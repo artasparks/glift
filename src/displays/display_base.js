@@ -16,12 +16,4 @@ BaseDisplay.prototype = {
     return this.theme;
   }
 };
-
-// theme is available to all display types.
-glift.core.options.registerByComponent(
-    glift.enums.components.DISPLAY, 'theme', 'default');
-
-glift.core.options.registerByComponent(
-    glift.enums.components.DISPLAY, 'graphicsType',
-    glift.enums.graphicsTypes.SVG);
 })();

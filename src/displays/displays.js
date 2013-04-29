@@ -3,14 +3,11 @@ glift.displays = {
   },
 
   initialize: function(options) {
-    var controllerManager = glift.controllers.getManager(
-      options.controllerType, options.controller);
     var theme = glift.displays.getTheme(options.theme);
     // Return the uninitialized environment
     var environment = glift.displays.environment.get(
         options.divId, options.displayType, options.displays);
-    return glift.displays.getFactory(
-        options.graphicsType, environment, controllerManager, theme);
+    return glift.displays.getFactory(options.graphicsType, environment, theme);
   },
 
   getFactory: function(graphicsType, environment, controller, theme) {
