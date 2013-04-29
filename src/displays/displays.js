@@ -1,5 +1,6 @@
 glift.displays = {
-  create: function(type, options) {
+  getImpl: function(options) {
+
   },
 
   initialize: function(options) {

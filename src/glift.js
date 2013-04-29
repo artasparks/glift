@@ -5,13 +5,13 @@ glift = window.glift || {};
 
 (function() {
 glift.create = function(options) {
-  new Glift(options);
+  new Glift(glift.displays.getImpl(options));
 };
 
 
 // Base object
 var Glift = function(options) {
-  this.options = options;
+  this.impl = impl;
 };
 
 })();
