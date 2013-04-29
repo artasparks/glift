@@ -1,7 +1,7 @@
 (function() {
 
 // should inherit from base widget
-otre.displays.rwidgets.board = function(options, factory) {
+glift.displays.rwidgets.board = function(options, factory) {
   return new GoBoard(options);
 };
 

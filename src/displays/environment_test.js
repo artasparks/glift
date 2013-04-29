@@ -1,8 +1,8 @@
-otre.displays.environmentTest = function() {
-  var util = otre.util,
-      displays = otre.displays,
-      enums = otre.enums,
-      env = otre.displays.environment,
+glift.displays.environmentTest = function() {
+  var util = glift.util,
+      displays = glift.displays,
+      enums = glift.enums,
+      env = glift.displays.environment,
       displayTypes = enums.displayTypes,
 
       WIDTH = 300,

@@ -1,5 +1,5 @@
 (function(){
-otre.displays.raphael.Factory.prototype.stones = function() {
+glift.displays.raphael.Factory.prototype.stones = function() {
   return new Stones(
       this.paper, this.environment, this.getController, this.theme.stones);
 };
@@ -20,7 +20,7 @@ Stones.prototype = {
         boardPoints = this.environment.boardPoints;
     for (var ptHash in boardPoints.points) {
       var coordPt = boardPoints.points[ptHash];
-      var intersection = otre.util.pointFromHash(ptHash);
+      var intersection = glift.util.pointFromHash(ptHash);
       var spacing = boardPoints.spacing;
       var stone = new Stone(this.paper, this.getController, intersection,
           coordPt, spacing, this.subtheme)

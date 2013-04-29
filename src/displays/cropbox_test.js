@@ -1,8 +1,8 @@
-otre.displays.cropboxTest = function() {
-  var displays = otre.displays,
-      boardRegions = otre.enums.boardRegions,
+glift.displays.cropboxTest = function() {
+  var displays = glift.displays,
+      boardRegions = glift.enums.boardRegions,
       overf = displays.cropbox.OVERFLOW,
-      util = otre.util;
+      util = glift.util;
   test("--------Cropbox Tests--------", function() { ok(true); });
 
   test("Cropbox tests for 19x19", function() {
@@ -77,17 +77,17 @@ otre.displays.cropboxTest = function() {
 
   // a = 0; i = 9; s = 18
   test("GetCropRegion: TOP_LEFT", function() {
-    var mt = otre.rules.movetree.getInstance(),
-        point = otre.util.point,
-        getCropRegion = otre.displays.cropbox.getCropRegion;
+    var mt = glift.rules.movetree.getInstance(),
+        point = glift.util.point,
+        getCropRegion = glift.displays.cropbox.getCropRegion;
     mt.getProperties().add('B', point(0,0).toSgfCoord());
     deepEqual(getCropRegion(mt), boardRegions.TOP_LEFT, "Must be TOP_LEFT");
   });
 
   test("GetCropRegion: TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT", function() {
-    var mt = otre.rules.movetree.getInstance(),
-        point = otre.util.point,
-        getCropRegion = otre.displays.cropbox.getCropRegion,
+    var mt = glift.rules.movetree.getInstance(),
+        point = glift.util.point,
+        getCropRegion = glift.displays.cropbox.getCropRegion,
         props = mt.getProperties();
     props.add('AB', point(17, 0).toSgfCoord());
     deepEqual(getCropRegion(mt), boardRegions.TOP_RIGHT, "Must be TOP_RIGHT");
@@ -102,9 +102,9 @@ otre.displays.cropboxTest = function() {
   });
 
   test("GetCropRegion: TOP, BOTTOM, LEFT, RIGHT", function() {
-    var mt = otre.rules.movetree.getInstance(),
-        point = otre.util.point,
-        getCropRegion = otre.displays.cropbox.getCropRegion,
+    var mt = glift.rules.movetree.getInstance(),
+        point = glift.util.point,
+        getCropRegion = glift.displays.cropbox.getCropRegion,
         props = mt.getProperties();
     props.add('AB', point(0, 0).toSgfCoord())
         .add('AB', point(18, 0).toSgfCoord());

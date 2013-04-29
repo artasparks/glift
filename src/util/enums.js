@@ -1,7 +1,7 @@
 // Otre: A Go Studying Program
 // Copyright (c) 2012, Josh <jrhoak@gmail.com>
 // Code licensed under the MIT License
-otre.enums = {
+glift.enums = {
   components: {
     CONTROLLER: "CONTROLLER",
     DISPLAY: "DISPLAY",
@@ -88,8 +88,8 @@ otre.enums = {
   },
 
   getSubComponentEnums: function(majorType, subType) {
-    var comp = otre.enums.components,
-        enums = otre.enums,
+    var comp = glift.enums.components,
+        enums = glift.enums,
         out = {};
     if (majorType === comp.CONTROLLER) {
       out = enums.controllerTypes;
@@ -103,4 +103,4 @@ otre.enums = {
     return out;
   },
 };
-var enums = otre.enums;
+var enums = glift.enums;

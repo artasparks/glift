@@ -1,5 +1,5 @@
-otre.utilTest = function() {
-  var util = otre.util;
+glift.utilTest = function() {
+  var util = glift.util;
   test("typeOf test", function() {
     equal(util.typeOf({}), "object", "expect object");
   });

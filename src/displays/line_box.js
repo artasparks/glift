@@ -1,6 +1,6 @@
 (function() {
-otre.displays.getLineBox = function(boardBox, cropbox) {
-  var overflow = otre.displays.cropbox.OVERFLOW,
+glift.displays.getLineBox = function(boardBox, cropbox) {
+  var overflow = glift.displays.cropbox.OVERFLOW,
       xSpacing = boardBox.width / cropbox.width,
       ySpacing = boardBox.height / cropbox.height,
       top = ySpacing * overflow / 2,
@@ -11,9 +11,9 @@ otre.displays.getLineBox = function(boardBox, cropbox) {
       topBase = boardBox.topLeft.y,
 
       // The Line Box is an extended cropbox.
-      lineBoxBoundingBox = otre.displays.bboxFromPts(
-          otre.util.point(left + leftBase, top + topBase),
-          otre.util.point(right + leftBase, bot + topBase));
+      lineBoxBoundingBox = glift.displays.bboxFromPts(
+          glift.util.point(left + leftBase, top + topBase),
+          glift.util.point(right + leftBase, bot + topBase));
       return new LineBox(lineBoxBoundingBox, xSpacing, ySpacing, cropbox);
 };
 

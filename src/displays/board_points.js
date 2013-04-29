@@ -1,24 +1,24 @@
 (function() {
-var util = otre.util;
+var util = glift.util;
 
-otre.displays.boardPoints = function() {
+glift.displays.boardPoints = function() {
   return new BoardPoints();
 };
 
-otre.displays.boardPointsFromLineBox = function(linebox) {
+glift.displays.boardPointsFromLineBox = function(linebox) {
   var spacing = linebox.spacing,
       linebbox = linebox.bbox,
       left = linebbox.left + linebox.extensionBox.left * spacing,
       top = linebbox.top + linebox.extensionBox.top * spacing,
       leftPt = linebox.pointTopLeft.x,
       topPt = linebox.pointTopLeft.y,
-      boardPoints = otre.displays.boardPoints();
+      boardPoints = glift.displays.boardPoints();
   for (var i = 0; i <= linebox.yPoints; i++) {
     for (var j = 0; j <= linebox.xPoints; j++) {
       var xCoord = left + j * spacing;
       var yCoord = top + i * spacing;
-      var intPt = otre.util.point(leftPt + j, topPt + i);
-      var coordPt = otre.util.point(xCoord, yCoord);
+      var intPt = glift.util.point(leftPt + j, topPt + i);
+      var coordPt = glift.util.point(xCoord, yCoord);
       boardPoints.add(intPt, coordPt);
     }
   }

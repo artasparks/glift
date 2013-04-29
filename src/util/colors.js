@@ -1,4 +1,4 @@
-otre.util.colors = {
+glift.util.colors = {
   isLegalColor: function(color) {
     return color === enums.states.BLACK ||
         color === enums.states.WHITE ||

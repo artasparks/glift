@@ -1,6 +1,6 @@
-otre.util.regions = {
+glift.util.regions = {
   getComponents: function(boardRegion) {
-    var br = otre.enums.boardRegions,
+    var br = glift.enums.boardRegions,
         out = {};
     if (boardRegion === br.TOP_LEFT) {
       out[br.TOP] = 1;

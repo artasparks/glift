@@ -2,8 +2,8 @@
 
 var pointCache = {};
 
-otre.util.point = function(x,y) {
-  var str = otre.util.coordToString(x, y);
+glift.util.point = function(x,y) {
+  var str = glift.util.coordToString(x, y);
   if (pointCache[str] !== undefined) {
     return pointCache[str];
   } else {
@@ -14,8 +14,8 @@ otre.util.point = function(x,y) {
 };
 
 // For testing the cache
-otre.util._cacheHasPoint = function(x, y) {
-  return pointCache[otre.util.coordToString(x, y)] !== undefined;
+glift.util._cacheHasPoint = function(x, y) {
+  return pointCache[glift.util.coordToString(x, y)] !== undefined;
 };
 
 // Private Point Class
@@ -26,7 +26,7 @@ var OtrePoint = function(x, y) {
 
 OtrePoint.prototype = {
   toString: function() {
-    return otre.util.coordToString(this.x, this.y);
+    return glift.util.coordToString(this.x, this.y);
   },
 
   hash: function() {
@@ -46,27 +46,27 @@ OtrePoint.prototype = {
   },
 
   log: function() {
-    otre.util.logz(this.toString());
+    glift.util.logz(this.toString());
   }
 };
 
-otre.util.coordToString = function(x, y) {
+glift.util.coordToString = function(x, y) {
   return x + ',' + y
 };
 
-otre.util.pointFromString = function(str) {
+glift.util.pointFromString = function(str) {
   try {
     var split = str.split(",");
     var x = parseInt(split[0]);
     var y = parseInt(split[1]);
-    return otre.util.point(x, y);
+    return glift.util.point(x, y);
   } catch(e) {
     throw "Parsing Error! Couldn't parse a point from: " + str;
   }
 };
 
-otre.util.pointFromHash = function(str) {
-  return otre.util.pointFromString(str);
+glift.util.pointFromHash = function(str) {
+  return glift.util.pointFromString(str);
 };
 
 })();

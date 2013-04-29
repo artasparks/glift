@@ -1,11 +1,11 @@
 (function() {
-otre.displays.bboxFromPts = function(topLeftPt, botRightPt) {
+glift.displays.bboxFromPts = function(topLeftPt, botRightPt) {
   return new BoundingBox(topLeftPt, botRightPt);
 };
 
-otre.displays.bbox = function(topLeft, width, height) {
+glift.displays.bbox = function(topLeft, width, height) {
   return new BoundingBox(
-      topLeft, otre.util.point(topLeft.x + width, topLeft.y + height));
+      topLeft, glift.util.point(topLeft.x + width, topLeft.y + height));
 }
 
 
@@ -14,9 +14,9 @@ otre.displays.bbox = function(topLeft, width, height) {
 var BoundingBox = function(topLeftPt, botRightPt) {
   this.topLeft = topLeftPt;
   this.botRight = botRightPt;
-  this.center = otre.util.point(
-      otre.math.abs((botRightPt.x - topLeftPt.x) / 2),
-      otre.math.abs((botRightPt.y - topLeftPt.y) / 2));
+  this.center = glift.util.point(
+      glift.math.abs((botRightPt.x - topLeftPt.x) / 2),
+      glift.math.abs((botRightPt.y - topLeftPt.y) / 2));
   this.width = botRightPt.x - topLeftPt.x;
   this.height = botRightPt.y - topLeftPt.y;
 
@@ -45,10 +45,10 @@ BoundingBox.prototype = {
 
   // Log the points to the console (for debugging);
   log: function() {
-    otre.util.logz("TopLeft: " + JSON.stringify(this.topLeft));
-    otre.util.logz("BotRight: " + JSON.stringify(this.botRight));
-    otre.util.logz("Width: " + this.width);
-    otre.util.logz("Height: " + this.height);
+    glift.util.logz("TopLeft: " + JSON.stringify(this.topLeft));
+    glift.util.logz("BotRight: " + JSON.stringify(this.botRight));
+    glift.util.logz("Width: " + this.width);
+    glift.util.logz("Height: " + this.height);
   },
 
   equals: function(other) {

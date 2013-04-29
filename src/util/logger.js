@@ -1,18 +1,18 @@
 (function() {
-otre.logger = function(logDiv, numMsgs) {
-  return new otre.Log(logDiv, numMsgs);
+glift.logger = function(logDiv, numMsgs) {
+  return new glift.Log(logDiv, numMsgs);
 };
 
-otre.Log = function(logDiv, numMsgs) {
+glift.Log = function(logDiv, numMsgs) {
   this.name = "#" + logDiv;
   this.num = numMsgs;
   this.curMsgs = 0;
 };
 
-otre.Log.prototype.println = function(msg) {
+glift.Log.prototype.println = function(msg) {
   var modmsg = msg;
-  if (otre.util.typeOf(msg) === "array" ||
-      otre.util.typeOf(msg) === "object") {
+  if (glift.util.typeOf(msg) === "array" ||
+      glift.util.typeOf(msg) === "object") {
     modmsg = JSON.stringify(msg);
   }
   $('<p>' + modmsg + '</p>').appendTo(this.name);
@@ -23,7 +23,7 @@ otre.Log.prototype.println = function(msg) {
   }
 };
 
-otre.Log.prototype.printv = function() {
+glift.Log.prototype.printv = function() {
   var args = arguments;
   var out = "";
   out = args[0];
@@ -33,9 +33,9 @@ otre.Log.prototype.printv = function() {
   this.println(out);
 };
 
-otre.Log.prototype.log = otre.Log.prototype.println;
+glift.Log.prototype.log = glift.Log.prototype.println;
 
-otre.Log.prototype.printArr = function(arr) {
+glift.Log.prototype.printArr = function(arr) {
   for (var i = 0; i < arr.length; i++) {
     this.println(arr[i].toString());
   }

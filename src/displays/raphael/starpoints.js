@@ -1,6 +1,6 @@
 (function() {
 
-otre.displays.raphael.Factory.prototype.starpoints = function() {
+glift.displays.raphael.Factory.prototype.starpoints = function() {
   return new StarPointSet(this.paper, this.environment, this.theme.board);
 };
 
@@ -13,7 +13,7 @@ var StarPointSet = function(paper, environment, subtheme) {
 
 StarPointSet.prototype = {
   draw: function() {
-    var point = otre.util.point,
+    var point = glift.util.point,
         boardPoints = this.environment.boardPoints,
         size = boardPoints.spacing * this.subtheme.starPointSize,
         intersections = this.environment.intersections,

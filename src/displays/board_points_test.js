@@ -1,7 +1,7 @@
-otre.displays.boardpointsTest = function() {
-  var displays = otre.displays,
-      util = otre.util,
-      point = otre.util.point;
+glift.displays.boardpointsTest = function() {
+  var displays = glift.displays,
+      util = glift.util,
+      point = glift.util.point;
   test("--------BoardPoints Tests--------", function() { ok(true); });
 
   test("Test for creating boardPoints from sc", function() {

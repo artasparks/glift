@@ -1,8 +1,8 @@
 (function() {
-var util = otre.util;
-var enums = otre.enums;
+var util = glift.util;
+var enums = glift.enums;
 
-otre.displays.environment = {
+glift.displays.environment = {
   TOPBAR_SIZE: 0.10,
   BOTTOMBAR_SIZE: 0.10,
 
@@ -11,12 +11,12 @@ otre.displays.environment = {
   },
 
   getInitialized: function(divId, displayType, options) {
-    return otre.displays.environment.get(divId, displayType, options)
+    return glift.displays.environment.get(divId, displayType, options)
       .initialize();
   },
 
   _getResizedBox: function(displayType, divBox, cropbox) {
-    var newDims = otre.displays.cropbox.getCropDimensions(
+    var newDims = glift.displays.cropbox.getCropDimensions(
             divBox.width,
             divBox.height,
             cropbox),
@@ -39,7 +39,7 @@ otre.displays.environment = {
         yDelta = yDiff === 0 ? 0 : yDiff / 2,
         newLeft = divBox.topLeft.x + xDelta,
         newTop = divBox.topLeft.y + yDelta;
-    return otre.displays.bbox(util.point(newLeft, newTop), newWidth, newHeight);
+    return glift.displays.bbox(util.point(newLeft, newTop), newWidth, newHeight);
   },
 
   // Get the bounding box of a sidebar.
@@ -77,10 +77,10 @@ otre.displays.environment = {
         top = resizedBox.botRight.y;
       }
     } else {
-      return otre.displays.bbox(util.point(0,0), 0, 0);
+      return glift.displays.bbox(util.point(0,0), 0, 0);
     }
 
-    return otre.displays.bboxFromPts(
+    return glift.displays.bboxFromPts(
         util.point(left, top), util.point(right, bot));
   }
 };
@@ -90,7 +90,7 @@ var GuiEnvironment = function(divId, displayType, options) {
   this.displayType = displayType || enums.displayTypes.SIMPLE_BOARD;
   this.boardRegion = options.boardRegion || enums.boardRegions.ALL;
   this.intersections = options.intersections || 19;
-  this.cropbox = options._cropbox || otre.displays.cropbox.getFromRegion(
+  this.cropbox = options._cropbox || glift.displays.cropbox.getFromRegion(
       this.boardRegion, this.intersections);
   // We allow the divHeight and divWidth to be specified explicitly, primarily
   // because it's extremely useful for testing.
@@ -106,7 +106,7 @@ var GuiEnvironment = function(divId, displayType, options) {
 GuiEnvironment.prototype = {
   // Initialize the internal variables that tell where to place the go broard.
   initialize: function() {
-    var displays = otre.displays,
+    var displays = glift.displays,
         env = displays.environment,
         divHeight = this.divHeight,
         divWidth  = this.divWidth,
@@ -125,12 +125,12 @@ GuiEnvironment.prototype = {
         bottomBar = env._getSidebarBox(displayType, resizedBox, dirs.BOTTOM),
         rightBar = env._getSidebarBox(displayType, resizedBox, dirs.RIGHT),
 
-        goBoardBox = otre.displays.bboxFromPts(
+        goBoardBox = glift.displays.bboxFromPts(
             util.point(leftBar.botRight.x, topBar.botRight.y),
             util.point(rightBar.topLeft.x, bottomBar.topLeft.y)),
-        goBoardLineBox = otre.displays.getLineBox(goBoardBox, cropbox),
-        boardPoints = otre.displays.boardPointsFromLineBox(goBoardLineBox),
-        lineSegments = otre.displays.getLineSegments(goBoardLineBox);
+        goBoardLineBox = glift.displays.getLineBox(goBoardBox, cropbox),
+        boardPoints = glift.displays.boardPointsFromLineBox(goBoardLineBox),
+        lineSegments = glift.displays.getLineSegments(goBoardLineBox);
 
     this.divBox = divBox;
     this.resizedBox = resizedBox;

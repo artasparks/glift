@@ -1,12 +1,12 @@
 (function() {
 
-otre.displays.raphael = {
+glift.displays.raphael = {
   getFactory: function(environment, controller, theme) {
-    return new otre.displays.raphael.Factory(environment, controller, theme);
+    return new glift.displays.raphael.Factory(environment, controller, theme);
   }
 };
 
-otre.displays.raphael.Factory = function(environment, controller, theme) {
+glift.displays.raphael.Factory = function(environment, controller, theme) {
   this.environment = environment;
   this.theme = theme;
   this.paper = Raphael(environment.divId, "100%", "100%");
@@ -27,7 +27,7 @@ otre.displays.raphael.Factory = function(environment, controller, theme) {
       _controller = controller;
   };
 };
-var Factory = otre.displays.raphael.Factory;
+var Factory = glift.displays.raphael.Factory;
 
 Factory.prototype.draw = function() {
   this.environment.initialize();

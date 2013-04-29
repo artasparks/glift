@@ -1,6 +1,6 @@
-otre.displays.bboxTest = function() {
-  var point = otre.util.point,
-      displays = otre.displays;
+glift.displays.bboxTest = function() {
+  var point = glift.util.point,
+      displays = glift.displays;
   test("--------Bounding Box Tests--------", function() { ok(true); });
 
   test("Test that the center is the shifted average", function() {

@@ -1,7 +1,7 @@
-otre.util.pointTest = function() {
-  var rules = otre.rules,
-      util = otre.util,
-      logz = otre.util.logz;
+glift.util.pointTest = function() {
+  var rules = glift.rules,
+      util = glift.util,
+      logz = glift.util.logz;
 
   test("--------Point Test--------", function() { ok(true); });
 
@@ -15,7 +15,7 @@ otre.util.pointTest = function() {
 
   test("test point cache", function() {
     var pt = util.point(1, 12);
-    ok(otre.util._cacheHasPoint(1, 12), "cache must be populated")
+    ok(glift.util._cacheHasPoint(1, 12), "cache must be populated")
     var otherPt = util.point(1, 12);
     ok(pt === otherPt, "pts must be precisely equal")
   });

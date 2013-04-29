@@ -1,8 +1,8 @@
 (function() {
-otre.displays.getLineSegments = function(lineBox) {
+glift.displays.getLineSegments = function(lineBox) {
   var segments = new Segments();
-  var point = otre.util.point;
-  var logz = otre.util.logz;
+  var point = glift.util.point;
+  var logz = glift.util.logz;
 
   var spacing = lineBox.spacing,
       left = lineBox.bbox.left + lineBox.extensionBox.left * spacing,
@@ -35,7 +35,7 @@ var Segments = function() {
 };
 
 Segments.prototype._debugDraw = function(paper, color) {
-  var rutil = otre.displays.raphael.rutil;
+  var rutil = glift.displays.raphael.rutil;
   var segs = [this.horz, this.vert];
   for (var i = 0; i < segs.length; i++) {
     var lines = segs[i];

@@ -1,12 +1,12 @@
-otre.util = {
+glift.util = {
   logz: function(msg) {
     var modmsg = msg;
-    if (otre.util.typeOf(msg) === "array" ||
-        otre.util.typeOf(msg) === "object") {
+    if (glift.util.typeOf(msg) === "array" ||
+        glift.util.typeOf(msg) === "object") {
       modmsg = JSON.stringify(msg);
     }
     console.log("" + modmsg);
-    return otre.util.none; // default value to return.
+    return glift.util.none; // default value to return.
   },
 
   // A utility method -- for prototypal inheritence.
@@ -102,7 +102,7 @@ otre.util = {
     if (variable === undefined) {
       throw msg;
     }
-    return otre.util.none;
+    return glift.util.none;
   },
 
   checkArgsDefined: function(args, expected) {
@@ -112,7 +112,7 @@ otre.util = {
             " must be defined, but is undefined";
       }
     }
-    return otre.util.none;
+    return glift.util.none;
   },
 
   setMethods: function(base, methods) {
@@ -124,11 +124,11 @@ otre.util = {
 };
 
 // A better logging solution.
-otre.util.debugl = function(msg) {
-  if (otre.debugOn) {
+glift.util.debugl = function(msg) {
+  if (glift.debugOn) {
     var modmsg = msg;
-    if (otre.util.typeOf(msg) === "array" ||
-        otre.util.typeOf(msg) === "object") {
+    if (glift.util.typeOf(msg) === "array" ||
+        glift.util.typeOf(msg) === "object") {
       modmsg = JSON.stringify(msg);
     }
     console.log(msg);
@@ -147,5 +147,5 @@ None.prototype = {
 };
 
 // We only need to create one instance of None.
-otre.util.none = new None();
+glift.util.none = new None();
 })();

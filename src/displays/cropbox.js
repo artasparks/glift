@@ -1,11 +1,11 @@
 (function() {
-otre.displays.cropbox = {
+glift.displays.cropbox = {
   LINE_EXTENSION: .5,
   DEFAULT_EXTENSION: 0,
   OVERFLOW: 1.5, // The line spacing that goes around the edge.
 
   getFromRegion: function(region, intersects) {
-    var util = otre.util,
+    var util = glift.util,
         boardRegions = enums.boardRegions,
         region = region || boardRegions.ALL,
         // So that we can 0 index, we subtract one.
@@ -96,11 +96,11 @@ otre.displays.cropbox = {
       default: break;
     };
 
-    var cbox = otre.displays.bboxFromPts(
+    var cbox = glift.displays.bboxFromPts(
         util.point(left, top), util.point(right, bot));
     cbox.minIntersects = minIntersects;
     cbox.maxIntersects = maxIntersects;
-    cbox.extensionBox = otre.displays.bboxFromPts(
+    cbox.extensionBox = glift.displays.bboxFromPts(
         util.point(leftExtension, topExtension),
         util.point(rightExtension, botExtension)),
     cbox.xPoints = cbox.width;
@@ -133,9 +133,9 @@ otre.displays.cropbox = {
   },
 
   getCropRegion: function(movetree) {
-    var bbox = otre.displays.bboxFromPts,
-        point = otre.util.point,
-        boardRegions = otre.enums.boardRegions,
+    var bbox = glift.displays.bboxFromPts,
+        point = glift.util.point,
+        boardRegions = glift.enums.boardRegions,
         ints = movetree.getIntersections() - 1,
         middle = Math.ceil(ints / 2),
         quads = {},
@@ -171,7 +171,7 @@ otre.displays.cropbox = {
 };
 
 var getRegionFromTracker = function(tracker, numstones) {
-  var regions = [], br = otre.enums.boardRegions;
+  var regions = [], br = glift.enums.boardRegions;
   for (var quadkey in tracker) {
     var quadlist = tracker[quadkey];
     if (quadlist.length === numstones) {
@@ -182,16 +182,16 @@ var getRegionFromTracker = function(tracker, numstones) {
   }
   if (regions.length !== 2) {
     // Shouldn't be 1 element here...
-    return otre.boardRegions.ALL;
+    return glift.boardRegions.ALL;
   }
-  var newset = otre.util.intersection(
-    otre.util.regions.getComponents(regions[0]),
-    otre.util.regions.getComponents(regions[1]));
+  var newset = glift.util.intersection(
+    glift.util.regions.getComponents(regions[0]),
+    glift.util.regions.getComponents(regions[1]));
   // there should only be one element at this point or nothing
   for (var key in newset) {
     return key;
   }
-  return otre.boardRegions.ALL;
+  return glift.boardRegions.ALL;
 }
 
 })();

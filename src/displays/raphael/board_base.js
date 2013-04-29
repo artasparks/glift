@@ -1,5 +1,5 @@
 (function(){
-otre.displays.raphael.Factory.prototype.createBoardBase = function() {
+glift.displays.raphael.Factory.prototype.createBoardBase = function() {
   var boardBase = new BoardBase(this.paper, this.environment, this.theme.board);
 };
 

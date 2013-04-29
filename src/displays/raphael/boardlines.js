@@ -1,6 +1,6 @@
 (function() {
 
-otre.displays.raphael.Factory.prototype.createBoardLines = function() {
+glift.displays.raphael.Factory.prototype.createBoardLines = function() {
   return new BoardLineSet(this.paper, this.environment, this.theme.board);
 };
 
@@ -14,7 +14,7 @@ var BoardLineSet = function(paper, environment, subtheme) {
 
 BoardLineSet.prototype = {
   draw: function() {
-    var point = otre.util.point,
+    var point = glift.util.point,
         paper = this.paper,
         subt = this.subtheme,
         segments = this.environment.lineSegments,
@@ -29,7 +29,7 @@ BoardLineSet.prototype = {
 
 var drawSegments = function(paper, segs, maxInts, normalSize, edgeSize) {
   var lineSet = paper.set(),
-      rutil = otre.displays.raphael.rutil;
+      rutil = glift.displays.raphael.rutil;
   for (var i = 0; i < segs.length; i++) {
     var path = paper.path(
         rutil.svgMovePt(segs[i].topLeft) +

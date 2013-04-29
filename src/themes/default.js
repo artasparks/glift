@@ -1,4 +1,4 @@
-otre.themes.registered.DEFAULT = {
+glift.themes.registered.DEFAULT = {
   board: {
     bgColor: "#f5be7e",
     lineColor: "black",
