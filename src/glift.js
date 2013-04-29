@@ -5,12 +5,13 @@ glift = window.glift || {};
 
 (function() {
 glift.create = function(options) {
-  return new Glift(glift.core.createManager(options));
+  new Glift(options);
 };
 
 
 // Base object
 var Glift = function(options) {
+  this.options = options;
 };
 
 })();

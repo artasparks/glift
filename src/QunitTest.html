@@ -11,7 +11,7 @@
 
 <!-- AUTO-GEN-DEPS -->
 <!-- Otre -->
-<script type="text/javascript" src="./qunit.js"></script>
+<script type="text/javascript" src="./glift.js"></script>
 <!-- Util -->
 <script type="text/javascript" src="util/util.js"></script>
 <script type="text/javascript" src="util/colors.js"></script>
@@ -51,20 +51,19 @@
 <script>
 $(document).ready(function() {
   // otre.debugOn = true;
-  logz = otre.util.logz;
-  otre.utilTest();
-  otre.util.pointTest();
+  glift.utilTest();
+  glift.util.pointTest();
 
-  otre.displays.bboxTest();
-  otre.displays.cropboxTest();
-  otre.displays.environmentTest();
-  otre.displays.boardpointsTest();
+  glift.displays.bboxTest();
+  glift.displays.cropboxTest();
+  glift.displays.environmentTest();
+  glift.displays.boardpointsTest();
 });
 </script>
 
 </head>
 <body>
-  <h1 id="qunit-header">Otre Goban Tests</h1>
+  <h1 id="qunit-header">Glift Tests</h1>
   <h2 id="qunit-banner"></h2>
   <div id="qunit-testrunner-toolbar"></div>
   <h2 id="qunit-userAgent"></h2>
