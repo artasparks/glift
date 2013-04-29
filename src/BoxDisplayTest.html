@@ -1,0 +1,135 @@
+<html>
+  <head>
+    <title> Box Display Test </title>
+    <script type="text/javascript" src="libs/jquery-1.7.2.min.js"></script>
+    <script type="text/javascript" src="libs/raphael-min.js"></script>
+
+<script type="text/javascript" src="testdata/sgfs.js"></script>
+
+
+<!-- AUTO-GEN-DEPS -->
+<!-- Util -->
+<script type="text/javascript" src="util/util.js"></script>
+<script type="text/javascript" src="util/colors.js"></script>
+<script type="text/javascript" src="util/enums.js"></script>
+<script type="text/javascript" src="util/logger.js"></script>
+<script type="text/javascript" src="util/math.js"></script>
+<script type="text/javascript" src="util/point.js"></script>
+<script type="text/javascript" src="util/point_test.js"></script>
+<script type="text/javascript" src="util/regions.js"></script>
+<script type="text/javascript" src="util/util_test.js"></script>
+<!-- Themes -->
+<script type="text/javascript" src="themes/themes.js"></script>
+<script type="text/javascript" src="themes/default.js"></script>
+<!-- Displays -->
+<script type="text/javascript" src="displays/displays.js"></script>
+<script type="text/javascript" src="displays/bbox.js"></script>
+<script type="text/javascript" src="displays/bbox_test.js"></script>
+<script type="text/javascript" src="displays/board_points.js"></script>
+<script type="text/javascript" src="displays/board_points_test.js"></script>
+<script type="text/javascript" src="displays/cropbox.js"></script>
+<script type="text/javascript" src="displays/cropbox_test.js"></script>
+<script type="text/javascript" src="displays/display_base.js"></script>
+<script type="text/javascript" src="displays/environment.js"></script>
+<script type="text/javascript" src="displays/environment_test.js"></script>
+<script type="text/javascript" src="displays/line_box.js"></script>
+<script type="text/javascript" src="displays/line_segments.js"></script>
+<!-- Displays raphael -->
+<script type="text/javascript" src="displays/raphael/raphael.js"></script>
+<script type="text/javascript" src="displays/raphael/board_base.js"></script>
+<script type="text/javascript" src="displays/raphael/boardlines.js"></script>
+<script type="text/javascript" src="displays/raphael/rutil.js"></script>
+<script type="text/javascript" src="displays/raphael/starpoints.js"></script>
+<script type="text/javascript" src="displays/raphael/stones.js"></script>
+
+<!-- END-AUTO-GEN-DEPS -->
+    <style>
+      #otre_display1 {
+        position: relative;
+        top: 0;
+        width: 400px;
+        height: 400px;
+        float: left;
+      }
+      #otre_display2 {
+        position: relative;
+        top: 0;
+        width: 300px;
+        height: 400px;
+        float: left;
+      }
+      #otre_display3 {
+        position: relative;
+        top: 0;
+        width: 400px;
+        height: 300px;
+        float: left;
+      }
+      #otre_display4 {
+        position: relative;
+        top: 0;
+        width: 400px;
+        height: 300px;
+        float: left;
+      }
+      #otre_display5 {
+        position: relative;
+        top: 0;
+        width: 400px;
+        height: 300px;
+        float: left;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="wrap" style="position:relative;">
+      <div id="otre_display1">
+      <div id="otre_display2">
+      <div id="otre_display3">
+      <div id="otre_display4">
+      <div id="otre_display5">
+        <script type="text/javascript">
+          var displayTypes = otre.enums.displayTypes;
+          var boardRegions = otre.enums.boardRegions;
+          logz = otre.util.logz;
+
+          var env = otre.display.environment.get({
+            divId: "otre_display1",
+            displayType: displayTypes.SIMPLE_BOARD
+          });
+          env._debugDrawAll();
+
+          var env = otre.display.environment.get({
+            divId: "otre_display2",
+            displayType: displayTypes.EXPLAIN_BOARD
+            //displayType: disps.SIMPLE_BOARD
+          });
+          env._debugDrawAll();
+
+          var env = otre.display.environment.get({
+            divId: "otre_display3",
+            displayType: displayTypes.EXPLAIN_BOARD
+            //displayType: disps.SIMPLE_BOARD
+          });
+          env._debugDrawAll();
+
+          var env = otre.display.environment.get({
+            divId: "otre_display4",
+            displayType: displayTypes.EXPLAIN_BOARD,
+            boardRegion: boardRegions.LEFT
+          });
+          env._debugDrawAll();
+
+          var env = otre.display.environment.get({
+            divId: "otre_display5",
+            displayType: displayTypes.EXPLAIN_BOARD,
+            boardRegion: boardRegions.TOP_LEFT
+          });
+          env._debugDrawAll();
+        </script>
+      </div>
+    </div>
+  </body>
+</html>
+
