@@ -130,43 +130,6 @@ glift.displays.cropbox = {
       height: newHeight,
       width: newWidth
     };
-  },
-
-  getCropRegion: function(movetree) {
-    var bbox = glift.displays.bboxFromPts,
-        point = glift.util.point,
-        boardRegions = glift.enums.boardRegions,
-        ints = movetree.getIntersections() - 1,
-        middle = Math.ceil(ints / 2),
-        quads = {},
-        tracker = {},
-        numstones = 0;
-    quads[boardRegions.TOP_LEFT] =
-        bbox(point(0, 0), point(middle + 1, middle + 1));
-    quads[boardRegions.TOP_RIGHT] =
-        bbox(point(middle - 1, 0), point(ints, middle + 1));
-    quads[boardRegions.BOTTOM_LEFT] =
-        bbox(point(0, middle - 1), point(middle + 1, ints));
-    quads[boardRegions.BOTTOM_RIGHT] =
-        bbox(point(middle - 1, middle - 1), point(ints, ints));
-    movetree.recurseFromRoot(function(mt) {
-      var stones = mt.getProperties().getAllStones();
-      for (var color in stones) {
-        var points = stones[color];
-        for (var i = 0; i < points.length; i++) {
-          var pt = points[i];
-          numstones += 1
-          for (var quadkey in quads) {
-            var box = quads[quadkey];
-            if (box.contains(pt)) {
-              if (tracker[quadkey] === undefined) tracker[quadkey] = [];
-              tracker[quadkey].push(pt);
-            }
-          }
-        }
-      }
-    });
-    return getRegionFromTracker(tracker, numstones);
   }
 };
 
