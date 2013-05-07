@@ -1,8 +1,8 @@
 (function() {
 
 glift.displays.raphael = {
-  getFactory: function(environment, controller, theme) {
-    return new glift.displays.raphael.Factory(environment, controller, theme);
+  create: function(environment, theme) {
+    return new glift.displays.raphael.Factory(environment,  theme);
   }
 };
 
@@ -14,18 +14,6 @@ glift.displays.raphael.Factory = function(environment, controller, theme) {
   // the objects.
   this.objectHistory = [];
   this.children = {}; // So the factory can access
-
-  // Closure Variables
-  var _controller = controller;
-
-  // Force the users of the Factory controller to get the correct version.
-  this.getController = function() {
-    return _controller;
-  };
-
-  this.setController = function(controller) {
-      _controller = controller;
-  };
 };
 var Factory = glift.displays.raphael.Factory;
 

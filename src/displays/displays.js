@@ -1,6 +1,6 @@
 glift.displays = {
   getImpl: function(options) {
-
+    var theme = glift.themes.get(options.theme);
   },
 
   initialize: function(options) {

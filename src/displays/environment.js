@@ -2,6 +2,13 @@
 var util = glift.util;
 var enums = glift.enums;
 
+/*
+ * The Environment represents:
+ *  - The bounding box for the lines.
+ *  - The bounding box for the whole board
+ *  - The bounding boxes for the sidebars.
+ *  - The divId to be used
+ */
 glift.displays.environment = {
   TOPBAR_SIZE: 0.10,
   BOTTOMBAR_SIZE: 0.10,
@@ -63,7 +70,7 @@ glift.displays.environment = {
       if (displayType === dispt.EXPLAIN_BOARD) {
         bot = resizedBox.topLeft.y +
             resizedBox.height * (this.TOPBAR_SIZE) /
-            (1 + this.BOTTOMBAR_SIZE + this.TOPBAR_SIZE)
+            (1 + this.BOTTOMBAR_SIZE + this.TOPBAR_SIZE) // Why the 1?
       } else {
         bot = resizedBox.topLeft.y;
       }
@@ -94,8 +101,12 @@ var GuiEnvironment = function(divId, displayType, options) {
       this.boardRegion, this.intersections);
   // We allow the divHeight and divWidth to be specified explicitly, primarily
   // because it's extremely useful for testing.
-  this.divHeight = options._divHeight || ($("#" + this.divId).innerHeight());
-  this.divWidth = options._divWidth || ($("#" + this.divId).innerWidth());
+  this.divHeight = options._divHeight ||
+      // Height = height after accounting for padding (recall that it goes
+      // margin-div-padding)
+      document.getElementById(divId).style.height();
+  this.divWidth = options._divWidth ||
+      document.getElementById(divId).style.height();
 
   // A variable to mark whether we need to initialize the go board.  Used in
   // other libraries to note when settings have changed and we need to

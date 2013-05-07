@@ -131,7 +131,9 @@ glift.util.debugl = function(msg) {
         glift.util.typeOf(msg) === "object") {
       modmsg = JSON.stringify(msg);
     }
-    console.log(msg);
+    if (console !== undefined && console.log !== undefined) {
+      console.log(msg);
+    }
   }
 };
 

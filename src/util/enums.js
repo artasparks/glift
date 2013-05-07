@@ -2,54 +2,11 @@
 // Copyright (c) 2012, Josh <jrhoak@gmail.com>
 // Code licensed under the MIT License
 glift.enums = {
-  components: {
-    CONTROLLER: "CONTROLLER",
-    DISPLAY: "DISPLAY",
-    TRANSITION: "TRANSITION"
-  },
-
-  displayTypes: {
-    BASE: "DISPLAY_BASE",
-    SIMPLE_BOARD: "SIMPLE_BOARD",
-    SIMPLE_PATH_EXPLORE : "SIMPLE_PATH_EXPLORE",
-    COMPLEX_EXPLORE: "COMPLEX_EXPLORE",
-    CREATE_BOARD: "CREATE_BOARD"
-  },
-
-  controllerTypes: {
-    BASE: "CONTROLLER_BASE",
-    STATIC_PROBLEM_STUDY: "STATIC_PROBLEM_STUDY",
-    DYNAMIC_PROBLEM_STUDY: "DYNAMIC_PROBLEM_STUDY",
-    EXLORE_SOLUTIONS: "EXPLORE_SOLUTIONS",
-    EXLORE_GAME: "EXPLORE_GAME"
-  },
-
-  transitionTypes: {
-    PROBLEM_OVERLAY: "PROBLEM_OVERLAY",
-    INSTANT: "INSTANT"
-  },
-
-  configTypes: {
-    PROBLEM_CONFIG: "PROBLEM_CONFIG"
-  },
-
   // Also sometimes referred to as colors. See util.colors.
   states: {
     BLACK: "BLACK",
     WHITE: "WHITE",
     EMPTY: "EMPTY"
-  },
-
-  problemResults: {
-    CORRECT: "CORRECT",
-    INCORRECT: "INCORRECT",
-    INDETERMINATE: "INDETERMINATE"
-  },
-
-  // GraphicsTypes: To select between SVG and Rasterized
-  graphicsTypes: {
-    SVG: "SVG",
-    RASTER: "RASTER"
   },
 
   directions: {
@@ -81,26 +38,11 @@ glift.enums = {
     XMARK: "XMARK"
   },
 
-  controllerMessages: {
-    CONTINUE: "CONTINUE",
-    DONE: "DONE",
-    FAILURE: "FAILURE"
-  },
-
-  getSubComponentEnums: function(majorType, subType) {
-    var comp = glift.enums.components,
-        enums = glift.enums,
-        out = {};
-    if (majorType === comp.CONTROLLER) {
-      out = enums.controllerTypes;
-    } else if (majorType === comp.DISPLAY) {
-      out = enums.displayTypes;
-    } else if (majorType === comp.TRANSITION) {
-      out = enums.transitionTypes;
-    } else {
-      throw "Unknown component type: " + majorType;
-    }
-    return out;
-  },
+  // Left in for legacy reasons.
+  displayTypes: {
+    EXPLORE_BOARD: "EXPLORE_BOARD",
+    EXPLAIN_BOARD: "EXPLAIN_BOARD",
+    SIMPLE_BOARD: "SIMPLE_BOARD"
+  }
 };
 var enums = glift.enums;
