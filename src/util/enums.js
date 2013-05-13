@@ -36,13 +36,5 @@ glift.enums = {
     STONE: "STONE",
     TRIANGLE: "TRIANGLE",
     XMARK: "XMARK"
-  },
-
-  // Left in for legacy reasons.
-  displayTypes: {
-    EXPLORE_BOARD: "EXPLORE_BOARD",
-    EXPLAIN_BOARD: "EXPLAIN_BOARD",
-    SIMPLE_BOARD: "SIMPLE_BOARD"
   }
 };
-var enums = glift.enums;

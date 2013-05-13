@@ -6,7 +6,8 @@ glift.processOptions = function(rawOptions) {
     intersections: 19,
     divId: "glift_display",
     theme: "DEFAULT",
-    boardRegion: "ALL"
+    boardRegion: "ALL",
+    displayConfig: {}
   };
 
   for (var key in rawOptions) {
@@ -19,6 +20,7 @@ glift.processOptions = function(rawOptions) {
           glift.util.debugl("Intersection value : " + key);
         }
         break;
+
       case 'theme':
         if (glift.themes.has(value)) {
           defaults.theme = value;
@@ -26,6 +28,7 @@ glift.processOptions = function(rawOptions) {
           glift.util.debugl("Unknown theme: " + value);
         }
         break;
+
       case 'divId':
         var elem = document.getElementById(value);
         if (elem !== null) {
@@ -34,12 +37,25 @@ glift.processOptions = function(rawOptions) {
           glift.util.debugl("Could not find div with id: " + value);
         }
         break;
+
+      // BoardRegion defines the cropping box.
       case 'boardRegion':
-        if (glift.util.enums.boardRegions[value] !== undefined) {
+        if (glift.enums.boardRegions[value] !== undefined) {
           defaults.boardRegion = value;
         } else {
           glift.util.debugl("Unknown board region: " + value);
         }
+        break;
+
+      // displayConfig is object containing an assortment of debug attributes.
+      case 'displayConfig':
+        if (glift.util.typeOf(value) === 'object') {
+          defaults.displayConfig = value;
+        } else {
+          glift.util.debugl("displayConfig not an object: " + value);
+        }
+        break;
+
       default:
         glift.util.debugl("Unknown option key: " + key);
     }

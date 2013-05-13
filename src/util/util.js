@@ -126,14 +126,19 @@ glift.util = {
 // A better logging solution.
 glift.util.debugl = function(msg) {
   if (glift.debugOn) {
-    var modmsg = msg;
-    if (glift.util.typeOf(msg) === "array" ||
-        glift.util.typeOf(msg) === "object") {
-      modmsg = JSON.stringify(msg);
-    }
-    if (console !== undefined && console.log !== undefined) {
-      console.log(msg);
-    }
+    glift.util.log(msg);
+  }
+};
+
+// A better logging solution.
+glift.util.log = function(msg) {
+  var modmsg = msg;
+  if (glift.util.typeOf(msg) === "array" ||
+      glift.util.typeOf(msg) === "object") {
+    modmsg = JSON.stringify(msg);
+  }
+  if (console !== undefined && console.log !== undefined) {
+    console.log(msg);
   }
 };
 

@@ -1,6 +1,6 @@
 (function() {
 
-glift.displays.raphael.Factory.prototype.starpoints = function() {
+glift.displays.raphael.Display.prototype.starpoints = function() {
   return new StarPointSet(this.paper, this.environment, this.theme.board);
 };
 

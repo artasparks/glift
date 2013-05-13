@@ -1,6 +1,6 @@
 (function() {
 
-glift.displays.raphael.Factory.prototype.createBoardLines = function() {
+glift.displays.raphael.Display.prototype.createBoardLines = function() {
   return new BoardLineSet(this.paper, this.environment, this.theme.board);
 };
 

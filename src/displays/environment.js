@@ -3,7 +3,7 @@ var util = glift.util;
 var enums = glift.enums;
 
 /*
- * The Environment represents:
+ * The Environment contains:
  *  - The bounding box for the lines.
  *  - The bounding box for the whole board
  *  - The bounding boxes for the sidebars.
@@ -13,164 +13,97 @@ glift.displays.environment = {
   TOPBAR_SIZE: 0.10,
   BOTTOMBAR_SIZE: 0.10,
 
-  get: function(divId, displayType, options) {
-    return new GuiEnvironment(divId, displayType, options);
+  get: function(options) {
+    return new GuiEnvironment(glift.processOptions(options));
   },
 
-  getInitialized: function(divId, displayType, options) {
-    return glift.displays.environment.get(divId, displayType, options)
-      .initialize();
+  getInitialized: function(options) {
+    return glift.displays.environment.get(options).init();
   },
 
-  _getResizedBox: function(displayType, divBox, cropbox) {
+  _getResizedBox: function(divBox, cropbox) {
     var newDims = glift.displays.cropbox.getCropDimensions(
-            divBox.width,
-            divBox.height,
+            divBox.width(),
+            divBox.height(),
             cropbox),
         newWidth = newDims.width,
-        newHeight = newDims.height;
-    if (displayType === enums.displayTypes.EXPLAIN_BOARD) {
-      var modHeight = (1 + this.TOPBAR_SIZE + this.BOTTOMBAR_SIZE) * newHeight;
-      var modWidth = newWidth;
-      if (modHeight > divBox.height) {
-        var shrinkPercent = 1 - (modHeight - divBox.height) / modHeight;
-        modHeight = shrinkPercent * modHeight;
-        modWidth = shrinkPercent * modWidth
-      }
-      newWidth = modWidth;
-      newHeight = modHeight;
-    }
-    var xDiff = divBox.width - newWidth,
-        yDiff = divBox.height - newHeight,
+        newHeight = newDims.height,
+        xDiff = divBox.width() - newWidth,
+        yDiff = divBox.height() - newHeight,
         xDelta = xDiff === 0 ? 0 : xDiff / 2,
         yDelta = yDiff === 0 ? 0 : yDiff / 2,
-        newLeft = divBox.topLeft.x + xDelta,
-        newTop = divBox.topLeft.y + yDelta;
-    return glift.displays.bbox(util.point(newLeft, newTop), newWidth, newHeight);
-  },
-
-  // Get the bounding box of a sidebar.
-  _getSidebarBox: function(displayType, resizedBox, direction) {
-    var dirs = enums.directions,
-        dispt = enums.displayTypes,
-        top = resizedBox.topLeft.y,
-        bot = resizedBox.botRight.y,
-        left = resizedBox.topLeft.x,
-        right = resizedBox.botRight.x;
-    if (direction === dirs.LEFT) {
-      // LEFT not yet used, so let width = 0
-      right = resizedBox.topLeft.x;
-
-    } else if (direction === dirs.RIGHT) {
-      // RIGHT not yet used, so let width = 0
-      left = resizedBox.botRight.x;
-
-    } else if (direction === dirs.TOP) {
-      top = resizedBox.topLeft.y
-      if (displayType === dispt.EXPLAIN_BOARD) {
-        bot = resizedBox.topLeft.y +
-            resizedBox.height * (this.TOPBAR_SIZE) /
-            (1 + this.BOTTOMBAR_SIZE + this.TOPBAR_SIZE) // Why the 1?
-      } else {
-        bot = resizedBox.topLeft.y;
-      }
-    } else if (direction === dirs.BOTTOM) {
-      bot = resizedBox.botRight.y
-      if (displayType === dispt.EXPLAIN_BOARD) {
-        top = resizedBox.topLeft.y +
-            resizedBox.height - resizedBox.height * (this.BOTTOMBAR_SIZE) /
-            (1 + this.BOTTOMBAR_SIZE + this.TOPBAR_SIZE)
-      } else {
-        top = resizedBox.botRight.y;
-      }
-    } else {
-      return glift.displays.bbox(util.point(0,0), 0, 0);
-    }
-
-    return glift.displays.bboxFromPts(
-        util.point(left, top), util.point(right, bot));
+        newLeft = divBox.topLeft().x + xDelta,
+        newTop = divBox.topLeft().y + yDelta,
+        newBox = glift.displays.bbox(
+            util.point(newLeft, newTop), newWidth, newHeight);
+    return newBox;
   }
 };
 
-var GuiEnvironment = function(divId, displayType, options) {
-  this.divId = divId;
-  this.displayType = displayType || enums.displayTypes.SIMPLE_BOARD;
-  this.boardRegion = options.boardRegion || enums.boardRegions.ALL;
-  this.intersections = options.intersections || 19;
-  this.cropbox = options._cropbox || glift.displays.cropbox.getFromRegion(
-      this.boardRegion, this.intersections);
+var GuiEnvironment = function(options) {
+  this.divId = options.divId;
+  this.boardRegion = options.boardRegion
+  this.intersections = options.intersections
+  this.cropbox = options.displayConfig._cropbox ||
+      glift.displays.cropbox.getFromRegion(this.boardRegion, this.intersections);
+  this.heightOverride = false;
+  this.widthOverride = false;
+
   // We allow the divHeight and divWidth to be specified explicitly, primarily
   // because it's extremely useful for testing.
-  this.divHeight = options._divHeight ||
-      // Height = height after accounting for padding (recall that it goes
-      // margin-div-padding)
-      document.getElementById(divId).style.height();
-  this.divWidth = options._divWidth ||
-      document.getElementById(divId).style.height();
+  if (options.displayConfig._divHeight !== undefined) {
+    this.divHeight = options.displayConfig._divHeight;
+    this.heightOverride = true;
+  }
 
-  // A variable to mark whether we need to initialize the go board.  Used in
-  // other libraries to note when settings have changed and we need to
-  // reinitialize.
-  this.needsInitialization = true;
+  if (options.displayConfig._divWidth !== undefined) {
+    this.divWidth = options.displayConfig._divWidth;
+    this.widthOverride = true;
+  }
 };
 
 GuiEnvironment.prototype = {
   // Initialize the internal variables that tell where to place the go broard.
-  initialize: function() {
+  init: function() {
+    if (!this.heightOverride || !this.widthOverride) {
+      this._resetDimensions();
+    }
+
     var displays = glift.displays,
         env = displays.environment,
         divHeight = this.divHeight,
         divWidth  = this.divWidth,
         cropbox   = this.cropbox,
-        displayType = this.displayType,
         dirs = enums.directions,
 
         // The box for the entire div
         divBox = displays.bboxFromPts(
             util.point(0, 0), // top left point
             util.point(divWidth, divHeight)), // bottom right point
-        resizedBox = env._getResizedBox(displayType, divBox, cropbox),
-
-        topBar = env._getSidebarBox(displayType, resizedBox, dirs.TOP),
-        leftBar = env._getSidebarBox(displayType, resizedBox, dirs.LEFT),
-        bottomBar = env._getSidebarBox(displayType, resizedBox, dirs.BOTTOM),
-        rightBar = env._getSidebarBox(displayType, resizedBox, dirs.RIGHT),
-
-        goBoardBox = glift.displays.bboxFromPts(
-            util.point(leftBar.botRight.x, topBar.botRight.y),
-            util.point(rightBar.topLeft.x, bottomBar.topLeft.y)),
+        resizedBox = env._getResizedBox(divBox, cropbox),
+        goBoardBox = resizedBox,
         goBoardLineBox = glift.displays.getLineBox(goBoardBox, cropbox),
         boardPoints = glift.displays.boardPointsFromLineBox(goBoardLineBox),
         lineSegments = glift.displays.getLineSegments(goBoardLineBox);
 
     this.divBox = divBox;
     this.resizedBox = resizedBox;
-    this.topBar = topBar;
-    this.leftBar = leftBar;
-    this.bottomBar = bottomBar;
-    this.rightBar = rightBar;
     this.goBoardBox = goBoardBox;
     this.goBoardLineBox = goBoardLineBox;
     this.boardPoints = boardPoints;
     this.lineSegments = lineSegments;
-
-    this.needsInitialization = false;
     return this;
-  },
-
-  setDisplayType: function(displayType) {
-    this.displayType = displayType;
-    this.needsInitialization = true;
   },
 
   setIntersections: function(intersections) {
     this.intersections = intersections;
-    this.needsInitialization = true;
   },
 
-  resetDimensions: function() {
-    this.divHeight  = ($("#" + this.divId).innerHeight());
-    this.divWidth   = ($("#" + this.divId).innerWidth());
+  _resetDimensions: function() {
+    this.divHeight = ($("#" + this.divId).innerWidth());
+    // -- no reason to use jquery
+    // document.getElementById(divId).style.height();
+    this.divWidth =  ($("#" + this.divId).innerHeight());
     this.needsInitialization = true;
     return this;
   },
@@ -179,11 +112,6 @@ GuiEnvironment.prototype = {
     var paper = Raphael(this.divId, "100%", "100%")
     this.divBox.draw(paper, 'yellow');
     this.resizedBox.draw(paper, 'red');
-    this.topBar.draw(paper, 'blue');
-    this.bottomBar.draw(paper, 'blue');
-    //TODO: Add left/right bars to debug when supported.
-    //this.leftBar.draw(this.paper, 'green');
-    //this.rightBar.draw(this.paper, 'green');
     this.goBoardBox.draw(paper, 'orange');
     this.goBoardLineBox.bbox.draw(paper, 'red');
     this.goBoardLineBox._debugDrawLines(paper, 'blue');

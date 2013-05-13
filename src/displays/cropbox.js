@@ -4,9 +4,13 @@ glift.displays.cropbox = {
   DEFAULT_EXTENSION: 0,
   OVERFLOW: 1.5, // The line spacing that goes around the edge.
 
+  create: function(cbox, extBox, minIntersects, maxIntersects) {
+    return new CropBox(cbox, extBox, minIntersects, maxIntersects);
+  },
+
   getFromRegion: function(region, intersects) {
     var util = glift.util,
-        boardRegions = enums.boardRegions,
+        boardRegions = glift.enums.boardRegions,
         region = region || boardRegions.ALL,
         // So that we can 0 index, we subtract one.
         maxIntersects = intersects - 1,
@@ -98,27 +102,18 @@ glift.displays.cropbox = {
 
     var cbox = glift.displays.bboxFromPts(
         util.point(left, top), util.point(right, bot));
-    cbox.minIntersects = minIntersects;
-    cbox.maxIntersects = maxIntersects;
-    cbox.extensionBox = glift.displays.bboxFromPts(
+    var extBox = glift.displays.bboxFromPts(
         util.point(leftExtension, topExtension),
-        util.point(rightExtension, botExtension)),
-    cbox.xPoints = cbox.width;
-    cbox.yPoints = cbox.height;
-    // A modification to the width for the purposes of making the ratio work
-    // out.
-    // TODO: Rename the cbox.width/height, since they are different than normal
-    // widths / heights.
-    cbox.width = cbox.width + leftExtension + rightExtension + this.OVERFLOW;
-    cbox.height = cbox.height + topExtension + botExtension + this.OVERFLOW;
-    return cbox;
+        util.point(rightExtension, botExtension));
+    return glift.displays.cropbox.create(
+        cbox, extBox, minIntersects, maxIntersects);
   },
 
   // Change the dimensions of the box (the height and width) to have the same
   // proportions as cropHeight / cropWidth;
   getCropDimensions: function(width, height, cropbox) {
     var origRatio = height / width,
-        cropRatio = cropbox.height / cropbox.width,
+        cropRatio = cropbox.heightMod() / cropbox.widthMod(),
         newHeight = height,
         newWidth = width;
     if (origRatio > cropRatio) {
@@ -132,6 +127,26 @@ glift.displays.cropbox = {
     };
   }
 };
+
+/**
+ * A cropbox is similar to a bounding box, but instead of a box based on pixels,
+ * it's a box based on points.
+ */
+var CropBox = function(cbox, extBox, minIntersects, maxIntersects) {
+  var OVERFLOW = glift.displays.cropbox.OVERFLOW;
+  this.cbox = function() { return cbox; };
+  this.extBox = function() { return extBox; };
+  this.xPoints = function() { return cbox.width(); };
+  this.yPoints = function() { return cbox.height(); };
+
+  // Modifications to the width/height to make the ratios work.
+  this.widthMod = function() {
+    return cbox.width() + extBox.topLeft().x + extBox.botRight().x + OVERFLOW;
+  }
+  this.heightMod = function() {
+    return cbox.height() + extBox.topLeft().y + extBox.botRight().y + OVERFLOW;
+  }
+}
 
 var getRegionFromTracker = function(tracker, numstones) {
   var regions = [], br = glift.enums.boardRegions;

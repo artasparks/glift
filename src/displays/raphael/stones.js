@@ -1,5 +1,5 @@
 (function(){
-glift.displays.raphael.Factory.prototype.stones = function() {
+glift.displays.raphael.Display.prototype.stones = function() {
   return new Stones(
       this.paper, this.environment, this.getController, this.theme.stones);
 };

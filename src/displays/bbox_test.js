@@ -1,23 +1,21 @@
 glift.displays.bboxTest = function() {
-
+module("Bounding Box Tests");
   var point = glift.util.point,
       displays = glift.displays;
-  test("--------Bounding Box Tests--------", function() { ok(true); });
-
   test("Test that the center is the shifted average", function() {
     var bbox = displays.bboxFromPts(point(1, 1), point(19, 21));
-    deepEqual(bbox.center.x, 9, "center.x must be 9");
-    deepEqual(bbox.center.y, 10, "center.y must be 10");
+    deepEqual(bbox.center().x, 9, "center.x must be 9");
+    deepEqual(bbox.center().y, 10, "center.y must be 10");
   });
 
   test("Width and height should be calculated correctly", function() {
     var bbox = displays.bboxFromPts(point(1, 9), point(18, 20));
-    deepEqual(bbox.width, 17, "Width should be br.x - tl.x");
-    deepEqual(bbox.height, 11, "Width should be br.y - tl.y");
+    deepEqual(bbox.width(), 17, "Width should be br.x - tl.x");
+    deepEqual(bbox.height(), 11, "Width should be br.y - tl.y");
 
     var bbox = displays.bboxFromPts(point(18, 20), point(1, 9));
-    deepEqual(bbox.width, -17, "Width should be br.x - tl.x");
-    deepEqual(bbox.height, -11, "Width should be br.y - tl.y");
+    deepEqual(bbox.width(), -17, "Width should be br.x - tl.x");
+    deepEqual(bbox.height(), -11, "Width should be br.y - tl.y");
   });
 
   test("Equality test", function() {

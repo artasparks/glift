@@ -22,7 +22,7 @@ BaseDisplay.prototype = {
   },
 
   // Set the CropBox.  This causes the board to be redrawn.
-  setCropBox: function(direction) {
+  setBoardRegion: function(direction) {
     throw "Not implemented";
   },
 

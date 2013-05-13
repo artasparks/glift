@@ -1,12 +1,12 @@
 (function() {
 glift.displays.getLineBox = function(boardBox, cropbox) {
   var overflow = glift.displays.cropbox.OVERFLOW,
-      xSpacing = boardBox.width / cropbox.width,
-      ySpacing = boardBox.height / cropbox.height,
+      xSpacing = boardBox.width / cropbox.widthMod(),
+      ySpacing = boardBox.height / cropbox.heightMod(),
       top = ySpacing * overflow / 2,
       left = xSpacing * overflow / 2,
-      bot = ySpacing * (cropbox.height - overflow / 2),
-      right = xSpacing * (cropbox.width - overflow / 2),
+      bot = ySpacing * (cropbox.heightMod() - overflow / 2),
+      right = xSpacing * (cropbox.widthMod() - overflow / 2),
       leftBase = boardBox.topLeft.x,
       topBase = boardBox.topLeft.y,
 
@@ -22,10 +22,11 @@ var LineBox = function(boundingBox, xSpacing, ySpacing, cropbox) {
   this._xSpacing = xSpacing; // For debug -- should be identical
   this._ySpacing = ySpacing; // For debug -- should be identical
   this.spacing = xSpacing;
-  this.extensionBox = cropbox.extensionBox;
-  this.pointTopLeft = cropbox.topLeft;
-  this.xPoints = cropbox.xPoints;
-  this.yPoints = cropbox.yPoints;
+  // todo: Make these methods instead of variables
+  this.extensionBox = cropbox.extBox();
+  this.pointTopLeft = cropbox.cbox().topLeft;
+  this.xPoints = cropbox.xPoints();
+  this.yPoints = cropbox.yPoints();
 };
 
 LineBox.prototype = {
