@@ -1,20 +1,22 @@
 (function() {
-
+// Create the board lines objects and immediately call draw()
 glift.displays.raphael.Display.prototype.createBoardLines = function() {
-  return new BoardLineSet(this.paper, this.environment, this.theme.board);
+  return new BoardLineSet(this.paper(), this.environment(), this.theme().board)
+      .draw();
 };
 
 var BoardLineSet = function(paper, environment, subtheme) {
   this.paper = paper;
   this.environment = environment;
   this.subtheme = subtheme;
-  // this.horzSet -- filled in by draw;
-  // this.vertSet -- filled in by draw;
+  this.horzSet = glift.util.none; // filled in by draw;
+  this.vertSet = glift.util.none; // filled in by draw;
 };
 
 BoardLineSet.prototype = {
   draw: function() {
-    var point = glift.util.point,
+    var _ = this.destroy(),
+        point = glift.util.point,
         paper = this.paper,
         subt = this.subtheme,
         segments = this.environment.lineSegments,
@@ -23,6 +25,12 @@ BoardLineSet.prototype = {
         paper, segments.horz, maxInts, subt.lineSize, subt.edgeLineSize);
     this.vertSet = drawSegments(
         paper, segments.vert, maxInts, subt.lineSize, subt.edgeLineSize);
+    return this;
+  },
+
+  destroy: function() {
+    this.horzSet && this.horzSet !== glift.util.none && this.horzSet.remove();
+    this.vertSet && this.vertSet !== glift.util.none && this.vertSet.remove();
     return this;
   }
 };

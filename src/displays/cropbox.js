@@ -123,10 +123,10 @@ var CropBox = function(cbox, extBox, minIntersects, maxIntersects) {
 
   // Modifications to the width/height to make the ratios work.
   this.widthMod = function() {
-    return cbox.width() + extBox.topLeft().x + extBox.botRight().x + OVERFLOW;
+    return cbox.width() + extBox.topLeft().x() + extBox.botRight().x() + OVERFLOW;
   }
   this.heightMod = function() {
-    return cbox.height() + extBox.topLeft().y + extBox.botRight().y + OVERFLOW;
+    return cbox.height() + extBox.topLeft().y() + extBox.botRight().y() + OVERFLOW;
   }
 }
 

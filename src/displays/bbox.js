@@ -5,9 +5,8 @@ glift.displays.bboxFromPts = function(topLeftPt, botRightPt) {
 
 glift.displays.bbox = function(topLeft, width, height) {
   return new BoundingBox(
-      topLeft, glift.util.point(topLeft.x + width, topLeft.y + height));
+      topLeft, glift.util.point(topLeft.x() + width, topLeft.y() + height));
 }
-
 
 // Might be nice to use the closure to create private variables.
 // A bounding box, generally for a graphical object.
@@ -18,15 +17,15 @@ var BoundingBox = function(topLeftPtIn, botRightPtIn) {
   this.botRight = function() { return botRightPt; };
   this.center = function() {
     return glift.util.point(
-      glift.math.abs((botRightPt.x - topLeftPt.x) / 2) + topLeftPt.x,
-      glift.math.abs((botRightPt.y - topLeftPt.y) / 2) + topLeftPt.y);
+      glift.math.abs((botRightPt.x() - topLeftPt.x()) / 2) + topLeftPt.x(),
+      glift.math.abs((botRightPt.y() - topLeftPt.y()) / 2) + topLeftPt.y());
   };
-  this.width = function() { return botRightPt.x - topLeftPt.x; };
-  this.height = function() { return botRightPt.y - topLeftPt.y; };
-  this.top = function() { return topLeftPt.y; };
-  this.left = function() { return topLeftPt.x; };
-  this.bottom = function() { return botRightPt.y; };
-  this.right = function() { return botRightPt.x; };
+  this.width = function() { return botRightPt.x() - topLeftPt.x(); };
+  this.height = function() { return botRightPt.y() - topLeftPt.y(); };
+  this.top = function() { return topLeftPt.y(); };
+  this.left = function() { return topLeftPt.x(); };
+  this.bottom = function() { return botRightPt.y(); };
+  this.right = function() { return botRightPt.x(); };
 };
 
 
@@ -34,15 +33,15 @@ BoundingBox.prototype = {
   // Draw the bbox (for debugging);
   draw: function(paper, color) {
     var obj = paper.rect(
-        this.topLeft().x, this.topLeft().y, this.width(), this.height());
+        this.topLeft().x(), this.topLeft().y(), this.width(), this.height());
     obj.attr({fill:color, opacity:0.5});
   },
 
   contains: function(point) {
-   return point.x >= this.topLeft().x
-      && point.x <= this.botRight().x
-      && point.y >= this.topLeft().y
-      && point.y <= this.botRight().y;
+   return point.x() >= this.topLeft().x()
+      && point.x() <= this.botRight().x()
+      && point.y() >= this.topLeft().y()
+      && point.y() <= this.botRight().y();
   },
 
   // Log the points to the console (for debugging);

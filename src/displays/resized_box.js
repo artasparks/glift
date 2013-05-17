@@ -10,8 +10,8 @@ glift.displays.getResizedBox = function(divBox, cropbox) {
       yDiff = divBox.height() - newHeight,
       xDelta = xDiff === 0 ? 0 : xDiff / 2,
       yDelta = yDiff === 0 ? 0 : yDiff / 2,
-      newLeft = divBox.topLeft().x + xDelta,
-      newTop = divBox.topLeft().y + yDelta,
+      newLeft = divBox.topLeft().x() + xDelta,
+      newTop = divBox.topLeft().y() + yDelta,
       newBox = glift.displays.bbox(
           util.point(newLeft, newTop), newWidth, newHeight);
       newBox._debugInfo = function() {

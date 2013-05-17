@@ -10,8 +10,8 @@ glift.displays.boardPointsFromLineBox = function(linebox) {
       linebbox = linebox.bbox,
       left = linebbox.left() + linebox.extensionBox.left() * spacing,
       top = linebbox.top() + linebox.extensionBox.top() * spacing,
-      leftPt = linebox.pointTopLeft.x,
-      topPt = linebox.pointTopLeft.y,
+      leftPt = linebox.pointTopLeft.x(),
+      topPt = linebox.pointTopLeft.y(),
       boardPoints = glift.displays.boardPoints();
   for (var i = 0; i <= linebox.yPoints; i++) {
     for (var j = 0; j <= linebox.xPoints; j++) {
@@ -43,6 +43,7 @@ BoardPoints.prototype = {
 
   setSpacing: function(spacing) {
     this.spacing = spacing;
+    return this;
   },
 
   getCoords: function() {
@@ -62,7 +63,7 @@ BoardPoints.prototype = {
   _debugDraw: function(paper, color) {
     for (var ptHash in this.points) {
       var coordPt = this.points[ptHash];
-      var circ = paper.circle(coordPt.x, coordPt.y, this.spacing / 2);
+      var circ = paper.circle(coordPt.x(), coordPt.y(), this.spacing / 2);
       circ.attr({fill:color, opacity:.3});
     }
   }

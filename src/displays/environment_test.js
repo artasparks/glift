@@ -34,10 +34,10 @@ module("Environment Test Suite");
     deepEqual(e.divBox.height(), 400, 'divBox height');
     deepEqual(e.goBoardBox.height(), 200, 'goBoardBox height');
     deepEqual(e.goBoardBox.width(), 200, 'goBoardBox width');
-    deepEqual(e.goBoardBox.topLeft().x, 0, 'topLeft x');
-    deepEqual(e.goBoardBox.topLeft().y, 100, 'topLeft y');
-    deepEqual(e.goBoardBox.botRight().x, 200, 'botRight x');
-    deepEqual(e.goBoardBox.botRight().y, 300, 'botRight y');
+    deepEqual(e.goBoardBox.topLeft().x(), 0, 'topLeft x');
+    deepEqual(e.goBoardBox.topLeft().y(), 100, 'topLeft y');
+    deepEqual(e.goBoardBox.botRight().x(), 200, 'botRight x');
+    deepEqual(e.goBoardBox.botRight().y(), 300, 'botRight y');
   });
 
   test("Test creation: wide div, square board", function() {
@@ -47,10 +47,10 @@ module("Environment Test Suite");
     deepEqual(e.divBox.height(), 200, 'divBox height');
     deepEqual(e.goBoardBox.height(), 200, 'goBoardBox height');
     deepEqual(e.goBoardBox.width(), 200, 'goBoardBox width');
-    deepEqual(e.goBoardBox.topLeft().x, 100, 'topLeft x');
-    deepEqual(e.goBoardBox.topLeft().y, 0, 'topLeft y');
-    deepEqual(e.goBoardBox.botRight().x, 300, 'botRight x');
-    deepEqual(e.goBoardBox.botRight().y, 200, 'botRight y');
+    deepEqual(e.goBoardBox.topLeft().x(), 100, 'topLeft x');
+    deepEqual(e.goBoardBox.topLeft().y(), 0, 'topLeft y');
+    deepEqual(e.goBoardBox.botRight().x(), 300, 'botRight x');
+    deepEqual(e.goBoardBox.botRight().y(), 200, 'botRight y');
   });
 
   test("Test with real (square) div", function() {

@@ -1,9 +1,17 @@
 glift.util.pointTest = function() {
+module("Point Test Suite");
   var rules = glift.rules,
       util = glift.util,
       logz = glift.util.logz;
 
-  test("--------Point Test--------", function() { ok(true); });
+  test("Create, basic methods", function() {
+    var pt = util.point(1, 5);
+    var pt2 = util.uncachedPoint(1, 5);
+    deepEqual(pt.x(), 1, "x val");
+    deepEqual(pt.y(), 5, "y val");
+    deepEqual(util.coordToString(1, 5), "1,5", "coord to string");;
+    ok(pt.equals(pt2), "equals");
+  });
 
   test("hash and unhash", function() {
     var pt = util.point(1, 12);
@@ -19,5 +27,17 @@ glift.util.pointTest = function() {
     var otherPt = util.point(1, 12);
     ok(pt === otherPt, "pts must be precisely equal")
   });
-};
 
+  test("Test immutability", function() {
+    var pt = util.uncachedPoint(1, 3);
+    var pt2 = util.uncachedPoint(1, 3);
+    ok(pt.equals(pt2), "pts must be equal");
+    ok(pt.x.toString() === pt2.x.toString(), "functions should be the same");
+    deepEqual(pt.toString(), pt2.toString());
+    pt.x = 4;
+    ok(pt.x.toString() !== pt2.x.toString(), "x values shouldn't be equal anymore");
+    deepEqual(pt.toString(), pt2.toString(), "must have same string" +
+        "representation");
+    ok(pt.equals(pt2), "must still be equal");
+  });
+};

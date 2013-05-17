@@ -7,8 +7,8 @@ glift.displays.getLineBox = function(boardBox, cropbox) {
       left = xSpacing * overflow / 2,
       bot = ySpacing * (cropbox.heightMod() - overflow / 2),
       right = xSpacing * (cropbox.widthMod() - overflow / 2),
-      leftBase = boardBox.topLeft().x,
-      topBase = boardBox.topLeft().y,
+      leftBase = boardBox.topLeft().x(),
+      topBase = boardBox.topLeft().y(),
 
       // The Line Box is an extended cropbox.
       lineBoxBoundingBox = glift.displays.bboxFromPts(
