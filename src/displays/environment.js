@@ -19,24 +19,6 @@ glift.displays.environment = {
 
   getInitialized: function(options) {
     return glift.displays.environment.get(options).init();
-  },
-
-  _getResizedBox: function(divBox, cropbox) {
-    var newDims = glift.displays.cropbox.getCropDimensions(
-            divBox.width(),
-            divBox.height(),
-            cropbox),
-        newWidth = newDims.width,
-        newHeight = newDims.height,
-        xDiff = divBox.width() - newWidth,
-        yDiff = divBox.height() - newHeight,
-        xDelta = xDiff === 0 ? 0 : xDiff / 2,
-        yDelta = yDiff === 0 ? 0 : yDiff / 2,
-        newLeft = divBox.topLeft().x + xDelta,
-        newTop = divBox.topLeft().y + yDelta,
-        newBox = glift.displays.bbox(
-            util.point(newLeft, newTop), newWidth, newHeight);
-    return newBox;
   }
 };
 
@@ -80,7 +62,7 @@ GuiEnvironment.prototype = {
         divBox = displays.bboxFromPts(
             util.point(0, 0), // top left point
             util.point(divWidth, divHeight)), // bottom right point
-        resizedBox = env._getResizedBox(divBox, cropbox),
+        resizedBox = glift.displays.getResizedBox(divBox, cropbox),
         goBoardBox = resizedBox,
         goBoardLineBox = glift.displays.getLineBox(goBoardBox, cropbox),
         boardPoints = glift.displays.boardPointsFromLineBox(goBoardLineBox),
@@ -100,10 +82,10 @@ GuiEnvironment.prototype = {
   },
 
   _resetDimensions: function() {
-    this.divHeight = ($("#" + this.divId).innerWidth());
+    this.divHeight = ($("#" + this.divId).innerHeight());
     // -- no reason to use jquery
     // document.getElementById(divId).style.height();
-    this.divWidth =  ($("#" + this.divId).innerHeight());
+    this.divWidth =  ($("#" + this.divId).innerWidth());
     this.needsInitialization = true;
     return this;
   },

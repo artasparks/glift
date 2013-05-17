@@ -8,22 +8,6 @@ module("Environment Test Suite");
       WIDTH = 300,
       HEIGHT = 400;
 
-  test("With resizing, should be square", function() {
-    var divBox = displays.bboxFromPts(
-        util.point(0,0), util.point(WIDTH, HEIGHT));
-    var cb = cropbox.create(
-        displays.bboxFromPts(util.point(0,0), 18, 18),
-        displays.bboxFromPts(util.point(0,0), util.point(0,0)), 0, 18);
-    deepEqual(divBox.width(), 300, "Width must be 300");
-    deepEqual(divBox.height(), 400, "Height must be 400");
-
-    var newDims = glift.displays.cropbox.getCropDimensions(
-      divBox.width(), divBox.height(), cb);
-
-    var resized = env._getResizedBox(divBox, cb);
-    deepEqual(Math.round(resized.width()), 300, "Width must be 300");
-    deepEqual(Math.round(resized.height()), 300, "Height must be 300");
-  });
 
   test("Test creation of square go board box", function() {
     var guiEnv = env.getInitialized({

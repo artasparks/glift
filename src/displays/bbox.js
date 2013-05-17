@@ -11,20 +11,22 @@ glift.displays.bbox = function(topLeft, width, height) {
 
 // Might be nice to use the closure to create private variables.
 // A bounding box, generally for a graphical object.
-var BoundingBox = function(topLeftPt, botRightPt) {
+var BoundingBox = function(topLeftPtIn, botRightPtIn) {
+  var topLeftPt = topLeftPtIn,
+      botRightPt = botRightPtIn;
   this.topLeft = function() { return topLeftPt; };
   this.botRight = function() { return botRightPt; };
   this.center = function() {
     return glift.util.point(
-      glift.math.abs((botRightPt.x - topLeftPt.x) / 2),
-      glift.math.abs((botRightPt.y - topLeftPt.y) / 2));
+      glift.math.abs((botRightPt.x - topLeftPt.x) / 2) + topLeftPt.x,
+      glift.math.abs((botRightPt.y - topLeftPt.y) / 2) + topLeftPt.y);
   };
   this.width = function() { return botRightPt.x - topLeftPt.x; };
   this.height = function() { return botRightPt.y - topLeftPt.y; };
-  this.top = function() { return topLeft.y; };
-  this.left = function() { return topLeft.x; };
-  this.bottom = function() { return botRight.y; };
-  this.right = function() { return botRight.x; };
+  this.top = function() { return topLeftPt.y; };
+  this.left = function() { return topLeftPt.x; };
+  this.bottom = function() { return botRightPt.y; };
+  this.right = function() { return botRightPt.x; };
 };
 
 
@@ -56,6 +58,5 @@ BoundingBox.prototype = {
         other.botRight && this.botRight().equals(other.botRight());
   }
 };
-
 
 })();

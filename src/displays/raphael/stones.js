@@ -4,13 +4,16 @@ glift.displays.raphael.Display.prototype.stones = function() {
       this.paper, this.environment, this.getController, this.theme.stones);
 };
 
+
+// Stones is a container for all the go stones.  Usually stones are accessed
+// through the Stones container
 var Stones = function(paper, environment, getController, subtheme) {
   this.paper = paper;
   this.environment = environment;
   this.getController = getController;
   this.subtheme = subtheme;
 
-  // Map from PtHash
+  // Map from PtHash to Stone
   this.stoneMap = {};
 };
 

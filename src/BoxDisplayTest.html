@@ -38,10 +38,13 @@
 <script type="text/javascript" src="displays/environment_test.js"></script>
 <script type="text/javascript" src="displays/line_box.js"></script>
 <script type="text/javascript" src="displays/line_segments.js"></script>
+<script type="text/javascript" src="displays/resized_box.js"></script>
+<script type="text/javascript" src="displays/resized_box_test.js"></script>
 <!-- Displays raphael -->
 <script type="text/javascript" src="displays/raphael/raphael.js"></script>
 <script type="text/javascript" src="displays/raphael/board_base.js"></script>
 <script type="text/javascript" src="displays/raphael/boardlines.js"></script>
+<script type="text/javascript" src="displays/raphael/raphael_test.js"></script>
 <script type="text/javascript" src="displays/raphael/rutil.js"></script>
 <script type="text/javascript" src="displays/raphael/starpoints.js"></script>
 <script type="text/javascript" src="displays/raphael/stones.js"></script>
@@ -106,10 +109,6 @@
             divId: "glift_display2",
           });
           env2._debugDrawAll();
-          logz(env2.goBoardBox.topLeft);
-          logz(env2.goBoardBox.botRight);
-          logz(env2.divBox.topLeft);
-          logz(env2.divBox.botRight);
 
           var env3 = glift.displays.environment.getInitialized({
             divId: "glift_display3",

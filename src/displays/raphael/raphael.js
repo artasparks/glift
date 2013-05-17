@@ -25,13 +25,15 @@ glift.displays.raphael.Display = function(inEnvironment, inTheme) {
   this.theme = function() { return theme; };
   this.boardRegion = function() { return environment.boardRegion; };
   this.paper = function() { return paper; };
+  this.setPaper = function(paperIn) { paper = paperIn; };
+  this.environment = function() { return environment; };
 
   this.init = function() {
       environment.init();
       if (paper === glift.util.none) {
         paper = Raphael(environment.divId, "100%", "100%");
       }
-      return glift.util.none;
+      return this;
   };
 
   this.setTheme = function(themeKey) { /* todo */ };
@@ -62,6 +64,11 @@ Display.prototype.draw = function() {
   this.objectHistory.push(stones);
 
   return this;
+};
+
+Display.prototype.destroy = function() {
+  this.paper().remove();
+  this.setPaper(glift.util.none);
 };
 
 })();

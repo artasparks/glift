@@ -59,18 +59,4 @@ module("Cropbox Tests");
     deepEqual(brbox.widthMod(), 11.5 + overf, "width for BOTTOM RIGHT");
     deepEqual(brbox.heightMod(), 10.5 + overf, "height for BOTTOP RIGHT");
   });
-
-  test("Test get CropDimensions: LEFT", function() {
-    var cropbox = displays.cropbox.getFromRegion(boardRegions.LEFT, 19);
-    var outDims = displays.cropbox.getCropDimensions(120, 60, cropbox);
-    deepEqual(Math.round(outDims.height / outDims.width),
-        Math.round(cropbox.heightMod() /  cropbox.widthMod()),
-        "CropBox Ratio and dim ration must be the same");
-  });
-
-  test("Test get CropDimensions: ALL must make dims square", function() {
-    var cropbox = displays.cropbox.getFromRegion(boardRegions.ALL, 19);
-    var outDims = displays.cropbox.getCropDimensions(120, 60, cropbox);
-    deepEqual(outDims.height, outDims.width, "Width and height must be equal");
-  });
 };

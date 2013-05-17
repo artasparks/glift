@@ -1,6 +1,6 @@
 (function(){
 glift.displays.raphael.Display.prototype.createBoardBase = function() {
-  return new BoardBase(this.paper, this.environment, this.theme.board);
+  return new BoardBase(this.paper(), this.environment(), this.theme().board);
 };
 
 var BoardBase = function(paper, environment, subtheme) {
@@ -13,12 +13,12 @@ var BoardBase = function(paper, environment, subtheme) {
 BoardBase.prototype = {
   draw: function() {
     var box = this.environment.goBoardBox;
-    this.destroy();
+    this.destroy(); // remove if it already exists.
     this.rect = this.paper.rect(
-        box.topLeft.x,
-        box.topLeft.y,
-        box.width,
-        box.height);
+        box.topLeft().x,
+        box.topLeft().y,
+        box.width(),
+        box.height());
     this.rect.attr({fill: this.subtheme.bgColor});
     return this;
   },

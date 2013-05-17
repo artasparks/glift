@@ -4,6 +4,7 @@
 <head>
 
 <script type="text/javascript" src="libs/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" src="libs/raphael-min.js"></script>
 <link rel="stylesheet" href="qunit/qunit.css" type="text/css" media="screen" />
 <script type="text/javascript" src="qunit/qunit.js"></script>
 
@@ -51,10 +52,13 @@
 <script type="text/javascript" src="displays/environment_test.js"></script>
 <script type="text/javascript" src="displays/line_box.js"></script>
 <script type="text/javascript" src="displays/line_segments.js"></script>
+<script type="text/javascript" src="displays/resized_box.js"></script>
+<script type="text/javascript" src="displays/resized_box_test.js"></script>
 <!-- Displays raphael -->
 <script type="text/javascript" src="displays/raphael/raphael.js"></script>
 <script type="text/javascript" src="displays/raphael/board_base.js"></script>
 <script type="text/javascript" src="displays/raphael/boardlines.js"></script>
+<script type="text/javascript" src="displays/raphael/raphael_test.js"></script>
 <script type="text/javascript" src="displays/raphael/rutil.js"></script>
 <script type="text/javascript" src="displays/raphael/starpoints.js"></script>
 <script type="text/javascript" src="displays/raphael/stones.js"></script>
@@ -71,6 +75,9 @@ $(document).ready(function() {
   glift.displays.cropboxTest();
   glift.displays.environmentTest();
   glift.displays.boardpointsTest();
+  glift.displays.resizedBoxTest();
+
+  glift.displays.raphaelTest();
 
   glift.gliftTest();
 });

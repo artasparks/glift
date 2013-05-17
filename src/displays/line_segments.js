@@ -5,9 +5,9 @@ glift.displays.getLineSegments = function(lineBox) {
   var logz = glift.util.logz;
 
   var spacing = lineBox.spacing,
-      left = lineBox.bbox.left + lineBox.extensionBox.left * spacing,
-      top = lineBox.bbox.top,
-      bottom = lineBox.bbox.bottom;
+      left = lineBox.bbox.left() + lineBox.extensionBox.left() * spacing,
+      top = lineBox.bbox.top(),
+      bottom = lineBox.bbox.bottom();
   for (var i = 0; i <= lineBox.xPoints; i++ ) {
     var xPos = left + i * spacing;
     var ordinal = lineBox.pointTopLeft.x + i;
@@ -15,9 +15,9 @@ glift.displays.getLineSegments = function(lineBox) {
         point(xPos, top), point(xPos, bottom), ordinal));
   }
 
-  var left = lineBox.bbox.left,
-      right = lineBox.bbox.right,
-      top = lineBox.bbox.top + lineBox.extensionBox.top * spacing;
+  var left = lineBox.bbox.left(),
+      right = lineBox.bbox.right(),
+      top = lineBox.bbox.top() + lineBox.extensionBox.top() * spacing;
   for (var i = 0; i <= lineBox.yPoints; i++ ) {
     var yPos = top + i * spacing;
     var ordinal = lineBox.pointTopLeft.y + i;

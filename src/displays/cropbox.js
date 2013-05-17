@@ -108,24 +108,6 @@ glift.displays.cropbox = {
     return glift.displays.cropbox.create(
         cbox, extBox, minIntersects, maxIntersects);
   },
-
-  // Change the dimensions of the box (the height and width) to have the same
-  // proportions as cropHeight / cropWidth;
-  getCropDimensions: function(width, height, cropbox) {
-    var origRatio = height / width,
-        cropRatio = cropbox.heightMod() / cropbox.widthMod(),
-        newHeight = height,
-        newWidth = width;
-    if (origRatio > cropRatio) {
-      newHeight = width * cropRatio;
-    } else if (origRatio < cropRatio) {
-      newWidth = height / cropRatio;
-    }
-    return {
-      height: newHeight,
-      width: newWidth
-    };
-  }
 };
 
 /**

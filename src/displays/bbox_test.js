@@ -4,8 +4,8 @@ module("Bounding Box Tests");
       displays = glift.displays;
   test("Test that the center is the shifted average", function() {
     var bbox = displays.bboxFromPts(point(1, 1), point(19, 21));
-    deepEqual(bbox.center().x, 9, "center.x must be 9");
-    deepEqual(bbox.center().y, 10, "center.y must be 10");
+    deepEqual(bbox.center().x, 10, "center.x must be 9");
+    deepEqual(bbox.center().y, 11, "center.y must be 10");
   });
 
   test("Width and height should be calculated correctly", function() {
