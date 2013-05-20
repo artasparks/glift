@@ -1,7 +1,7 @@
 glift.displays = {
   getImpl: function(options) {
-    var environment = glift.displays.environment.get(options);
-    var display = glift.displays.raphael.create(environment, options.theme);
-    return display;
+    var processed = glift.processOptions(options),
+        environment = glift.displays.environment.get(processed);
+    return glift.displays.raphael.create(environment, processed.theme).draw();
   }
 };

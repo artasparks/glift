@@ -1,7 +1,7 @@
 (function(){
 // Create the base board background object and immediately call draw().
 glift.displays.raphael.Display.prototype.createBoardBase = function() {
-  return new BoardBase(this.paper(), this.environment(), this.theme().board)
+  return new BoardBase(this._paper, this._environment, this._theme.board)
     .draw();
 };
 

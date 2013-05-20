@@ -1,12 +1,12 @@
 (function(){
 // Create the entire grid of stones and immediately call draw()
 glift.displays.raphael.Display.prototype.createStones = function() {
-  return new Stones(this.paper(), this.environment(), this.theme().stones)
+  return new Stones(this._paper, this._environment, this._theme.stones)
       .draw();
 };
 
-// Stones is a container for all the go stones.  Usually stones are accessed
-// through the Stones container
+// Stones is a container for all the go stones.  Individual stones are only
+// interacted with through this container.
 var Stones = function(paper, environment, subtheme) {
   this.paper = paper;
   this.environment = environment;
@@ -30,7 +30,47 @@ Stones.prototype = {
     }
     this.stoneMap = stoneMap;
     return this;
+  },
+
+  // Set handlers for all the stones.
+  setClickHandler: function(fn) {
+    return this._setHandler('clickHandler', fn);
+  },
+  setHoverInHandler: function(fn) {
+    return this._setHandler('hoverInHandler', fn);
+  },
+  setHoverOutHandler: function(fn) {
+    return this._setHandler('hoverOutHandler', fn);
+  },
+  _setHandler: function(key, fn) {
+    for (var ptHash in this.stoneMap) {
+      var stone = this.stoneMap[ptHash];
+      stone[key] = fn;
+    }
+    return this;
+  },
+
+  forceClick: function(pt) { this.stoneMap[pt.hash()].bboxClick(); },
+  forceHoverIn: function(pt) { this.stoneMap[pt.hash()].bboxHoverIn(); },
+  forceHoverOut: function(pt) { this.stoneMap[pt.hash()].bboxHoverOut(); },
+  setColor: function(point, key) {
+    var stone = this.stoneMap[point.hash()];
+    if (stone === undefined) {
+      throw "Could not find stone for point: " + point.toString();
+    }
+    stone.setColor(key);
+    return this;
+  },
+
+  // Destroy is extremely slow.
+  destroy: function() {
+    for (var ptHash in this.stoneMap) {
+      this.stoneMap[ptHash].destroy();
+    }
+    this.stoneMap = {};
   }
+
+  // TODO(kashomon): Add drawing marks on top of the stones.
 };
 
 var Stone = function(paper, intersection, coordinate, spacing, subtheme) {
@@ -41,38 +81,69 @@ var Stone = function(paper, intersection, coordinate, spacing, subtheme) {
   // coordinate: the center of the stone, in pixels.
   this.coordinate = coordinate;
   this.subtheme = subtheme;
-  // TODO(kashomon): Change the magic #s to variables
-  this.radius = this.spacing / 2 - .2 // .2 -> account for line width
+  // TODO(kashomon): Change the magic #s to variables.
+  // The .2 fudge factor is used to account for line width.
+  this.radius = spacing / 2 - .2
 
-  this.clickHandler = function() { };
-  this.hoverHandlerIn = function() { };
-  this.hoverHandlerOut = function() { };
+  // Set via draw
+  this.circle = glift.util.none;
+  this.bbox = glift.util.none;
+
+  this.bboxHoverIn = function() { throw "bboxHoverIn not Defined"; };
+  this.bboxHoverOut = function() { throw "bboxHoverOut not defined"; };
+  this.bboxClick = function() { throw "bboxClick not defined"; };
+
+  // Click handlers are set via setHandler in Stones.
+  this.clickHandler = function(intersection) {};
+  this.hoverInHandler = function(intersection) {};
+  this.hoverOutHandler = function(intersection) {};
 };
 
 Stone.prototype = {
   draw: function() {
     var subtheme = this.subtheme,
         paper = this.paper,
-        radius = this.radius
-        coord = this.coordinate;
+        r = this.radius
+        coord = this.coordinate,
+        intersection = this.intersection,
+        that = this; // Avoid lexical 'this' binding problems.
 
-    this.circle = paper.circle(coord.x(), coord.y(), radius);
-    this.circle.attr({fill:"blue", opacity:0})
+    this.circle = paper.circle(coord.x(), coord.y(), r);
 
-    this.bbox = paper.rect(coord.x() - radius, coord.y() -
-        radius, 2 * radius, 2 * radius)
+    // Create a bounding box surrounding the stone.  This is what the user
+    // actually clicks on, since just using circles leaves annoying gaps.
+    this.bbox = paper.rect(coord.x() - r, coord.y() - r, 2 * r, 2 * r)
     this.bbox.attr({fill: "white", opacity: 0});
 
-    var circle = this.circle; // closure variable.
-    this.bbox_hover_in = function() {
-      var state = getController().getCurrentColor()
-      circle.attr({opacity: subtheme.hoverOpacity});
-    };
-    this.bbox_hover_out = function() {
-      circle.attr({opacity: 0});
-    };
+    this.bboxHoverIn = function() { that.hoverInHandler(intersection); };
+    this.bboxHoverOut = function() { that.hoverOutHandler(intersection); };
+    this.bboxClick = function() { that.clickHandler(intersection); };
+    this.bbox.hover(this.bboxHoverIn, this.bboxHoverOut);
+    this.bbox.click(this.bboxClick);
+    this.setColor("EMPTY");
+    return this;
+  },
 
-    this.bbox.hover(this.bbox_hover_in, this.bbox_hover_out);
+  // Set the color of the stone by retrieving the "key" from the stones
+  // sub object.
+  setColor: function(key) {
+    if (this.circle === glift.util.none) {
+      throw "Circle was not initialized, so cannot set color";
+    }
+    if (!(key in this.subtheme)) {
+     glift.util.logz("Key " + key + " not found in theme");
+    }
+    this.circle.attr(this.subtheme[key]);
+  },
+
+  destroy: function() {
+    if (this.circle === glift.util.none || this.bbox === glift.util.none) {
+      return this // not initialized,
+    }
+    this.bbox.unhover(this.bboxHoverIn, this.bboxHoverOut);
+    this.bbox.unclick(this.bboxClick);
+    this.bbox.remove();
+    this.circle.remove();
     return this;
   }
 };

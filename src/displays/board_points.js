@@ -28,6 +28,7 @@ glift.displays.boardPointsFromLineBox = function(linebox) {
 
 // BoardPoints maintains a mapping from an intersection on the board
 // to a coordinate in pixel-space.
+// Also: Why the hell did I design this objec this way?
 var BoardPoints = function() {
   this.points = {};
   this.spacing = undefined; // to be set by caller
@@ -67,6 +68,6 @@ BoardPoints.prototype = {
       circ.attr({fill:color, opacity:.3});
     }
   }
-}
+};
 
 })();

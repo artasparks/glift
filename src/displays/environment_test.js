@@ -11,14 +11,14 @@ module("Environment Test Suite");
 
   test("Test creation of square go board box", function() {
     var guiEnv = env.getInitialized({
-        divId: 'foo',
+        divId: 'glift_display',
         displayConfig: { _divHeight: HEIGHT, _divWidth: WIDTH}
     });
     deepEqual(guiEnv.goBoardBox.height(), guiEnv.goBoardBox.width(),
         "Must create a square board for a long box");
 
     var guiEnv = env.getInitialized({
-        divId: 'foo',
+        divId: 'glift_display',
         displayConfig: { _divHeight: WIDTH, _divWidth: HEIGHT }
     });
     deepEqual(

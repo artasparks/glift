@@ -3,28 +3,38 @@ glift.themes.registered.DEFAULT = {
     bgColor: "#f5be7e",
     lineColor: "black",
     lineSize: 1,
-    edgeLineSize: 2.5,
+    edgeLineSize: 1,
     starPointSize: .15, // As a fraction of the spacing.
     textColor: "white"
   },
 
-  sidebars: {
-    // as a percentage of height / width.
-    size: .10
-  },
-
   stones: {
     hoverOpacity: 0.5,
-    opacity: 1,
+    "EMPTY" : {
+      fill: 'blue',
+      opacity: 0
+    },
     "BLACK" : {
-      lineColor: "black",
-      color: "black",
-      hover: "black"
+      fill: "black",
+      opacity: 1,
+      "stroke-width": 1, // The default value
+      stroke: "black",
+    },
+    "BLACK_HOVER" : {
+      fill: "black",
+      opacity: 0.5
     },
     "WHITE" : {
-      lineColor: "black",
-      color: "white",
-      hover: "white"
+      stroke: "black",
+      fill: "white",
+      opacity: 1,
+      "stroke-width": 1, // The default value
     }
-  } // filled in below
+  },
+
+  marks: {
+    XMARK : {
+      
+    }
+  }
 };

@@ -17,7 +17,7 @@ glift.processOptions = function(rawOptions) {
         if (glift.util.typeOf(value) == 'number' && value > 0) {
           defaults.intersections = value;
         } else {
-          glift.util.debugl("Intersection value : " + key);
+          glift.util.logz("Intersection value : " + key);
         }
         break;
 
@@ -25,7 +25,7 @@ glift.processOptions = function(rawOptions) {
         if (glift.themes.has(value)) {
           defaults.theme = value;
         } else {
-          glift.util.debugl("Unknown theme: " + value);
+          glift.util.logz("Unknown theme: " + value);
         }
         break;
 
@@ -34,7 +34,7 @@ glift.processOptions = function(rawOptions) {
         if (elem !== null) {
           defaults.divId = value
         } else {
-          glift.util.debugl("Could not find div with id: " + value);
+          glift.util.logz("Could not find div with id: " + value);
         }
         break;
 
@@ -43,7 +43,7 @@ glift.processOptions = function(rawOptions) {
         if (glift.enums.boardRegions[value] !== undefined) {
           defaults.boardRegion = value;
         } else {
-          glift.util.debugl("Unknown board region: " + value);
+          glift.util.logz("Unknown board region: " + value);
         }
         break;
 
@@ -52,12 +52,12 @@ glift.processOptions = function(rawOptions) {
         if (glift.util.typeOf(value) === 'object') {
           defaults.displayConfig = value;
         } else {
-          glift.util.debugl("displayConfig not an object: " + value);
+          glift.util.logz("displayConfig not an object: " + value);
         }
         break;
 
       default:
-        glift.util.debugl("Unknown option key: " + key);
+        glift.util.logz("Unknown option key: " + key);
     }
   }
   return defaults;

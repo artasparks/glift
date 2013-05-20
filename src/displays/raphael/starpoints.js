@@ -2,7 +2,7 @@
 
 // Create the starPoints object and immediately call draw()
 glift.displays.raphael.Display.prototype.createStarPoints = function() {
-  return new StarPointSet(this.paper(), this.environment(), this.theme().board)
+  return new StarPointSet(this._paper, this._environment, this._theme.board)
       .draw();
 };
 
@@ -21,18 +21,21 @@ StarPointSet.prototype = {
         size = boardPoints.spacing * this.subtheme.starPointSize,
         intersections = this.environment.intersections,
         pts = {
-          9 : [ 4 ],
-          13 : [ 3, 6, 9 ],
-          19 : [ 3, 9, 15 ]
+          9 : [[ 4 ]],
+          13 : [[ 3, 9 ], [6]],
+          19 : [[ 3, 9, 15 ]]
         },
-        thisSet = pts[intersections] || [],
+        outerSet = pts[intersections] || [],
         starSet = this.paper.set();
-    for (var i = 0; i < thisSet.length; i++) {
-      for (var j = 0; j < thisSet.length; j++) {
-        var pt = point(thisSet[i], thisSet[j]);
-        if (boardPoints.hasCoord(pt)) {
-          var coord = boardPoints.getCoord(pt);
-          starSet.push(this.paper.circle(coord.x(), coord.y(), size));
+    for (var k = 0; k < outerSet.length; k++) {
+      var thisSet = outerSet[k];
+      for (var i = 0; i < thisSet.length; i++) {
+        for (var j = 0; j < thisSet.length; j++) {
+          var pt = point(thisSet[i], thisSet[j]);
+          if (boardPoints.hasCoord(pt)) {
+            var coord = boardPoints.getCoord(pt);
+            starSet.push(this.paper.circle(coord.x(), coord.y(), size));
+          }
         }
       }
     }

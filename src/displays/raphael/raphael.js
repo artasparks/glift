@@ -7,68 +7,78 @@ glift.displays.raphael = {
 };
 
 glift.displays.raphael.Display = function(inEnvironment, inTheme) {
-  var environment = inEnvironment,
-      themeName = inTheme,
-      theme = glift.themes.get(themeName),
-      paper = glift.util.none, // defined on init
-
-      // Due layering issues, we need to keep track of the order in which we
-      // created the objects.
-      objectHistory = [],
-      children = {}; // So the factory can access
-
+  // Due layering issues, we need to keep track of the order in which we
+  // created the objects.
+  this._objectHistory = [];
+  this._paper = glift.util.none;
+  this._environment = inEnvironment;
+  this._themeName = inTheme;
+  this._theme = glift.themes.get(inTheme);
+  this._stones = glift.util.none;
 
   // Methods accessing private data
-  this.intersections = function() { return environment.intersections; };
-  this.divId = function() { return environment.divId };
-  this.themeName = function() { return themeDict; };
-  this.theme = function() { return theme; };
-  this.boardRegion = function() { return environment.boardRegion; };
-  this.paper = function() { return paper; };
-  this.setPaper = function(paperIn) { paper = paperIn; };
-  this.environment = function() { return environment; };
-
-  this.init = function() {
-      environment.init();
-      if (paper === glift.util.none) {
-        paper = Raphael(environment.divId, "100%", "100%");
-      }
-      return this;
-  };
-
-  this.setTheme = function(themeKey) { /* todo */ };
-  this.setBoardRegion = function(region) { /* todo */ };
-  this.setBoardRegion = function(region) { /* todo */ };
-  this.draw = function(region) { /* todo */ };
+  this.intersections = function() { return this._environment.intersections; };
+  this.divId = function() { return this._environment.divId };
+  this.theme = function() { return this._themeName; };
+  this.boardRegion = function() { return this._environment.boardRegion; };
 };
 
 // Alias for typing convenience
 var Display = glift.displays.raphael.Display;
 
-Display.prototype.draw = function() {
-  this.environment.initialize();
-  for (var i = 0; i < this.objectHistory.length; i++) {
-    this.objectHistory[i].destroy();
-  }
-  this.objectHistory = [
-    this.createBoardBase().draw(),
-    this.createBoardLines().draw(),
-    this.createStarPoints().draw()
-  ]
-
-  var stones = this.stones().draw();
-
-  this.children = {
-    'stones' : stones // Should use an ENUM here
-  };
-  this.objectHistory.push(stones);
-
+// This allows us to create a base display object without creating all drawing
+// all the parts.
+Display.prototype.init = function() {
+  this._paper = Raphael(this.divId(), "100%", "100%");
+  this._environment.init();
   return this;
 };
 
+Display.prototype.draw = function() {
+  this.init();
+  for (var i = 0; i < this._objectHistory.length; i++) {
+    this._objectHistory[i].destroy();
+  }
+  this._objectHistory = [
+    this.createBoardBase(),
+    this.createBoardLines(),
+    this.createStarPoints()
+  ];
+  this._stones = this.createStones();
+  this._objectHistory.push(this._stones);
+  return this;
+};
+
+// Maybe I'm working too hard to 'destroy' these objects.  Why not just remove
+// them from the SVG paper?
 Display.prototype.destroy = function() {
-  this.paper().remove();
-  this.setPaper(glift.util.none);
+  for (var i = 0; i < this._objectHistory.length; i++) {
+    this._objectHistory[i].destroy();
+  }
+  this._objectHistory = [];
+  this._paper.remove();
+  this._paper = glift.util.none;
+  this._stones = glift.util.none;
+  // Empty out the div of anything that's left
+  $('#' + this.divId()).empty();
+};
+
+Display.prototype.recreate = function(options) {
+  this.destroy();
+  var processed = glift.processOptions(options),
+      environment = glift.displays.environment.get(processed);
+  this._environment = environment;
+  this._themeName = processed.theme
+  this._theme = glift.themes.get(processed.theme);
+  return this;
+};
+
+Display.prototype.setColor = function(point, color) {
+  if (this._stones !== glift.util.none) {
+    this._stones.setColor(point, color);
+  } else {
+    throw "Stones === none! Cannot setColor";
+  }
 };
 
 })();

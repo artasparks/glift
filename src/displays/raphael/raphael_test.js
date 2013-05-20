@@ -3,31 +3,24 @@ glift.displays.raphaelTest = function() {
   var util = glift.util,
       enums = glift.enums,
       none = util.none,
-      DEFAULT = 'DEFAULT'
+      DEFAULT_THEME = 'DEFAULT' // theme
       boardRegions = glift.enums.boardRegions,
       raphael = glift.displays.raphael,
-      env = glift.displays.environment.get({}), // divId: glift_display.
-      display = raphael.create(env, DEFAULT).init(),
-      displayPaper = display.paper(),
-
+      env = glift.displays.environment.get({
+        intersections: 9 // Use a 9x9 to make things a bit faster
+      }), // divId: glift_display.
+      display = raphael.create(env, DEFAULT_THEME).init(),
+      displayPaper = display._paper,
+      testUtil = glift.testUtil,
       // Utility methods
-      getAllElements = function(paper) {
-        var list = [];
-        paper.forEach(function (el) {
-          list.push(el);
-        });
-        return list;
-      },
-      assertEmptyPaper = function() {
-        var elems = getAllElements(displayPaper);
-        deepEqual(elems.length, 0, "Paper should have been emptied");
-      };
+      getAllElements = testUtil.getAllElements,
+      assertEmptyPaper = testUtil.assertEmptyPaper;
 
   test("Create/Destroy base board box", function() {
     var board = display.createBoardBase();
     ok(board.rect !== none);
     board.destroy();
-    assertEmptyPaper();
+    assertEmptyPaper(displayPaper);
   });
 
   test("Create/Destroy board lines", function() {
@@ -37,23 +30,50 @@ glift.displays.raphaelTest = function() {
     ok(lines.vertSet !== none);
     ok(lines.vertSet !== undefined);
     lines.destroy();
-    assertEmptyPaper();
+    assertEmptyPaper(displayPaper);
   });
-
-  // test("Create/Destroy stones", function() {
-    // // Contents
-  // });
 
   test("Create/Destroy star points", function() {
     var starPoints = display.createBoardLines();
     ok(starPoints.starSet !== none);
     starPoints.destroy();
-    assertEmptyPaper();
+    assertEmptyPaper(displayPaper);
+  });
+
+  test("Create/Destroy stones", function() {
+    var stones = display.createStones(),
+        numStones = 0,
+        clickCounter = 0,
+        hoverInCounter = 0,
+        hoverOutCounter = 0,
+        _ = stones.setClickHandler(function(pt) { clickCounter++; }),
+        _ = stones.setHoverInHandler(function(pt) { hoverInCounter += 2; }),
+        _ = stones.setHoverOutHandler(function(pt) { hoverOutCounter += 3; });
+    for (var key in stones.stoneMap){
+      var stone = stones.stoneMap[key],
+          pt = glift.util.pointFromHash(key);
+      stones.forceClick(pt);
+      stones.forceHoverIn(pt);
+      stones.forceHoverOut(pt);
+      numStones++;
+    }
+    deepEqual(numStones, 81);
+    deepEqual(clickCounter, 81);
+    deepEqual(hoverInCounter, 162);
+    deepEqual(hoverOutCounter, 243);
+
+    // Individual stone tests
+    var testPoint = glift.util.point(1, 3);
+    var stone = stones.stoneMap[testPoint.hash()];
+    deepEqual(stone.intersection.toString(), testPoint.hash(), "stoneKey");
+
+    stones.destroy();
+    assertEmptyPaper(displayPaper);
   });
 
   test("Remove Paper", function() {
-    ok($('#glift_display').text() !== '');
+    testUtil.assertFullDiv('glift_display')
     display.destroy();
-    deepEqual($('#glift_display').text(), '');
+    testUtil.assertEmptyDiv('glift_display')
   });
 };

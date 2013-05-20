@@ -1,7 +1,7 @@
 (function() {
 // Create the board lines objects and immediately call draw()
 glift.displays.raphael.Display.prototype.createBoardLines = function() {
-  return new BoardLineSet(this.paper(), this.environment(), this.theme().board)
+  return new BoardLineSet(this._paper, this._environment, this._theme.board)
       .draw();
 };
 
