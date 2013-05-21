@@ -1,5 +1,5 @@
 glift.util.pointTest = function() {
-module("Point Test Suite");
+  module("Point Test Suite");
   var rules = glift.rules,
       util = glift.util,
       logz = glift.util.logz;

@@ -1,4 +1,5 @@
 glift.utilTest = function() {
+  module("Util Test Suite");
   var util = glift.util;
   test("typeOf test", function() {
     equal(util.typeOf({}), "object", "expect object");

@@ -1,0 +1,105 @@
+(function() {
+glift.displays.raphael.Display.prototype.createStoneBboxes = function() {
+  // Force the returned StoneBbox to always exist in a 'drawn' state.
+  return new StoneBboxes(this._paper, this._environment).draw();
+}
+
+StoneBboxes = function(paper, environment) {
+  this.paper = paper;
+  this.environment = environment;
+  this.bboxMap = glift.util.none; // init'd by draw
+};
+
+StoneBboxes.prototype = {
+  draw: function() {
+    var bboxMap = {},
+        boardPoints = this.environment.boardPoints;
+    for (var ptHash in boardPoints.points) {
+      var coordPt = boardPoints.points[ptHash],
+          intersection = glift.util.pointFromHash(ptHash),
+          spacing = boardPoints.spacing,
+          stoneBbox = new StoneBbox(this.paper, intersection, coordPt, spacing);
+      bboxMap[ptHash] = stoneBbox.draw();
+    }
+    this.bboxMap = bboxMap;
+    return this;
+  },
+
+  // Set handlers for all the stones.
+  setClickHandler: function(fn) { return this._handler('clickHandler', fn); },
+  setHoverInHandler: function(fn) { return this._handler('hoverInHandler', fn); },
+  setHoverOutHandler: function(fn) { return this._handler('hoverOutHandler', fn); },
+
+  _handler: function(key, fn) {
+    for (var ptHash in this.bboxMap) {
+      var bbox = this.bboxMap[ptHash];
+      bbox[key] = fn;
+    }
+    return this;
+  },
+
+  forceClick: function(pt) { this.bboxMap[pt.hash()].bboxClick(); },
+  forceHoverIn: function(pt) { this.bboxMap[pt.hash()].bboxHoverIn(); },
+  forceHoverOut: function(pt) { this.bboxMap[pt.hash()].bboxHoverOut(); },
+
+  // Useful method that forces a bbox to be on top.
+  toFront: function(pt) {
+    this.bboxMap[pt].toFront();
+  }
+};
+
+StoneBbox = function(paper, intersection, coordinate, spacing) {
+  this.paper = paper;
+  this.intersection = intersection;
+  this.coordinate = coordinate;
+  this.radius = spacing / 2 - .2; // Ah, that fudge factor...
+  this.bbox = glift.util.none; // init'd by draw
+
+  this.bboxHoverIn = function() { throw "bboxHoverIn not Defined"; };
+  this.bboxHoverOut = function() { throw "bboxHoverOut not defined"; };
+  this.bboxClick = function() { throw "bboxClick not defined"; };
+
+  // Click handlers are set via setHandler in Stones.
+  this.clickHandler = function(intersection) {};
+  this.hoverInHandler = function(intersection) {};
+  this.hoverOutHandler = function(intersection) {};
+};
+
+StoneBbox.prototype = {
+  draw: function() {
+    var paper = this.paper,
+        r = this.radius,
+        coord = this.coordinate,
+        intersection = this.intersection,
+        that = this; // Avoid lexical 'this' binding problems.
+
+    // Create a bounding box surrounding the stone.  This is what the user
+    // actually clicks on, since just using circles leaves annoying gaps.
+    this.bbox = paper.rect(coord.x() - r, coord.y() - r, 2 * r, 2 * r)
+    // The box needs to be filled with an arbitrary color so that clicks/hovers
+    // will register.
+    this.bbox.attr({fill: "white", opacity: 0});
+
+    this.bboxHoverIn = function() { that.hoverInHandler(intersection); };
+    this.bboxHoverOut = function() { that.hoverOutHandler(intersection); };
+    this.bboxClick = function() { that.clickHandler(intersection); };
+    this.bbox.hover(this.bboxHoverIn, this.bboxHoverOut);
+    this.bbox.click(this.bboxClick);
+  },
+
+  toFront: function() {
+    this.bbox !== glift.util.none && this.bbox.toFront();
+    return this;
+  },
+
+  destroy: function() {
+    if (!this.bbox === glift.util.none) {
+      this.bbox.unhover(this.bboxHoverIn, this.bboxHoverOut);
+      this.bbox.unclick(this.bboxClick);
+      this.bbox.remove();
+    }
+    return this;
+  }
+};
+
+})();

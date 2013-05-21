@@ -76,6 +76,7 @@ Display.prototype.recreate = function(options) {
 Display.prototype.setColor = function(point, color) {
   if (this._stones !== glift.util.none) {
     this._stones.setColor(point, color);
+    return this;
   } else {
     throw "Stones === none! Cannot setColor";
   }

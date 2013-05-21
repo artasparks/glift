@@ -10,6 +10,8 @@ var Marks = function(paper, environment, subtheme) {
   this.marks = {}; // map from intersection to mark
 };
 
+// TODO(kashomon): Finish writing marks.  This will probably require changing
+// how the circle/bounding boxes are created, again, due to layering issues.
 Marks.prototype = {
   addMark: function(type, pt, color) {
     switch(type) {
@@ -20,6 +22,9 @@ Marks.prototype = {
   },
 
   _addXMark: function(pt, color) {
+    var boardPoints = this.environment.boardpoints,
+        coordPt = boardpoints.points[pt.hash()],
+        spacing = boardpoints.spacing;
   },
 
   clearMark: function(pt) {

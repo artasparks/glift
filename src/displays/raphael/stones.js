@@ -33,16 +33,11 @@ Stones.prototype = {
   },
 
   // Set handlers for all the stones.
-  setClickHandler: function(fn) {
-    return this._setHandler('clickHandler', fn);
-  },
-  setHoverInHandler: function(fn) {
-    return this._setHandler('hoverInHandler', fn);
-  },
-  setHoverOutHandler: function(fn) {
-    return this._setHandler('hoverOutHandler', fn);
-  },
-  _setHandler: function(key, fn) {
+  setClickHandler: function(fn) { return this._handler('clickHandler', fn); },
+  setHoverInHandler: function(fn) { return this._handler('hoverInHandler', fn); },
+  setHoverOutHandler: function(fn) { return this._handler('hoverOutHandler', fn); },
+
+  _handler: function(key, fn) {
     for (var ptHash in this.stoneMap) {
       var stone = this.stoneMap[ptHash];
       stone[key] = fn;
@@ -53,6 +48,7 @@ Stones.prototype = {
   forceClick: function(pt) { this.stoneMap[pt.hash()].bboxClick(); },
   forceHoverIn: function(pt) { this.stoneMap[pt.hash()].bboxHoverIn(); },
   forceHoverOut: function(pt) { this.stoneMap[pt.hash()].bboxHoverOut(); },
+
   setColor: function(point, key) {
     var stone = this.stoneMap[point.hash()];
     if (stone === undefined) {
@@ -103,7 +99,7 @@ Stone.prototype = {
   draw: function() {
     var subtheme = this.subtheme,
         paper = this.paper,
-        r = this.radius
+        r = this.radius,
         coord = this.coordinate,
         intersection = this.intersection,
         that = this; // Avoid lexical 'this' binding problems.
