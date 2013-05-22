@@ -12,9 +12,9 @@ FILES_TO_AUTOGEN = {
     'RealBoardTest.html': True,
     }
 
-COMBINED_LOC = 'compiled/otre_combined.js'
-COMPILED_LOC = 'compiled/otre_goban.js'
-GZIPPED_LOC = 'compiled/otre_goban.js.gz'
+COMBINED_LOC = 'compiled/glift_combined.js'
+COMPILED_LOC = 'compiled/glift.js'
+GZIPPED_LOC = 'compiled/glift.js.gz'
 
 HEADER = '<!-- AUTO-GEN-DEPS -->'
 FOOTER = '<!-- END-AUTO-GEN-DEPS -->'
@@ -80,7 +80,7 @@ def SeparateFiles(flist):
     section = []
     test_files = []
     for f in grouping:
-      if re.match(".*Test\.js", f) != None:
+      if re.match(".*test\.js", f) != None:
         test_files.append(f)
       elif re.match(tailname + '\.js', f):
         section.insert(0, f)
@@ -103,10 +103,10 @@ def CreateHtmlImports(imps, suffix):
         out.append(CreateImport(os.path.join(direct, fname)))
   return out
 
-def CompilePegJs():
-  pegjs_call = "pegjs sgf/sgf_grammar.pegjs"
-  out, err = subprocess.Popen(pegjs_call, shell=True).communicate()
-  Replacer("sgf/sgf_grammar.js", PegjsTransform)
+# def CompilePegJs():
+  # pegjs_call = "pegjs sgf/sgf_grammar.pegjs"
+  # out, err = subprocess.Popen(pegjs_call, shell=True).communicate()
+  # Replacer("sgf/sgf_grammar.js", PegjsTransform)
 
 def Replacer(filename, transform):
   in_file = open(filename, "r")
@@ -136,8 +136,8 @@ def main(argv=None):
   flags = set(sys.argv[1:])
   flist = GetFileList(sys.argv[0])
 
-  if '--pegjs' in flags or '--full' in flags:
-    CompilePegJs()
+  # if '--pegjs' in flags or '--full' in flags:
+    # CompilePegJs()
 
   srcs, tests = SeparateFiles(flist)
 

@@ -107,7 +107,7 @@ glift.displays.cropbox = {
         util.point(rightExtension, botExtension));
     return glift.displays.cropbox.create(
         cbox, extBox, minIntersects, maxIntersects);
-  },
+  }
 };
 
 /**
@@ -124,11 +124,11 @@ var CropBox = function(cbox, extBox, minIntersects, maxIntersects) {
   // Modifications to the width/height to make the ratios work.
   this.widthMod = function() {
     return cbox.width() + extBox.topLeft().x() + extBox.botRight().x() + OVERFLOW;
-  }
+  };
   this.heightMod = function() {
     return cbox.height() + extBox.topLeft().y() + extBox.botRight().y() + OVERFLOW;
-  }
-}
+  };
+};
 
 var getRegionFromTracker = function(tracker, numstones) {
   var regions = [], br = glift.enums.boardRegions;
@@ -152,6 +152,5 @@ var getRegionFromTracker = function(tracker, numstones) {
     return key;
   }
   return glift.boardRegions.ALL;
-}
-
+};
 })();

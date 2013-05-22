@@ -18,7 +18,7 @@ glift.themes.registered.DEFAULT = {
       fill: "black",
       opacity: 1,
       "stroke-width": 1, // The default value
-      stroke: "black",
+      stroke: "black"
     },
     "BLACK_HOVER" : {
       fill: "black",
@@ -28,13 +28,17 @@ glift.themes.registered.DEFAULT = {
       stroke: "black",
       fill: "white",
       opacity: 1,
-      "stroke-width": 1, // The default value
+      "stroke-width": 1 // The default value
+    },
+    "WHITE_HOVER" : {
+      fill: "white",
+      opacity: 0.5
     }
   },
 
   marks: {
+    // TODO(kashomon): add
     XMARK : {
-      
     }
   }
 };

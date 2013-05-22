@@ -1,5 +1,5 @@
 glift.displays.bboxTest = function() {
-module("Bounding Box Tests");
+  module("Bounding Box Tests");
   var point = glift.util.point,
       displays = glift.displays;
   test("Test that the center is the shifted average", function() {

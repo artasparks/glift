@@ -1,5 +1,5 @@
 glift.displays.boardpointsTest = function() {
-module("Board Point Tests");
+  module("Board Point Tests");
   var displays = glift.displays,
       util = glift.util,
       point = glift.util.point;
@@ -14,4 +14,4 @@ module("Board Point Tests");
     deepEqual(bp.getCoords()[point(1,2)], point(1.2, 55),
         "Must get the right coordinate at point 1,2");
   });
-}
+};

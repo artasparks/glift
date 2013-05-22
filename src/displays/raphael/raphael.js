@@ -82,4 +82,16 @@ Display.prototype.setColor = function(point, color) {
   }
 };
 
+Display.prototype.setClickHandler = function(fn) {
+  this._stones.setClickHandler(fn);
+};
+
+Display.prototype.setHoverInHandler = function(fn) {
+  this._stones.setHoverInHandler(fn);
+};
+
+Display.prototype.setHoverOutHandler = function(fn) {
+  this._stones.setHoverOutHandler(fn);
+};
+
 })();

@@ -24,7 +24,7 @@ glift.displays.getResizedBox = function(divBox, cropbox) {
           xDelta: xDelta,
           yDelta: yDelta,
           newLeft: newLeft,
-          newTop: newTop,
+          newTop: newTop
         };
       };
   return newBox;
@@ -46,4 +46,4 @@ glift.displays.getCropDimensions = function(width, height, cropbox) {
     height: function() { return newHeight; },
     width: function() { return newWidth; }
   };
-}
+};

@@ -141,6 +141,15 @@ Stone.prototype = {
     this.bbox.remove();
     this.circle.remove();
     return this;
+  },
+
+  _bboxToFront: function() {
+    this.bbox && this.bbox !== glift.util.non && this.bbox.toFront();
+    return this;
+  },
+
+  addMark: function(type, color) {
+    // TODO(kashomon): flargnargle.
   }
 };
 
