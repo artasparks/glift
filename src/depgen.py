@@ -29,6 +29,8 @@ DIR_ORDER = [
     'rules',
     'sgf',
     'controllers',
+    # Extra: These don't really live anywhere
+    'bridge',
     ]
 
 # Need a closure alias, e.g.,: export CLOSURE="java -jar ~/closure.jar"
@@ -113,6 +115,9 @@ def CompilePegJs():
   Replacer("sgf/sgf_grammar.js", PegjsTransform)
 
 def Replacer(filename, transform):
+  """
+  Utility method to take a function (transform) and apply that to the contents
+  """
   in_file = open(filename, "r")
   in_con = in_file.read()
   in_file.close()
@@ -122,9 +127,12 @@ def Replacer(filename, transform):
   out_file.close()
 
 def PegjsTransform(cont):
-  return cont.replace("module.exports", "otre.sgf.parser")
+  return cont.replace("module.exports", "glift.sgf.parser")
 
 def CombineSourceFiles(srcs):
+  """
+  Concatenate all the files in srcs together and return the string.
+  """
   outString = ''
   for group in srcs:
     directory = group.pop(0)

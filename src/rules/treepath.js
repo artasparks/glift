@@ -28,12 +28,19 @@
 
 glift.rules.treepath = {
   parseInitPosition: function(initPos) {
+    var errors = glift.errors
     if (initPos === undefined) {
       return [];
     } else if (glift.util.typeOf(initPos) === 'number') {
       initPos = "" + initPos;
+    } else if (glift.util.typeOf(initPos) === 'array') {
+      return initPos
     } else if (glift.util.typeOf(initPos) === 'string') {
-      // do nothing
+      // Do nothing. this is the expected type
+    // TODO(kashomon): throw some darn errors.
+    // } else if (glift.util.typeOf(initPos) === 'object') {
+      // throw new errors.ParseError("Cannot parse type " +
+          // glift.util.typeOf(initPos));
     } else {
       return [];
     }

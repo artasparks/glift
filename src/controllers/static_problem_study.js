@@ -22,7 +22,7 @@ glift.controllers.controllerMap[STATIC_PROBLEM_STUDY] =
 var staticProblemStudyMethods = {
   initOptions: function(options) {
     this.sgfString = options.sgfString;
-    this.initialPosition = options.initialPosition
+    this.initialPosition = options.initialPosition;
     return this;
   },
 

@@ -4,8 +4,17 @@
 
 (function() {
 var glift = window.glift || {};
+
+/**
+ * Create a Glift Display
+ */
 glift.createDisplay = function(options) {
-  return glift.displays.getImpl(options);
+  return glift.displays.create(options);
 };
+
+glift.createController = function(options) {
+  return glift.controllers.create(options);
+};
+
 window.glift = glift;
 })();

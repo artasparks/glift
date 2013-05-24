@@ -14,7 +14,9 @@ glift.displays.environment = {
   BOTTOMBAR_SIZE: 0.10,
 
   get: function(options) {
-    return new GuiEnvironment(glift.processOptions(options));
+    // TODO(kashomon): Remove the processOptions here.  It's only used for
+    // tests.
+    return new GuiEnvironment(glift.displays.processOptions(options));
   },
 
   getInitialized: function(options) {

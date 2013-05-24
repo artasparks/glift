@@ -65,7 +65,7 @@ Display.prototype.destroy = function() {
 
 Display.prototype.recreate = function(options) {
   this.destroy();
-  var processed = glift.processOptions(options),
+  var processed = glift.displays.processOptions(options),
       environment = glift.displays.environment.get(processed);
   this._environment = environment;
   this._themeName = processed.theme

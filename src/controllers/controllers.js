@@ -7,13 +7,12 @@ glift.controllers = {
   // immutable.
   controllerMap: {},
 
-  create: function(type, options) {
-    glift.util.checkArgsDefined(arguments, 2);
-    var map = glift.controllers.controllerMap;
-    if (map[type] !== undefined) {
-      return map[type](options)
+  create: function(rawOptions) {
+    var options = glift.controllers.processOptions(options);
+    if (options.controllerType in glift.controllers.controllerMap) {
+      return glift.controllers.controllerMap[options.controllerType](options);
     } else {
-      throw "No controller found for type: " + type
+      throw "No controller found for type: " + options.controllerType;
     }
   }
 };
