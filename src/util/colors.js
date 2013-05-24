@@ -1,13 +1,13 @@
 glift.util.colors = {
   isLegalColor: function(color) {
-    return color === enums.states.BLACK ||
-        color === enums.states.WHITE ||
-        color === enums.states.EMPTY;
+    return color === glift.enums.states.BLACK ||
+        color === glift.enums.states.WHITE ||
+        color === glift.enums.states.EMPTY;
   },
 
   oppositeColor: function(color) {
-    if (color === enums.states.BLACK) return enums.states.WHITE;
-    if (color === enums.states.WHITE) return enums.states.BLACK;
+    if (color === glift.enums.states.BLACK) return glift.enums.states.WHITE;
+    if (color === glift.enums.states.WHITE) return glift.enums.states.BLACK;
     else return color;
   }
 };

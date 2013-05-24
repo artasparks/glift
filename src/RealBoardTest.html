@@ -38,6 +38,22 @@
 <script type="text/javascript" src="displays/raphael/rutil.js"></script>
 <script type="text/javascript" src="displays/raphael/starpoints.js"></script>
 <script type="text/javascript" src="displays/raphael/stones.js"></script>
+<!-- Rules -->
+<script type="text/javascript" src="rules/rules.js"></script>
+<script type="text/javascript" src="rules/goban.js"></script>
+<script type="text/javascript" src="rules/intersections.js"></script>
+<script type="text/javascript" src="rules/movenode.js"></script>
+<script type="text/javascript" src="rules/movetree.js"></script>
+<script type="text/javascript" src="rules/properties.js"></script>
+<script type="text/javascript" src="rules/treepath.js"></script>
+<!-- Sgf -->
+<script type="text/javascript" src="sgf/sgf.js"></script>
+<script type="text/javascript" src="sgf/props.js"></script>
+<script type="text/javascript" src="sgf/sgf_grammar.js"></script>
+<!-- Controllers -->
+<script type="text/javascript" src="controllers/controllers.js"></script>
+<script type="text/javascript" src="controllers/base_controller.js"></script>
+<script type="text/javascript" src="controllers/static_problem_study.js"></script>
 <!-- Otre Tests -->
 <script type="text/javascript" src="./glift_test.js"></script>
 <!-- Util Tests -->
@@ -53,6 +69,16 @@
 <script type="text/javascript" src="displays/resized_box_test.js"></script>
 <!-- Displays raphael Tests -->
 <script type="text/javascript" src="displays/raphael/raphael_test.js"></script>
+<!-- Rules Tests -->
+<script type="text/javascript" src="rules/goban_test.js"></script>
+<script type="text/javascript" src="rules/intersections_test.js"></script>
+<script type="text/javascript" src="rules/movetree_test.js"></script>
+<script type="text/javascript" src="rules/properties_test.js"></script>
+<script type="text/javascript" src="rules/treepath_test.js"></script>
+<!-- Controllers Tests -->
+<script type="text/javascript" src="controllers/base_controller_test.js"></script>
+<script type="text/javascript" src="controllers/controllers_test.js"></script>
+<script type="text/javascript" src="controllers/static_problem_study_test.js"></script>
 
 <!-- END-AUTO-GEN-DEPS -->
 
@@ -93,7 +119,7 @@
           var point = glift.util.point;
           logz = glift.util.logz;
 
-          var display = glift.create({
+          var display = glift.createDisplay({
             divId: "glift_display1",
           });
           display.setColor(point(16, 4), 'BLACK');
@@ -113,7 +139,7 @@
             display.setColor(pt, 'EMPTY');
           });
 
-          var display2 = glift.create({
+          var display2 = glift.createDisplay({
             divId: "glift_display2",
             boardRegion: boardRegions.TOP_RIGHT
           });

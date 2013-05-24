@@ -25,6 +25,10 @@ DIR_ORDER = [
     'themes',
     'displays',
     'displays/raphael',
+    # Rules and display are not linked
+    'rules',
+    'sgf',
+    'controllers',
     ]
 
 # Need a closure alias, e.g.,: export CLOSURE="java -jar ~/closure.jar"
@@ -103,10 +107,10 @@ def CreateHtmlImports(imps, suffix):
         out.append(CreateImport(os.path.join(direct, fname)))
   return out
 
-# def CompilePegJs():
-  # pegjs_call = "pegjs sgf/sgf_grammar.pegjs"
-  # out, err = subprocess.Popen(pegjs_call, shell=True).communicate()
-  # Replacer("sgf/sgf_grammar.js", PegjsTransform)
+def CompilePegJs():
+  pegjs_call = "pegjs sgf/sgf_grammar.pegjs"
+  out, err = subprocess.Popen(pegjs_call, shell=True).communicate()
+  Replacer("sgf/sgf_grammar.js", PegjsTransform)
 
 def Replacer(filename, transform):
   in_file = open(filename, "r")
@@ -136,8 +140,8 @@ def main(argv=None):
   flags = set(sys.argv[1:])
   flist = GetFileList(sys.argv[0])
 
-  # if '--pegjs' in flags or '--full' in flags:
-    # CompilePegJs()
+  if '--pegjs' in flags or '--full' in flags:
+    CompilePegJs()
 
   srcs, tests = SeparateFiles(flist)
 
@@ -154,11 +158,14 @@ def main(argv=None):
       if err != None:
         print err
         return -1
+      # TODO(kashomon): either make gzipping work, or remove it
+      # -----------------
       #if os.path.exists(GZIPPED_LOC):
       #  os.remove(GZIPPED_LOC)
       #gzip = 'gzip ' + COMPILED_LOC
       #print gzip
       #out, err = subprocess.Popen(gzip, shell=True).communicate()
+      #------------------
       srcs = [['compiled', COMPILED_LOC.replace('compiled/', '')]]
     else:
       srcs = [['compiled', COMBINED_LOC.replace('compiled/', '')]]
