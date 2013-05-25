@@ -1,12 +1,12 @@
 (function() {
-var msgs = glift.enums.controllerMessages,
-    util = glift.util,
+var util = glift.util,
     STATIC_PROBLEM_STUDY = glift.enums.controllerTypes.STATIC_PROBLEM_STUDY;
 
 glift.controllers.staticProblemStudy = {
-  create: function(options) {
+  // This is mostly left for legacy reasons
+  _create: function(options) {
     var controllers = glift.controllers,
-        baseController = glift.util.beget(controllers.baseController.create()),
+        baseController = glift.util.beget(controllers.createBaseController()),
         newController = util.setMethods(
             baseController, staticProblemStudyMethods),
         // At this point, options have already been processed
@@ -15,31 +15,21 @@ glift.controllers.staticProblemStudy = {
   }
 };
 
+glift.controllers.createStaticProblemStudy = function(options) {
+  var c = glift.controllers.staticProblemStudy._create(options)
+  c.initialize('foo');
+  return c;
+};
+
 // Register this Controller type in the map;
 glift.controllers.controllerMap[STATIC_PROBLEM_STUDY] =
-    glift.controllers.staticProblemStudy.create;
+    glift.controllers.createStaticProblemStudy;
 
 var staticProblemStudyMethods = {
   initOptions: function(options) {
-    this.sgfString = options.sgfString;
+    this.sgfString = options.sgfString || "";
     this.initialPosition = options.initialPosition;
     return this;
-  },
-
-  nextSgf: function(callback) {
-    if (this.sgfString !== "") {
-      this.staticStringNextSgf(callback);
-    } else if (options.sgfDataLocation !== undefined) {
-      this.sgfDataLocation = options.sgfDataLocation;
-      // Get the Data Location
-      throw "Not implemented"
-    } else {
-      // ... what to do here?
-    }
-  },
-
-  staticStringNextSgf: function(callback) {
-    this.initialize(this.sgfString, this.initPosition, callback);
   },
 
   // Add a stone to the board.  Since this is a problem, we check for
@@ -47,59 +37,59 @@ var staticProblemStudyMethods = {
   // fashion) as correct.
   //
   // TODO: Refactor this into something less ridiculous.
-  addStone: function(point, color, callback) {
+  addStone: function(point, color) {
+    var problemResults = glift.enums.problemResults,
+        msgs = glift.enums.controllerMessages,
+        FAILURE = msgs.FAILURE,
+        DONE = msgs.DONE,
+        CONTINUE = msgs.CONTINUE,
+        CORRECT = problemResults.CORRECT,
+        INCORRECT = problemResults.INCORRECT,
+        INDETERMINATE = problemResults.INDETERMINATE;
+
     var addResult = this.goban.addStone(point, color);
     if (!addResult.successful) {
-      callback({
-        message: msgs.FAILURE,
-        reason: "Cannot add stone"
-      });
-      return util.none;
+      return { message: FAILURE, reason: "Cannot add stone" };
     }
-    // At this point, the move is allowed by the rules of Go
-    var problemResults = glift.enums.problemResults,
-        nextVarNum = this.movetree.findNextMove(point, color);
+    // At this point, the move is allowed by the rules of Go.  Now the task is
+    // to determine whether tho move is 'correct' or not based on the data in
+    // the movetree, presumably from an SGF.
+    var nextVarNum = this.movetree.findNextMove(point, color);
     this.lastPlayed = {point: point, color: color};
+
+    // There are no variations corresponding to the move made, so we assume that
+    // the move is INCORRECT.
     if (nextVarNum === util.none) {
-      callback({
-        message: msgs.DONE,
-        result: problemResults.INCORRECT
-      });
-      return util.none;
-    } else {
+      return { message: DONE, result: INCORRECT };
+    }
+
+    else {
       this.movetree.moveDown(nextVarNum);
       var correctness = this.movetree.isCorrectPosition();
-      var intersectionData = glift.rules.intersections.getFullBoardData(
+      // TODO(kashomon): Only retrieve the intersections that have changed.
+      var outData = glift.rules.intersections.getFullBoardData(
           this.movetree, this.goban);
-      if (correctness === problemResults.CORRECT) {
-        // A bit sloppy: we don't need the entire board info.
-        callback({
-            message: msgs.DONE,
-            result: problemResults.CORRECT,
-            data: intersectionData
-        });
-        return util.none;
-      } else if (correctness === problemResults.INDETERMINATE) {
+
+      if (correctness === CORRECT) {
+        return { message: DONE, result: CORRECT, data: outData };
+      }
+
+      else if (correctness === INDETERMINATE) {
         var randNext = glift.math.getRandomInt(
             0, this.movetree.getNode().numChildren() - 1);
         this.movetree.moveDown(randNext);
         var nextMove = this.movetree.getProperties().getMove();
         this.goban.addStone(nextMove.point, nextMove.color);
-        var intersectionData = glift.rules.intersections.getFullBoardData(
+        var outData = glift.rules.intersections.getFullBoardData(
             this.movetree, this.goban);
-        callback({
-            message: msgs.CONTINUE,
-            result: problemResults.INDETERMINATE,
-            data: intersectionData
-        });
-        return util.none;
-      } else if (correctness === problemResults.INCORRECT) {
-        callback({
-            message: msgs.DONE,
-            result: problemResults.INCORRECT
-        });
-        return util.none;
-      } else {
+        return { message: CONTINUE, result: INDETERMINATE, data: outData };
+      }
+
+      else if (correctness === problemResults.INCORRECT) {
+        return { message: msgs.DONE, result: INCORRECT };
+      }
+
+      else {
         throw "Unexpected result output: " + correctness
       }
     }

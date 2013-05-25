@@ -1,8 +1,9 @@
 <html>
-  <head>
-    <title> RealBoardTest </title>
-    <script type="text/javascript" src="libs/jquery-1.7.2.min.js"></script>
-    <script type="text/javascript" src="libs/raphael-min.js"></script>
+<head>
+<title> ProblemTester </title>
+<script type="text/javascript" src="libs/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" src="libs/raphael-min.js"></script>
+<script type="text/javascript" src="testdata/sgfs.js"></script>
 
 <!-- AUTO-GEN-DEPS -->
 <!-- Otre -->
@@ -96,67 +97,58 @@
         height: 300px;
         float: left;
       }
-      #glift_display2 {
-        position: relative;
-        top: 0;
-        width: 400px;
-        height: 300px;
-        float: left;
-      }
-      #glift_display3 {
-        position: relative;
-        top: 0;
-        width: 400px;
-        height: 300px;
-        float: left;
-      }
     </style>
   </head>
 
   <body>
     <div id="wrap" style="position:relative;">
       <div id="glift_display1"></div>
-      <div id="glift_display2"></div>
-      <div id="glift_display3"></div>
+      <div id="extra_info"></div>
       <script type="text/javascript">
         //parsing test
         var displayTypes = glift.enums.displayTypes;
         var boardRegions = glift.enums.boardRegions;
         var point = glift.util.point;
-        logz = glift.util.logz;
+
+        var hoverColors = {
+          "BLACK": "BLACK_HOVER",
+          "WHITE": "WHITE_HOVER"
+        };
+
+        var controller = glift.createController({
+          controllerType: "STATIC_PROBLEM_STUDY",
+          sgfString: testdata.sgfs.complexproblem
+        });
+        var cropping = glift.bridge.getFromMovetree(controller.movetree);
 
         var display = glift.createDisplay({
-          divId: "glift_display1",
+            divId: "glift_display1",
+            boardRegion: cropping
         });
-        display.setColor(point(16, 4), 'BLACK');
-        display.setColor(point(15, 4), 'WHITE');
+        glift.bridge.setDisplayState(controller.getEntireBoardState(), display);
 
-        var colors = ['BLACK', 'WHITE'];
-        var hoverColors = ['BLACK_HOVER', 'WHITE_HOVER'];
-        var index = 0
         display.setClickHandler(function(pt) {
-          display.setColor(pt, colors[index]);
-          index = (index + 1) % 2;
+          var currentPlayer = controller.getCurrentPlayer();
+          var data = controller.addStone(pt, currentPlayer);
+          $('#extra_info').text(data.message + '//' + (data.result || ''));
+          if (data.data !== undefined) {
+            glift.bridge.setDisplayState(data.data, display);
+          }
         });
+
         display.setHoverInHandler(function(pt) {
-          display.setColor(pt, hoverColors[index]);
+          var currentPlayer = controller.getCurrentPlayer();
+          if (controller.canAddStone(pt, currentPlayer)) {
+            display.setColor(pt, hoverColors[currentPlayer]);
+          }
         });
+
         display.setHoverOutHandler(function(pt) {
-          display.setColor(pt, 'EMPTY');
+          var currentPlayer = controller.getCurrentPlayer();
+          if (controller.canAddStone(pt, currentPlayer)) {
+            display.setColor(pt, 'EMPTY');
+          }
         });
-
-        var display2 = glift.createDisplay({
-          divId: "glift_display2",
-          boardRegion: boardRegions.TOP_RIGHT
-        });
-        display2.setColor(point(16, 4), 'BLACK');
-        display2.setColor(point(15, 4), 'WHITE');
-
-        var display3 = glift.createDisplay({
-          divId: "glift_display3",
-          boardRegion: boardRegions.BOTTOM
-        });
-
       </script>
     </div>
   </body>

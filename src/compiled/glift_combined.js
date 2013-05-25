@@ -1,78 +1,23 @@
 // Glift: A lightweight Go frontend
-// Copyright (c) 2011-2012, Josh <jrhoak@gmail.com>
+// Copyright (c) 2011-2013, Josh <jrhoak@gmail.com>
 // Code licensed under the MIT License
 
 (function() {
 var glift = window.glift || {};
-glift.create = function(options) {
-  return glift.displays.getImpl(options);
+
+/**
+ * Create a Glift Display
+ */
+glift.createDisplay = function(options) {
+  return glift.displays.create(options);
 };
+
+glift.createController = function(options) {
+  return glift.controllers.create(options);
+};
+
 window.glift = glift;
 })();
-// Create: Process the options, using defaults where appropriate.
-glift.processOptions = function(rawOptions) {
-
-  // Default keys
-  var defaults = {
-    intersections: 19,
-    divId: "glift_display",
-    theme: "DEFAULT",
-    boardRegion: "ALL",
-    displayConfig: {}
-  };
-
-  for (var key in rawOptions) {
-    var value = rawOptions[key];
-    switch(key) {
-      case 'intersections':
-        if (glift.util.typeOf(value) == 'number' && value > 0) {
-          defaults.intersections = value;
-        } else {
-          glift.util.logz("Intersection value : " + key);
-        }
-        break;
-
-      case 'theme':
-        if (glift.themes.has(value)) {
-          defaults.theme = value;
-        } else {
-          glift.util.logz("Unknown theme: " + value);
-        }
-        break;
-
-      case 'divId':
-        var elem = document.getElementById(value);
-        if (elem !== null) {
-          defaults.divId = value
-        } else {
-          glift.util.logz("Could not find div with id: " + value);
-        }
-        break;
-
-      // BoardRegion defines the cropping box.
-      case 'boardRegion':
-        if (glift.enums.boardRegions[value] !== undefined) {
-          defaults.boardRegion = value;
-        } else {
-          glift.util.logz("Unknown board region: " + value);
-        }
-        break;
-
-      // displayConfig is object containing an assortment of debug attributes.
-      case 'displayConfig':
-        if (glift.util.typeOf(value) === 'object') {
-          defaults.displayConfig = value;
-        } else {
-          glift.util.logz("displayConfig not an object: " + value);
-        }
-        break;
-
-      default:
-        glift.util.logz("Unknown option key: " + key);
-    }
-  }
-  return defaults;
-};
 glift.util = {
   logz: function(msg) {
     var modmsg = msg;
@@ -233,21 +178,22 @@ glift.util.none = new None();
 })();
 glift.util.colors = {
   isLegalColor: function(color) {
-    return color === enums.states.BLACK ||
-        color === enums.states.WHITE ||
-        color === enums.states.EMPTY;
+    return color === glift.enums.states.BLACK ||
+        color === glift.enums.states.WHITE ||
+        color === glift.enums.states.EMPTY;
   },
 
   oppositeColor: function(color) {
-    if (color === enums.states.BLACK) return enums.states.WHITE;
-    if (color === enums.states.WHITE) return enums.states.BLACK;
+    if (color === glift.enums.states.BLACK) return glift.enums.states.WHITE;
+    if (color === glift.enums.states.WHITE) return glift.enums.states.BLACK;
     else return color;
   }
 };
 // Otre: A Go Studying Program
-// Copyright (c) 2012, Josh <jrhoak@gmail.com>
+// Copyright (c) 2011-2013, Josh <jrhoak@gmail.com>
 // Code licensed under the MIT License
 glift.enums = {
+  // TODO(kashomon): Move enums to their own domains
   // Also sometimes referred to as colors. See util.colors.
   states: {
     BLACK: "BLACK",
@@ -260,6 +206,12 @@ glift.enums = {
     RIGHT: "RIGHT",
     TOP: "TOP",
     BOTTOM: "BOTTOM"
+  },
+
+  controllerMessages: {
+    CONTINUE: "CONTINUE",
+    DONE: "DONE",
+    FAILURE: "FAILURE"
   },
 
   // The directions should work with the boardRegions.
@@ -282,8 +234,39 @@ glift.enums = {
     STONE: "STONE",
     TRIANGLE: "TRIANGLE",
     XMARK: "XMARK"
+  },
+
+  problemResults: {
+    CORRECT: "CORRECT",
+    INCORRECT: "INCORRECT",
+    INDETERMINATE: "INDETERMINATE"
+  },
+
+  // TODO(kashomon): Delete these enums. or at least rethink them
+  controllerMessages: {
+    CONTINUE: "CONTINUE",
+    DONE: "DONE",
+    FAILURE: "FAILURE"
+  },
+
+  controllerTypes: {
+    BASE: "CONTROLLER_BASE",
+    STATIC_PROBLEM_STUDY: "STATIC_PROBLEM_STUDY",
+    DYNAMIC_PROBLEM_STUDY: "DYNAMIC_PROBLEM_STUDY",
+    EXLORE_SOLUTIONS: "EXPLORE_SOLUTIONS",
+    EXLORE_GAME: "EXPLORE_GAME"
   }
 };
+(function() {
+glift.errors = {};
+
+glift.errors.ParseError = function(message) {
+  this.name = "ParseError";
+  this.message = message || "";
+};
+glift.errors.ParseError.prototype = new Error();
+
+})();
 (function() {
 glift.logger = function(logDiv, numMsgs) {
   return new glift.Log(logDiv, numMsgs);
@@ -547,8 +530,8 @@ glift.themes.registered.DEFAULT = {
   }
 };
 glift.displays = {
-  getImpl: function(options) {
-    var processed = glift.processOptions(options),
+  create: function(options) {
+    var processed = glift.displays.processOptions(options),
         environment = glift.displays.environment.get(processed);
     return glift.displays.raphael.create(environment, processed.theme).draw();
   }
@@ -844,56 +827,6 @@ var getRegionFromTracker = function(tracker, numstones) {
 };
 })();
 (function() {
-// Note: options are already processed by the time they get here.
-glift.displays.createBase = function(options) {
-  var themeName = options.themeName,
-      theme = glift.themes.get(themeName);
-  return new BaseDisplay(theme);
-};
-
-/**
- * In the absence of interfaces in javascript, the BaseDisplay represents the
- * Display interface.
- */
-var BaseDisplay = function(type, theme) {
-  this.theme = theme;
-};
-
-BaseDisplay.prototype = {
-  // Set the theme, by providing a registered theme key (e.g., DEFAULT). This
-  // causes the board to be redrawn.
-  setTheme: function(themeKey) {
-    throw "Not implemented";
-  },
-
-  // Set the CropBox.  This causes the board to be redrawn.
-  setBoardRegion: function(direction) {
-    throw "Not implemented";
-  },
-
-  // Set an event handler for the given object.  If more than one object is
-  // found, the handler will be applied to all such objects.
-  setHandler: function(objKey, func) {
-    throw "Not implemented";
-  },
-
-  // Redraw the board
-  redraw: function() {
-    throw "Not implemented";
-  },
-
-  // Set a stone at a particular point (bounded
-  setStone: function(point, color, mark) {
-    throw "Not implemented";
-  },
-
-  // The sidebar is managed separately.
-  getSidebar: function(direction) {
-    throw "Not implemented";
-  }
-};
-})();
-(function() {
 var util = glift.util;
 var enums = glift.enums;
 
@@ -909,7 +842,9 @@ glift.displays.environment = {
   BOTTOMBAR_SIZE: 0.10,
 
   get: function(options) {
-    return new GuiEnvironment(glift.processOptions(options));
+    // TODO(kashomon): Remove the processOptions here.  It's only used for
+    // tests.
+    return new GuiEnvironment(glift.displays.processOptions(options));
   },
 
   getInitialized: function(options) {
@@ -1102,6 +1037,74 @@ var LineSegment = function(tl, br, ordinal) {
 };
 
 })();
+glift.displays.processOptions = function(rawOptions) {
+  var DisplayOptionError = function(message) {
+    this.name = "DisplayOptionError";
+    this.message = message;
+  };
+  DisplayOptionError.prototype = new Error();
+
+  // Default keys
+  var defaults = {
+    intersections: 19,
+    divId: "glift_display",
+    theme: "DEFAULT",
+    boardRegion: "ALL",
+    displayConfig: {}
+  };
+
+  for (var key in rawOptions) {
+    var value = rawOptions[key];
+    switch(key) {
+      case 'intersections':
+        if (glift.util.typeOf(value) == 'number' && value > 0) {
+          defaults.intersections = value;
+        } else {
+          throw new DisplayOptionError("Intersection value : " + key);
+        }
+        break;
+
+      case 'theme':
+        if (glift.themes.has(value)) {
+          defaults.theme = value;
+        } else {
+          throw new DisplayOptionError("Unknown theme: " + value);
+        }
+        break;
+
+      case 'divId':
+        var elem = document.getElementById(value);
+        if (elem !== null) {
+          defaults.divId = value
+        } else {
+          throw new DisplayOptionError("Could not find div with id: " + value);
+        }
+        break;
+
+      // BoardRegion defines the cropping box.
+      case 'boardRegion':
+        if (glift.enums.boardRegions[value] !== undefined) {
+          defaults.boardRegion = value;
+        } else {
+          throw new DisplayOptionError("Unknown board region: " + value);
+        }
+        break;
+
+      // displayConfig is object containing an assortment of debug attributes.
+      case 'displayConfig':
+        if (glift.util.typeOf(value) === 'object') {
+          defaults.displayConfig = value;
+        } else {
+          throw new DisplayOptionError("displayConfig not an object: " + value);
+        }
+        break;
+
+      default:
+        glift.util.logz("Unknown option key: " + key);
+    }
+  }
+  return defaults;
+};
 glift.displays.getResizedBox = function(divBox, cropbox) {
   var util = glift.util,
       newDims = glift.displays.getCropDimensions(
@@ -1218,7 +1221,7 @@ Display.prototype.destroy = function() {
 
 Display.prototype.recreate = function(options) {
   this.destroy();
-  var processed = glift.processOptions(options),
+  var processed = glift.displays.processOptions(options),
       environment = glift.displays.environment.get(processed);
   this._environment = environment;
   this._themeName = processed.theme
@@ -1613,3 +1616,2488 @@ Stone.prototype = {
 };
 
 })();
+glift.rules = {};
+(function(){
+var util = glift.util;
+
+glift.rules.goban = {
+  getInstance: function(intersections) {
+    var ints = intersections || 19;
+    return new Goban(ints);
+  },
+
+  getFromMoveTree: function(mt, initPosition) {
+    var goban = new Goban(mt.getIntersections()),
+        movetree = mt.getTreeFromRoot();
+    if (initPosition === undefined) {
+      initPosition = [];
+    }
+    // We assume the movetree is at root
+    goban.loadStonesFromMovetree(movetree);
+    for (var i = 0; i < initPosition.length; i++) {
+      movetree.moveDown(initPosition[i]);
+      goban.loadStonesFromMovetree(movetree);
+    }
+    return goban;
+  }
+};
+
+// Goban tracks the state of the stones.
+//
+// Note that, for our purposes,
+// x: refers to the column.
+// y: refers to the row.
+//
+// Thus, to get a particular "stone" you must do
+// stones[y][x]. Also, stones are 0-indexed.
+//
+// 0,0    : Upper Left
+// 0,19   : Lower Left
+// 19,0   : Upper Right
+// 19,19  : Lower Right
+var Goban = function(ints) {
+  if (ints <= 0) throw "Intersections must be greater than 0";
+  this.ints = ints;
+  this.stones = initStones(ints);
+};
+
+Goban.prototype = {
+  intersections: function() {
+    return this.ints;
+  },
+
+  // getStone helps abstract the nastiness and trickiness of having to use the x/y
+  // indices in the reverse order.
+  //
+  // Returns: a Color from glift.enums.states.
+  getStone: function(point) {
+    return this.stones[point.y()][point.x()];
+  },
+
+  // Get all the placed stones on the board (BLACK or WHITE)
+  // Returns an array of the form:
+  // [ {point:point, color:color}, {...}, ...]
+  getAllPlacedStones: function() {
+    var out = [];
+    for (var i = 0; i < this.stones.length; i++) {
+      var row = this.stones[i];
+      for (var j = 0; j < row.length; j++) {
+        var point = util.point(j, i);
+        var color = this.getStone(point);
+        if (color === glift.enums.states.BLACK ||
+            color === glift.enums.states.WHITE) {
+          out.push({point:point, color:color});
+        }
+      }
+    }
+    return out;
+  },
+
+  // Returns true or false:
+  // True = stone can be placed
+  // False = can't
+  placeable: function(point, color) {
+    // Currently, color is unused, but there are plans to use it because
+    // self-capture is disallowed.
+    return this.inBounds(point)
+        && this.getStone(point) === glift.enums.states.EMPTY;
+  },
+
+  // Returns true if out-of-bounds.  False, otherwise
+  outBounds: function(point) {
+    return util.outBounds(point.x(), this.ints)
+        || util.outBounds(point.y(), this.ints);
+  },
+
+  // Returns true if in-bounds. False, otherwise
+  inBounds: function(point) {
+    return util.inBounds(point.x(), this.ints)
+        && util.inBounds(point.y(), this.ints);
+  },
+
+  // Simply set the intersection back to EMPTY
+  clearStone: function(point) {
+    this._setColor(point, glift.enums.states.EMPTY);
+  },
+
+  clearSome: function(points) {
+    for (var i = 1; i < points.length; i++) {
+      this.clearStone(points[i]);
+    }
+  },
+
+  _setColor: function(point, color) {
+    this.stones[point.y()][point.x()] = color;
+  },
+
+  // addStone: Add a stone to the GoBoard (0-indexed).  Requires the
+  // intersection (a point) where the stone is to be placed, and the color of
+  // the stone to be placed.
+  //
+  // addStone always returns a StoneResult object.
+  //
+  // A diagram of a StoneResult:
+  // {
+  //    successful: true or false   // Was placing a stone successful?
+  //    captures : [ ... points ... ]  // the intersections of stones captured
+  //        by placing a stone at the intersection (pt).
+  // }
+  //
+  addStone: function(pt, color) {
+    if (!util.colors.isLegalColor(color)) throw "Unknown color: " + color;
+
+    // Add stone fail.  Return a failed StoneResult.
+    if (this.outBounds(pt) || !this.placeable(pt))
+      return new StoneResult(false);
+
+    this._setColor(pt, color); // set stone as active
+    var captures = new CaptureTracker();
+    var oppColor = util.colors.oppositeColor(color);
+
+    this._getCaptures(captures, util.point(pt.x() + 1, pt.y()), oppColor);
+    this._getCaptures(captures, util.point(pt.x() - 1, pt.y()), oppColor);
+    this._getCaptures(captures, util.point(pt.x(), pt.y() - 1), oppColor);
+    this._getCaptures(captures, util.point(pt.x(), pt.y() + 1), oppColor);
+
+    if (captures.numCaptures <= 0) {
+      // We are now in a state where placing this stone results in 0 liberties.
+      // Now, we check if move is self capture -- i.e., if the move doesn't
+      // capture any stones.
+      this._getCaptures(captures, pt, color);
+      if (captures.numCaptures > 0) {
+        // Onos! The move is self capture.
+        this.clearStone(pt);
+        return new StoneResult(false);
+      }
+    }
+
+    var actualCaptures = captures.getCaptures();
+    // Remove the captures from the board.
+    this.clearSome(actualCaptures);
+    return new StoneResult(true, actualCaptures);
+  },
+
+  // Get the captures.  We return nothing because state is stored in 'captures'
+  _getCaptures: function(captures, pt, color) {
+    this._findConnected(captures, pt, color);
+    if (captures.liberties <= 0) captures.consideringToCaptures();
+    captures.clearExceptCaptures();
+  },
+
+  // find the stones of the same color connected to eachother.  The color to
+  // find is the param color. We return nothing because state is stored in
+  // 'captures'.
+  _findConnected: function(captures, pt, color) {
+    // check to make sure we haven't already seen a stone
+    // and that the point is not out of bounds.  If
+    // either of these conditions fail, return immediately.
+    if (captures.seen[pt.hash()] !== undefined || this.outBounds(pt)) {
+      // we're done -- there's no where to go.
+    } else {
+      // note that we've seen the point
+      captures.seen[pt.hash()] = true;
+      var stoneColor = this.getStone(pt);
+      if (stoneColor === glift.enums.states.EMPTY)    {
+        // add a liberty if the point is empty and return
+        captures.liberties++;
+      } else if (stoneColor === util.colors.oppositeColor(color)) {
+        // return and don't add liberties.  This works because we assume that
+        // the stones start out with 0 liberties, and then we go along and add
+        // the liberties as we see them.
+      } else if (stoneColor === color) {
+        // recursively add connected stones
+        captures.considering.push(pt);
+        this._findConnected(captures, util.point(pt.x() + 1, pt.y()), color);
+        this._findConnected(captures, util.point(pt.x() - 1, pt.y()), color);
+        this._findConnected(captures, util.point(pt.x(), pt.y() + 1), color);
+        this._findConnected(captures, util.point(pt.x(), pt.y() - 1), color);
+      } else {
+        // Sanity check.
+        throw "Unknown color error: " + stoneColor;
+      }
+    }
+  },
+
+  loadStonesFromMovetree: function(movetree) {
+    var cols = [glift.enums.states.BLACK, glift.enums.states.WHITE];
+    for (var i = 0; i < cols.length; i++) {
+      var pm = movetree.getProperties().getPlacementsAsPoints(cols[i]);
+      for (var j = 0; j < pm.length; j++) {
+        if (this.placeable(pm[j]), cols[i]) {
+          this.addStone(pm[j], cols[i]);;
+        }
+      }
+    }
+    var mv = movetree.getProperties().getMove();
+    if (mv != util.none) {
+      this.addStone(mv.point, mv.color);
+    }
+  },
+
+  // for debug, of course =)
+  _debug: function() {
+    glift.util.logz(this.stones);
+  }
+}
+
+// Utiity functions
+
+// Private function to initialize the stones.
+var initStones = function(ints) {
+  var stones = [];
+  for (var i = 0; i < ints; i++) {
+    var newRow = [];
+    for (var j = 0; j < ints; j++) {
+      newRow[j] = glift.enums.states.EMPTY;
+    }
+    stones[i] = newRow
+  }
+  return stones;
+};
+
+
+// CaptureTracker is a utility object that assists in keeping track of captures.
+// As an optimization, we keep track of points we've seen for efficiency.
+var CaptureTracker = function() {
+  this.toCapture = {}; // set of points to capture (mapping pt.hash() -> true)
+  this.numCaptures = 0;
+  this.considering = []; // list of points we're considering to capture
+  this.seen = {}; // set of points we've seen (mapping pt.hash() -> true)
+  this.liberties = 0;
+};
+
+CaptureTracker.prototype = {
+  clearExceptCaptures: function() {
+    this.considering =[];
+    this.seen = {};
+    this.liberties = 0;
+  },
+
+  consideringToCaptures: function() {
+    for (var i = 0; i < this.considering.length; i++) {
+      var value = this.considering[i];
+      if (this.toCapture[value.hash()] === undefined) {
+        this.toCapture[value.hash()] = true;
+        this.numCaptures++;
+      }
+    }
+  },
+
+  addLiberties: function(x) {
+    this.liberties += x;
+  },
+
+  addSeen: function(point) {
+    this.seen[point.hash()] = true;
+  },
+
+  getCaptures: function() {
+    var out = [];
+    for (var key in this.toCapture) {
+      out.push(util.pointFromHash(key));
+    }
+    return out;
+  }
+};
+
+// The stone result keeps track of whether placing a stone was successful and what
+// stones (if any) were captured.
+var StoneResult = function(success, captures) {
+  this.successful = success;
+  if (success) {
+    this.captures = captures;
+  } else {
+    this.captures = [];
+  }
+};
+
+})();
+(function() {
+var enums = glift.enums;
+/*
+ * Intersection Data is the precise set of information necessary to display the
+ * Go Board, which is to say, it is the set of stones and display information.
+ *
+ * The IntersectionData is just an object containing intersection information, of
+ * the form:
+ *
+ *   {
+ *     points: [
+ *       pthash: {STONE: "BLACK" , TRIANGLE: true, point: pt},
+ *       pthash: {STONE: "WHITE", point: pt},
+ *       pthash: {LETTER: "A", point: pt}
+ *     ],
+ *     comment: "This is a good move",
+ *   }
+ *
+ * In the points array, each must object contain a point, and each should contain a
+ * mark or a stone.  There can only be a maximum of one stone and one mark
+ * (glift.enums.marks).
+ */
+
+glift.rules.intersections = {
+  propertiesToMarks: {
+    CR: enums.marks.CIRCLE,
+    LB: enums.marks.LETTER,
+    MA: enums.marks.XMARK,
+    SQ: enums.marks.SQUARE,
+    TR: enums.marks.TRIANGLE
+  },
+
+  getFullBoardData: function(movetree, goban) {
+    var out = {},
+        pointsObj = {},
+        gobanStones = goban.getAllPlacedStones();
+    // First, set the stones.
+    for (var i = 0; i < gobanStones.length; i++) {
+      var pt = gobanStones[i].point;
+      var sobj = {point: pt}
+      sobj[enums.marks.STONE] = gobanStones[i].color;
+      pointsObj[pt.hash()] = sobj;
+    }
+
+    pointsObj = this.addCurrentMarks(pointsObj, movetree);
+    out.points = pointsObj;
+    if (movetree.getProperties().getComment() !== glift.util.none) {
+      out.comment = movetree.getProperties().getComment();
+    }
+    return out;
+  },
+
+  // TODO: Add a way to send back only what has changed
+  getChangeData: function(movetree, captures, extra) {
+  },
+
+  addCurrentMarks: function(pointsObj, movetree) {
+    for (var prop in glift.rules.intersections.propertiesToMarks) {
+      var mark = glift.rules.intersections.propertiesToMarks[prop];
+      if (movetree.getProperties().contains(prop)) {
+        var data = movetree.getProperties().get(prop);
+        for (var i = 0; i < data.length; i++) {
+          var pt = {}, value = true;
+          if (prop === glift.sgf.allProperties.LB) {
+            var conv = glift.sgf.convertFromLabelData(data[i]);
+            pt = conv.point;
+            value = conv.value
+          } else {
+            var pt = glift.sgf.sgfCoordToPoint(data[i]);
+          }
+
+          var ptHash = pt.hash();
+          if (pointsObj[ptHash] === undefined) {
+            pointsObj[ptHash] = {point: pt};
+          }
+          pointsObj[ptHash][mark] = value;
+        }
+      }
+    }
+    return pointsObj;
+  }
+};
+
+})();
+(function() {
+glift.rules.movenode = function(properties, children) {
+  return new MoveNode(properties, children);
+};
+
+var MoveNode = function(properties, children) {
+  this.properties = properties || glift.rules.properties();
+  this.children = children || [];
+  this.nodeId = {nodeNum: 0, varNum: 0};
+};
+
+MoveNode.prototype = {
+  setNodeId: function(nodeNum, varNum) {
+    this.nodeId = {
+        nodeNum: nodeNum,
+        varNum: varNum
+    }
+    return this;
+  },
+
+  getNodeNum: function() {
+    return this.nodeId.nodeNum
+  },
+
+  getVarNum: function() {
+    return this.nodeId.varNum
+  },
+
+  numChildren: function() {
+    return this.children.length;
+  },
+
+  addChild: function() {
+    this.children.push(glift.rules.movenode().setNodeId(
+        this.getNodeNum() + 1, this.numChildren()));
+    return this;
+  },
+
+  getNext: function(variationNum) {
+    if (variationNum === undefined) {
+      return this.children[0];
+    } else {
+      return this.children[variationNum];
+    }
+  },
+
+  renumber: function() {
+    numberMoves(this, this.nodeId.nodeNum, this.nodeId.varNum);
+    return this;
+  }
+};
+
+// Private number moves function
+var numberMoves = function(move, nodeNum, varNum) {
+  move.setNodeId(nodeNum, varNum);
+  for (var i = 0; i < move.children.length; i++) {
+    var next = move.children[i];
+    numberMoves(next, nodeNum + 1, i);
+  }
+  return move;
+};
+
+})();
+(function() {
+var util = glift.util;
+var enums = glift.enums;
+/*
+ * When an SGF is parsed by the parser, it is transformed into the following:
+ *
+ *MoveTree {
+ *  _history: [MoveNode, MoveNode, ... ]
+ *}
+ * And where a MoveNode looks like the following:
+ * MoveNode: {
+ *    nodeId: { ... }
+ *    properties: Properties
+ *    children: [MoveNode, MoveNode, MoveNode]
+ *  }
+ *}
+ *
+ * Additionally, each node in the movetree has an ID property that looks like:
+ *
+ * node : {
+ *  nodeId : <num>,  // The vertical position in the tree.
+ *  varId  : <num>,  // The variation number, which is identical to the position
+ *                   // in the 'nodes' array.  Also, the 'horizontal' position .
+ * }
+ *
+ * If you are familiar with the SGF format, this should look very similar to the
+ * actual SGF format, and is easily converten back to a SGF. And so, The
+ * MoveTree is a simple wrapper around the parsed SGF.
+ *
+ * Each move is an object with two properties: tokens and nodes, the
+ * latter of which is a list to capture the idea of multiple variations.
+ */
+glift.rules.movetree = {
+  // Create an empty MoveTree
+  getInstance: function(intersections) {
+    var intersections = intersections || 19;
+    var mt = new MoveTree(glift.rules.movenode());
+    mt.setIntersections(intersections);
+    return mt;
+  },
+
+  // Create a MoveTree from an SGF.
+  getFromSgf: function(sgfString, initPosition) {
+    if (initPosition === undefined) {
+      initPosition = []; // Should throw an error?
+    }
+    var mt = new MoveTree(glift.sgf.parser.parse($.trim(sgfString)));
+    // Set the initial position
+    for (var i = 0; i < initPosition.length; i++) {
+      mt.moveDown(initPosition[i]);
+    }
+    return mt;
+  },
+
+  getFromNode: function(node) {
+    return new MoveTree(node);
+  },
+
+  // Seach nodes with a Depth First Search. We rely on closure variables to
+  // capture the result of the recursion.
+  searchMoveTreeDFS: function(moveTree, func) {
+    func(moveTree);
+    for (var i = 0; i < moveTree.getNode().numChildren(); i++) {
+      glift.rules.movetree.searchMoveTreeDFS(moveTree.moveDown(i), func);
+    }
+    moveTree.moveUp();
+  }
+};
+
+// A MoveTree is a history (a tree) of the past nodes played.  The movetree is
+// (usually) a processed parsed SGF, but could be created organically.
+//
+// The tree itself is tree structure made out of MoveNodes.
+var MoveTree = function(rootNode) {
+  // The moveHistory serves two purposes -- it allows travel backwards (i.e.,
+  // up the tree), and it gives the current move, which is the last move in the
+  // array.
+  this._nodeHistory = [];
+  this._nodeHistory.push(rootNode);
+};
+
+MoveTree.prototype = {
+  getTreeFromRoot: function() {
+    return glift.rules.movetree.getFromNode(this._nodeHistory[0]);
+  },
+
+  getNode: function() {
+    return this._nodeHistory[this._nodeHistory.length - 1];
+  },
+
+  getProperties: function() {
+    return this.getNode().properties;
+  },
+
+  findNextMove: function(point, color) {
+    var nextNodes = this.getNode().children,
+        token = glift.sgf.colorToToken(color),
+        ptSet = {};
+    for (var i = 0; i < nextNodes.length; i++) {
+      var node = nextNodes[i];
+      if (node.properties.contains(token)) {
+        ptSet[node.properties.getAsPoint(token).hash()] =
+          node.getVarNum();
+      }
+    }
+    if (ptSet[point.hash()] !== undefined) {
+      return ptSet[point.hash()];
+    } else {
+      return util.none;
+    }
+  },
+
+  getCurrentPlayer: function() {
+    var move = this.getProperties().getMove();
+    if (move === util.none) {
+      return enums.states.BLACK;
+    } else if (move.color === enums.states.BLACK) {
+      return enums.states.WHITE;
+    } else if (move.color === enums.states.WHITE) {
+      return enums.states.BLACK;
+    } else {
+      // TODO: This is not the right way to do this.  Really, we need to
+      // traverse up the tree until we see a color, and return the opposite. If
+      // we reach the root, _then_ we can return BLACK.
+      return enums.states.BLACK;
+    }
+  },
+
+  // Move down, but only if there is an available variation
+  // variationNum can be undefined for convenicence.
+  moveDown: function(variationNum) {
+    var num = variationNum === undefined ? 0 : variationNum;
+    if (this.getNode().getNext(num) !== undefined) {
+      var next = this.getNode().getNext(num);
+      this._nodeHistory.push(next);
+    }
+    return this;
+  },
+
+  // Move up a move, but only if you are not in the intial (0th) move.
+  moveUp: function() {
+    if (this._nodeHistory.length > 1) {
+      this._nodeHistory.pop();
+    }
+    return this;
+  },
+
+  // Move to the root node
+  moveToRoot: function() {
+    this._nodeHistory = this._nodeHistory.slice(0,1);
+    return this;
+  },
+
+  addNewNode: function() {
+    this.getNode().addChild();
+    this.moveDown(this.getNode().numChildren() - 1);
+    return this;
+  },
+
+  //TODO(nelsonjhk): finish
+  deleteCurrentNode: function() {
+    var nodeId = glift.rules.movetree.getNodeId();
+    VarNum = this.getVarNum();
+    this.moveUp();
+    var theMoves = this.getAllNextNodes();
+    //delete theMoves(nodeId,VarNum); // This is currently a syntax error
+    return this;
+  },
+
+  recurse: function(func) {
+    glift.rules.movetree.searchMoveTreeDFS(this, func);
+  },
+
+  recurseFromRoot: function(func) {
+    glift.rules.movetree.searchMoveTreeDFS(this.getTreeFromRoot(), func);
+  },
+
+  // TODO (probably will involve the recursion)
+  toSgf: function() {
+    var out = "";
+    for (var propKey in this.getAllProps()) {
+      //TODO
+    }
+  },
+
+  debugLog: function(spaces) {
+    if (spaces === undefined) {
+      spaces = "  ";
+    }
+    glift.util.logz(spaces + this.getNode(i).getVarNum() + '-'
+        + this.getNode(i).getNodeNum());
+    for (var i = 0; i < this.getNode().numChildren(); i++) {
+      this.moveDown(i);
+      this.debugLog(spaces);
+      this.moveUp();
+    }
+  },
+
+  //---------------------//
+  // Convenience methods //
+  //---------------------//
+  setIntersections: function(intersections) {
+    var mt = this.getTreeFromRoot(),
+        allProperties = glift.sgf.allProperties;
+    if (!mt.getProperties().contains(allProperties.SZ)) {
+      this.getProperties().add(allProperties.SZ, intersections + "");
+    }
+    return this;
+  },
+
+  getIntersections: function() {
+    var mt = this.getTreeFromRoot(),
+        allProperties = glift.sgf.allProperties;
+    if (mt.getNode().properties.contains(allProperties.SZ)) {
+      return parseInt(mt.getNode().properties.get(allProperties.SZ));
+    } else {
+      return undefined;
+    }
+  },
+
+  // Used for Problems.
+  // Can return CORRECT, INCORRECT, or INDETERMINATE
+  isCorrectPosition: function() {
+    var problemResults = glift.enums.problemResults;
+    if (this.getProperties().isCorrect()) {
+      return problemResults.CORRECT;
+    } else {
+      var flatPaths = glift.rules.treepath.flattenMoveTree(this);
+      var successTracker = {};
+      for (var i = 0; i < flatPaths.length; i++) {
+        var path = flatPaths[i];
+        var newmt = glift.rules.movetree.getFromNode(this.getNode());
+        var pathCorrect = false
+        for (var j = 0; j < path.length; j++) {
+          newmt.moveDown(path[j]);
+          if (newmt.getProperties().isCorrect()) {
+            pathCorrect = true;
+          }
+        }
+        if (pathCorrect) {
+          successTracker[problemResults.CORRECT] = true;
+        } else {
+          successTracker[problemResults.INCORRECT] = true;
+        }
+      }
+      if (successTracker[problemResults.CORRECT] &&
+          !successTracker[problemResults.INCORRECT]) {
+        return problemResults.CORRECT;
+      } else if (successTracker[problemResults.CORRECT] &&
+          successTracker[problemResults.INCORRECT]) {
+        return problemResults.INDETERMINATE;
+      } else {
+        return problemResults.INCORRECT;
+      }
+    }
+  }
+};
+})();
+(function() {
+var util = glift.util;
+var enums = glift.enums;
+
+// A stub for the time being.
+glift.rules.properties = function(map) {
+  return new Properties(map);
+};
+
+var Properties = function(map) {
+  if (map === undefined) {
+    this.propMap = {};
+  } else {
+    this.propMap = map;
+  }
+}
+
+Properties.prototype = {
+  // Add an SGF Property to the current move. Return the 'this', for
+  // convenience, so that you can chain addProp calls.
+  //
+  // Eventually, each sgf property should be matched to a datatype.  For now,
+  // the user is allowed to put arbitrary data into a property.
+  //
+  // Note that this does not overwrite an existing property - for that, the user
+  // has to delete the existing property. If the property already exists, we add
+  // another data element onto the array.
+  add: function(prop, value) {
+    // Return if the property is not string or a real property
+    if (glift.sgf.allProperties[prop] === undefined) {
+      throw "Can't add undefined properties";
+    } else if (util.typeOf(value) !== 'string' &&
+        util.typeOf(value) !== 'array') {
+      // The value has to be either a string or an array.
+      value = value.toString();
+    }
+    value = util.typeOf(value) === 'string' ? [value] : value;
+
+    // If the type is a string, make into an array or concat.
+    if (this.contains(prop)) {
+      this.propMap[prop] = this.get(prop).concat(value);
+    } else {
+      this.propMap[prop] = value;
+    }
+    return this;
+  },
+
+  // Return an array of data associated with a property key
+  get: function(strProp) {
+    if (glift.sgf.allProperties[strProp] === undefined) {
+      util.debugl("attempted to retrieve a property that is not part"
+           + " of the SGF Spec: " + strProp);
+      return util.none;
+    }
+    if (this.propMap[strProp] !== undefined) {
+      return this.propMap[strProp];
+    } else {
+      util.debugl("no property: " + strProp + " exists for the current move");
+      return util.none;
+    }
+  },
+
+  // Get one piece of data associated with a property. Default to the first
+  // element in the data associated with a property.
+  //
+  // Since the get() always returns an array, it's sometimes useful to return
+  // the first property in the list.  Like get(), if a property or value can't
+  // be found, util.none is returned.
+  getDatum: function(strProp, index) {
+    var index = (index !== undefined
+        && typeof index === 'number' && index >= 0) ? index : 0;
+    var arr = this.get(strProp);
+    if (arr !== util.none && arr.length >= 1) {
+      return arr[index];
+    } else {
+      return util.none;
+    }
+  },
+
+  // Get a value from a property and return the point representation.
+  // Optionally, the user can provide an index, since each property points to an
+  // array of values.
+  getAsPoint: function(strProp, index) {
+    var out = this.getDatum(strProp, index);
+    if (out !== util.none) {
+      return glift.sgf.sgfCoordToPoint(out);
+    } else {
+      return out;
+    }
+  },
+
+  // contains: Return true if the current move has the property "prop".  Return
+  // false otherwise.
+  contains: function(prop) {
+    return this.get(prop) !== util.none;
+  },
+
+  // Delete the prop and return the value.
+  remove: function(prop) {
+    if (this.contains(prop)) {
+      var value = this.get(prop);
+      delete this.propMap[prop];
+      return value;
+    } else {
+      return util.none;
+    }
+  },
+
+  // Replace replaces the current value if the property already exists.
+  replace: function(prop, value) {
+    this.propMap[prop] = value
+  },
+
+  //---------------------//
+  // Convenience methods //
+  //---------------------//
+
+  // Get all the placements for a color (BLACK or WHITE).  Return as an array.
+  getPlacementsAsPoints: function(color) {
+    var prop = "";
+    if (color === enums.states.BLACK) {
+      prop = glift.sgf.allProperties.AB;
+    } else if (color === enums.states.WHITE) {
+      prop = glift.sgf.allProperties.AW;
+    }
+
+    if (prop === "" || !this.contains(prop)) {
+      return [];
+    }
+
+    return glift.sgf.allSgfCoordsToPoints(this.get(prop));
+  },
+
+  getComment: function() {
+    if (this.contains('C')) {
+      return this.getDatum('C');
+    } else {
+      return util.none;
+    }
+  },
+
+  getMove: function() {
+    if (this.contains('B')) {
+      return {
+        color: enums.states.BLACK,
+        point: glift.sgf.sgfCoordToPoint(this.getDatum('B'))
+      };
+    } else if (this.contains('W')) {
+      return {
+        color: enums.states.WHITE,
+        point: glift.sgf.sgfCoordToPoint(this.getDatum('W'))
+      };
+    } else {
+      return util.none;
+    }
+  },
+
+  isCorrect: function() {
+    if (this.contains('GB')) {
+      return true;
+    } else {
+      return false;
+    }
+  },
+
+  // Get all the stones (placements and moves)
+  getAllStones: function() {
+    var states = glift.enums.states,
+        out = {},
+        BLACK = states.BLACK,
+        WHITE = states.WHITE;
+    out[BLACK] = this.getPlacementsAsPoints(states.BLACK);
+    out[WHITE] = this.getPlacementsAsPoints(states.WHITE);
+    var move = this.getMove()
+    if (move != util.none) {
+      out[move.color].push(move.point);
+    }
+    return out;
+  }
+};
+
+})();
+/*
+ * The treepath is specified by a String, which specifies a series of moves
+ * saying how to get to the move.
+ *
+ * Note: Both moves and and variations are 0 indexed.
+ *
+ * Some examples:
+ * 0         - Start at the 0th move (the root node)
+ * 53        - Start at the 53rd move, taking the primary path
+ * 2.3       - Start at the 3rd variation on move 2 (actually move 3)
+ * 3         - Start at the 3rd move
+ * 2.0       - Start at the 3rd move
+ * 0.0.0.0   - Start at the 3rd move
+ * 2.3-4.1   - Start at the 1st variation of the 4th move, arrived at by traveling
+ *             through the 3rd varition of the 2nd move
+ *
+ * The init position returned is an array of variation numbers traversed through.
+ *
+ * So:
+ * 0       becomes []
+ * 1       becomes [0]
+ * 0.1     becomes [1]
+ * 53      becomes [0,0,0,...,0] (53 times)
+ * 2.3     becomes [0,0,3]
+ * 0.0.0.0 becomes [0,0,0,0]
+ * 2.3-4.1 becomes [0,0,3,0,1]
+ */
+
+glift.rules.treepath = {
+  parseInitPosition: function(initPos) {
+    var errors = glift.errors
+    if (initPos === undefined) {
+      return [];
+    } else if (glift.util.typeOf(initPos) === 'number') {
+      initPos = "" + initPos;
+    } else if (glift.util.typeOf(initPos) === 'array') {
+      return initPos
+    } else if (glift.util.typeOf(initPos) === 'string') {
+      // Do nothing. this is the expected type
+    // TODO(kashomon): throw some darn errors.
+    // } else if (glift.util.typeOf(initPos) === 'object') {
+      // throw new errors.ParseError("Cannot parse type " +
+          // glift.util.typeOf(initPos));
+    } else {
+      return [];
+    }
+
+    var out = [];
+    var lastNum = 0;
+    var sect = initPos.split('-');
+    for (var i = 0; i < sect.length; i++) {
+      var v = sect[i].split('\.');
+      for (var j = 0; j < v[0] - lastNum; j++) {
+        out.push(0);
+      }
+      var lastNum = v[0];
+      for (var j = 1; j < v.length; j++) {
+        out.push(parseInt(v[j]));
+        lastNum++;
+      }
+    }
+    return out;
+  },
+
+  // Flatten the move tree variations into a list of lists, where the sublists
+  // are each a tree-path.
+  flattenMoveTree: function(movetree) {
+    var out = [];
+    for (var i = 0; i < movetree.getNode().numChildren(); i++) {
+      movetree.moveDown(i);
+      var result = glift.rules.treepath._flattenMoveTree(movetree, []);
+      movetree.moveUp();
+      for (var j = 0; j < result.length; j++) {
+        out.push(result[j])
+      }
+    }
+    return out;
+  },
+
+  _flattenMoveTree: function(movetree, pathToHere) {
+    if (pathToHere === undefined) pathToHere = [];
+    pathToHere.push(movetree.getNode().getVarNum());
+    var out = [];
+    for (var i = 0; i < movetree.getNode().numChildren(); i++) {
+      movetree.moveDown(i)
+      var thisout = glift.rules.treepath._flattenMoveTree(
+          movetree, pathToHere.slice());
+      out = out.concat(thisout)
+      movetree.moveUp(i)
+    }
+    if (out.length == 0) out.push(pathToHere);
+    return out;
+  }
+};
+/*
+ * The SGF library contains functions for dealing with SGFs.
+ *
+ * sgf_grammar.js: sgf parser generated, generated from
+ * sgf_grammar.pegjs. To regenerate the parser from the peg grammar, use
+ * jszip.py.
+ *
+ */
+glift.sgf = {
+  colorToToken: function(color) {
+    if (color === glift.enums.states.WHITE) {
+      return 'W';
+    } else if (color === glift.enums.states.BLACK) {
+      return 'B';
+    } else {
+      throw "Unknown color-to-token conversion for: " + color;
+    }
+  },
+
+  // SGFs are indexed from the Upper Left:
+  //  _  _  _
+  // |aa ba ca ...
+  // |ab bb
+  // |.
+  // |.
+  // |.
+  sgfCoordToPoint: function(c) {
+    var a = 'a'.charCodeAt(0)
+    return glift.util.point(c.charCodeAt(0) - a, c.charCodeAt(1) - a);
+  },
+
+  allSgfCoordsToPoints: function(arr) {
+    var out = [];
+    for (var i = 0; i < arr.length; i++) {
+      out.push(glift.sgf.sgfCoordToPoint(arr[i]));
+    }
+    return out;
+  },
+
+  convertFromLabelData: function(data) {
+    var parts = data.split(":"),
+        pt = glift.sgf.sgfCoordToPoint(parts[0]),
+        value = parts[1];
+    return {point: pt, value: value};
+  },
+
+  convertFromLabelArray: function(arr) {
+    var out = [];
+    for (var i = 0; i < arr.length; i++) {
+      out.push(glift.sgf.convertFromLabelData(arr[i]));
+    }
+    return out;
+  },
+
+  pointToSgfCoord: function(pt) {
+    var a = 'a'.charCodeAt(0);
+    return String.fromCharCode(pt.x() +  a) + String.fromCharCode(pt.y() + a);
+  }
+};
+// The allProperties object is used to check to make sure that a given property is
+// actually a real property
+glift.sgf.allProperties = {
+AB: "AB", AE: "AE", AN: "AN", AP: "AP", AR: "AR", AS: "AS", AW: "AW", B: "B",
+BL: "BL", BM: "BM", BR: "BR", BS: "BS", BT: "BT", C: "C", CA: "CA", CH: "CH",
+CP: "CP", CR: "CR", DD: "DD", DM: "DM", DO: "DO", DT: "DT", EL: "EL", EV: "EV",
+EX: "EX", FF: "FF", FG: "FG", GB: "GB", GC: "GC", GM: "GM", GN: "GN", GW: "GW",
+HA: "HA", HO: "HO", ID: "ID", IP: "IP", IT: "IT", IY: "IY", KM: "KM", KO: "KO",
+L: "L", LB: "LB", LN: "LN", LT: "LT", M: "M", MA: "MA", MN: "MN", N: "N", OB:
+"OB", OM: "OM", ON: "ON", OP: "OP", OT: "OT", OV: "OV", OW: "OW", PB: "PB", PC:
+"PC", PL: "PL", PM: "PM", PW: "PW", RE: "RE", RG: "RG", RO: "RO", RU: "RU", SC:
+"SC", SE: "SE", SI: "SI", SL: "SL", SO: "SO", SQ: "SQ", ST: "ST", SU: "SU", SZ:
+"SZ", TB: "TB", TC: "TC", TE: "TE", TM: "TM", TR: "TR", TW: "TW", UC: "UC", US:
+"US", V: "V", VW: "VW", W: "W", WL: "WL", WR: "WR", WS: "WS", WT: "WT"
+};
+glift.sgf.parser = (function(){
+  /* Generated by PEG.js 0.6.2 (http://pegjs.majda.cz/). */
+  
+  var result = {
+    /*
+     * Parses the input with a generated parser. If the parsing is successfull,
+     * returns a value explicitly or implicitly specified by the grammar from
+     * which the parser was generated (see |PEG.buildParser|). If the parsing is
+     * unsuccessful, throws |PEG.parser.SyntaxError| describing the error.
+     */
+    parse: function(input, startRule) {
+      var parseFunctions = {
+        "Data": parse_Data,
+        "MoreData": parse_MoreData,
+        "MoreTokens": parse_MoreTokens,
+        "MoreVars": parse_MoreVars,
+        "Moves": parse_Moves,
+        "Start": parse_Start,
+        "TokenName": parse_TokenName,
+        "Tokens": parse_Tokens,
+        "Variations": parse_Variations,
+        "WhiteSpace": parse_WhiteSpace
+      };
+      
+      if (startRule !== undefined) {
+        if (parseFunctions[startRule] === undefined) {
+          throw new Error("Invalid rule name: " + quote(startRule) + ".");
+        }
+      } else {
+        startRule = "Start";
+      }
+      
+      var pos = 0;
+      var reportMatchFailures = true;
+      var rightmostMatchFailuresPos = 0;
+      var rightmostMatchFailuresExpected = [];
+      var cache = {};
+      
+      function padLeft(input, padding, length) {
+        var result = input;
+        
+        var padLength = length - input.length;
+        for (var i = 0; i < padLength; i++) {
+          result = padding + result;
+        }
+        
+        return result;
+      }
+      
+      function escape(ch) {
+        var charCode = ch.charCodeAt(0);
+        
+        if (charCode <= 0xFF) {
+          var escapeChar = 'x';
+          var length = 2;
+        } else {
+          var escapeChar = 'u';
+          var length = 4;
+        }
+        
+        return '\\' + escapeChar + padLeft(charCode.toString(16).toUpperCase(), '0', length);
+      }
+      
+      function quote(s) {
+        /*
+         * ECMA-262, 5th ed., 7.8.4: All characters may appear literally in a
+         * string literal except for the closing quote character, backslash,
+         * carriage return, line separator, paragraph separator, and line feed.
+         * Any character may appear in the form of an escape sequence.
+         */
+        return '"' + s
+          .replace(/\\/g, '\\\\')            // backslash
+          .replace(/"/g, '\\"')              // closing quote character
+          .replace(/\r/g, '\\r')             // carriage return
+          .replace(/\n/g, '\\n')             // line feed
+          .replace(/[\x80-\uFFFF]/g, escape) // non-ASCII characters
+          + '"';
+      }
+      
+      function matchFailed(failure) {
+        if (pos < rightmostMatchFailuresPos) {
+          return;
+        }
+        
+        if (pos > rightmostMatchFailuresPos) {
+          rightmostMatchFailuresPos = pos;
+          rightmostMatchFailuresExpected = [];
+        }
+        
+        rightmostMatchFailuresExpected.push(failure);
+      }
+      
+      function parse_Start() {
+        var cacheKey = 'Start@' + pos;
+        var cachedResult = cache[cacheKey];
+        if (cachedResult) {
+          pos = cachedResult.nextPos;
+          return cachedResult.result;
+        }
+        
+        
+        var savedPos0 = pos;
+        var savedPos1 = pos;
+        if (input.substr(pos, 2) === "(;") {
+          var result3 = "(;";
+          pos += 2;
+        } else {
+          var result3 = null;
+          if (reportMatchFailures) {
+            matchFailed("\"(;\"");
+          }
+        }
+        if (result3 !== null) {
+          var result4 = parse_Tokens();
+          if (result4 !== null) {
+            var result5 = parse_Variations();
+            if (result5 !== null) {
+              if (input.substr(pos, 1) === ")") {
+                var result6 = ")";
+                pos += 1;
+              } else {
+                var result6 = null;
+                if (reportMatchFailures) {
+                  matchFailed("\")\"");
+                }
+              }
+              if (result6 !== null) {
+                var result1 = [result3, result4, result5, result6];
+              } else {
+                var result1 = null;
+                pos = savedPos1;
+              }
+            } else {
+              var result1 = null;
+              pos = savedPos1;
+            }
+          } else {
+            var result1 = null;
+            pos = savedPos1;
+          }
+        } else {
+          var result1 = null;
+          pos = savedPos1;
+        }
+        var result2 = result1 !== null
+          ? (function(props, children) {
+            return glift.rules.movenode(glift.rules.properties(props), children).renumber();
+          })(result1[1], result1[2])
+          : null;
+        if (result2 !== null) {
+          var result0 = result2;
+        } else {
+          var result0 = null;
+          pos = savedPos0;
+        }
+        
+        
+        
+        cache[cacheKey] = {
+          nextPos: pos,
+          result:  result0
+        };
+        return result0;
+      }
+      
+      function parse_Variations() {
+        var cacheKey = 'Variations@' + pos;
+        var cachedResult = cache[cacheKey];
+        if (cachedResult) {
+          pos = cachedResult.nextPos;
+          return cachedResult.result;
+        }
+        
+        
+        var savedPos1 = pos;
+        var savedPos2 = pos;
+        if (input.substr(pos, 1) === "(") {
+          var result7 = "(";
+          pos += 1;
+        } else {
+          var result7 = null;
+          if (reportMatchFailures) {
+            matchFailed("\"(\"");
+          }
+        }
+        if (result7 !== null) {
+          var result8 = parse_Moves();
+          if (result8 !== null) {
+            if (input.substr(pos, 1) === ")") {
+              var result9 = ")";
+              pos += 1;
+            } else {
+              var result9 = null;
+              if (reportMatchFailures) {
+                matchFailed("\")\"");
+              }
+            }
+            if (result9 !== null) {
+              var result17 = parse_WhiteSpace();
+              var result10 = result17 !== null ? result17 : '';
+              if (result10 !== null) {
+                if (input.substr(pos, 1) === "(") {
+                  var result11 = "(";
+                  pos += 1;
+                } else {
+                  var result11 = null;
+                  if (reportMatchFailures) {
+                    matchFailed("\"(\"");
+                  }
+                }
+                if (result11 !== null) {
+                  var result12 = parse_Moves();
+                  if (result12 !== null) {
+                    if (input.substr(pos, 1) === ")") {
+                      var result13 = ")";
+                      pos += 1;
+                    } else {
+                      var result13 = null;
+                      if (reportMatchFailures) {
+                        matchFailed("\")\"");
+                      }
+                    }
+                    if (result13 !== null) {
+                      var result16 = parse_WhiteSpace();
+                      var result14 = result16 !== null ? result16 : '';
+                      if (result14 !== null) {
+                        var result15 = parse_MoreVars();
+                        if (result15 !== null) {
+                          var result5 = [result7, result8, result9, result10, result11, result12, result13, result14, result15];
+                        } else {
+                          var result5 = null;
+                          pos = savedPos2;
+                        }
+                      } else {
+                        var result5 = null;
+                        pos = savedPos2;
+                      }
+                    } else {
+                      var result5 = null;
+                      pos = savedPos2;
+                    }
+                  } else {
+                    var result5 = null;
+                    pos = savedPos2;
+                  }
+                } else {
+                  var result5 = null;
+                  pos = savedPos2;
+                }
+              } else {
+                var result5 = null;
+                pos = savedPos2;
+              }
+            } else {
+              var result5 = null;
+              pos = savedPos2;
+            }
+          } else {
+            var result5 = null;
+            pos = savedPos2;
+          }
+        } else {
+          var result5 = null;
+          pos = savedPos2;
+        }
+        var result6 = result5 !== null
+          ? (function(var1, white, var2, whiteAlso, more) { return [var1, var2].concat(more); })(result5[1], result5[3], result5[5], result5[7], result5[8])
+          : null;
+        if (result6 !== null) {
+          var result4 = result6;
+        } else {
+          var result4 = null;
+          pos = savedPos1;
+        }
+        if (result4 !== null) {
+          var result0 = result4;
+        } else {
+          var savedPos0 = pos;
+          var result2 = parse_Moves();
+          var result3 = result2 !== null
+            ? (function(move) { return (move === undefined ? [] : [move]); })(result2)
+            : null;
+          if (result3 !== null) {
+            var result1 = result3;
+          } else {
+            var result1 = null;
+            pos = savedPos0;
+          }
+          if (result1 !== null) {
+            var result0 = result1;
+          } else {
+            var result0 = null;;
+          };
+        }
+        
+        
+        
+        cache[cacheKey] = {
+          nextPos: pos,
+          result:  result0
+        };
+        return result0;
+      }
+      
+      function parse_MoreVars() {
+        var cacheKey = 'MoreVars@' + pos;
+        var cachedResult = cache[cacheKey];
+        if (cachedResult) {
+          pos = cachedResult.nextPos;
+          return cachedResult.result;
+        }
+        
+        
+        var savedPos1 = pos;
+        var savedPos2 = pos;
+        if (input.substr(pos, 1) === "(") {
+          var result7 = "(";
+          pos += 1;
+        } else {
+          var result7 = null;
+          if (reportMatchFailures) {
+            matchFailed("\"(\"");
+          }
+        }
+        if (result7 !== null) {
+          var result8 = parse_Moves();
+          if (result8 !== null) {
+            if (input.substr(pos, 1) === ")") {
+              var result9 = ")";
+              pos += 1;
+            } else {
+              var result9 = null;
+              if (reportMatchFailures) {
+                matchFailed("\")\"");
+              }
+            }
+            if (result9 !== null) {
+              var result12 = parse_WhiteSpace();
+              var result10 = result12 !== null ? result12 : '';
+              if (result10 !== null) {
+                var result11 = parse_MoreVars();
+                if (result11 !== null) {
+                  var result5 = [result7, result8, result9, result10, result11];
+                } else {
+                  var result5 = null;
+                  pos = savedPos2;
+                }
+              } else {
+                var result5 = null;
+                pos = savedPos2;
+              }
+            } else {
+              var result5 = null;
+              pos = savedPos2;
+            }
+          } else {
+            var result5 = null;
+            pos = savedPos2;
+          }
+        } else {
+          var result5 = null;
+          pos = savedPos2;
+        }
+        var result6 = result5 !== null
+          ? (function(move, white, more) {
+              return [move].concat(more); })(result5[1], result5[3], result5[4])
+          : null;
+        if (result6 !== null) {
+          var result4 = result6;
+        } else {
+          var result4 = null;
+          pos = savedPos1;
+        }
+        if (result4 !== null) {
+          var result0 = result4;
+        } else {
+          var savedPos0 = pos;
+          if (input.substr(pos, 0) === "") {
+            var result2 = "";
+            pos += 0;
+          } else {
+            var result2 = null;
+            if (reportMatchFailures) {
+              matchFailed("\"\"");
+            }
+          }
+          var result3 = result2 !== null
+            ? (function() { return []; })()
+            : null;
+          if (result3 !== null) {
+            var result1 = result3;
+          } else {
+            var result1 = null;
+            pos = savedPos0;
+          }
+          if (result1 !== null) {
+            var result0 = result1;
+          } else {
+            var result0 = null;;
+          };
+        }
+        
+        
+        
+        cache[cacheKey] = {
+          nextPos: pos,
+          result:  result0
+        };
+        return result0;
+      }
+      
+      function parse_Moves() {
+        var cacheKey = 'Moves@' + pos;
+        var cachedResult = cache[cacheKey];
+        if (cachedResult) {
+          pos = cachedResult.nextPos;
+          return cachedResult.result;
+        }
+        
+        
+        var savedPos1 = pos;
+        var savedPos2 = pos;
+        if (input.substr(pos, 1) === ";") {
+          var result7 = ";";
+          pos += 1;
+        } else {
+          var result7 = null;
+          if (reportMatchFailures) {
+            matchFailed("\";\"");
+          }
+        }
+        if (result7 !== null) {
+          var result8 = parse_Tokens();
+          if (result8 !== null) {
+            var result9 = parse_Variations();
+            if (result9 !== null) {
+              var result5 = [result7, result8, result9];
+            } else {
+              var result5 = null;
+              pos = savedPos2;
+            }
+          } else {
+            var result5 = null;
+            pos = savedPos2;
+          }
+        } else {
+          var result5 = null;
+          pos = savedPos2;
+        }
+        var result6 = result5 !== null
+          ? (function(props, children) {
+                    return glift.rules.movenode(glift.rules.properties(props), children);
+                  })(result5[1], result5[2])
+          : null;
+        if (result6 !== null) {
+          var result4 = result6;
+        } else {
+          var result4 = null;
+          pos = savedPos1;
+        }
+        if (result4 !== null) {
+          var result0 = result4;
+        } else {
+          var savedPos0 = pos;
+          if (input.substr(pos, 0) === "") {
+            var result2 = "";
+            pos += 0;
+          } else {
+            var result2 = null;
+            if (reportMatchFailures) {
+              matchFailed("\"\"");
+            }
+          }
+          var result3 = result2 !== null
+            ? (function() { return undefined; })()
+            : null;
+          if (result3 !== null) {
+            var result1 = result3;
+          } else {
+            var result1 = null;
+            pos = savedPos0;
+          }
+          if (result1 !== null) {
+            var result0 = result1;
+          } else {
+            var result0 = null;;
+          };
+        }
+        
+        
+        
+        cache[cacheKey] = {
+          nextPos: pos,
+          result:  result0
+        };
+        return result0;
+      }
+      
+      function parse_Tokens() {
+        var cacheKey = 'Tokens@' + pos;
+        var cachedResult = cache[cacheKey];
+        if (cachedResult) {
+          pos = cachedResult.nextPos;
+          return cachedResult.result;
+        }
+        
+        
+        var savedPos0 = pos;
+        var savedPos1 = pos;
+        var result3 = parse_TokenName();
+        if (result3 !== null) {
+          if (input.substr(pos, 1) === "[") {
+            var result4 = "[";
+            pos += 1;
+          } else {
+            var result4 = null;
+            if (reportMatchFailures) {
+              matchFailed("\"[\"");
+            }
+          }
+          if (result4 !== null) {
+            var result5 = parse_Data();
+            if (result5 !== null) {
+              if (input.substr(pos, 1) === "]") {
+                var result6 = "]";
+                pos += 1;
+              } else {
+                var result6 = null;
+                if (reportMatchFailures) {
+                  matchFailed("\"]\"");
+                }
+              }
+              if (result6 !== null) {
+                var result12 = parse_WhiteSpace();
+                var result7 = result12 !== null ? result12 : '';
+                if (result7 !== null) {
+                  var result8 = parse_MoreData();
+                  if (result8 !== null) {
+                    var result11 = parse_WhiteSpace();
+                    var result9 = result11 !== null ? result11 : '';
+                    if (result9 !== null) {
+                      var result10 = parse_MoreTokens();
+                      if (result10 !== null) {
+                        var result1 = [result3, result4, result5, result6, result7, result8, result9, result10];
+                      } else {
+                        var result1 = null;
+                        pos = savedPos1;
+                      }
+                    } else {
+                      var result1 = null;
+                      pos = savedPos1;
+                    }
+                  } else {
+                    var result1 = null;
+                    pos = savedPos1;
+                  }
+                } else {
+                  var result1 = null;
+                  pos = savedPos1;
+                }
+              } else {
+                var result1 = null;
+                pos = savedPos1;
+              }
+            } else {
+              var result1 = null;
+              pos = savedPos1;
+            }
+          } else {
+            var result1 = null;
+            pos = savedPos1;
+          }
+        } else {
+          var result1 = null;
+          pos = savedPos1;
+        }
+        var result2 = result1 !== null
+          ? (function(token, propdata, white, more, whiteAlso, tokens) {
+            tokens[token] = [propdata].concat(more);
+            return tokens;
+          })(result1[0], result1[2], result1[4], result1[5], result1[6], result1[7])
+          : null;
+        if (result2 !== null) {
+          var result0 = result2;
+        } else {
+          var result0 = null;
+          pos = savedPos0;
+        }
+        
+        
+        
+        cache[cacheKey] = {
+          nextPos: pos,
+          result:  result0
+        };
+        return result0;
+      }
+      
+      function parse_MoreTokens() {
+        var cacheKey = 'MoreTokens@' + pos;
+        var cachedResult = cache[cacheKey];
+        if (cachedResult) {
+          pos = cachedResult.nextPos;
+          return cachedResult.result;
+        }
+        
+        
+        var result4 = parse_Tokens();
+        if (result4 !== null) {
+          var result0 = result4;
+        } else {
+          var savedPos0 = pos;
+          if (input.substr(pos, 0) === "") {
+            var result2 = "";
+            pos += 0;
+          } else {
+            var result2 = null;
+            if (reportMatchFailures) {
+              matchFailed("\"\"");
+            }
+          }
+          var result3 = result2 !== null
+            ? (function() { return {}; })()
+            : null;
+          if (result3 !== null) {
+            var result1 = result3;
+          } else {
+            var result1 = null;
+            pos = savedPos0;
+          }
+          if (result1 !== null) {
+            var result0 = result1;
+          } else {
+            var result0 = null;;
+          };
+        }
+        
+        
+        
+        cache[cacheKey] = {
+          nextPos: pos,
+          result:  result0
+        };
+        return result0;
+      }
+      
+      function parse_Data() {
+        var cacheKey = 'Data@' + pos;
+        var cachedResult = cache[cacheKey];
+        if (cachedResult) {
+          pos = cachedResult.nextPos;
+          return cachedResult.result;
+        }
+        
+        
+        var savedPos0 = pos;
+        var result1 = [];
+        if (input.substr(pos, 2) === "\\]") {
+          var result5 = "\\]";
+          pos += 2;
+        } else {
+          var result5 = null;
+          if (reportMatchFailures) {
+            matchFailed("\"\\\\]\"");
+          }
+        }
+        if (result5 !== null) {
+          var result3 = result5;
+        } else {
+          if (input.substr(pos).match(/^[^\]]/) !== null) {
+            var result4 = input.charAt(pos);
+            pos++;
+          } else {
+            var result4 = null;
+            if (reportMatchFailures) {
+              matchFailed("[^\\]]");
+            }
+          }
+          if (result4 !== null) {
+            var result3 = result4;
+          } else {
+            var result3 = null;;
+          };
+        }
+        while (result3 !== null) {
+          result1.push(result3);
+          if (input.substr(pos, 2) === "\\]") {
+            var result5 = "\\]";
+            pos += 2;
+          } else {
+            var result5 = null;
+            if (reportMatchFailures) {
+              matchFailed("\"\\\\]\"");
+            }
+          }
+          if (result5 !== null) {
+            var result3 = result5;
+          } else {
+            if (input.substr(pos).match(/^[^\]]/) !== null) {
+              var result4 = input.charAt(pos);
+              pos++;
+            } else {
+              var result4 = null;
+              if (reportMatchFailures) {
+                matchFailed("[^\\]]");
+              }
+            }
+            if (result4 !== null) {
+              var result3 = result4;
+            } else {
+              var result3 = null;;
+            };
+          }
+        }
+        var result2 = result1 !== null
+          ? (function(props) {
+            return props.join("");
+          })(result1)
+          : null;
+        if (result2 !== null) {
+          var result0 = result2;
+        } else {
+          var result0 = null;
+          pos = savedPos0;
+        }
+        
+        
+        
+        cache[cacheKey] = {
+          nextPos: pos,
+          result:  result0
+        };
+        return result0;
+      }
+      
+      function parse_MoreData() {
+        var cacheKey = 'MoreData@' + pos;
+        var cachedResult = cache[cacheKey];
+        if (cachedResult) {
+          pos = cachedResult.nextPos;
+          return cachedResult.result;
+        }
+        
+        
+        var savedPos1 = pos;
+        var savedPos2 = pos;
+        if (input.substr(pos, 1) === "[") {
+          var result7 = "[";
+          pos += 1;
+        } else {
+          var result7 = null;
+          if (reportMatchFailures) {
+            matchFailed("\"[\"");
+          }
+        }
+        if (result7 !== null) {
+          var result8 = parse_Data();
+          if (result8 !== null) {
+            if (input.substr(pos, 1) === "]") {
+              var result9 = "]";
+              pos += 1;
+            } else {
+              var result9 = null;
+              if (reportMatchFailures) {
+                matchFailed("\"]\"");
+              }
+            }
+            if (result9 !== null) {
+              var result12 = parse_WhiteSpace();
+              var result10 = result12 !== null ? result12 : '';
+              if (result10 !== null) {
+                var result11 = parse_MoreData();
+                if (result11 !== null) {
+                  var result5 = [result7, result8, result9, result10, result11];
+                } else {
+                  var result5 = null;
+                  pos = savedPos2;
+                }
+              } else {
+                var result5 = null;
+                pos = savedPos2;
+              }
+            } else {
+              var result5 = null;
+              pos = savedPos2;
+            }
+          } else {
+            var result5 = null;
+            pos = savedPos2;
+          }
+        } else {
+          var result5 = null;
+          pos = savedPos2;
+        }
+        var result6 = result5 !== null
+          ? (function(propdata, white, more) {
+              return [propdata].concat(more); })(result5[1], result5[3], result5[4])
+          : null;
+        if (result6 !== null) {
+          var result4 = result6;
+        } else {
+          var result4 = null;
+          pos = savedPos1;
+        }
+        if (result4 !== null) {
+          var result0 = result4;
+        } else {
+          var savedPos0 = pos;
+          if (input.substr(pos, 0) === "") {
+            var result2 = "";
+            pos += 0;
+          } else {
+            var result2 = null;
+            if (reportMatchFailures) {
+              matchFailed("\"\"");
+            }
+          }
+          var result3 = result2 !== null
+            ? (function() { return []; })()
+            : null;
+          if (result3 !== null) {
+            var result1 = result3;
+          } else {
+            var result1 = null;
+            pos = savedPos0;
+          }
+          if (result1 !== null) {
+            var result0 = result1;
+          } else {
+            var result0 = null;;
+          };
+        }
+        
+        
+        
+        cache[cacheKey] = {
+          nextPos: pos,
+          result:  result0
+        };
+        return result0;
+      }
+      
+      function parse_TokenName() {
+        var cacheKey = 'TokenName@' + pos;
+        var cachedResult = cache[cacheKey];
+        if (cachedResult) {
+          pos = cachedResult.nextPos;
+          return cachedResult.result;
+        }
+        
+        
+        var savedPos0 = pos;
+        var savedPos1 = pos;
+        if (input.substr(pos).match(/^[a-zA-Z]/) !== null) {
+          var result5 = input.charAt(pos);
+          pos++;
+        } else {
+          var result5 = null;
+          if (reportMatchFailures) {
+            matchFailed("[a-zA-Z]");
+          }
+        }
+        if (result5 !== null) {
+          if (input.substr(pos).match(/^[a-zA-Z]/) !== null) {
+            var result6 = input.charAt(pos);
+            pos++;
+          } else {
+            var result6 = null;
+            if (reportMatchFailures) {
+              matchFailed("[a-zA-Z]");
+            }
+          }
+          if (result6 !== null) {
+            var result4 = [result5, result6];
+          } else {
+            var result4 = null;
+            pos = savedPos1;
+          }
+        } else {
+          var result4 = null;
+          pos = savedPos1;
+        }
+        if (result4 !== null) {
+          var result1 = result4;
+        } else {
+          if (input.substr(pos).match(/^[a-zA-Z]/) !== null) {
+            var result3 = input.charAt(pos);
+            pos++;
+          } else {
+            var result3 = null;
+            if (reportMatchFailures) {
+              matchFailed("[a-zA-Z]");
+            }
+          }
+          if (result3 !== null) {
+            var result1 = result3;
+          } else {
+            var result1 = null;;
+          };
+        }
+        var result2 = result1 !== null
+          ? (function(name) {
+            if (name.length === 1) return name[0];
+            else return name.join("").toUpperCase();
+          })(result1)
+          : null;
+        if (result2 !== null) {
+          var result0 = result2;
+        } else {
+          var result0 = null;
+          pos = savedPos0;
+        }
+        
+        
+        
+        cache[cacheKey] = {
+          nextPos: pos,
+          result:  result0
+        };
+        return result0;
+      }
+      
+      function parse_WhiteSpace() {
+        var cacheKey = 'WhiteSpace@' + pos;
+        var cachedResult = cache[cacheKey];
+        if (cachedResult) {
+          pos = cachedResult.nextPos;
+          return cachedResult.result;
+        }
+        
+        
+        var result0 = [];
+        if (input.substr(pos, 1) === " ") {
+          var result3 = " ";
+          pos += 1;
+        } else {
+          var result3 = null;
+          if (reportMatchFailures) {
+            matchFailed("\" \"");
+          }
+        }
+        if (result3 !== null) {
+          var result1 = result3;
+        } else {
+          if (input.substr(pos, 1) === "\n") {
+            var result2 = "\n";
+            pos += 1;
+          } else {
+            var result2 = null;
+            if (reportMatchFailures) {
+              matchFailed("\"\\n\"");
+            }
+          }
+          if (result2 !== null) {
+            var result1 = result2;
+          } else {
+            var result1 = null;;
+          };
+        }
+        while (result1 !== null) {
+          result0.push(result1);
+          if (input.substr(pos, 1) === " ") {
+            var result3 = " ";
+            pos += 1;
+          } else {
+            var result3 = null;
+            if (reportMatchFailures) {
+              matchFailed("\" \"");
+            }
+          }
+          if (result3 !== null) {
+            var result1 = result3;
+          } else {
+            if (input.substr(pos, 1) === "\n") {
+              var result2 = "\n";
+              pos += 1;
+            } else {
+              var result2 = null;
+              if (reportMatchFailures) {
+                matchFailed("\"\\n\"");
+              }
+            }
+            if (result2 !== null) {
+              var result1 = result2;
+            } else {
+              var result1 = null;;
+            };
+          }
+        }
+        
+        
+        
+        cache[cacheKey] = {
+          nextPos: pos,
+          result:  result0
+        };
+        return result0;
+      }
+      
+      function buildErrorMessage() {
+        function buildExpected(failuresExpected) {
+          failuresExpected.sort();
+          
+          var lastFailure = null;
+          var failuresExpectedUnique = [];
+          for (var i = 0; i < failuresExpected.length; i++) {
+            if (failuresExpected[i] !== lastFailure) {
+              failuresExpectedUnique.push(failuresExpected[i]);
+              lastFailure = failuresExpected[i];
+            }
+          }
+          
+          switch (failuresExpectedUnique.length) {
+            case 0:
+              return 'end of input';
+            case 1:
+              return failuresExpectedUnique[0];
+            default:
+              return failuresExpectedUnique.slice(0, failuresExpectedUnique.length - 1).join(', ')
+                + ' or '
+                + failuresExpectedUnique[failuresExpectedUnique.length - 1];
+          }
+        }
+        
+        var expected = buildExpected(rightmostMatchFailuresExpected);
+        var actualPos = Math.max(pos, rightmostMatchFailuresPos);
+        var actual = actualPos < input.length
+          ? quote(input.charAt(actualPos))
+          : 'end of input';
+        
+        return 'Expected ' + expected + ' but ' + actual + ' found.';
+      }
+      
+      function computeErrorPosition() {
+        /*
+         * The first idea was to use |String.split| to break the input up to the
+         * error position along newlines and derive the line and column from
+         * there. However IE's |split| implementation is so broken that it was
+         * enough to prevent it.
+         */
+        
+        var line = 1;
+        var column = 1;
+        var seenCR = false;
+        
+        for (var i = 0; i <  rightmostMatchFailuresPos; i++) {
+          var ch = input.charAt(i);
+          if (ch === '\n') {
+            if (!seenCR) { line++; }
+            column = 1;
+            seenCR = false;
+          } else if (ch === '\r' | ch === '\u2028' || ch === '\u2029') {
+            line++;
+            column = 1;
+            seenCR = true;
+          } else {
+            column++;
+            seenCR = false;
+          }
+        }
+        
+        return { line: line, column: column };
+      }
+      
+      
+      
+      var result = parseFunctions[startRule]();
+      
+      /*
+       * The parser is now in one of the following three states:
+       *
+       * 1. The parser successfully parsed the whole input.
+       *
+       *    - |result !== null|
+       *    - |pos === input.length|
+       *    - |rightmostMatchFailuresExpected| may or may not contain something
+       *
+       * 2. The parser successfully parsed only a part of the input.
+       *
+       *    - |result !== null|
+       *    - |pos < input.length|
+       *    - |rightmostMatchFailuresExpected| may or may not contain something
+       *
+       * 3. The parser did not successfully parse any part of the input.
+       *
+       *   - |result === null|
+       *   - |pos === 0|
+       *   - |rightmostMatchFailuresExpected| contains at least one failure
+       *
+       * All code following this comment (including called functions) must
+       * handle these states.
+       */
+      if (result === null || pos !== input.length) {
+        var errorPosition = computeErrorPosition();
+        throw new this.SyntaxError(
+          buildErrorMessage(),
+          errorPosition.line,
+          errorPosition.column
+        );
+      }
+      
+      return result;
+    },
+    
+    /* Returns the parser source code. */
+    toSource: function() { return this._source; }
+  };
+  
+  /* Thrown when a parser encounters a syntax error. */
+  
+  result.SyntaxError = function(message, line, column) {
+    this.name = 'SyntaxError';
+    this.message = message;
+    this.line = line;
+    this.column = column;
+  };
+  
+  result.SyntaxError.prototype = Error.prototype;
+  
+  return result;
+})();
+/*
+ * The controllers logical parts of the Go board.
+ */
+glift.controllers = {
+  // Map from glift.enums.controllerTypes to constructor, which takes one argument:
+  // (processed) options. This is global static state and thus meant to be
+  // immutable.
+  controllerMap: {},
+
+  create: function(rawOptions) {
+    var options = glift.controllers.processOptions(options);
+    if (options.controllerType in glift.controllers.controllerMap) {
+      return glift.controllers.controllerMap[options.controllerType](options);
+    } else {
+      throw "No controller found for type: " + options.controllerType;
+    }
+  }
+};
+(function() {
+var msgs = glift.enums.controllerMessages,
+    BASE = glift.enums.controllerTypes.BASE;
+
+glift.controllers.baseController = {
+  create: function() {
+    return new BaseController();
+  }
+};
+
+glift.controllers.controllerMap[BASE] =
+    glift.controllers.baseController.create;
+
+var BaseController = function() {};
+
+BaseController.prototype = {
+  // nextSgf doesn't really make sense for playing games. But, oh well. We'll
+  // figure out what to do then in the (probably distant) future.
+  //
+  // Really this shouldn't be nextSgf either -- this ties us to the
+  // serialization format (SGF).  But for now, it's probably fine.
+  nextSgf: function(callback) {
+    throw "Not Implemented";
+  },
+
+  addStone: function(callback) {
+    throw "Not Implemented";
+  },
+
+  initialize: function(sgfString, initPosString, callback) {
+    var rules = glift.rules;
+    this.initPosition = rules.treepath.parseInitPosition(initPosString);
+    this.movetree = rules.movetree.getFromSgf(sgfString, this.initPosition);
+    // glift.sgf.parseInitPosition handles an undefined initPosition
+    this.goban = rules.goban.getFromMoveTree(this.movetree, this.initPosition);
+    // return the entire boardState
+    this.getEntireBoardState(callback);
+  },
+
+  getEntireBoardState: function(callback) {
+    var ints = glift.rules.intersections,
+        intersectionData = ints.getFullBoardData(this.movetree, this.goban);
+    callback({
+      message: msgs.CONTINUE,
+      data: intersectionData
+    });
+  },
+
+  canAddStone: function(point, color, callback) {
+    if (this.goban.placeable(point,color)) {
+      callback({message: msgs.CONTINUE});
+    } else {
+      callback({message: msgs.FAILURE});
+    }
+  },
+
+  // Returns a State (either BLACK or WHITE). Needs to be fast since it's used
+  // to display the hover-color in the display, so the assumption is that a
+  // callback won't be necessary.
+  //
+  // This will be undefined until initialize is called, so the clients of the
+  // controller must make sure to always initialize the board position
+  // first.
+  getCurrentPlayer: function(callback) {
+    return this.movetree.getCurrentPlayer();
+  },
+
+  // Returns the number of intersections.  Should be known at load time, so no
+  // callback required.
+  getIntersections: function(callback) {
+    return this.movetree.getIntersections();
+  }
+};
+})();
+glift.controllers.processOptions = function(rawOptions) {
+  var ControllerOptionError = function(message) {
+    this.name = "DisplayOptionError";
+    this.message = message;
+  };
+  ControllerOptionError.prototype = new Error();
+
+  // Default options
+  var defaults = {
+    // intersections: 19, -- intersections is not necessary, since it's set via
+    // the SGF (and the default is 19 anyway).
+    controllerType: "STATIC_PROBLEM_STUDY",
+    initialPosition: [0],
+    sgfString: ''
+  };
+  for (var key in rawOptions) {
+    var value = rawOptions[key];
+    switch(key) {
+
+      case 'controllerType':
+        if (glift.util.typeOf(value) == 'string' &&
+            value in glift.enums.controllerTypes) {
+          defaults.controllerType = value;
+        } else {
+          throw new ControllerOptionError("Unknown controllerType: " + value);
+        }
+        break;
+
+      case 'initialPosition':
+        // If there's an error, a ParseError will be thrown.
+        defaults.initialPosition = glift.rules.parseInitPosition(value);
+        break;
+
+      case 'sgfString':
+        if (glift.util.typeOf(value) == 'string') {
+          defaults.sgfString = value;
+        } else {
+          throw new ControllerOptionError("Bad type for sgfString: " + value);
+        }
+        break;
+
+      default:
+        glift.util.logz("Unknown option key: " + key);
+    }
+  }
+  return defaults;
+};
+(function() {
+var msgs = glift.enums.controllerMessages,
+    util = glift.util,
+    STATIC_PROBLEM_STUDY = glift.enums.controllerTypes.STATIC_PROBLEM_STUDY;
+
+glift.controllers.staticProblemStudy = {
+  create: function(options) {
+    var controllers = glift.controllers,
+        baseController = glift.util.beget(controllers.baseController.create()),
+        newController = util.setMethods(
+            baseController, staticProblemStudyMethods),
+        // At this point, options have already been processed
+        _ = newController.initOptions(options);
+    return newController;
+  }
+};
+
+// Register this Controller type in the map;
+glift.controllers.controllerMap[STATIC_PROBLEM_STUDY] =
+    glift.controllers.staticProblemStudy.create;
+
+var staticProblemStudyMethods = {
+  initOptions: function(options) {
+    this.sgfString = options.sgfString;
+    this.initialPosition = options.initialPosition;
+    return this;
+  },
+
+  nextSgf: function(callback) {
+    if (this.sgfString !== "") {
+      this.staticStringNextSgf(callback);
+    } else if (options.sgfDataLocation !== undefined) {
+      this.sgfDataLocation = options.sgfDataLocation;
+      // Get the Data Location
+      throw "Not implemented"
+    } else {
+      // ... what to do here?
+    }
+  },
+
+  staticStringNextSgf: function(callback) {
+    this.initialize(this.sgfString, this.initPosition, callback);
+  },
+
+  // Add a stone to the board.  Since this is a problem, we check for
+  // 'correctness', which we check whether all child nodes are labeled (in some
+  // fashion) as correct.
+  //
+  // TODO: Refactor this into something less ridiculous.
+  addStone: function(point, color, callback) {
+    var addResult = this.goban.addStone(point, color);
+    if (!addResult.successful) {
+      callback({
+        message: msgs.FAILURE,
+        reason: "Cannot add stone"
+      });
+      return util.none;
+    }
+    // At this point, the move is allowed by the rules of Go
+    var problemResults = glift.enums.problemResults,
+        nextVarNum = this.movetree.findNextMove(point, color);
+    this.lastPlayed = {point: point, color: color};
+    if (nextVarNum === util.none) {
+      callback({
+        message: msgs.DONE,
+        result: problemResults.INCORRECT
+      });
+      return util.none;
+    } else {
+      this.movetree.moveDown(nextVarNum);
+      var correctness = this.movetree.isCorrectPosition();
+      var intersectionData = glift.rules.intersections.getFullBoardData(
+          this.movetree, this.goban);
+      if (correctness === problemResults.CORRECT) {
+        // A bit sloppy: we don't need the entire board info.
+        callback({
+            message: msgs.DONE,
+            result: problemResults.CORRECT,
+            data: intersectionData
+        });
+        return util.none;
+      } else if (correctness === problemResults.INDETERMINATE) {
+        var randNext = glift.math.getRandomInt(
+            0, this.movetree.getNode().numChildren() - 1);
+        this.movetree.moveDown(randNext);
+        var nextMove = this.movetree.getProperties().getMove();
+        this.goban.addStone(nextMove.point, nextMove.color);
+        var intersectionData = glift.rules.intersections.getFullBoardData(
+            this.movetree, this.goban);
+        callback({
+            message: msgs.CONTINUE,
+            result: problemResults.INDETERMINATE,
+            data: intersectionData
+        });
+        return util.none;
+      } else if (correctness === problemResults.INCORRECT) {
+        callback({
+            message: msgs.DONE,
+            result: problemResults.INCORRECT
+        });
+        return util.none;
+      } else {
+        throw "Unexpected result output: " + correctness
+      }
+    }
+  }
+};
+
+})();
+/**
+ * The bridge is the only place where display and rules+controller code can
+ * mingle.
+ */
+glift.bridge = {};
+glift.bridge.getFromMovetree = function(movetree) {
+  var bbox = glift.displays.bboxFromPts,
+      point = glift.util.point,
+      boardRegions = glift.enums.boardRegions,
+      // Intersections need to be 0 rather than 1 indexed.
+      ints = movetree.getIntersections() - 1,
+      middle = Math.ceil(ints / 2),
+      quads = {},
+      tracker = {},
+      numstones = 0;
+  quads[boardRegions.TOP_LEFT] =
+      bbox(point(0, 0), point(middle + 1, middle + 1));
+  quads[boardRegions.TOP_RIGHT] =
+      bbox(point(middle - 1, 0), point(ints, middle + 1));
+  quads[boardRegions.BOTTOM_LEFT] =
+      bbox(point(0, middle - 1), point(middle + 1, ints));
+  quads[boardRegions.BOTTOM_RIGHT] =
+      bbox(point(middle - 1, middle - 1), point(ints, ints));
+  movetree.recurseFromRoot(function(mt) {
+    var stones = mt.getProperties().getAllStones();
+    for (var color in stones) {
+      var points = stones[color];
+      for (var i = 0; i < points.length; i++) {
+        var pt = points[i];
+        numstones += 1
+        for (var quadkey in quads) {
+          var box = quads[quadkey];
+          if (box.contains(pt)) {
+            if (tracker[quadkey] === undefined) tracker[quadkey] = [];
+            tracker[quadkey].push(pt);
+          }
+        }
+      }
+    }
+  });
+  return glift.bridge._getRegionFromTracker(tracker, numstones);
+};
+
+glift.bridge._getRegionFromTracker = function(tracker, numstones) {
+  var regions = [], br = glift.enums.boardRegions;
+  for (var quadkey in tracker) {
+    var quadlist = tracker[quadkey];
+    if (quadlist.length === numstones) {
+      return quadkey;
+    } else {
+      regions.push(quadkey);
+    }
+  }
+  if (regions.length !== 2) {
+    return glift.boardRegions.ALL; // Shouldn't be 1 element here...
+  }
+  var newset = glift.util.intersection(
+    glift.util.regions.getComponents(regions[0]),
+    glift.util.regions.getComponents(regions[1]));
+  // there should only be one element at this point or nothing
+  for (var key in newset) {
+    return key;
+  }
+  return glift.boardRegions.ALL;
+};

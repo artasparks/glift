@@ -4,7 +4,7 @@ glift.controllers.baseControllerTest = function() {
   var sgfs = testdata.sgfs;
 
   test("Successful create the Base Controller", function() {
-    var genCont = cont.baseController.create();
+    var genCont = cont.createBaseController();
     ok(genCont !== undefined, "must successfully init the controller");
   });
 };

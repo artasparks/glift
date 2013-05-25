@@ -30,6 +30,19 @@ glift.rules.intersections = {
     TR: enums.marks.TRIANGLE
   },
 
+  /**
+   * Intersection data is a object, containing all the intersection data.  So,
+   *  {
+   *    points: {
+   *      "1,2" : {
+   *        point: {1, 2},
+   *        STONE: "WHITE"
+   *      }
+   *      ... etc ...
+   *    }
+   *    comment : "foo"
+   *  }
+   */
   getFullBoardData: function(movetree, goban) {
     var out = {},
         pointsObj = {},
@@ -37,7 +50,8 @@ glift.rules.intersections = {
     // First, set the stones.
     for (var i = 0; i < gobanStones.length; i++) {
       var pt = gobanStones[i].point;
-      var sobj = {point: pt}
+      var sobj = {};
+      sobj["point"] = pt;
       sobj[enums.marks.STONE] = gobanStones[i].color;
       pointsObj[pt.hash()] = sobj;
     }

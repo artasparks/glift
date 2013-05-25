@@ -8,7 +8,7 @@ glift.controllers = {
   controllerMap: {},
 
   create: function(rawOptions) {
-    var options = glift.controllers.processOptions(options);
+    var options = glift.controllers.processOptions(rawOptions);
     if (options.controllerType in glift.controllers.controllerMap) {
       return glift.controllers.controllerMap[options.controllerType](options);
     } else {

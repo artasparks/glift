@@ -44,6 +44,9 @@ glift.rules.movetree = {
     if (initPosition === undefined) {
       initPosition = []; // Should throw an error?
     }
+    if (sgfString === undefined || sgfString === "") {
+      return glift.rules.movetree.getInstance(19);
+    }
     var mt = new MoveTree(glift.sgf.parser.parse($.trim(sgfString)));
     // Set the initial position
     for (var i = 0; i < initPosition.length; i++) {

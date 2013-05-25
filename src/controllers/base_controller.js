@@ -2,72 +2,92 @@
 var msgs = glift.enums.controllerMessages,
     BASE = glift.enums.controllerTypes.BASE;
 
-glift.controllers.baseController = {
-  create: function() {
-    return new BaseController();
-  }
+glift.controllers.createBaseController = function() {
+  return new BaseController();
 };
 
-glift.controllers.controllerMap[BASE] =
-    glift.controllers.baseController.create;
+glift.controllers.controllerMap[BASE] = glift.controllers.createBaseController;
 
+/**
+ * Boring constructor.  It's expected that this will be extended.
+ */
 var BaseController = function() {};
 
 BaseController.prototype = {
-  // nextSgf doesn't really make sense for playing games. But, oh well. We'll
-  // figure out what to do then in the (probably distant) future.
-  //
-  // Really this shouldn't be nextSgf either -- this ties us to the
-  // serialization format (SGF).  But for now, it's probably fine.
-  nextSgf: function(callback) {
+  /**
+   * Add a stone.  What happens here depends on the extender of this base class.
+   */
+  addStone: function() {
     throw "Not Implemented";
   },
 
-  addStone: function(callback) {
-    throw "Not Implemented";
-  },
-
-  initialize: function(sgfString, initPosString, callback) {
-    var rules = glift.rules;
+  /**
+   * Initialize the:
+   *  - initPosition (description of where to start)
+   *  - movetree (tree of move nodes from the SGF)
+   *  - goban (backing array describing the go board)
+   */
+  initialize: function(o) {
+    var rules = glift.rules,
+        sgfString = this.sgfString,
+        initPosString = this.initialPosition;
     this.initPosition = rules.treepath.parseInitPosition(initPosString);
     this.movetree = rules.movetree.getFromSgf(sgfString, this.initPosition);
     // glift.sgf.parseInitPosition handles an undefined initPosition
     this.goban = rules.goban.getFromMoveTree(this.movetree, this.initPosition);
     // return the entire boardState
-    this.getEntireBoardState(callback);
+    return this.getEntireBoardState();
   },
 
-  getEntireBoardState: function(callback) {
-    var ints = glift.rules.intersections,
-        intersectionData = ints.getFullBoardData(this.movetree, this.goban);
-    callback({
-      message: msgs.CONTINUE,
-      data: intersectionData
-    });
+  /**
+   * Return the entire intersection data, including all stones, marks, and
+   * comments.  This format allows the user to completely populate some UI of
+   * some sort.
+   *
+   * The output looks like:
+   *  {
+   *    points: {
+   *      "1,2" : {
+   *        point: {1, 2},
+   *        STONE: "WHITE"
+   *      }
+   *      ... etc ...
+   *    }
+   *    comment : "foo"
+   *  }
+   */
+  getEntireBoardState: function() {
+    return glift.rules.intersections.getFullBoardData(this.movetree, this.goban);
   },
 
-  canAddStone: function(point, color, callback) {
-    if (this.goban.placeable(point,color)) {
-      callback({message: msgs.CONTINUE});
-    } else {
-      callback({message: msgs.FAILURE});
-    }
+  /**
+   * Return true if a Stone can (probably) be added to the board and false
+   * otherwise.
+   *
+   * Note, this method isn't always totally accurate. This method must be very
+   * fast since it's expected that this will be used for hover events.
+   *
+   */
+  canAddStone: function(point, color) {
+    return this.goban.placeable(point,color);
   },
 
-  // Returns a State (either BLACK or WHITE). Needs to be fast since it's used
-  // to display the hover-color in the display, so the assumption is that a
-  // callback won't be necessary.
-  //
-  // This will be undefined until initialize is called, so the clients of the
-  // controller must make sure to always initialize the board position
-  // first.
-  getCurrentPlayer: function(callback) {
+  /**
+   * Returns a State (either BLACK or WHITE). Needs to be fast since it's used
+   * to display the hover-color in the display.
+   *
+   * This will be undefined until initialize is called, so the clients of the
+   * controller must make sure to always initialize the board position
+   * first.
+   */
+  getCurrentPlayer: function() {
     return this.movetree.getCurrentPlayer();
   },
 
-  // Returns the number of intersections.  Should be known at load time, so no
-  // callback required.
-  getIntersections: function(callback) {
+  /**
+   * Returns the number of intersections.  Should be known at load time.
+   */
+  getIntersections: function() {
     return this.movetree.getIntersections();
   }
 };

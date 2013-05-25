@@ -38,8 +38,7 @@ var GliftPoint = function(xIn, yIn) {
       privateYval = yIn;
   this.x = function() { return privateXval };
   this.y = function() { return privateYval };
-  this.toString = function() {
-      return glift.util.coordToString(privateXval, privateYval); };
+
   this.equals = function(pt) {
       return privateXval === pt.x() && privateYval === pt.y();
   };
@@ -52,6 +51,10 @@ var GliftPoint = function(xIn, yIn) {
 GliftPoint.prototype = {
   hash: function() {
     return this.toString();
+  },
+
+  toString: function() {
+    return glift.util.coordToString(this.x(), this.y());
   },
 
   value: function() {

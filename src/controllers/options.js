@@ -10,7 +10,7 @@ glift.controllers.processOptions = function(rawOptions) {
     // intersections: 19, -- intersections is not necessary, since it's set via
     // the SGF (and the default is 19 anyway).
     controllerType: "STATIC_PROBLEM_STUDY",
-    initialPosition: [0],
+    initialPosition: [],
     sgfString: ''
   };
   for (var key in rawOptions) {
@@ -32,7 +32,7 @@ glift.controllers.processOptions = function(rawOptions) {
         break;
 
       case 'sgfString':
-        if (glift.util.typeOf(value) == 'string') {
+        if (glift.util.typeOf(value) === 'string') {
           defaults.sgfString = value;
         } else {
           throw new ControllerOptionError("Bad type for sgfString: " + value);

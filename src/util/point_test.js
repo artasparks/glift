@@ -28,16 +28,13 @@ glift.util.pointTest = function() {
     ok(pt === otherPt, "pts must be precisely equal")
   });
 
-  test("Test immutability", function() {
-    var pt = util.uncachedPoint(1, 3);
-    var pt2 = util.uncachedPoint(1, 3);
-    ok(pt.equals(pt2), "pts must be equal");
-    ok(pt.x.toString() === pt2.x.toString(), "functions should be the same");
-    deepEqual(pt.toString(), pt2.toString());
-    pt.x = 4;
-    ok(pt.x.toString() !== pt2.x.toString(), "x values shouldn't be equal anymore");
-    deepEqual(pt.toString(), pt2.toString(), "must have same string" +
-        "representation");
-    ok(pt.equals(pt2), "must still be equal");
-  });
+  // test("Test immutability", function() {
+    // var pt = util.uncachedPoint(1, 3);
+    // var pt2 = util.uncachedPoint(1, 3);
+    // ok(pt.equals(pt2), "pts must be equal");
+    // deepEqual(pt.toString(), pt2.toString());
+    // deepEqual(pt.toString(), pt2.toString(), "must have same string" +
+        // "representation");
+    // ok(pt.equals(pt2), "must still be equal");
+  // });
 };
