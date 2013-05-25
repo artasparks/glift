@@ -377,8 +377,7 @@ var GliftPoint = function(xIn, yIn) {
       privateYval = yIn;
   this.x = function() { return privateXval };
   this.y = function() { return privateYval };
-  this.toString = function() {
-      return glift.util.coordToString(privateXval, privateYval); };
+
   this.equals = function(pt) {
       return privateXval === pt.x() && privateYval === pt.y();
   };
@@ -391,6 +390,10 @@ var GliftPoint = function(xIn, yIn) {
 GliftPoint.prototype = {
   hash: function() {
     return this.toString();
+  },
+
+  toString: function() {
+    return glift.util.coordToString(this.x(), this.y());
   },
 
   value: function() {
@@ -1944,6 +1947,19 @@ glift.rules.intersections = {
     TR: enums.marks.TRIANGLE
   },
 
+  /**
+   * Intersection data is a object, containing all the intersection data.  So,
+   *  {
+   *    points: {
+   *      "1,2" : {
+   *        point: {1, 2},
+   *        STONE: "WHITE"
+   *      }
+   *      ... etc ...
+   *    }
+   *    comment : "foo"
+   *  }
+   */
   getFullBoardData: function(movetree, goban) {
     var out = {},
         pointsObj = {},
@@ -1951,7 +1967,8 @@ glift.rules.intersections = {
     // First, set the stones.
     for (var i = 0; i < gobanStones.length; i++) {
       var pt = gobanStones[i].point;
-      var sobj = {point: pt}
+      var sobj = {};
+      sobj["point"] = pt;
       sobj[enums.marks.STONE] = gobanStones[i].color;
       pointsObj[pt.hash()] = sobj;
     }
@@ -2104,6 +2121,9 @@ glift.rules.movetree = {
   getFromSgf: function(sgfString, initPosition) {
     if (initPosition === undefined) {
       initPosition = []; // Should throw an error?
+    }
+    if (sgfString === undefined || sgfString === "") {
+      return glift.rules.movetree.getInstance(19);
     }
     var mt = new MoveTree(glift.sgf.parser.parse($.trim(sgfString)));
     // Set the initial position
@@ -3798,7 +3818,7 @@ glift.controllers = {
   controllerMap: {},
 
   create: function(rawOptions) {
-    var options = glift.controllers.processOptions(options);
+    var options = glift.controllers.processOptions(rawOptions);
     if (options.controllerType in glift.controllers.controllerMap) {
       return glift.controllers.controllerMap[options.controllerType](options);
     } else {
@@ -3810,72 +3830,92 @@ glift.controllers = {
 var msgs = glift.enums.controllerMessages,
     BASE = glift.enums.controllerTypes.BASE;
 
-glift.controllers.baseController = {
-  create: function() {
-    return new BaseController();
-  }
+glift.controllers.createBaseController = function() {
+  return new BaseController();
 };
 
-glift.controllers.controllerMap[BASE] =
-    glift.controllers.baseController.create;
+glift.controllers.controllerMap[BASE] = glift.controllers.createBaseController;
 
+/**
+ * Boring constructor.  It's expected that this will be extended.
+ */
 var BaseController = function() {};
 
 BaseController.prototype = {
-  // nextSgf doesn't really make sense for playing games. But, oh well. We'll
-  // figure out what to do then in the (probably distant) future.
-  //
-  // Really this shouldn't be nextSgf either -- this ties us to the
-  // serialization format (SGF).  But for now, it's probably fine.
-  nextSgf: function(callback) {
+  /**
+   * Add a stone.  What happens here depends on the extender of this base class.
+   */
+  addStone: function() {
     throw "Not Implemented";
   },
 
-  addStone: function(callback) {
-    throw "Not Implemented";
-  },
-
-  initialize: function(sgfString, initPosString, callback) {
-    var rules = glift.rules;
+  /**
+   * Initialize the:
+   *  - initPosition (description of where to start)
+   *  - movetree (tree of move nodes from the SGF)
+   *  - goban (backing array describing the go board)
+   */
+  initialize: function(o) {
+    var rules = glift.rules,
+        sgfString = this.sgfString,
+        initPosString = this.initialPosition;
     this.initPosition = rules.treepath.parseInitPosition(initPosString);
     this.movetree = rules.movetree.getFromSgf(sgfString, this.initPosition);
     // glift.sgf.parseInitPosition handles an undefined initPosition
     this.goban = rules.goban.getFromMoveTree(this.movetree, this.initPosition);
     // return the entire boardState
-    this.getEntireBoardState(callback);
+    return this.getEntireBoardState();
   },
 
-  getEntireBoardState: function(callback) {
-    var ints = glift.rules.intersections,
-        intersectionData = ints.getFullBoardData(this.movetree, this.goban);
-    callback({
-      message: msgs.CONTINUE,
-      data: intersectionData
-    });
+  /**
+   * Return the entire intersection data, including all stones, marks, and
+   * comments.  This format allows the user to completely populate some UI of
+   * some sort.
+   *
+   * The output looks like:
+   *  {
+   *    points: {
+   *      "1,2" : {
+   *        point: {1, 2},
+   *        STONE: "WHITE"
+   *      }
+   *      ... etc ...
+   *    }
+   *    comment : "foo"
+   *  }
+   */
+  getEntireBoardState: function() {
+    return glift.rules.intersections.getFullBoardData(this.movetree, this.goban);
   },
 
-  canAddStone: function(point, color, callback) {
-    if (this.goban.placeable(point,color)) {
-      callback({message: msgs.CONTINUE});
-    } else {
-      callback({message: msgs.FAILURE});
-    }
+  /**
+   * Return true if a Stone can (probably) be added to the board and false
+   * otherwise.
+   *
+   * Note, this method isn't always totally accurate. This method must be very
+   * fast since it's expected that this will be used for hover events.
+   *
+   */
+  canAddStone: function(point, color) {
+    return this.goban.placeable(point,color);
   },
 
-  // Returns a State (either BLACK or WHITE). Needs to be fast since it's used
-  // to display the hover-color in the display, so the assumption is that a
-  // callback won't be necessary.
-  //
-  // This will be undefined until initialize is called, so the clients of the
-  // controller must make sure to always initialize the board position
-  // first.
-  getCurrentPlayer: function(callback) {
+  /**
+   * Returns a State (either BLACK or WHITE). Needs to be fast since it's used
+   * to display the hover-color in the display.
+   *
+   * This will be undefined until initialize is called, so the clients of the
+   * controller must make sure to always initialize the board position
+   * first.
+   */
+  getCurrentPlayer: function() {
     return this.movetree.getCurrentPlayer();
   },
 
-  // Returns the number of intersections.  Should be known at load time, so no
-  // callback required.
-  getIntersections: function(callback) {
+  /**
+   * Returns the number of intersections.  Should be known at load time.
+   */
+  getIntersections: function() {
     return this.movetree.getIntersections();
   }
 };
@@ -3892,7 +3932,7 @@ glift.controllers.processOptions = function(rawOptions) {
     // intersections: 19, -- intersections is not necessary, since it's set via
     // the SGF (and the default is 19 anyway).
     controllerType: "STATIC_PROBLEM_STUDY",
-    initialPosition: [0],
+    initialPosition: [],
     sgfString: ''
   };
   for (var key in rawOptions) {
@@ -3914,7 +3954,7 @@ glift.controllers.processOptions = function(rawOptions) {
         break;
 
       case 'sgfString':
-        if (glift.util.typeOf(value) == 'string') {
+        if (glift.util.typeOf(value) === 'string') {
           defaults.sgfString = value;
         } else {
           throw new ControllerOptionError("Bad type for sgfString: " + value);
@@ -3928,14 +3968,14 @@ glift.controllers.processOptions = function(rawOptions) {
   return defaults;
 };
 (function() {
-var msgs = glift.enums.controllerMessages,
-    util = glift.util,
+var util = glift.util,
     STATIC_PROBLEM_STUDY = glift.enums.controllerTypes.STATIC_PROBLEM_STUDY;
 
 glift.controllers.staticProblemStudy = {
-  create: function(options) {
+  // This is mostly left for legacy reasons
+  _create: function(options) {
     var controllers = glift.controllers,
-        baseController = glift.util.beget(controllers.baseController.create()),
+        baseController = glift.util.beget(controllers.createBaseController()),
         newController = util.setMethods(
             baseController, staticProblemStudyMethods),
         // At this point, options have already been processed
@@ -3944,31 +3984,21 @@ glift.controllers.staticProblemStudy = {
   }
 };
 
+glift.controllers.createStaticProblemStudy = function(options) {
+  var c = glift.controllers.staticProblemStudy._create(options)
+  c.initialize('foo');
+  return c;
+};
+
 // Register this Controller type in the map;
 glift.controllers.controllerMap[STATIC_PROBLEM_STUDY] =
-    glift.controllers.staticProblemStudy.create;
+    glift.controllers.createStaticProblemStudy;
 
 var staticProblemStudyMethods = {
   initOptions: function(options) {
-    this.sgfString = options.sgfString;
+    this.sgfString = options.sgfString || "";
     this.initialPosition = options.initialPosition;
     return this;
-  },
-
-  nextSgf: function(callback) {
-    if (this.sgfString !== "") {
-      this.staticStringNextSgf(callback);
-    } else if (options.sgfDataLocation !== undefined) {
-      this.sgfDataLocation = options.sgfDataLocation;
-      // Get the Data Location
-      throw "Not implemented"
-    } else {
-      // ... what to do here?
-    }
-  },
-
-  staticStringNextSgf: function(callback) {
-    this.initialize(this.sgfString, this.initPosition, callback);
   },
 
   // Add a stone to the board.  Since this is a problem, we check for
@@ -3976,59 +4006,59 @@ var staticProblemStudyMethods = {
   // fashion) as correct.
   //
   // TODO: Refactor this into something less ridiculous.
-  addStone: function(point, color, callback) {
+  addStone: function(point, color) {
+    var problemResults = glift.enums.problemResults,
+        msgs = glift.enums.controllerMessages,
+        FAILURE = msgs.FAILURE,
+        DONE = msgs.DONE,
+        CONTINUE = msgs.CONTINUE,
+        CORRECT = problemResults.CORRECT,
+        INCORRECT = problemResults.INCORRECT,
+        INDETERMINATE = problemResults.INDETERMINATE;
+
     var addResult = this.goban.addStone(point, color);
     if (!addResult.successful) {
-      callback({
-        message: msgs.FAILURE,
-        reason: "Cannot add stone"
-      });
-      return util.none;
+      return { message: FAILURE, reason: "Cannot add stone" };
     }
-    // At this point, the move is allowed by the rules of Go
-    var problemResults = glift.enums.problemResults,
-        nextVarNum = this.movetree.findNextMove(point, color);
+    // At this point, the move is allowed by the rules of Go.  Now the task is
+    // to determine whether tho move is 'correct' or not based on the data in
+    // the movetree, presumably from an SGF.
+    var nextVarNum = this.movetree.findNextMove(point, color);
     this.lastPlayed = {point: point, color: color};
+
+    // There are no variations corresponding to the move made, so we assume that
+    // the move is INCORRECT.
     if (nextVarNum === util.none) {
-      callback({
-        message: msgs.DONE,
-        result: problemResults.INCORRECT
-      });
-      return util.none;
-    } else {
+      return { message: DONE, result: INCORRECT };
+    }
+
+    else {
       this.movetree.moveDown(nextVarNum);
       var correctness = this.movetree.isCorrectPosition();
-      var intersectionData = glift.rules.intersections.getFullBoardData(
+      // TODO(kashomon): Only retrieve the intersections that have changed.
+      var outData = glift.rules.intersections.getFullBoardData(
           this.movetree, this.goban);
-      if (correctness === problemResults.CORRECT) {
-        // A bit sloppy: we don't need the entire board info.
-        callback({
-            message: msgs.DONE,
-            result: problemResults.CORRECT,
-            data: intersectionData
-        });
-        return util.none;
-      } else if (correctness === problemResults.INDETERMINATE) {
+
+      if (correctness === CORRECT) {
+        return { message: DONE, result: CORRECT, data: outData };
+      }
+
+      else if (correctness === INDETERMINATE) {
         var randNext = glift.math.getRandomInt(
             0, this.movetree.getNode().numChildren() - 1);
         this.movetree.moveDown(randNext);
         var nextMove = this.movetree.getProperties().getMove();
         this.goban.addStone(nextMove.point, nextMove.color);
-        var intersectionData = glift.rules.intersections.getFullBoardData(
+        var outData = glift.rules.intersections.getFullBoardData(
             this.movetree, this.goban);
-        callback({
-            message: msgs.CONTINUE,
-            result: problemResults.INDETERMINATE,
-            data: intersectionData
-        });
-        return util.none;
-      } else if (correctness === problemResults.INCORRECT) {
-        callback({
-            message: msgs.DONE,
-            result: problemResults.INCORRECT
-        });
-        return util.none;
-      } else {
+        return { message: CONTINUE, result: INDETERMINATE, data: outData };
+      }
+
+      else if (correctness === problemResults.INCORRECT) {
+        return { message: msgs.DONE, result: INCORRECT };
+      }
+
+      else {
         throw "Unexpected result output: " + correctness
       }
     }
@@ -4040,7 +4070,24 @@ var staticProblemStudyMethods = {
  * The bridge is the only place where display and rules+controller code can
  * mingle.
  */
-glift.bridge = {};
+glift.bridge = {
+  /**
+   * Set/create the various components in the UI.
+   *
+   * For a more detailed discussion, see intersections in glift.rules.
+   */
+  setDisplayState: function(intersectionData, display) {
+    var marks = glift.enums.marks;
+    for (var ptHash in intersectionData.points) {
+      var intersection = intersectionData.points[ptHash];
+      if (marks.STONE in intersection) {
+        var color = intersection[marks.STONE];
+        var pt = intersection.point;
+        display.setColor(pt, color);
+      }
+    }
+  }
+};
 glift.bridge.getFromMovetree = function(movetree) {
   var bbox = glift.displays.bboxFromPts,
       point = glift.util.point,
