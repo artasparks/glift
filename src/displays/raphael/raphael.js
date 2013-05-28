@@ -73,6 +73,26 @@ Display.prototype.recreate = function(options) {
   return this;
 };
 
+Display.prototype.enableAutoResizing = function() {
+  var that = this;
+  var resizeFunc = function() {
+    that.redraw();
+  };
+
+  var timeoutId;
+  $(window).resize(function(event) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(resizeFunc, 200);
+  });
+};
+
+Display.prototype.redraw = function() {
+  this._environment.init();
+  for (var i = 0; i < this._objectHistory.length; i++) {
+    this._objectHistory[i].redraw();
+  }
+};
+
 Display.prototype.setColor = function(point, color) {
   if (this._stones !== glift.util.none) {
     this._stones.setColor(point, color);

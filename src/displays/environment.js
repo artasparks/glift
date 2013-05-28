@@ -21,6 +21,14 @@ glift.displays.environment = {
 
   getInitialized: function(options) {
     return glift.displays.environment.get(options).init();
+  },
+
+  environmentCopy: function(env) {
+    return new GuiEnvironment(glift.displays.processOptions({
+      divId: env.divId,
+      boardRegion: env.boardRegion,
+      intersections: env.intersections
+    }));
   }
 };
 
@@ -84,10 +92,10 @@ GuiEnvironment.prototype = {
   },
 
   _resetDimensions: function() {
-    this.divHeight = ($("#" + this.divId).innerHeight());
+    this.divHeight = ($("#" + this.divId).height());
     // -- no reason to use jquery
     // document.getElementById(divId).style.height();
-    this.divWidth =  ($("#" + this.divId).innerWidth());
+    this.divWidth =  ($("#" + this.divId).width());
     this.needsInitialization = true;
     return this;
   },

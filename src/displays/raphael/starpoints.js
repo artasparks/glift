@@ -15,13 +15,13 @@ var StarPointSet = function(paper, environment, subtheme) {
 
 StarPointSet.prototype = {
   draw: function() {
-    var _ = this.destroy(), // remove if it already exists.
-        point = glift.util.point,
+    this.destroy(); // remove if it already exists.
+    var point = glift.util.point,
         boardPoints = this.environment.boardPoints,
         size = boardPoints.spacing * this.subtheme.starPointSize,
         intersections = this.environment.intersections,
         pts = {
-          9 : [[ 4 ]],
+          9 : [[ 2, 6 ], [ 4 ]],
           13 : [[ 3, 9 ], [6]],
           19 : [[ 3, 9, 15 ]]
         },

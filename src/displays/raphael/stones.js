@@ -13,23 +13,44 @@ var Stones = function(paper, environment, subtheme) {
   this.subtheme = subtheme;
 
   // Map from PtHash to Stone
-  this.stoneMap = {}; // init'd with draw();
+  this.stoneMap = glift.util.none; // init'd with draw();
 };
 
 Stones.prototype = {
   draw: function() {
-    var stoneMap = {},
+    var newStoneMap = {},
         boardPoints = this.environment.boardPoints;
     for (var ptHash in boardPoints.points) {
       var coordPt = boardPoints.points[ptHash],
           intersection = glift.util.pointFromHash(ptHash),
           spacing = boardPoints.spacing,
-          stone = new Stone(this.paper, intersection, coordPt, spacing,
-              this.subtheme);
-      stoneMap[ptHash] = stone.draw();
+          stone = glift.displays.raphael.createStone(
+              this.paper, intersection, coordPt, spacing, this.subtheme);
+
+      // This is a ack.  This is here so we can support redrawing the board.
+      // However, it conflates the idea of drawing and redrawing which probably
+      // ought to be separate.
+      if (this.stoneMap && this.stoneMap !== glift.util.none &&
+          this.stoneMap[ptHash]) {
+        // restore the stone state, if it exists.
+        var prevStone = this.stoneMap[ptHash];
+        var state = prevStone.colorState;
+        stone.cloneHandlers(prevStone);
+        stone.draw();
+        stone.setColor(state);
+        this.stoneMap[ptHash].destroy();
+      } else {
+        stone.draw();
+      }
+
+      newStoneMap[ptHash] = stone;
     }
-    this.stoneMap = stoneMap;
+    this.stoneMap = newStoneMap;
     return this;
+  },
+
+  redraw: function() {
+    return this.draw();
   },
 
   // Set handlers for all the stones.
@@ -67,90 +88,6 @@ Stones.prototype = {
   }
 
   // TODO(kashomon): Add drawing marks on top of the stones.
-};
-
-var Stone = function(paper, intersection, coordinate, spacing, subtheme) {
-  this.paper = paper;
-  // intersection: The standard point on the board, (1-indexed?). So, on a 19x19
-  // board, this will be a point where x,y are between 1 and 19 inclusive.
-  this.intersection = intersection;
-  // coordinate: the center of the stone, in pixels.
-  this.coordinate = coordinate;
-  this.subtheme = subtheme;
-  // TODO(kashomon): Change the magic #s to variables.
-  // The .2 fudge factor is used to account for line width.
-  this.radius = spacing / 2 - .2
-
-  // Set via draw
-  this.circle = glift.util.none;
-  this.bbox = glift.util.none;
-
-  this.bboxHoverIn = function() { throw "bboxHoverIn not Defined"; };
-  this.bboxHoverOut = function() { throw "bboxHoverOut not defined"; };
-  this.bboxClick = function() { throw "bboxClick not defined"; };
-
-  // Click handlers are set via setHandler in Stones.
-  this.clickHandler = function(intersection) {};
-  this.hoverInHandler = function(intersection) {};
-  this.hoverOutHandler = function(intersection) {};
-};
-
-Stone.prototype = {
-  draw: function() {
-    var subtheme = this.subtheme,
-        paper = this.paper,
-        r = this.radius,
-        coord = this.coordinate,
-        intersection = this.intersection,
-        that = this; // Avoid lexical 'this' binding problems.
-
-    this.circle = paper.circle(coord.x(), coord.y(), r);
-
-    // Create a bounding box surrounding the stone.  This is what the user
-    // actually clicks on, since just using circles leaves annoying gaps.
-    this.bbox = paper.rect(coord.x() - r, coord.y() - r, 2 * r, 2 * r)
-    this.bbox.attr({fill: "white", opacity: 0});
-
-    this.bboxHoverIn = function() { that.hoverInHandler(intersection); };
-    this.bboxHoverOut = function() { that.hoverOutHandler(intersection); };
-    this.bboxClick = function() { that.clickHandler(intersection); };
-    this.bbox.hover(this.bboxHoverIn, this.bboxHoverOut);
-    this.bbox.click(this.bboxClick);
-    this.setColor("EMPTY");
-    return this;
-  },
-
-  // Set the color of the stone by retrieving the "key" from the stones
-  // sub object.
-  setColor: function(key) {
-    if (this.circle === glift.util.none) {
-      throw "Circle was not initialized, so cannot set color";
-    }
-    if (!(key in this.subtheme)) {
-     glift.util.logz("Key " + key + " not found in theme");
-    }
-    this.circle.attr(this.subtheme[key]);
-  },
-
-  destroy: function() {
-    if (this.circle === glift.util.none || this.bbox === glift.util.none) {
-      return this // not initialized,
-    }
-    this.bbox.unhover(this.bboxHoverIn, this.bboxHoverOut);
-    this.bbox.unclick(this.bboxClick);
-    this.bbox.remove();
-    this.circle.remove();
-    return this;
-  },
-
-  _bboxToFront: function() {
-    this.bbox && this.bbox !== glift.util.non && this.bbox.toFront();
-    return this;
-  },
-
-  addMark: function(type, color) {
-    // TODO(kashomon): flargnargle.
-  }
 };
 
 })();

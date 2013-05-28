@@ -16,5 +16,10 @@ glift.createController = function(options) {
   return glift.controllers.create(options);
 };
 
+
+glift.global = {
+  debugMode: false
+};
+
 window.glift = glift;
 })();

@@ -7,8 +7,60 @@
 <script type="text/javascript" src="testdata/sgfs.js"></script>
 
 <!-- AUTO-GEN-DEPS -->
-<!-- Compiled -->
-<script type="text/javascript" src="compiled/glift.js"></script>
+<!-- Otre -->
+<script type="text/javascript" src="./glift.js"></script>
+<!-- Util -->
+<script type="text/javascript" src="util/util.js"></script>
+<script type="text/javascript" src="util/colors.js"></script>
+<script type="text/javascript" src="util/enums.js"></script>
+<script type="text/javascript" src="util/errors.js"></script>
+<script type="text/javascript" src="util/logger.js"></script>
+<script type="text/javascript" src="util/math.js"></script>
+<script type="text/javascript" src="util/point.js"></script>
+<script type="text/javascript" src="util/regions.js"></script>
+<script type="text/javascript" src="util/test_util.js"></script>
+<!-- Themes -->
+<script type="text/javascript" src="themes/themes.js"></script>
+<script type="text/javascript" src="themes/default.js"></script>
+<!-- Displays -->
+<script type="text/javascript" src="displays/displays.js"></script>
+<script type="text/javascript" src="displays/bbox.js"></script>
+<script type="text/javascript" src="displays/board_points.js"></script>
+<script type="text/javascript" src="displays/cropbox.js"></script>
+<script type="text/javascript" src="displays/environment.js"></script>
+<script type="text/javascript" src="displays/line_box.js"></script>
+<script type="text/javascript" src="displays/line_segments.js"></script>
+<script type="text/javascript" src="displays/options.js"></script>
+<script type="text/javascript" src="displays/resized_box.js"></script>
+<!-- Displays raphael -->
+<script type="text/javascript" src="displays/raphael/raphael.js"></script>
+<script type="text/javascript" src="displays/raphael/board_base.js"></script>
+<script type="text/javascript" src="displays/raphael/boardlines.js"></script>
+<script type="text/javascript" src="displays/raphael/marks.js"></script>
+<script type="text/javascript" src="displays/raphael/rutil.js"></script>
+<script type="text/javascript" src="displays/raphael/starpoints.js"></script>
+<script type="text/javascript" src="displays/raphael/stone.js"></script>
+<script type="text/javascript" src="displays/raphael/stones.js"></script>
+<!-- Rules -->
+<script type="text/javascript" src="rules/rules.js"></script>
+<script type="text/javascript" src="rules/goban.js"></script>
+<script type="text/javascript" src="rules/intersections.js"></script>
+<script type="text/javascript" src="rules/movenode.js"></script>
+<script type="text/javascript" src="rules/movetree.js"></script>
+<script type="text/javascript" src="rules/properties.js"></script>
+<script type="text/javascript" src="rules/treepath.js"></script>
+<!-- Sgf -->
+<script type="text/javascript" src="sgf/sgf.js"></script>
+<script type="text/javascript" src="sgf/props.js"></script>
+<script type="text/javascript" src="sgf/sgf_grammar.js"></script>
+<!-- Controllers -->
+<script type="text/javascript" src="controllers/controllers.js"></script>
+<script type="text/javascript" src="controllers/base_controller.js"></script>
+<script type="text/javascript" src="controllers/options.js"></script>
+<script type="text/javascript" src="controllers/static_problem_study.js"></script>
+<!-- Bridge -->
+<script type="text/javascript" src="bridge/bridge.js"></script>
+<script type="text/javascript" src="bridge/cropping.js"></script>
 <!-- Otre Tests -->
 <script type="text/javascript" src="./glift_test.js"></script>
 <!-- Util Tests -->
@@ -40,18 +92,20 @@
 <!-- END-AUTO-GEN-DEPS -->
 
     <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
       #glift_display1 {
-        position: relative;
-        top: 0;
-        width: 400px;
-        height: 300px;
-        float: left;
+        height:95%;
+        position:relative;
       }
     </style>
   </head>
 
   <body>
     <div id="wrap" style="position:relative;">
+      <div id="gheader"></div>
       <div id="glift_display1"></div>
       <div id="extra_info"></div>
       <script type="text/javascript">
@@ -76,6 +130,7 @@
             boardRegion: cropping
         });
         glift.bridge.setDisplayState(controller.getEntireBoardState(), display);
+        display.enableAutoResizing();
 
         display.setClickHandler(function(pt) {
           var currentPlayer = controller.getCurrentPlayer();

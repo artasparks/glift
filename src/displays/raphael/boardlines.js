@@ -15,8 +15,8 @@ var BoardLineSet = function(paper, environment, subtheme) {
 
 BoardLineSet.prototype = {
   draw: function() {
-    var _ = this.destroy(),
-        point = glift.util.point,
+    this.destroy();
+    var point = glift.util.point,
         paper = this.paper,
         subt = this.subtheme,
         segments = this.environment.lineSegments,
@@ -26,6 +26,10 @@ BoardLineSet.prototype = {
     this.vertSet = drawSegments(
         paper, segments.vert, maxInts, subt.lineSize, subt.edgeLineSize);
     return this;
+  },
+
+  redraw: function() {
+    return this.draw();
   },
 
   destroy: function() {
