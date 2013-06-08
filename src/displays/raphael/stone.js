@@ -91,11 +91,13 @@ Stone.prototype = {
       glift.util.logz("Key " + key + " not found in theme");
     }
     this.circle.attr(this.subtheme[key]);
-    if (key !== "EMPTY" && this.shadow !== undefined ) {
+
+    if (key !== "EMPTY" && !key.match("_HOVER") && this.shadow !== undefined ) {
       this.shadow.attr({opacity: 1});
-    } else if (key === "EMPTY" && this.shadow !== undefined) {
+    } else if (key === "EMPTY" && !key.match("_HOVER") && this.shadow !== undefined) {
       this.shadow.attr({opacity: 0});
     }
+
     this.colorState = key;
   },
 
