@@ -21,7 +21,7 @@ BoardBase.prototype = {
         box.topLeft().y(),
         box.width(),
         box.height());
-    this.rect.attr({fill: this.subtheme.bgColor});
+    this.rect.attr(this.subtheme.boardAttr);
     return this;
   },
 

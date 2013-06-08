@@ -16,6 +16,11 @@ glift.createController = function(options) {
   return glift.controllers.create(options);
 };
 
+
+glift.global = {
+  debugMode: false
+};
+
 window.glift = glift;
 })();
 glift.util = {
@@ -852,6 +857,14 @@ glift.displays.environment = {
 
   getInitialized: function(options) {
     return glift.displays.environment.get(options).init();
+  },
+
+  environmentCopy: function(env) {
+    return new GuiEnvironment(glift.displays.processOptions({
+      divId: env.divId,
+      boardRegion: env.boardRegion,
+      intersections: env.intersections
+    }));
   }
 };
 
@@ -915,10 +928,10 @@ GuiEnvironment.prototype = {
   },
 
   _resetDimensions: function() {
-    this.divHeight = ($("#" + this.divId).innerHeight());
+    this.divHeight = ($("#" + this.divId).height());
     // -- no reason to use jquery
     // document.getElementById(divId).style.height();
-    this.divWidth =  ($("#" + this.divId).innerWidth());
+    this.divWidth =  ($("#" + this.divId).width());
     this.needsInitialization = true;
     return this;
   },
@@ -1124,19 +1137,21 @@ glift.displays.getResizedBox = function(divBox, cropbox) {
       newTop = divBox.topLeft().y() + yDelta,
       newBox = glift.displays.bbox(
           util.point(newLeft, newTop), newWidth, newHeight);
-      newBox._debugInfo = function() {
-        return {
-          newDims: newDims,
-          newWidth: newWidth,
-          newHeight: newHeight,
-          xDiff: xDiff,
-          yDiff: yDiff,
-          xDelta: xDelta,
-          yDelta: yDelta,
-          newLeft: newLeft,
-          newTop: newTop
+      if (glift.global.debugMode) {
+        newBox._debugInfo = function() {
+          return {
+            newDims: newDims,
+            newWidth: newWidth,
+            newHeight: newHeight,
+            xDiff: xDiff,
+            yDiff: yDiff,
+            xDelta: xDelta,
+            yDelta: yDelta,
+            newLeft: newLeft,
+            newTop: newTop
+          };
         };
-      };
+      }
   return newBox;
 };
 
@@ -1232,6 +1247,26 @@ Display.prototype.recreate = function(options) {
   return this;
 };
 
+Display.prototype.enableAutoResizing = function() {
+  var that = this;
+  var resizeFunc = function() {
+    that.redraw();
+  };
+
+  var timeoutId;
+  $(window).resize(function(event) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(resizeFunc, 200);
+  });
+};
+
+Display.prototype.redraw = function() {
+  this._environment.init();
+  for (var i = 0; i < this._objectHistory.length; i++) {
+    this._objectHistory[i].redraw();
+  }
+};
+
 Display.prototype.setColor = function(point, color) {
   if (this._stones !== glift.util.none) {
     this._stones.setColor(point, color);
@@ -1308,8 +1343,8 @@ var BoardLineSet = function(paper, environment, subtheme) {
 
 BoardLineSet.prototype = {
   draw: function() {
-    var _ = this.destroy(),
-        point = glift.util.point,
+    this.destroy();
+    var point = glift.util.point,
         paper = this.paper,
         subt = this.subtheme,
         segments = this.environment.lineSegments,
@@ -1319,6 +1354,10 @@ BoardLineSet.prototype = {
     this.vertSet = drawSegments(
         paper, segments.vert, maxInts, subt.lineSize, subt.edgeLineSize);
     return this;
+  },
+
+  redraw: function() {
+    return this.draw();
   },
 
   destroy: function() {
@@ -1405,6 +1444,17 @@ glift.displays.raphael.rutil = {
   // Create an absolute SVG line -- different from lower case.
   svgLineAbsPt: function(pt) {
     return glift.displays.raphael.rutil.svgLineAbs(pt.x(), pt.y());
+  },
+  // Get the transform string, based on the scaliing object, which look like:
+  // {
+  //  xScale: num,
+  //  yScale: num,
+  //  xMove: num,
+  //  yMove: num
+  // }
+  transform: function(scalingObj) {
+    return "t" + scalingObj.xMove + "," + scalingObj.yMove +
+      "s" + scalingObj.xScale + "," + scalingObj.yScale;
   }
 };
 (function() {
@@ -1424,13 +1474,13 @@ var StarPointSet = function(paper, environment, subtheme) {
 
 StarPointSet.prototype = {
   draw: function() {
-    var _ = this.destroy(), // remove if it already exists.
-        point = glift.util.point,
+    this.destroy(); // remove if it already exists.
+    var point = glift.util.point,
         boardPoints = this.environment.boardPoints,
         size = boardPoints.spacing * this.subtheme.starPointSize,
         intersections = this.environment.intersections,
         pts = {
-          9 : [[ 4 ]],
+          9 : [[ 2, 6 ], [ 4 ]],
           13 : [[ 3, 9 ], [6]],
           19 : [[ 3, 9, 15 ]]
         },
@@ -1464,6 +1514,122 @@ StarPointSet.prototype = {
 };
 })();
 (function(){
+
+/**
+ * Create a Stone.
+ *
+ * This constructor is different than all the other constructors in this
+ * diroctory.  Not sure if this is a problem or not.
+ */
+glift.displays.raphael.createStone = function(
+    paper, intersection, coordinate, spacing, subtheme) {
+  return new Stone(paper, intersection, coordinate, spacing, subtheme);
+}
+
+var Stone = function(paper, intersection, coordinate, spacing, subtheme) {
+  this.paper = paper;
+  // intersection: The standard point on the board, (1-indexed?). So, on a 19x19
+  // board, this will be a point where x,y are between 1 and 19 inclusive.
+  this.intersection = intersection;
+  // coordinate: the center of the stone, in pixels.
+  this.coordinate = coordinate;
+  this.subtheme = subtheme;
+  // TODO(kashomon): Change the magic #s to variables.
+  // The .2 fudge factor is used to account for line width.
+  this.radius = spacing / 2 - .2
+
+  // The purpose of colorState is to provide a way to recreate the GoBoard.
+  this.colorState = glift.util.none; // set with setColor(...)
+
+  // Set via draw
+  this.circle = glift.util.none;
+  this.bbox = glift.util.none;
+
+  this.bboxHoverIn = function() { throw "bboxHoverIn not Defined"; };
+  this.bboxHoverOut = function() { throw "bboxHoverOut not defined"; };
+  this.bboxClick = function() { throw "bboxClick not defined"; };
+
+  // Click handlers are set via setHandler in Stones.
+  this.clickHandler = function(intersection) {};
+  this.hoverInHandler = function(intersection) {};
+  this.hoverOutHandler = function(intersection) {};
+};
+
+// TODO(kashomon): Break out into its own file.
+Stone.prototype = {
+  draw: function() {
+    this.destroy();
+    var subtheme = this.subtheme,
+        paper = this.paper,
+        r = this.radius,
+        coord = this.coordinate,
+        intersection = this.intersection,
+        that = this; // Avoid lexical 'this' binding problems.
+    this.circle = paper.circle(coord.x(), coord.y(), r);
+
+    // Create a bounding box surrounding the stone.  This is what the user
+    // actually clicks on, since just using circles leaves annoying gaps.
+    this.bbox = paper.rect(coord.x() - r, coord.y() - r, 2 * r, 2 * r)
+    this.bbox.attr({fill: "white", opacity: 0});
+
+    this.bboxHoverIn = function() { that.hoverInHandler(intersection); };
+    this.bboxHoverOut = function() { that.hoverOutHandler(intersection); };
+    this.bboxClick = function() { that.clickHandler(intersection); };
+    this.bbox.hover(this.bboxHoverIn, this.bboxHoverOut);
+    this.bbox.click(this.bboxClick);
+    this.setColor("EMPTY");
+    return this;
+  },
+
+  cloneHandlers: function(stone) {
+    var propertiesToCopy = [ 'bboxHoverIn', 'bboxHoverOut', 'bboxClick',
+        'clickHandler', 'hoverInHandler', 'hoverOutHandler'];
+    for (var i = 0; i < propertiesToCopy.length; i++) {
+      if (stone[propertiesToCopy[i]]) {
+        this[propertiesToCopy[i]] = stone[propertiesToCopy[i]];
+      }
+    }
+  },
+
+  // Set the color of the stone by retrieving the "key" from the stones
+  // sub object.
+  setColor: function(key) {
+    if (this.circle === glift.util.none) {
+      throw "Circle was not initialized, so cannot set color";
+    }
+    if (!(key in this.subtheme)) {
+      glift.util.logz("Key " + key + " not found in theme");
+    }
+    this.circle.attr(this.subtheme[key]);
+    this.colorState = key;
+  },
+
+  redraw: function() {
+    return this.draw();
+  },
+
+  destroy: function() {
+    if (this.circle === glift.util.none || this.bbox === glift.util.none) {
+      return this // not initialized,
+    }
+    this.bbox.unhover(this.bboxHoverIn, this.bboxHoverOut);
+    this.bbox.unclick(this.bboxClick);
+    this.bbox.remove();
+    this.circle.remove();
+    return this;
+  },
+
+  _bboxToFront: function() {
+    this.bbox && this.bbox !== glift.util.non && this.bbox.toFront();
+    return this;
+  },
+
+  addMark: function(type, color) {
+    // TODO(kashomon): flargnargle.
+  }
+};
+})();
+(function(){
 // Create the entire grid of stones and immediately call draw()
 glift.displays.raphael.Display.prototype.createStones = function() {
   return new Stones(this._paper, this._environment, this._theme.stones)
@@ -1478,23 +1644,44 @@ var Stones = function(paper, environment, subtheme) {
   this.subtheme = subtheme;
 
   // Map from PtHash to Stone
-  this.stoneMap = {}; // init'd with draw();
+  this.stoneMap = glift.util.none; // init'd with draw();
 };
 
 Stones.prototype = {
   draw: function() {
-    var stoneMap = {},
+    var newStoneMap = {},
         boardPoints = this.environment.boardPoints;
     for (var ptHash in boardPoints.points) {
       var coordPt = boardPoints.points[ptHash],
           intersection = glift.util.pointFromHash(ptHash),
           spacing = boardPoints.spacing,
-          stone = new Stone(this.paper, intersection, coordPt, spacing,
-              this.subtheme);
-      stoneMap[ptHash] = stone.draw();
+          stone = glift.displays.raphael.createStone(
+              this.paper, intersection, coordPt, spacing, this.subtheme);
+
+      // This is a ack.  This is here so we can support redrawing the board.
+      // However, it conflates the idea of drawing and redrawing which probably
+      // ought to be separate.
+      if (this.stoneMap && this.stoneMap !== glift.util.none &&
+          this.stoneMap[ptHash]) {
+        // restore the stone state, if it exists.
+        var prevStone = this.stoneMap[ptHash];
+        var state = prevStone.colorState;
+        stone.cloneHandlers(prevStone);
+        stone.draw();
+        stone.setColor(state);
+        this.stoneMap[ptHash].destroy();
+      } else {
+        stone.draw();
+      }
+
+      newStoneMap[ptHash] = stone;
     }
-    this.stoneMap = stoneMap;
+    this.stoneMap = newStoneMap;
     return this;
+  },
+
+  redraw: function() {
+    return this.draw();
   },
 
   // Set handlers for all the stones.
@@ -1532,90 +1719,6 @@ Stones.prototype = {
   }
 
   // TODO(kashomon): Add drawing marks on top of the stones.
-};
-
-var Stone = function(paper, intersection, coordinate, spacing, subtheme) {
-  this.paper = paper;
-  // intersection: The standard point on the board, (1-indexed?). So, on a 19x19
-  // board, this will be a point where x,y are between 1 and 19 inclusive.
-  this.intersection = intersection;
-  // coordinate: the center of the stone, in pixels.
-  this.coordinate = coordinate;
-  this.subtheme = subtheme;
-  // TODO(kashomon): Change the magic #s to variables.
-  // The .2 fudge factor is used to account for line width.
-  this.radius = spacing / 2 - .2
-
-  // Set via draw
-  this.circle = glift.util.none;
-  this.bbox = glift.util.none;
-
-  this.bboxHoverIn = function() { throw "bboxHoverIn not Defined"; };
-  this.bboxHoverOut = function() { throw "bboxHoverOut not defined"; };
-  this.bboxClick = function() { throw "bboxClick not defined"; };
-
-  // Click handlers are set via setHandler in Stones.
-  this.clickHandler = function(intersection) {};
-  this.hoverInHandler = function(intersection) {};
-  this.hoverOutHandler = function(intersection) {};
-};
-
-Stone.prototype = {
-  draw: function() {
-    var subtheme = this.subtheme,
-        paper = this.paper,
-        r = this.radius,
-        coord = this.coordinate,
-        intersection = this.intersection,
-        that = this; // Avoid lexical 'this' binding problems.
-
-    this.circle = paper.circle(coord.x(), coord.y(), r);
-
-    // Create a bounding box surrounding the stone.  This is what the user
-    // actually clicks on, since just using circles leaves annoying gaps.
-    this.bbox = paper.rect(coord.x() - r, coord.y() - r, 2 * r, 2 * r)
-    this.bbox.attr({fill: "white", opacity: 0});
-
-    this.bboxHoverIn = function() { that.hoverInHandler(intersection); };
-    this.bboxHoverOut = function() { that.hoverOutHandler(intersection); };
-    this.bboxClick = function() { that.clickHandler(intersection); };
-    this.bbox.hover(this.bboxHoverIn, this.bboxHoverOut);
-    this.bbox.click(this.bboxClick);
-    this.setColor("EMPTY");
-    return this;
-  },
-
-  // Set the color of the stone by retrieving the "key" from the stones
-  // sub object.
-  setColor: function(key) {
-    if (this.circle === glift.util.none) {
-      throw "Circle was not initialized, so cannot set color";
-    }
-    if (!(key in this.subtheme)) {
-     glift.util.logz("Key " + key + " not found in theme");
-    }
-    this.circle.attr(this.subtheme[key]);
-  },
-
-  destroy: function() {
-    if (this.circle === glift.util.none || this.bbox === glift.util.none) {
-      return this // not initialized,
-    }
-    this.bbox.unhover(this.bboxHoverIn, this.bboxHoverOut);
-    this.bbox.unclick(this.bboxClick);
-    this.bbox.remove();
-    this.circle.remove();
-    return this;
-  },
-
-  _bboxToFront: function() {
-    this.bbox && this.bbox !== glift.util.non && this.bbox.toFront();
-    return this;
-  },
-
-  addMark: function(type, color) {
-    // TODO(kashomon): flargnargle.
-  }
 };
 
 })();

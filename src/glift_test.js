@@ -44,10 +44,10 @@ module("Glift API Test Suite");
       intersections: 13,
       boardRegion: boardRegions.LEFT
     });
-    ok(display._theme !== undefined, "shouldn't be undefined");
-    deepEqual(display._themeName, "DEFAULT", "Default");
-    ok(display._theme.board !== undefined, "shouldn't be undefined");
-    deepEqual(display._theme.board.bgColor, "#f5be7e");
+    ok(display._theme !== undefined, "_theme shouldn't be undefined");
+    deepEqual(display._themeName, "DEFAULT", "ThemeName: Default");
+    ok(display._theme.board !== undefined, "theme.board shouldn't be undefined");
+    deepEqual(display._theme.board.boardAttr.fill, "#f5be7e");
     ok(display !== undefined);
     ok(display.divId() !== undefined);
     ok(display.theme() !== undefined);

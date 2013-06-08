@@ -1,10 +1,4 @@
 glift.displays.processOptions = function(rawOptions) {
-  var DisplayOptionError = function(message) {
-    this.name = "DisplayOptionError";
-    this.message = message;
-  };
-  DisplayOptionError.prototype = new Error();
-
   // Default keys
   var defaults = {
     intersections: 19,
@@ -21,7 +15,7 @@ glift.displays.processOptions = function(rawOptions) {
         if (glift.util.typeOf(value) == 'number' && value > 0) {
           defaults.intersections = value;
         } else {
-          throw new DisplayOptionError("Intersection value : " + key);
+          throw "Intersection value : " + key;
         }
         break;
 
@@ -29,7 +23,7 @@ glift.displays.processOptions = function(rawOptions) {
         if (glift.themes.has(value)) {
           defaults.theme = value;
         } else {
-          throw new DisplayOptionError("Unknown theme: " + value);
+          throw "Unknown theme: " + value;
         }
         break;
 
@@ -38,7 +32,7 @@ glift.displays.processOptions = function(rawOptions) {
         if (elem !== null) {
           defaults.divId = value
         } else {
-          throw new DisplayOptionError("Could not find div with id: " + value);
+          throw "Could not find div with id: " + value;
         }
         break;
 
@@ -47,7 +41,7 @@ glift.displays.processOptions = function(rawOptions) {
         if (glift.enums.boardRegions[value] !== undefined) {
           defaults.boardRegion = value;
         } else {
-          throw new DisplayOptionError("Unknown board region: " + value);
+          throw "Unknown board region: " + value;
         }
         break;
 
@@ -56,7 +50,7 @@ glift.displays.processOptions = function(rawOptions) {
         if (glift.util.typeOf(value) === 'object') {
           defaults.displayConfig = value;
         } else {
-          throw new DisplayOptionError("displayConfig not an object: " + value);
+          throw "displayConfig not an object: " + value;
         }
         break;
 
@@ -65,4 +59,4 @@ glift.displays.processOptions = function(rawOptions) {
     }
   }
   return defaults;
-};
+}

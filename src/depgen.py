@@ -11,6 +11,7 @@ FILES_TO_AUTOGEN = {
     'BoxDisplayTest.html': True,
     'RealBoardTest.html': True,
     'ProblemTester.html': True,
+    'ThemeTester.html': True,
     }
 
 COMBINED_LOC = 'compiled/glift_combined.js'

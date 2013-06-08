@@ -1,0 +1,172 @@
+<html>
+<head>
+
+<title> Theme Tester </title>
+<script type="text/javascript" src="libs/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" src="libs/raphael-min.js"></script>
+<script type="text/javascript" src="testdata/sgfs.js"></script>
+
+<!-- AUTO-GEN-DEPS -->
+<!-- Otre -->
+<script type="text/javascript" src="./glift.js"></script>
+<!-- Util -->
+<script type="text/javascript" src="util/util.js"></script>
+<script type="text/javascript" src="util/colors.js"></script>
+<script type="text/javascript" src="util/enums.js"></script>
+<script type="text/javascript" src="util/errors.js"></script>
+<script type="text/javascript" src="util/logger.js"></script>
+<script type="text/javascript" src="util/math.js"></script>
+<script type="text/javascript" src="util/point.js"></script>
+<script type="text/javascript" src="util/regions.js"></script>
+<script type="text/javascript" src="util/test_util.js"></script>
+<!-- Themes -->
+<script type="text/javascript" src="themes/themes.js"></script>
+<script type="text/javascript" src="themes/default.js"></script>
+<script type="text/javascript" src="themes/depth.js"></script>
+<!-- Displays -->
+<script type="text/javascript" src="displays/displays.js"></script>
+<script type="text/javascript" src="displays/bbox.js"></script>
+<script type="text/javascript" src="displays/board_points.js"></script>
+<script type="text/javascript" src="displays/cropbox.js"></script>
+<script type="text/javascript" src="displays/environment.js"></script>
+<script type="text/javascript" src="displays/line_box.js"></script>
+<script type="text/javascript" src="displays/line_segments.js"></script>
+<script type="text/javascript" src="displays/options.js"></script>
+<script type="text/javascript" src="displays/resized_box.js"></script>
+<!-- Displays raphael -->
+<script type="text/javascript" src="displays/raphael/raphael.js"></script>
+<script type="text/javascript" src="displays/raphael/board_base.js"></script>
+<script type="text/javascript" src="displays/raphael/boardlines.js"></script>
+<script type="text/javascript" src="displays/raphael/marks.js"></script>
+<script type="text/javascript" src="displays/raphael/rutil.js"></script>
+<script type="text/javascript" src="displays/raphael/starpoints.js"></script>
+<script type="text/javascript" src="displays/raphael/stone.js"></script>
+<script type="text/javascript" src="displays/raphael/stones.js"></script>
+<!-- Rules -->
+<script type="text/javascript" src="rules/rules.js"></script>
+<script type="text/javascript" src="rules/goban.js"></script>
+<script type="text/javascript" src="rules/intersections.js"></script>
+<script type="text/javascript" src="rules/movenode.js"></script>
+<script type="text/javascript" src="rules/movetree.js"></script>
+<script type="text/javascript" src="rules/properties.js"></script>
+<script type="text/javascript" src="rules/treepath.js"></script>
+<!-- Sgf -->
+<script type="text/javascript" src="sgf/sgf.js"></script>
+<script type="text/javascript" src="sgf/props.js"></script>
+<script type="text/javascript" src="sgf/sgf_grammar.js"></script>
+<!-- Controllers -->
+<script type="text/javascript" src="controllers/controllers.js"></script>
+<script type="text/javascript" src="controllers/base_controller.js"></script>
+<script type="text/javascript" src="controllers/options.js"></script>
+<script type="text/javascript" src="controllers/static_problem_study.js"></script>
+<!-- Bridge -->
+<script type="text/javascript" src="bridge/bridge.js"></script>
+<script type="text/javascript" src="bridge/cropping.js"></script>
+<!-- Otre Tests -->
+<script type="text/javascript" src="./glift_test.js"></script>
+<!-- Util Tests -->
+<script type="text/javascript" src="util/point_test.js"></script>
+<script type="text/javascript" src="util/util_test.js"></script>
+<!-- Themes Tests -->
+<script type="text/javascript" src="themes/themes_test.js"></script>
+<!-- Displays Tests -->
+<script type="text/javascript" src="displays/bbox_test.js"></script>
+<script type="text/javascript" src="displays/board_points_test.js"></script>
+<script type="text/javascript" src="displays/cropbox_test.js"></script>
+<script type="text/javascript" src="displays/environment_test.js"></script>
+<script type="text/javascript" src="displays/resized_box_test.js"></script>
+<!-- Displays raphael Tests -->
+<script type="text/javascript" src="displays/raphael/raphael_test.js"></script>
+<!-- Rules Tests -->
+<script type="text/javascript" src="rules/goban_test.js"></script>
+<script type="text/javascript" src="rules/intersections_test.js"></script>
+<script type="text/javascript" src="rules/movetree_test.js"></script>
+<script type="text/javascript" src="rules/properties_test.js"></script>
+<script type="text/javascript" src="rules/treepath_test.js"></script>
+<!-- Controllers Tests -->
+<script type="text/javascript" src="controllers/base_controller_test.js"></script>
+<script type="text/javascript" src="controllers/controllers_test.js"></script>
+<script type="text/javascript" src="controllers/static_problem_study_test.js"></script>
+<!-- Bridge Tests -->
+<script type="text/javascript" src="bridge/cropping_test.js"></script>
+
+<!-- END-AUTO-GEN-DEPS -->
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background:url('themes/assets/bookelement5_crop.jpg') no-repeat fixed 50% 50%;
+        -webkit-background-size: cover;
+        -moz-background-size: cover;
+        -o-background-size: cover;
+        background-size: cover;
+      }
+      #glift_display1 {
+        position:absolute;
+        top: 50px;
+        bottom: 60px;
+        left: 10px;
+        right: 10px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="gheader"></div>
+    <div id="glift_display1"></div>
+    <div id="extra_info"></div>
+    <script type="text/javascript">
+      //parsing test
+      var displayTypes = glift.enums.displayTypes;
+      var boardRegions = glift.enums.boardRegions;
+      var point = glift.util.point;
+
+      var hoverColors = {
+        "BLACK": "BLACK_HOVER",
+        "WHITE": "WHITE_HOVER"
+      };
+
+      var controller = glift.createController({
+        controllerType: "STATIC_PROBLEM_STUDY",
+        sgfString: testdata.sgfs.complexproblem
+      });
+      var cropping = glift.bridge.getFromMovetree(controller.movetree);
+
+      glift.themes.setGoBoardBackground('DEPTH', 'themes/assets/bambootile_warm.jpg')
+      var display = glift.createDisplay({
+          divId: "glift_display1",
+          boardRegion: cropping,
+          theme: 'DEPTH'
+      });
+      glift.bridge.setDisplayState(controller.getEntireBoardState(), display);
+      display.enableAutoResizing();
+
+      display.setClickHandler(function(pt) {
+        var currentPlayer = controller.getCurrentPlayer();
+        var data = controller.addStone(pt, currentPlayer);
+        $('#extra_info').text(data.message + '//' + (data.result || ''));
+        if (data.data !== undefined) {
+          glift.bridge.setDisplayState(data.data, display);
+        }
+      });
+
+      display.setHoverInHandler(function(pt) {
+        var currentPlayer = controller.getCurrentPlayer();
+        if (controller.canAddStone(pt, currentPlayer)) {
+          display.setColor(pt, hoverColors[currentPlayer]);
+        }
+      });
+
+      display.setHoverOutHandler(function(pt) {
+        var currentPlayer = controller.getCurrentPlayer();
+        if (controller.canAddStone(pt, currentPlayer)) {
+          display.setColor(pt, 'EMPTY');
+        }
+      });
+    </script>
+  </body>
+</html>
+

@@ -1,6 +1,8 @@
 glift.themes.registered.DEFAULT = {
   board: {
-    bgColor: "#f5be7e",
+    boardAttr: {
+      fill: "#f5be7e",
+    },
     lineColor: "black",
     lineSize: 1,
     edgeLineSize: 1,

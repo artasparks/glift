@@ -15,5 +15,12 @@ glift.themes = {
     // undefined.  However, this is pretty useless for our case (and will cause
     // problems anyway).
     return (id in registered);
+  },
+
+  setGoBoardBackground: function(id, value) {
+    var theme = this.get(id);
+    if (theme !== glift.util.none) {
+      theme.board.boardAttr.fill = "url('" + value  + "')";
+    }
   }
 };

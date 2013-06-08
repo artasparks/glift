@@ -44,14 +44,19 @@ var Stone = function(paper, intersection, coordinate, spacing, subtheme) {
 Stone.prototype = {
   draw: function() {
     this.destroy();
-    var subtheme = this.subtheme,
+    var subtheme = this.subtheme, // i.e., THEME.stones
         paper = this.paper,
         r = this.radius,
         coord = this.coordinate,
         intersection = this.intersection,
         that = this; // Avoid lexical 'this' binding problems.
+    if (this.key !== "EMPTY" && subtheme['shadows'] !== undefined) {
+      this.shadow = paper.circle(coord.x(), coord.y(), r);
+      this.shadow.attr(subtheme.shadows);
+      this.shadow.blur(2);
+      this.shadow.attr({opacity: 0});
+    }
     this.circle = paper.circle(coord.x(), coord.y(), r);
-
     // Create a bounding box surrounding the stone.  This is what the user
     // actually clicks on, since just using circles leaves annoying gaps.
     this.bbox = paper.rect(coord.x() - r, coord.y() - r, 2 * r, 2 * r)
@@ -86,6 +91,11 @@ Stone.prototype = {
       glift.util.logz("Key " + key + " not found in theme");
     }
     this.circle.attr(this.subtheme[key]);
+    if (key !== "EMPTY" && this.shadow !== undefined ) {
+      this.shadow.attr({opacity: 1});
+    } else if (key === "EMPTY" && this.shadow !== undefined) {
+      this.shadow.attr({opacity: 0});
+    }
     this.colorState = key;
   },
 
@@ -100,7 +110,8 @@ Stone.prototype = {
     this.bbox.unhover(this.bboxHoverIn, this.bboxHoverOut);
     this.bbox.unclick(this.bboxClick);
     this.bbox.remove();
-    this.circle.remove();
+    this.circle && this.circle.remove();
+    this.shadow && this.shadow.remove();
     return this;
   },
 
