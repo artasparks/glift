@@ -1,9 +1,7 @@
 glift.themes.registered.DEPTH = {
   board: {
     boardAttr: {
-      fill: "#f5be7e",
-      // fill: "url('themes/assets/bambootile_warm.jpg')"
-      // opacity: 0
+      fill: "#f5be7e"
     },
     lineColor: "black",
     lineSize: 1,

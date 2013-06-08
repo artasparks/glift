@@ -491,11 +491,20 @@ glift.themes = {
     // undefined.  However, this is pretty useless for our case (and will cause
     // problems anyway).
     return (id in registered);
+  },
+
+  setGoBoardBackground: function(id, value) {
+    var theme = this.get(id);
+    if (theme !== glift.util.none) {
+      theme.board.boardAttr.fill = "url('" + value  + "')";
+    }
   }
 };
 glift.themes.registered.DEFAULT = {
   board: {
-    bgColor: "#f5be7e",
+    boardAttr: {
+      fill: "#f5be7e"
+    },
     lineColor: "black",
     lineSize: 1,
     edgeLineSize: 1,
@@ -524,6 +533,56 @@ glift.themes.registered.DEFAULT = {
       fill: "white",
       opacity: 1,
       "stroke-width": 1 // The default value
+    },
+    "WHITE_HOVER" : {
+      fill: "white",
+      opacity: 0.5
+    }
+  },
+
+  marks: {
+    // TODO(kashomon): add
+    XMARK : {
+    }
+  }
+};
+glift.themes.registered.DEPTH = {
+  board: {
+    boardAttr: {
+      fill: "#f5be7e"
+    },
+    lineColor: "black",
+    lineSize: 1,
+    edgeLineSize: 1,
+    starPointSize: .15, // As a fraction of the spacing.
+    textColor: "white"
+  },
+
+  stones: {
+    shadows: {
+      stroke: "none",
+      fill: "#555",
+      transform: "T4,4"
+    },
+    "EMPTY" : {
+      fill: 'blue',
+      opacity: 0
+    },
+    "BLACK" : {
+      fill: "black",
+      opacity: 1,
+      "stroke-width": 0, // The default value
+      stroke: "black"
+    },
+    "BLACK_HOVER" : {
+      fill: "black",
+      opacity: 0.5
+    },
+    "WHITE" : {
+      stroke: "white",
+      fill: "white",
+      opacity: 1,
+      "stroke-width": 0 // The default value
     },
     "WHITE_HOVER" : {
       fill: "white",
@@ -1054,12 +1113,6 @@ var LineSegment = function(tl, br, ordinal) {
 
 })();
 glift.displays.processOptions = function(rawOptions) {
-  var DisplayOptionError = function(message) {
-    this.name = "DisplayOptionError";
-    this.message = message;
-  };
-  DisplayOptionError.prototype = new Error();
-
   // Default keys
   var defaults = {
     intersections: 19,
@@ -1076,7 +1129,7 @@ glift.displays.processOptions = function(rawOptions) {
         if (glift.util.typeOf(value) == 'number' && value > 0) {
           defaults.intersections = value;
         } else {
-          throw new DisplayOptionError("Intersection value : " + key);
+          throw "Intersection value : " + key;
         }
         break;
 
@@ -1084,7 +1137,7 @@ glift.displays.processOptions = function(rawOptions) {
         if (glift.themes.has(value)) {
           defaults.theme = value;
         } else {
-          throw new DisplayOptionError("Unknown theme: " + value);
+          throw "Unknown theme: " + value;
         }
         break;
 
@@ -1093,7 +1146,7 @@ glift.displays.processOptions = function(rawOptions) {
         if (elem !== null) {
           defaults.divId = value
         } else {
-          throw new DisplayOptionError("Could not find div with id: " + value);
+          throw "Could not find div with id: " + value;
         }
         break;
 
@@ -1102,7 +1155,7 @@ glift.displays.processOptions = function(rawOptions) {
         if (glift.enums.boardRegions[value] !== undefined) {
           defaults.boardRegion = value;
         } else {
-          throw new DisplayOptionError("Unknown board region: " + value);
+          throw "Unknown board region: " + value;
         }
         break;
 
@@ -1111,7 +1164,7 @@ glift.displays.processOptions = function(rawOptions) {
         if (glift.util.typeOf(value) === 'object') {
           defaults.displayConfig = value;
         } else {
-          throw new DisplayOptionError("displayConfig not an object: " + value);
+          throw "displayConfig not an object: " + value;
         }
         break;
 
@@ -1120,7 +1173,7 @@ glift.displays.processOptions = function(rawOptions) {
     }
   }
   return defaults;
-};
+}
 glift.displays.getResizedBox = function(divBox, cropbox) {
   var util = glift.util,
       newDims = glift.displays.getCropDimensions(
@@ -1312,7 +1365,7 @@ BoardBase.prototype = {
         box.topLeft().y(),
         box.width(),
         box.height());
-    this.rect.attr({fill: this.subtheme.bgColor});
+    this.rect.attr(this.subtheme.boardAttr);
     return this;
   },
 
@@ -1559,14 +1612,19 @@ var Stone = function(paper, intersection, coordinate, spacing, subtheme) {
 Stone.prototype = {
   draw: function() {
     this.destroy();
-    var subtheme = this.subtheme,
+    var subtheme = this.subtheme, // i.e., THEME.stones
         paper = this.paper,
         r = this.radius,
         coord = this.coordinate,
         intersection = this.intersection,
         that = this; // Avoid lexical 'this' binding problems.
+    if (this.key !== "EMPTY" && subtheme['shadows'] !== undefined) {
+      this.shadow = paper.circle(coord.x(), coord.y(), r);
+      this.shadow.attr(subtheme.shadows);
+      this.shadow.blur(2);
+      this.shadow.attr({opacity: 0});
+    }
     this.circle = paper.circle(coord.x(), coord.y(), r);
-
     // Create a bounding box surrounding the stone.  This is what the user
     // actually clicks on, since just using circles leaves annoying gaps.
     this.bbox = paper.rect(coord.x() - r, coord.y() - r, 2 * r, 2 * r)
@@ -1601,6 +1659,13 @@ Stone.prototype = {
       glift.util.logz("Key " + key + " not found in theme");
     }
     this.circle.attr(this.subtheme[key]);
+
+    if (key !== "EMPTY" && !key.match("_HOVER") && this.shadow !== undefined ) {
+      this.shadow.attr({opacity: 1});
+    } else if (key === "EMPTY" && !key.match("_HOVER") && this.shadow !== undefined) {
+      this.shadow.attr({opacity: 0});
+    }
+
     this.colorState = key;
   },
 
@@ -1615,7 +1680,8 @@ Stone.prototype = {
     this.bbox.unhover(this.bboxHoverIn, this.bboxHoverOut);
     this.bbox.unclick(this.bboxClick);
     this.bbox.remove();
-    this.circle.remove();
+    this.circle && this.circle.remove();
+    this.shadow && this.shadow.remove();
     return this;
   },
 

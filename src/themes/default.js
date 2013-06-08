@@ -1,7 +1,7 @@
 glift.themes.registered.DEFAULT = {
   board: {
     boardAttr: {
-      fill: "#f5be7e",
+      fill: "#f5be7e"
     },
     lineColor: "black",
     lineSize: 1,
