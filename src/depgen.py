@@ -31,8 +31,9 @@ DIR_ORDER = [
     'rules',
     'sgf',
     'controllers',
-    # Extra: These don't really live anywhere
+    # Extra: These parts connect display and rules pieces.
     'bridge',
+    'widgets',
     ]
 
 # Need a closure alias, e.g.,: export CLOSURE="java -jar ~/closure.jar"

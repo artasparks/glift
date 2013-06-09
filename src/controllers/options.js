@@ -1,10 +1,4 @@
 glift.controllers.processOptions = function(rawOptions) {
-  var ControllerOptionError = function(message) {
-    this.name = "DisplayOptionError";
-    this.message = message;
-  };
-  ControllerOptionError.prototype = new Error();
-
   // Default options
   var defaults = {
     // intersections: 19, -- intersections is not necessary, since it's set via
@@ -22,7 +16,7 @@ glift.controllers.processOptions = function(rawOptions) {
             value in glift.enums.controllerTypes) {
           defaults.controllerType = value;
         } else {
-          throw new ControllerOptionError("Unknown controllerType: " + value);
+          throw "Unknown controllerType: " + value;
         }
         break;
 
@@ -35,12 +29,12 @@ glift.controllers.processOptions = function(rawOptions) {
         if (glift.util.typeOf(value) === 'string') {
           defaults.sgfString = value;
         } else {
-          throw new ControllerOptionError("Bad type for sgfString: " + value);
+          throw "Bad type for sgfString: " + value;
         }
         break;
 
       default:
-        glift.util.logz("Unknown option key: " + key);
+        // Don't do anything.  This is really convenient for widgets.
     }
   }
   return defaults;

@@ -1,19 +1,19 @@
 (function() {
 
 glift.displays.raphael = {
-  create: function(environment, theme) {
-    return new glift.displays.raphael.Display(environment, theme);
+  create: function(environment, themeName, theme) {
+    return new glift.displays.raphael.Display(environment, themeName, theme);
   }
 };
 
-glift.displays.raphael.Display = function(inEnvironment, inTheme) {
+glift.displays.raphael.Display = function(inEnvironment, themeName, theme) {
   // Due layering issues, we need to keep track of the order in which we
   // created the objects.
   this._objectHistory = [];
   this._paper = glift.util.none;
   this._environment = inEnvironment;
-  this._themeName = inTheme;
-  this._theme = glift.themes.get(inTheme);
+  this._themeName = themeName;
+  this._theme = theme;
   this._stones = glift.util.none;
 
   // Methods accessing private data

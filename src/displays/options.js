@@ -5,7 +5,8 @@ glift.displays.processOptions = function(rawOptions) {
     divId: "glift_display",
     theme: "DEFAULT",
     boardRegion: "ALL",
-    displayConfig: {}
+    displayConfig: {},
+    goBoardBackground: ''
   };
 
   for (var key in rawOptions) {
@@ -54,8 +55,18 @@ glift.displays.processOptions = function(rawOptions) {
         }
         break;
 
+      // GoBoardBackground: just what it sounds like: a jpg or png path.
+      case 'goBoardBackground':
+        if (glift.util.typeOf(value) === 'string') {
+          defaults.goBoardBackground = value;
+        } else {
+          throw "goBoardBackground not a string: " + value;
+        }
+        break;
+
       default:
-        glift.util.logz("Unknown option key: " + key);
+        // Don't do anything. This is really convenient for widgets.
+        // glift.util.logz("Unknown option key: " + key);
     }
   }
   return defaults;

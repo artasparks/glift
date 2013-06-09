@@ -1,10 +1,14 @@
 glift.themes = {
   registered: {},
 
-  // Accepts a (case sensitive) ID and returns the theme.
+  // Accepts a (case sensitive) ID and returns a COPY of the theme.
   get: function(id) {
     var registered = glift.themes.registered;
-    return !(id in registered) ? glift.util.none : registered[id];
+    var rawTheme = !(id in registered) ? glift.util.none : registered[id];
+
+    // Perform the DeepCopy
+    var themeCopy = jQuery.extend(true, {}, rawTheme);
+    return themeCopy;
   },
 
   // Accepts a (case sensitive) theme ID and true if the theme exists and false
@@ -17,10 +21,13 @@ glift.themes = {
     return (id in registered);
   },
 
-  setGoBoardBackground: function(id, value) {
-    var theme = this.get(id);
-    if (theme !== glift.util.none) {
+  // For a theme object. This generally assumes you're called 'get' so that you
+  // have a copy of the base theme.
+  setGoBoardBackground: function(theme, value) {
+    if (theme && theme !== glift.util.none) {
       theme.board.boardAttr.fill = "url('" + value  + "')";
+    } else {
+      throw "Yikes! Not a theme: cannot set background image."
     }
   }
 };
