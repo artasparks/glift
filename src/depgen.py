@@ -7,11 +7,11 @@ import re
 import subprocess
 
 FILES_TO_AUTOGEN = {
-    'QunitTest.html': True,
-    'BoxDisplayTest.html': True,
-    'RealBoardTest.html': True,
-    'ProblemTester.html': True,
-    'ThemeTester.html': True,
+    'htmltests/QunitTest.html': True,
+    'htmltests/BoxDisplayTest.html': True,
+    'htmltests/RealBoardTest.html': True,
+    'htmltests/ProblemTester.html': True,
+    'htmltests/ThemeTester.html': True,
     }
 
 COMBINED_LOC = 'compiled/glift_combined.js'
@@ -41,7 +41,7 @@ DIR_ORDER = [
 CLOSURE = ("${CLOSURE} --js " + COMBINED_LOC + " --js_output_file " + COMPILED_LOC)
 
 def CreateImport(name):
-  return '<script type="text/javascript" src="' + name + '"></script>'
+  return '<script type="text/javascript" src="../' + name + '"></script>'
 
 def AppendImports(out):
   import_str = ''
@@ -101,7 +101,11 @@ def SeparateFiles(flist):
     out_test.append(test_files)
   return (out, out_test)
 
+
 def CreateHtmlImports(imps, suffix):
+  """
+  Create the HTML imports.
+  """
   out = []
   for grouping in imps:
     if len(grouping) > 1:
