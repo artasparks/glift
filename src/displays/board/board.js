@@ -1,12 +1,12 @@
 (function() {
 
-glift.displays.raphael = {
+glift.displays.board = {
   create: function(environment, themeName, theme) {
-    return new glift.displays.raphael.Display(environment, themeName, theme);
+    return new glift.displays.board.Display(environment, themeName, theme);
   }
 };
 
-glift.displays.raphael.Display = function(inEnvironment, themeName, theme) {
+glift.displays.board.Display = function(inEnvironment, themeName, theme) {
   // Due layering issues, we need to keep track of the order in which we
   // created the objects.
   this._objectHistory = [];
@@ -24,7 +24,7 @@ glift.displays.raphael.Display = function(inEnvironment, themeName, theme) {
 };
 
 // Alias for typing convenience
-var Display = glift.displays.raphael.Display;
+var Display = glift.displays.board.Display;
 
 // This allows us to create a base display object without creating all drawing
 // all the parts.

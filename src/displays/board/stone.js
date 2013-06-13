@@ -6,7 +6,7 @@
  * This constructor is different than all the other constructors in this
  * diroctory.  Not sure if this is a problem or not.
  */
-glift.displays.raphael.createStone = function(
+glift.displays.board.createStone = function(
     paper, intersection, coordinate, spacing, subtheme) {
   return new Stone(paper, intersection, coordinate, spacing, subtheme);
 }
@@ -53,6 +53,8 @@ Stone.prototype = {
     if (this.key !== "EMPTY" && subtheme['shadows'] !== undefined) {
       this.shadow = paper.circle(coord.x(), coord.y(), r);
       this.shadow.attr(subtheme.shadows);
+      var tAmt = r / 4.0; // translateAmount
+      this.shadow.attr({transform:"T" + tAmt + "," + tAmt});
       this.shadow.blur(2);
       this.shadow.attr({opacity: 0});
     }

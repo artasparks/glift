@@ -6,7 +6,7 @@ glift.displays = {
     if (processed.goBoardBackground !== '') {
       glift.themes.setGoBoardBackground(theme, processed.goBoardBackground);
     }
-    return glift.displays.raphael.create(
+    return glift.displays.board.create(
         environment, processed.theme, theme).draw();
   }
 };

@@ -1,7 +1,7 @@
 (function() {
 
 // Create the starPoints object and immediately call draw()
-glift.displays.raphael.Display.prototype.createStarPoints = function() {
+glift.displays.board.Display.prototype.createStarPoints = function() {
   return new StarPointSet(this._paper, this._environment, this._theme.board)
       .draw();
 };

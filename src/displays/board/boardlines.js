@@ -1,6 +1,6 @@
 (function() {
 // Create the board lines objects and immediately call draw()
-glift.displays.raphael.Display.prototype.createBoardLines = function() {
+glift.displays.board.Display.prototype.createBoardLines = function() {
   return new BoardLineSet(this._paper, this._environment, this._theme.board)
       .draw();
 };
@@ -41,7 +41,7 @@ BoardLineSet.prototype = {
 
 var drawSegments = function(paper, segs, maxInts, normalSize, edgeSize) {
   var lineSet = paper.set(),
-      rutil = glift.displays.raphael.rutil;
+      rutil = glift.displays.board.rutil;
   for (var i = 0; i < segs.length; i++) {
     var path = paper.path(
         rutil.svgMovePt(segs[i].topLeft) +

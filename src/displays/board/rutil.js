@@ -1,17 +1,17 @@
-glift.displays.raphael.rutil = {
+glift.displays.board.rutil = {
   // Move the current position to X,Y
   svgMove: function(x, y) {
     return "M" + x + "," + y;
   },
   svgMovePt: function(pt) {
-    return glift.displays.raphael.rutil.svgMove(pt.x(), pt.y());
+    return glift.displays.board.rutil.svgMove(pt.x(), pt.y());
   },
   // Create a relative SVG line, starting from the 'current' position.
   svgLineRel: function(x, y) {
     return "l" + x + "," + y;
   },
   svgLineRelPt: function(pt) {
-    return glift.displays.raphael.rutil.svgLineRel(pt.x(), pt.y());
+    return glift.displays.board.rutil.svgLineRel(pt.x(), pt.y());
   },
   // Create an absolute SVG line -- different from lower case
   svgLineAbs: function(x, y) {
@@ -19,7 +19,7 @@ glift.displays.raphael.rutil = {
   },
   // Create an absolute SVG line -- different from lower case.
   svgLineAbsPt: function(pt) {
-    return glift.displays.raphael.rutil.svgLineAbs(pt.x(), pt.y());
+    return glift.displays.board.rutil.svgLineAbs(pt.x(), pt.y());
   },
   // Get the transform string, based on the scaliing object, which look like:
   // {

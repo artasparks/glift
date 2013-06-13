@@ -6,6 +6,9 @@
 <script type="text/javascript" src="../libs/raphael-min.js"></script>
 <script type="text/javascript" src="../testdata/sgfs.js"></script>
 
+<link href="testlibs/bootstrap/css/bootstrap.css" rel="stylesheet">
+<link href="testlibs/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+
 <!-- AUTO-GEN-DEPS -->
 <!-- Otre -->
 <script type="text/javascript" src=".././glift.js"></script>
@@ -102,9 +105,16 @@
         margin: 0;
         padding: 0;
       }
-      #glift_display1 {
-        height:95%;
-        position:relative;
+      #wrap {
+        width: 100%;
+        height: 100%;
+      }
+      #glift_display {
+        position:absolute;
+        top: 10;
+        bottom: 10;
+        left: 10;
+        right: 10;
       }
     </style>
   </head>
@@ -112,12 +122,12 @@
   <body>
     <div id="wrap" style="position:relative;">
       <div id="gheader"></div>
-      <div id="glift_display1"></div>
+      <div id="glift_display"></div>
       <div id="extra_info"></div>
       <script type="text/javascript">
-        var basicProblem = glift.widgets.createBasicProblem({
+        var basicProblem = glift.widgets.createProblemSeries({
           sgfString: testdata.sgfs.complexproblem,
-          divId: "glift_display1"
+          divId: "glift_display"
         });
       </script>
     </div>

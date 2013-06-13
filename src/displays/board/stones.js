@@ -1,6 +1,6 @@
 (function(){
 // Create the entire grid of stones and immediately call draw()
-glift.displays.raphael.Display.prototype.createStones = function() {
+glift.displays.board.Display.prototype.createStones = function() {
   return new Stones(this._paper, this._environment, this._theme.stones)
       .draw();
 };
@@ -24,7 +24,7 @@ Stones.prototype = {
       var coordPt = boardPoints.points[ptHash],
           intersection = glift.util.pointFromHash(ptHash),
           spacing = boardPoints.spacing,
-          stone = glift.displays.raphael.createStone(
+          stone = glift.displays.board.createStone(
               this.paper, intersection, coordPt, spacing, this.subtheme);
 
       // This is a ack.  This is here so we can support redrawing the board.

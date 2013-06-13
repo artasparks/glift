@@ -1,5 +1,5 @@
 (function() {
-glift.displays.raphael.Display.prototype.createMarks = function() {
+glift.displays.board.Display.prototype.createMarks = function() {
   return new Marks(this._paper, this._environment, this._theme.marks)
 };
 

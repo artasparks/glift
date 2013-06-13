@@ -2,13 +2,13 @@ glift.widgets.createBasicProblem = function(options) {
   var displayTypes = glift.enums.displayTypes;
   var boardRegions = glift.enums.boardRegions;
   var point = glift.util.point;
+  var divId = options.divId;
 
   options.controllerType = "STATIC_PROBLEM_STUDY";
   var controller = glift.createController(options);
   var cropping = glift.bridge.getFromMovetree(controller.movetree);
   var display = glift.createDisplay(options);
   glift.bridge.setDisplayState(controller.getEntireBoardState(), display);
-  display.enableAutoResizing();
   return new glift.widgets._BasicProblem(display, controller);
 };
 
@@ -45,3 +45,9 @@ glift.widgets._BasicProblem = function(display, controller) {
     }
   });
 };
+
+glift.widgets._BasicProblem.prototype = {
+  enableAutoResizing: function() {
+    this.display.enableAutoResizing();
+  }
+}

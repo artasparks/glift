@@ -1,4 +1,4 @@
-glift.displays.raphaelTest = function() {
+glift.displays.boardTest = function() {
   module("Raphael Tests");
   var util = glift.util,
       enums = glift.enums,
@@ -6,11 +6,11 @@ glift.displays.raphaelTest = function() {
       DEFAULT_THEME = 'DEFAULT' // theme
       theme = glift.themes.get(DEFAULT_THEME),
       boardRegions = glift.enums.boardRegions,
-      raphael = glift.displays.raphael,
+      board = glift.displays.board,
       env = glift.displays.environment.get({
         intersections: 9 // Use a 9x9 to make things a bit faster
       }), // divId: glift_display.
-      display = raphael.create(env, DEFAULT_THEME, theme).init(),
+      display = board.create(env, DEFAULT_THEME, theme).init(),
       displayPaper = display._paper,
       testUtil = glift.testUtil,
       // Utility methods

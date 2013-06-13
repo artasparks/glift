@@ -12,6 +12,7 @@ FILES_TO_AUTOGEN = {
     'htmltests/RealBoardTest.html': True,
     'htmltests/ProblemTester.html': True,
     'htmltests/ThemeTester.html': True,
+    'htmltests/SeriesTester.html': True,
     }
 
 COMBINED_LOC = 'compiled/glift_combined.js'
@@ -26,7 +27,7 @@ DIR_ORDER = [
     'util',
     'themes',
     'displays',
-    'displays/raphael',
+    'displays/board',
     # Rules and display are not linked
     'rules',
     'sgf',

@@ -35,7 +35,7 @@ var Segments = function() {
 };
 
 Segments.prototype._debugDraw = function(paper, color) {
-  var rutil = glift.displays.raphael.rutil;
+  var rutil = glift.displays.board.rutil;
   var segs = [this.horz, this.vert];
   for (var i = 0; i < segs.length; i++) {
     var lines = segs[i];

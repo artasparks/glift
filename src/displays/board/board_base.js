@@ -1,6 +1,6 @@
 (function(){
 // Create the base board background object and immediately call draw().
-glift.displays.raphael.Display.prototype.createBoardBase = function() {
+glift.displays.board.Display.prototype.createBoardBase = function() {
   return new BoardBase(this._paper, this._environment, this._theme.board)
     .draw();
 };
