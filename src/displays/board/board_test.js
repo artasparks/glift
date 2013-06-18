@@ -1,5 +1,5 @@
 glift.displays.boardTest = function() {
-  module("Raphael Tests");
+  module("Board Tests");
   var util = glift.util,
       enums = glift.enums,
       none = util.none,

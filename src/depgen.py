@@ -28,6 +28,7 @@ DIR_ORDER = [
     'themes',
     'displays',
     'displays/board',
+    'displays/raphael',
     # Rules and display are not linked
     'rules',
     'sgf',

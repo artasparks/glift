@@ -41,7 +41,7 @@ BoardLineSet.prototype = {
 
 var drawSegments = function(paper, segs, maxInts, normalSize, edgeSize) {
   var lineSet = paper.set(),
-      rutil = glift.displays.board.rutil;
+      rutil = glift.displays.raphael.util;
   for (var i = 0; i < segs.length; i++) {
     var path = paper.path(
         rutil.svgMovePt(segs[i].topLeft) +

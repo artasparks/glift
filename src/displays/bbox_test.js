@@ -34,4 +34,16 @@ glift.displays.bboxTest = function() {
     ok(bbox.contains(point(4, 11)), "Must contain middle pt");
     ok(!bbox.contains(point(4, 14)), "Must not contain outside pt");
   });
+
+  test("fixedScale test", function() {
+    var bbox = displays.bboxFromPts(point(1,10), point(11, 20));
+    deepEqual(bbox.width(), 10, "width");
+    deepEqual(bbox.height(), 10, "height");
+
+    var smallBbox = bbox.fixedScale(0.5);
+    deepEqual(smallBbox.width(), 5, "small width");
+    deepEqual(smallBbox.height(), 5, "small height");
+    deepEqual(smallBbox.topLeft().x(), bbox.topLeft().x(), 'tl.x');
+    deepEqual(smallBbox.topLeft().y(), bbox.topLeft().y(), 'tl.y');
+  });
 };

@@ -6,7 +6,13 @@ glift.displays.bboxFromPts = function(topLeftPt, botRightPt) {
 glift.displays.bbox = function(topLeft, width, height) {
   return new BoundingBox(
       topLeft, glift.util.point(topLeft.x() + width, topLeft.y() + height));
-}
+};
+
+glift.displays.fromRaphaelBbox = function(rapBbox) {
+  return new BoundingBox(
+      glift.util.point(rapBbox.x, rapBbox.y),
+      glift.util.point(rapBbox.x2, rapBbox.y2));
+};
 
 // Might be nice to use the closure to create private variables.
 // A bounding box, generally for a graphical object.
@@ -30,21 +36,19 @@ var BoundingBox = function(topLeftPtIn, botRightPtIn) {
 
 
 BoundingBox.prototype = {
-  // Draw the bbox (for debugging);
+
+  /**
+   * Draw the bbox (for debugging).
+   */
   draw: function(paper, color) {
     var obj = paper.rect(
         this.topLeft().x(), this.topLeft().y(), this.width(), this.height());
     obj.attr({fill:color, opacity:0.5});
   },
 
-  contains: function(point) {
-   return point.x() >= this.topLeft().x()
-      && point.x() <= this.botRight().x()
-      && point.y() >= this.topLeft().y()
-      && point.y() <= this.botRight().y();
-  },
-
-  // Log the points to the console (for debugging);
+  /**
+   * Log the points to the console (for debugging).
+   */
   log: function() {
     glift.util.logz("TopLeft: " + JSON.stringify(this.topLeft()));
     glift.util.logz("BotRight: " + JSON.stringify(this.botRight()));
@@ -52,9 +56,33 @@ BoundingBox.prototype = {
     glift.util.logz("Height: " + this.height());
   },
 
+  /**
+   * Test to see if a point is contained in the bounding box.  Points on the
+   * edge count as being contained.
+   */
+  contains: function(point) {
+   return point.x() >= this.topLeft().x()
+      && point.x() <= this.botRight().x()
+      && point.y() >= this.topLeft().y()
+      && point.y() <= this.botRight().y();
+  },
+
+  /**
+   * Test to see if two points are equal.
+   */
   equals: function(other) {
     return other.topLeft && this.topLeft().equals(other.topLeft()) &&
         other.botRight && this.botRight().equals(other.botRight());
+  },
+
+  /**
+   * Return a new Bbox with the width and the height scaled by some fraction.
+   * The TopLeft point remains the same.
+   */
+  fixedScale: function(amount) {
+    var newHeight = this.height() * amount,
+        newWidth = this.width() * amount;
+    return glift.displays.bbox(this.topLeft(), newWidth, newHeight);
   }
 };
 
