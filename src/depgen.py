@@ -13,6 +13,7 @@ FILES_TO_AUTOGEN = {
     'htmltests/ProblemTester.html': True,
     'htmltests/ThemeTester.html': True,
     'htmltests/SeriesTester.html': True,
+    'htmltests/IconBarTester.html': True,
     }
 
 COMBINED_LOC = 'compiled/glift_combined.js'

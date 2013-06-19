@@ -25,17 +25,5 @@ glift.displays.raphael.util = {
   // Create an absolute SVG line -- different from lower case.
   svgLineAbsPt: function(pt) {
     return glift.displays.raphael.util.svgLineAbs(pt.x(), pt.y());
-  },
-
-  // Get the transform string, based on the scaliing object, which look like:
-  // {
-  //  xScale: num,
-  //  yScale: num,
-  //  xMove: num,
-  //  yMove: num
-  // }
-  transform: function(scalingObj) {
-    return "t" + scalingObj.xMove + "," + scalingObj.yMove +
-      "s" + scalingObj.xScale + "," + scalingObj.yScale;
   }
 };

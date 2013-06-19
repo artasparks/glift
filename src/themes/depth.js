@@ -13,8 +13,8 @@ glift.themes.registered.DEPTH = {
   stones: {
     shadows: {
       stroke: "none",
-      fill: "#555",
-      transform: "T4,4"
+      fill: "#555"
+      // transform: "T4,4" -- now depends on spacing
     },
     "EMPTY" : {
       fill: 'blue',

@@ -17,6 +17,9 @@ glift.displays.rowCenter = function(
         vscale = innerHeight / bbox.height(),
         partialTransform = { xScale: vscale, yScale: vscale },
         newBbox = bbox.fixedScale(vscale);
+    // glift.util.logz(bbox.width());
+    // glift.util.logz(bbox.height());
+    // glift.util.logz(partialTransform);
     transforms.push(partialTransform);
     newBboxes.push(newBbox);
     elemWidth += newBbox.width() + minSpacing;
@@ -29,7 +32,7 @@ glift.displays.rowCenter = function(
   var unfitTransforms = [];
   while (innerWidth < elemWidth) {
     var rightMostBox = newBboxes.pop();
-    var transform = translates.pop();
+    var transform = transforms.pop();
     elemWidth -= rightMostBox.width() + minSpacing;
     unfitTransforms.push(transform);
   }
@@ -46,13 +49,14 @@ glift.displays.rowCenter = function(
     extraMargin = totalExtraMargin / 2;
   }
   var left = outerBox.left() + horzMargin + extraMargin;
-  var top = outerBox.top();
+  var top = outerBox.top() + vertMargin;
 
   // Find the x and y translates.
   for (var i = 0; i < newBboxes.length; i++) {
     var newBox = newBboxes[i];
     var partialTransform = transforms[i];
     var yTranslate = top - newBbox.top();
+
     var xTranslate = left - newBbox.left();
     partialTransform.xMove = xTranslate;
     partialTransform.yMove = yTranslate;
