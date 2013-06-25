@@ -1,13 +1,14 @@
+(function() {
 glift.widgets.createProblemSeries = function(options) {
   var divId = '' + (options.divId || 'glift_display');
   var main = 'glift_internal_main_' + glift.util.idGenerator.next();
   var footer = 'glift_internal_footer_' + glift.util.idGenerator.next();
   options.divId = main;
-  var series = new glift.widgets._ProblemSeries(options, divId, main, footer);
+  var series = new ProblemSeries(options, divId, main, footer);
   return series;
 };
 
-glift.widgets._ProblemSeries = function(
+ProblemSeries = function(
     options, wrapperDiv, mainDiv, footerDiv) {
   this.options = options;
   this.wrapperDiv = wrapperDiv;
@@ -19,7 +20,7 @@ glift.widgets._ProblemSeries = function(
   this.basicProblm = glift.widgets.createBasicProblem(options);
 };
 
-glift.widgets._ProblemSeries.prototype = {
+ProblemSeries.prototype = {
   createDivs: function() {
     $('#' + this.wrapperDiv).append('<div id = "' + this.mainDiv + '"></div>');
     $('#' + this.wrapperDiv).append('<div id = "' + this.footerDiv + '"></div>');
@@ -49,3 +50,4 @@ glift.widgets._ProblemSeries.prototype = {
     return this;
   }
 };
+})();

@@ -46,4 +46,15 @@ glift.displays.bboxTest = function() {
     deepEqual(smallBbox.topLeft().x(), bbox.topLeft().x(), 'tl.x');
     deepEqual(smallBbox.topLeft().y(), bbox.topLeft().y(), 'tl.y');
   });
+
+  test("translate test", function() {
+    var bbox = displays.bboxFromPts(point(1,10), point(11, 20));
+    var newBox = bbox.translate(13, 6);
+    deepEqual(newBox.topLeft().x(), bbox.topLeft().x() + 13, 'tl.x');
+    deepEqual(newBox.topLeft().y(), bbox.topLeft().y() + 6, 'tl.y');
+    deepEqual(newBox.botRight().x(), bbox.botRight().x() + 13, 'br.x');
+    deepEqual(newBox.botRight().y(), bbox.botRight().y() + 6, 'br.y');
+    deepEqual(newBox.width(), bbox.width(), 'width');
+    deepEqual(newBox.height(), bbox.height(), 'height');
+  });
 };

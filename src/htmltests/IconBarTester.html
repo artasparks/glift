@@ -48,6 +48,7 @@
 <script type="text/javascript" src="../displays/board/stones.js"></script>
 <!-- Displays raphael -->
 <script type="text/javascript" src="../displays/raphael/raphael.js"></script>
+<script type="text/javascript" src="../displays/raphael/buttons.js"></script>
 <script type="text/javascript" src="../displays/raphael/icons.js"></script>
 <script type="text/javascript" src="../displays/raphael/position.js"></script>
 <script type="text/javascript" src="../displays/raphael/util.js"></script>
@@ -74,6 +75,7 @@
 <!-- Widgets -->
 <script type="text/javascript" src="../widgets/widgets.js"></script>
 <script type="text/javascript" src="../widgets/basic_problem.js"></script>
+<script type="text/javascript" src="../widgets/icon_bar.js"></script>
 <script type="text/javascript" src="../widgets/problem_series.js"></script>
 <!-- Otre Tests -->
 <script type="text/javascript" src=".././glift_test.js"></script>
@@ -132,26 +134,12 @@
       <div id="glift_display"></div>
       <div id="extra_info"></div>
       <script type="text/javascript">
-        var paper = Raphael("glift_display", "100%", "100%");
-        var icons = glift.displays.raphael.icons;
-        var raph = glift.displays.raphael;
-        var icarr = [];
-        icarr.push(paper.path(icons.refresh));
-        icarr.push(paper.path(icons['chevron-left']));
-        //icarr.push(paper.path(icons['chevron-right']));
-        //icarr.push(paper.path(icons.roadmap));
-        //icarr.push(paper.path(icons['small-gear']));
-        glift.util.logz(icarr[0].getBBox());
-        var bboxes = raph.getBboxes(icarr);
-        var width = $('#glift_display').width();
-        var height = $('#glift_display').height();
-        glift.util.logz(width);
-        glift.util.logz(height);
-        var paperBbox = glift.displays.bbox(glift.util.point(0,0),
-            width, height);
-        var transforms = glift.displays.raphael.rowCenter(
-            paperBbox, bboxes, 5, 0, 0, 0);
-        glift.displays.raphael.applyTransforms(transforms, icarr);
+        glift.widgets.iconBar({
+            divId: 'glift_display',
+            vertMargin:  5,
+            icons:  ['chevron-left', 'refresh', 'chevron-right', 'roadmap',
+                'small-gear']
+        });
       </script>
     </div>
   </body>

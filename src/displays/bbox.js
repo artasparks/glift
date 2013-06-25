@@ -3,6 +3,12 @@ glift.displays.bboxFromPts = function(topLeftPt, botRightPt) {
   return new BoundingBox(topLeftPt, botRightPt);
 };
 
+glift.displays.bboxFromDiv = function(divId) {
+  var width = $('#' + divId).width();
+  var height = $('#' + divId).height();
+  return glift.displays.bbox(glift.util.point(0,0), width, height);
+};
+
 glift.displays.bbox = function(topLeft, width, height) {
   return new BoundingBox(
       topLeft, glift.util.point(topLeft.x() + width, topLeft.y() + height));
@@ -71,8 +77,8 @@ BoundingBox.prototype = {
    * Test to see if two points are equal.
    */
   equals: function(other) {
-    return other.topLeft && this.topLeft().equals(other.topLeft()) &&
-        other.botRight && this.botRight().equals(other.botRight());
+    return other.topLeft() && this.topLeft().equals(other.topLeft()) &&
+        other.botRight() && this.botRight().equals(other.botRight());
   },
 
   /**
@@ -83,6 +89,16 @@ BoundingBox.prototype = {
     var newHeight = this.height() * amount,
         newWidth = this.width() * amount;
     return glift.displays.bbox(this.topLeft(), newWidth, newHeight);
+  },
+
+  toString: function() {
+    return this.topLeft().toString() + ',' +  this.botRight().toString();
+  },
+
+  translate: function(dx, dy) {
+    return glift.displays.bboxFromPts(
+        glift.util.point(this.topLeft().x() + dx, this.topLeft().y() + dy),
+        glift.util.point(this.botRight().x() + dx, this.botRight().y() + dy));
   }
 };
 

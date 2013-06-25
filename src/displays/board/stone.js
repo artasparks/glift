@@ -73,6 +73,8 @@ Stone.prototype = {
     return this;
   },
 
+  // Clone the handlers.  This is useful for recreating the board.  At that
+  // point, we recreate each stone with the same handlers as before.
   cloneHandlers: function(stone) {
     var propertiesToCopy = [ 'bboxHoverIn', 'bboxHoverOut', 'bboxClick',
         'clickHandler', 'hoverInHandler', 'hoverOutHandler'];

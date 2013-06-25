@@ -1,3 +1,10 @@
+/**
+ * Return pair of
+ *  {
+ *    transforms: [...]
+ *    bboxes: [...]
+ *  }
+ */
 glift.displays.rowCenter = function(
     outerBox, inBboxes, vertMargin, horzMargin, minSpacing, maxSpacing) {
   var outerWidth = outerBox.width(),
@@ -13,13 +20,10 @@ glift.displays.rowCenter = function(
 
   // Adjust all the bboxes so that they are the right height.
   for (var i = 0; i < inBboxes.length; i++) {
-    var bbox = inBboxes[i],
-        vscale = innerHeight / bbox.height(),
-        partialTransform = { xScale: vscale, yScale: vscale },
-        newBbox = bbox.fixedScale(vscale);
-    // glift.util.logz(bbox.width());
-    // glift.util.logz(bbox.height());
-    // glift.util.logz(partialTransform);
+    var bbox = inBboxes[i];
+    var vscale = innerHeight / bbox.height();
+    var partialTransform = { xScale: vscale, yScale: vscale };
+    var newBbox = bbox.fixedScale(vscale);
     transforms.push(partialTransform);
     newBboxes.push(newBbox);
     elemWidth += newBbox.width() + minSpacing;
@@ -52,15 +56,17 @@ glift.displays.rowCenter = function(
   var top = outerBox.top() + vertMargin;
 
   // Find the x and y translates.
+  var finishedBoxes = []
   for (var i = 0; i < newBboxes.length; i++) {
-    var newBox = newBboxes[i];
+    var newBbox = newBboxes[i];
     var partialTransform = transforms[i];
     var yTranslate = top - newBbox.top();
-
     var xTranslate = left - newBbox.left();
     partialTransform.xMove = xTranslate;
     partialTransform.yMove = yTranslate;
+    finishedBoxes.push(newBbox.translate(xTranslate, yTranslate));
     left += newBbox.width() + elementSpacing;
   }
-  return transforms;
+
+  return { transforms: transforms, bboxes: finishedBoxes };
 };

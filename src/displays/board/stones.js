@@ -27,7 +27,7 @@ Stones.prototype = {
           stone = glift.displays.board.createStone(
               this.paper, intersection, coordPt, spacing, this.subtheme);
 
-      // This is a ack.  This is here so we can support redrawing the board.
+      // This is a hack.  This is here so we can support redrawing the board.
       // However, it conflates the idea of drawing and redrawing which probably
       // ought to be separate.
       if (this.stoneMap && this.stoneMap !== glift.util.none &&

@@ -38,6 +38,15 @@ glift.themes.registered.DEFAULT = {
     }
   },
 
+  icons: {
+    'DEFAULT' : {
+      fill: "90-#337-#55B"
+    },
+    'DEFAULT_HOVER' : {
+      fill: "90-#337-#55D"
+    }
+  },
+
   marks: {
     // TODO(kashomon): add
     XMARK : {
