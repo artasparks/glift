@@ -1,4 +1,4 @@
-glift.widgets.createBasicProblem = function(options) {
+glift.widgets.basicProblem = function(options) {
   var displayTypes = glift.enums.displayTypes;
   var boardRegions = glift.enums.boardRegions;
   var point = glift.util.point;
@@ -49,5 +49,14 @@ glift.widgets._BasicProblem = function(display, controller) {
 glift.widgets._BasicProblem.prototype = {
   enableAutoResizing: function() {
     this.display.enableAutoResizing();
+  },
+
+  redraw: function() {
+    this.display.destroy();
+    this.display.redraw();
+  },
+
+  destroy: function() {
+    this.display.destroy();
   }
-}
+};

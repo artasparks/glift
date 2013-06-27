@@ -133,9 +133,11 @@
       <div id="glift_display"></div>
       <div id="extra_info"></div>
       <script type="text/javascript">
-        var basicProblem = glift.widgets.createProblemSeries({
+        var basicProblem = glift.widgets.problemSeries({
           sgfString: testdata.sgfs.complexproblem,
-          divId: "glift_display"
+          divId: "glift_display",
+          theme: "DEPTH",
+          goBoardBackground: '../themes/assets/bambootile_warm.jpg'
         });
       </script>
     </div>

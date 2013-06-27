@@ -134,11 +134,24 @@
       <div id="glift_display"></div>
       <div id="extra_info"></div>
       <script type="text/javascript">
-        glift.widgets.iconBar({
+        var iconBar = glift.widgets.iconBar({
             divId: 'glift_display',
             vertMargin:  5,
             icons:  ['chevron-left', 'refresh', 'chevron-right', 'roadmap',
                 'small-gear']
+        });
+
+        iconBar.forEachIcon(function(icon) {
+          icon.button.setHover(function() {
+            icon.obj.attr({fill:'blue'});
+          }, function() {
+            icon.obj.attr(iconBar.subTheme['DEFAULT']);
+          });
+        });
+        iconBar.setHover('chevron-left', function() {
+          iconBar.iconObjects['chevron-left'].attr({fill:'blue'});
+        }, function() {
+          iconBar.iconObjects['chevron-left'].attr(iconBar.subTheme['DEFAULT']);
         });
       </script>
     </div>

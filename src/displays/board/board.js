@@ -2,7 +2,8 @@
 
 glift.displays.board = {
   create: function(environment, themeName, theme) {
-    return new glift.displays.board.Display(environment, themeName, theme);
+    return new glift.displays.board.Display(environment, themeName, theme)
+        .init();
   }
 };
 
@@ -21,6 +22,8 @@ glift.displays.board.Display = function(inEnvironment, themeName, theme) {
   this.divId = function() { return this._environment.divId };
   this.theme = function() { return this._themeName; };
   this.boardRegion = function() { return this._environment.boardRegion; };
+  this.width = function() { return this._environment.goBoardBox.width() };
+  this.height = function() { return this._environment.goBoardBox.height() };
 };
 
 // Alias for typing convenience

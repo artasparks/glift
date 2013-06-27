@@ -10,7 +10,7 @@ glift.displays.boardTest = function() {
       env = glift.displays.environment.get({
         intersections: 9 // Use a 9x9 to make things a bit faster
       }), // divId: glift_display.
-      display = board.create(env, DEFAULT_THEME, theme).init(),
+      display = board.create(env, DEFAULT_THEME, theme);
       displayPaper = display._paper,
       testUtil = glift.testUtil,
       // Utility methods

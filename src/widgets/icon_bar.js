@@ -13,6 +13,7 @@ glift.widgets.iconBar = function(options) {
       boundingBox = undefined,
       icons = [],
       vertMargin = 0,
+      horzMargin = 0,
       theme = 'DEFAULT'
   if (options.divId !== undefined) {
     paper = Raphael(options.divId, '100%', '100%');
@@ -30,6 +31,10 @@ glift.widgets.iconBar = function(options) {
     vertMargin = options.vertMargin;
   }
 
+  if (options.horzMargin !== undefined) {
+    horzMargin = options.horzMargin;
+  }
+
   if (options.theme !== undefined) {
     this.theme = options.theme;
   }
@@ -41,22 +46,25 @@ glift.widgets.iconBar = function(options) {
     }
   }
 
-  return new IconBar(paper, boundingBox, theme, icons, vertMargin).init();
+  return new IconBar(paper, boundingBox, theme, icons, vertMargin, horzMargin)
+      .draw();
 };
 
-var IconBar = function(paper, boundingBox, themeName, iconNames, vertMargin) {
+var IconBar = function(
+    paper, boundingBox, themeName, iconNames, vertMargin, horzMargin) {
   this.paper = paper;
   this.boundingBox = boundingBox;
   this.themeName = themeName;
   this.subTheme = glift.themes.get(themeName).icons;
   this.iconNames = iconNames;
   this.vertMargin = vertMargin;
-  this.iconObjects = {}; // init'd by init;
-  this.iconButtons = {};
+  this.horzMargin = horzMargin;
+  this.iconObjects = {}; // init'd by draw
+  this.iconButtons = {}; // init'd by draw
 };
 
 IconBar.prototype = {
-  init: function() {
+  draw: function() {
     var raph = glift.displays.raphael, raphObjects = [];
     for (var i = 0; i < this.iconNames.length; i++) {
       var name = this.iconNames[i];
@@ -72,27 +80,52 @@ IconBar.prototype = {
     }
     var bboxes = raph.getBboxes(raphObjects);
     var transforms = raph.rowCenter(
-        this.boundingBox, bboxes, this.vertMargin, 0, 0, 0);
+        this.boundingBox, bboxes, this.vertMargin, this.horzMargin, 0, 0).transforms;
     raph.applyTransforms(transforms, raphObjects);
 
-    // Create the buttons, now that the icons have been resized.
+    // Create the buttons (without handlers.
     for (var key in this.iconObjects) {
-      var icon = this.iconObjects[key];
-      var button = glift.displays.raphael.button(this.paper, icon);
-      (function() {
-        // Hack to avoid lazy binding.
-        var thiskey = key
-        button.setHover(
-            function() { console.log('in: ' + thiskey) },
-            function() { console.log('out: ' + thiskey) });
-      })()
-      this.iconButtons[name] = button;
+      this.iconButtons[key] = glift.displays.raphael.button(
+          this.paper, this.iconObjects[key])
     }
     return this;
   },
 
-  attachHandler: function(name, handler) {
-    // TODO(kashomon): Add handler attaching for button purposes.
+  setHover: function(name, hoverin, hoverout) {
+    this.iconButtons[name].setHover(hoverin, hoverout);
+  },
+
+  setClick: function(name, mouseDown, mouseUp) {
+    this.iconButtons[name].setClick(mouseDown, mouseUp);
+  },
+
+  getIcon: function(name) {
+    return {
+      name: name,
+      obj: this.iconObjects[name],
+      button: this.iconButtons[name]
+    };
+  },
+
+  forEachIcon: function(func) {
+    for (var i = 0; i < this.iconNames.length; i++) {
+      func(this.getIcon(this.iconNames[i]));
+    }
+  },
+
+  redraw: function() {
+    this.destroy();
+    this.draw();
+  },
+
+  destroy: function() {
+    this.forEachIcon(function(icon) {
+      icon.obj.remove();
+      icon.button.destroy(); // Destroys handlers also.
+    });
+    this.iconObjects = {};
+    this.iconButtons = {};
+    return this;
   }
 };
 

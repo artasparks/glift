@@ -79,7 +79,6 @@ GuiEnvironment.prototype = {
         lineSegments = glift.displays.getLineSegments(goBoardLineBox);
 
     this.divBox = divBox;
-    this.resizedBox = resizedBox;
     this.goBoardBox = goBoardBox;
     this.goBoardLineBox = goBoardLineBox;
     this.boardPoints = boardPoints;

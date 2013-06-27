@@ -1,5 +1,5 @@
 (function() {
-glift.widgets.createProblemSeries = function(options) {
+glift.widgets.problemSeries = function(options) {
   var divId = '' + (options.divId || 'glift_display');
   var main = 'glift_internal_main_' + glift.util.idGenerator.next();
   var footer = 'glift_internal_footer_' + glift.util.idGenerator.next();
@@ -14,19 +14,30 @@ ProblemSeries = function(
   this.wrapperDiv = wrapperDiv;
   this.mainDiv = mainDiv;
   this.footerDiv = footerDiv;
-
-  this.createDivs();
-  this.resizeDivs();
-  this.basicProblm = glift.widgets.createBasicProblem(options);
+  this.problemDisplay = undefined;
+  this.iconBar = undefined;
+  this.draw();
 };
 
 ProblemSeries.prototype = {
+  draw: function() {
+    this.createDivs();
+    this.resizeDivs();
+    this.problemDisplay = glift.widgets.basicProblem(this.options);
+    var margin = ($('#' +  this.mainDiv).width() -
+        this.problemDisplay.display.width()) / 2;
+    this.iconBar = glift.widgets.iconBar({
+      divId: this.footerDiv,
+      vertMargin:  5,
+      horzMargin: margin,
+      icons:  ['chevron-left', 'refresh', 'chevron-right', 'roadmap',
+          'small-gear']
+    });
+  },
+
   createDivs: function() {
     $('#' + this.wrapperDiv).append('<div id = "' + this.mainDiv + '"></div>');
     $('#' + this.wrapperDiv).append('<div id = "' + this.footerDiv + '"></div>');
-    this.paper = Raphael(this.footerDiv, '100%', '100%');
-    this.paper.path("M10.129,22.186 16.316,15.999 10.129,9.812 13.665,6.276 " +
-        "23.389,15.999 13.665,25.725z");
     return this;
   },
 
@@ -36,17 +47,27 @@ ProblemSeries.prototype = {
         position: 'absolute',
         width: '100%',
         height: (height - 50),
-        'background-color': 'blue',
         top: 0
     });
     $('#' + this.footerDiv).css({
         'position' : 'absolute',
         'width' : '100%',
         'height' : 50,
-        'background-color': 'red',
         'text-align': 'center',
         'bottom' : 0
     });
+    return this;
+  },
+
+  redraw: function() {
+    this.destroy();
+    this.draw();
+  },
+
+  destroy: function() {
+    this.problemDisplay && this.problemDisplay.destroy();
+    this.iconBar && this.iconBar.destroy();
+    $('#' + this.wrapperDiv).empty();
     return this;
   }
 };

@@ -1,9 +1,7 @@
 (function() {
 glift.displays.raphael.button = function(paper, robj, bbox) {
   if (bbox === undefined) {
-    glift.util.logz(robj.getBBox());
     bbox = glift.displays.fromRaphaelBbox(robj.getBBox());
-    glift.util.logz(bbox.toString());
   }
   return new Button(paper, bbox);
 };
@@ -11,13 +9,12 @@ glift.displays.raphael.button = function(paper, robj, bbox) {
 var Button = function(paper, bbox) {
   this.paper = paper;
   this.bbox = bbox;
-  glift.util.logz('' + this.bbox.toString());
   this.rect = this.paper.rect(
       this.bbox.topLeft().x(),
       this.bbox.topLeft().y(),
-      this.bbox.botRight().x(),
-      this.bbox.botRight().y());
-  this.rect.attr({fill: "red", opacity: 0.5});
+      this.bbox.width(),
+      this.bbox.height());
+  this.rect.attr({fill: "red", opacity: 0.0});
   this.hoverin = undefined;
   this.hoverout = undefined;
   this.mousedown = undefined;
