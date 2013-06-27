@@ -11,7 +11,7 @@ var enums = glift.enums;
  *     points: [
  *       pthash: {STONE: "BLACK" , TRIANGLE: true, point: pt},
  *       pthash: {STONE: "WHITE", point: pt},
- *       pthash: {LETTER: "A", point: pt}
+ *       pthash: {LABEL: "A", point: pt}
  *     ],
  *     comment: "This is a good move",
  *   }
@@ -24,7 +24,7 @@ var enums = glift.enums;
 glift.rules.intersections = {
   propertiesToMarks: {
     CR: enums.marks.CIRCLE,
-    LB: enums.marks.LETTER,
+    LB: enums.marks.LABEL,
     MA: enums.marks.XMARK,
     SQ: enums.marks.SQUARE,
     TR: enums.marks.TRIANGLE

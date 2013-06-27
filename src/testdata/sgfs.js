@@ -84,6 +84,24 @@ testdata.sgfs = {
     "(;W[nd]\n" +
     ";B[mc]\n" +
     ";W[oa]\n" +
-    ";B[nc]GB[1]C[White dies.])))"
+    ";B[nc]GB[1]C[White dies.])))",
+
+  marktest:
+    "(;GM[1]FF[4]CA[UTF-8]AP[CGoban:3]ST[2]" +
+    "RU[Japanese]SZ[19]KM[0.00]" +
+    "PW[White]PB[Black]" +
+    "AW[na][oa][pa][qa][ra][sa]" +
+    "AB[nb][ob][pb][qb][rb][sb]" +
+    // Label
+    "LB[pa:A][ob:2][pb:B][pc:C]" +
+    "[oa:1][oc:3][ne:9][oe:8][pe:7][qe:6][re:5]" +
+    "[se:4][nf:15][of:14][pf:13][qf:11][rf:12][sf:10]" +
+    // Circle
+    "CR[qa][qb][qc]" +
+    // Triangle
+    "TR[sa][sb][sc]" +
+    // Square
+    "SQ[ra][rb][rc]" +
+    ")"
 };
 

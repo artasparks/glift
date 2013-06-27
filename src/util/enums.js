@@ -38,11 +38,10 @@ glift.enums = {
 
   marks: {
     CIRCLE: "CIRCLE",
-    LETTER: "LETTER",
+    LABEL: "LABEL",
     SQUARE: "SQUARE",
-    STONE: "STONE",
     TRIANGLE: "TRIANGLE",
-    XMARK: "XMARK"
+    XMARK: "XMARK",
   },
 
   problemResults: {

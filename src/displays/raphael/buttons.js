@@ -22,6 +22,10 @@ var Button = function(paper, bbox) {
 };
 
 Button.prototype = {
+  toFront: function() {
+    this.rect && this.rect.toFront();
+  },
+
   setHover: function(hoverin, hoverout) {
     this.hoverin = hoverin;
     this.hoverout = hoverout;

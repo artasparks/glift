@@ -19,16 +19,18 @@ var Stone = function(paper, intersection, coordinate, spacing, subtheme) {
   // coordinate: the center of the stone, in pixels.
   this.coordinate = coordinate;
   this.subtheme = subtheme;
-  // TODO(kashomon): Change the magic #s to variables.
+
+  this.spacing = spacing;
+  // TODO(kashomon): Change the magic #s to variables or remove
   // The .2 fudge factor is used to account for line width.
   this.radius = spacing / 2 - .2
 
   // The purpose of colorState is to provide a way to recreate the GoBoard.
-  this.colorState = glift.util.none; // set with setColor(...)
+  this.colorState = undefined; // set with setColor(...)
 
   // Set via draw
-  this.circle = glift.util.none;
-  this.bbox = glift.util.none;
+  this.circle = undefined;
+  this.bbox = undefined;
 
   this.bboxHoverIn = function() { throw "bboxHoverIn not Defined"; };
   this.bboxHoverOut = function() { throw "bboxHoverOut not defined"; };
@@ -53,17 +55,18 @@ Stone.prototype = {
     if (this.key !== "EMPTY" && subtheme['shadows'] !== undefined) {
       this.shadow = paper.circle(coord.x(), coord.y(), r);
       this.shadow.attr(subtheme.shadows);
-      var tAmt = r / 4.0; // translateAmount
+      var tAmt = r / 5.0; // translateAmount
       this.shadow.attr({transform:"T" + tAmt + "," + tAmt});
-      this.shadow.blur(2);
+      this.shadow.blur(1);
       this.shadow.attr({opacity: 0});
     }
     this.circle = paper.circle(coord.x(), coord.y(), r);
+
     // Create a bounding box surrounding the stone.  This is what the user
     // actually clicks on, since just using circles leaves annoying gaps.
+    // TODO(kashomon): Replace with button code.
     this.bbox = paper.rect(coord.x() - r, coord.y() - r, 2 * r, 2 * r)
     this.bbox.attr({fill: "white", opacity: 0});
-
     this.bboxHoverIn = function() { that.hoverInHandler(intersection); };
     this.bboxHoverOut = function() { that.hoverOutHandler(intersection); };
     this.bboxClick = function() { that.clickHandler(intersection); };
@@ -88,7 +91,7 @@ Stone.prototype = {
   // Set the color of the stone by retrieving the "key" from the stones
   // sub object.
   setColor: function(key) {
-    if (this.circle === glift.util.none) {
+    if (this.circle === undefined) {
       throw "Circle was not initialized, so cannot set color";
     }
     if (!(key in this.subtheme)) {
@@ -110,14 +113,12 @@ Stone.prototype = {
   },
 
   destroy: function() {
-    if (this.circle === glift.util.none || this.bbox === glift.util.none) {
-      return this // not initialized,
-    }
-    this.bbox.unhover(this.bboxHoverIn, this.bboxHoverOut);
-    this.bbox.unclick(this.bboxClick);
-    this.bbox.remove();
+    this.bbox && this.bbox.unhover(this.bboxHoverIn, this.bboxHoverOut);
+    this.bbox && this.bbox.unclick(this.bboxClick);
+    this.bbox && this.bbox.remove();
     this.circle && this.circle.remove();
     this.shadow && this.shadow.remove();
+    this.mark && this.mark.remove();
     return this;
   },
 
@@ -126,8 +127,15 @@ Stone.prototype = {
     return this;
   },
 
-  addMark: function(type, color) {
-    // TODO(kashomon): flargnargle.
+  addMark: function(type) {
+    this.mark = glift.displays.raphael.mark(
+        this.paper, type, this.coordinate, {fill: 'blue'}, this.spacing);
+    this.bbox.toFront();
+    return this;
+  },
+
+  clearMark: function() {
+    this.mark && this.mark.remove();
   }
 };
 })();

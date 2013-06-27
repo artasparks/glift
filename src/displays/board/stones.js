@@ -14,6 +14,7 @@ var Stones = function(paper, environment, subtheme) {
 
   // Map from PtHash to Stone
   this.stoneMap = glift.util.none; // init'd with draw();
+  this.markMap = {}; // map from type to arraf of points
 };
 
 Stones.prototype = {
@@ -49,10 +50,6 @@ Stones.prototype = {
     return this;
   },
 
-  redraw: function() {
-    return this.draw();
-  },
-
   // Set handlers for all the stones.
   setClickHandler: function(fn) { return this._handler('clickHandler', fn); },
   setHoverInHandler: function(fn) { return this._handler('hoverInHandler', fn); },
@@ -79,15 +76,44 @@ Stones.prototype = {
     return this;
   },
 
+  addMark: function(point, type) {
+    var stone = this.stoneMap[point.hash()];
+    if (stone === undefined) {
+      throw "Could not find stone for point: " + point.toString();
+    }
+    stone.addMark(type);
+    var mapped = this.markMap[type];
+    if (mapped !== undefined) {
+      this.markMap[type].push(point);
+    } else {
+      this.markMap[type] = [point]
+    }
+    return this;
+  },
+
+  clearMarks: function() {
+    for (var type in this.markMap) {
+      var ptarray = this.markMap[type];
+      for (var i = 0; i < ptarray.length; i++) {
+        var pt = ptarray[i];
+        this.stoneMap[pt].clearMark();
+      }
+    }
+    return this;
+  },
+
+  redraw: function() {
+    return this.draw();
+  },
+
   // Destroy is extremely slow.
   destroy: function() {
     for (var ptHash in this.stoneMap) {
       this.stoneMap[ptHash].destroy();
     }
     this.stoneMap = {};
+    this.markMap = {};
   }
-
-  // TODO(kashomon): Add drawing marks on top of the stones.
 };
 
 })();

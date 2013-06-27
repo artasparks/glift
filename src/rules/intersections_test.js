@@ -16,14 +16,14 @@ glift.rules.intersectionsTest = function() {
         tripts = glift.sgf.allSgfCoordsToPoints(['qd', 'qe']),
         testmap = {
           "CIRCLE" : cirpts,
-          "LETTER" : labels,
+          "LABEL" : labels,
           "SQUARE" : squpts,
           "TRIANGLE" : tripts
         };
     for (var key in testmap) {
       var pts = testmap[key];
       for (var i = 0; i < pts.length; i++) {
-        if (key === "LETTER") {
+        if (key === "LABEL") {
           deepEqual(foundMarks[pts[i].point.hash()][key], pts[i].value,
               "Must find the correct label");
         } else {

@@ -1,0 +1,6 @@
+- Replace stone bbox with button.
+- Add generic options parsing.
+- Add marks.
+- Add tests for widgets.
+- Add tests for marks.
+- Remove argument guarding code.
