@@ -76,12 +76,14 @@ Stones.prototype = {
     return this;
   },
 
-  addMark: function(point, type) {
+  addMark: function(point, type, label) {
     var stone = this.stoneMap[point.hash()];
     if (stone === undefined) {
       throw "Could not find stone for point: " + point.toString();
     }
-    stone.addMark(type);
+    stone.addMark(type, label);
+
+    // store a cache of mark data
     var mapped = this.markMap[type];
     if (mapped !== undefined) {
       this.markMap[type].push(point);

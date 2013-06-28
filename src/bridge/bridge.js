@@ -10,12 +10,22 @@ glift.bridge = {
    */
   setDisplayState: function(intersectionData, display) {
     var marks = glift.enums.marks;
+    display.clearMarks();
     for (var ptHash in intersectionData.points) {
       var intersection = intersectionData.points[ptHash];
-      if (marks.STONE in intersection) {
-        var color = intersection[marks.STONE];
-        var pt = intersection.point;
+      var pt = intersection.point;
+      if ('stone' in intersection) {
+        var color = intersection.stone;
         display.setColor(pt, color);
+      }
+      for (var mark in marks) {
+        if (mark in intersection) {
+          if (mark === marks.LABEL) {
+            display.addMark(pt, mark, intersection[mark]);
+          } else {
+            display.addMark(pt, mark);
+          }
+        }
       }
     }
   }

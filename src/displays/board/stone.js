@@ -127,9 +127,9 @@ Stone.prototype = {
     return this;
   },
 
-  addMark: function(type) {
+  addMark: function(type, label) {
     this.mark = glift.displays.raphael.mark(
-        this.paper, type, this.coordinate, {fill: 'blue'}, this.spacing);
+        this.paper, type, this.coordinate, {fill: 'blue'}, this.spacing, label);
     this.bbox.toFront();
     return this;
   },

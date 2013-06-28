@@ -9,19 +9,28 @@
  *  XMARK: "XMARK",
  *  TRIANGLE: "TRIANGLE",
  */
-glift.displays.raphael.mark = function(paper, type, coordinate, attr, spacing) {
+glift.displays.raphael.mark = function(
+    paper, type, coordinate, attr, spacing, label) {
   var c = coordinate;
+  var obj;
   switch(type) {
     case "CIRCLE":
-        return paper.text(c.x(), c.y(), 'CR');
-    case "LETTER":
-        return paper.text(c.x(), c.y(), 'LB');
+        obj = paper.text(c.x(), c.y(), 'CR');
+        break;
+    case "LABEL":
+        obj = paper.text(c.x(), c.y(), label);
+        break;
     case "SQUARE":
-        return paper.text(c.x(), c.y(), 'SQ');
+        obj = paper.text(c.x(), c.y(), 'SQ');
+        break;
     case "TRIANGLE":
-        return paper.text(c.x(), c.y(), 'TR');
+        obj = paper.text(c.x(), c.y(), 'TR');
+        break;
     case "XMARK":
-        return paper.text(c.x(), c.y(), 'MA');
+        obj = paper.text(c.x(), c.y(), 'MA');
+        break;
     default: // do nothing
   }
+  obj.attr(attr);
+  return obj;
 };

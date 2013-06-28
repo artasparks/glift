@@ -92,10 +92,13 @@ testdata.sgfs = {
     "PW[White]PB[Black]" +
     "AW[na][oa][pa][qa][ra][sa]" +
     "AB[nb][ob][pb][qb][rb][sb]" +
+
     // Label
     "LB[pa:A][ob:2][pb:B][pc:C]" +
     "[oa:1][oc:3][ne:9][oe:8][pe:7][qe:6][re:5]" +
     "[se:4][nf:15][of:14][pf:13][qf:11][rf:12][sf:10]" +
+    // Mark
+    "MA[na][nb][nc]" +
     // Circle
     "CR[qa][qb][qc]" +
     // Triangle

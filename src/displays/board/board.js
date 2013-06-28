@@ -60,8 +60,8 @@ Display.prototype.destroy = function() {
   }
   this._objectHistory = [];
   this._paper.remove();
-  this._paper = glift.util.none;
-  this._stones = glift.util.none;
+  this._paper = undefined;
+  this._stones = undefined;
   // Empty out the div of anything that's left
   $('#' + this.divId()).empty();
 };
@@ -97,24 +97,28 @@ Display.prototype.redraw = function() {
 };
 
 Display.prototype.setColor = function(point, color) {
-  if (this._stones !== glift.util.none) {
-    this._stones.setColor(point, color);
-    return this;
-  } else {
-    throw "Stones === none! Cannot setColor";
-  }
+  this._stones && this._stones.setColor(point, color);
+  return this;
+};
+
+Display.prototype.addMark = function(point, type, label) {
+  this._stones && this._stones.addMark(point, type, label);
+};
+
+Display.prototype.clearMarks = function(point, type) {
+  this._stones && this._stones.clearMarks();
 };
 
 Display.prototype.setClickHandler = function(fn) {
-  this._stones.setClickHandler(fn);
+  this._stones && this._stones.setClickHandler(fn);
 };
 
 Display.prototype.setHoverInHandler = function(fn) {
-  this._stones.setHoverInHandler(fn);
+  this._stones && this._stones.setHoverInHandler(fn);
 };
 
 Display.prototype.setHoverOutHandler = function(fn) {
-  this._stones.setHoverOutHandler(fn);
+  this._stones && this._stones.setHoverOutHandler(fn);
 };
 
 })();

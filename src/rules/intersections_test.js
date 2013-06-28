@@ -52,9 +52,9 @@ glift.rules.intersectionsTest = function() {
         abstone = conv("pc"),
         comment = "foo";
     ok(datap[sqpt.hash()][mk.SQUARE], "SQAURE must exist");
-    deepEqual(datap[bstone.hash()][mk.STONE], col.BLACK, "Must be black");
-    deepEqual(datap[wstone.hash()][mk.STONE], col.WHITE, "Must be white");
-    deepEqual(datap[abstone.hash()][mk.STONE], col.BLACK,
+    deepEqual(datap[bstone.hash()].stone, col.BLACK, "Must be black");
+    deepEqual(datap[wstone.hash()].stone, col.WHITE, "Must be white");
+    deepEqual(datap[abstone.hash()].stone, col.BLACK,
         "Also must be black for placements");
     ok(!datap[sqpt.hash()][mk.TRIANGLE], "TRIANGLE must not exist");
     deepEqual(data.comment, "foo", "Comment must be foo");

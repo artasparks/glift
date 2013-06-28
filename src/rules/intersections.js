@@ -9,8 +9,8 @@ var enums = glift.enums;
  *
  *   {
  *     points: [
- *       pthash: {STONE: "BLACK" , TRIANGLE: true, point: pt},
- *       pthash: {STONE: "WHITE", point: pt},
+ *       pthash: {stone: "BLACK" , TRIANGLE: true, point: pt},
+ *       pthash: {stone: "WHITE", point: pt},
  *       pthash: {LABEL: "A", point: pt}
  *     ],
  *     comment: "This is a good move",
@@ -36,7 +36,7 @@ glift.rules.intersections = {
    *    points: {
    *      "1,2" : {
    *        point: {1, 2},
-   *        STONE: "WHITE"
+   *        stone: "WHITE"
    *      }
    *      ... etc ...
    *    }
@@ -51,8 +51,8 @@ glift.rules.intersections = {
     for (var i = 0; i < gobanStones.length; i++) {
       var pt = gobanStones[i].point;
       var sobj = {};
-      sobj["point"] = pt;
-      sobj[enums.marks.STONE] = gobanStones[i].color;
+      sobj.point = pt;
+      sobj.stone = gobanStones[i].color;
       pointsObj[pt.hash()] = sobj;
     }
 

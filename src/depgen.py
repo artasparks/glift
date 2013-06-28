@@ -14,6 +14,7 @@ FILES_TO_AUTOGEN = {
     'htmltests/ThemeTester.html': True,
     'htmltests/SeriesTester.html': True,
     'htmltests/IconBarTester.html': True,
+    'htmltests/MarkTester.html': True,
     }
 
 COMBINED_LOC = 'compiled/glift_combined.js'
