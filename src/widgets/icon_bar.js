@@ -86,13 +86,13 @@ IconBar.prototype = {
     // Create the buttons (without handlers.
     for (var key in this.iconObjects) {
       this.iconButtons[key] = glift.displays.raphael.button(
-          this.paper, this.iconObjects[key])
+          this.paper, {name: name}, this.iconObjects[key]);
     }
     return this;
   },
 
   setHover: function(name, hoverin, hoverout) {
-    this.iconButtons[name].setHover(hoverin, hoverout);
+    this.iconButtons[name].setMouseOver(hoverin).setMouseOut(hoverout);
   },
 
   setClick: function(name, mouseDown, mouseUp) {

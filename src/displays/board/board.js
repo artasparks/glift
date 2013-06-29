@@ -15,7 +15,8 @@ glift.displays.board.Display = function(inEnvironment, themeName, theme) {
   this._environment = inEnvironment;
   this._themeName = themeName;
   this._theme = theme;
-  this._stones = glift.util.none;
+  this._stones = undefined;
+  this.stones = function() { return this._stones; };
 
   // Methods accessing private data
   this.intersections = function() { return this._environment.intersections; };
@@ -62,6 +63,7 @@ Display.prototype.destroy = function() {
   this._paper.remove();
   this._paper = undefined;
   this._stones = undefined;
+
   // Empty out the div of anything that's left
   $('#' + this.divId()).empty();
 };
@@ -94,31 +96,6 @@ Display.prototype.redraw = function() {
   for (var i = 0; i < this._objectHistory.length; i++) {
     this._objectHistory[i].redraw();
   }
-};
-
-Display.prototype.setColor = function(point, color) {
-  this._stones && this._stones.setColor(point, color);
-  return this;
-};
-
-Display.prototype.addMark = function(point, type, label) {
-  this._stones && this._stones.addMark(point, type, label);
-};
-
-Display.prototype.clearMarks = function(point, type) {
-  this._stones && this._stones.clearMarks();
-};
-
-Display.prototype.setClickHandler = function(fn) {
-  this._stones && this._stones.setClickHandler(fn);
-};
-
-Display.prototype.setHoverInHandler = function(fn) {
-  this._stones && this._stones.setHoverInHandler(fn);
-};
-
-Display.prototype.setHoverOutHandler = function(fn) {
-  this._stones && this._stones.setHoverOutHandler(fn);
 };
 
 })();

@@ -17,9 +17,9 @@ glift.controllers.staticProblemStudyTest = function() {
     ok(true);
     deepEqual(c.sgfString, sgfs.realproblem);
     var result = c.initialize();
-    deepEqual(result.points[wstone.hash()][mk.STONE], states.WHITE,
+    deepEqual(result.points[wstone.hash()].stone, states.WHITE,
         "Must find a white stone where expected");
-    deepEqual(result.points[bstone.hash()][mk.STONE], states.BLACK,
+    deepEqual(result.points[bstone.hash()].stone, states.BLACK,
         "Must find a black stone where expected");
   });
 

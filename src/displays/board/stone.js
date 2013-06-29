@@ -30,6 +30,7 @@ var Stone = function(paper, intersection, coordinate, spacing, subtheme) {
 
   // Set via draw
   this.circle = undefined;
+  this.button = undefined
   this.bbox = undefined;
 
   this.bboxHoverIn = function() { throw "bboxHoverIn not Defined"; };
@@ -51,6 +52,7 @@ Stone.prototype = {
         r = this.radius,
         coord = this.coordinate,
         intersection = this.intersection,
+        point = glift.util.point,
         that = this; // Avoid lexical 'this' binding problems.
     if (this.key !== "EMPTY" && subtheme['shadows'] !== undefined) {
       this.shadow = paper.circle(coord.x(), coord.y(), r);
@@ -61,17 +63,11 @@ Stone.prototype = {
       this.shadow.attr({opacity: 0});
     }
     this.circle = paper.circle(coord.x(), coord.y(), r);
-
-    // Create a bounding box surrounding the stone.  This is what the user
-    // actually clicks on, since just using circles leaves annoying gaps.
-    // TODO(kashomon): Replace with button code.
-    this.bbox = paper.rect(coord.x() - r, coord.y() - r, 2 * r, 2 * r)
-    this.bbox.attr({fill: "white", opacity: 0});
-    this.bboxHoverIn = function() { that.hoverInHandler(intersection); };
-    this.bboxHoverOut = function() { that.hoverOutHandler(intersection); };
-    this.bboxClick = function() { that.clickHandler(intersection); };
-    this.bbox.hover(this.bboxHoverIn, this.bboxHoverOut);
-    this.bbox.click(this.bboxClick);
+    var bbox = glift.displays.bbox(point(coord.x() - r, coord.y() - r),
+        2 * r, 2 * r);
+    this.button = glift.displays.raphael.button(
+        paper, intersection, this.circle, bbox);
+    this.button.toFront();
     this.setColor("EMPTY");
     return this;
   },
@@ -101,7 +97,8 @@ Stone.prototype = {
 
     if (key !== "EMPTY" && !key.match("_HOVER") && this.shadow !== undefined ) {
       this.shadow.attr({opacity: 1});
-    } else if (key === "EMPTY" && !key.match("_HOVER") && this.shadow !== undefined) {
+    } else if (key === "EMPTY" && !key.match("_HOVER")
+        && this.shadow !== undefined) {
       this.shadow.attr({opacity: 0});
     }
 
@@ -113,9 +110,7 @@ Stone.prototype = {
   },
 
   destroy: function() {
-    this.bbox && this.bbox.unhover(this.bboxHoverIn, this.bboxHoverOut);
-    this.bbox && this.bbox.unclick(this.bboxClick);
-    this.bbox && this.bbox.remove();
+    this.button && this.button.destroy();
     this.circle && this.circle.remove();
     this.shadow && this.shadow.remove();
     this.mark && this.mark.remove();

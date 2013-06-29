@@ -22,7 +22,7 @@ glift.widgets._BasicProblem = function(display, controller) {
     "WHITE": "WHITE_HOVER"
   };
 
-  display.setClickHandler(function(pt) {
+  display.stones().setClick(function(pt) {
     var currentPlayer = controller.getCurrentPlayer();
     var data = controller.addStone(pt, currentPlayer);
     $('#extra_info').text(data.message + '//' + (data.result || ''));
@@ -31,17 +31,17 @@ glift.widgets._BasicProblem = function(display, controller) {
     }
   });
 
-  display.setHoverInHandler(function(pt) {
+  display.stones().setMouseOver(function(pt) {
     var currentPlayer = controller.getCurrentPlayer();
     if (controller.canAddStone(pt, currentPlayer)) {
-      display.setColor(pt, hoverColors[currentPlayer]);
+      display.stones().setColor(pt, hoverColors[currentPlayer]);
     }
   });
 
-  display.setHoverOutHandler(function(pt) {
+  display.stones().setMouseOut(function(pt) {
     var currentPlayer = controller.getCurrentPlayer();
     if (controller.canAddStone(pt, currentPlayer)) {
-      display.setColor(pt, 'EMPTY');
+      display.stones().setColor(pt, 'EMPTY');
     }
   });
 };

@@ -45,23 +45,23 @@ glift.displays.boardTest = function() {
     var stones = display.createStones(),
         numStones = 0,
         clickCounter = 0,
-        hoverInCounter = 0,
-        hoverOutCounter = 0,
-        _ = stones.setClickHandler(function(pt) { clickCounter++; }),
-        _ = stones.setHoverInHandler(function(pt) { hoverInCounter += 2; }),
-        _ = stones.setHoverOutHandler(function(pt) { hoverOutCounter += 3; });
+        mouseOverCounter = 0,
+        mouseOutCounter = 0,
+        _ = stones.setClick(function(pt) { clickCounter++; }),
+        _ = stones.setMouseOver(function(pt) { mouseOverCounter += 2; }),
+        _ = stones.setMouseOut(function(pt) { mouseOutCounter += 3; });
     for (var key in stones.stoneMap){
       var stone = stones.stoneMap[key],
           pt = glift.util.pointFromHash(key);
       stones.forceClick(pt);
-      stones.forceHoverIn(pt);
-      stones.forceHoverOut(pt);
+      stones.forceMouseOver(pt);
+      stones.forceMouseOut(pt);
       numStones++;
     }
     deepEqual(numStones, 81);
     deepEqual(clickCounter, 81);
-    deepEqual(hoverInCounter, 162);
-    deepEqual(hoverOutCounter, 243);
+    deepEqual(mouseOverCounter, 162);
+    deepEqual(mouseOutCounter, 243);
 
     // Individual stone tests
     var testPoint = glift.util.point(1, 3);

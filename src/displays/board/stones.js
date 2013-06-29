@@ -50,22 +50,65 @@ Stones.prototype = {
     return this;
   },
 
-  // Set handlers for all the stones.
-  setClickHandler: function(fn) { return this._handler('clickHandler', fn); },
-  setHoverInHandler: function(fn) { return this._handler('hoverInHandler', fn); },
-  setHoverOutHandler: function(fn) { return this._handler('hoverOutHandler', fn); },
 
-  _handler: function(key, fn) {
+  // Set handlers for all the stones.
+  setMouseOver: function(fn) {
+    this.forEach(function(stone) {
+      stone.button && stone.button.setMouseOver(fn);
+    });
+    return this;
+  },
+
+  setMouseOut: function(fn) {
+    return this.forEach(function(stone) {
+      stone.button && stone.button.setMouseOut(fn);
+    });
+  },
+
+  setHover: function(fnIn, fnOut) {
+    return this.setMouseOver(fnIn).setMouseOut(fnOut);
+  },
+
+  setClick: function(fn) {
+    return this.forEach(function(stone) {
+      stone.button && stone.button.setClick(fn);
+    });
+  },
+
+  setMouseUp: function(fn) {
+    return this.forEach(function(stone) {
+      stone.button && stone.button.setMouseUp(fn);
+    });
+  },
+
+  setMouseDown: function(fn) {
+    return this.forEach(function(stone) {
+      stone.button && stone.button.setMouseDown(fn);
+    });
+  },
+
+  forEach: function(func) {
     for (var ptHash in this.stoneMap) {
-      var stone = this.stoneMap[ptHash];
-      stone[key] = fn;
+      func(this.stoneMap[ptHash]);
     }
     return this;
   },
 
-  forceClick: function(pt) { this.stoneMap[pt.hash()].bboxClick(); },
-  forceHoverIn: function(pt) { this.stoneMap[pt.hash()].bboxHoverIn(); },
-  forceHoverOut: function(pt) { this.stoneMap[pt.hash()].bboxHoverOut(); },
+  forceClick: function(pt) {
+    this.stoneMap[pt.hash()].button.forceClick();
+  },
+  forceMouseOver: function(pt) {
+    this.stoneMap[pt.hash()].button.forceMouseOver();
+  },
+  forceMouseOut: function(pt) {
+    this.stoneMap[pt.hash()].button.forceMouseOut();
+  },
+  forceMouseDown: function(pt) {
+    this.stoneMap[pt.hash()].button.forceMouseDown();
+  },
+  forceMouseUp: function(pt) {
+    this.stoneMap[pt.hash()].button.forceMouseUp();
+  },
 
   setColor: function(point, key) {
     var stone = this.stoneMap[point.hash()];

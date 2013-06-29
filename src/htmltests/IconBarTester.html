@@ -142,9 +142,9 @@
         });
 
         iconBar.forEachIcon(function(icon) {
-          icon.button.setHover(function() {
+          icon.button.setMouseOver(function() {
             icon.obj.attr({fill:'blue'});
-          }, function() {
+          }).setMouseOut(function() {
             icon.obj.attr(iconBar.subTheme['DEFAULT']);
           });
         });
