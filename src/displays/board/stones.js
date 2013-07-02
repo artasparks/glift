@@ -13,20 +13,25 @@ var Stones = function(paper, environment, subtheme) {
   this.subtheme = subtheme;
 
   // Map from PtHash to Stone
-  this.stoneMap = glift.util.none; // init'd with draw();
-  this.markMap = {}; // map from type to arraf of points
+  this.stoneMap = {}; // init'd with draw();
+  this.markMap = {}; // map from type to array of points
 };
 
 Stones.prototype = {
   draw: function() {
     var newStoneMap = {},
         boardPoints = this.environment.boardPoints;
+    this.paper.setStart();
     for (var ptHash in boardPoints.points) {
       var coordPt = boardPoints.points[ptHash],
-          intersection = glift.util.pointFromHash(ptHash),
+          intersection = glift.util.pointFromHash(ptHash), // 0 indexed
           spacing = boardPoints.spacing,
           stone = glift.displays.board.createStone(
               this.paper, intersection, coordPt, spacing, this.subtheme);
+
+      // var intersectionLines = glift.displays.board.intersectionLine(
+          // this.paper, intersection, coordPt,
+          // this.environment.intersections - 1, spacing, this.subtheme);
 
       // This is a hack.  This is here so we can support redrawing the board.
       // However, it conflates the idea of drawing and redrawing which probably
@@ -36,20 +41,21 @@ Stones.prototype = {
         // restore the stone state, if it exists.
         var prevStone = this.stoneMap[ptHash];
         var state = prevStone.colorState;
-        stone.cloneHandlers(prevStone);
         stone.draw();
+        stone.cloneButtonHandlers(prevStone);
         stone.setColor(state);
         this.stoneMap[ptHash].destroy();
       } else {
         stone.draw();
       }
-
       newStoneMap[ptHash] = stone;
+
     }
+    this.paper.setFinish();
+    // TODO(kashomon): Move to own class.
     this.stoneMap = newStoneMap;
     return this;
   },
-
 
   // Set handlers for all the stones.
   setMouseOver: function(fn) {

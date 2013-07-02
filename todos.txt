@@ -1,4 +1,8 @@
-- Replace stone bbox with button.
+Done - Replace stone bbox with button.
+
+- 'stone model' to be intersection based
+  - add star point object
+  - add lines object
 - Add generic options parsing.
 - Add marks.
 - Add tests for widgets.

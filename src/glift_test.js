@@ -14,10 +14,10 @@ module("Glift API Test Suite");
     ok(display !== undefined);
     ok(display.divId() !== undefined);
     ok(display.theme() !== undefined);
-    ok(display.intersections() !== undefined);
+    ok(display.intersectionPoints() !== undefined);
     deepEqual(display.divId(), 'glift_display', "div id");
     deepEqual(display.theme(), 'DEFAULT', "theme name");
-    deepEqual(display.intersections(), 9, "intersections");
+    deepEqual(display.intersectionPoints(), 9, "intersections");
     deepEqual(display.boardRegion(), boardRegions.ALL, "board region");
 
     testUtil.assertFullDiv('glift_display')
@@ -33,10 +33,10 @@ module("Glift API Test Suite");
     ok(display !== undefined);
     ok(display.divId() !== undefined);
     ok(display.theme() !== undefined);
-    ok(display.intersections() !== undefined);
+    ok(display.intersectionPoints() !== undefined);
     deepEqual(display.divId(), 'glift_display1', "div id");
     deepEqual(display.theme(), 'DEFAULT', "theme name");
-    deepEqual(display.intersections(), 7, "intersections");
+    deepEqual(display.intersectionPoints(), 7, "intersections");
     deepEqual(display.boardRegion(), boardRegions.ALL, "board region");
 
     display.recreate({
@@ -51,9 +51,9 @@ module("Glift API Test Suite");
     ok(display !== undefined);
     ok(display.divId() !== undefined);
     ok(display.theme() !== undefined);
-    ok(display.intersections() !== undefined);
+    ok(display.intersectionPoints() !== undefined);
     deepEqual(display.divId(), 'glift_display1', "div id");
-    deepEqual(display.intersections(), 13, "intersections");
+    deepEqual(display.intersectionPoints(), 13, "intersections");
     deepEqual(display.boardRegion(), boardRegions.LEFT, "board region");
     display.draw();
 

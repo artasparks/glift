@@ -31,7 +31,7 @@ var Button = function(paper, data, bbox) {
   this.mouseup = undefined;
   this.click = undefined;
 
-  var b = this;
+  var b = this; // closure variable.
   this.forceMouseOver = function() { b.mouseover && b.mouseover(b.data); };
   this.forceMouseOut = function() { b.mouseout && b.mouseout(b.data); };
   this.forceMouseDown = function() { b.mousedown && b.mousedown(b.data); };
@@ -49,6 +49,14 @@ Button.prototype = {
   toFront: function() {
     this.rect && this.rect.toFront();
     return this;
+  },
+
+  cloneHandlers: function(that) {
+    this.mouseover = that.mouseover;
+    this.mouseout = that.mouseout;
+    this.mousedown = that.mousedown;
+    this.mouseup = that.mouseup;
+    this.click = that.click;
   },
 
   setMouseOver: function(mouseover) {

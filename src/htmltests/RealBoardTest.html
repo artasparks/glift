@@ -37,6 +37,7 @@
 <script type="text/javascript" src="../displays/board/board.js"></script>
 <script type="text/javascript" src="../displays/board/board_base.js"></script>
 <script type="text/javascript" src="../displays/board/boardlines.js"></script>
+<script type="text/javascript" src="../displays/board/intersection_line.js"></script>
 <script type="text/javascript" src="../displays/board/starpoints.js"></script>
 <script type="text/javascript" src="../displays/board/stone.js"></script>
 <script type="text/javascript" src="../displays/board/stones.js"></script>
@@ -143,29 +144,29 @@
         var display = glift.createDisplay({
           divId: "glift_display1",
         });
-        display.setColor(point(16, 4), 'BLACK');
-        display.setColor(point(15, 4), 'WHITE');
+        display.stones().setColor(point(16, 4), 'BLACK');
+        display.stones().setColor(point(15, 4), 'WHITE');
 
         var colors = ['BLACK', 'WHITE'];
         var hoverColors = ['BLACK_HOVER', 'WHITE_HOVER'];
         var index = 0
-        display.setClickHandler(function(pt) {
-          display.setColor(pt, colors[index]);
+        display.stones().setClick(function(pt) {
+          display.stones().setColor(pt, colors[index]);
           index = (index + 1) % 2;
         });
-        display.setHoverInHandler(function(pt) {
-          display.setColor(pt, hoverColors[index]);
+        display.stones().setMouseOver(function(pt) {
+          display.stones().setColor(pt, hoverColors[index]);
         });
-        display.setHoverOutHandler(function(pt) {
-          display.setColor(pt, 'EMPTY');
+        display.stones().setMouseOut(function(pt) {
+          display.stones().setColor(pt, 'EMPTY');
         });
 
         var display2 = glift.createDisplay({
           divId: "glift_display2",
           boardRegion: boardRegions.TOP_RIGHT
         });
-        display2.setColor(point(16, 4), 'BLACK');
-        display2.setColor(point(15, 4), 'WHITE');
+        display2.stones().setColor(point(16, 4), 'BLACK');
+        display2.stones().setColor(point(15, 4), 'WHITE');
 
         var display3 = glift.createDisplay({
           divId: "glift_display3",

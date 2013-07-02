@@ -19,7 +19,7 @@ glift.displays.board.Display = function(inEnvironment, themeName, theme) {
   this.stones = function() { return this._stones; };
 
   // Methods accessing private data
-  this.intersections = function() { return this._environment.intersections; };
+  this.intersectionPoints = function() { return this._environment.intersections; };
   this.divId = function() { return this._environment.divId };
   this.theme = function() { return this._themeName; };
   this.boardRegion = function() { return this._environment.boardRegion; };
@@ -87,7 +87,7 @@ Display.prototype.enableAutoResizing = function() {
   var timeoutId;
   $(window).resize(function(event) {
     clearTimeout(timeoutId);
-    timeoutId = setTimeout(resizeFunc, 200);
+    timeoutId = setTimeout(resizeFunc, 100);
   });
 };
 

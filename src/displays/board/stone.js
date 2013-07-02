@@ -13,7 +13,7 @@ glift.displays.board.createStone = function(
 
 var Stone = function(paper, intersection, coordinate, spacing, subtheme) {
   this.paper = paper;
-  // intersection: The standard point on the board, (1-indexed?). So, on a 19x19
+  // intersection: The standard point on the board, (1-indexed). So, on a 19x19
   // board, this will be a point where x,y are between 1 and 19 inclusive.
   this.intersection = intersection;
   // coordinate: the center of the stone, in pixels.
@@ -32,15 +32,6 @@ var Stone = function(paper, intersection, coordinate, spacing, subtheme) {
   this.circle = undefined;
   this.button = undefined
   this.bbox = undefined;
-
-  this.bboxHoverIn = function() { throw "bboxHoverIn not Defined"; };
-  this.bboxHoverOut = function() { throw "bboxHoverOut not defined"; };
-  this.bboxClick = function() { throw "bboxClick not defined"; };
-
-  // Click handlers are set via setHandler in Stones.
-  this.clickHandler = function(intersection) {};
-  this.hoverInHandler = function(intersection) {};
-  this.hoverOutHandler = function(intersection) {};
 };
 
 // TODO(kashomon): Break out into its own file.
@@ -72,16 +63,10 @@ Stone.prototype = {
     return this;
   },
 
-  // Clone the handlers.  This is useful for recreating the board.  At that
-  // point, we recreate each stone with the same handlers as before.
-  cloneHandlers: function(stone) {
-    var propertiesToCopy = [ 'bboxHoverIn', 'bboxHoverOut', 'bboxClick',
-        'clickHandler', 'hoverInHandler', 'hoverOutHandler'];
-    for (var i = 0; i < propertiesToCopy.length; i++) {
-      if (stone[propertiesToCopy[i]]) {
-        this[propertiesToCopy[i]] = stone[propertiesToCopy[i]];
-      }
-    }
+  // Clone the button handlers.  This is useful for recreating the board.  At
+  // that point, we recreate each stone with the same handlers as before.
+  cloneButtonHandlers: function(stone) {
+    this.button.cloneHandlers(stone.button);
   },
 
   // Set the color of the stone by retrieving the "key" from the stones
@@ -117,15 +102,10 @@ Stone.prototype = {
     return this;
   },
 
-  _bboxToFront: function() {
-    this.bbox && this.bbox !== glift.util.non && this.bbox.toFront();
-    return this;
-  },
-
   addMark: function(type, label) {
     this.mark = glift.displays.raphael.mark(
         this.paper, type, this.coordinate, {fill: 'blue'}, this.spacing, label);
-    this.bbox.toFront();
+    this.button.toFront();
     return this;
   },
 
