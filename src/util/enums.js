@@ -63,5 +63,10 @@ glift.enums = {
     DYNAMIC_PROBLEM_STUDY: "DYNAMIC_PROBLEM_STUDY",
     EXLORE_SOLUTIONS: "EXPLORE_SOLUTIONS",
     EXLORE_GAME: "EXPLORE_GAME"
+  },
+
+  mediums: {
+    SVG: "SVG",
+    CANVAS: "CANVAS"
   }
 };

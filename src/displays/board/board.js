@@ -54,7 +54,7 @@ Display.prototype.draw = function() {
 };
 
 // Maybe I'm working too hard to 'destroy' these objects.  Why not just remove
-// them from the SVG paper?
+// them from the SVG element? Or just remove the SVG element itself?
 Display.prototype.destroy = function() {
   for (var i = 0; i < this._objectHistory.length; i++) {
     this._objectHistory[i].destroy();

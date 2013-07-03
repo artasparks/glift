@@ -1,12 +1,14 @@
 glift.displays.processOptions = function(rawOptions) {
   // Default keys
+  var enums = glift.enums;
   var defaults = {
     intersections: 19,
     divId: "glift_display",
     theme: "DEFAULT",
     boardRegion: "ALL",
     displayConfig: {},
-    goBoardBackground: ''
+    goBoardBackground: '',
+    medium: enums.mediums.SVG
   };
 
   for (var key in rawOptions) {
@@ -61,6 +63,14 @@ glift.displays.processOptions = function(rawOptions) {
           defaults.goBoardBackground = value;
         } else {
           throw "goBoardBackground not a string: " + value;
+        }
+        break;
+
+      case 'medium':
+        if (glift.enums.mediums[value] !== undefined) {
+          defaults.medium = value;
+        } else {
+          throw "Unknown board region: " + value;
         }
         break;
 
