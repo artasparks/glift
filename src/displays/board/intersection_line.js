@@ -13,8 +13,8 @@ glift.displays.board.intersectionLine = function(
   var right = intersection.x() === maxIntersects ?
       coordinate.x() : coordinate.x() + spacing / 2;
   var l1 = paper.path(rutil.svgMove(coordinate.x(), top)
-      + ' ' + rutil.svgLineAbs(coordinate.x(), bottom));
-  var l2 = paper.path(rutil.svgMove(left, coordinate.y())
+      + ' ' + rutil.svgLineAbs(coordinate.x(), bottom)
+      + rutil.svgMove(left, coordinate.y())
       + ' ' + rutil.svgLineAbs(right, coordinate.y()));
   // var set = paper.set();
   // set.push(l1);

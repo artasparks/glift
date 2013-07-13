@@ -1,0 +1,184 @@
+<html>
+<head>
+
+<title> Speed Tester </title>
+<script type="text/javascript" src="../libs/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" src="../libs/raphael-min.js"></script>
+<script type="text/javascript" src="../testdata/sgfs.js"></script>
+<script type="text/javascript" src="../libs/fabric.all.min.js"></script>
+<script type="text/javascript" src="../libs/d3.min.js"></script>
+<!-- <script type="text/javascript" src="../libs/processing-1.4.1.min.js"></script> -->
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      #wrap {
+        width: 100%;
+        height: 100%;
+      }
+      #glift_display {
+        position:relative;
+        width: 500;
+        height: 500;
+        border: 1px solid;
+      }
+      #glift_display2 {
+        position:relative;
+        border: 1px solid;
+      }
+      #glift_display3 {
+        position:relative;
+        width: 500;
+        height: 500;
+        border: 1px solid;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="wrap" style="position:relative;">
+      <div id="gheader"></div>
+      <div id="glift_display"></div>
+      <div id="glift_display3"></div>
+      <div id="extra_info"></div>
+      <script type="text/javascript">
+        var spacing = 20;
+        var forEachIntersection = function(func) {
+          for (var i = 0; i < 19; i++) {
+            for (var j = 0; j < 19; j++) {
+              var x = i * spacing + spacing;
+              var y = j * spacing + spacing;
+              var left = x - spacing / 2;
+              var right = x + spacing / 2;
+              var top = y - spacing / 2;
+              var bot = y + spacing / 2;
+              func({
+                  x_int: i,
+                  y_int: j,
+                  x: x,
+                  y: y,
+                  left: left,
+                  right: right,
+                  bot: bot,
+                  top: top,
+                  spacing: spacing,
+                  radius: spacing / 2
+              });
+            }
+          }
+        };
+
+        (function() {
+          var d = new Date();
+          var begin = d.getTime();
+          console.log('---Raphael start---');
+
+          var paper = Raphael('glift_display', '100%', '100%');
+          var background = paper.rect(0, 0, 500, 500);
+          background.attr({fill: 'cyan'});
+          var createHandlers = function(set, bbox) {
+            bbox.hover(function() {
+              set.attr({opacity: 1});
+            }, function() {
+              set.attr({opacity: 0});
+            });
+          };
+          forEachIntersection(function(i) {
+              // board lines
+              var p = paper.path('M' + i.left + ',' + i.y + 'L' + i.right  + ',' + i.y + 'M' + i.x + ',' + i.top  + 'L' + i.x + ',' + i.bot);
+              var shadow = paper.circle(i.x, i.y, i.spacing / 2);
+              shadow.attr({transform: 'T' + spacing / 10 + ',' + spacing / 10, fill: 'black'});
+
+              var c = paper.circle(i.x, i.y, i.spacing / 2);
+              c.attr({fill:'blue'});
+
+              sset = paper.set();
+              sset.push(c).push(shadow);
+              sset.attr({opacity: 0});
+
+              // simulate bbox
+              var rect = paper.rect(i.left, i.top, spacing, spacing)
+              rect.attr({fill:'red', opacity: 0.0});
+              createHandlers(sset, rect);
+          });
+          var d = new Date();
+
+          var after = d.getTime();
+          console.log(after - begin);
+          console.log('---Raphael finish---');
+        })();
+
+        (function() {
+          return
+          var d = new Date();
+          var begin = d.getTime();
+          console.log('---Fabric // too slow //---');
+          console.log('---Total time: ~5s---');
+          //
+
+          var canvas = new fabric.Canvas('glift_display2');
+          canvas.selection = false;
+          forEachIntersection(function(i) {
+            var circle = new fabric.Circle({
+              radius: i.spacing / 2, left: i.x, top: i.y, fill: '#aac'
+            });
+            var v = new fabric.Path('M ' + i.left + ' ' + i.y + 'L ' + i.right  + ' ' + i.y);
+            var h = new fabric.Path('M ' + i.x + ' ' + i.top  + 'L ' + i.x + ' ' + i.bot);
+            canvas.add(circle, h, v);
+          });
+
+          var d = new Date();
+          var after = d.getTime();
+          console.log('---Fabric finish---');
+          console.log(after - begin);
+        })();
+
+        (function() {
+          var data = [];
+          forEachIntersection(function(i) {
+            data.push(i);
+          });
+          var d = new Date();
+          var begin = d.getTime();
+          console.log('---D3---');
+          var svg = d3.select("#glift_display3").append("svg")
+              .attr("width", '500px')
+              .attr("height", '500px');
+
+          svg.selectAll("lines")
+              .data(data)
+            .enter().append("path")
+              .attr('d', function(i) {
+                  return 'M ' + i.left + ' ' + i.y + 'L ' + i.right  + ' ' + i.y +
+                  'M ' + i.x + ' ' + i.top  + 'L ' + i.x + ' ' + i.bot})
+              .attr('stroke', '#000000')
+              .attr('stroke-linecap', 'round');
+
+          svg.selectAll("circle")
+              .data(data)
+            .enter().append("circle")
+              .attr("cx", function(d) { return d.x; })
+              .attr("cy", function(d) { return d.y; })
+              .attr("r", function(d) { return d.spacing / 2})
+              .attr('opacity', 0.0)
+              .attr('fill', 'red')
+              .attr('stroke', '#000000')
+              .attr('stroke-width', '1')
+              .on('mouseover', function(d) {
+                d3.select(this).attr('opacity', 1);
+              })
+              .on('mouseout', function(d) {
+                d3.select(this).attr('opacity', 0);
+              });
+
+          var d = new Date();
+          var after = d.getTime();
+          console.log(after - begin);
+          console.log('---D3 Finish---');
+        })();
+      </script>
+    </div>
+  </body>
+</html>

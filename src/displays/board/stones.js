@@ -21,7 +21,6 @@ Stones.prototype = {
   draw: function() {
     var newStoneMap = {},
         boardPoints = this.environment.boardPoints;
-    this.paper.setStart();
     for (var ptHash in boardPoints.points) {
       var coordPt = boardPoints.points[ptHash],
           intersection = glift.util.pointFromHash(ptHash), // 0 indexed
@@ -49,9 +48,8 @@ Stones.prototype = {
         stone.draw();
       }
       newStoneMap[ptHash] = stone;
-
     }
-    this.paper.setFinish();
+
     // TODO(kashomon): Move to own class.
     this.stoneMap = newStoneMap;
     return this;
