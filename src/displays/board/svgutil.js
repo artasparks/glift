@@ -1,5 +1,20 @@
 glift.displays.board.svgutil = {
-  // Move the current position to X,Y
+  /**
+   * Get an ID for a SVG element.
+   */
+  elementId: function(divId, type, intPt) {
+    var base = divId + '_glift_' + type;
+    if (intPt !== undefined) {
+      return base + '_' + intPt.x() + '_' + intPt.y();
+    } else {
+      return base;
+    }
+  },
+
+  /**
+   * Move the current position to X,Y.  Usually used in the context of creating a
+   * path.
+   */
   svgMove: function(x, y) {
     return "M" + x + " " + y;
   },

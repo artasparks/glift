@@ -65,6 +65,20 @@ glift.enums = {
     EXLORE_GAME: "EXPLORE_GAME"
   },
 
+  /**
+   * Used to create svg element Ids
+   */
+  svgElements: {
+    STONE: 'stone',
+    STONE_SHADOW: 'stone_shadow',
+    BOARD_LINE: 'board_line',
+    BOARD_BASE: 'board_base',
+    STARPOINT: 'starpoint',
+    MARK: 'mark'
+  },
+
+  // TODO(kashomon): Perhaps remove.  This isn't used (at least for anything
+  // useful yet (and maybe ever).
   mediums: {
     SVG: "SVG",
     CANVAS: "CANVAS"

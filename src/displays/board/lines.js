@@ -1,5 +1,31 @@
+/**
+ * Create the background lines. These are create at each individual intersection
+ * rather than as a whole so that we can clear theme out when we to draw marks
+ * on the raw board (rather than on stones).
+ */
+glift.displays.board.createLines = function(divId, svg, boardPoints, theme) {
+  // Mapping from int point (e.g., 3,3) hash to id;
+  var lineMapping = {};
+  var svgutil = glift.displays.board.svgutil;
+  var BOARD_LINE = glift.enums.svgElements.BOARD_LINE;
+  svg.selectAll(BOARD_LINE).data(boardPoints.data())
+    .enter().append("path")
+      .attr('d', function(pt) {
+        return glift.displays.board.intersectionLine(
+            pt, boardPoints.radius, boardPoints.numIntersections, theme);
+      })
+      .attr('stroke', theme.lines.stroke)
+      .attr('stroke-linecap', 'round')
+      .attr('id', function(pt) {
+        var id = svgutil.elementId(divId, BOARD_LINE, pt.intPt);
+        lineMapping[pt.intPt.hash()] = id;
+        return id;
+      });
+  return lineMapping;
+};
+
 glift.displays.board.intersectionLine = function(
-    boardPt, radius, numIntersections, theme) {
+    boardPt, radius, numIntersections) {
   // minIntersects: 0 indexed,
   // maxIntersects: 0 indexed,
   // numIntersections: 1 indexed (it's the number of intersections)

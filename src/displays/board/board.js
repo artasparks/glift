@@ -39,9 +39,10 @@ glift.displays.board.Display.prototype = {
   init: function() {
     if (this._svg === undefined) {
       this.destroy(); // make sure everything is cleared out of the div.
-      this._svg = d3.select('#' + this.divId()).append("svg")
-        .attr("width", '100%')
-        .attr("height", '100%');
+      this._svg = d3.select('#' + this.divId())
+        .append("svg")
+          .attr("width", '100%')
+          .attr("height", '100%');
     }
     this._environment.init();
     return this;
@@ -55,25 +56,16 @@ glift.displays.board.Display.prototype = {
     var board = glift.displays.board,
         env = this._environment,
         boardPoints = env.boardPoints,
-        data = boardPoints.data(),
         theme = this._theme,
         svg = this._svg,
-        numIntersections = boardPoints.numIntersections,
-        radius = boardPoints.radius;
-
-    // We don't ever want
-    board.createBoardBase(svg, env, theme);
-
-    // Create board lines.
-    svg.selectAll("lines").data(data)
-      .enter().append("path")
-        .attr('d', function(pt) {
-          return board.intersectionLine(pt, radius, numIntersections, theme);
-        })
-        .attr('stroke', '#000000')
-        .attr('stroke-linecap', 'round');
-
-    board.createStarPoints(svg, boardPoints, theme);
+        divId = this.divId();
+    var boardId = board.createBoardBase(divId, svg, env.goBoardBox, theme);
+    var lineIds = board.createLines(divId, svg, boardPoints, theme);
+    var starPointIds = board.createStarPoints(divId, svg, boardPoints, theme);
+    var stoneShadowIds = board.createShadows(divId, svg, boardPoints, theme);
+    var stoneIds = board.createStones(divId, svg, boardPoints, theme);
+    var markIds = board.createMarks(divId, svg, boardPoints, theme);
+    var boundingBoxIds = 'todo'
   },
 
   /**

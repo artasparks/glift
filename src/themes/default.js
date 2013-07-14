@@ -9,16 +9,16 @@ glift.themes.registered.DEFAULT = {
     fill: '#000000'
   },
 
-  // TODO(kashomon): Remove legacy
-  legacy: {
-    lineColor: "black",
-    lineSize: 1,
-    edgeLineSize: 1,
-    textColor: "white"
+  lines: {
+    stroke: "#000000",
   },
 
   stones: {
-    hoverOpacity: 0.5,
+    shadows: {
+      stroke: "none",
+      fill: "#222"
+      // transform: "T4,4" -- now depends on spacing
+    },
     "EMPTY" : {
       fill: 'blue',
       opacity: 0
@@ -55,8 +55,7 @@ glift.themes.registered.DEFAULT = {
   },
 
   marks: {
-    // TODO(kashomon): add
-    XMARK : {
-    }
+    fill: "black",
+    stroke: "white"
   }
 };

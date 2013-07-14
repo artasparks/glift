@@ -13,8 +13,8 @@ glift.displays.board.createStone = function(
 
 var Stone = function(paper, intersection, coordinate, spacing, subtheme) {
   this.paper = paper;
-  // intersection: The standard point on the board, (1-indexed). So, on a 19x19
-  // board, this will be a point where x,y are between 1 and 19 inclusive.
+  // intersection: The standard point on the board, (0-indexed). So, on a 19x19
+  // board, this will be a point where x,y are between 0 and 18 inclusive.
   this.intersection = intersection;
   // coordinate: the center of the stone, in pixels.
   this.coordinate = coordinate;

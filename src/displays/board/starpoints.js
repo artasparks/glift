@@ -1,7 +1,11 @@
-glift.displays.board.createStarPoints = function(svg, boardPoints, theme) {
+glift.displays.board.createStarPoints = function(
+    divId, svg, boardPoints, theme) {
   var size = theme.starPoints.sizeFraction * boardPoints.spacing;
   var starPointData = boardPoints.starPoints();
-  svg.selectAll('starpoints').data(starPointData)
+  var svgutil = glift.displays.board.svgutil;
+  var STARPOINT = glift.enums.svgElements.STARPOINT;
+  var starPointIds = {}; // mapping from int point hash to element ID
+  svg.selectAll(STARPOINT).data(starPointData)
     .enter().append('circle')
       .attr('cx', function(ip) {
         return boardPoints.getCoord(ip).coordPt.x()
@@ -10,5 +14,11 @@ glift.displays.board.createStarPoints = function(svg, boardPoints, theme) {
         return boardPoints.getCoord(ip).coordPt.y()
       })
       .attr('r', size)
-      .attr('fill', theme.starPoints.fill);
+      .attr('fill', theme.starPoints.fill)
+      .attr('id', function(pt) {
+        var id = svgutil.elementId(divId, STARPOINT, pt);
+        starPointIds[pt.hash()] = id;
+        return id;
+      });
+  return starPointIds;
 };
