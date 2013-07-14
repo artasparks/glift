@@ -1,5 +1,6 @@
 glift.bridge.croppingTest = function() {
   module("Cropping Bridge Suite");
+  var boardRegions = glift.enums.boardRegions;
 
   // a = 0; i = 9; s = 18
   test("GetCropRegion: TOP_LEFT", function() {

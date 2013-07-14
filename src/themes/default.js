@@ -1,8 +1,11 @@
 glift.themes.registered.DEFAULT = {
   board: {
-    boardAttr: {
-      fill: "#f5be7e"
-    },
+    fill: "#f5be7e",
+    stroke: "#000000"
+  },
+
+  // TODO(kashomon): Remove legacy
+  legacy: {
     lineColor: "black",
     lineSize: 1,
     edgeLineSize: 1,

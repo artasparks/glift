@@ -4,7 +4,8 @@
 <head>
 
 <script type="text/javascript" src="../libs/jquery-1.7.2.min.js"></script>
-<script type="text/javascript" src="../libs/raphael-min.js"></script>
+<script type="text/javascript" src="../libs/d3.min.js"></script>
+<!-- <script type="text/javascript" src="../libs/raphael-min.js"></script> -->
 <link rel="stylesheet" href="../qunit/qunit.css" type="text/css" media="screen" />
 <script type="text/javascript" src="../qunit/qunit.js"></script>
 <script type="text/javascript" src="../testdata/sgfs.js"></script>
@@ -56,7 +57,6 @@
 <script type="text/javascript" src="../displays/cropbox.js"></script>
 <script type="text/javascript" src="../displays/environment.js"></script>
 <script type="text/javascript" src="../displays/line_box.js"></script>
-<script type="text/javascript" src="../displays/line_segments.js"></script>
 <script type="text/javascript" src="../displays/options.js"></script>
 <script type="text/javascript" src="../displays/resized_box.js"></script>
 <!-- Displays board -->
@@ -142,7 +142,7 @@ $(document).ready(function() {
   glift.displays.environmentTest();
   glift.displays.boardpointsTest();
   glift.displays.resizedBoxTest();
-  glift.displays.boardTest();
+  //glift.displays.boardTest();
   glift.displays.centerTest();
 
   glift.rules.movetreeTest();

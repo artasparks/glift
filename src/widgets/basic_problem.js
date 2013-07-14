@@ -3,11 +3,12 @@ glift.widgets.basicProblem = function(options) {
   var boardRegions = glift.enums.boardRegions;
   var point = glift.util.point;
   var divId = options.divId;
+  var display = glift.createDisplay(options);
+  return;
 
   options.controllerType = "STATIC_PROBLEM_STUDY";
   var controller = glift.createController(options);
   var cropping = glift.bridge.getFromMovetree(controller.movetree);
-  var display = glift.createDisplay(options);
   glift.bridge.setDisplayState(controller.getEntireBoardState(), display);
   return new glift.widgets._BasicProblem(display, controller);
 };

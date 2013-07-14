@@ -1,8 +1,5 @@
 (function() {
-var util = glift.util;
-var enums = glift.enums;
-
-/*
+/***
  * The Environment contains:
  *  - The bounding box for the lines.
  *  - The bounding box for the whole board
@@ -43,6 +40,9 @@ var GuiEnvironment = function(options) {
 
   // We allow the divHeight and divWidth to be specified explicitly, primarily
   // because it's extremely useful for testing.
+  //
+  // TODO(kashomon): Make this a first-class option. I now think it's totally
+  // reasonable to set the height/width explicitly.
   if (options.displayConfig._divHeight !== undefined) {
     this.divHeight = options.displayConfig._divHeight;
     this.heightOverride = true;
@@ -66,36 +66,38 @@ GuiEnvironment.prototype = {
         divHeight = this.divHeight,
         divWidth  = this.divWidth,
         cropbox   = this.cropbox,
-        dirs = enums.directions,
+        dirs = glift.enums.directions,
 
         // The box for the entire div
         divBox = displays.bboxFromPts(
-            util.point(0, 0), // top left point
-            util.point(divWidth, divHeight)), // bottom right point
-        resizedBox = glift.displays.getResizedBox(divBox, cropbox),
-        goBoardBox = resizedBox,
+            glift.util.point(0, 0), // top left point
+            glift.util.point(divWidth, divHeight)), // bottom right point
+
+        // The resized goboard box, accounting for the cropbox.
+        goBoardBox = glift.displays.getResizedBox(divBox, cropbox),
+
+        // The bounding box (modified) for the lines. This is slightly different
+        // than the go board, due to cropping and the margin between go board
+        // and the lines.
         goBoardLineBox = glift.displays.getLineBox(goBoardBox, cropbox),
-        boardPoints = glift.displays.boardPointsFromLineBox(goBoardLineBox),
-        lineSegments = glift.displays.getLineSegments(goBoardLineBox);
+
+        // Calculate the coordinates and bounding boxes for each intersection.
+        boardPoints = glift.displays.boardPointsFromLineBox(
+            goBoardLineBox, this.intersections);
 
     this.divBox = divBox;
     this.goBoardBox = goBoardBox;
     this.goBoardLineBox = goBoardLineBox;
     this.boardPoints = boardPoints;
-    this.lineSegments = lineSegments;
     return this;
   },
 
-  setIntersections: function(intersections) {
-    this.intersections = intersections;
-  },
-
   _resetDimensions: function() {
+    // TODO(kashomon): Replace with non-jquery
     this.divHeight = ($("#" + this.divId).height());
     // -- no reason to use jquery
     // document.getElementById(divId).style.height();
     this.divWidth =  ($("#" + this.divId).width());
-    this.needsInitialization = true;
     return this;
   },
 

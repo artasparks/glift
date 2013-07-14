@@ -1,11 +1,17 @@
 (function() {
 
 // Perhaps this should be removed.  It's hard to preserve immutability when
-// there's a global cache.
+// there's a global cache.  Ideally, the integer points would be cache, but the
+// float points would not be cached.
 var pointCache = {};
 
-// Create a point.  Each point is cached, so that each point is only actually
-// created once.
+/**
+ * Create a point.  Each point is cached, so that each point is only actually
+ * created once.
+ *
+ * Revist later:  It might be better to remove the caching. It means that no
+ * points will ever get garbage collected, which might create a memory leaks.
+ */
 glift.util.point = function(x, y) {
   var str = glift.util.coordToString(x, y);
   if (pointCache[str] !== undefined) {
@@ -55,6 +61,10 @@ GliftPoint.prototype = {
 
   toString: function() {
     return glift.util.coordToString(this.x(), this.y());
+  },
+
+  translate: function(x, y) {
+    return glift.util.point(this.x() + x, this.y() + y);
   },
 
   value: function() {

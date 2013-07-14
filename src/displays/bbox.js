@@ -40,9 +40,7 @@ var BoundingBox = function(topLeftPtIn, botRightPtIn) {
   this.right = function() { return botRightPt.x(); };
 };
 
-
 BoundingBox.prototype = {
-
   /**
    * Draw the bbox (for debugging).
    */

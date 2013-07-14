@@ -110,31 +110,6 @@
         })();
 
         (function() {
-          return
-          var d = new Date();
-          var begin = d.getTime();
-          console.log('---Fabric // too slow //---');
-          console.log('---Total time: ~5s---');
-          //
-
-          var canvas = new fabric.Canvas('glift_display2');
-          canvas.selection = false;
-          forEachIntersection(function(i) {
-            var circle = new fabric.Circle({
-              radius: i.spacing / 2, left: i.x, top: i.y, fill: '#aac'
-            });
-            var v = new fabric.Path('M ' + i.left + ' ' + i.y + 'L ' + i.right  + ' ' + i.y);
-            var h = new fabric.Path('M ' + i.x + ' ' + i.top  + 'L ' + i.x + ' ' + i.bot);
-            canvas.add(circle, h, v);
-          });
-
-          var d = new Date();
-          var after = d.getTime();
-          console.log('---Fabric finish---');
-          console.log(after - begin);
-        })();
-
-        (function() {
           var data = [];
           forEachIntersection(function(i) {
             data.push(i);
