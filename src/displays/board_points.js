@@ -26,11 +26,15 @@ glift.displays.boardPointsFromLineBox = function(linebox, maxIntersects) {
       // Mapping from int point hash, e.g., (0,18), to coordinate data.
       points = {};
 
-  for (var i = 0; i <= linebox.xPoints; i++) {
-    for (var j = 0; j <= linebox.yPoints; j++) {
-      var xCoord = left + i * spacing;
-      var yCoord = top + j * spacing;
+  for (var i = 0; i <= linebox.yPoints; i++) {
+    for (var j = 0; j <= linebox.xPoints; j++) {
+      var xCoord = left + j * spacing;
+      var yCoord = top + i * spacing;
       var intPt = glift.util.point(leftPt + j, topPt + i);
+
+      // TODO(kashomon): Prehaps the coordinate point should be truncated?
+      // right now it's ~15 decimal places.  This is too much precision and it
+      // might hurt performance.
       var coordPt = glift.util.point(xCoord, yCoord);
       points[intPt.hash()] = {
         // Integer point.
@@ -61,11 +65,11 @@ glift.displays.boardPointsFromLineBox = function(linebox, maxIntersects) {
  *
  *  Note: The integer points are 0 Indexed.
  */
-var BoardPoints = function(points, spacing, maxIntersects) {
+var BoardPoints = function(points, spacing, numIntersections) {
   this.points = points; // int hash is 0 indexed, i.e., 0->18.
   this.spacing = spacing;
   this.radius = spacing / 2;
-  this.intersections = maxIntersects;
+  this.numIntersections = numIntersections; // 1 indexed (1->19)
 };
 
 BoardPoints.prototype = {

@@ -50,40 +50,27 @@ glift.displays.board.Display.prototype = {
   },
 
   /**
-   * Draw the GoBoard.
-   *
-   * TODO(kashomon): Once everything works on D3, this needs to be split into helper
-   * functions for clarity.
+   * Draw the GoBoard!
    */
   draw:  function() {
     this.init();
-    var boardPoints = this.boardPoints();
-    var data = boardPoints.data();
-    var theme = this._theme;
-    var svg = this._svg;
+    var board = glift.displays.board,
+        env = this._environment,
+        boardPoints = env.boardPoints,
+        data = boardPoints.data(),
+        theme = this._theme,
+        svg = this._svg,
+        numIntersections = boardPoints.numIntersections,
+        radius = boardPoints.radius;
 
-    // board box.
-    var goBox = this._environment.goBoardBox;
-    svg.selectAll('goBoardRect').data(['goboard'])
-      .enter().append('rect')
-        .attr('x', goBox.topLeft().x() + 'px')
-        .attr('y', goBox.topLeft().y() + 'px')
-        .attr('width', goBox.width() + 'px')
-        .attr('height', goBox.height() + 'px')
-        .attr('height', goBox.height() + 'px')
-        .attr('fill', theme.board.fill)
-        .attr('stroke', theme.board.stroke);
+    // We don't ever want
+    board.createBoardBase(svg, env, theme);
 
-    // board lines.
+    // Create board lines.
     svg.selectAll("lines").data(data)
       .enter().append("path")
-        .attr('d', function(i) {
-          var b = i.bbox
-          var x = i.coordPt.x();
-          var y = i.coordPt.y();
-          var horzLine = 'M ' + b.left() + ' ' + y + 'L ' + b.right()  + ' ' + y;
-          var vertLine = 'M ' + x + ' ' + b.top()  + 'L ' + x + ' ' + b.bottom();
-          return horzLine + vertLine;
+        .attr('d', function(pt) {
+          return board.intersectionLine(pt, radius, numIntersections, theme);
         })
         .attr('stroke', '#000000')
         .attr('stroke-linecap', 'round');

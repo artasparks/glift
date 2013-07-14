@@ -1,5 +1,9 @@
 glift.displays.boardTest = function() {
   module("Board Tests");
+  // TODO(kashomon): Add some real tests. These are all outdated since moving to
+  // D3. In particular, we don't destroy individual elements since it's time
+  // consuming doesn't really buy us much.
+  return
   var util = glift.util,
       enums = glift.enums,
       none = util.none,
