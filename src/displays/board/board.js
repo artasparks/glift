@@ -1,5 +1,3 @@
-
-
 glift.displays.board = {
   create: function(environment, themeName, theme) {
     return new glift.displays.board.Display(environment, themeName, theme)
@@ -74,6 +72,8 @@ glift.displays.board.Display.prototype = {
         })
         .attr('stroke', '#000000')
         .attr('stroke-linecap', 'round');
+
+    board.createStarPoints(svg, boardPoints, theme);
   },
 
   /**

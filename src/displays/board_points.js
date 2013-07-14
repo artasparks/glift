@@ -87,12 +87,12 @@ BoardPoints.prototype = {
    * points are 0 indexed, i.e., 0->18.
    *
    * Ex. :  (0,2) =>
-   * {
-   *  intPt: (0,2),
-   *  x: 12.32,
-   *  y: 54.54,
-   *  ...
-   * }
+   *  {
+   *    intPt: (0,2),
+   *    x: 12.32,
+   *    y: 54.54,
+   *    ...
+   *  }
    */
   getCoord: function(pt) {
     return this.points[pt.hash()];
@@ -120,10 +120,43 @@ BoardPoints.prototype = {
   },
 
   /**
-   * Test whether a point exists in the points map.
+   * Test whether an integer point exists in the points map.
+   * TODO(kashomon): Rename.  This is not apt since it confuses the idea of
+   * integer points and float coordinates.
    */
   hasCoord: function(pt) {
     return this.points[pt.hash()] !== undefined;
+  },
+
+  /**
+   * Return an array on integer points (0-indexed), used to indicate where star
+   * points should go. Ex. [(3,3), (3,9), (3,15), ...].  This only returns the
+   * points that are actually present in the points mapping.
+   */
+  starPoints: function() {
+    var point = glift.util.point,
+        // In pts, each element in the sub array is mapped against every other
+        // element.  Thus [2, 6] generates [(2,2), (2,6), (6,2), (6,6)] and
+        // [[2, 6], [4]] generates the above concatinated with [4,4].
+        pts = {
+          9 : [[ 2, 6 ], [ 4 ]],
+          13 : [[ 3, 9 ], [6]],
+          19 : [[ 3, 9, 15 ]]
+        },
+        outerSet = pts[this.numIntersections] || [],
+        outStarPoints = [];
+    for (var k = 0; k < outerSet.length; k++) {
+      var thisSet = outerSet[k];
+      for (var i = 0; i < thisSet.length; i++) {
+        for (var j = 0; j < thisSet.length; j++) {
+          var pt = point(thisSet[i], thisSet[j]);
+          if (this.hasCoord(pt)) {
+            outStarPoints.push(pt);
+          }
+        }
+      }
+    }
+    return outStarPoints;
   },
 
   /**

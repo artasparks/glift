@@ -4,12 +4,16 @@ glift.themes.registered.DEFAULT = {
     stroke: "#000000"
   },
 
+  starPoints: {
+    sizeFraction: .15, // As a fraction of the spacing.
+    fill: '#000000'
+  },
+
   // TODO(kashomon): Remove legacy
   legacy: {
     lineColor: "black",
     lineSize: 1,
     edgeLineSize: 1,
-    starPointSize: .15, // As a fraction of the spacing.
     textColor: "white"
   },
 
