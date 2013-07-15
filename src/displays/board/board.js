@@ -39,6 +39,16 @@ glift.displays.board.Display.prototype = {
   init: function() {
     if (this._svg === undefined) {
       this.destroy(); // make sure everything is cleared out of the div.
+
+      // Make the text not selectable (there's no point and it's distracting)
+      this._svg = d3.select('#' + this.divId())
+        .style('-webkit-touch-callout', 'none')
+        .style('-webkit-user-select', 'none')
+        .style('-khtml-user-select', 'none')
+        .style('-moz-user-select', 'moz-none')
+        .style('-ms-user-select', 'none')
+        .style('user-select', 'none')
+        .style('cursor', 'default');
       this._svg = d3.select('#' + this.divId())
         .append("svg")
           .attr("width", '100%')
@@ -59,13 +69,22 @@ glift.displays.board.Display.prototype = {
         theme = this._theme,
         svg = this._svg,
         divId = this.divId();
+
+    board.initBlurFilter(divId, svg);
     var boardId = board.createBoardBase(divId, svg, env.goBoardBox, theme);
     var lineIds = board.createLines(divId, svg, boardPoints, theme);
     var starPointIds = board.createStarPoints(divId, svg, boardPoints, theme);
     var stoneShadowIds = board.createShadows(divId, svg, boardPoints, theme);
     var stoneIds = board.createStones(divId, svg, boardPoints, theme);
     var markIds = board.createMarks(divId, svg, boardPoints, theme);
-    var boundingBoxIds = 'todo'
+    var buttons = board.createButtons(divId, svg, boardPoints);
+    var intersectionData = {
+      lineIds: lineIds,
+      starPointIds: starPointIds,
+      stoneShadowIds: stoneShadowIds
+    };
+    // TODO(kashomon): create an intersections abstraction that has an API (like
+    // stones before it).
   },
 
   /**

@@ -69,12 +69,13 @@ glift.enums = {
    * Used to create svg element Ids
    */
   svgElements: {
-    STONE: 'stone',
-    STONE_SHADOW: 'stone_shadow',
-    BOARD_LINE: 'board_line',
     BOARD_BASE: 'board_base',
+    BOARD_LINE: 'board_line',
+    BUTTON: 'button',
+    MARK: 'mark',
     STARPOINT: 'starpoint',
-    MARK: 'mark'
+    STONE: 'stone',
+    STONE_SHADOW: 'stone_shadow'
   },
 
   // TODO(kashomon): Perhaps remove.  This isn't used (at least for anything

@@ -11,7 +11,7 @@ glift.displays.board.createStones = function(divId, svg, boardPoints, theme) {
       .attr("cx", function(pt) { return pt.coordPt.x(); })
       .attr("cy", function(pt) { return pt.coordPt.y(); })
       .attr("r", boardPoints.radius - .4) // for stroke
-      .attr("opacity", 1)
+      .attr("opacity", 0)
       .attr("fill", 'blue') // dummy color
       .attr("id", function(pt) {
         var intPt = pt.intPt;
@@ -46,9 +46,10 @@ glift.displays.board.createShadows = function(
           return pt.coordPt.y() + boardPoints.radius / 7;
       })
       .attr("r", boardPoints.radius - 0.4)
-      .attr("opacity", 1)
+      .attr("opacity", 0)
       .attr("fill", theme.stones.shadows.fill)
       .attr("stroke", theme.stones.shadows.stroke)
+      .attr("filter", 'url(#' + divId + "_svg_blur)")
       .attr("id", function(pt) {
         var intPt = pt.intPt;
         var id = svgutil.elementId(divId, STONE_SHADOW, intPt);
@@ -56,4 +57,13 @@ glift.displays.board.createShadows = function(
         return id;
       });
   return shadowMap;
+};
+
+
+glift.displays.board.initBlurFilter = function(divId, svg) {
+  svg.append("svg:defs")
+    .append("svg:filter")
+      .attr("id", divId + '_svg_blur')
+    .append("svg:feGaussianBlur")
+      .attr("stdDeviation", 2);
 };
