@@ -81,7 +81,10 @@ glift.displays.board.Display.prototype = {
     var intersectionData = {
       lineIds: lineIds,
       starPointIds: starPointIds,
-      stoneShadowIds: stoneShadowIds
+      stoneShadowIds: stoneShadowIds,
+      stoneIds: stoneIds,
+      markIds: markIds,
+      buttons: buttons
     };
     // TODO(kashomon): create an intersections abstraction that has an API (like
     // stones before it).
