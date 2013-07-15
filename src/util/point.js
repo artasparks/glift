@@ -1,37 +1,9 @@
 (function() {
-
-// Perhaps this should be removed.  It's hard to preserve immutability when
-// there's a global cache.  Ideally, the integer points would be cache, but the
-// float points would not be cached.
-var pointCache = {};
-
 /**
- * Create a point.  Each point is cached, so that each point is only actually
- * created once.
- *
- * Revist later:  It might be better to remove the caching. It means that no
- * points will ever get garbage collected, which might create a memory leaks.
+ * Create a point.  We no longer cache points
  */
 glift.util.point = function(x, y) {
-  var str = glift.util.coordToString(x, y);
-  if (pointCache[str] !== undefined) {
-    return pointCache[str];
-  } else {
-    var newpt = new GliftPoint(x, y);
-    pointCache[str] = newpt;
-    return newpt;
-  }
-};
-
-// Create a point, but don't use the cache. The method above is prefered to this
-// one, but sometimes it's useful to use an explicitly uncached point.
-glift.util.uncachedPoint = function(x, y) {
   return new GliftPoint(x, y);
-};
-
-// For testing the cache
-glift.util._cacheHasPoint = function(x, y) {
-  return pointCache[glift.util.coordToString(x, y)] !== undefined;
 };
 
 // Private Point Class.  Because each point is cached, we have to be careful to
@@ -55,6 +27,11 @@ var GliftPoint = function(xIn, yIn) {
 };
 
 GliftPoint.prototype = {
+  /**
+   * Create the form used in objects.
+   * TODO(kashomon): Replace with string form.  The term hash() is confusing and
+   * it makes it seem like I'm converting it to an int (which I was, long ago)
+   */
   hash: function() {
     return this.toString();
   },

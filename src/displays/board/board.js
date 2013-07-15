@@ -1,15 +1,16 @@
 glift.displays.board = {
-  create: function(environment, themeName, theme) {
-    return new glift.displays.board.Display(environment, themeName, theme)
-        .draw();
+  create: function(env, themeName, theme) {
+    return new glift.displays.board.Display(env, themeName, theme).draw();
   }
 };
 
+/**
+ * The core Display object returned to the user.
+ */
 glift.displays.board.Display = function(inEnvironment, themeName, theme) {
   // Due layering issues, we need to keep track of the order in which we
   // created the objects.
   this._objectHistory = [];
-  this._svg = undefined; // defined in draw
   this._environment = inEnvironment;
   this._themeName = themeName;
   this._theme = theme;
@@ -18,6 +19,10 @@ glift.displays.board.Display = function(inEnvironment, themeName, theme) {
   // using d3.
   this._stones = undefined;
   this.stones = function() { return this._stones; };
+
+  this._svg = undefined; // defined in draw
+  this._intersections = undefined // defined in draw;
+  this.intersections = function() { return this._intersections; };
 
   // Methods accessing private data
   this.intersectionPoints = function() { return this._environment.intersections; };
@@ -41,6 +46,8 @@ glift.displays.board.Display.prototype = {
       this.destroy(); // make sure everything is cleared out of the div.
 
       // Make the text not selectable (there's no point and it's distracting)
+      // TODO(kashomon): Is this needed now that each point is covered with a
+      // transparent button element?
       this._svg = d3.select('#' + this.divId())
         .style('-webkit-touch-callout', 'none')
         .style('-webkit-user-select', 'none')
@@ -79,15 +86,16 @@ glift.displays.board.Display.prototype = {
     var markIds = board.createMarks(divId, svg, boardPoints, theme);
     var buttons = board.createButtons(divId, svg, boardPoints);
     var intersectionData = {
-      lineIds: lineIds,
-      starPointIds: starPointIds,
-      stoneShadowIds: stoneShadowIds,
-      stoneIds: stoneIds,
-      markIds: markIds,
-      buttons: buttons
+        lineIds: lineIds,
+        starPointIds: starPointIds,
+        stoneShadowIds: stoneShadowIds,
+        stoneIds: stoneIds,
+        markIds: markIds,
+        buttons: buttons
     };
-    // TODO(kashomon): create an intersections abstraction that has an API (like
-    // stones before it).
+    this._intersections = glift.displays.board.createIntersections(
+        divId, svg, intersectionData, theme);
+    return this; // required -- used in create(...);
   },
 
   /**
@@ -97,6 +105,7 @@ glift.displays.board.Display.prototype = {
   destroy: function() {
     this.divId() && d3.select('#' + this.divId()).selectAll("svg").remove();
     this._svg = undefined;
+    this._intersections = undefined;
   },
 
   /**

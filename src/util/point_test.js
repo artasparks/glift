@@ -6,7 +6,7 @@ glift.util.pointTest = function() {
 
   test("Create, basic methods", function() {
     var pt = util.point(1, 5);
-    var pt2 = util.uncachedPoint(1, 5);
+    var pt2 = util.point(1, 5);
     deepEqual(pt.x(), 1, "x val");
     deepEqual(pt.y(), 5, "y val");
     deepEqual(util.coordToString(1, 5), "1,5", "coord to string");;
@@ -21,13 +21,7 @@ glift.util.pointTest = function() {
     ok(newPt.equals(pt), "pts must be equal")
   });
 
-  test("test point cache", function() {
-    var pt = util.point(1, 12);
-    ok(glift.util._cacheHasPoint(1, 12), "cache must be populated")
-    var otherPt = util.point(1, 12);
-    ok(pt === otherPt, "pts must be precisely equal")
-  });
-
+  // TODO(kashomon): Add back in now that we no longer cache points.
   // test("Test immutability", function() {
     // var pt = util.uncachedPoint(1, 3);
     // var pt2 = util.uncachedPoint(1, 3);

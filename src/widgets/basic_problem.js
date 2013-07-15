@@ -4,7 +4,6 @@ glift.widgets.basicProblem = function(options) {
   var point = glift.util.point;
   var divId = options.divId;
   var display = glift.createDisplay(options);
-  return;
 
   options.controllerType = "STATIC_PROBLEM_STUDY";
   var controller = glift.createController(options);
@@ -23,7 +22,7 @@ glift.widgets._BasicProblem = function(display, controller) {
     "WHITE": "WHITE_HOVER"
   };
 
-  display.stones().setClick(function(pt) {
+  display.intersections().setEvent('click', function(pt) {
     var currentPlayer = controller.getCurrentPlayer();
     var data = controller.addStone(pt, currentPlayer);
     $('#extra_info').text(data.message + '//' + (data.result || ''));
@@ -32,14 +31,14 @@ glift.widgets._BasicProblem = function(display, controller) {
     }
   });
 
-  display.stones().setMouseOver(function(pt) {
+  display.intersections().setEvent('mouseover', function(pt) {
     var currentPlayer = controller.getCurrentPlayer();
     if (controller.canAddStone(pt, currentPlayer)) {
       display.stones().setColor(pt, hoverColors[currentPlayer]);
     }
   });
 
-  display.stones().setMouseOut(function(pt) {
+  display.intersections().setEvent('mouseout', function(pt) {
     var currentPlayer = controller.getCurrentPlayer();
     if (controller.canAddStone(pt, currentPlayer)) {
       display.stones().setColor(pt, 'EMPTY');
