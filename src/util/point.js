@@ -6,6 +6,26 @@ glift.util.point = function(x, y) {
   return new GliftPoint(x, y);
 };
 
+glift.util.coordToString = function(x, y) {
+  return x + ',' + y
+};
+
+glift.util.pointFromString = function(str) {
+  try {
+    var split = str.split(",");
+    var x = parseInt(split[0]);
+    var y = parseInt(split[1]);
+    return glift.util.point(x, y);
+  } catch(e) {
+    throw "Parsing Error! Couldn't parse a point from: " + str;
+  }
+};
+
+glift.util.pointFromHash = function(str) {
+  return glift.util.pointFromString(str);
+};
+
+
 // Private Point Class.  Because each point is cached, we have to be careful to
 // preserve immutability. As such, we use getters to access the x and y values.
 // Of course, you could still change functions themselves to be mysterious and
@@ -51,25 +71,6 @@ GliftPoint.prototype = {
   log: function() {
     glift.util.logz(this.toString());
   }
-};
-
-glift.util.coordToString = function(x, y) {
-  return x + ',' + y
-};
-
-glift.util.pointFromString = function(str) {
-  try {
-    var split = str.split(",");
-    var x = parseInt(split[0]);
-    var y = parseInt(split[1]);
-    return glift.util.point(x, y);
-  } catch(e) {
-    throw "Parsing Error! Couldn't parse a point from: " + str;
-  }
-};
-
-glift.util.pointFromHash = function(str) {
-  return glift.util.pointFromString(str);
 };
 
 })();

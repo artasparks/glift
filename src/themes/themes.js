@@ -24,8 +24,9 @@ glift.themes = {
   // For a theme object. This generally assumes you're called 'get' so that you
   // have a copy of the base theme.
   setGoBoardBackground: function(theme, value) {
-    if (theme && theme !== glift.util.none) {
-      theme.board.boardAttr.fill = "url('" + value  + "')";
+    if (theme) {
+      theme.board.imagefill = value
+      // "url('" + value  + "')";
     } else {
       throw "Yikes! Not a theme: cannot set background image."
     }

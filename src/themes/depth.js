@@ -9,6 +9,10 @@ glift.themes.registered.DEPTH = {
     fill: '#000000'
   },
 
+  lines: {
+    stroke: "#000000",
+  },
+
   stones: {
     shadows: {
       stroke: "none",
@@ -42,8 +46,7 @@ glift.themes.registered.DEPTH = {
   },
 
   marks: {
-    // TODO(kashomon): add
-    XMARK : {
-    }
+    fill: "black",
+    stroke: "white"
   }
 };

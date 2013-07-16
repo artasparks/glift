@@ -34,29 +34,44 @@ glift.widgets._BasicProblem = function(display, controller) {
   display.intersections().setEvent('mouseover', function(pt) {
     var currentPlayer = controller.getCurrentPlayer();
     if (controller.canAddStone(pt, currentPlayer)) {
-      display.stones().setColor(pt, hoverColors[currentPlayer]);
+      display.intersections().setStoneColor(pt, hoverColors[currentPlayer]);
     }
   });
 
   display.intersections().setEvent('mouseout', function(pt) {
     var currentPlayer = controller.getCurrentPlayer();
     if (controller.canAddStone(pt, currentPlayer)) {
-      display.stones().setColor(pt, 'EMPTY');
+      display.intersections().setStoneColor(pt, 'EMPTY');
     }
   });
 };
 
 glift.widgets._BasicProblem.prototype = {
-  enableAutoResizing: function() {
-    this.display.enableAutoResizing();
-  },
-
   redraw: function() {
-    this.display.destroy();
     this.display.redraw();
   },
 
   destroy: function() {
     this.display.destroy();
+  },
+
+  /**
+   * Enable auto-resizing.  This completely destroys and recreates the goboard.
+   * However, this
+   *
+   * TODO(kashomon): Does this need to be reworked for d3? Also, need to provide
+   * a way to turn enableAutoResizing off.
+   */
+  enableAutoResizing: function() {
+    var that = this; // for closing over.
+    var resizeFunc = function() {
+      that.redraw();
+    };
+
+    var timeoutId;
+    $(window).resize(function(event) {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(resizeFunc, 100);
+    });
   }
 };

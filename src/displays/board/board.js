@@ -34,7 +34,6 @@ glift.displays.board.Display = function(inEnvironment, themeName, theme) {
   this.height = function() { return this._environment.goBoardBox.height() };
 };
 
-// Alias for typing convenience
 glift.displays.board.Display.prototype = {
   /**
    * Initialize the SVG
@@ -106,6 +105,7 @@ glift.displays.board.Display.prototype = {
     this.divId() && d3.select('#' + this.divId()).selectAll("svg").remove();
     this._svg = undefined;
     this._intersections = undefined;
+    return this;
   },
 
   /**
@@ -123,26 +123,6 @@ glift.displays.board.Display.prototype = {
     this._themeName = processed.theme
     this._theme = glift.themes.get(processed.theme);
     return this;
-  },
-
-  /**
-   * Enable auto-resizing.  This completely destroys and recreates the goboard.
-   * However, this
-   *
-   * TODO(kashomon): Does this need to be reworked for d3? Also, need to provide
-   * a way to turn enableAutoResizing off.
-   */
-  enableAutoResizing: function() {
-    var that = this; // for closing over.
-    var resizeFunc = function() {
-      that.redraw();
-    };
-
-    var timeoutId;
-    $(window).resize(function(event) {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(resizeFunc, 100);
-    });
   },
 
   /**

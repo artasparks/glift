@@ -3,7 +3,7 @@ glift.displays.board.svgutil = {
    * Get an ID for a SVG element.
    */
   elementId: function(divId, type, intPt) {
-    var base = divId + '_glift_' + type;
+    var base = divId + "_" + type;
     if (intPt !== undefined) {
       return base + '_' + intPt.x() + '_' + intPt.y();
     } else {

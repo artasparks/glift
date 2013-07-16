@@ -1,4 +1,7 @@
 glift.displays = {
+  /**
+   * Create the display.  Delegates to board.create(...);
+   */
   create: function(options) {
     var processed = glift.displays.processOptions(options),
         environment = glift.displays.environment.get(processed),

@@ -7,13 +7,18 @@ glift.displays.board._Intersections = function(divId, svg, ids, theme) {
   this.svg = svg;
   this.theme = theme;
 
-  // elements by id.  Maps from point to element ID ('#...')
+  // elements by id.  Maps from point-string to element ID ('#...')
   this.lineIds = ids.lineIds;
   this.starPointIds = ids.starPointIds;
   this.stoneShadowIds = ids.stoneShadowIds;
   this.stoneIds = ids.stoneIds;
   this.markIds = ids.markIds;
   this.buttons = ids.buttons;
+
+  this.buttonsData = [];
+  for (var key in this.buttons) {
+    this.buttonsData.push(glift.util.pointFromString(key));
+  }
 };
 
 glift.displays.board._Intersections.prototype = {
@@ -51,6 +56,8 @@ glift.displays.board._Intersections.prototype = {
   },
 
   setEvent: function(event, func) {
-    // TODO(kashomon): Write. Here to prevent errors
+    var BUTTON = glift.enums.svgElements.BUTTON;
+    this.svg.selectAll('rect' + '.' + BUTTON).data(this.buttonsData)
+      .on(event, function(pt) { func(pt); });
   }
 };

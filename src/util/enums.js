@@ -71,7 +71,7 @@ glift.enums = {
   svgElements: {
     BOARD_BASE: 'board_base',
     BOARD_LINE: 'board_line',
-    BUTTON: 'button',
+    BUTTON: 'intersection_button',
     MARK: 'mark',
     STARPOINT: 'starpoint',
     STONE: 'stone',
