@@ -14,20 +14,30 @@ glift.themes.registered.DEPTH = {
   },
 
   stones: {
+    marks: {
+      'font-family': 'sans-serif'
+    },
     shadows: {
       stroke: "none",
       fill: "#555"
-      // transform: "T4,4" -- now depends on spacing
     },
     "EMPTY" : {
       fill: 'blue',
-      opacity: 0
+      opacity: 0,
+      marks: {
+        fill: 'black',
+        stroke: 'black'
+      }
     },
     "BLACK" : {
       fill: "black",
       opacity: 1,
       "stroke-width": 0, // The default value
-      stroke: "black"
+      stroke: "black",
+      marks: {
+        fill: 'white',
+        stroke: 'white'
+      }
     },
     "BLACK_HOVER" : {
       fill: "black",
@@ -37,16 +47,15 @@ glift.themes.registered.DEPTH = {
       stroke: "white",
       fill: "white",
       opacity: 1,
-      "stroke-width": 0 // The default value
+      "stroke-width": 0, // The default value
+      marks: {
+        fill: 'black',
+        stroke: 'black'
+      }
     },
     "WHITE_HOVER" : {
       fill: "white",
       opacity: 0.5
     }
-  },
-
-  marks: {
-    fill: "black",
-    stroke: "white"
   }
 };

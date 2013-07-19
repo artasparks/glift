@@ -14,20 +14,32 @@ glift.themes.registered.DEFAULT = {
   },
 
   stones: {
+    marks: {
+      'font-family': 'sans-serif'
+    },
+
     shadows: {
       stroke: "none",
       fill: "#222"
-      // transform: "T4,4" -- now depends on spacing
     },
+
     "EMPTY" : {
       fill: 'blue',
-      opacity: 0
+      opacity: 0,
+      marks: {
+        fill: 'black',
+        stroke: 'black'
+      }
     },
     "BLACK" : {
       fill: "black",
       opacity: 1,
       "stroke-width": 1, // The default value
-      stroke: "black"
+      stroke: "black",
+      marks: {
+        fill: 'white',
+        stroke: 'white'
+      }
     },
     "BLACK_HOVER" : {
       fill: "black",
@@ -37,7 +49,11 @@ glift.themes.registered.DEFAULT = {
       stroke: "black",
       fill: "white",
       opacity: 1,
-      "stroke-width": 1 // The default value
+      "stroke-width": 1, // The default value
+      marks: {
+        fill: 'white',
+        stroke: 'white'
+      }
     },
     "WHITE_HOVER" : {
       fill: "white",
@@ -52,10 +68,5 @@ glift.themes.registered.DEFAULT = {
     'DEFAULT_HOVER' : {
       fill: "90-#337-#55D"
     }
-  },
-
-  marks: {
-    fill: "black",
-    stroke: "white"
   }
 };

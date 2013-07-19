@@ -94,9 +94,13 @@ testdata.sgfs = {
     "AB[nb][ob][pb][qb][rb][sb]" +
 
     // Label
-    "LB[pa:A][ob:2][pb:B][pc:C]" +
+    "LB[pa:A][ob:2][pb:B][pc:C][pd:D]" +
     "[oa:1][oc:3][ne:9][oe:8][pe:7][qe:6][re:5]" +
     "[se:4][nf:15][of:14][pf:13][qf:11][rf:12][sf:10]" +
+
+    // Unicode labels [japanese unicode numbers
+    "[ma:\u4e00][mb:\u4e8c][mc:\u4e09][md:\u56db][me:\u4e94]" +
+    "[la:\u516d][lb:\u4e03][lc:\u516b][ld:\u4e5d][le:\u5341]" +
     // Mark
     "MA[na][nb][nc]" +
     // Circle

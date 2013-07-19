@@ -93,7 +93,7 @@ glift.displays.board.Display.prototype = {
         buttons: buttons
     };
     this._intersections = glift.displays.board.createIntersections(
-        divId, svg, intersectionData, theme);
+        divId, svg, intersectionData, boardPoints, theme);
     return this; // required -- used in create(...);
   },
 
