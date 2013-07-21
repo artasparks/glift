@@ -90,8 +90,8 @@ testdata.sgfs = {
     "(;GM[1]FF[4]CA[UTF-8]AP[CGoban:3]ST[2]" +
     "RU[Japanese]SZ[19]KM[0.00]" +
     "PW[White]PB[Black]" +
-    "AW[na][oa][pa][qa][ra][sa][ka][la][ma]" +
-    "AB[nb][ob][pb][qb][rb][sb][kb][lb][mb]" +
+    "AW[na][oa][pa][qa][ra][sa][ka][la][ma][ja]" +
+    "AB[nb][ob][pb][qb][rb][sb][kb][lb][mb][jb]" +
 
     // Label
     "LB[pa:A][ob:2][pb:B][pc:C][pd:D]" +
@@ -112,4 +112,3 @@ testdata.sgfs = {
     "SQ[ra][rb][rc]" +
     ")"
 };
-

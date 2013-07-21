@@ -14,7 +14,9 @@ glift.widgets.iconBar = function(options) {
       icons = [],
       vertMargin = 0,
       horzMargin = 0,
-      theme = 'DEFAULT'
+      theme = 'DEFAULT';
+  // TODO(kashomon): Replace this hackiness with legitimate options code.  Much
+  // better to keep this code from getting WETter ;).
   if (options.divId !== undefined) {
     paper = Raphael(options.divId, '100%', '100%');
     boundingBox = glift.displays.bboxFromDiv(options.divId);

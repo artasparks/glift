@@ -55,9 +55,14 @@ glift.displays.board._Intersections.prototype = {
   // TODO(kashomon): Move to marks.js.  Besides the arguments below, the only
   // data this method depends on is the divId, to generate the Element ID and
   // boardPoints.  SVG can be passed in or inferred.
-  addMark: function(pt, mark, label) {
+  addMarkPt: function(pt, mark, label) {
     glift.displays.board.addMark(
         this.divId, this.svg, this.boardPoints, this.theme, pt, mark, label);
+    return this;
+  },
+
+  addMark: function(x, y, mark, label) {
+    this.addMarkPt(glift.util.point(x, y), mark, label);
     return this;
   },
 

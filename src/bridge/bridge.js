@@ -21,9 +21,9 @@ glift.bridge = {
       for (var mark in marks) {
         if (mark in intersection) {
           if (mark === marks.LABEL) {
-            display.intersections().addMark(pt, mark, intersection[mark]);
+            display.intersections().addMarkPt(pt, mark, intersection[mark]);
           } else {
-            display.intersections().addMark(pt, mark);
+            display.intersections().addMarkPt(pt, mark);
           }
         }
       }

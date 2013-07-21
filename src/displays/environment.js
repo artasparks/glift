@@ -68,7 +68,9 @@ GuiEnvironment.prototype = {
         cropbox   = this.cropbox,
         dirs = glift.enums.directions,
 
-        // The box for the entire div
+        // The box for the entire div.
+        // TODO(kashomon): This is created twice, which is a little silly (but
+        // not expensive) in _resetDimensions. Might want to replace.
         divBox = displays.bboxFromPts(
             glift.util.point(0, 0), // top left point
             glift.util.point(divWidth, divHeight)), // bottom right point
@@ -84,7 +86,6 @@ GuiEnvironment.prototype = {
         // Calculate the coordinates and bounding boxes for each intersection.
         boardPoints = glift.displays.boardPointsFromLineBox(
             goBoardLineBox, this.intersections);
-
     this.divBox = divBox;
     this.goBoardBox = goBoardBox;
     this.goBoardLineBox = goBoardLineBox;
@@ -93,11 +94,11 @@ GuiEnvironment.prototype = {
   },
 
   _resetDimensions: function() {
-    // TODO(kashomon): Replace with non-jquery
-    this.divHeight = ($("#" + this.divId).height());
+    var bbox = glift.displays.bboxFromDiv(this.divId);
+    this.divHeight = bbox.height();
+    this.divWidth = bbox.width();
     // -- no reason to use jquery
-    // document.getElementById(divId).style.height();
-    this.divWidth =  ($("#" + this.divId).width());
+    // this.divWidth =  ($("#" + this.divId).width());
     return this;
   },
 

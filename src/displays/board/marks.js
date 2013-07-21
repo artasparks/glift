@@ -76,6 +76,7 @@ glift.displays.board.addMark = function(
         .attr('stroke-width', 2)
         .attr('class', MARK)
         .attr('stroke', marksTheme.stroke);
+
   } else if (mark === marks.XMARK) {
     var baseDelta = boardPoints.radius / rootTwo;
     var halfDelta = baseDelta - fudge;
@@ -87,13 +88,10 @@ glift.displays.board.addMark = function(
         .attr('d',
             svgutil.svgMovePt(coordPt) + ' ' +
             svgutil.svgLineAbsPt(topLeft) + ' ' +
-
             svgutil.svgMovePt(coordPt) + ' ' +
             svgutil.svgLineAbsPt(topRight) + ' ' +
-
             svgutil.svgMovePt(coordPt) + ' ' +
             svgutil.svgLineAbsPt(botLeft) + ' ' +
-
             svgutil.svgMovePt(coordPt) + ' ' +
             svgutil.svgLineAbsPt(botRight))
         .attr('stroke-width', 2)
@@ -108,6 +106,14 @@ glift.displays.board.addMark = function(
         .attr('stroke-width', 2)
         .attr('class', MARK)
         .attr('stroke', marksTheme.stroke);
+  } else if (mark == marks.STONE_MARKER) {
+    svg.select('.' + MARK_CONTAINER).append('circle')
+        .attr('cx', coordPt.x())
+        .attr('cy', coordPt.y())
+        .attr('r', boardPoints.radius / 3)
+        .attr('class', MARK)
+        .attr('opacity', 0.6)
+        .attr('fill', 'blue');
   } else if (mark === marks.TRIANGLE) {
     var r = boardPoints.radius - fudge;
     var rightNode = coordPt.translate(r * (rootThree / 2), r * (1 / 2));

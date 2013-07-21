@@ -1,10 +1,11 @@
 <html>
 <head>
 
-<title> SeriesTester </title>
+<title> BBoxFinder </title>
 <script type="text/javascript" src="../libs/jquery-1.7.2.min.js"></script>
 <script type="text/javascript" src="../testdata/sgfs.js"></script>
 <script type="text/javascript" src="../libs/d3.min.js"></script>
+<script type="text/javascript" src="../libs/raphael-min.js"></script>
 
 <!-- AUTO-GEN-DEPS -->
 <!-- Otre -->
@@ -105,46 +106,10 @@
 
 <!-- END-AUTO-GEN-DEPS -->
 
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-      }
-      #wrap {
-        width: 100%;
-        height: 100%;
-      }
-      #glift_display {
-        position:absolute;
-        top: 10;
-        bottom: 10;
-        left: 10;
-        right: 10;
-      }
-    </style>
-  </head>
-
-  <body>
-    <div id="wrap" style="position:relative;">
-      <div id="gheader"></div>
-      <div id="glift_display"></div>
-      <div id="extra_info"></div>
-      <script type="text/javascript">
-        (function() {
-          var d = new Date();
-          var begin = d.getTime();
-          var basicProblem = glift.widgets.problemSeries({
-            sgfString: testdata.sgfs.complexproblem,
-            divId: "glift_display",
-            theme: "DEPTH",
-            goBoardBackground: '../themes/assets/bambootile_warm.jpg'
-          });
-          var d = new Date();
-          var after = d.getTime();
-          console.log('---finished---');
-          console.log(after - begin);
-        })();
-      </script>
-    </div>
-  </body>
-</html>
+<body>
+<script type="text/javascript">
+(function() {
+  console.log("foom!");
+})();
+</script>
+</body>

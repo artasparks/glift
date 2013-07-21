@@ -4,8 +4,16 @@ glift.displays.bboxFromPts = function(topLeftPt, botRightPt) {
 };
 
 glift.displays.bboxFromDiv = function(divId) {
-  var width = $('#' + divId).width();
-  var height = $('#' + divId).height();
+  // Getting the height this might not work for Window or Documents.
+  var e = document.getElementById(divId),
+      height = Math.max(e.clientHeight,
+          isNaN(parseFloat(e.style.height)) ? 0 : parseFloat(e.style.height),
+          e.offsetHeight),
+      width = Math.max(e.clientWidth,
+          isNaN(parseFloat(e.style.width)) ? 0 : parseFloat(e.style.width),
+          e.offsetWidth);
+  // There is no reason to use jquery.  Hotever, this is how it would be done:
+  // this.divWidth =  ($("#" + this.divId).width());
   return glift.displays.bbox(glift.util.point(0,0), width, height);
 };
 

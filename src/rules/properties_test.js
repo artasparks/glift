@@ -1,4 +1,5 @@
 glift.rules.propertiesTest = function() {
+  module("Properties Test");
   var properties = glift.rules.properties,
       point = glift.util.point;
 
@@ -11,6 +12,7 @@ glift.rules.propertiesTest = function() {
     props.add('AB', p1.toSgfCoord()).add('AB', p2.toSgfCoord());
     deepEqual(props.get('AB').length, 2, "Must have 2 elems");
     var allStones = props.getAllStones();
-    deepEqual(allStones.BLACK, [p1, p2]);
+    deepEqual(allStones.BLACK[0].toString(), "0,0");
+    deepEqual(allStones.BLACK[1].toString(), "18,18");
   })
 };

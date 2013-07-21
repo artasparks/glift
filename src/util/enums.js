@@ -42,6 +42,7 @@ glift.enums = {
     SQUARE: "SQUARE",
     TRIANGLE: "TRIANGLE",
     XMARK: "XMARK",
+    STONE_MARKER: "STONE_MARKER"
   },
 
   problemResults: {
