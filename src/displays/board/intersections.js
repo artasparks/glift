@@ -52,55 +52,22 @@ glift.displays.board._Intersections.prototype = {
     return this;
   },
 
+  // TODO(kashomon): Move to marks.js.  Besides the arguments below, the only
+  // data this method depends on is the divId, to generate the Element ID and
+  // boardPoints.  SVG can be passed in or inferred.
   addMark: function(pt, mark, label) {
-    var svgutil = glift.displays.board.svgutil;
-    var MARK = glift.enums.svgElements.MARK;
-    var STONE = glift.enums.svgElements.STONE;
-    var STARPOINT = glift.enums.svgElements.STARPOINT;
-    var BOARD_LINE = glift.enums.svgElements.BOARD_LINE;
-    var marks = glift.enums.marks;
-    var id = svgutil.elementId(this.divId, MARK, pt);
-    var stoneColor = this.svg
-        .select('#' + svgutil.elementId(this.divId, STONE, pt))
-            .attr('stone_color');
-    if (stoneColor === 'EMPTY') {
-      this.svg.select('#' + svgutil.elementId(this.divId, STARPOINT, pt))
-          .attr('opacity', 0)
-      this.svg.select('#' + svgutil.elementId(this.divId, BOARD_LINE, pt))
-          .attr('opacity', 0)
-    }
-    var marksTheme = this.theme.stones[stoneColor].marks;
-    var node = this.svg.select('#' + id);
-    node.attr('opacity', 1)
-        .attr('fill', marksTheme.fill)
-        .attr('stroke', marksTheme.stroke);
-    switch(mark) {
-      case marks.CIRCLE:
-        node.text('\u25EF')
-            .attr('dy', '.375em') // for vertical centering
-        break;
-      case marks.SQUARE:
-        node.text('\u25A2')
-            //.text('\u2610')
-            .attr('dy', '.375em') // for vertical centering
-        break;
-      case marks.TRIANGLE:
-        node.text('\u25B3')
-        break;
-      case marks.XMARK:
-        node.text('\u2715')
-        break;
-      case marks.LABEL:
-        node.text(label)
-        break;
-    }
+    glift.displays.board.addMark(
+        this.divId, this.svg, this.boardPoints, this.theme, pt, mark, label);
     return this;
   },
 
   clearMarks: function() {
-    var MARK = glift.enums.svgElements.MARK;
-    this.svg.selectAll('.' + MARK)
-        .attr('opacity', 0);
+    var elems = glift.enums.svgElements;
+    // Some STARPOINTs/BOARD_LINEs may have been 'turned-off' when adding marks.
+    // It's easier just to manipulate them as a whole.
+    this.svg.selectAll('.' + elems.STARPOINT).attr('opacity', 1);
+    this.svg.selectAll('.' + elems.BOARD_LINE).attr('opacity', 1);
+    this.svg.selectAll('.' + elems.MARK).remove();
     return this;
   },
 

@@ -7,6 +7,7 @@ glift.displays.board.createBoardBase = function(divId, svg, goBox, theme) {
   var BOARD = glift.enums.svgElements.BOARD;
   var id = svgutil.elementId(divId, BOARD)
 
+  // TODO(kashomon): Make this more DRY
   if (theme.board.imagefill) {
     svg.selectAll('goBoardRect').data([BOARD])
       .enter().append('svg:image')

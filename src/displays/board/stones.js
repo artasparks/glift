@@ -12,6 +12,7 @@ glift.displays.board.createStones = function(divId, svg, boardPoints, theme) {
       .attr("cy", function(pt) { return pt.coordPt.y(); })
       .attr("r", boardPoints.radius - .4) // for stroke
       .attr("opacity", 0)
+      .attr('class', glift.enums.svgElements.GLIFT_ELEMENT)
       .attr("stone_color", "EMPTY")
       .attr("fill", 'blue') // dummy color
       .attr("id", function(pt) {

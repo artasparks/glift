@@ -90,13 +90,14 @@ testdata.sgfs = {
     "(;GM[1]FF[4]CA[UTF-8]AP[CGoban:3]ST[2]" +
     "RU[Japanese]SZ[19]KM[0.00]" +
     "PW[White]PB[Black]" +
-    "AW[na][oa][pa][qa][ra][sa]" +
-    "AB[nb][ob][pb][qb][rb][sb]" +
+    "AW[na][oa][pa][qa][ra][sa][ka][la][ma]" +
+    "AB[nb][ob][pb][qb][rb][sb][kb][lb][mb]" +
 
     // Label
     "LB[pa:A][ob:2][pb:B][pc:C][pd:D]" +
     "[oa:1][oc:3][ne:9][oe:8][pe:7][qe:6][re:5]" +
     "[se:4][nf:15][of:14][pf:13][qf:11][rf:12][sf:10]" +
+    "[ka:a][kb:b][kc:c][kd:d][ke:e][kf:f][kg:g]" +
 
     // Unicode labels [japanese unicode numbers
     "[ma:\u4e00][mb:\u4e8c][mc:\u4e09][md:\u56db][me:\u4e94]" +

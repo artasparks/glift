@@ -73,6 +73,8 @@ glift.enums = {
     BOARD_LINE: 'board_line',
     BUTTON: 'intersection_button',
     MARK: 'mark',
+    MARK_CONTAINER: 'mark_container',
+    GLIFT_ELEMENT: 'glift_element',
     STARPOINT: 'starpoint',
     STONE: 'stone',
     STONE_SHADOW: 'stone_shadow'

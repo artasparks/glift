@@ -15,6 +15,7 @@ glift.displays.board.createLines = function(divId, svg, boardPoints, theme) {
             pt, boardPoints.radius, boardPoints.numIntersections, theme);
       })
       .attr('stroke', theme.lines.stroke)
+      .attr('class', BOARD_LINE)
       .attr('stroke-linecap', 'round')
       .attr('id', function(pt) {
         var id = svgutil.elementId(divId, BOARD_LINE, pt.intPt);

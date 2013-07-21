@@ -89,8 +89,7 @@ BoardPoints.prototype = {
    * Ex. :  (0,2) =>
    *  {
    *    intPt: (0,2),
-   *    x: 12.32,
-   *    y: 54.54,
+   *    coordPt: (12.2, 34.2),
    *    ...
    *  }
    */

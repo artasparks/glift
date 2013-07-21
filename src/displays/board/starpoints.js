@@ -14,6 +14,7 @@ glift.displays.board.createStarPoints = function(
       .attr('cx', function(ip) { return boardPoints.getCoord(ip).coordPt.x(); })
       .attr('cy', function(ip) { return boardPoints.getCoord(ip).coordPt.y(); })
       .attr('r', size)
+      .attr('class', STARPOINT)
       .attr('fill', theme.starPoints.fill)
       .attr('id', function(pt) {
         var id = svgutil.elementId(divId, STARPOINT, pt);

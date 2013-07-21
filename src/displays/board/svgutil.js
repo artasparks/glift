@@ -32,7 +32,10 @@ glift.displays.board.svgutil = {
     return glift.displays.board.svgutil.svgLineRel(pt.x(), pt.y());
   },
 
-  // Create an absolute SVG line -- different from lower case
+  /**
+   * Create an absolute SVG line -- different from lower case
+   * This form is usually preferred.
+   */
   svgLineAbs: function(x, y) {
     return "L" + x + " " + y;
   },

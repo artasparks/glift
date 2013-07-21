@@ -60,6 +60,9 @@ GliftPoint.prototype = {
     return glift.util.coordToString(this.x(), this.y());
   },
 
+  /**
+   * Return a new point that's a translation from this one
+   */
   translate: function(x, y) {
     return glift.util.point(this.x() + x, this.y() + y);
   },

@@ -82,7 +82,7 @@ glift.displays.board.Display.prototype = {
     var starPointIds = board.createStarPoints(divId, svg, boardPoints, theme);
     var stoneShadowIds = board.createShadows(divId, svg, boardPoints, theme);
     var stoneIds = board.createStones(divId, svg, boardPoints, theme);
-    var markIds = board.createMarks(divId, svg, boardPoints, theme);
+    var markIds = board.createMarkContainer(divId, svg, boardPoints, theme);
     var buttons = board.createButtons(divId, svg, boardPoints);
     var intersectionData = {
         lineIds: lineIds,
