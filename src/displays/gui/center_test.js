@@ -1,7 +1,7 @@
-glift.displays.centerTest = function() {
+glift.displays.gui.centerTest = function() {
   module("Center Tests");
   var point = glift.util.point,
-      rowCenter = glift.displays.rowCenter,
+      rowCenter = glift.displays.gui.rowCenter,
       bboxFromPts = glift.displays.bboxFromPts,
       baseBox = bboxFromPts(point(0,0), point(250, 50));
 

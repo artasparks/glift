@@ -22,12 +22,6 @@ glift.displays.bbox = function(topLeft, width, height) {
       topLeft, glift.util.point(topLeft.x() + width, topLeft.y() + height));
 };
 
-glift.displays.fromRaphaelBbox = function(rapBbox) {
-  return new BoundingBox(
-      glift.util.point(rapBbox.x, rapBbox.y),
-      glift.util.point(rapBbox.x2, rapBbox.y2));
-};
-
 // Might be nice to use the closure to create private variables.
 // A bounding box, generally for a graphical object.
 var BoundingBox = function(topLeftPtIn, botRightPtIn) {

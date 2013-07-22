@@ -5,7 +5,7 @@
  *    bboxes: [...]
  *  }
  */
-glift.displays.rowCenter = function(
+glift.displays.gui.rowCenter = function(
     outerBox, inBboxes, vertMargin, horzMargin, minSpacing, maxSpacing) {
   var outerWidth = outerBox.width(),
       innerWidth = outerWidth - 2 * horzMargin,

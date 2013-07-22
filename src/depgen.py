@@ -1,4 +1,11 @@
 #! /usr/local/bin/python
+# I (kashomon) hacked together this script to concatenate and compile the
+# relevant parts of Glift. To get it working for yourself, you'll need the
+# following:
+#
+# -pegjs on your path
+# -CLOSURE pointing to the closure jar
+
 
 import glob
 import os
@@ -31,7 +38,7 @@ DIR_ORDER = [
     'themes',
     'displays',
     'displays/board',
-    'displays/raphael',
+    'displays/gui',
     # Rules and display are not linked
     'rules',
     'sgf',
@@ -122,6 +129,10 @@ def CreateHtmlImports(imps, suffix):
   return out
 
 def CompilePegJs():
+  """
+  Compile the SGF Parser, using PEGJS.
+  This requires that you have a pegjs command on your PATH.
+  """
   pegjs_call = "pegjs sgf/sgf_grammar.pegjs"
   out, err = subprocess.Popen(pegjs_call, shell=True).communicate()
   Replacer("sgf/sgf_grammar.js", PegjsTransform)
@@ -178,7 +189,7 @@ def main(argv=None):
       if err != None:
         print err
         return -1
-      # TODO(kashomon): either make gzipping work, or remove it
+      # TODO(kashomon): either make gzipping work, or remove this:
       # -----------------
       #if os.path.exists(GZIPPED_LOC):
       #  os.remove(GZIPPED_LOC)

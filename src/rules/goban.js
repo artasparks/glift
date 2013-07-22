@@ -2,6 +2,9 @@
 var util = glift.util;
 
 glift.rules.goban = {
+  /**
+   * Create a Goban instance, just with intersections.
+   */
   getInstance: function(intersections) {
     var ints = intersections || 19;
     return new Goban(ints);
@@ -23,19 +26,21 @@ glift.rules.goban = {
   }
 };
 
-// Goban tracks the state of the stones.
-//
-// Note that, for our purposes,
-// x: refers to the column.
-// y: refers to the row.
-//
-// Thus, to get a particular "stone" you must do
-// stones[y][x]. Also, stones are 0-indexed.
-//
-// 0,0    : Upper Left
-// 0,19   : Lower Left
-// 19,0   : Upper Right
-// 19,19  : Lower Right
+/**
+ * The Goban tracks the state of the stones.
+ *
+ * Note that, for our purposes,
+ * x: refers to the column.
+ * y: refers to the row.
+ *
+ * Thus, to get a particular "stone" you must do
+ * stones[y][x]. Also, stones are 0-indexed.
+ *
+ * 0,0    : Upper Left
+ * 0,19   : Lower Left
+ * 19,0   : Upper Right
+ * 19,19  : Lower Right
+ */
 var Goban = function(ints) {
   if (ints <= 0) throw "Intersections must be greater than 0";
   this.ints = ints;

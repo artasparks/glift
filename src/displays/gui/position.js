@@ -1,14 +1,8 @@
-glift.displays.raphael.rowCenter = function(
-    outerBox, rapBboxes, vertMargin, horzMargin, minSpacing, maxSpacing) {
-  var inBboxes = [];
-  for (var i = 0; i < rapBboxes.length; i++) {
-    inBboxes[i] = glift.displays.fromRaphaelBbox(rapBboxes[i]);
-  }
-  return glift.displays.rowCenter(
-      outerBox, inBboxes, vertMargin, horzMargin, minSpacing, maxSpacing);
-};
-
-glift.displays.raphael.getBboxes = function(robjects) {
+/**
+ * Get Raphael Bboxes.
+ * TODO(kashomon): Remove this now that we're using D3.
+ */
+glift.displays.gui.getRaphaelBboxes = function(robjects) {
   var outBboxes = [];
   for (var i = 0; i < robjects.length; i++) {
     outBboxes.push(robjects[i].getBBox());
@@ -16,10 +10,14 @@ glift.displays.raphael.getBboxes = function(robjects) {
   return outBboxes;
 };
 
-glift.displays.raphael.applyTransforms = function(transforms, robjects) {
+/**
+ * Apply a set of transforms to a Raphael object.
+ * TODO(kashomon): Remove this now that we're using D3.
+ */
+glift.displays.gui.applyTransforms = function(transforms, robjects) {
   for (var i = 0; i < transforms.length; i++) {
     var obj = robjects[i];
-    obj.transform(glift.displays.raphael.scaleAndMove(
+    obj.transform(glift.displays.gui.scaleAndMove(
         obj.getBBox(), transforms[i]));
   }
 };
@@ -36,7 +34,7 @@ glift.displays.raphael.applyTransforms = function(transforms, robjects) {
  *    yMove
  *  }
  */
-glift.displays.raphael.scaleAndMove = function(objBbox, scaleObj) {
+glift.displays.gui.scaleAndMove = function(objBbox, scaleObj) {
   return 's' + scaleObj.xScale + ',' + scaleObj.yScale +
       ',' + objBbox.x + ',' + objBbox.y +
       'T' + scaleObj.xMove + ',' + scaleObj.yMove;
