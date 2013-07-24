@@ -22,8 +22,9 @@ glift.displays.gui.rowCenter = function(
   for (var i = 0; i < inBboxes.length; i++) {
     var bbox = inBboxes[i];
     var vscale = innerHeight / bbox.height();
-    var partialTransform = { xScale: vscale, yScale: vscale };
-    var newBbox = bbox.fixedScale(vscale);
+    var partialTransform = { scale: vscale }
+    // we have scale the bbox to account for the transform.
+    var newBbox = bbox.scale(vscale);
     transforms.push(partialTransform);
     newBboxes.push(newBbox);
     elemWidth += newBbox.width() + minSpacing;

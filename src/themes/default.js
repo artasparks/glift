@@ -10,12 +10,16 @@ glift.themes.registered.DEFAULT = {
   },
 
   lines: {
-    stroke: "#000000",
+    stroke: "#000000"
   },
 
   stones: {
     marks: {
-      'font-family': 'sans-serif'
+      'font-family' : 'sans-serif',
+      'STONE_MARKER' : {
+        fill: 'blue',
+        opacity: 0.6
+      }
     },
 
     shadows: {

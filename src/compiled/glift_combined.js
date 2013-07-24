@@ -234,11 +234,11 @@ glift.enums = {
 
   marks: {
     CIRCLE: "CIRCLE",
-    LETTER: "LETTER",
+    LABEL: "LABEL",
     SQUARE: "SQUARE",
-    STONE: "STONE",
     TRIANGLE: "TRIANGLE",
-    XMARK: "XMARK"
+    XMARK: "XMARK",
+    STONE_MARKER: "STONE_MARKER"
   },
 
   problemResults: {
@@ -260,6 +260,28 @@ glift.enums = {
     DYNAMIC_PROBLEM_STUDY: "DYNAMIC_PROBLEM_STUDY",
     EXLORE_SOLUTIONS: "EXPLORE_SOLUTIONS",
     EXLORE_GAME: "EXPLORE_GAME"
+  },
+
+  /**
+   * Used to create svg element Ids
+   */
+  svgElements: {
+    BOARD_BASE: 'board_base',
+    BOARD_LINE: 'board_line',
+    BUTTON: 'intersection_button',
+    MARK: 'mark',
+    MARK_CONTAINER: 'mark_container',
+    GLIFT_ELEMENT: 'glift_element',
+    STARPOINT: 'starpoint',
+    STONE: 'stone',
+    STONE_SHADOW: 'stone_shadow'
+  },
+
+  // TODO(kashomon): Perhaps remove.  This isn't used (at least for anything
+  // useful yet (and maybe ever).
+  mediums: {
+    SVG: "SVG",
+    CANVAS: "CANVAS"
   }
 };
 (function() {
@@ -272,6 +294,19 @@ glift.errors.ParseError = function(message) {
 glift.errors.ParseError.prototype = new Error();
 
 })();
+glift.util._IdGenerator = function(seed) {
+  this.seed  = seed || 0;
+};
+
+glift.util._IdGenerator.prototype = {
+  next: function() {
+    var out = this.seed + "";
+    this.seed += 1
+    return out;
+  }
+};
+
+glift.util.idGenerator = new glift.util._IdGenerator(0);
 (function() {
 glift.logger = function(logDiv, numMsgs) {
   return new glift.Log(logDiv, numMsgs);
@@ -343,34 +378,32 @@ glift.math = {
   }
 };
 (function() {
-
-// Perhaps this should be removed.  It's hard to preserve immutability when
-// there's a global cache.
-var pointCache = {};
-
-// Create a point.  Each point is cached, so that each point is only actually
-// created once.
+/**
+ * Create a point.  We no longer cache points
+ */
 glift.util.point = function(x, y) {
-  var str = glift.util.coordToString(x, y);
-  if (pointCache[str] !== undefined) {
-    return pointCache[str];
-  } else {
-    var newpt = new GliftPoint(x, y);
-    pointCache[str] = newpt;
-    return newpt;
-  }
-};
-
-// Create a point, but don't use the cache. The method above is prefered to this
-// one, but sometimes it's useful to use an explicitly uncached point.
-glift.util.uncachedPoint = function(x, y) {
   return new GliftPoint(x, y);
 };
 
-// For testing the cache
-glift.util._cacheHasPoint = function(x, y) {
-  return pointCache[glift.util.coordToString(x, y)] !== undefined;
+glift.util.coordToString = function(x, y) {
+  return x + ',' + y
 };
+
+glift.util.pointFromString = function(str) {
+  try {
+    var split = str.split(",");
+    var x = parseInt(split[0]);
+    var y = parseInt(split[1]);
+    return glift.util.point(x, y);
+  } catch(e) {
+    throw "Parsing Error! Couldn't parse a point from: " + str;
+  }
+};
+
+glift.util.pointFromHash = function(str) {
+  return glift.util.pointFromString(str);
+};
+
 
 // Private Point Class.  Because each point is cached, we have to be careful to
 // preserve immutability. As such, we use getters to access the x and y values.
@@ -393,12 +426,24 @@ var GliftPoint = function(xIn, yIn) {
 };
 
 GliftPoint.prototype = {
+  /**
+   * Create the form used in objects.
+   * TODO(kashomon): Replace with string form.  The term hash() is confusing and
+   * it makes it seem like I'm converting it to an int (which I was, long ago)
+   */
   hash: function() {
     return this.toString();
   },
 
   toString: function() {
     return glift.util.coordToString(this.x(), this.y());
+  },
+
+  /**
+   * Return a new point that's a translation from this one
+   */
+  translate: function(x, y) {
+    return glift.util.point(this.x() + x, this.y() + y);
   },
 
   value: function() {
@@ -408,25 +453,6 @@ GliftPoint.prototype = {
   log: function() {
     glift.util.logz(this.toString());
   }
-};
-
-glift.util.coordToString = function(x, y) {
-  return x + ',' + y
-};
-
-glift.util.pointFromString = function(str) {
-  try {
-    var split = str.split(",");
-    var x = parseInt(split[0]);
-    var y = parseInt(split[1]);
-    return glift.util.point(x, y);
-  } catch(e) {
-    throw "Parsing Error! Couldn't parse a point from: " + str;
-  }
-};
-
-glift.util.pointFromHash = function(str) {
-  return glift.util.pointFromString(str);
 };
 
 })();
@@ -453,34 +479,27 @@ glift.util.regions = {
   }
 };
 glift.testUtil = {
-  getAllElements: function(paper) {
-    var list = [];
-    paper.forEach(function (el) {
-      list.push(el);
-    });
-    return list;
-  },
-
-  assertEmptyPaper: function(paper) {
-    var elems = glift.testUtil.getAllElements(paper);
-    deepEqual(elems.length, 0, "Paper should have been emptied");
-  },
-
   assertFullDiv: function(divId) {
-    ok($('#' + divId).text() !== '', "Div should contain contents");
+    ok(d3.selectAll('#' + divId + ' svg')[0].length !== 0,
+        "Div should contain contents");
   },
 
   assertEmptyDiv: function(divId) {
-    deepEqual($('#' + divId ).text(), '', "Div should not contain contents");
+    deepEqual(d3.selectAll('#' + divId + ' svg')[0].length, 0 ,
+        "Div should not contain contents");
   }
 };
 glift.themes = {
   registered: {},
 
-  // Accepts a (case sensitive) ID and returns the theme.
+  // Accepts a (case sensitive) ID and returns a COPY of the theme.
   get: function(id) {
     var registered = glift.themes.registered;
-    return !(id in registered) ? glift.util.none : registered[id];
+    var rawTheme = !(id in registered) ? glift.util.none : registered[id];
+
+    // Perform the DeepCopy
+    var themeCopy = jQuery.extend(true, {}, rawTheme);
+    return themeCopy;
   },
 
   // Accepts a (case sensitive) theme ID and true if the theme exists and false
@@ -493,36 +512,59 @@ glift.themes = {
     return (id in registered);
   },
 
-  setGoBoardBackground: function(id, value) {
-    var theme = this.get(id);
-    if (theme !== glift.util.none) {
-      theme.board.boardAttr.fill = "url('" + value  + "')";
+  // For a theme object. This generally assumes you're called 'get' so that you
+  // have a copy of the base theme.
+  setGoBoardBackground: function(theme, value) {
+    if (theme) {
+      theme.board.imagefill = value
+      // "url('" + value  + "')";
+    } else {
+      throw "Yikes! Not a theme: cannot set background image."
     }
   }
 };
 glift.themes.registered.DEFAULT = {
   board: {
-    boardAttr: {
-      fill: "#f5be7e"
-    },
-    lineColor: "black",
-    lineSize: 1,
-    edgeLineSize: 1,
-    starPointSize: .15, // As a fraction of the spacing.
-    textColor: "white"
+    fill: "#f5be7e",
+    stroke: "#000000"
+  },
+
+  starPoints: {
+    sizeFraction: .15, // As a fraction of the spacing.
+    fill: '#000000'
+  },
+
+  lines: {
+    stroke: "#000000"
   },
 
   stones: {
-    hoverOpacity: 0.5,
+    marks: {
+      'font-family': 'sans-serif'
+    },
+
+    shadows: {
+      stroke: "none",
+      fill: "#222"
+    },
+
     "EMPTY" : {
       fill: 'blue',
-      opacity: 0
+      opacity: 0,
+      marks: {
+        fill: 'black',
+        stroke: 'black'
+      }
     },
     "BLACK" : {
       fill: "black",
       opacity: 1,
       "stroke-width": 1, // The default value
-      stroke: "black"
+      stroke: "black",
+      marks: {
+        fill: 'white',
+        stroke: 'white'
+      }
     },
     "BLACK_HOVER" : {
       fill: "black",
@@ -532,7 +574,11 @@ glift.themes.registered.DEFAULT = {
       stroke: "black",
       fill: "white",
       opacity: 1,
-      "stroke-width": 1 // The default value
+      "stroke-width": 1, // The default value
+      marks: {
+        fill: 'white',
+        stroke: 'white'
+      }
     },
     "WHITE_HOVER" : {
       fill: "white",
@@ -540,39 +586,55 @@ glift.themes.registered.DEFAULT = {
     }
   },
 
-  marks: {
-    // TODO(kashomon): add
-    XMARK : {
+  icons: {
+    'DEFAULT' : {
+      fill: "90-#337-#55B"
+    },
+    'DEFAULT_HOVER' : {
+      fill: "90-#337-#55D"
     }
   }
 };
 glift.themes.registered.DEPTH = {
   board: {
-    boardAttr: {
-      fill: "#f5be7e"
-    },
-    lineColor: "black",
-    lineSize: 1,
-    edgeLineSize: 1,
-    starPointSize: .15, // As a fraction of the spacing.
-    textColor: "white"
+    fill: "#f5be7e",
+    stroke: "#000000"
+  },
+
+  starPoints: {
+    sizeFraction: .15, // As a fraction of the spacing.
+    fill: '#000000'
+  },
+
+  lines: {
+    stroke: "#000000"
   },
 
   stones: {
+    marks: {
+      'font-family': 'sans-serif'
+    },
     shadows: {
       stroke: "none",
-      fill: "#555",
-      transform: "T4,4"
+      fill: "#555"
     },
     "EMPTY" : {
       fill: 'blue',
-      opacity: 0
+      opacity: 0,
+      marks: {
+        fill: 'black',
+        stroke: 'black'
+      }
     },
     "BLACK" : {
       fill: "black",
       opacity: 1,
       "stroke-width": 0, // The default value
-      stroke: "black"
+      stroke: "black",
+      marks: {
+        fill: 'white',
+        stroke: 'white'
+      }
     },
     "BLACK_HOVER" : {
       fill: "black",
@@ -582,25 +644,30 @@ glift.themes.registered.DEPTH = {
       stroke: "white",
       fill: "white",
       opacity: 1,
-      "stroke-width": 0 // The default value
+      "stroke-width": 0, // The default value
+      marks: {
+        fill: 'black',
+        stroke: 'black'
+      }
     },
     "WHITE_HOVER" : {
       fill: "white",
       opacity: 0.5
     }
-  },
-
-  marks: {
-    // TODO(kashomon): add
-    XMARK : {
-    }
   }
 };
 glift.displays = {
+  /**
+   * Create the display.  Delegates to board.create(...);
+   */
   create: function(options) {
     var processed = glift.displays.processOptions(options),
-        environment = glift.displays.environment.get(processed);
-    return glift.displays.raphael.create(environment, processed.theme).draw();
+        environment = glift.displays.environment.get(processed),
+        theme = glift.themes.get(processed.theme); // get a theme copy.
+    if (processed.goBoardBackground !== '') {
+      glift.themes.setGoBoardBackground(theme, processed.goBoardBackground);
+    }
+    return glift.displays.board.create(environment, processed.theme, theme);
   }
 };
 (function() {
@@ -608,10 +675,24 @@ glift.displays.bboxFromPts = function(topLeftPt, botRightPt) {
   return new BoundingBox(topLeftPt, botRightPt);
 };
 
+glift.displays.bboxFromDiv = function(divId) {
+  // Getting the height this might not work for Window or Documents.
+  var e = document.getElementById(divId),
+      height = Math.max(e.clientHeight,
+          isNaN(parseFloat(e.style.height)) ? 0 : parseFloat(e.style.height),
+          e.offsetHeight),
+      width = Math.max(e.clientWidth,
+          isNaN(parseFloat(e.style.width)) ? 0 : parseFloat(e.style.width),
+          e.offsetWidth);
+  // There is no reason to use jquery.  Hotever, this is how it would be done:
+  // this.divWidth =  ($("#" + this.divId).width());
+  return glift.displays.bbox(glift.util.point(0,0), width, height);
+};
+
 glift.displays.bbox = function(topLeft, width, height) {
   return new BoundingBox(
       topLeft, glift.util.point(topLeft.x() + width, topLeft.y() + height));
-}
+};
 
 // Might be nice to use the closure to create private variables.
 // A bounding box, generally for a graphical object.
@@ -633,23 +714,19 @@ var BoundingBox = function(topLeftPtIn, botRightPtIn) {
   this.right = function() { return botRightPt.x(); };
 };
 
-
 BoundingBox.prototype = {
-  // Draw the bbox (for debugging);
+  /**
+   * Draw the bbox (for debugging).
+   */
   draw: function(paper, color) {
     var obj = paper.rect(
         this.topLeft().x(), this.topLeft().y(), this.width(), this.height());
     obj.attr({fill:color, opacity:0.5});
   },
 
-  contains: function(point) {
-   return point.x() >= this.topLeft().x()
-      && point.x() <= this.botRight().x()
-      && point.y() >= this.topLeft().y()
-      && point.y() <= this.botRight().y();
-  },
-
-  // Log the points to the console (for debugging);
+  /**
+   * Log the points to the console (for debugging).
+   */
   log: function() {
     glift.util.logz("TopLeft: " + JSON.stringify(this.topLeft()));
     glift.util.logz("BotRight: " + JSON.stringify(this.botRight()));
@@ -657,80 +734,218 @@ BoundingBox.prototype = {
     glift.util.logz("Height: " + this.height());
   },
 
+  /**
+   * Test to see if a point is contained in the bounding box.  Points on the
+   * edge count as being contained.
+   */
+  contains: function(point) {
+   return point.x() >= this.topLeft().x()
+      && point.x() <= this.botRight().x()
+      && point.y() >= this.topLeft().y()
+      && point.y() <= this.botRight().y();
+  },
+
+  /**
+   * Test to see if two points are equal.
+   */
   equals: function(other) {
-    return other.topLeft && this.topLeft().equals(other.topLeft()) &&
-        other.botRight && this.botRight().equals(other.botRight());
+    return other.topLeft() && this.topLeft().equals(other.topLeft()) &&
+        other.botRight() && this.botRight().equals(other.botRight());
+  },
+
+  /**
+   * Return a new Bbox with the width and the height scaled by some fraction.
+   * The TopLeft point remains the same.
+   */
+  fixedScale: function(amount) {
+    var newHeight = this.height() * amount,
+        newWidth = this.width() * amount;
+    return glift.displays.bbox(this.topLeft(), newWidth, newHeight);
+  },
+
+  toString: function() {
+    return this.topLeft().toString() + ',' +  this.botRight().toString();
+  },
+
+  translate: function(dx, dy) {
+    return glift.displays.bboxFromPts(
+        glift.util.point(this.topLeft().x() + dx, this.topLeft().y() + dy),
+        glift.util.point(this.botRight().x() + dx, this.botRight().y() + dy));
   }
 };
 
 })();
 (function() {
-var util = glift.util;
+// TODO(kashomon): Add much better tests for these methods.  The BoardPoints are
+// pivotal to creating the go board, so we want them to really work.
 
-glift.displays.boardPoints = function() {
-  return new BoardPoints();
+/**
+ * Simple wrapper around the BoardPoints constructor.
+ */
+glift.displays.boardPoints = function(points, spacing, maxIntersects) {
+  return new BoardPoints(points, spacing, maxIntersects);
 };
 
-glift.displays.boardPointsFromLineBox = function(linebox) {
+/**
+ * Construct the board points from a linebox (see linebox.js).
+ *
+ * TODO(kashomon): This is pretty irritating to test.  Is there an easier way to
+ * structure this?
+ */
+glift.displays.boardPointsFromLineBox = function(linebox, maxIntersects) {
   var spacing = linebox.spacing,
+      radius = spacing / 2,
       linebbox = linebox.bbox,
       left = linebbox.left() + linebox.extensionBox.left() * spacing,
       top = linebbox.top() + linebox.extensionBox.top() * spacing,
       leftPt = linebox.pointTopLeft.x(),
       topPt = linebox.pointTopLeft.y(),
-      boardPoints = glift.displays.boardPoints();
+      // Mapping from int point hash, e.g., (0,18), to coordinate data.
+      points = {};
+
   for (var i = 0; i <= linebox.yPoints; i++) {
     for (var j = 0; j <= linebox.xPoints; j++) {
       var xCoord = left + j * spacing;
       var yCoord = top + i * spacing;
       var intPt = glift.util.point(leftPt + j, topPt + i);
+
+      // TODO(kashomon): Prehaps the coordinate point should be truncated?
+      // right now it's ~15 decimal places.  This is too much precision and it
+      // might hurt performance.
       var coordPt = glift.util.point(xCoord, yCoord);
-      boardPoints.add(intPt, coordPt);
+      points[intPt.hash()] = {
+        // Integer point.
+        intPt: intPt,
+        coordPt: coordPt,
+        bbox: glift.displays.bboxFromPts(
+            glift.util.point(coordPt.x() - radius, coordPt.y() - radius),
+            glift.util.point(coordPt.x() + radius, coordPt.y() + radius))
+      };
     }
   }
-  boardPoints.setSpacing(spacing);
-  return boardPoints;
+  return glift.displays.boardPoints(points, spacing, maxIntersects);
 };
 
-// BoardPoints maintains a mapping from an intersection on the board
-// to a coordinate in pixel-space.
-// Also: Why the hell did I design this objec this way?
-var BoardPoints = function() {
-  this.points = {};
-  this.spacing = undefined; // to be set by caller
+/**
+ * BoardPoints maintains a mapping from an intersection on the board
+ * to a coordinate in pixel-space. It also contains information about the
+ * spcaing of the points and the radius (useful for drawing circles).
+ *
+ * Later, this is directly to create everything that lives on an intersection.
+ * In particular,
+ *  - lines
+ *  - star ponts
+ *  - marks
+ *  - stones
+ *  - stone shadows
+ *  - button bounding box.
+ *
+ *  Note: The integer points are 0 Indexed.
+ */
+var BoardPoints = function(points, spacing, numIntersections) {
+  this.points = points; // int hash is 0 indexed, i.e., 0->18.
+  this.spacing = spacing;
+  this.radius = spacing / 2;
+  this.numIntersections = numIntersections; // 1 indexed (1->19)
 };
 
 BoardPoints.prototype = {
-  add: function(intPt, coordPt) {
-    if (this.points[intPt.hash()] === undefined) {
-      this.points[intPt.hash()] = coordPt;
-    }
-    return this;
-  },
-
-  setSpacing: function(spacing) {
-    this.spacing = spacing;
-    return this;
-  },
-
+  /**
+   * Get the points.
+   *
+   * TODO(kashomon): Remove?  I don't think this is necessary any longer.
+   */
   getCoords: function() {
     return this.points;
   },
 
-  // Test whether there is a
-  hasCoord: function(pt) {
-    return this.points[pt.hash()] !== undefined;
-  },
-
-  // Get the coordinate in the HTML div associated with the
+  /**
+   * Get the coordinate for a given integer point string.  Note: the integer
+   * points are 0 indexed, i.e., 0->18.
+   *
+   * Ex. :  (0,2) =>
+   *  {
+   *    intPt: (0,2),
+   *    coordPt: (12.2, 34.2),
+   *    ...
+   *  }
+   */
   getCoord: function(pt) {
     return this.points[pt.hash()];
   },
 
+  /**
+   * Traverse over all the points. The order in which the points are traversed
+   * is not guaranteed.
+   */
+  forEach: function(func) {
+    for (var key in this.points) {
+      func(this.points[key]);
+    }
+  },
+
+  /**
+   * Return the points as an array.  This is useful for D3, in particular.
+   */
+  data: function() {
+    var data = [];
+    this.forEach(function(point) {
+      data.push(point);
+    });
+    return data;
+  },
+
+  /**
+   * Test whether an integer point exists in the points map.
+   * TODO(kashomon): Rename.  This is not apt since it confuses the idea of
+   * integer points and float coordinates.
+   */
+  hasCoord: function(pt) {
+    return this.points[pt.hash()] !== undefined;
+  },
+
+  /**
+   * Return an array on integer points (0-indexed), used to indicate where star
+   * points should go. Ex. [(3,3), (3,9), (3,15), ...].  This only returns the
+   * points that are actually present in the points mapping.
+   */
+  starPoints: function() {
+    var point = glift.util.point,
+        // In pts, each element in the sub array is mapped against every other
+        // element.  Thus [2, 6] generates [(2,2), (2,6), (6,2), (6,6)] and
+        // [[2, 6], [4]] generates the above concatinated with [4,4].
+        pts = {
+          9 : [[ 2, 6 ], [ 4 ]],
+          13 : [[ 3, 9 ], [6]],
+          19 : [[ 3, 9, 15 ]]
+        },
+        outerSet = pts[this.numIntersections] || [],
+        outStarPoints = [];
+    for (var k = 0; k < outerSet.length; k++) {
+      var thisSet = outerSet[k];
+      for (var i = 0; i < thisSet.length; i++) {
+        for (var j = 0; j < thisSet.length; j++) {
+          var pt = point(thisSet[i], thisSet[j]);
+          if (this.hasCoord(pt)) {
+            outStarPoints.push(pt);
+          }
+        }
+      }
+    }
+    return outStarPoints;
+  },
+
+  /**
+   * Draw a circle for every intersection, for debug purposes.
+   *
+   * TODO(kashomon): This is raphael-specific and should be removed, or changed
+   * to use D3.
+   */
   _debugDraw: function(paper, color) {
     for (var ptHash in this.points) {
-      var coordPt = this.points[ptHash];
-      var circ = paper.circle(coordPt.x(), coordPt.y(), this.spacing / 2);
+      var centerX = this.points[ptHash].bbox.center().x();
+      var centerY = this.points[ptHash].bbox.center().y();
+      var circ = paper.circle(centerX, centerY, this.radius);
       circ.attr({fill:color, opacity:.3});
     }
   }
@@ -894,10 +1109,7 @@ var getRegionFromTracker = function(tracker, numstones) {
 };
 })();
 (function() {
-var util = glift.util;
-var enums = glift.enums;
-
-/*
+/***
  * The Environment contains:
  *  - The bounding box for the lines.
  *  - The bounding box for the whole board
@@ -938,6 +1150,9 @@ var GuiEnvironment = function(options) {
 
   // We allow the divHeight and divWidth to be specified explicitly, primarily
   // because it's extremely useful for testing.
+  //
+  // TODO(kashomon): Make this a first-class option. I now think it's totally
+  // reasonable to set the height/width explicitly.
   if (options.displayConfig._divHeight !== undefined) {
     this.divHeight = options.displayConfig._divHeight;
     this.heightOverride = true;
@@ -961,37 +1176,39 @@ GuiEnvironment.prototype = {
         divHeight = this.divHeight,
         divWidth  = this.divWidth,
         cropbox   = this.cropbox,
-        dirs = enums.directions,
+        dirs = glift.enums.directions,
 
-        // The box for the entire div
+        // The box for the entire div.
+        // TODO(kashomon): This is created twice, which is a little silly (but
+        // not expensive) in _resetDimensions. Might want to replace.
         divBox = displays.bboxFromPts(
-            util.point(0, 0), // top left point
-            util.point(divWidth, divHeight)), // bottom right point
-        resizedBox = glift.displays.getResizedBox(divBox, cropbox),
-        goBoardBox = resizedBox,
-        goBoardLineBox = glift.displays.getLineBox(goBoardBox, cropbox),
-        boardPoints = glift.displays.boardPointsFromLineBox(goBoardLineBox),
-        lineSegments = glift.displays.getLineSegments(goBoardLineBox);
+            glift.util.point(0, 0), // top left point
+            glift.util.point(divWidth, divHeight)), // bottom right point
 
+        // The resized goboard box, accounting for the cropbox.
+        goBoardBox = glift.displays.getResizedBox(divBox, cropbox),
+
+        // The bounding box (modified) for the lines. This is slightly different
+        // than the go board, due to cropping and the margin between go board
+        // and the lines.
+        goBoardLineBox = glift.displays.getLineBox(goBoardBox, cropbox),
+
+        // Calculate the coordinates and bounding boxes for each intersection.
+        boardPoints = glift.displays.boardPointsFromLineBox(
+            goBoardLineBox, this.intersections);
     this.divBox = divBox;
-    this.resizedBox = resizedBox;
     this.goBoardBox = goBoardBox;
     this.goBoardLineBox = goBoardLineBox;
     this.boardPoints = boardPoints;
-    this.lineSegments = lineSegments;
     return this;
   },
 
-  setIntersections: function(intersections) {
-    this.intersections = intersections;
-  },
-
   _resetDimensions: function() {
-    this.divHeight = ($("#" + this.divId).height());
+    var bbox = glift.displays.bboxFromDiv(this.divId);
+    this.divHeight = bbox.height();
+    this.divWidth = bbox.width();
     // -- no reason to use jquery
-    // document.getElementById(divId).style.height();
-    this.divWidth =  ($("#" + this.divId).width());
-    this.needsInitialization = true;
+    // this.divWidth =  ($("#" + this.divId).width());
     return this;
   },
 
@@ -1052,74 +1269,17 @@ LineBox.prototype = {
 
 
 })();
-(function() {
-glift.displays.getLineSegments = function(lineBox) {
-  var segments = new Segments();
-  var point = glift.util.point;
-  var logz = glift.util.logz;
-
-  var spacing = lineBox.spacing,
-      left = lineBox.bbox.left() + lineBox.extensionBox.left() * spacing,
-      top = lineBox.bbox.top(),
-      bottom = lineBox.bbox.bottom();
-  for (var i = 0; i <= lineBox.xPoints; i++ ) {
-    var xPos = left + i * spacing;
-    var ordinal = lineBox.pointTopLeft.x() + i;
-    segments.vert.push(new LineSegment(
-        point(xPos, top), point(xPos, bottom), ordinal));
-  }
-
-  var left = lineBox.bbox.left(),
-      right = lineBox.bbox.right(),
-      top = lineBox.bbox.top() + lineBox.extensionBox.top() * spacing;
-  for (var i = 0; i <= lineBox.yPoints; i++ ) {
-    var yPos = top + i * spacing;
-    var ordinal = lineBox.pointTopLeft.y() + i;
-    segments.horz.push(new LineSegment(
-        point(left, yPos), point(right, yPos), ordinal));
-  }
-  return segments;
-};
-
-// Segments contains all the line segments, which are eventually turned into
-// lines on the board.
-var Segments = function() {
-  this.horz = [];
-  this.vert = [];
-};
-
-Segments.prototype._debugDraw = function(paper, color) {
-  var rutil = glift.displays.raphael.rutil;
-  var segs = [this.horz, this.vert];
-  for (var i = 0; i < segs.length; i++) {
-    var lines = segs[i];
-    for (var j = 0; j < lines.length; j++) {
-      paper.path(
-          rutil.svgMovePt(lines[j].topLeft) +
-          rutil.svgLineAbsPt(lines[j].botRight))
-    }
-  }
-};
-
-// The equation for a line segment, which is eventually turned into a line on
-// the board.
-var LineSegment = function(tl, br, ordinal) {
-  this.topLeft = tl;  // coordinate
-  this.botRight = br; // coordinate
-  // The ordinal point on the board, i.e., the 0th line, the 2nd line, etc...
-  // 0 indexed, of course.
-  this.ordinal = ordinal;
-};
-
-})();
 glift.displays.processOptions = function(rawOptions) {
   // Default keys
+  var enums = glift.enums;
   var defaults = {
     intersections: 19,
     divId: "glift_display",
     theme: "DEFAULT",
     boardRegion: "ALL",
-    displayConfig: {}
+    displayConfig: {},
+    goBoardBackground: '',
+    medium: enums.mediums.SVG
   };
 
   for (var key in rawOptions) {
@@ -1168,8 +1328,26 @@ glift.displays.processOptions = function(rawOptions) {
         }
         break;
 
+      // GoBoardBackground: just what it sounds like: a jpg or png path.
+      case 'goBoardBackground':
+        if (glift.util.typeOf(value) === 'string') {
+          defaults.goBoardBackground = value;
+        } else {
+          throw "goBoardBackground not a string: " + value;
+        }
+        break;
+
+      case 'medium':
+        if (glift.enums.mediums[value] !== undefined) {
+          defaults.medium = value;
+        } else {
+          throw "Unknown board region: " + value;
+        }
+        break;
+
       default:
-        glift.util.logz("Unknown option key: " + key);
+        // Don't do anything. This is really convenient for widgets.
+        // glift.util.logz("Unknown option key: " + key);
     }
   }
   return defaults;
@@ -1225,574 +1403,870 @@ glift.displays.getCropDimensions = function(width, height, cropbox) {
     width: function() { return newWidth; }
   };
 };
-(function() {
-
-glift.displays.raphael = {
-  create: function(environment, theme) {
-    return new glift.displays.raphael.Display(environment, theme);
+glift.displays.board = {
+  create: function(env, themeName, theme) {
+    return new glift.displays.board.Display(env, themeName, theme).draw();
   }
 };
 
-glift.displays.raphael.Display = function(inEnvironment, inTheme) {
+/**
+ * The core Display object returned to the user.
+ */
+glift.displays.board.Display = function(inEnvironment, themeName, theme) {
   // Due layering issues, we need to keep track of the order in which we
   // created the objects.
   this._objectHistory = [];
-  this._paper = glift.util.none;
   this._environment = inEnvironment;
-  this._themeName = inTheme;
-  this._theme = glift.themes.get(inTheme);
-  this._stones = glift.util.none;
+  this._themeName = themeName;
+  this._theme = theme;
+
+  // TODO(kashomon): remove stones (or rework into intersections) now that we're
+  // using d3.
+  this._stones = undefined;
+  this.stones = function() { return this._stones; };
+
+  this._svg = undefined; // defined in draw
+  this._intersections = undefined // defined in draw;
+  this.intersections = function() { return this._intersections; };
 
   // Methods accessing private data
-  this.intersections = function() { return this._environment.intersections; };
+  this.intersectionPoints = function() { return this._environment.intersections; };
+  this.boardPoints = function() { return this._environment.boardPoints; };
   this.divId = function() { return this._environment.divId };
   this.theme = function() { return this._themeName; };
   this.boardRegion = function() { return this._environment.boardRegion; };
+  this.width = function() { return this._environment.goBoardBox.width() };
+  this.height = function() { return this._environment.goBoardBox.height() };
 };
 
-// Alias for typing convenience
-var Display = glift.displays.raphael.Display;
+glift.displays.board.Display.prototype = {
+  /**
+   * Initialize the SVG
+   * This allows us to create a base display object without creating all drawing
+   * all the parts.
+   */
+  init: function() {
+    if (this._svg === undefined) {
+      this.destroy(); // make sure everything is cleared out of the div.
 
-// This allows us to create a base display object without creating all drawing
-// all the parts.
-Display.prototype.init = function() {
-  this._paper = Raphael(this.divId(), "100%", "100%");
-  this._environment.init();
-  return this;
-};
-
-Display.prototype.draw = function() {
-  this.init();
-  for (var i = 0; i < this._objectHistory.length; i++) {
-    this._objectHistory[i].destroy();
-  }
-  this._objectHistory = [
-    this.createBoardBase(),
-    this.createBoardLines(),
-    this.createStarPoints()
-  ];
-  this._stones = this.createStones();
-  this._objectHistory.push(this._stones);
-  return this;
-};
-
-// Maybe I'm working too hard to 'destroy' these objects.  Why not just remove
-// them from the SVG paper?
-Display.prototype.destroy = function() {
-  for (var i = 0; i < this._objectHistory.length; i++) {
-    this._objectHistory[i].destroy();
-  }
-  this._objectHistory = [];
-  this._paper.remove();
-  this._paper = glift.util.none;
-  this._stones = glift.util.none;
-  // Empty out the div of anything that's left
-  $('#' + this.divId()).empty();
-};
-
-Display.prototype.recreate = function(options) {
-  this.destroy();
-  var processed = glift.displays.processOptions(options),
-      environment = glift.displays.environment.get(processed);
-  this._environment = environment;
-  this._themeName = processed.theme
-  this._theme = glift.themes.get(processed.theme);
-  return this;
-};
-
-Display.prototype.enableAutoResizing = function() {
-  var that = this;
-  var resizeFunc = function() {
-    that.redraw();
-  };
-
-  var timeoutId;
-  $(window).resize(function(event) {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(resizeFunc, 200);
-  });
-};
-
-Display.prototype.redraw = function() {
-  this._environment.init();
-  for (var i = 0; i < this._objectHistory.length; i++) {
-    this._objectHistory[i].redraw();
-  }
-};
-
-Display.prototype.setColor = function(point, color) {
-  if (this._stones !== glift.util.none) {
-    this._stones.setColor(point, color);
-    return this;
-  } else {
-    throw "Stones === none! Cannot setColor";
-  }
-};
-
-Display.prototype.setClickHandler = function(fn) {
-  this._stones.setClickHandler(fn);
-};
-
-Display.prototype.setHoverInHandler = function(fn) {
-  this._stones.setHoverInHandler(fn);
-};
-
-Display.prototype.setHoverOutHandler = function(fn) {
-  this._stones.setHoverOutHandler(fn);
-};
-
-})();
-(function(){
-// Create the base board background object and immediately call draw().
-glift.displays.raphael.Display.prototype.createBoardBase = function() {
-  return new BoardBase(this._paper, this._environment, this._theme.board)
-    .draw();
-};
-
-var BoardBase = function(paper, environment, subtheme) {
-  this.paper = paper;
-  this.environment = environment;
-  this.subtheme = subtheme;
-  this.rect = glift.util.none // init'd with draw()
-};
-
-BoardBase.prototype = {
-  draw: function() {
-    var box = this.environment.goBoardBox;
-    this.destroy(); // remove if it already exists.
-    this.rect = this.paper.rect(
-        box.topLeft().x(),
-        box.topLeft().y(),
-        box.width(),
-        box.height());
-    this.rect.attr(this.subtheme.boardAttr);
-    return this;
-  },
-
-  redraw: function() {
-    return this.draw();
-  },
-
-  destroy: function() {
-    this.rect && this.rect !== glift.util.none && this.rect.remove();
-    return this;
-  }
-};
-})();
-(function() {
-// Create the board lines objects and immediately call draw()
-glift.displays.raphael.Display.prototype.createBoardLines = function() {
-  return new BoardLineSet(this._paper, this._environment, this._theme.board)
-      .draw();
-};
-
-var BoardLineSet = function(paper, environment, subtheme) {
-  this.paper = paper;
-  this.environment = environment;
-  this.subtheme = subtheme;
-  this.horzSet = glift.util.none; // filled in by draw;
-  this.vertSet = glift.util.none; // filled in by draw;
-};
-
-BoardLineSet.prototype = {
-  draw: function() {
-    this.destroy();
-    var point = glift.util.point,
-        paper = this.paper,
-        subt = this.subtheme,
-        segments = this.environment.lineSegments,
-        maxInts = this.environment.intersections;
-    this.horzSet = drawSegments(
-        paper, segments.horz, maxInts, subt.lineSize, subt.edgeLineSize);
-    this.vertSet = drawSegments(
-        paper, segments.vert, maxInts, subt.lineSize, subt.edgeLineSize);
-    return this;
-  },
-
-  redraw: function() {
-    return this.draw();
-  },
-
-  destroy: function() {
-    this.horzSet && this.horzSet !== glift.util.none && this.horzSet.remove();
-    this.vertSet && this.vertSet !== glift.util.none && this.vertSet.remove();
-    return this;
-  }
-};
-
-var drawSegments = function(paper, segs, maxInts, normalSize, edgeSize) {
-  var lineSet = paper.set(),
-      rutil = glift.displays.raphael.rutil;
-  for (var i = 0; i < segs.length; i++) {
-    var path = paper.path(
-        rutil.svgMovePt(segs[i].topLeft) +
-        rutil.svgLineAbsPt(segs[i].botRight));
-    var ordinal = segs[i].ordinal;
-    var size = ordinal === 0 || ordinal  === maxInts - 1 ?
-        edgeSize : normalSize;
-    path.attr({"stroke-linecap" : "round", "stroke-width" : size});
-    lineSet.push(path);
-  }
-  return lineSet;
-};
-
-})();
-(function() {
-glift.displays.raphael.Display.prototype.createMarks = function() {
-  return new Marks(this._paper, this._environment, this._theme.marks)
-};
-
-var Marks = function(paper, environment, subtheme) {
-  this.paper = paper;
-  this.environment = environment;
-  this.subtheme = subtheme;
-  this.marks = {}; // map from intersection to mark
-};
-
-// TODO(kashomon): Finish writing marks.  This will probably require changing
-// how the circle/bounding boxes are created, again, due to layering issues.
-Marks.prototype = {
-  addMark: function(type, pt, color) {
-    switch(type) {
-      case "XMARK": _addXMark(pt, color); break;
-      default: // do nothing
+      // Make the text not selectable (there's no point and it's distracting)
+      // TODO(kashomon): Is this needed now that each point is covered with a
+      // transparent button element?
+      this._svg = d3.select('#' + this.divId())
+        .style('-webkit-touch-callout', 'none')
+        .style('-webkit-user-select', 'none')
+        .style('-khtml-user-select', 'none')
+        .style('-moz-user-select', 'moz-none')
+        .style('-ms-user-select', 'none')
+        .style('user-select', 'none')
+        .style('cursor', 'default');
+      this._svg = d3.select('#' + this.divId())
+        .append("svg")
+          .attr("width", '100%')
+          .attr("height", '100%');
     }
+    this._environment.init();
     return this;
   },
 
-  _addXMark: function(pt, color) {
-    var boardPoints = this.environment.boardpoints,
-        coordPt = boardpoints.points[pt.hash()],
-        spacing = boardpoints.spacing;
+  /**
+   * Draw the GoBoard!
+   */
+  draw:  function() {
+    this.init();
+    var board = glift.displays.board,
+        env = this._environment,
+        boardPoints = env.boardPoints,
+        theme = this._theme,
+        svg = this._svg,
+        divId = this.divId();
+
+    board.initBlurFilter(divId, svg);
+    var boardId = board.createBoardBase(divId, svg, env.goBoardBox, theme);
+    var lineIds = board.createLines(divId, svg, boardPoints, theme);
+    var starPointIds = board.createStarPoints(divId, svg, boardPoints, theme);
+    var stoneShadowIds = board.createShadows(divId, svg, boardPoints, theme);
+    var stoneIds = board.createStones(divId, svg, boardPoints, theme);
+    var markIds = board.createMarkContainer(divId, svg, boardPoints, theme);
+    var buttons = board.createButtons(divId, svg, boardPoints);
+    var intersectionData = {
+        lineIds: lineIds,
+        starPointIds: starPointIds,
+        stoneShadowIds: stoneShadowIds,
+        stoneIds: stoneIds,
+        markIds: markIds,
+        buttons: buttons
+    };
+    this._intersections = glift.displays.board.createIntersections(
+        divId, svg, intersectionData, boardPoints, theme);
+    return this; // required -- used in create(...);
   },
 
-  clearMark: function(pt) {
-
+  /**
+   * Destory the GUI portion of the GoBoard.  We just remove the SVG element.
+   * This makes redrawing the GoBoard much quicker.
+   */
+  destroy: function() {
+    this.divId() && d3.select('#' + this.divId()).selectAll("svg").remove();
+    this._svg = undefined;
+    this._intersections = undefined;
+    return this;
   },
 
-  clearMarks: function() {
+  /**
+   * Recreate the GoBoard. This means we create a completely new environment,
+   * but we reuse the old Display object.
+   *
+   * TODO(kashomon): Why is this here?  Why not just give back a completely new
+   * display?
+   */
+  recreate: function(options) {
+    this.destroy();
+    var processed = glift.displays.processOptions(options),
+        environment = glift.displays.environment.get(processed);
+    this._environment = environment;
+    this._themeName = processed.theme
+    this._theme = glift.themes.get(processed.theme);
+    return this;
+  },
 
+  /**
+   * Redraw the goboard.
+   *
+   * TODO(kashomon): Does this still need to exist?
+   */
+  redraw:  function() {
+    this.draw();
   }
 };
-})();
-glift.displays.raphael.rutil = {
-  // Move the current position to X,Y
-  svgMove: function(x, y) {
-    return "M" + x + "," + y;
-  },
-  svgMovePt: function(pt) {
-    return glift.displays.raphael.rutil.svgMove(pt.x(), pt.y());
-  },
-  // Create a relative SVG line, starting from the 'current' position.
-  svgLineRel: function(x, y) {
-    return "l" + x + "," + y;
-  },
-  svgLineRelPt: function(pt) {
-    return glift.displays.raphael.rutil.svgLineRel(pt.x(), pt.y());
-  },
-  // Create an absolute SVG line -- different from lower case
-  svgLineAbs: function(x, y) {
-    return "L" + x + "," + y;
-  },
-  // Create an absolute SVG line -- different from lower case.
-  svgLineAbsPt: function(pt) {
-    return glift.displays.raphael.rutil.svgLineAbs(pt.x(), pt.y());
-  },
-  // Get the transform string, based on the scaliing object, which look like:
-  // {
-  //  xScale: num,
-  //  yScale: num,
-  //  xMove: num,
-  //  yMove: num
-  // }
-  transform: function(scalingObj) {
-    return "t" + scalingObj.xMove + "," + scalingObj.yMove +
-      "s" + scalingObj.xScale + "," + scalingObj.yScale;
+/**
+ * Create the background GoBoard object.  Essentially just a rectangle with a
+ * fill color and a border.
+ */
+glift.displays.board.createBoardBase = function(divId, svg, goBox, theme) {
+  var svgutil = glift.displays.board.svgutil;
+  var BOARD = glift.enums.svgElements.BOARD;
+  var id = svgutil.elementId(divId, BOARD)
+
+  // TODO(kashomon): Make this more DRY
+  if (theme.board.imagefill) {
+    svg.selectAll('goBoardRect').data([BOARD])
+      .enter().append('svg:image')
+        .attr('x', goBox.topLeft().x())
+        .attr('y', goBox.topLeft().y())
+        .attr('width', goBox.width())
+        .attr('height', goBox.height())
+        .attr('stroke', theme.board.stroke)
+        .attr('xlink:href', theme.board.imagefill)
+        .attr('preserveAspectRatio', 'none')
+        .attr('id', id);
+  } else {
+    svg.selectAll('goBoardRect').data([BOARD])
+      .enter().append('rect')
+        .attr('x', goBox.topLeft().x() + 'px')
+        .attr('y', goBox.topLeft().y() + 'px')
+        .attr('width', goBox.width() + 'px')
+        .attr('height', goBox.height() + 'px')
+        .attr('height', goBox.height() + 'px')
+        .attr('fill', theme.board.fill)
+        .attr('background-image', theme.board.imagefill)
+        .attr('stroke', theme.board.stroke)
+        .attr('id', id);
+  }
+  return id;
+};
+/**
+ * Create transparent buttons that overlay each intersection.
+ */
+glift.displays.board.createButtons = function(divId, svg, boardPoints) {
+  var buttonMapping = {};
+  var svgutil = glift.displays.board.svgutil;
+  var elems = glift.enums.svgElements;
+  var BUTTON = elems.BUTTON;
+  svg.selectAll(BUTTON).data(boardPoints.data())
+      .enter().append("svg:rect")
+          .attr("x", function(pt) { return pt.coordPt.x() - boardPoints.radius; })
+          .attr("y", function(pt) { return pt.coordPt.y() - boardPoints.radius; })
+          .attr("width", boardPoints.spacing)
+          .attr("height", boardPoints.spacing)
+          .attr("class", BUTTON)
+          .attr('opacity', 0)
+          .attr('fill', 'red')
+          .attr('stroke', 'red')
+          .attr('stone_color', 'EMPTY')
+          .attr('id', function(pt) {
+              var id = svgutil.elementId(divId, BUTTON, pt.intPt);
+              buttonMapping[pt.intPt.hash()] = id;
+              return id;
+        });
+  return buttonMapping;
+};
+glift.displays.board.createIntersections = function(
+    divId, svg, ids, boardPoints, theme) {
+  return new glift.displays.board._Intersections(
+      divId, svg, ids, boardPoints, theme);
+};
+
+glift.displays.board._Intersections = function(
+    divId, svg, ids, boardPoints, theme) {
+  this.divId = divId;
+  this.svg = svg;
+  this.theme = theme;
+  this.boardPoints = boardPoints;
+
+  // elements by id.  Maps from point-string to element ID ('#...')
+  this.lineIds = ids.lineIds;
+  this.starPointIds = ids.starPointIds;
+  this.stoneShadowIds = ids.stoneShadowIds;
+  this.stoneIds = ids.stoneIds;
+  this.markIds = ids.markIds;
+  this.buttons = ids.buttons;
+
+  this.buttonsData = [];
+  for (var key in this.buttons) {
+    this.buttonsData.push(glift.util.pointFromString(key));
   }
 };
-(function() {
 
-// Create the starPoints object and immediately call draw()
-glift.displays.raphael.Display.prototype.createStarPoints = function() {
-  return new StarPointSet(this._paper, this._environment, this._theme.board)
-      .draw();
-};
+glift.displays.board._Intersections.prototype = {
+  /**
+   * Set the color of a stone. Returns 'this' for the possibility of chaining.
+   */
+  setStoneColor: function(pt, colorKey) {
+    var key = pt.hash();
+    if (this.theme.stones[colorKey] === undefined) {
+      throw 'Unknown color key [' + colorKey + ']'
+    }
 
-var StarPointSet = function(paper, environment, subtheme) {
-  this.paper = paper;
-  this.environment = environment;
-  this.subtheme = subtheme;
-  this.starSet = glift.util.none; // init'd with draw()
-};
-
-StarPointSet.prototype = {
-  draw: function() {
-    this.destroy(); // remove if it already exists.
-    var point = glift.util.point,
-        boardPoints = this.environment.boardPoints,
-        size = boardPoints.spacing * this.subtheme.starPointSize,
-        intersections = this.environment.intersections,
-        pts = {
-          9 : [[ 2, 6 ], [ 4 ]],
-          13 : [[ 3, 9 ], [6]],
-          19 : [[ 3, 9, 15 ]]
-        },
-        outerSet = pts[intersections] || [],
-        starSet = this.paper.set();
-    for (var k = 0; k < outerSet.length; k++) {
-      var thisSet = outerSet[k];
-      for (var i = 0; i < thisSet.length; i++) {
-        for (var j = 0; j < thisSet.length; j++) {
-          var pt = point(thisSet[i], thisSet[j]);
-          if (boardPoints.hasCoord(pt)) {
-            var coord = boardPoints.getCoord(pt);
-            starSet.push(this.paper.circle(coord.x(), coord.y(), size));
-          }
+    if (this.stoneIds[key] !== undefined) {
+      var stoneColor = this.theme.stones[colorKey];
+      this.svg.select('#' + this.stoneIds[key])
+          .attr('fill', stoneColor.fill)
+          .attr('stone_color', colorKey)
+          .attr('opacity', stoneColor.opacity);
+      if (this.stoneShadowIds[key] !== undefined) {
+        if (stoneColor.opacity === 1) {
+          this.svg.select('#' + this.stoneShadowIds[key]).attr('opacity', 1);
+        } else {
+          this.svg.select('#' + this.stoneShadowIds[key]).attr('opacity', 0);
         }
       }
     }
-    starSet.attr({fill: this.subtheme.lineColor});
-    this.starSet = starSet;
     return this;
   },
 
-  redraw: function() {
-    return this.draw();
+  // TODO(kashomon): Move to marks.js.  Besides the arguments below, the only
+  // data this method depends on is the divId, to generate the Element ID and
+  // boardPoints.  SVG can be passed in or inferred.
+  addMarkPt: function(pt, mark, label) {
+    glift.displays.board.addMark(
+        this.divId, this.svg, this.boardPoints, this.theme, pt, mark, label);
+    return this;
   },
 
-  destroy: function() {
-    this.starSet && this.starSet !== glift.util.none && this.starSet.remove();
+  addMark: function(x, y, mark, label) {
+    this.addMarkPt(glift.util.point(x, y), mark, label);
     return this;
+  },
+
+  clearMarks: function() {
+    var elems = glift.enums.svgElements;
+    // Some STARPOINTs/BOARD_LINEs may have been 'turned-off' when adding marks.
+    // It's easier just to manipulate them as a whole.
+    this.svg.selectAll('.' + elems.STARPOINT).attr('opacity', 1);
+    this.svg.selectAll('.' + elems.BOARD_LINE).attr('opacity', 1);
+    this.svg.selectAll('.' + elems.MARK).remove();
+    return this;
+  },
+
+  setEvent: function(event, func) {
+    var BUTTON = glift.enums.svgElements.BUTTON;
+    this.svg.selectAll('rect' + '.' + BUTTON).data(this.buttonsData)
+      .on(event, function(pt) { func(pt); });
   }
 };
-})();
-(function(){
+/**
+ * Create the background lines. These are create at each individual intersection
+ * rather than as a whole so that we can clear theme out when we to draw marks
+ * on the raw board (rather than on stones).
+ */
+glift.displays.board.createLines = function(divId, svg, boardPoints, theme) {
+  // Mapping from int point (e.g., 3,3) hash to id;
+  var lineMapping = {};
+  var svgutil = glift.displays.board.svgutil;
+  var BOARD_LINE = glift.enums.svgElements.BOARD_LINE;
+  svg.selectAll(BOARD_LINE).data(boardPoints.data())
+    .enter().append("path")
+      .attr('d', function(pt) {
+        return glift.displays.board.intersectionLine(
+            pt, boardPoints.radius, boardPoints.numIntersections, theme);
+      })
+      .attr('stroke', theme.lines.stroke)
+      .attr('class', BOARD_LINE)
+      .attr('stroke-linecap', 'round')
+      .attr('id', function(pt) {
+        var id = svgutil.elementId(divId, BOARD_LINE, pt.intPt);
+        lineMapping[pt.intPt.hash()] = id;
+        return id;
+      });
+  return lineMapping;
+};
+
+glift.displays.board.intersectionLine = function(
+    boardPt, radius, numIntersections) {
+  // minIntersects: 0 indexed,
+  // maxIntersects: 0 indexed,
+  // numIntersections: 1 indexed (it's the number of intersections)
+  var minIntersects = 0,
+      maxIntersects = numIntersections - 1,
+      coordinate = boardPt.coordPt,
+      intersection = boardPt.intPt,
+      svgutil = glift.displays.board.svgutil;
+  var top = intersection.y() === minIntersects ?
+      coordinate.y() : coordinate.y() - radius;
+  var bottom = intersection.y() === maxIntersects ?
+      coordinate.y() : coordinate.y() + radius;
+  var left = intersection.x() === minIntersects ?
+      coordinate.x() : coordinate.x() - radius;
+  var right = intersection.x() === maxIntersects ?
+      coordinate.x() : coordinate.x() + radius;
+  var line =
+      // Vertical Line
+      svgutil.svgMove(coordinate.x(), top) + ' '
+      + svgutil.svgLineAbs(coordinate.x(), bottom) + ' '
+      // Horizontal Line
+      + svgutil.svgMove(left, coordinate.y()) + ' '
+      + svgutil.svgLineAbs(right, coordinate.y());
+  return line;
+};
+/**
+ * Create the mark container.  For layering purposes (i.e., for the z-index), a
+ * dummy mark container is once as a place holder. Unlike all other elements,
+ * the Marks are created / destroyed on demand, which is why we need a g
+ * container.
+ */
+glift.displays.board.createMarkContainer =
+    function(divId, svg, boardPoints, theme) {
+  var markMapping = {};
+  var svgutil = glift.displays.board.svgutil;
+  var MARK_CONTAINER = glift.enums.svgElements.MARK_CONTAINER;
+
+  svg.selectAll(MARK_CONTAINER).data([1]) // dummy data;
+      .enter().append("g")
+          .attr('class', MARK_CONTAINER);
+  return markMapping;
+};
+
+glift.displays.board.addMark = function(
+    divId, svg, boardPoints, theme, pt, mark, label) {
+  var svgutil = glift.displays.board.svgutil;
+  var elems = glift.enums.svgElements;
+  var MARK = elems.MARK;
+  var STONE = elems.STONE;
+  var STARPOINT = elems.STARPOINT;
+  var BOARD_LINE = elems.BOARD_LINE;
+  var MARK_CONTAINER = elems.MARK_CONTAINER;
+
+  var rootTwo = 1.41421356237;
+  var rootThree = 1.73205080757;
+  var marks = glift.enums.marks;
+  var coordPt = boardPoints.getCoord(pt).coordPt;
+  var id = svgutil.elementId(divId, MARK, pt);
+  var stoneColor = svg.select('#' + svgutil.elementId(divId, STONE, pt))
+      .attr('stone_color');
+  var marksTheme = theme.stones[stoneColor].marks;
+
+  // If necessary, clear out intersections and starpoints.  This only applies
+  // to when a stone hasn't yet been set (stoneColor === 'EMPTY').
+  if (stoneColor === 'EMPTY' && mark === marks.LABEL) {
+    svg.select('#' + svgutil.elementId(divId, STARPOINT, pt))
+        .attr('opacity', 0);
+    svg.select('#' + svgutil.elementId(divId, BOARD_LINE, pt))
+        .attr('opacity', 0);
+  }
+
+  var node = undefined;
+  var fudge = boardPoints.radius / 8;
+  // Although not strictly necessary to specify node, since scoping is based
+  // on the function, it is semantically convenient to define the node first
+  // as undefined, at least to this Java-trained programmer.
+  if (mark === marks.LABEL) {
+    svg.select('.' + MARK_CONTAINER).append('text')
+        .text(label)
+        .attr('fill', marksTheme.fill)
+        .attr('stroke', marksTheme.stroke)
+        .attr('class', MARK)
+        .attr('text-anchor', 'middle')
+        .attr('dy', '.35em') // for vertical centering
+        .attr('x', coordPt.x()) // x and y are the anchor points.
+        .attr('y', coordPt.y())
+        .attr('font-family', theme.stones.marks['font-family'])
+        .attr('font-size', boardPoints.spacing * 0.7);
+
+  } else if (mark === marks.SQUARE) {
+    var baseDelta = boardPoints.radius / rootTwo;
+    // If the square is right next to the stone edge, it doesn't look as nice
+    // as if it's offset by a little bit.
+    var halfWidth = baseDelta - fudge;
+    svg.select('.' + MARK_CONTAINER).append('rect')
+        .attr('x', coordPt.x() - halfWidth)
+        .attr('y', coordPt.y() - halfWidth)
+        .attr('width', 2 * halfWidth)
+        .attr('height', 2 * halfWidth)
+        .attr('fill', 'none')
+        .attr('stroke-width', 2)
+        .attr('class', MARK)
+        .attr('stroke', marksTheme.stroke);
+
+  } else if (mark === marks.XMARK) {
+    var baseDelta = boardPoints.radius / rootTwo;
+    var halfDelta = baseDelta - fudge;
+    var topLeft = coordPt.translate(-1 * halfDelta, -1 * halfDelta);
+    var topRight = coordPt.translate(halfDelta, -1 * halfDelta);
+    var botLeft = coordPt.translate(-1 * halfDelta, halfDelta);
+    var botRight = coordPt.translate(halfDelta, halfDelta);
+    svg.select('.' + MARK_CONTAINER).append('path')
+        .attr('d',
+            svgutil.svgMovePt(coordPt) + ' ' +
+            svgutil.svgLineAbsPt(topLeft) + ' ' +
+            svgutil.svgMovePt(coordPt) + ' ' +
+            svgutil.svgLineAbsPt(topRight) + ' ' +
+            svgutil.svgMovePt(coordPt) + ' ' +
+            svgutil.svgLineAbsPt(botLeft) + ' ' +
+            svgutil.svgMovePt(coordPt) + ' ' +
+            svgutil.svgLineAbsPt(botRight))
+        .attr('stroke-width', 2)
+        .attr('class', MARK)
+        .attr('stroke', marksTheme.stroke);
+  } else if (mark == marks.CIRCLE) {
+    svg.select('.' + MARK_CONTAINER).append('circle')
+        .attr('cx', coordPt.x())
+        .attr('cy', coordPt.y())
+        .attr('r', boardPoints.radius / 2)
+        .attr('fill', 'none')
+        .attr('stroke-width', 2)
+        .attr('class', MARK)
+        .attr('stroke', marksTheme.stroke);
+  } else if (mark == marks.STONE_MARKER) {
+    svg.select('.' + MARK_CONTAINER).append('circle')
+        .attr('cx', coordPt.x())
+        .attr('cy', coordPt.y())
+        .attr('r', boardPoints.radius / 3)
+        .attr('class', MARK)
+        .attr('opacity', 0.6)
+        .attr('fill', 'blue');
+  } else if (mark === marks.TRIANGLE) {
+    var r = boardPoints.radius - fudge;
+    var rightNode = coordPt.translate(r * (rootThree / 2), r * (1 / 2));
+    var leftNode  = coordPt.translate(r * (-1 * rootThree / 2), r * (1 / 2));
+    var topNode = coordPt.translate(0, -1 * r);
+    svg.select('.' + MARK_CONTAINER).append('path')
+        .attr('fill', 'none')
+        .attr('d',
+            svgutil.svgMovePt(topNode) + ' ' +
+            svgutil.svgLineAbsPt(leftNode) + ' ' +
+            svgutil.svgLineAbsPt(rightNode) + ' ' +
+            svgutil.svgLineAbsPt(topNode))
+        .attr('stroke-width', 2)
+        .attr('class', MARK)
+        .attr('stroke', marksTheme.stroke);
+  } else {
+    // do nothing.  I suppose we could throw an exception here.
+  }
+  return this;
+};
+/**
+ * Create the star points.  See boardPoints.starPoints() for details about which
+ * points are used
+ */
+glift.displays.board.createStarPoints = function(
+    divId, svg, boardPoints, theme) {
+  var size = theme.starPoints.sizeFraction * boardPoints.spacing;
+  var starPointData = boardPoints.starPoints();
+  var svgutil = glift.displays.board.svgutil;
+  var STARPOINT = glift.enums.svgElements.STARPOINT;
+  var starPointIds = {}; // mapping from int point hash to element ID
+  svg.selectAll(STARPOINT).data(starPointData)
+    .enter().append('circle')
+      .attr('cx', function(ip) { return boardPoints.getCoord(ip).coordPt.x(); })
+      .attr('cy', function(ip) { return boardPoints.getCoord(ip).coordPt.y(); })
+      .attr('r', size)
+      .attr('class', STARPOINT)
+      .attr('fill', theme.starPoints.fill)
+      .attr('id', function(pt) {
+        var id = svgutil.elementId(divId, STARPOINT, pt);
+        starPointIds[pt.hash()] = id;
+        return id;
+      });
+  return starPointIds;
+};
+/**
+ * Create the Go stones.  They are initially invisible to the user, but they
+ * all exist at the time of GoBoard creation.
+ */
+glift.displays.board.createStones = function(divId, svg, boardPoints, theme) {
+  var STONE = glift.enums.svgElements.STONE;
+  var svgutil = glift.displays.board.svgutil;
+  var stoneIdMap = {};
+  svg.selectAll(STONE).data(boardPoints.data())
+    .enter().append("circle")
+      .attr("cx", function(pt) { return pt.coordPt.x(); })
+      .attr("cy", function(pt) { return pt.coordPt.y(); })
+      .attr("r", boardPoints.radius - .4) // for stroke
+      .attr("opacity", 0)
+      .attr('class', glift.enums.svgElements.GLIFT_ELEMENT)
+      .attr("stone_color", "EMPTY")
+      .attr("fill", 'blue') // dummy color
+      .attr("id", function(pt) {
+        var intPt = pt.intPt;
+        var id = svgutil.elementId(divId, STONE, intPt);
+        stoneIdMap[intPt.hash()] = id;
+        return id;
+      });
+  return stoneIdMap;
+};
 
 /**
- * Create a Stone.
+ * Create the shadows for the Go stones.  They are initially invisible to the
+ * user, but they may become visible later (e.g., via mousover).  Shadows are
+ * only created if the theme has a shadow.
  *
- * This constructor is different than all the other constructors in this
- * diroctory.  Not sure if this is a problem or not.
+ * TODO(kashomon): Probably, this should be merged with createStarPoints.
  */
-glift.displays.raphael.createStone = function(
-    paper, intersection, coordinate, spacing, subtheme) {
-  return new Stone(paper, intersection, coordinate, spacing, subtheme);
-}
-
-var Stone = function(paper, intersection, coordinate, spacing, subtheme) {
-  this.paper = paper;
-  // intersection: The standard point on the board, (1-indexed?). So, on a 19x19
-  // board, this will be a point where x,y are between 1 and 19 inclusive.
-  this.intersection = intersection;
-  // coordinate: the center of the stone, in pixels.
-  this.coordinate = coordinate;
-  this.subtheme = subtheme;
-  // TODO(kashomon): Change the magic #s to variables.
-  // The .2 fudge factor is used to account for line width.
-  this.radius = spacing / 2 - .2
-
-  // The purpose of colorState is to provide a way to recreate the GoBoard.
-  this.colorState = glift.util.none; // set with setColor(...)
-
-  // Set via draw
-  this.circle = glift.util.none;
-  this.bbox = glift.util.none;
-
-  this.bboxHoverIn = function() { throw "bboxHoverIn not Defined"; };
-  this.bboxHoverOut = function() { throw "bboxHoverOut not defined"; };
-  this.bboxClick = function() { throw "bboxClick not defined"; };
-
-  // Click handlers are set via setHandler in Stones.
-  this.clickHandler = function(intersection) {};
-  this.hoverInHandler = function(intersection) {};
-  this.hoverOutHandler = function(intersection) {};
+glift.displays.board.createShadows = function(
+    divId, svg, boardPoints, theme) {
+  if (theme.stones.shadows === undefined) {
+    return {};
+  }
+  var STONE_SHADOW = glift.enums.svgElements.STONE_SHADOW;
+  var svgutil = glift.displays.board.svgutil;
+  var shadowMap = {};
+  svg.selectAll(STONE_SHADOW).data(boardPoints.data())
+    .enter().append("circle")
+      .attr("cx", function(pt) {
+          return pt.coordPt.x() + boardPoints.radius / 7;
+      })
+      .attr("cy", function(pt) {
+          return pt.coordPt.y() + boardPoints.radius / 7;
+      })
+      .attr("r", boardPoints.radius - 0.4)
+      .attr("opacity", 0)
+      .attr("fill", theme.stones.shadows.fill)
+      .attr("stroke", theme.stones.shadows.stroke)
+      .attr("filter", 'url(#' + divId + "_svg_blur)")
+      .attr("id", function(pt) {
+        var intPt = pt.intPt;
+        var id = svgutil.elementId(divId, STONE_SHADOW, intPt);
+        shadowMap[intPt.hash()] = id;
+        return id;
+      });
+  return shadowMap;
 };
 
-// TODO(kashomon): Break out into its own file.
-Stone.prototype = {
-  draw: function() {
-    this.destroy();
-    var subtheme = this.subtheme, // i.e., THEME.stones
-        paper = this.paper,
-        r = this.radius,
-        coord = this.coordinate,
-        intersection = this.intersection,
-        that = this; // Avoid lexical 'this' binding problems.
-    if (this.key !== "EMPTY" && subtheme['shadows'] !== undefined) {
-      this.shadow = paper.circle(coord.x(), coord.y(), r);
-      this.shadow.attr(subtheme.shadows);
-      this.shadow.blur(2);
-      this.shadow.attr({opacity: 0});
-    }
-    this.circle = paper.circle(coord.x(), coord.y(), r);
-    // Create a bounding box surrounding the stone.  This is what the user
-    // actually clicks on, since just using circles leaves annoying gaps.
-    this.bbox = paper.rect(coord.x() - r, coord.y() - r, 2 * r, 2 * r)
-    this.bbox.attr({fill: "white", opacity: 0});
 
-    this.bboxHoverIn = function() { that.hoverInHandler(intersection); };
-    this.bboxHoverOut = function() { that.hoverOutHandler(intersection); };
-    this.bboxClick = function() { that.clickHandler(intersection); };
-    this.bbox.hover(this.bboxHoverIn, this.bboxHoverOut);
-    this.bbox.click(this.bboxClick);
-    this.setColor("EMPTY");
-    return this;
-  },
-
-  cloneHandlers: function(stone) {
-    var propertiesToCopy = [ 'bboxHoverIn', 'bboxHoverOut', 'bboxClick',
-        'clickHandler', 'hoverInHandler', 'hoverOutHandler'];
-    for (var i = 0; i < propertiesToCopy.length; i++) {
-      if (stone[propertiesToCopy[i]]) {
-        this[propertiesToCopy[i]] = stone[propertiesToCopy[i]];
-      }
+glift.displays.board.initBlurFilter = function(divId, svg) {
+  svg.append("svg:defs")
+    .append("svg:filter")
+      .attr("id", divId + '_svg_blur')
+    .append("svg:feGaussianBlur")
+      .attr("stdDeviation", 2);
+};
+glift.displays.board.svgutil = {
+  /**
+   * Get an ID for a SVG element.
+   */
+  elementId: function(divId, type, intPt) {
+    var base = divId + "_" + type;
+    if (intPt !== undefined) {
+      return base + '_' + intPt.x() + '_' + intPt.y();
+    } else {
+      return base;
     }
   },
 
-  // Set the color of the stone by retrieving the "key" from the stones
-  // sub object.
-  setColor: function(key) {
-    if (this.circle === glift.util.none) {
-      throw "Circle was not initialized, so cannot set color";
-    }
-    if (!(key in this.subtheme)) {
-      glift.util.logz("Key " + key + " not found in theme");
-    }
-    this.circle.attr(this.subtheme[key]);
-
-    if (key !== "EMPTY" && !key.match("_HOVER") && this.shadow !== undefined ) {
-      this.shadow.attr({opacity: 1});
-    } else if (key === "EMPTY" && !key.match("_HOVER") && this.shadow !== undefined) {
-      this.shadow.attr({opacity: 0});
-    }
-
-    this.colorState = key;
+  /**
+   * Move the current position to X,Y.  Usually used in the context of creating a
+   * path.
+   */
+  svgMove: function(x, y) {
+    return "M" + x + " " + y;
   },
 
-  redraw: function() {
-    return this.draw();
+  svgMovePt: function(pt) {
+    return glift.displays.board.svgutil.svgMove(pt.x(), pt.y());
   },
 
-  destroy: function() {
-    if (this.circle === glift.util.none || this.bbox === glift.util.none) {
-      return this // not initialized,
-    }
-    this.bbox.unhover(this.bboxHoverIn, this.bboxHoverOut);
-    this.bbox.unclick(this.bboxClick);
-    this.bbox.remove();
-    this.circle && this.circle.remove();
-    this.shadow && this.shadow.remove();
-    return this;
+  // Create a relative SVG line, starting from the 'current' position.
+  svgLineRel: function(x, y) {
+    return "l" + x + " " + y;
   },
 
-  _bboxToFront: function() {
-    this.bbox && this.bbox !== glift.util.non && this.bbox.toFront();
-    return this;
+  svgLineRelPt: function(pt) {
+    return glift.displays.board.svgutil.svgLineRel(pt.x(), pt.y());
   },
 
-  addMark: function(type, color) {
-    // TODO(kashomon): flargnargle.
+  /**
+   * Create an absolute SVG line -- different from lower case
+   * This form is usually preferred.
+   */
+  svgLineAbs: function(x, y) {
+    return "L" + x + " " + y;
+  },
+
+  // Create an absolute SVG line -- different from lower case.
+  svgLineAbsPt: function(pt) {
+    return glift.displays.board.svgutil.svgLineAbs(pt.x(), pt.y());
   }
 };
-})();
-(function(){
-// Create the entire grid of stones and immediately call draw()
-glift.displays.raphael.Display.prototype.createStones = function() {
-  return new Stones(this._paper, this._environment, this._theme.stones)
-      .draw();
-};
-
-// Stones is a container for all the go stones.  Individual stones are only
-// interacted with through this container.
-var Stones = function(paper, environment, subtheme) {
-  this.paper = paper;
-  this.environment = environment;
-  this.subtheme = subtheme;
-
-  // Map from PtHash to Stone
-  this.stoneMap = glift.util.none; // init'd with draw();
-};
-
-Stones.prototype = {
-  draw: function() {
-    var newStoneMap = {},
-        boardPoints = this.environment.boardPoints;
-    for (var ptHash in boardPoints.points) {
-      var coordPt = boardPoints.points[ptHash],
-          intersection = glift.util.pointFromHash(ptHash),
-          spacing = boardPoints.spacing,
-          stone = glift.displays.raphael.createStone(
-              this.paper, intersection, coordPt, spacing, this.subtheme);
-
-      // This is a ack.  This is here so we can support redrawing the board.
-      // However, it conflates the idea of drawing and redrawing which probably
-      // ought to be separate.
-      if (this.stoneMap && this.stoneMap !== glift.util.none &&
-          this.stoneMap[ptHash]) {
-        // restore the stone state, if it exists.
-        var prevStone = this.stoneMap[ptHash];
-        var state = prevStone.colorState;
-        stone.cloneHandlers(prevStone);
-        stone.draw();
-        stone.setColor(state);
-        this.stoneMap[ptHash].destroy();
-      } else {
-        stone.draw();
-      }
-
-      newStoneMap[ptHash] = stone;
-    }
-    this.stoneMap = newStoneMap;
-    return this;
-  },
-
-  redraw: function() {
-    return this.draw();
-  },
-
-  // Set handlers for all the stones.
-  setClickHandler: function(fn) { return this._handler('clickHandler', fn); },
-  setHoverInHandler: function(fn) { return this._handler('hoverInHandler', fn); },
-  setHoverOutHandler: function(fn) { return this._handler('hoverOutHandler', fn); },
-
-  _handler: function(key, fn) {
-    for (var ptHash in this.stoneMap) {
-      var stone = this.stoneMap[ptHash];
-      stone[key] = fn;
-    }
-    return this;
-  },
-
-  forceClick: function(pt) { this.stoneMap[pt.hash()].bboxClick(); },
-  forceHoverIn: function(pt) { this.stoneMap[pt.hash()].bboxHoverIn(); },
-  forceHoverOut: function(pt) { this.stoneMap[pt.hash()].bboxHoverOut(); },
-
-  setColor: function(point, key) {
-    var stone = this.stoneMap[point.hash()];
-    if (stone === undefined) {
-      throw "Could not find stone for point: " + point.toString();
-    }
-    stone.setColor(key);
-    return this;
-  },
-
-  // Destroy is extremely slow.
-  destroy: function() {
-    for (var ptHash in this.stoneMap) {
-      this.stoneMap[ptHash].destroy();
-    }
-    this.stoneMap = {};
+/**
+ * Extra GUI methods and data.
+ */
+glift.displays.gui = {};
+/**
+ * Return pair of
+ *  {
+ *    transforms: [...]
+ *    bboxes: [...]
+ *  }
+ */
+glift.displays.gui.rowCenter = function(
+    outerBox, inBboxes, vertMargin, horzMargin, minSpacing, maxSpacing) {
+  var outerWidth = outerBox.width(),
+      innerWidth = outerWidth - 2 * horzMargin,
+      outerHeight = outerBox.height(),
+      innerHeight = outerHeight - 2 * vertMargin,
+      transforms = [],
+      newBboxes = [],
+      elemWidth = 0;
+  if (maxSpacing <= 0) {
+    maxSpacing = 10000000; // some arbitrarily large number
   }
 
-  // TODO(kashomon): Add drawing marks on top of the stones.
+  // Adjust all the bboxes so that they are the right height.
+  for (var i = 0; i < inBboxes.length; i++) {
+    var bbox = inBboxes[i];
+    var vscale = innerHeight / bbox.height();
+    var partialTransform = { xScale: vscale, yScale: vscale };
+    var newBbox = bbox.fixedScale(vscale);
+    transforms.push(partialTransform);
+    newBboxes.push(newBbox);
+    elemWidth += newBbox.width() + minSpacing;
+  }
+
+  // We don't need the final minSpacing, so subtract off.
+  elemWidth -= minSpacing
+
+  // Remove elements that don't fit.
+  var unfitTransforms = [];
+  while (innerWidth < elemWidth) {
+    var rightMostBox = newBboxes.pop();
+    var transform = transforms.pop();
+    elemWidth -= rightMostBox.width() + minSpacing;
+    unfitTransforms.push(transform);
+  }
+
+  // Find how much space to use for which parts
+  var extraSpace = innerWidth - elemWidth;
+  var extraSpacing = extraSpace / (transforms.length + 1);
+  var elementSpacing = extraSpacing;
+  var extraMargin = extraSpacing;
+  if (extraSpacing > maxSpacing) {
+    elementSpacing = maxSpacing;
+    var totalExtraMargin = extraSpace -
+        elementSpacing * (transforms.length - 1);
+    extraMargin = totalExtraMargin / 2;
+  }
+  var left = outerBox.left() + horzMargin + extraMargin;
+  var top = outerBox.top() + vertMargin;
+
+  // Find the x and y translates.
+  var finishedBoxes = []
+  for (var i = 0; i < newBboxes.length; i++) {
+    var newBbox = newBboxes[i];
+    var partialTransform = transforms[i];
+    var yTranslate = top - newBbox.top();
+    var xTranslate = left - newBbox.left();
+    partialTransform.xMove = xTranslate;
+    partialTransform.yMove = yTranslate;
+    finishedBoxes.push(newBbox.translate(xTranslate, yTranslate));
+    left += newBbox.width() + elementSpacing;
+  }
+
+  return { transforms: transforms, bboxes: finishedBoxes };
+};
+/**
+ * Icons taken from: http://raphaeljs.com/icons
+ *
+ * The bounding boxes are precalculated by running BboxFinder.html
+ */
+glift.displays.gui.icons = {
+   // http://raphaeljs.com/icons/#cross
+  cross: function() {
+    return {
+      string: "M24.778,21.419 19.276,15.917 24.777,10.415 21.949,7.585 16.447,13.087 10.945,7.585 8.117,10.415 13.618,15.917 8.116,21.419 10.946,24.248 16.447,18.746 21.948,24.248z",
+      "x":8.116,
+      "y":7.585,
+      "x2":24.778,
+      "y2":24.248,
+      "width":16.662,
+      "height":16.663
+    };
+  },
+
+  // http://raphaeljs.com/icons/#check
+  check: function() {
+    return {
+      string: "M2.379,14.729 5.208,11.899 12.958,19.648 25.877,6.733 28.707,9.561 12.958,25.308z",
+      "x":2.379,
+      "y":6.733,
+      "x2":28.707,
+      "y2":25.308,
+      "width":26.328,
+      "height":18.575
+    };
+  },
+
+  // http://raphaeljs.com/icons/#refresh
+  refresh: function() {
+    return {
+      string: "M24.083,15.5c-0.009,4.739-3.844,8.574-8.583,8.583c-4.741-0.009-8.577-3.844-8.585-8.583c0.008-4.741,3.844-8.577,8.585-8.585c1.913,0,3.665,0.629,5.09,1.686l-1.782,1.783l8.429,2.256l-2.26-8.427l-1.89,1.89c-2.072-1.677-4.717-2.688-7.587-2.688C8.826,3.418,3.418,8.826,3.416,15.5C3.418,22.175,8.826,27.583,15.5,27.583S27.583,22.175,27.583,15.5H24.083z",
+      "x":3.416,
+      "y":3.415,
+      "x2":27.583,
+      "y2":27.583,
+      "width":24.167,
+      "height":24.168
+    };
+  },
+
+  // http://raphaeljs.com/icons/#star3
+  star3on: function() {
+    return {
+      string: "M22.441,28.181c-0.419,0-0.835-0.132-1.189-0.392l-5.751-4.247L9.75,27.789c-0.354,0.26-0.771,0.392-1.189,0.392c-0.412,0-0.824-0.128-1.175-0.384c-0.707-0.511-1-1.422-0.723-2.25l2.26-6.783l-5.815-4.158c-0.71-0.509-1.009-1.416-0.74-2.246c0.268-0.826,1.037-1.382,1.904-1.382c0.004,0,0.01,0,0.014,0l7.15,0.056l2.157-6.816c0.262-0.831,1.035-1.397,1.906-1.397s1.645,0.566,1.906,1.397l2.155,6.816l7.15-0.056c0.004,0,0.01,0,0.015,0c0.867,0,1.636,0.556,1.903,1.382c0.271,0.831-0.028,1.737-0.739,2.246l-5.815,4.158l2.263,6.783c0.276,0.826-0.017,1.737-0.721,2.25C23.268,28.053,22.854,28.181,22.441,28.181L22.441,28.181z",
+      "x":2.27025872,
+      "y":2.821,
+      "x2":28.7268678,
+      "y2":28.181,
+      "width":26.45660907,
+      "height":25.36
+    };
+  },
+
+  // http://raphaeljs.com/icons/#star3off
+  star3off: function() {
+    return {
+      string: "M28.631,12.359c-0.268-0.826-1.036-1.382-1.903-1.382h-0.015l-7.15,0.056l-2.155-6.816c-0.262-0.831-1.035-1.397-1.906-1.397s-1.645,0.566-1.906,1.397l-2.157,6.816l-7.15-0.056H4.273c-0.868,0-1.636,0.556-1.904,1.382c-0.27,0.831,0.029,1.737,0.74,2.246l5.815,4.158l-2.26,6.783c-0.276,0.828,0.017,1.739,0.723,2.25c0.351,0.256,0.763,0.384,1.175,0.384c0.418,0,0.834-0.132,1.189-0.392l5.751-4.247l5.751,4.247c0.354,0.26,0.771,0.392,1.189,0.392c0.412,0,0.826-0.128,1.177-0.384c0.704-0.513,0.997-1.424,0.721-2.25l-2.263-6.783l5.815-4.158C28.603,14.097,28.901,13.19,28.631,12.359zM19.712,17.996l2.729,8.184l-6.94-5.125L8.56,26.18l2.729-8.184l-7.019-5.018l8.627,0.066L15.5,4.82l2.603,8.225l8.627-0.066L19.712,17.996z",
+      "x":2.27070338,
+      "y":2.82,
+      "x2":28.72944822,
+      "y2":28.18,
+      "width":26.45874494,
+      "height":25.36
+    };
+  },
+
+  // http://raphaeljs.com/icons/#arrowright2
+  'chevron-right': function() {
+    return {
+      string: "M10.129,22.186 16.316,15.999 10.129,9.812 13.665,6.276 23.389,15.999 13.665,25.725z",
+      "x":10.129,
+      "y":6.276,
+      "x2":23.389,
+      "y2":25.725,
+      "width":13.26,
+      "height":19.449
+    };
+  },
+
+  // http://raphaeljs.com/icons/#arrowleft2
+  'chevron-left': function() {
+    return {
+      string: "M21.871,9.814 15.684,16.001 21.871,22.188 18.335,25.725 8.612,16.001 18.335,6.276z",
+      "x":8.612,"y":6.276,"x2":21.871,"y2":25.725,"width":13.259,"height":19.449
+    };
+  },
+
+  // http://raphaeljs.com/icons/#smallgear
+  'small-gear': function() {
+    return {
+      string: "M31.229,17.736c0.064-0.571,0.104-1.148,0.104-1.736s-0.04-1.166-0.104-1.737l-4.377-1.557c-0.218-0.716-0.504-1.401-0.851-2.05l1.993-4.192c-0.725-0.91-1.549-1.734-2.458-2.459l-4.193,1.994c-0.647-0.347-1.334-0.632-2.049-0.849l-1.558-4.378C17.165,0.708,16.588,0.667,16,0.667s-1.166,0.041-1.737,0.105L12.707,5.15c-0.716,0.217-1.401,0.502-2.05,0.849L6.464,4.005C5.554,4.73,4.73,5.554,4.005,6.464l1.994,4.192c-0.347,0.648-0.632,1.334-0.849,2.05l-4.378,1.557C0.708,14.834,0.667,15.412,0.667,16s0.041,1.165,0.105,1.736l4.378,1.558c0.217,0.715,0.502,1.401,0.849,2.049l-1.994,4.193c0.725,0.909,1.549,1.733,2.459,2.458l4.192-1.993c0.648,0.347,1.334,0.633,2.05,0.851l1.557,4.377c0.571,0.064,1.148,0.104,1.737,0.104c0.588,0,1.165-0.04,1.736-0.104l1.558-4.377c0.715-0.218,1.399-0.504,2.049-0.851l4.193,1.993c0.909-0.725,1.733-1.549,2.458-2.458l-1.993-4.193c0.347-0.647,0.633-1.334,0.851-2.049L31.229,17.736zM16,20.871c-2.69,0-4.872-2.182-4.872-4.871c0-2.69,2.182-4.872,4.872-4.872c2.689,0,4.871,2.182,4.871,4.872C20.871,18.689,18.689,20.871,16,20.871z",
+      "x":0.667,"y":0.667,"x2":31.333,"y2":31.333,"width":30.666,"height":30.666
+    };
+  },
+
+  // http://raphaeljs.com/icons/#?2
+  'question-box': function() {
+    return {
+      string: "M26.711,14.086L16.914,4.29c-0.778-0.778-2.051-0.778-2.829,0L4.29,14.086c-0.778,0.778-0.778,2.05,0,2.829l9.796,9.796c0.778,0.777,2.051,0.777,2.829,0l9.797-9.797C27.488,16.136,27.488,14.864,26.711,14.086zM16.431,21.799c-0.248,0.241-0.543,0.362-0.885,0.362c-0.343,0-0.638-0.121-0.886-0.362c-0.247-0.241-0.371-0.533-0.371-0.876s0.124-0.638,0.371-0.885c0.248-0.248,0.543-0.372,0.886-0.372c0.342,0,0.637,0.124,0.885,0.372c0.248,0.247,0.371,0.542,0.371,0.885S16.679,21.558,16.431,21.799zM18.911,15.198c-0.721,0.716-1.712,1.147-2.972,1.294v2.027h-0.844v-3.476c0.386-0.03,0.768-0.093,1.146-0.188c0.38-0.095,0.719-0.25,1.019-0.464c0.312-0.227,0.555-0.5,0.729-0.822c0.174-0.322,0.261-0.77,0.261-1.346c0-0.918-0.194-1.623-0.582-2.113c-0.389-0.49-0.956-0.735-1.701-0.735c-0.281,0-0.527,0.042-0.738,0.124s-0.366,0.16-0.464,0.234c0.031,0.146,0.072,0.357,0.124,0.633c0.052,0.275,0.078,0.486,0.078,0.633c0,0.226-0.098,0.433-0.294,0.619c-0.195,0.187-0.479,0.28-0.853,0.28c-0.33,0-0.565-0.113-0.706-0.339s-0.211-0.489-0.211-0.789c0-0.244,0.067-0.484,0.201-0.72c0.135-0.235,0.346-0.463,0.633-0.684c0.245-0.195,0.577-0.364,0.995-0.504c0.419-0.141,0.854-0.211,1.308-0.211c0.647,0,1.223,0.103,1.724,0.308c0.502,0.205,0.914,0.479,1.238,0.822c0.337,0.355,0.586,0.755,0.748,1.198c0.162,0.444,0.243,0.926,0.243,1.446C19.994,13.558,19.633,14.482,18.911,15.198z",
+      "x":3.7065,"y":3.7065,"x2":27.293875,"y2":27.293750,"width":23.587375,"height":23.58725
+    };
+  },
+
+  // http://raphaeljs.com/icons/#talke
+  'question-bubble': function() {
+    return {
+      string: "M16,4.938c-7.732,0-14,4.701-14,10.5c0,1.981,0.741,3.833,2.016,5.414L2,25.272l5.613-1.44c2.339,1.316,5.237,2.106,8.387,2.106c7.732,0,14-4.701,14-10.5S23.732,4.938,16,4.938zM16.982,21.375h-1.969v-1.889h1.969V21.375zM16.982,17.469v0.625h-1.969v-0.769c0-2.321,2.641-2.689,2.641-4.337c0-0.752-0.672-1.329-1.553-1.329c-0.912,0-1.713,0.672-1.713,0.672l-1.12-1.393c0,0,1.104-1.153,3.009-1.153c1.81,0,3.49,1.121,3.49,3.009C19.768,15.437,16.982,15.741,16.982,17.469z",
+      "x":2,"y":4.938,"x2":30,"y2":25.938,"width":28,"height":21
+    };
+  },
+
+  // http://raphaeljs.com/icons/#roadmap
+  roadmap: function() {
+    return {
+      string: "M23.188,3.735c0-0.975-0.789-1.766-1.766-1.766s-1.766,0.791-1.766,1.766s1.766,4.267,1.766,4.267S23.188,4.71,23.188,3.735zM20.578,3.734c0-0.466,0.378-0.843,0.844-0.843c0.467,0,0.844,0.377,0.844,0.844c0,0.466-0.377,0.843-0.844,0.843C20.956,4.578,20.578,4.201,20.578,3.734zM25.281,18.496c-0.562,0-1.098,0.046-1.592,0.122L11.1,13.976c0.199-0.181,0.312-0.38,0.312-0.59c0-0.108-0.033-0.213-0.088-0.315l8.41-2.239c0.459,0.137,1.023,0.221,1.646,0.221c1.521,0,2.75-0.485,2.75-1.083c0-0.599-1.229-1.083-2.75-1.083s-2.75,0.485-2.75,1.083c0,0.069,0.021,0.137,0.054,0.202L9.896,12.2c-0.633-0.188-1.411-0.303-2.265-0.303c-2.088,0-3.781,0.667-3.781,1.49c0,0.823,1.693,1.489,3.781,1.489c0.573,0,1.11-0.054,1.597-0.144l11.99,4.866c-0.19,0.192-0.306,0.401-0.306,0.623c0,0.188,0.096,0.363,0.236,0.532L8.695,25.415c-0.158-0.005-0.316-0.011-0.477-0.011c-3.241,0-5.87,1.037-5.87,2.312c0,1.276,2.629,2.312,5.87,2.312c3.241,0,5.87-1.034,5.87-2.312c0-0.22-0.083-0.432-0.229-0.633l10.265-5.214c0.37,0.04,0.753,0.066,1.155,0.066c2.414,0,4.371-0.771,4.371-1.723C29.65,19.268,27.693,18.496,25.281,18.496z",
+      "x":2.348,"y":1.969,"x2":29.65,"y2":30.028,"width":27.302,"height":28.059
+    };
+  }
+};
+/**
+ * Get Raphael Bboxes.
+ * TODO(kashomon): Remove this now that we're using D3.
+ */
+glift.displays.gui.getRaphaelBboxes = function(robjects) {
+  var outBboxes = [];
+  for (var i = 0; i < robjects.length; i++) {
+    outBboxes.push(robjects[i].getBBox());
+  }
+  return outBboxes;
 };
 
-})();
+/**
+ * Apply a set of transforms to a Raphael object.
+ * TODO(kashomon): Remove this now that we're using D3.
+ */
+glift.displays.gui.applyTransforms = function(transforms, robjects) {
+  for (var i = 0; i < transforms.length; i++) {
+    var obj = robjects[i];
+    obj.transform(glift.displays.gui.scaleAndMove(
+        obj.getBBox(), transforms[i]));
+  }
+};
+
+/**
+ * Get the scaling string based on the raphael bbox and the scaling object.
+ * This scales the object, with the scale centered at the top left.
+ *
+ * The scaleObject looks like the following:
+ *  {
+ *    xScale: num,
+ *    yScale: num,
+ *    xMove: num,
+ *    yMove
+ *  }
+ */
+glift.displays.gui.scaleAndMove = function(objBbox, scaleObj) {
+  return 's' + scaleObj.xScale + ',' + scaleObj.yScale +
+      ',' + objBbox.x + ',' + objBbox.y +
+      'T' + scaleObj.xMove + ',' + scaleObj.yMove;
+};
 glift.rules = {};
 (function(){
 var util = glift.util;
 
 glift.rules.goban = {
+  /**
+   * Create a Goban instance, just with intersections.
+   */
   getInstance: function(intersections) {
     var ints = intersections || 19;
     return new Goban(ints);
@@ -1814,19 +2288,21 @@ glift.rules.goban = {
   }
 };
 
-// Goban tracks the state of the stones.
-//
-// Note that, for our purposes,
-// x: refers to the column.
-// y: refers to the row.
-//
-// Thus, to get a particular "stone" you must do
-// stones[y][x]. Also, stones are 0-indexed.
-//
-// 0,0    : Upper Left
-// 0,19   : Lower Left
-// 19,0   : Upper Right
-// 19,19  : Lower Right
+/**
+ * The Goban tracks the state of the stones.
+ *
+ * Note that, for our purposes,
+ * x: refers to the column.
+ * y: refers to the row.
+ *
+ * Thus, to get a particular "stone" you must do
+ * stones[y][x]. Also, stones are 0-indexed.
+ *
+ * 0,0    : Upper Left
+ * 0,19   : Lower Left
+ * 19,0   : Upper Right
+ * 19,19  : Lower Right
+ */
 var Goban = function(ints) {
   if (ints <= 0) throw "Intersections must be greater than 0";
   this.ints = ints;
@@ -2095,9 +2571,9 @@ var enums = glift.enums;
  *
  *   {
  *     points: [
- *       pthash: {STONE: "BLACK" , TRIANGLE: true, point: pt},
- *       pthash: {STONE: "WHITE", point: pt},
- *       pthash: {LETTER: "A", point: pt}
+ *       pthash: {stone: "BLACK" , TRIANGLE: true, point: pt},
+ *       pthash: {stone: "WHITE", point: pt},
+ *       pthash: {LABEL: "A", point: pt}
  *     ],
  *     comment: "This is a good move",
  *   }
@@ -2110,7 +2586,7 @@ var enums = glift.enums;
 glift.rules.intersections = {
   propertiesToMarks: {
     CR: enums.marks.CIRCLE,
-    LB: enums.marks.LETTER,
+    LB: enums.marks.LABEL,
     MA: enums.marks.XMARK,
     SQ: enums.marks.SQUARE,
     TR: enums.marks.TRIANGLE
@@ -2122,7 +2598,7 @@ glift.rules.intersections = {
    *    points: {
    *      "1,2" : {
    *        point: {1, 2},
-   *        STONE: "WHITE"
+   *        stone: "WHITE"
    *      }
    *      ... etc ...
    *    }
@@ -2137,8 +2613,8 @@ glift.rules.intersections = {
     for (var i = 0; i < gobanStones.length; i++) {
       var pt = gobanStones[i].point;
       var sobj = {};
-      sobj["point"] = pt;
-      sobj[enums.marks.STONE] = gobanStones[i].color;
+      sobj.point = pt;
+      sobj.stone = gobanStones[i].color;
       pointsObj[pt.hash()] = sobj;
     }
 
@@ -4090,12 +4566,6 @@ BaseController.prototype = {
 };
 })();
 glift.controllers.processOptions = function(rawOptions) {
-  var ControllerOptionError = function(message) {
-    this.name = "DisplayOptionError";
-    this.message = message;
-  };
-  ControllerOptionError.prototype = new Error();
-
   // Default options
   var defaults = {
     // intersections: 19, -- intersections is not necessary, since it's set via
@@ -4113,7 +4583,7 @@ glift.controllers.processOptions = function(rawOptions) {
             value in glift.enums.controllerTypes) {
           defaults.controllerType = value;
         } else {
-          throw new ControllerOptionError("Unknown controllerType: " + value);
+          throw "Unknown controllerType: " + value;
         }
         break;
 
@@ -4126,12 +4596,12 @@ glift.controllers.processOptions = function(rawOptions) {
         if (glift.util.typeOf(value) === 'string') {
           defaults.sgfString = value;
         } else {
-          throw new ControllerOptionError("Bad type for sgfString: " + value);
+          throw "Bad type for sgfString: " + value;
         }
         break;
 
       default:
-        glift.util.logz("Unknown option key: " + key);
+        // Don't do anything.  This is really convenient for widgets.
     }
   }
   return defaults;
@@ -4247,12 +4717,22 @@ glift.bridge = {
    */
   setDisplayState: function(intersectionData, display) {
     var marks = glift.enums.marks;
+    display.intersections().clearMarks();
     for (var ptHash in intersectionData.points) {
       var intersection = intersectionData.points[ptHash];
-      if (marks.STONE in intersection) {
-        var color = intersection[marks.STONE];
-        var pt = intersection.point;
-        display.setColor(pt, color);
+      var pt = intersection.point;
+      if ('stone' in intersection) {
+        var color = intersection.stone;
+        display.intersections().setStoneColor(pt, color);
+      }
+      for (var mark in marks) {
+        if (mark in intersection) {
+          if (mark === marks.LABEL) {
+            display.intersections().addMarkPt(pt, mark, intersection[mark]);
+          } else {
+            display.intersections().addMarkPt(pt, mark);
+          }
+        }
       }
     }
   }
@@ -4317,3 +4797,287 @@ glift.bridge._getRegionFromTracker = function(tracker, numstones) {
   }
   return glift.boardRegions.ALL;
 };
+// Widgets are toplevel objects, which combine display and
+// controller/rules bits together.
+glift.widgets = {};
+glift.widgets.basicProblem = function(options) {
+  var displayTypes = glift.enums.displayTypes;
+  var boardRegions = glift.enums.boardRegions;
+  var point = glift.util.point;
+  var divId = options.divId;
+  var display = glift.createDisplay(options);
+
+  options.controllerType = "STATIC_PROBLEM_STUDY";
+  var controller = glift.createController(options);
+  var cropping = glift.bridge.getFromMovetree(controller.movetree);
+  glift.bridge.setDisplayState(controller.getEntireBoardState(), display);
+  return new glift.widgets._BasicProblem(display, controller);
+};
+
+// Basic problem function object.  Meant to be private;
+glift.widgets._BasicProblem = function(display, controller) {
+  this.display = display;
+  this.controller = controller;
+
+  var hoverColors = {
+    "BLACK": "BLACK_HOVER",
+    "WHITE": "WHITE_HOVER"
+  };
+
+  display.intersections().setEvent('click', function(pt) {
+    var currentPlayer = controller.getCurrentPlayer();
+    var data = controller.addStone(pt, currentPlayer);
+    $('#extra_info').text(data.message + '//' + (data.result || ''));
+    if (data.data !== undefined) {
+      glift.bridge.setDisplayState(data.data, display);
+    }
+  });
+
+  display.intersections().setEvent('mouseover', function(pt) {
+    var currentPlayer = controller.getCurrentPlayer();
+    if (controller.canAddStone(pt, currentPlayer)) {
+      display.intersections().setStoneColor(pt, hoverColors[currentPlayer]);
+    }
+  });
+
+  display.intersections().setEvent('mouseout', function(pt) {
+    var currentPlayer = controller.getCurrentPlayer();
+    if (controller.canAddStone(pt, currentPlayer)) {
+      display.intersections().setStoneColor(pt, 'EMPTY');
+    }
+  });
+};
+
+glift.widgets._BasicProblem.prototype = {
+  redraw: function() {
+    this.display.redraw();
+  },
+
+  destroy: function() {
+    this.display.destroy();
+  },
+
+  /**
+   * Enable auto-resizing.  This completely destroys and recreates the goboard.
+   * However, this
+   *
+   * TODO(kashomon): Does this need to be reworked for d3? Also, need to provide
+   * a way to turn enableAutoResizing off.
+   */
+  enableAutoResizing: function() {
+    var that = this; // for closing over.
+    var resizeFunc = function() {
+      that.redraw();
+    };
+
+    var timeoutId;
+    $(window).resize(function(event) {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(resizeFunc, 100);
+    });
+  }
+};
+(function() {
+/**
+ * Options:
+ *    - divId (if need to create paper)
+ *    - paper (if div already created)
+ *    - bounding box (if paper already created)
+ *    - icons (an array of icon names)
+ *    - vertMargin (in pixels)
+ *    - theme (default: DEFAULT)
+ */
+glift.widgets.iconBar = function(options) {
+  var paper = undefined,
+      boundingBox = undefined,
+      icons = [],
+      vertMargin = 0,
+      horzMargin = 0,
+      theme = 'DEFAULT';
+  // TODO(kashomon): Replace this hackiness with legitimate options code.  Much
+  // better to keep this code from getting WETter ;).
+  if (options.divId !== undefined) {
+    throw "Must define 'divId' as an option"
+  }
+
+  if (options.icons !== undefined) {
+    icons = options.icons;
+  }
+
+  if (options.vertMargin !== undefined) {
+    vertMargin = options.vertMargin;
+  }
+
+  if (options.horzMargin !== undefined) {
+    horzMargin = options.horzMargin;
+  }
+
+  if (options.theme !== undefined) {
+    this.theme = options.theme;
+  }
+
+  for (var i = 0; i < icons.length; i++) {
+    if (glift.displays.gui.icons[icons[i]] === undefined) {
+      throw "Icon string undefined in glift.displays.gui.icons [" +
+          icons[i] + "]";
+    }
+  }
+
+  return new IconBar(divId, boundingBox, theme, icons, vertMargin, horzMargin)
+      .draw();
+};
+
+var IconBar = function(
+    divId, boundingBox, themeName, iconNames, vertMargin, horzMargin) {
+  this.divId = divId;
+  this.boundingBox = boundingBox;
+  this.themeName = themeName;
+  this.subTheme = glift.themes.get(themeName).icons;
+  this.iconNames = iconNames;
+  this.vertMargin = vertMargin;
+  this.horzMargin = horzMargin;
+  this.iconObjects = {}; // init'd by draw
+  this.iconButtons = {}; // init'd by draw
+};
+
+IconBar.prototype = {
+  draw: function() {
+    var gui = glift.displays.gui,
+        bboxes = [];
+    for (var i = 0; i < this.iconNames.length; i++) {
+      var name = this.iconNames[i];
+      var iconString = gui.icons[name];
+      if (this.subTheme[name] !== undefined) {
+        obj.attr(this.subTheme[name]);
+      } else {
+        obj.attr(this.subTheme['DEFAULT']);
+      }
+      this.iconObjects[name] = obj;
+      raphObjects.push(obj);
+    }
+    var bboxes = raph.getBboxes(raphObjects);
+    var transforms = raph.rowCenter(
+        this.boundingBox, bboxes, this.vertMargin, this.horzMargin, 0, 0).transforms;
+    raph.applyTransforms(transforms, raphObjects);
+
+    // Create the buttons (without handlers.
+    for (var key in this.iconObjects) {
+      this.iconButtons[key] = glift.displays.raphael.button(
+          this.paper, {name: name}, this.iconObjects[key]);
+    }
+    return this;
+  },
+
+  setHover: function(name, hoverin, hoverout) {
+    this.iconButtons[name].setMouseOver(hoverin).setMouseOut(hoverout);
+  },
+
+  setClick: function(name, mouseDown, mouseUp) {
+    this.iconButtons[name].setClick(mouseDown, mouseUp);
+  },
+
+  getIcon: function(name) {
+    return {
+      name: name,
+      obj: this.iconObjects[name],
+      button: this.iconButtons[name]
+    };
+  },
+
+  forEachIcon: function(func) {
+    for (var i = 0; i < this.iconNames.length; i++) {
+      func(this.getIcon(this.iconNames[i]));
+    }
+  },
+
+  redraw: function() {
+    this.destroy();
+    this.draw();
+  },
+
+  destroy: function() {
+    this.forEachIcon(function(icon) {
+      icon.obj.remove();
+      icon.button.destroy(); // Destroys handlers also.
+    });
+    this.iconObjects = {};
+    this.iconButtons = {};
+    return this;
+  }
+};
+
+})();
+(function() {
+glift.widgets.problemSeries = function(options) {
+  var divId = '' + (options.divId || 'glift_display');
+  var main = 'glift_internal_main_' + glift.util.idGenerator.next();
+  var footer = 'glift_internal_footer_' + glift.util.idGenerator.next();
+  options.divId = main;
+  var series = new ProblemSeries(options, divId, main, footer);
+  return series;
+};
+
+ProblemSeries = function(
+    options, wrapperDiv, mainDiv, footerDiv) {
+  this.options = options;
+  this.wrapperDiv = wrapperDiv;
+  this.mainDiv = mainDiv;
+  this.footerDiv = footerDiv;
+  this.problemDisplay = undefined;
+  this.iconBar = undefined;
+  this.draw();
+};
+
+ProblemSeries.prototype = {
+  draw: function() {
+    this.createDivs();
+    this.resizeDivs();
+    this.problemDisplay = glift.widgets.basicProblem(this.options);
+    var margin = ($('#' +  this.mainDiv).width() -
+        this.problemDisplay.display.width()) / 2;
+    this.iconBar = glift.widgets.iconBar({
+      divId: this.footerDiv,
+      vertMargin:  5,
+      horzMargin: margin,
+      icons:  ['chevron-left', 'refresh', 'chevron-right', 'roadmap',
+          'small-gear']
+    });
+  },
+
+  createDivs: function() {
+    $('#' + this.wrapperDiv).append('<div id = "' + this.mainDiv + '"></div>');
+    $('#' + this.wrapperDiv).append('<div id = "' + this.footerDiv + '"></div>');
+    return this;
+  },
+
+  resizeDivs: function() {
+    var height = $('#' + this.wrapperDiv).height();
+    $('#' + this.mainDiv).css({
+        position: 'absolute',
+        width: '100%',
+        height: (height - 50),
+        top: 0
+    });
+    $('#' + this.footerDiv).css({
+        'position' : 'absolute',
+        'width' : '100%',
+        'height' : 50,
+        'text-align': 'center',
+        'bottom' : 0
+    });
+    return this;
+  },
+
+  redraw: function() {
+    this.destroy();
+    this.draw();
+  },
+
+  destroy: function() {
+    this.problemDisplay && this.problemDisplay.destroy();
+    this.iconBar && this.iconBar.destroy();
+    $('#' + this.wrapperDiv).empty();
+    return this;
+  }
+};
+})();

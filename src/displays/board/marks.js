@@ -107,13 +107,14 @@ glift.displays.board.addMark = function(
         .attr('class', MARK)
         .attr('stroke', marksTheme.stroke);
   } else if (mark == marks.STONE_MARKER) {
+    var stoneMarkerTheme = theme.stones.marks['STONE_MARKER'];
     svg.select('.' + MARK_CONTAINER).append('circle')
         .attr('cx', coordPt.x())
         .attr('cy', coordPt.y())
         .attr('r', boardPoints.radius / 3)
         .attr('class', MARK)
-        .attr('opacity', 0.6)
-        .attr('fill', 'blue');
+        .attr('opacity', stoneMarkerTheme.opacity)
+        .attr('fill', stoneMarkerTheme.fill);
   } else if (mark === marks.TRIANGLE) {
     var r = boardPoints.radius - fudge;
     var rightNode = coordPt.translate(r * (rootThree / 2), r * (1 / 2));

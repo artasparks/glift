@@ -6,9 +6,9 @@ glift.themes = {
     var registered = glift.themes.registered;
     var rawTheme = !(id in registered) ? glift.util.none : registered[id];
 
-    // Perform the DeepCopy
-    var themeCopy = jQuery.extend(true, {}, rawTheme);
-    return themeCopy;
+    // TODO(kashomon): Copy the default theme values over when the theme keys
+    // don't exist.
+    return rawTheme;
   },
 
   // Accepts a (case sensitive) theme ID and true if the theme exists and false

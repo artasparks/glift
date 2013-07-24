@@ -1,41 +1,24 @@
 /**
- * Get Raphael Bboxes.
- * TODO(kashomon): Remove this now that we're using D3.
- */
-glift.displays.gui.getRaphaelBboxes = function(robjects) {
-  var outBboxes = [];
-  for (var i = 0; i < robjects.length; i++) {
-    outBboxes.push(robjects[i].getBBox());
-  }
-  return outBboxes;
-};
-
-/**
- * Apply a set of transforms to a Raphael object.
- * TODO(kashomon): Remove this now that we're using D3.
- */
-glift.displays.gui.applyTransforms = function(transforms, robjects) {
-  for (var i = 0; i < transforms.length; i++) {
-    var obj = robjects[i];
-    obj.transform(glift.displays.gui.scaleAndMove(
-        obj.getBBox(), transforms[i]));
-  }
-};
-
-/**
  * Get the scaling string based on the raphael bbox and the scaling object.
  * This scales the object, with the scale centered at the top left.
  *
+ * The arguments ar a scaling object and an object bounding box.
+ *
+ * The Bounding Box is the original bounding box.  It's used to specify the
+ * center of the scale operation.
+ *
  * The scaleObject looks like the following:
  *  {
- *    xScale: num,
- *    yScale: num,
+ *    scale: num,
  *    xMove: num,
- *    yMove
+ *    yMove: num
  *  }
+ *
+ * Returned is the transformation string. To apply, one only needs to set the
+ * transform attribute on the SVG element, e.g.,
+ *    d3.select('foo').attr('transform', transformString);
  */
-glift.displays.gui.scaleAndMove = function(objBbox, scaleObj) {
-  return 's' + scaleObj.xScale + ',' + scaleObj.yScale +
-      ',' + objBbox.x + ',' + objBbox.y +
-      'T' + scaleObj.xMove + ',' + scaleObj.yMove;
+glift.displays.gui.scaleAndMoveString = function(objBbox, scaleObj) {
+  return 'translate(' + scaleObj.xMove + ',' + scaleObj.yMove + ') ' +
+    'scale(' + scaleObj.scale + ')';
 };

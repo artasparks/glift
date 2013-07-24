@@ -9,20 +9,16 @@
  *    - theme (default: DEFAULT)
  */
 glift.widgets.iconBar = function(options) {
-  var paper = undefined,
-      boundingBox = undefined,
+  var divId = options.divId,
       icons = [],
       vertMargin = 0,
       horzMargin = 0,
-      theme = 'DEFAULT';
+      themeName = 'DEFAULT';
+
   // TODO(kashomon): Replace this hackiness with legitimate options code.  Much
   // better to keep this code from getting WETter ;).
-  if (options.divId !== undefined) {
-    paper = Raphael(options.divId, '100%', '100%');
-    boundingBox = glift.displays.bboxFromDiv(options.divId);
-  } else if (options.paper !== undefined && boundingBox !== undefined) {
-    paper = options.paper;
-    boundingBox = options.boundingBox;
+  if (divId === undefined) {
+    throw "Must define 'divId' as an option"
   }
 
   if (options.icons !== undefined) {
@@ -38,26 +34,23 @@ glift.widgets.iconBar = function(options) {
   }
 
   if (options.theme !== undefined) {
-    this.theme = options.theme;
+    this.themeName = options.theme;
   }
 
   for (var i = 0; i < icons.length; i++) {
-    if (glift.displays.raphael.icons[icons[i]] === undefined) {
-      throw "Icon string undefined in glift.displays.raphael.icons [" +
+    if (glift.displays.gui.icons[icons[i]] === undefined) {
+      throw "Icon string undefined in glift.displays.gui.icons [" +
           icons[i] + "]";
     }
   }
 
-  return new IconBar(paper, boundingBox, theme, icons, vertMargin, horzMargin)
-      .draw();
+  return new IconBar(divId, themeName, icons, vertMargin, horzMargin).draw();
 };
 
-var IconBar = function(
-    paper, boundingBox, themeName, iconNames, vertMargin, horzMargin) {
-  this.paper = paper;
-  this.boundingBox = boundingBox;
+var IconBar = function(divId, themeName, iconNames, vertMargin, horzMargin) {
+  this.divId = divId;
   this.themeName = themeName;
-  this.subTheme = glift.themes.get(themeName).icons;
+  this.theme = glift.themes.get(themeName);
   this.iconNames = iconNames;
   this.vertMargin = vertMargin;
   this.horzMargin = horzMargin;
@@ -67,30 +60,47 @@ var IconBar = function(
 
 IconBar.prototype = {
   draw: function() {
-    var raph = glift.displays.raphael, raphObjects = [];
+    this.destroy();
+    var divBbox = glift.displays.bboxFromDiv(this.divId),
+        svg = d3.select('#' + this.divId).append("svg")
+            // TODO(kashomon): Make height / width directly configurable.
+            .attr("width", '100%')
+            .attr("height", '100%'),
+        gui = glift.displays.gui,
+        iconBboxes = [],
+        iconStrings = [],
+        indicesData = [],
+        point = glift.util.point;
+
     for (var i = 0; i < this.iconNames.length; i++) {
       var name = this.iconNames[i];
-      var iconString = raph.icons[name];
-      var obj = this.paper.path(iconString);
-      if (this.subTheme[name] !== undefined) {
-        obj.attr(this.subTheme[name]);
-      } else {
-        obj.attr(this.subTheme['DEFAULT']);
-      }
-      this.iconObjects[name] = obj;
-      raphObjects.push(obj);
+      var iconData = gui.icons[name];
+      iconStrings.push(iconData.string);
+      iconBboxes.push(glift.displays.bboxFromPts(
+          point(iconData.bbox.x, iconData.bbox.y),
+          point(iconData.bbox.x2, iconData.bbox.y2)));
+      indicesData.push(i);
     }
-    var bboxes = raph.getBboxes(raphObjects);
-    var transforms = raph.rowCenter(
-        this.boundingBox, bboxes, this.vertMargin, this.horzMargin, 0, 0).transforms;
-    raph.applyTransforms(transforms, raphObjects);
 
-    // Create the buttons (without handlers.
-    for (var key in this.iconObjects) {
-      this.iconButtons[key] = glift.displays.raphael.button(
-          this.paper, {name: name}, this.iconObjects[key]);
-    }
+    // Row center returns: { transforms: [...], bboxes: [...] }
+    var centerObj = glift.displays.gui.rowCenter(
+        divBbox, iconBboxes, this.vertMargin, this.horzMargin, 0, 0);
+
+    svg.selectAll('icons').data(indicesData)
+        .enter().append('path')
+            .attr('d', function(i) { return iconStrings[i] })
+            .attr('fill', this.theme.icons['DEFAULT'].fill)
+            .attr('transform', function(i) {
+              return glift.displays.gui.scaleAndMoveString(
+                  centerObj.bboxes[i],
+                  centerObj.transforms[i]);
+            });
+    // TODO(kashomon): Create buttons
     return this;
+  },
+
+  iconId: function(iconName) {
+    return this.divId + '_' + iconName
   },
 
   setHover: function(name, hoverin, hoverout) {
@@ -121,10 +131,7 @@ IconBar.prototype = {
   },
 
   destroy: function() {
-    this.forEachIcon(function(icon) {
-      icon.obj.remove();
-      icon.button.destroy(); // Destroys handlers also.
-    });
+    this.divId && d3.select('#' + this.divId).selectAll("svg").remove();
     this.iconObjects = {};
     this.iconButtons = {};
     return this;

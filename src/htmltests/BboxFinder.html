@@ -16,7 +16,6 @@
 <script type="text/javascript" src="../util/enums.js"></script>
 <script type="text/javascript" src="../util/errors.js"></script>
 <script type="text/javascript" src="../util/id_generator.js"></script>
-<script type="text/javascript" src="../util/logger.js"></script>
 <script type="text/javascript" src="../util/math.js"></script>
 <script type="text/javascript" src="../util/point.js"></script>
 <script type="text/javascript" src="../util/regions.js"></script>
@@ -107,19 +106,18 @@
 <!-- END-AUTO-GEN-DEPS -->
 
 <body>
+<!-- Create a div as a place holder just so we can create a Raphael paper. -->
+<div id="glift_display1">
 <script type="text/javascript">
+
 (function() {
   console.log("foom!");
+  var paper = Raphael('glift_display1', 100, 100);
   for (var key in glift.displays.gui.icons) {
     var pathobj = paper.path(glift.displays.gui.icons[key]);
     var bbox = pathobj.getBBox();
-    console.log(
-        "x: " + bbox.x + ",\n" +
-        "y: " + bbox.y + ",\n" +
-        "x2: " + bbox.x2 + ",\n" +
-        "y2: " + bbox.y2 + ",\n" +
-        "height: " + bbox.y - bbox.y2 + ",\n" +
-        "width: " + bbox.x - bbox.x2);
+    glift.util.logz(key)
+    glift.util.logz(bbox);
   };
 })();
 </script>

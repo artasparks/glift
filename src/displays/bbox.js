@@ -83,12 +83,14 @@ BoundingBox.prototype = {
 
   /**
    * Return a new Bbox with the width and the height scaled by some fraction.
-   * The TopLeft point remains the same.
+   * The TopLeft point is also scaled by the amount.
    */
-  fixedScale: function(amount) {
+  scale: function(amount) {
     var newHeight = this.height() * amount,
-        newWidth = this.width() * amount;
-    return glift.displays.bbox(this.topLeft(), newWidth, newHeight);
+        newWidth = this.width() * amount,
+        newTopLeft = glift.util.point(
+            this.topLeft().x() * amount, this.topLeft().y() * amount);
+    return glift.displays.bbox(newTopLeft, newWidth, newHeight);
   },
 
   toString: function() {

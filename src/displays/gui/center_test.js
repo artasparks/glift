@@ -10,8 +10,7 @@ glift.displays.gui.centerTest = function() {
     var centerInfo = rowCenter(baseBox, [oneBox], 0, 0, 0, 0)
     var transforms = centerInfo.transforms;
     var trans = transforms[0];
-    deepEqual(trans.xScale, 5, 'xscale');
-    deepEqual(trans.yScale, 5, 'yscale');
+    deepEqual(trans.scale, 5, 'xscale');
     deepEqual(trans.xMove, 100, 'xMove');
     deepEqual(trans.yMove, 0, 'yMove');
 
@@ -27,13 +26,11 @@ glift.displays.gui.centerTest = function() {
     var twoBox = bboxFromPts(point(0, 0), point(25, 25));
     var transforms = rowCenter(baseBox, [oneBox, twoBox], 0, 0, 0, 0).transforms;
     var transOne = transforms[0];
-    deepEqual(transOne.xScale, 5, 'xscale');
-    deepEqual(transOne.yScale, 5, 'yscale');
+    deepEqual(transOne.scale, 5, 'xscale');
     deepEqual(transOne.xMove, 50, 'xMove');
     deepEqual(transOne.yMove, 0, 'yMove');
     var transTwo = transforms[1];
-    deepEqual(transTwo.xScale, 2, 'xscale');
-    deepEqual(transTwo.yScale, 2, 'yscale');
+    deepEqual(transTwo.scale, 2, 'xscale');
     deepEqual(transTwo.xMove, 150, 'xMove');
     deepEqual(transTwo.yMove, 0, 'yMove');
   });
@@ -46,18 +43,15 @@ glift.displays.gui.centerTest = function() {
         .transforms;
     var transOne = transforms[0];
     // 250 - 150 = 100; 100 / 4 = 25.
-    deepEqual(transOne.xScale, 5, 'xscale');
-    deepEqual(transOne.yScale, 5, 'yscale');
+    deepEqual(transOne.scale, 5, 'xscale');
     deepEqual(transOne.xMove, 25, 'xMove');
     deepEqual(transOne.yMove, 0, 'yMove');
     var transTwo = transforms[1];
-    deepEqual(transTwo.xScale, 2, 'xscale');
-    deepEqual(transTwo.yScale, 2, 'yscale');
+    deepEqual(transTwo.scale, 2, 'xscale');
     deepEqual(transTwo.xMove, 100, 'xMove');
     deepEqual(transTwo.yMove, 0, 'yMove');
     var transThree = transforms[2];
-    deepEqual(transThree.xScale, 2.5, 'xscale');
-    deepEqual(transThree.yScale, 2.5, 'yscale');
+    deepEqual(transThree.scale, 2.5, 'xscale');
     deepEqual(transThree.xMove, 175, 'xMove');
     deepEqual(transThree.yMove, 0, 'yMove');
   });
@@ -68,12 +62,10 @@ glift.displays.gui.centerTest = function() {
     var transforms = rowCenter(baseBox, [oneBox, twoBox], 5, 0, 0, 0)
         .transforms;
     var transOne = transforms[0];
-    deepEqual(transOne.xScale, 4, 'xscale');
-    deepEqual(transOne.yScale, 4, 'yscale');
+    deepEqual(transOne.scale, 4, 'xscale');
     deepEqual(transOne.yMove, 5, 'yMove');
     var transTwo = transforms[1];
-    deepEqual(transOne.xScale, 4, 'xscale');
-    deepEqual(transOne.yScale, 4, 'yscale');
+    deepEqual(transOne.scale, 4, 'xscale');
     deepEqual(transOne.yMove, 5, 'yMove');
   });
 
@@ -84,14 +76,12 @@ glift.displays.gui.centerTest = function() {
         .transforms;
     var transOne = transforms[0];
     ok(transOne !== undefined, 'transOne');
-    deepEqual(transOne.xScale, 5, 'xscale');
-    deepEqual(transOne.yScale, 5, 'yscale');
+    deepEqual(transOne.scale, 5, 'scale');
     deepEqual(transOne.xMove, 75, 'xMove');
     deepEqual(transOne.yMove, 0, 'yMove');
     var transTwo = transforms[1];
     ok(transTwo !== undefined, 'transTwo');
-    deepEqual(transTwo.xScale, 2, 'xscale t2');
-    deepEqual(transTwo.yScale, 2, 'yscale t2');
+    deepEqual(transTwo.scale, 2, 'scale t2');
     deepEqual(transTwo.xMove, 125, 'yMove t2');
     deepEqual(transOne.yMove, 0, 'xMove t2');
   });
