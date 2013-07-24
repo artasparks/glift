@@ -39,6 +39,7 @@ glift.displays.board._Intersections.prototype = {
       var stoneColor = this.theme.stones[colorKey];
       this.svg.select('#' + this.stoneIds[key])
           .attr('fill', stoneColor.fill)
+          .attr('stroke', stoneColor.stroke)
           .attr('stone_color', colorKey)
           .attr('opacity', stoneColor.opacity);
       if (this.stoneShadowIds[key] !== undefined) {

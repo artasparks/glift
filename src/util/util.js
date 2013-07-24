@@ -16,7 +16,9 @@ glift.util = {
     return new F();
   },
 
-  // Via Crockford / StackOverflow: Determine the type of a value in robust way.
+  /**
+   * Via Crockford / StackOverflow: Determine the type of a value in robust way.
+   */
   typeOf: function(value) {
     var s = typeof value;
     if (s === 'object') {

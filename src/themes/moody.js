@@ -1,9 +1,8 @@
-glift.themes.registered.DEPTH = {
+glift.themes.registered.MOODY = {
+  board: {
+    fill: "#777777"
+  },
   stones: {
-    shadows: {
-      stroke: "none",
-      fill: "#555"
-    },
     "WHITE" : {
       stroke: "white",
       fill: "white"
@@ -14,4 +13,4 @@ glift.themes.registered.DEPTH = {
       opacity: 0.5
     }
   }
-};
+}

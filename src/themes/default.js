@@ -1,3 +1,6 @@
+/**
+ * The base theme.  All possible theme options must be specified here.
+ */
 glift.themes.registered.DEFAULT = {
   board: {
     fill: "#f5be7e",
@@ -14,17 +17,17 @@ glift.themes.registered.DEFAULT = {
   },
 
   stones: {
+    shadows: {
+      stroke: "none",
+      fill: "none"
+    },
+
     marks: {
       'font-family' : 'sans-serif',
       'STONE_MARKER' : {
         fill: 'blue',
         opacity: 0.6
       }
-    },
-
-    shadows: {
-      stroke: "none",
-      fill: "#222"
     },
 
     "EMPTY" : {
@@ -35,6 +38,7 @@ glift.themes.registered.DEFAULT = {
         stroke: 'black'
       }
     },
+
     "BLACK" : {
       fill: "black",
       opacity: 1,
@@ -55,22 +59,34 @@ glift.themes.registered.DEFAULT = {
       opacity: 1,
       "stroke-width": 1, // The default value
       marks: {
-        fill: 'white',
-        stroke: 'white'
+        fill: 'black',
+        stroke: 'black'
       }
     },
     "WHITE_HOVER" : {
       fill: "white",
+      stroke: "black",
       opacity: 0.5
     }
   },
 
+  // TODO(kashomon): Add support for gradients.  This is non-trivial.  It
+  // requires that we attach defs at the beginning of the SVG.  Not hard, but a
+  // little bit of work.
   icons: {
     'DEFAULT' : {
-      fill: "90-#337-#55B"
+      fill: "#0000AA",
+      stroke: 'black'
+      //fill: "90-#337-#55B"
     },
     'DEFAULT_HOVER' : {
-      fill: "90-#337-#55D"
+      fill: 'cyan',
+      stroke: 'black'
+      //fill: "90-#337-#55D"
     }
+  },
+
+  defs: {
+    // TODO(kashomon): Support SVG Defs
   }
 };

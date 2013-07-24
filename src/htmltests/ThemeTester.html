@@ -3,8 +3,8 @@
 
 <title> Theme Tester </title>
 <script type="text/javascript" src="../libs/jquery-1.7.2.min.js"></script>
-<script type="text/javascript" src="../libs/raphael-min.js"></script>
 <script type="text/javascript" src="../testdata/sgfs.js"></script>
+<script type="text/javascript" src="../libs/d3.min.js"></script>
 
 <!-- AUTO-GEN-DEPS -->
 <!-- Otre -->
@@ -23,6 +23,9 @@
 <script type="text/javascript" src="../themes/themes.js"></script>
 <script type="text/javascript" src="../themes/default.js"></script>
 <script type="text/javascript" src="../themes/depth.js"></script>
+<script type="text/javascript" src="../themes/moody.js"></script>
+<script type="text/javascript" src="../themes/textbook.js"></script>
+<script type="text/javascript" src="../themes/transparent.js"></script>
 <!-- Displays -->
 <script type="text/javascript" src="../displays/displays.js"></script>
 <script type="text/javascript" src="../displays/bbox.js"></script>
@@ -117,11 +120,29 @@
         background-size: cover;
       }
       #glift_display1 {
-        position:absolute;
-        top: 50px;
-        bottom: 60px;
-        left: 10px;
-        right: 10px;
+        position:relative;
+        width: 500;
+        height: 500;
+      }
+      #glift_display2 {
+        position:relative;
+        width: 500;
+        height: 500;
+      }
+      #glift_display3 {
+        position:relative;
+        width: 500;
+        height: 500;
+      }
+      #glift_display4 {
+        position:relative;
+        width: 500;
+        height: 500;
+      }
+      #glift_display5 {
+        position:relative;
+        width: 500;
+        height: 500;
       }
     </style>
   </head>
@@ -129,15 +150,38 @@
   <body>
     <div id="gheader"></div>
     <div id="glift_display1"></div>
+    <div id="glift_display2"></div>
+    <div id="glift_display3"></div>
+    <div id="glift_display4"></div>
+    <div id="glift_display5"></div>
     <div id="extra_info"></div>
     <script type="text/javascript">
       var basicProblem = glift.widgets.basicProblem({
         sgfString: testdata.sgfs.complexproblem,
         divId: "glift_display1",
+        theme: "DEFAULT",
+      });
+      var basicProblem2 = glift.widgets.basicProblem({
+        sgfString: testdata.sgfs.complexproblem,
+        divId: "glift_display2",
         theme: "DEPTH",
         goBoardBackground: '../themes/assets/bambootile_warm.jpg'
       });
-      basicProblem.enableAutoResizing();
+      var basicProblem3 = glift.widgets.basicProblem({
+        sgfString: testdata.sgfs.complexproblem,
+        divId: "glift_display3",
+        theme: "TEXTBOOK",
+      });
+      var basicProblem4 = glift.widgets.basicProblem({
+        sgfString: testdata.sgfs.complexproblem,
+        divId: "glift_display4",
+        theme: "MOODY",
+      });
+      var basicProblem5 = glift.widgets.basicProblem({
+        sgfString: testdata.sgfs.complexproblem,
+        divId: "glift_display5",
+        theme: "TRANSPARENT",
+      });
     </script>
   </body>
 </html>
