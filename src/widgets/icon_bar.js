@@ -59,6 +59,9 @@ var IconBar = function(divId, themeName, iconNames, vertMargin, horzMargin) {
 };
 
 IconBar.prototype = {
+  /**
+   * Draw the IconBar!
+   */
   draw: function() {
     this.destroy();
     var divBbox = glift.displays.bboxFromDiv(this.divId),
@@ -86,39 +89,94 @@ IconBar.prototype = {
     var centerObj = glift.displays.gui.rowCenter(
         divBbox, iconBboxes, this.vertMargin, this.horzMargin, 0, 0);
 
+    var that = this;
     svg.selectAll('icons').data(indicesData)
-        .enter().append('path')
-            .attr('d', function(i) { return iconStrings[i] })
-            .attr('fill', this.theme.icons['DEFAULT'].fill)
-            .attr('transform', function(i) {
-              return glift.displays.gui.scaleAndMoveString(
-                  centerObj.bboxes[i],
-                  centerObj.transforms[i]);
-            });
-    // TODO(kashomon): Create buttons
+      .enter().append('path')
+        .attr('d', function(i) { return iconStrings[i]; })
+        .attr('fill', this.theme.icons['DEFAULT'].fill)
+        .attr('id', function(i) { return that.iconId(that.iconNames[i]); })
+        .attr('transform', function(i) {
+          return glift.displays.gui.scaleAndMoveString(
+              centerObj.bboxes[i],
+              centerObj.transforms[i]);
+        });
+
+    var bboxes = centerObj.bboxes;
+    svg.selectAll('buttons').data(indicesData)
+      .enter().append('rect')
+        .attr('x', function(i) { return bboxes[i].topLeft().x(); })
+        .attr('y', function(i) { return bboxes[i].topLeft().y(); })
+        .attr('width', function(i) { return bboxes[i].width(); })
+        .attr('height', function(i) { return bboxes[i].height(); })
+        .attr('fill', 'blue') // doesn't matter the color.
+        .attr('opacity', 0)
+        .attr('_icon', function(i) { return that.iconNames[i]; })
+        .attr('id', function(i) { return that.buttonId(that.iconNames[i]); });
+
     return this;
   },
 
+  /**
+   * Get the Element ID of the Icon.
+   */
   iconId: function(iconName) {
-    return this.divId + '_' + iconName
+    return glift.displays.gui.elementId(
+        this.divId, glift.enums.svgElements.ICON, iconName);
   },
 
+  /**
+   * Get the Element ID of the button.
+   */
+  buttonId: function(iconName) {
+    return glift.displays.gui.elementId(
+        this.divId, glift.enums.svgElements.BUTTON, iconName);
+  },
+
+  /**
+   * Assign an event handler to the icon named with 'iconName'.  Note, that the
+   * function 'func' will always be sent the object resulting from getIcon,
+   * namely,
+   *
+   * {
+   *  name: name of the icon
+   *  iconId: the element id of the icon (for convenience).
+   * }
+   */
+  setEvent: function(event, iconName, func) {
+    var that = this; // not sure if this is necessary
+    d3.select('#' + that.buttonId(iconName))
+      .on(event, function() { func(that.getIcon(iconName)); });
+    return this;
+  },
+
+  /**
+   * Convenience mothod for adding hover events.  Equivalent to adding mouseover
+   * and mouseout.
+   */
   setHover: function(name, hoverin, hoverout) {
-    this.iconButtons[name].setMouseOver(hoverin).setMouseOut(hoverout);
+    this.setEvent('mouseover', name, hoverin);
+    this.setEvent('mouseout', name, hoverout);
   },
 
-  setClick: function(name, mouseDown, mouseUp) {
-    this.iconButtons[name].setClick(mouseDown, mouseUp);
-  },
-
+  /**
+   * Return a simple object containing the
+   *
+   * {
+   *  name: name of the icon
+   *  iconId: the element id of the icon (for convenience)
+   * }
+   */
   getIcon: function(name) {
     return {
       name: name,
-      obj: this.iconObjects[name],
-      button: this.iconButtons[name]
+      iconId: this.iconId(name)
     };
   },
 
+  /**
+   * Convenience method to loop over each icon, primarily for the purpose of
+   * adding events.
+   */
   forEachIcon: function(func) {
     for (var i = 0; i < this.iconNames.length; i++) {
       func(this.getIcon(this.iconNames[i]));

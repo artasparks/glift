@@ -30,17 +30,17 @@ glift.displays.board.addMark = function(
   var rootThree = 1.73205080757;
   var marks = glift.enums.marks;
   var coordPt = boardPoints.getCoord(pt).coordPt;
-  var id = svgutil.elementId(divId, MARK, pt);
-  var stoneColor = svg.select('#' + svgutil.elementId(divId, STONE, pt))
+  var id = glift.displays.gui.elementId(divId, MARK, pt);
+  var stoneColor = svg.select('#' + glift.displays.gui.elementId(divId, STONE, pt))
       .attr('stone_color');
   var marksTheme = theme.stones[stoneColor].marks;
 
   // If necessary, clear out intersections and starpoints.  This only applies
   // to when a stone hasn't yet been set (stoneColor === 'EMPTY').
   if (stoneColor === 'EMPTY' && mark === marks.LABEL) {
-    svg.select('#' + svgutil.elementId(divId, STARPOINT, pt))
+    svg.select('#' + glift.displays.gui.elementId(divId, STARPOINT, pt))
         .attr('opacity', 0);
-    svg.select('#' + svgutil.elementId(divId, BOARD_LINE, pt))
+    svg.select('#' + glift.displays.gui.elementId(divId, BOARD_LINE, pt))
         .attr('opacity', 0);
   }
 

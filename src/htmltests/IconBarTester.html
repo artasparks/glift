@@ -144,16 +144,11 @@
         });
 
         iconBar.forEachIcon(function(icon) {
-          icon.button.setMouseOver(function() {
-            icon.obj.attr({fill:'blue'});
-          }).setMouseOut(function() {
-            icon.obj.attr(iconBar.subTheme['DEFAULT']);
+          iconBar.setEvent('mouseover', icon.name, function() {
+            d3.select('#' + icon.iconId).attr('fill', 'red');
+          }).setEvent('mouseout', icon.name, function() {
+            d3.select('#' + icon.iconId).attr('fill', iconBar.theme.icons.DEFAULT.fill);
           });
-        });
-        iconBar.setHover('chevron-left', function() {
-          iconBar.iconObjects['chevron-left'].attr({fill:'blue'});
-        }, function() {
-          iconBar.iconObjects['chevron-left'].attr(iconBar.subTheme['DEFAULT']);
         });
       </script>
     </div>

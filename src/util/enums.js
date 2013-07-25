@@ -72,13 +72,14 @@ glift.enums = {
   svgElements: {
     BOARD_BASE: 'board_base',
     BOARD_LINE: 'board_line',
-    BUTTON: 'intersection_button',
+    BUTTON: 'button',
     MARK: 'mark',
     MARK_CONTAINER: 'mark_container',
     GLIFT_ELEMENT: 'glift_element',
     STARPOINT: 'starpoint',
     STONE: 'stone',
-    STONE_SHADOW: 'stone_shadow'
+    STONE_SHADOW: 'stone_shadow',
+    ICON: 'icon'
   },
 
   // TODO(kashomon): Perhaps remove.  This isn't used (at least for anything

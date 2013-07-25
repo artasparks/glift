@@ -1,17 +1,5 @@
 glift.displays.board.svgutil = {
   /**
-   * Get an ID for a SVG element.
-   */
-  elementId: function(divId, type, intPt) {
-    var base = divId + "_" + type;
-    if (intPt !== undefined) {
-      return base + '_' + intPt.x() + '_' + intPt.y();
-    } else {
-      return base;
-    }
-  },
-
-  /**
    * Move the current position to X,Y.  Usually used in the context of creating a
    * path.
    */

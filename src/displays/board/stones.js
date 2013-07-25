@@ -4,7 +4,6 @@
  */
 glift.displays.board.createStones = function(divId, svg, boardPoints, theme) {
   var STONE = glift.enums.svgElements.STONE;
-  var svgutil = glift.displays.board.svgutil;
   var stoneIdMap = {};
   svg.selectAll(STONE).data(boardPoints.data())
     .enter().append("circle")
@@ -17,7 +16,7 @@ glift.displays.board.createStones = function(divId, svg, boardPoints, theme) {
       .attr("fill", 'blue') // dummy color
       .attr("id", function(pt) {
         var intPt = pt.intPt;
-        var id = svgutil.elementId(divId, STONE, intPt);
+        var id = glift.displays.gui.elementId(divId, STONE, intPt);
         stoneIdMap[intPt.hash()] = id;
         return id;
       });
@@ -54,7 +53,7 @@ glift.displays.board.createShadows = function(
       .attr("filter", 'url(#' + divId + "_svg_blur)")
       .attr("id", function(pt) {
         var intPt = pt.intPt;
-        var id = svgutil.elementId(divId, STONE_SHADOW, intPt);
+        var id = glift.displays.gui.elementId(divId, STONE_SHADOW, intPt);
         shadowMap[intPt.hash()] = id;
         return id;
       });

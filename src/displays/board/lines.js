@@ -6,7 +6,6 @@
 glift.displays.board.createLines = function(divId, svg, boardPoints, theme) {
   // Mapping from int point (e.g., 3,3) hash to id;
   var lineMapping = {};
-  var svgutil = glift.displays.board.svgutil;
   var BOARD_LINE = glift.enums.svgElements.BOARD_LINE;
   svg.selectAll(BOARD_LINE).data(boardPoints.data())
     .enter().append("path")
@@ -18,7 +17,7 @@ glift.displays.board.createLines = function(divId, svg, boardPoints, theme) {
       .attr('class', BOARD_LINE)
       .attr('stroke-linecap', 'round')
       .attr('id', function(pt) {
-        var id = svgutil.elementId(divId, BOARD_LINE, pt.intPt);
+        var id = glift.displays.gui.elementId(divId, BOARD_LINE, pt.intPt);
         lineMapping[pt.intPt.hash()] = id;
         return id;
       });

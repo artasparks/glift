@@ -3,9 +3,8 @@
  * fill color and a border.
  */
 glift.displays.board.createBoardBase = function(divId, svg, goBox, theme) {
-  var svgutil = glift.displays.board.svgutil;
   var BOARD = glift.enums.svgElements.BOARD;
-  var id = svgutil.elementId(divId, BOARD)
+  var id = glift.displays.gui.elementId(divId, BOARD)
 
   // TODO(kashomon): Make this more DRY
   if (theme.board.imagefill) {

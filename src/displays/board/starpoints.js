@@ -6,7 +6,6 @@ glift.displays.board.createStarPoints = function(
     divId, svg, boardPoints, theme) {
   var size = theme.starPoints.sizeFraction * boardPoints.spacing;
   var starPointData = boardPoints.starPoints();
-  var svgutil = glift.displays.board.svgutil;
   var STARPOINT = glift.enums.svgElements.STARPOINT;
   var starPointIds = {}; // mapping from int point hash to element ID
   svg.selectAll(STARPOINT).data(starPointData)
@@ -17,7 +16,7 @@ glift.displays.board.createStarPoints = function(
       .attr('class', STARPOINT)
       .attr('fill', theme.starPoints.fill)
       .attr('id', function(pt) {
-        var id = svgutil.elementId(divId, STARPOINT, pt);
+        var id = glift.displays.gui.elementId(divId, STARPOINT, pt);
         starPointIds[pt.hash()] = id;
         return id;
       });
