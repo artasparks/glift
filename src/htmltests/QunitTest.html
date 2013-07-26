@@ -73,6 +73,7 @@
 <!-- Displays gui -->
 <script type="text/javascript" src="../displays/gui/gui.js"></script>
 <script type="text/javascript" src="../displays/gui/center.js"></script>
+<script type="text/javascript" src="../displays/gui/icon_bar.js"></script>
 <script type="text/javascript" src="../displays/gui/icons.js"></script>
 <script type="text/javascript" src="../displays/gui/position.js"></script>
 <!-- Rules -->
@@ -98,7 +99,6 @@
 <!-- Widgets -->
 <script type="text/javascript" src="../widgets/widgets.js"></script>
 <script type="text/javascript" src="../widgets/basic_problem.js"></script>
-<script type="text/javascript" src="../widgets/icon_bar.js"></script>
 <script type="text/javascript" src="../widgets/problem_series.js"></script>
 <!-- Otre Tests -->
 <script type="text/javascript" src=".././glift_test.js"></script>
@@ -117,6 +117,7 @@
 <script type="text/javascript" src="../displays/board/board_test.js"></script>
 <!-- Displays gui Tests -->
 <script type="text/javascript" src="../displays/gui/center_test.js"></script>
+<script type="text/javascript" src="../displays/gui/split_test.js"></script>
 <!-- Rules Tests -->
 <script type="text/javascript" src="../rules/goban_test.js"></script>
 <script type="text/javascript" src="../rules/intersections_test.js"></script>
@@ -160,6 +161,7 @@ $(document).ready(function() {
   glift.controllers.controllersTest();
 
   glift.displays.gui.centerTest();
+  glift.displays.gui.splitTest();
 
   // API tests
   glift.gliftTest();

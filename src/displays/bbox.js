@@ -5,16 +5,25 @@ glift.displays.bboxFromPts = function(topLeftPt, botRightPt) {
 
 glift.displays.bboxFromDiv = function(divId) {
   // Getting the height this might not work for Window or Documents.
-  var e = document.getElementById(divId),
-      height = Math.max(e.clientHeight,
-          isNaN(parseFloat(e.style.height)) ? 0 : parseFloat(e.style.height),
-          e.offsetHeight),
-      width = Math.max(e.clientWidth,
-          isNaN(parseFloat(e.style.width)) ? 0 : parseFloat(e.style.width),
-          e.offsetWidth);
-  // There is no reason to use jquery.  Hotever, this is how it would be done:
-  // this.divWidth =  ($("#" + this.divId).width());
-  return glift.displays.bbox(glift.util.point(0,0), width, height);
+  // var e = document.getElementById(divId);
+  // var height =
+      // isNaN(parseFloat(e.style.height)) ? 0 : parseFloat(e.style.height) ||
+      // e.clientHeight ||
+      // e.offsetHeight;
+  // var width =
+      // isNaN(parseFloat(e.style.width)) ? 0 : parseFloat(e.style.width) ||
+      // e.clientWidth ||
+      // e.offsetWidth;
+  // glift.util.logz('width' + width);
+  // There is no reason to use jquery, but the above doesn't work...
+  //
+  // the Height method is really complicated in JQuery
+  // https://github.com/jquery/jquery/blob/master/src/css.js#L374
+  //
+  return glift.displays.bbox(
+      glift.util.point(0,0),
+      $('#' + divId).width(),
+      $('#' + divId).height());
 };
 
 glift.displays.bbox = function(topLeft, width, height) {

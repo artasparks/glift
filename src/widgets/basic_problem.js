@@ -25,6 +25,7 @@ glift.widgets._BasicProblem = function(display, controller) {
   display.intersections().setEvent('click', function(pt) {
     var currentPlayer = controller.getCurrentPlayer();
     var data = controller.addStone(pt, currentPlayer);
+    // TODO(kashomon): Remove this debug info
     $('#extra_info').text(data.message + '//' + (data.result || ''));
     if (data.data !== undefined) {
       glift.bridge.setDisplayState(data.data, display);

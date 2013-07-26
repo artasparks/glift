@@ -26,7 +26,7 @@ ProblemSeries.prototype = {
     this.problemDisplay = glift.widgets.basicProblem(this.options);
     var margin = ($('#' +  this.mainDiv).width() -
         this.problemDisplay.display.width()) / 2;
-    this.iconBar = glift.widgets.iconBar({
+    this.iconBar = glift.displays.gui.iconBar({
       divId: this.footerDiv,
       vertMargin:  5,
       horzMargin: margin,

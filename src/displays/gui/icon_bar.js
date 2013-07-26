@@ -8,15 +8,15 @@
  *    - vertMargin (in pixels)
  *    - theme (default: DEFAULT)
  */
-glift.widgets.iconBar = function(options) {
+glift.displays.gui.iconBar = function(options) {
   var divId = options.divId,
       icons = [],
       vertMargin = 0,
-      horzMargin = 0,
+      horzMargin = 0
       themeName = 'DEFAULT';
 
   // TODO(kashomon): Replace this hackiness with legitimate options code.  Much
-  // better to keep this code from getting WETter ;).
+  // better to keep this code from getting WETter.
   if (divId === undefined) {
     throw "Must define 'divId' as an option"
   }
