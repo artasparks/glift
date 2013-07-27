@@ -1,6 +1,4 @@
 (function(){
-var util = glift.util;
-
 glift.rules.goban = {
   /**
    * Create a Goban instance, just with intersections.
@@ -68,7 +66,7 @@ Goban.prototype = {
     for (var i = 0; i < this.stones.length; i++) {
       var row = this.stones[i];
       for (var j = 0; j < row.length; j++) {
-        var point = util.point(j, i);
+        var point = glift.util.point(j, i);
         var color = this.getStone(point);
         if (color === glift.enums.states.BLACK ||
             color === glift.enums.states.WHITE) {
@@ -91,14 +89,14 @@ Goban.prototype = {
 
   // Returns true if out-of-bounds.  False, otherwise
   outBounds: function(point) {
-    return util.outBounds(point.x(), this.ints)
-        || util.outBounds(point.y(), this.ints);
+    return glift.util.outBounds(point.x(), this.ints)
+        || glift.util.outBounds(point.y(), this.ints);
   },
 
   // Returns true if in-bounds. False, otherwise
   inBounds: function(point) {
-    return util.inBounds(point.x(), this.ints)
-        && util.inBounds(point.y(), this.ints);
+    return glift.util.inBounds(point.x(), this.ints)
+        && glift.util.inBounds(point.y(), this.ints);
   },
 
   // Simply set the intersection back to EMPTY
@@ -130,7 +128,7 @@ Goban.prototype = {
   // }
   //
   addStone: function(pt, color) {
-    if (!util.colors.isLegalColor(color)) throw "Unknown color: " + color;
+    if (!glift.util.colors.isLegalColor(color)) throw "Unknown color: " + color;
 
     // Add stone fail.  Return a failed StoneResult.
     if (this.outBounds(pt) || !this.placeable(pt))
@@ -138,12 +136,12 @@ Goban.prototype = {
 
     this._setColor(pt, color); // set stone as active
     var captures = new CaptureTracker();
-    var oppColor = util.colors.oppositeColor(color);
+    var oppColor = glift.util.colors.oppositeColor(color);
 
-    this._getCaptures(captures, util.point(pt.x() + 1, pt.y()), oppColor);
-    this._getCaptures(captures, util.point(pt.x() - 1, pt.y()), oppColor);
-    this._getCaptures(captures, util.point(pt.x(), pt.y() - 1), oppColor);
-    this._getCaptures(captures, util.point(pt.x(), pt.y() + 1), oppColor);
+    this._getCaptures(captures, glift.util.point(pt.x() + 1, pt.y()), oppColor);
+    this._getCaptures(captures, glift.util.point(pt.x() - 1, pt.y()), oppColor);
+    this._getCaptures(captures, glift.util.point(pt.x(), pt.y() - 1), oppColor);
+    this._getCaptures(captures, glift.util.point(pt.x(), pt.y() + 1), oppColor);
 
     if (captures.numCaptures <= 0) {
       // We are now in a state where placing this stone results in 0 liberties.
@@ -174,6 +172,7 @@ Goban.prototype = {
   // find is the param color. We return nothing because state is stored in
   // 'captures'.
   _findConnected: function(captures, pt, color) {
+    var util = glift.util;
     // check to make sure we haven't already seen a stone
     // and that the point is not out of bounds.  If
     // either of these conditions fail, return immediately.
@@ -215,7 +214,7 @@ Goban.prototype = {
       }
     }
     var mv = movetree.getProperties().getMove();
-    if (mv != util.none) {
+    if (mv != glift.util.none) {
       this.addStone(mv.point, mv.color);
     }
   },
@@ -280,7 +279,7 @@ CaptureTracker.prototype = {
   getCaptures: function() {
     var out = [];
     for (var key in this.toCapture) {
-      out.push(util.pointFromHash(key));
+      out.push(glift.util.pointFromHash(key));
     }
     return out;
   }

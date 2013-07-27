@@ -4,11 +4,36 @@ glift.controllers.createBase = function() {
 };
 
 /**
- * Boring constructor.  It's expected that this will be extended.
+ * The BaseConstructor provides, in classical-ish inheritance style, a base
+ * implementation for interacting with SGFs.  Typically, those objects extending
+ * this base class will implement addStone and extraOptions
  */
-var BaseController = function() {};
+var BaseController = function() {
+  this.sgfString = ""; // set with initOptions
+  this.initPosition = []; // can also be a string (and then parsed)
+};
 
 BaseController.prototype = {
+  /**
+   * Initialize both the options and the controller's children data structures.
+   *
+   * Note that these options should be protected by the options parsing (see
+   * options.js in this same directory).  Thus, no special checks are made here.
+   */
+  initOptions: function(options) {
+    this.sgfString = options.sgfString;
+    this.initialPosition = options.initialPositiona;
+    this.extraOptions(options); // Overridden by implementers
+    this.initialize();
+    return this;
+  },
+
+  /**
+   * It's expected that this will be implemented by those extending this base
+   * class.  This is called during initOptions above.
+   */
+  extraOptions: function(opt) { /* Implemented by other controllers. */ },
+
   /**
    * Generally, this is the only thing you need to override.
    */
@@ -18,20 +43,20 @@ BaseController.prototype = {
 
   /**
    * Initialize the:
-   *  - initPosition (description of where to start)
-   *  - movetree (tree of move nodes from the SGF)
-   *  - goban (backing array describing the go board)
+   *  - initPosition -- description of where to start
+   *  - movetree -- tree of move nodes from the SGF
+   *  - goban -- data structure describing the go board.  Really, the goban is
+   *  useful for telling you where stones can be placed, and (after placing)
+   *  what stones were captured.
    */
   initialize: function() {
     var rules = glift.rules,
         sgfString = this.sgfString,
-        initPosString = this.initialPosition;
-    this.initPosition = rules.treepath.parseInitPosition(initPosString);
+        initPos = this.initialPosition;
+    this.initPosition = rules.treepath.parseInitPosition(initPos);
     this.movetree = rules.movetree.getFromSgf(sgfString, this.initPosition);
-    // glift.sgf.parseInitPosition handles an undefined initPosition
     this.goban = rules.goban.getFromMoveTree(this.movetree, this.initPosition);
-    // return the entire boardState
-    return this.getEntireBoardState();
+    return this;
   },
 
   /**

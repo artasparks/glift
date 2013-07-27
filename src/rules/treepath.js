@@ -34,7 +34,7 @@ glift.rules.treepath = {
     } else if (glift.util.typeOf(initPos) === 'number') {
       initPos = "" + initPos;
     } else if (glift.util.typeOf(initPos) === 'array') {
-      return initPos
+      return initPos;
     } else if (glift.util.typeOf(initPos) === 'string') {
       // Do nothing. this is the expected type
     // TODO(kashomon): throw some darn errors.

@@ -1,7 +1,8 @@
 (function() {
 var util = glift.util;
 var enums = glift.enums;
-/*
+
+/**
  * When an SGF is parsed by the parser, it is transformed into the following:
  *
  *MoveTree {
@@ -24,14 +25,16 @@ var enums = glift.enums;
  * }
  *
  * If you are familiar with the SGF format, this should look very similar to the
- * actual SGF format, and is easily converten back to a SGF. And so, The
+ * actual SGF format, and is easily converted back to a SGF. And so, The
  * MoveTree is a simple wrapper around the parsed SGF.
  *
  * Each move is an object with two properties: tokens and nodes, the
  * latter of which is a list to capture the idea of multiple variations.
  */
 glift.rules.movetree = {
-  // Create an empty MoveTree
+  /**
+   * Create an empty MoveTree
+   */
   getInstance: function(intersections) {
     var intersections = intersections || 19;
     var mt = new MoveTree(glift.rules.movenode());
@@ -39,7 +42,9 @@ glift.rules.movetree = {
     return mt;
   },
 
-  // Create a MoveTree from an SGF.
+  /**
+   * Create a MoveTree from an SGF.
+   */
   getFromSgf: function(sgfString, initPosition) {
     if (initPosition === undefined) {
       initPosition = []; // Should throw an error?
@@ -55,12 +60,16 @@ glift.rules.movetree = {
     return mt;
   },
 
+  /**
+   * TODO(kashomon): This needs some explanation.
+   */
   getFromNode: function(node) {
     return new MoveTree(node);
   },
 
-  // Seach nodes with a Depth First Search. We rely on closure variables to
-  // capture the result of the recursion.
+  /**
+   * Seach nodes with a Depth First Search.
+   */
   searchMoveTreeDFS: function(moveTree, func) {
     func(moveTree);
     for (var i = 0; i < moveTree.getNode().numChildren(); i++) {
@@ -70,10 +79,12 @@ glift.rules.movetree = {
   }
 };
 
-// A MoveTree is a history (a tree) of the past nodes played.  The movetree is
-// (usually) a processed parsed SGF, but could be created organically.
-//
-// The tree itself is tree structure made out of MoveNodes.
+/**
+ * A MoveTree is a history (a tree) of the past nodes played.  The movetree is
+ * (usually) a processed parsed SGF, but could be created organically.
+ *
+ * The tree itself is tree structure made out of MoveNodes.
+ */
 var MoveTree = function(rootNode) {
   // The moveHistory serves two purposes -- it allows travel backwards (i.e.,
   // up the tree), and it gives the current move, which is the last move in the
@@ -83,18 +94,31 @@ var MoveTree = function(rootNode) {
 };
 
 MoveTree.prototype = {
+  /**
+   * Get a new move tree instance from the node history.  Note, that this still
+   * refers to the same movetree -- the current position is just changed.
+   */
   getTreeFromRoot: function() {
     return glift.rules.movetree.getFromNode(this._nodeHistory[0]);
   },
 
+  /**
+   * Get the current node -- that is, the node at the current position.
+   */
   getNode: function() {
     return this._nodeHistory[this._nodeHistory.length - 1];
   },
 
+  /**
+   * Get the properties object on the current node.
+   */
   getProperties: function() {
     return this.getNode().properties;
   },
 
+  /**
+   * Given a point and a color, find the
+   */
   findNextMove: function(point, color) {
     var nextNodes = this.getNode().children,
         token = glift.sgf.colorToToken(color),

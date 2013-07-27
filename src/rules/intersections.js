@@ -1,5 +1,4 @@
 (function() {
-var enums = glift.enums;
 /*
  * Intersection Data is the precise set of information necessary to display the
  * Go Board, which is to say, it is the set of stones and display information.
@@ -23,11 +22,11 @@ var enums = glift.enums;
 
 glift.rules.intersections = {
   propertiesToMarks: {
-    CR: enums.marks.CIRCLE,
-    LB: enums.marks.LABEL,
-    MA: enums.marks.XMARK,
-    SQ: enums.marks.SQUARE,
-    TR: enums.marks.TRIANGLE
+    CR: glift.enums.marks.CIRCLE,
+    LB: glift.enums.marks.LABEL,
+    MA: glift.enums.marks.XMARK,
+    SQ: glift.enums.marks.SQUARE,
+    TR: glift.enums.marks.TRIANGLE
   },
 
   /**
@@ -64,7 +63,7 @@ glift.rules.intersections = {
     return out;
   },
 
-  // TODO: Add a way to send back only what has changed
+  // TODO(kashomon): Add a way to send back only what has changed
   getChangeData: function(movetree, captures, extra) {
   },
 

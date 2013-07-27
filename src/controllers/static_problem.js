@@ -1,12 +1,20 @@
 (function() {
+/**
+ * The static problem controller encapsulates the idea of trying to solve a
+ * problem.  Thus, when a player adds a stone, the controller checks to make
+ * sure that:
+ *
+ *  - There is actually a variation with that position / color.
+ *  - There is actually a node somewhere beneath the variation that results in a
+ *  'correct' outcome.
+ */
 glift.controllers.createStaticProblem = function(rawOptions) {
   var options = glift.controllers.processOptions(rawOptions),
       controllers = glift.controllers,
       baseController = glift.util.beget(controllers.createBase()),
       newController = glift.util.setMethods(baseController, methods),
       // At this point, options have already been processed
-      _ = newController.initOptions(options),
-      _ = newController.initialize();
+      _ = newController.initOptions(options);
   return newController;
 };
 
@@ -17,11 +25,13 @@ var methods = {
     return this;
   },
 
-  // Add a stone to the board.  Since this is a problem, we check for
-  // 'correctness', which we check whether all child nodes are labeled (in some
-  // fashion) as correct.
-  //
-  // TODO: Refactor this into something less ridiculous.
+  /**
+   * Add a stone to the board.  Since this is a problem, we check for
+   * 'correctness', which we check whether all child nodes are labeled (in some
+   * fashion) as correct.
+   *
+   * TODO: Refactor this into something less ridiculous.
+   */
   addStone: function(point, color) {
     var problemResults = glift.enums.problemResults,
         msgs = glift.enums.controllerMessages,
@@ -32,6 +42,11 @@ var methods = {
         INCORRECT = problemResults.INCORRECT,
         INDETERMINATE = problemResults.INDETERMINATE;
 
+    // Reminder -- the goban returns:
+    //  {
+    //    successful: <boolean>
+    //    captures: [ points]
+    //  }
     var addResult = this.goban.addStone(point, color);
     if (!addResult.successful) {
       return { message: FAILURE, reason: "Cannot add stone" };

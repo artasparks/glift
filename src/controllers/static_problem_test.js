@@ -15,7 +15,7 @@ glift.controllers.staticProblemTest = function() {
         wstone = conv("pc"),
         bstone = conv("oc");
     deepEqual(c.sgfString, sgfs.realproblem);
-    var result = c.initialize();
+    var result = c.initialize().getEntireBoardState();
     deepEqual(result.points[wstone.hash()].stone, states.WHITE,
         "Must find a white stone where expected");
     deepEqual(result.points[bstone.hash()].stone, states.BLACK,

@@ -10,15 +10,21 @@ glift.controllers.processOptions = function(rawOptions) {
     var value = rawOptions[key];
     switch(key) {
       case 'initialPosition':
-        // If there's an error, a ParseError will be thrown.
-        defaults.initialPosition = glift.rules.parseInitPosition(value);
+        if (glift.util.typeOf(value) === 'string') {
+          // If there's an error, a ParseError will be thrown.
+          defaults.initialPosition = glift.rules.parseInitPosition(value);
+        } else if (glift.util.typeOf(value) === 'array') {
+          defaults.initialPosition = value;
+        } else {
+          throw "Unknown type for option initialPosition: " + value;
+        }
         break;
 
       case 'sgfString':
         if (glift.util.typeOf(value) === 'string') {
           defaults.sgfString = value;
         } else {
-          throw "Bad type for sgfString: " + value;
+          throw "Bad type for sgfString -- was expecting an SGF string: " + value;
         }
         break;
 
