@@ -1,12 +1,7 @@
 (function() {
-var msgs = glift.enums.controllerMessages,
-    BASE = glift.enums.controllerTypes.BASE;
-
-glift.controllers.createBaseController = function() {
+glift.controllers.createBase = function() {
   return new BaseController();
 };
-
-glift.controllers.controllerMap[BASE] = glift.controllers.createBaseController;
 
 /**
  * Boring constructor.  It's expected that this will be extended.
@@ -15,7 +10,7 @@ var BaseController = function() {};
 
 BaseController.prototype = {
   /**
-   * Add a stone.  What happens here depends on the extender of this base class.
+   * Generally, this is the only thing you need to override.
    */
   addStone: function() {
     throw "Not Implemented";
@@ -27,7 +22,7 @@ BaseController.prototype = {
    *  - movetree (tree of move nodes from the SGF)
    *  - goban (backing array describing the go board)
    */
-  initialize: function(o) {
+  initialize: function() {
     var rules = glift.rules,
         sgfString = this.sgfString,
         initPosString = this.initialPosition;

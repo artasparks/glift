@@ -7,18 +7,17 @@ var glift = window.glift || {};
 
 /**
  * Create a Glift Display
+ *
+ * TODO(kashomon): Perhaps remove this?
  */
 glift.createDisplay = function(options) {
   return glift.displays.create(options);
 };
 
-glift.createController = function(options) {
-  return glift.controllers.create(options);
-};
-
-
 glift.global = {
-  debugMode: false
+  // Neither of these are currently used
+  debugMode: false,
+  performanceDebug: false
 };
 
 window.glift = glift;

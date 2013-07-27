@@ -27,7 +27,7 @@ glift.displays.gui = {
    * percents: Precent tall that each section is.  Note that the length of this
    * == the number of splits - 1;
    *
-   * direction: defaults to horizontal.  Also can split vertically
+   * direction: defaults to 'horizontal'.  Also can split 'vertical'-ly.
    *
    * Note:
    *  X => XX (vertical split)
@@ -35,14 +35,20 @@ glift.displays.gui = {
    *  X => X  (horizontal split)
    *       X
    *
-   * return: the ids for the top div and bottom div.
+   * return: an array of useful div info:
+   *  [{
+   *    id: foo
+   *    start: 0 // top for horz, left for vert
+   *    length: 100 // height for horz, width for vert
+   *  }, {...}
+   *  ]
    */
   splitDiv: function(divId, percents, direction) {
     var bbox = glift.displays.bboxFromDiv(divId),
         totalPercent = 0;
     if (!direction) {
       direction = 'horizontal';
-    } else if (direction !== 'vertical' || direction !== 'horizontal') {
+    } else if (direction !== 'vertical' && direction !== 'horizontal') {
       direction = 'horizontal'
     }
 
@@ -54,7 +60,6 @@ glift.displays.gui = {
           'Was ' + totalPercent;
     }
     percents.push(1 - totalPercent); // Add in last value.
-    glift.util.logz(JSON.stringify(percents));
 
     // Create Data for D3.
     var boxData = [];
@@ -70,6 +75,7 @@ glift.displays.gui = {
     }
 
     for (var i = 0; i < boxData.length; i++) {
+      // TODO(kashomon): Maybe replace with d3 for uniformity?
       $('#' + divId).append('<div id="' + boxData[i].id + '"></div>');
       var cssObj = {
         width: direction === 'horizontal' ? '100%' : boxData[i].length,

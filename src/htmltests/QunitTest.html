@@ -90,15 +90,17 @@
 <script type="text/javascript" src="../sgf/sgf_grammar.js"></script>
 <!-- Controllers -->
 <script type="text/javascript" src="../controllers/controllers.js"></script>
-<script type="text/javascript" src="../controllers/base_controller.js"></script>
+<script type="text/javascript" src="../controllers/base.js"></script>
+<script type="text/javascript" src="../controllers/game_viewer.js"></script>
 <script type="text/javascript" src="../controllers/options.js"></script>
-<script type="text/javascript" src="../controllers/static_problem_study.js"></script>
+<script type="text/javascript" src="../controllers/static_problem.js"></script>
 <!-- Bridge -->
 <script type="text/javascript" src="../bridge/bridge.js"></script>
 <script type="text/javascript" src="../bridge/cropping.js"></script>
 <!-- Widgets -->
 <script type="text/javascript" src="../widgets/widgets.js"></script>
 <script type="text/javascript" src="../widgets/basic_problem.js"></script>
+<script type="text/javascript" src="../widgets/game_viewer.js"></script>
 <script type="text/javascript" src="../widgets/problem_series.js"></script>
 <!-- Otre Tests -->
 <script type="text/javascript" src=".././glift_test.js"></script>
@@ -125,9 +127,9 @@
 <script type="text/javascript" src="../rules/properties_test.js"></script>
 <script type="text/javascript" src="../rules/treepath_test.js"></script>
 <!-- Controllers Tests -->
-<script type="text/javascript" src="../controllers/base_controller_test.js"></script>
+<script type="text/javascript" src="../controllers/base_test.js"></script>
 <script type="text/javascript" src="../controllers/controllers_test.js"></script>
-<script type="text/javascript" src="../controllers/static_problem_study_test.js"></script>
+<script type="text/javascript" src="../controllers/static_problem_test.js"></script>
 <!-- Bridge Tests -->
 <script type="text/javascript" src="../bridge/cropping_test.js"></script>
 
@@ -156,8 +158,8 @@ $(document).ready(function() {
   glift.rules.gobanTest();
   glift.rules.propertiesTest();
 
-  glift.controllers.baseControllerTest();
-  glift.controllers.staticProblemStudyTest();
+  glift.controllers.baseTest();
+  glift.controllers.staticProblemTest();
   glift.controllers.controllersTest();
 
   glift.displays.gui.centerTest();

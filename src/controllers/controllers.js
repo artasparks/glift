@@ -1,18 +1,6 @@
 /*
- * The controllers logical parts of the Go board.
+ * The controllers logical parts of the Go board.  You can use the movetree and
+ * rules directly, but it's usually easier to use the controller layer to
+ * abstract dealing with the rules.
  */
-glift.controllers = {
-  // Map from glift.enums.controllerTypes to constructor, which takes one argument:
-  // (processed) options. This is global static state and thus meant to be
-  // immutable.
-  controllerMap: {},
-
-  create: function(rawOptions) {
-    var options = glift.controllers.processOptions(rawOptions);
-    if (options.controllerType in glift.controllers.controllerMap) {
-      return glift.controllers.controllerMap[options.controllerType](options);
-    } else {
-      throw "No controller found for type: " + options.controllerType;
-    }
-  }
-};
+glift.controllers = {};

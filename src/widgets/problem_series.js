@@ -1,19 +1,13 @@
 (function() {
 glift.widgets.problemSeries = function(options) {
   var divId = '' + (options.divId || 'glift_display');
-  var main = 'glift_internal_main_' + glift.util.idGenerator.next();
-  var footer = 'glift_internal_footer_' + glift.util.idGenerator.next();
-  options.divId = main;
-  var series = new ProblemSeries(options, divId, main, footer);
+  var series = new ProblemSeries(options, divId);
   return series;
 };
 
-ProblemSeries = function(
-    options, wrapperDiv, mainDiv, footerDiv) {
+ProblemSeries = function(options, wrapperDiv) {
   this.options = options;
   this.wrapperDiv = wrapperDiv;
-  this.mainDiv = mainDiv;
-  this.footerDiv = footerDiv;
   this.problemDisplay = undefined;
   this.iconBar = undefined;
   this.draw();
@@ -21,52 +15,33 @@ ProblemSeries = function(
 
 ProblemSeries.prototype = {
   draw: function() {
-    this.createDivs();
-    this.resizeDivs();
+    this.divInfo = glift.displays.gui.splitDiv(
+        this.wrapperDiv, [.90], 'horizontal');
+    this.options.divId = this.divInfo[0].id;
     this.problemDisplay = glift.widgets.basicProblem(this.options);
-    var margin = ($('#' +  this.mainDiv).width() -
+
+    // We want the icons to be bounded by the go board width, not the parent
+    // container width.  Otherwise it looks super goofy.  Recall that margin is
+    // applied to both sides, so we need to divide by 2.
+    var margin = ($('#' +  this.divInfo[0].id).width() -
         this.problemDisplay.display.width()) / 2;
     this.iconBar = glift.displays.gui.iconBar({
-      divId: this.footerDiv,
-      vertMargin:  5,
+      divId: this.divInfo[1].id,
+      vertMargin:  5, // For good measure
       horzMargin: margin,
       icons:  ['chevron-left', 'refresh', 'chevron-right', 'roadmap',
           'small-gear']
     });
   },
 
-  createDivs: function() {
-    $('#' + this.wrapperDiv).append('<div id = "' + this.mainDiv + '"></div>');
-    $('#' + this.wrapperDiv).append('<div id = "' + this.footerDiv + '"></div>');
-    return this;
-  },
-
-  resizeDivs: function() {
-    var height = $('#' + this.wrapperDiv).height();
-    $('#' + this.mainDiv).css({
-        position: 'absolute',
-        width: '100%',
-        height: (height - 50),
-        top: 0
-    });
-    $('#' + this.footerDiv).css({
-        'position' : 'absolute',
-        'width' : '100%',
-        'height' : 50,
-        'text-align': 'center',
-        'bottom' : 0
-    });
-    return this;
-  },
-
   redraw: function() {
-    this.destroy();
-    this.draw();
+    // need special logic here for resetting state information.
+    // this.destroy();
+    // this.draw();
+    return this;
   },
 
   destroy: function() {
-    this.problemDisplay && this.problemDisplay.destroy();
-    this.iconBar && this.iconBar.destroy();
     $('#' + this.wrapperDiv).empty();
     return this;
   }

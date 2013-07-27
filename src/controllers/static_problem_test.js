@@ -1,5 +1,5 @@
-glift.controllers.staticProblemStudyTest = function() {
-  module("Static Problem Study Controller");
+glift.controllers.staticProblemTest = function() {
+  module("Static Problem Controller");
   var cont = glift.controllers,
       util = glift.util,
       conv = glift.sgf.sgfCoordToPoint,
@@ -11,10 +11,9 @@ glift.controllers.staticProblemStudyTest = function() {
       problemResults = glift.enums.problemResults;
 
   test("Test create & initialize problem controller", function() {
-    var c = cont.staticProblemStudy._create(options),
+    var c = cont.createStaticProblem(options),
         wstone = conv("pc"),
         bstone = conv("oc");
-    ok(true);
     deepEqual(c.sgfString, sgfs.realproblem);
     var result = c.initialize();
     deepEqual(result.points[wstone.hash()].stone, states.WHITE,
@@ -24,13 +23,13 @@ glift.controllers.staticProblemStudyTest = function() {
   });
 
   test("Test Current Player Color", function() {
-    var c = cont.staticProblemStudy._create(options)
+    var c = cont.createStaticProblem(options)
     c.initialize();
     deepEqual(c.getCurrentPlayer(), states.BLACK, "Must get player color");
   });
 
   test("Test Can-Add Stone", function() {
-    var c = cont.staticProblemStudy._create(options),
+    var c = cont.createStaticProblem(options),
         yes1 = conv("ob"),
         yes2 = conv("aa"),
         nope = conv("pc");
@@ -43,7 +42,7 @@ glift.controllers.staticProblemStudyTest = function() {
   });
 
   test("Test Add Stone: Failure", function() {
-    var c = cont.staticProblemStudy._create(options),
+    var c = cont.createStaticProblem(options),
         pt = conv("pb");
     c.initialize();
     var result = c.addStone(pt, states.BLACK);
@@ -52,7 +51,7 @@ glift.controllers.staticProblemStudyTest = function() {
   });
 
   test("Test Add Stone: Incorrect - no variation", function() {
-    var c = cont.staticProblemStudy._create(options),
+    var c = cont.createStaticProblem(options),
         pt = conv("aa");
     c.initialize();
     var result = c.addStone(pt, states.BLACK);
@@ -61,7 +60,7 @@ glift.controllers.staticProblemStudyTest = function() {
   });
 
   test("Test Add Stone: Incorrect - variation", function() {
-    var c = cont.staticProblemStudy._create(options),
+    var c = cont.createStaticProblem(options),
         pt = conv("ob");
     c.initialize();
     var result = c.addStone(pt, states.BLACK);
@@ -70,7 +69,7 @@ glift.controllers.staticProblemStudyTest = function() {
   });
 
   test("Test Add Stone: Correct", function() {
-    var c = cont.staticProblemStudy._create(options),
+    var c = cont.createStaticProblem(options),
         pt = conv("nc");
     c.initialize();
     var result = c.addStone(pt, states.BLACK);
@@ -80,7 +79,7 @@ glift.controllers.staticProblemStudyTest = function() {
 
   //13,3; 12,2 Black
   test("Test Add Stone: Continue", function() {
-    var c = cont.staticProblemStudy._create({sgfString: sgfs.complexproblem}),
+    var c = cont.createStaticProblem({sgfString: sgfs.complexproblem}),
         pt = conv("ma"),
         possNext = [conv('oa'), conv('mc'), conv('nd')];
     c.initialize();

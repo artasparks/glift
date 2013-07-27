@@ -5,8 +5,7 @@ glift.widgets.basicProblem = function(options) {
   var divId = options.divId;
   var display = glift.createDisplay(options);
 
-  options.controllerType = "STATIC_PROBLEM_STUDY";
-  var controller = glift.createController(options);
+  var controller = glift.controllers.createStaticProblem(options);
   var cropping = glift.bridge.getFromMovetree(controller.movetree);
   glift.bridge.setDisplayState(controller.getEntireBoardState(), display);
   return new glift.widgets._BasicProblem(display, controller);

@@ -58,14 +58,6 @@ glift.enums = {
     FAILURE: "FAILURE"
   },
 
-  controllerTypes: {
-    BASE: "CONTROLLER_BASE",
-    STATIC_PROBLEM_STUDY: "STATIC_PROBLEM_STUDY",
-    DYNAMIC_PROBLEM_STUDY: "DYNAMIC_PROBLEM_STUDY",
-    EXLORE_SOLUTIONS: "EXPLORE_SOLUTIONS",
-    EXLORE_GAME: "EXPLORE_GAME"
-  },
-
   /**
    * Used to create svg element Ids
    */
@@ -80,12 +72,5 @@ glift.enums = {
     STONE: 'stone',
     STONE_SHADOW: 'stone_shadow',
     ICON: 'icon'
-  },
-
-  // TODO(kashomon): Perhaps remove.  This isn't used (at least for anything
-  // useful yet (and maybe ever).
-  mediums: {
-    SVG: "SVG",
-    CANVAS: "CANVAS"
   }
 };

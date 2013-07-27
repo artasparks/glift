@@ -1,10 +1,7 @@
-glift.controllers.baseControllerTest = function() {
+glift.controllers.baseTest = function() {
   module("Base Controller Tests");
-  var cont = glift.controllers;
-  var sgfs = testdata.sgfs;
-
   test("Successful create the Base Controller", function() {
-    var genCont = cont.createBaseController();
+    var genCont = glift.controllers.createBase();
     ok(genCont !== undefined, "must successfully init the controller");
   });
 };
