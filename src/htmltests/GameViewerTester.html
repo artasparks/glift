@@ -1,11 +1,10 @@
 <html>
 <head>
 
-<title> BBoxFinder </title>
+<title> GameViewerTester </title>
 <script type="text/javascript" src="../libs/jquery-1.10.2.min.js"></script>
 <script type="text/javascript" src="../testdata/sgfs.js"></script>
 <script type="text/javascript" src="../libs/d3.min.js"></script>
-<script type="text/javascript" src="../libs/raphael-min.js"></script>
 
 <!-- AUTO-GEN-DEPS -->
 <!-- Otre -->
@@ -112,20 +111,34 @@
 
 <!-- END-AUTO-GEN-DEPS -->
 
-<body>
-<!-- Create a div as a place holder just so we can create a Raphael paper. -->
-<div id="glift_display1">
-<script type="text/javascript">
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      #glift_display1 {
+        height:99%;
+        position:relative;
+      }
+    </style>
+  </head>
 
-(function() {
-  console.log("foom!");
-  var paper = Raphael('glift_display1', 100, 100);
-  for (var key in glift.displays.gui.icons) {
-    var pathobj = paper.path(glift.displays.gui.icons[key].string);
-    var bbox = pathobj.getBBox();
-    glift.util.logz(key)
-    glift.util.logz(bbox);
-  };
-})();
-</script>
-</body>
+  <body>
+    <div id="wrap" style="position:relative;">
+      <div id="gheader"></div>
+      <div id="glift_display1"></div>
+      <div id="extra_info"></div>
+      <script type="text/javascript">
+        $.get("../testdata/Fujisawa-Hosai-vs-Go-Seigen-" +
+            "19430225-commentary-An-Younggil-8p.sgf", function(data) {
+          var gameViewer = glift.widgets.gameViewer({
+            sgfString: data,
+            theme: 'DEPTH',
+            //goBoardBackground: '../themes/assets/bambootile_warm.jpg',
+            divId: "glift_display1"
+          })
+        });
+      </script>
+    </div>
+  </body>
+</html>

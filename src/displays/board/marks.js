@@ -116,7 +116,7 @@ glift.displays.board.addMark = function(
         .attr('opacity', stoneMarkerTheme.opacity)
         .attr('fill', stoneMarkerTheme.fill);
   } else if (mark === marks.TRIANGLE) {
-    var r = boardPoints.radius - fudge;
+    var r = boardPoints.radius - boardPoints.radius / 5;
     var rightNode = coordPt.translate(r * (rootThree / 2), r * (1 / 2));
     var leftNode  = coordPt.translate(r * (-1 * rootThree / 2), r * (1 / 2));
     var topNode = coordPt.translate(0, -1 * r);

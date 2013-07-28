@@ -77,6 +77,18 @@ glift.displays.board._Intersections.prototype = {
     return this;
   },
 
+  clearStones: function() {
+    var elems = glift.enums.svgElements;
+    this.svg.selectAll('.' + elems.STONE).attr('opacity', 0)
+        .attr('stone_color', 'EMPTY');
+    this.svg.selectAll('.' + elems.STONE_SHADOW).attr('opacity', 0);
+  },
+
+  clearAll: function() {
+    this.clearMarks();
+    this.clearStones();
+  },
+
   setEvent: function(event, func) {
     var BUTTON = glift.enums.svgElements.BUTTON;
     this.svg.selectAll('rect' + '.' + BUTTON).data(this.buttonsData)

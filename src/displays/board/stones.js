@@ -11,7 +11,7 @@ glift.displays.board.createStones = function(divId, svg, boardPoints, theme) {
       .attr("cy", function(pt) { return pt.coordPt.y(); })
       .attr("r", boardPoints.radius - .2) // for stroke
       .attr("opacity", 0)
-      .attr('class', glift.enums.svgElements.GLIFT_ELEMENT)
+      .attr('class', glift.enums.svgElements.STONE)
       .attr("stone_color", "EMPTY")
       .attr("fill", 'blue') // dummy color
       .attr("id", function(pt) {
@@ -48,9 +48,10 @@ glift.displays.board.createShadows = function(
       })
       .attr("r", boardPoints.radius - 0.4)
       .attr("opacity", 0)
+      .attr("class", STONE_SHADOW)
       .attr("fill", theme.stones.shadows.fill)
       .attr("stroke", theme.stones.shadows.stroke)
-      .attr("filter", 'url(#' + divId + "_svg_blur)")
+      // .attr("filter", 'url(#' + divId + "_svg_blur)")
       .attr("id", function(pt) {
         var intPt = pt.intPt;
         var id = glift.displays.gui.elementId(divId, STONE_SHADOW, intPt);
