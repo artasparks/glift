@@ -8,16 +8,22 @@ glift.rules.goban = {
     return new Goban(ints);
   },
 
-  getFromMoveTree: function(mt, initPosition) {
+  /**
+   * Create a goban, from a move tree and (optionally) a treePath, which defines
+   * how to get from the start to a given location.  Usually, the treePath is
+   * the initialPosition, but not necessarily.
+   */
+  getFromMoveTree: function(mt, treePath) {
     var goban = new Goban(mt.getIntersections()),
         movetree = mt.getTreeFromRoot();
-    if (initPosition === undefined) {
-      initPosition = [];
+    if (treePath === undefined) {
+      treePath = [];
     }
-    // We assume the movetree is at root
+
+    // We assume the movetree is at root.
     goban.loadStonesFromMovetree(movetree);
-    for (var i = 0; i < initPosition.length; i++) {
-      movetree.moveDown(initPosition[i]);
+    for (var i = 0; i < treePath.length; i++) {
+      movetree.moveDown(treePath[i]);
       goban.loadStonesFromMovetree(movetree);
     }
     return goban;
@@ -203,6 +209,10 @@ Goban.prototype = {
     }
   },
 
+  /**
+   * For the current position in the movetree, load all the stone values into
+   * the goban. This includes placements [AW,AB] and moves [B,W].
+   */
   loadStonesFromMovetree: function(movetree) {
     var cols = [glift.enums.states.BLACK, glift.enums.states.WHITE];
     for (var i = 0; i < cols.length; i++) {

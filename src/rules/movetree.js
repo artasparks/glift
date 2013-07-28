@@ -110,6 +110,13 @@ MoveTree.prototype = {
   },
 
   /**
+   * Get the number of next variations.
+   */
+  numVariations: function() {
+    return this.getNode().numChildren();
+  },
+
+  /**
    * Get the properties object on the current node.
    */
   getProperties: function() {
@@ -202,7 +209,7 @@ MoveTree.prototype = {
     glift.rules.movetree.searchMoveTreeDFS(this.getTreeFromRoot(), func);
   },
 
-  // TODO (probably will involve the recursion)
+  // TODO(kashomon): ADd this.
   toSgf: function() {
     var out = "";
     for (var propKey in this.getAllProps()) {
@@ -245,8 +252,13 @@ MoveTree.prototype = {
     }
   },
 
-  // Used for Problems.
-  // Can return CORRECT, INCORRECT, or INDETERMINATE
+  /**
+   * Used for Problems. Determine if a 'move' is correct
+   *
+   * Can return CORRECT, INCORRECT, or INDETERMINATE
+   *
+   * TODO(kashomon): Move this somewhere else.  It's too specific.
+   */
   isCorrectPosition: function() {
     var problemResults = glift.enums.problemResults;
     if (this.getProperties().isCorrect()) {

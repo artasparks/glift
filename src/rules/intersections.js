@@ -31,6 +31,7 @@ glift.rules.intersections = {
 
   /**
    * Intersection data is a object, containing all the intersection data.  So,
+   *
    *  {
    *    points: {
    *      "1,2" : {
@@ -67,6 +68,10 @@ glift.rules.intersections = {
   getChangeData: function(movetree, captures, extra) {
   },
 
+  /**
+   * Create an object with the current marks at the current position in the
+   * movetree.
+   */
   addCurrentMarks: function(pointsObj, movetree) {
     for (var prop in glift.rules.intersections.propertiesToMarks) {
       var mark = glift.rules.intersections.propertiesToMarks[prop];

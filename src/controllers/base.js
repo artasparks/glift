@@ -22,7 +22,7 @@ BaseController.prototype = {
    */
   initOptions: function(options) {
     this.sgfString = options.sgfString;
-    this.initialPosition = options.initialPositiona;
+    this.initialPosition = options.initialPosition;
     this.extraOptions(options); // Overridden by implementers
     this.initialize();
     return this;
@@ -37,7 +37,7 @@ BaseController.prototype = {
   /**
    * Generally, this is the only thing you need to override.
    */
-  addStone: function() {
+  addStone: function(point, color) {
     throw "Not Implemented";
   },
 

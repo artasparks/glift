@@ -19,18 +19,16 @@ glift.controllers.createStaticProblem = function(rawOptions) {
 };
 
 var methods = {
-  initOptions: function(options) {
-    this.sgfString = options.sgfString || "";
-    this.initialPosition = options.initialPosition;
-    return this;
-  },
-
   /**
    * Add a stone to the board.  Since this is a problem, we check for
    * 'correctness', which we check whether all child nodes are labeled (in some
    * fashion) as correct.
    *
+   * Note: color must be one of enums.states (either BLACK or WHITE).
+   *
    * TODO: Refactor this into something less ridiculous.
+   *
+   * TODO(kashomon): Also, get rid of the stupid message nonsense.
    */
   addStone: function(point, color) {
     var problemResults = glift.enums.problemResults,
@@ -55,6 +53,8 @@ var methods = {
     // to determine whether tho move is 'correct' or not based on the data in
     // the movetree, presumably from an SGF.
     var nextVarNum = this.movetree.findNextMove(point, color);
+
+    // TODO(kashomon): What is this used for?
     this.lastPlayed = {point: point, color: color};
 
     // There are no variations corresponding to the move made, so we assume that

@@ -12,7 +12,8 @@ glift.controllers.processOptions = function(rawOptions) {
       case 'initialPosition':
         if (glift.util.typeOf(value) === 'string') {
           // If there's an error, a ParseError will be thrown.
-          defaults.initialPosition = glift.rules.parseInitPosition(value);
+          defaults.initialPosition =
+              glift.treepath.rules.parseInitPosition(value);
         } else if (glift.util.typeOf(value) === 'array') {
           defaults.initialPosition = value;
         } else {

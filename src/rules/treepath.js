@@ -15,6 +15,7 @@
  *             through the 3rd varition of the 2nd move
  *
  * The init position returned is an array of variation numbers traversed through.
+ * The move number is precisely the length of the array.
  *
  * So:
  * 0       becomes []
