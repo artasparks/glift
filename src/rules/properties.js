@@ -2,7 +2,6 @@
 var util = glift.util;
 var enums = glift.enums;
 
-// A stub for the time being.
 glift.rules.properties = function(map) {
   return new Properties(map);
 };
@@ -16,15 +15,17 @@ var Properties = function(map) {
 }
 
 Properties.prototype = {
-  // Add an SGF Property to the current move. Return the 'this', for
-  // convenience, so that you can chain addProp calls.
-  //
-  // Eventually, each sgf property should be matched to a datatype.  For now,
-  // the user is allowed to put arbitrary data into a property.
-  //
-  // Note that this does not overwrite an existing property - for that, the user
-  // has to delete the existing property. If the property already exists, we add
-  // another data element onto the array.
+  /**
+   * Add an SGF Property to the current move. Return the 'this', for
+   * convenience, so that you can chain addProp calls.
+   *
+   * Eventually, each sgf property should be matched to a datatype.  For now,
+   * the user is allowed to put arbitrary data into a property.
+   *
+   * Note that this does not overwrite an existing property - for that, the user
+   * has to delete the existing property. If the property already exists, we add
+   * another data element onto the array.
+   */
   add: function(prop, value) {
     // Return if the property is not string or a real property
     if (glift.sgf.allProperties[prop] === undefined) {
@@ -45,7 +46,9 @@ Properties.prototype = {
     return this;
   },
 
-  // Return an array of data associated with a property key
+  /**
+   * Return an array of data associated with a property key
+   */
   get: function(strProp) {
     if (glift.sgf.allProperties[strProp] === undefined) {
       util.debugl("attempted to retrieve a property that is not part"
@@ -60,12 +63,14 @@ Properties.prototype = {
     }
   },
 
-  // Get one piece of data associated with a property. Default to the first
-  // element in the data associated with a property.
-  //
-  // Since the get() always returns an array, it's sometimes useful to return
-  // the first property in the list.  Like get(), if a property or value can't
-  // be found, util.none is returned.
+  /**
+   * Get one piece of data associated with a property. Default to the first
+   * element in the data associated with a property.
+   *
+   * Since the get() always returns an array, it's sometimes useful to return
+   * the first property in the list.  Like get(), if a property or value can't
+   * be found, util.none is returned.
+   */
   getDatum: function(strProp, index) {
     var index = (index !== undefined
         && typeof index === 'number' && index >= 0) ? index : 0;
@@ -82,10 +87,10 @@ Properties.prototype = {
   // array of values.
   getAsPoint: function(strProp, index) {
     var out = this.getDatum(strProp, index);
-    if (out !== util.none) {
-      return glift.sgf.sgfCoordToPoint(out);
-    } else {
+    if (out === util.none) {
       return out;
+    } else {
+      return glift.sgf.sgfCoordToPoint(out);
     }
   },
 
@@ -139,16 +144,19 @@ Properties.prototype = {
     }
   },
 
+  /**
+   * Get the current Move
+   */
   getMove: function() {
     if (this.contains('B')) {
       return {
         color: enums.states.BLACK,
-        point: glift.sgf.sgfCoordToPoint(this.getDatum('B'))
+        point: this.getAsPoint('B')
       };
     } else if (this.contains('W')) {
       return {
         color: enums.states.WHITE,
-        point: glift.sgf.sgfCoordToPoint(this.getDatum('W'))
+        point: this.getAsPoint('W')
       };
     } else {
       return util.none;

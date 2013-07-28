@@ -110,7 +110,8 @@ MoveTree.prototype = {
   },
 
   /**
-   * Get the number of next variations.
+   * Get the number of next variations.  This is a convenience method, since it
+   * delegates to getNode().numChildren().
    */
   numVariations: function() {
     return this.getNode().numChildren();
@@ -124,7 +125,10 @@ MoveTree.prototype = {
   },
 
   /**
-   * Given a point and a color, find the
+   * Given a point and a color, find the variation number corresponding to the
+   * branch that has the sepceified move.
+   *
+   * return either the number or glift.util.none;
    */
   findNextMove: function(point, color) {
     var nextNodes = this.getNode().children,
@@ -144,6 +148,30 @@ MoveTree.prototype = {
     }
   },
 
+  /**
+   * Get the last move ([B] or [W]). This is a convenience method, since it
+   * delegates to getProperties().getMove();
+   *
+   * Returns a simple object:
+   *  {
+   *    color:
+   *    point:
+   *  }
+   *
+   * returns glift.util.none if property doesn't exist.  There are two cases
+   * where this can occur:
+   *  - The root node.
+   *  - When, in the middle of the game, stone-placements are added for
+   *  illustration (AW,AB).
+   */
+  getLastMove: function() {
+    return this.getProperties().getMove();
+  },
+
+  /**
+   * Get the current player.  This is exactly the opposite of the last move that
+   * was played -- i.e., the move on the current node.
+   */
   getCurrentPlayer: function() {
     var move = this.getProperties().getMove();
     if (move === util.none) {
@@ -153,15 +181,17 @@ MoveTree.prototype = {
     } else if (move.color === enums.states.WHITE) {
       return enums.states.BLACK;
     } else {
-      // TODO: This is not the right way to do this.  Really, we need to
-      // traverse up the tree until we see a color, and return the opposite. If
-      // we reach the root, _then_ we can return BLACK.
+      // TODO(kashomon): This is not the right way to do this.  Really, we need
+      // to traverse up the tree until we see a color, and return the opposite.
+      // If we reach the root, _then_ we can return BLACK.
       return enums.states.BLACK;
     }
   },
 
-  // Move down, but only if there is an available variation
-  // variationNum can be undefined for convenicence.
+  /**
+   * Move down, but only if there is an available variation
+   * variationNum can be undefined for convenicence.
+   */
   moveDown: function(variationNum) {
     var num = variationNum === undefined ? 0 : variationNum;
     if (this.getNode().getNext(num) !== undefined) {
@@ -171,7 +201,9 @@ MoveTree.prototype = {
     return this;
   },
 
-  // Move up a move, but only if you are not in the intial (0th) move.
+  /**
+   * Move up a move, but only if you are not in the intial (0th) move.
+   */
   moveUp: function() {
     if (this._nodeHistory.length > 1) {
       this._nodeHistory.pop();
@@ -191,14 +223,14 @@ MoveTree.prototype = {
     return this;
   },
 
-  //TODO(nelsonjhk): finish
+  // TODO(kashomon): Finish this.
   deleteCurrentNode: function() {
-    var nodeId = glift.rules.movetree.getNodeId();
-    VarNum = this.getVarNum();
-    this.moveUp();
-    var theMoves = this.getAllNextNodes();
+    // var nodeId = glift.rules.movetree.getNodeId();
+    // VarNum = this.getVarNum();
+    // this.moveUp();
+    // var theMoves = this.getAllNextNodes();
     //delete theMoves(nodeId,VarNum); // This is currently a syntax error
-    return this;
+    throw "Unfinished";
   },
 
   recurse: function(func) {
@@ -209,7 +241,7 @@ MoveTree.prototype = {
     glift.rules.movetree.searchMoveTreeDFS(this.getTreeFromRoot(), func);
   },
 
-  // TODO(kashomon): ADd this.
+  // TODO(kashomon): Add this.
   toSgf: function() {
     var out = "";
     for (var propKey in this.getAllProps()) {

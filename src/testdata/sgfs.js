@@ -60,7 +60,7 @@ testdata.sgfs = {
     ";B[qb]GB[1]C[White loses his corner])))",
 
   complexproblem:
-    "(;GM[1]FF[4]CA[UTF-8]AP[CGoban:3]ST[2]\n" +
+    "(;GM[1]FF[4]CA[UTF-8]AP[Glift]ST[2]\n" +
     "RU[Japanese]SZ[19]KM[0.00]\n" +
     "PW[White]PB[Black]AW[pa][qa][nb][ob][qb][oc][pc][md][pd][ne][oe]\n" +
     "AB[na][ra][mb][rb][lc][qc][ld][od][qd][le][pe][qe][mf][nf][of][pg]\n" +
@@ -69,22 +69,22 @@ testdata.sgfs = {
     "(;B[ma]\n" +
 
     "(;W[oa]\n" +
-    ";B[nc]\n" +
-    ";W[nd]\n" +
-    ";B[mc]GB[1]C[White dies.])\n" +
+      ";B[nc]\n" +
+      ";W[nd]\n" +
+      ";B[mc]GB[1]C[White dies.])\n" +
 
     "(;W[mc]\n" +
-    "(;B[oa]\n" +
-    ";W[nd]\n" +
-    ";B[pb]C[White lives])\n" +
-    "(;B[nd]\n" +
-    ";W[nc]\n" +
-    ";B[oa]GB[1]C[White dies.]))\n" +
+      "(;B[oa]\n" +
+        ";W[nd]\n" +
+        ";B[pb]C[White lives])\n" +
+      "(;B[nd]\n" +
+        ";W[nc]\n" +
+        ";B[oa]GB[1]C[White dies.]))\n" +
 
     "(;W[nd]\n" +
-    ";B[mc]\n" +
-    ";W[oa]\n" +
-    ";B[nc]GB[1]C[White dies.])))",
+      ";B[mc]\n" +
+      ";W[oa]\n" +
+      ";B[nc]GB[1]C[White dies.])))",
 
   marktest:
     "(;GM[1]FF[4]CA[UTF-8]AP[CGoban:3]ST[2]" +
