@@ -23,7 +23,7 @@ glift.themes.registered.DEFAULT = {
     },
 
     marks: {
-      'font-family' : 'sans-serif',
+      'font-family' : 'sans-serif'
     },
 
     "EMPTY" : {

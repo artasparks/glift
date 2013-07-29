@@ -97,6 +97,7 @@ var methods = {
   toBeginning: function() {
     this.movetree = this.movetree.getTreeFromRoot();
     this.goban = glift.rules.goban.getFromMoveTree(this.movetree, []);
+    this.currentMoveNumber = 0;
     return this.getEntireBoardState();
   },
 
@@ -104,7 +105,6 @@ var methods = {
    * Go to the end.
    */
   toEnd: function() {
-    glift.util.logz('toEnd');
     while (this.movetree.numVariations() > 0) {
       this._nextMoveNoState();
     }
@@ -116,9 +116,9 @@ var methods = {
    * preserved.
    */
   prevMove: function() {
-    // TODO(kashomon): PrevMove doesn't currently work for some reason.  It
+    // TODO(kashomon): Fix. PrevMove doesn't currently work for some reason.  It
     // definitely needs more testing.
-    this.currentMoveNumber = this.currentMoveNumber == 0 ?
+    this.currentMoveNumber = this.currentMoveNumber === 0 ?
         this.currentMoveNumber : this.currentMoveNumber - 1;
     this.movetree.moveUp();
     // There's no way to go backwards in time on the gobans, currently, unless
