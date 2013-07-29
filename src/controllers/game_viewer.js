@@ -92,10 +92,32 @@ var methods = {
   },
 
   /**
+   * Go back to the beginning.
+   */
+  toBeginning: function() {
+    this.movetree = this.movetree.getTreeFromRoot();
+    this.goban = glift.rules.goban.getFromMoveTree(this.movetree, []);
+    return this.getEntireBoardState();
+  },
+
+  /**
+   * Go to the end.
+   */
+  toEnd: function() {
+    glift.util.logz('toEnd');
+    while (this.movetree.numVariations() > 0) {
+      this._nextMoveNoState();
+    }
+    return this.getEntireBoardState();
+  },
+
+  /**
    * Get the Previous move in the game.  The path traversed by the player is
    * preserved.
    */
   prevMove: function() {
+    // TODO(kashomon): PrevMove doesn't currently work for some reason.  It
+    // definitely needs more testing.
     this.currentMoveNumber = this.currentMoveNumber == 0 ?
         this.currentMoveNumber : this.currentMoveNumber - 1;
     this.movetree.moveUp();
@@ -112,6 +134,14 @@ var methods = {
    * then we follow this previous path.
    */
   nextMove: function() {
+    this._nextMoveNoState();
+    return this.getEntireBoardState();
+  },
+
+  /**
+   * Get the next move without returning the updated state.
+   */
+  _nextMoveNoState: function() {
     if (this.gamePath[this.currentMoveNumber] !== undefined) {
       this.movetree.moveDown(this.gamePath[this.currentMoveNumber]);
     } else {
@@ -121,7 +151,6 @@ var methods = {
     this.currentMoveNumber++;
     // Load all of: [B, W, AW, AB].
     this.goban.loadStonesFromMovetree(this.movetree);
-    return this.getEntireBoardState();
   }
 };
 })();

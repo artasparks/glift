@@ -40,7 +40,8 @@ glift.rules.intersections = {
    *      }
    *      ... etc ...
    *    }
-   *    comment : "foo"
+   *    comment : "foo",
+   *    lastMove : { color: <color>, point: <point> }
    *  }
    */
   getFullBoardData: function(movetree, goban) {
@@ -55,6 +56,7 @@ glift.rules.intersections = {
       sobj.stone = gobanStones[i].color;
       pointsObj[pt.hash()] = sobj;
     }
+    out.lastMove = movetree.getLastMove();
 
     pointsObj = this.addCurrentMarks(pointsObj, movetree);
     out.points = pointsObj;

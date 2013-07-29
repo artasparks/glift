@@ -48,6 +48,8 @@ glift.rules.gobanTest = function() {
     ok(result.successful, "must be be successful");
     deepEqual(result.captures[0].toString(), glift.util.point(1,2).toString(),
         "must have captured the white stone");
+    deepEqual(test_goban.getStone(glift.util.point(1,2)), EMPTY,
+        "Must be removed");
   });
 
   test("Capture -- side", function() {

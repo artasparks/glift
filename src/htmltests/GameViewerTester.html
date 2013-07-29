@@ -131,7 +131,7 @@
       <script type="text/javascript">
         $.get("../testdata/Fujisawa-Hosai-vs-Go-Seigen-" +
             "19430225-commentary-An-Younggil-8p.sgf", function(data) {
-          var gameViewer = glift.widgets.gameViewer({
+          window.gameViewer = glift.widgets.gameViewer({
             sgfString: data,
             theme: 'DEPTH',
             //goBoardBackground: '../themes/assets/bambootile_warm.jpg',

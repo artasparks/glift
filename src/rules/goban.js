@@ -66,7 +66,7 @@ Goban.prototype = {
 
   // Get all the placed stones on the board (BLACK or WHITE)
   // Returns an array of the form:
-  // [ {point:point, color:color}, {...}, ...]
+  // [ {point:<point>, color:<color>}, {...}, ...]
   getAllPlacedStones: function() {
     var out = [];
     for (var i = 0; i < this.stones.length; i++) {
@@ -111,7 +111,7 @@ Goban.prototype = {
   },
 
   clearSome: function(points) {
-    for (var i = 1; i < points.length; i++) {
+    for (var i = 0; i < points.length; i++) {
       this.clearStone(points[i]);
     }
   },
@@ -224,7 +224,7 @@ Goban.prototype = {
       }
     }
     var mv = movetree.getProperties().getMove();
-    if (mv != glift.util.none) {
+    if (mv !== glift.util.none) {
       this.addStone(mv.point, mv.color);
     }
   },

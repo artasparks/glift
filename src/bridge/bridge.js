@@ -8,11 +8,11 @@ glift.bridge = {
    *
    * For a more detailed discussion, see intersections in glift.rules.
    */
-  setDisplayState: function(intersectionData, display) {
+  setDisplayState: function(fullBoardData, display) {
     var marks = glift.enums.marks;
     display.intersections().clearMarks();
-    for (var ptHash in intersectionData.points) {
-      var intersection = intersectionData.points[ptHash];
+    for (var ptHash in fullBoardData.points) {
+      var intersection = fullBoardData.points[ptHash];
       var pt = intersection.point;
       if ('stone' in intersection) {
         var color = intersection.stone;
@@ -27,6 +27,10 @@ glift.bridge = {
           }
         }
       }
+    }
+    if (fullBoardData.lastMove && fullBoardData.lastMove !== glift.util.none) {
+      var lm = fullBoardData.lastMove;
+      display.intersections().addMarkPt(lm.point, marks.STONE_MARKER);
     }
   }
 };

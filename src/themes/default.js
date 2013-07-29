@@ -24,10 +24,6 @@ glift.themes.registered.DEFAULT = {
 
     marks: {
       'font-family' : 'sans-serif',
-      'STONE_MARKER' : {
-        fill: 'blue',
-        opacity: 0.6
-      }
     },
 
     "EMPTY" : {
@@ -46,7 +42,11 @@ glift.themes.registered.DEFAULT = {
       stroke: "black",
       marks: {
         fill: 'white',
-        stroke: 'white'
+        stroke: 'white',
+        'STONE_MARKER' : {
+          fill: 'cyan',
+          opacity: 0.6
+        }
       }
     },
     "BLACK_HOVER" : {
@@ -60,7 +60,11 @@ glift.themes.registered.DEFAULT = {
       "stroke-width": 1, // The default value
       marks: {
         fill: 'black',
-        stroke: 'black'
+        stroke: 'black',
+        'STONE_MARKER' : {
+          fill: 'blue',
+          opacity: 0.6
+        }
       }
     },
     "WHITE_HOVER" : {

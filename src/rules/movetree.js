@@ -189,8 +189,8 @@ MoveTree.prototype = {
   },
 
   /**
-   * Move down, but only if there is an available variation
-   * variationNum can be undefined for convenicence.
+   * Move down, but only if there is an available variation.  variationNum can
+   * be undefined for convenicence, in which case it defaults to 0.
    */
   moveDown: function(variationNum) {
     var num = variationNum === undefined ? 0 : variationNum;

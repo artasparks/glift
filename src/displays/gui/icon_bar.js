@@ -56,6 +56,7 @@ var IconBar = function(divId, themeName, iconNames, vertMargin, horzMargin) {
   this.horzMargin = horzMargin;
   this.iconObjects = {}; // init'd by draw
   this.iconButtons = {}; // init'd by draw
+  this.events = {};
 };
 
 IconBar.prototype = {
@@ -144,8 +145,16 @@ IconBar.prototype = {
    */
   setEvent: function(event, iconName, func) {
     var that = this; // not sure if this is necessary
+    this.events[iconName] = func;
     d3.select('#' + that.buttonId(iconName))
       .on(event, function() { func(that.getIcon(iconName)); });
+    return this;
+  },
+
+  forceEvent: function(iconName) {
+    if (this.events[iconName] !== undefined) {
+      this.events[iconName]();
+    }
     return this;
   },
 
@@ -192,6 +201,7 @@ IconBar.prototype = {
     this.divId && d3.select('#' + this.divId).selectAll("svg").remove();
     this.iconObjects = {};
     this.iconButtons = {};
+    this.events = {};
     return this;
   }
 };

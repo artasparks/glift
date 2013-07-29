@@ -113,8 +113,8 @@ glift.displays.board.addMark = function(
         .attr('cy', coordPt.y())
         .attr('r', boardPoints.radius / 3)
         .attr('class', MARK)
-        .attr('opacity', stoneMarkerTheme.opacity)
-        .attr('fill', stoneMarkerTheme.fill);
+        .attr('opacity', marksTheme.STONE_MARKER.opacity)
+        .attr('fill', marksTheme.STONE_MARKER.fill);
   } else if (mark === marks.TRIANGLE) {
     var r = boardPoints.radius - boardPoints.radius / 5;
     var rightNode = coordPt.translate(r * (rootThree / 2), r * (1 / 2));
