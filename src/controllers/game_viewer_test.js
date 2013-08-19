@@ -4,14 +4,14 @@ glift.controllers.gameViewerTest = function() {
   var states = glift.enums.states;
 
   test("Test Create", function() {
-    var gameViewer = glift.controllers.createGameViewer({ sgfString: problem });
+    var gameViewer = glift.controllers.gameViewer({ sgfString: problem });
     ok(gameViewer !== undefined, "Make sure we can actually create an obj");
     deepEqual(gameViewer.currentMoveNumber, 0, "index init'd to 0");
     deepEqual(gameViewer.gamePath, [], "Gamepath set to beginning");
   });
 
   test("Test NextMove / PrevMove", function() {
-    var gameViewer = glift.controllers.createGameViewer({ sgfString: problem });
+    var gameViewer = glift.controllers.gameViewer({ sgfString: problem });
     var fullData = gameViewer.nextMove();
     var move = gameViewer.movetree.getLastMove();
     ok(move !== undefined);
@@ -55,7 +55,7 @@ glift.controllers.gameViewerTest = function() {
   });
 
   test("Test Simple Change Variations", function() {
-    var gameViewer = glift.controllers.createGameViewer({ sgfString: problem });
+    var gameViewer = glift.controllers.gameViewer({ sgfString: problem });
     var fullData = gameViewer.setNextVariation(1).nextMove();
     var move = gameViewer.movetree.getLastMove();
     deepEqual(gameViewer.currentMoveNumber, 1);
@@ -68,7 +68,7 @@ glift.controllers.gameViewerTest = function() {
   });
 
   test("AddStone", function() {
-    var gameViewer = glift.controllers.createGameViewer({ sgfString: problem });
+    var gameViewer = glift.controllers.gameViewer({ sgfString: problem });
     var data = gameViewer.addStone(glift.util.point(18,0), states.BLACK);
     deepEqual(data, glift.util.none);
     var data = gameViewer.addStone(glift.util.point(12,0), states.BLACK);
@@ -77,7 +77,7 @@ glift.controllers.gameViewerTest = function() {
   });
 
   test("Test complex path", function() {
-    var gameViewer = glift.controllers.createGameViewer({ sgfString: problem });
+    var gameViewer = glift.controllers.gameViewer({ sgfString: problem });
     gameViewer.setNextVariation(1).nextMove(); // [1x]
     gameViewer.moveUpVariations(1).nextMove(); // [1,1x]
     gameViewer.moveDownVariations(1).nextMove(); // [1,1,1x]

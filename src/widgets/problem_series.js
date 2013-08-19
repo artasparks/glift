@@ -1,16 +1,18 @@
 (function() {
 glift.widgets.problemSeries = function(options) {
   var divId = '' + (options.divId || 'glift_display');
+  var urls = options.urls || [];
   var series = new ProblemSeries(options, divId);
-  return series;
+  return series.draw();
 };
 
 ProblemSeries = function(options, wrapperDiv) {
   this.options = options;
+  this.urls = options.urls;
+  this.index = 0;
   this.wrapperDiv = wrapperDiv;
   this.problemDisplay = undefined;
   this.iconBar = undefined;
-  this.draw();
 };
 
 ProblemSeries.prototype = {
@@ -31,6 +33,28 @@ ProblemSeries.prototype = {
       horzMargin: margin,
       icons:  ['chevron-left', 'refresh', 'chevron-right', 'roadmap',
           'small-gear']
+    });
+    this.initIconHandlers();
+    return this;
+  },
+
+  initProblem: function() {
+  },
+
+  initIconHandlers: function() {
+    var that = this;
+    this.iconBar.forEachIcon(function(icon) {
+      that.iconBar.setEvent('mouseover', icon.name, function() {
+        d3.select('#' + icon.iconId)
+            .attr('fill', 'red');
+      }).setEvent('mouseout', icon.name, function() {
+        d3.select('#' + icon.iconId)
+            .attr('fill', that.iconBar.theme.icons.DEFAULT.fill);
+      });
+    });
+
+    this.iconBar.setEvent('click', 'arrowright', function() {
+      this.index = this.index++;
     });
   },
 

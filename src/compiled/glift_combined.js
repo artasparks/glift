@@ -2194,6 +2194,16 @@ glift.displays.gui.rowCenter = function(
   return { transforms: transforms, bboxes: finishedBoxes };
 };
 (function() {
+glift.displays.gui.commentBox = function(divId) {
+  return new CommentBox(divId, theme);
+};
+
+var CommentBox = function(divId, theme) {
+  this.divId = divId;
+  this.theme = theme;
+};
+})();
+(function() {
 /**
  * Options:
  *    - divId (if need to create paper)
@@ -5592,16 +5602,18 @@ GameViewer.prototype = {
 (function() {
 glift.widgets.problemSeries = function(options) {
   var divId = '' + (options.divId || 'glift_display');
+  var urls = options.urls || [];
   var series = new ProblemSeries(options, divId);
-  return series;
+  return series.draw();
 };
 
 ProblemSeries = function(options, wrapperDiv) {
   this.options = options;
+  this.urls = options.urls;
+  this.index = 0;
   this.wrapperDiv = wrapperDiv;
   this.problemDisplay = undefined;
   this.iconBar = undefined;
-  this.draw();
 };
 
 ProblemSeries.prototype = {
@@ -5623,6 +5635,28 @@ ProblemSeries.prototype = {
       icons:  ['chevron-left', 'refresh', 'chevron-right', 'roadmap',
           'small-gear']
     });
+    this.initIconHandlers();
+    return this;
+  },
+
+  initProblem: function() {
+  },
+
+  initIconHandlers: function() {
+    var that = this;
+    this.iconBar.forEachIcon(function(icon) {
+      that.iconBar.setEvent('mouseover', icon.name, function() {
+        d3.select('#' + icon.iconId)
+            .attr('fill', 'red');
+      }).setEvent('mouseout', icon.name, function() {
+        d3.select('#' + icon.iconId)
+            .attr('fill', that.iconBar.theme.icons.DEFAULT.fill);
+      });
+    });
+
+    this.iconBar.setEvent('click', 'arrowright', function() {
+      this.index = this.index++;
+    });
   },
 
   redraw: function() {
@@ -5637,4 +5671,35 @@ ProblemSeries.prototype = {
     return this;
   }
 };
+})();
+(function() {
+glift.widgets.problemService = function(options) {
+  var divId = '' + (options.divId || 'glift_display');
+  var url = options.url;
+  var service = new ProblemService(options, divId);
+  return service.draw();
+};
+
+
+/**
+ * A Problem Service is a widget that gets its problems from a single URL.  Thus
+ * the ProblemService must be backed by some web server.
+ *
+ * For static problems, use the ProblemSeries.
+ */
+ProblemService = function(options, wrapperDiv) {
+  this.options = options;
+  this.urls = options.urls;
+  this.index = 0;
+  this.wrapperDiv = wrapperDiv;
+  this.problemDisplay = undefined;
+  this.iconBar = undefined;
+};
+
+ProblemService.prototype = {
+  draw: function() {
+    return this;
+  }
+};
+
 })();

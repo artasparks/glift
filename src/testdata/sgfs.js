@@ -62,6 +62,8 @@ testdata.sgfs = {
   complexproblem:
     "(;GM[1]FF[4]CA[UTF-8]AP[Glift]ST[2]\n" +
     "RU[Japanese]SZ[19]KM[0.00]\n" +
+    "C[Black to play. There aren't many options " +
+    "to choose from, but you might be surprised at the answer!]" +
     "PW[White]PB[Black]AW[pa][qa][nb][ob][qb][oc][pc][md][pd][ne][oe]\n" +
     "AB[na][ra][mb][rb][lc][qc][ld][od][qd][le][pe][qe][mf][nf][of][pg]\n" +
     "(;B[mc]\n" +

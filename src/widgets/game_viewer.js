@@ -7,7 +7,7 @@ glift.widgets.gameViewer = function(options) {
 GameViewer = function(options, wrapperDiv) {
   this.options = options;
   this.wrapperDiv = wrapperDiv;
-  this.controller = glift.controllers.createGameViewer(options);
+  this.controller = glift.controllers.gameViewer(options);
   this.display = undefined;
   this.gameDisplay = undefined;
   this.commentDisplay = undefined;
@@ -19,7 +19,6 @@ GameViewer.prototype = {
     var that = this;
     this.divInfo = glift.displays.gui.splitDiv(
         this.wrapperDiv, [.70,.20], 'horizontal');
-
     this.goboxDivId = this.divInfo[0].id;
     this.commentBoxId = this.divInfo[1].id;
     this.iconBarId = this.divInfo[2].id;
@@ -30,19 +29,11 @@ GameViewer.prototype = {
     var boundingWidth = $('#' +  this.goboxDivId).width();
 
     // note: divInfo[1] is for comments
-    this.commentBox = $('#' + this.commentBoxId);
-    this.commentBox.css({
-      // "border-radius": "10px",
-      // "-moz-border-radius": "10px",
-      // "-webkit-border-radius": "10px",
-      background: '#CCCCFF',
-      left: (boundingWidth - this.display.width()) / 2,
-      right: (boundingWidth + this.display.width()) / 2,
-      margin: 'auto',
-      'font-family': 'Baskerville',
-      overflow: 'auto',
-      width: this.display.width()
-    });
+    this.commentBox = glift.displays.gui.commentBox(
+        this.commentBoxId,
+        this.display.width(),
+        boundingWidth,
+        this.options.themeName);
 
     var margin = (boundingWidth - this.display.width()) / 2;
     this.iconBar = glift.displays.gui.iconBar({
@@ -116,10 +107,9 @@ GameViewer.prototype = {
 
   setCommentBox: function(fullBoardData) {
     if (fullBoardData.comment) {
-      this.commentBox.html('<p>' +
-          fullBoardData.comment.replace(/\n/g, '<br><p>'));
+      this.commentBox.setText(fullBoardData.comment);
     } else {
-      this.commentBox.html('');
+      this.commentBox.clearText();
     }
   },
 

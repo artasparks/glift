@@ -24,7 +24,8 @@ glift.displays.board.Display = function(inEnvironment, themeName, theme) {
   this._intersections = undefined // defined in draw;
   this.intersections = function() { return this._intersections; };
 
-  // Methods accessing private data
+  // Methods accessing private data. Most of these are no longer private and
+  // need to be moved out.
   this.intersectionPoints = function() { return this._environment.intersections; };
   this.boardPoints = function() { return this._environment.boardPoints; };
   this.divId = function() { return this._environment.divId };

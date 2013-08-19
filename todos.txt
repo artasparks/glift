@@ -1,10 +1,51 @@
 Done - Replace stone bbox with button.
+Done - 'stone model' to be intersection based
+Done - add star point object
+Done - add lines object
+Done - Add marks.
+Done - Add a key-stroke mapping
 
-- 'stone model' to be intersection based
-  - add star point object
-  - add lines object
+Smaller Changes.
 - Add generic options parsing.
-- Add marks.
 - Add tests for widgets.
 - Add tests for marks.
 - Remove argument guarding code.
+- Change public createBlah(...) to just blah(...)
+- BUG: Getting to the end of a Game causes problems for some reason.
+- Add intersections on the edges.
+- Finish key-stroke mappings (add more keys)
+- Add movetree->SGF transformation
+
+- Make the adding/removing stones smarter / more efficient.
+- Support displaying variations (movetree)
+
+Some ideas for future development:
+1. Make a base window configuration that does more for you.
+  - Should provide the Go board by default (display).
+  - Should provide a comment window by default.  Relatively easy.
+  - Should provide an icon bar by default.  Icons will have to be created by
+    user (parent widget).  Hover should be provided automatically. 'click' will
+    still need to added.
+  - Controller will still need to be added.  By default, I suppose the
+    BaseController could be added.  This would make testing a bit easier
+  - This would mean that new widgets could be reduced to:
+    FooWidget = function(options) {
+      this.controller = glift.controllers.fooController(...);
+      this.baseWidget = glift.widgets.baseWidget({
+        icons: ['foo', 'bar', 'biff'],
+        controller: controller,
+      })
+      this.baseWidget.setClickHandler(...);
+    }
+
+2. Make the base configuration totally resizeable.  This is a relatively
+difficult problem I'm not sure what the best way to approach it is.  Probably I
+will create a wrapper abstraction that automatically changes the dimensions of
+the boxes, since everything is absolutely positioned.  How does the real world
+solve this problem?
+  - Auto-resizes.
+  - Changes orientations based on screen dimensions.
+
+3. Really make the Problem series work the way I want
+
+4. Make a Problem Reviewer Widget

@@ -55,6 +55,7 @@ glift.displays.gui = {
     for (var i = 0; i < percents.length; i++) {
       totalPercent += percents[i];
     }
+
     if (totalPercent > 1 || totalPercent < 0) {
       throw 'Percents must sum to a number be between 0 and 1.' +
           'Was ' + totalPercent;
