@@ -15,9 +15,15 @@ Smaller Changes.
 - Add intersections on the edges.
 - Finish key-stroke mappings (add more keys)
 - Add movetree->SGF transformation
+- Make the comment box prettier.
+- figure out how to support pass
+- add moveTree support for delete
+
+- support vert centered icons (editor).
 
 - Make the adding/removing stones smarter / more efficient.
 - Support displaying variations (movetree)
+
 
 Some ideas for future development:
 1. Make a base window configuration that does more for you.
@@ -44,8 +50,8 @@ will create a wrapper abstraction that automatically changes the dimensions of
 the boxes, since everything is absolutely positioned.  How does the real world
 solve this problem?
   - Auto-resizes.
-  - Changes orientations based on screen dimensions.
+  - Changes orientations based on screen dimensions.  See the KGS window.
 
-3. Really make the Problem series work the way I want
+3. Really make the Problem series work the way I want!
 
-4. Make a Problem Reviewer Widget
+4. Make a Problem Reviewer Widget.  Perhaps, generally, make an Info panel box.

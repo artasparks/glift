@@ -17,29 +17,17 @@ glift.sgf = {
     }
   },
 
-  // SGFs are indexed from the Upper Left:
-  //  _  _  _
-  // |aa ba ca ...
-  // |ab bb
-  // |.
-  // |.
-  // |.
-  sgfCoordToPoint: function(c) {
-    var a = 'a'.charCodeAt(0)
-    return glift.util.point(c.charCodeAt(0) - a, c.charCodeAt(1) - a);
-  },
-
   allSgfCoordsToPoints: function(arr) {
     var out = [];
     for (var i = 0; i < arr.length; i++) {
-      out.push(glift.sgf.sgfCoordToPoint(arr[i]));
+      out.push(glift.util.pointFromSgfCoord(arr[i]));
     }
     return out;
   },
 
   convertFromLabelData: function(data) {
     var parts = data.split(":"),
-        pt = glift.sgf.sgfCoordToPoint(parts[0]),
+        pt = glift.util.pointFromSgfCoord(parts[0]),
         value = parts[1];
     return {point: pt, value: value};
   },

@@ -41,7 +41,7 @@ glift.rules.intersectionsTest = function() {
         data = glift.rules.intersections.getFullBoardData(movetree, goban),
         datap = data.points,
 
-        conv = glift.sgf.sgfCoordToPoint,
+        conv = glift.util.pointFromSgfCoord,
         mk = glift.enums.marks,
         col = glift.enums.states,
 

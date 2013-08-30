@@ -64,7 +64,7 @@ var methods = {
    */
   moveUpVariations: function() {
     return this.setNextVariation((this.getNextVariationNumber() + 1)
-        % this.movetree.numVariations());
+        % this.movetree.getNode().numChildren());
   },
 
   /**
@@ -74,8 +74,8 @@ var methods = {
     // Module is defined incorrectly for negative numbers.  So, we need to add n
     // to the result.
     return this.setNextVariation((this.getNextVariationNumber() - 1 +
-        + this.movetree.numVariations())
-        % this.movetree.numVariations());
+        + this.movetree.getNode().numChildren())
+        % this.movetree.getNode().numChildren());
   },
 
   /**
@@ -87,7 +87,7 @@ var methods = {
     // this.gamePath.length (if at the end).  Thus, if the old gamepath was
     // [0,1,2,0] and the currentMoveNumber was 2, we'll have [0, 1, num].
     this.gamePath = this.gamePath.slice(0, this.currentMoveNumber);
-    this.gamePath.push(num % this.movetree.numVariations());
+    this.gamePath.push(num % this.movetree.getNode().numChildren());
     return this;
   },
 
@@ -105,7 +105,7 @@ var methods = {
    * Go to the end.
    */
   toEnd: function() {
-    while (this.movetree.numVariations() > 0) {
+    while (this.movetree.getNode().numChildren() > 0) {
       this._nextMoveNoState();
     }
     return this.getEntireBoardState();

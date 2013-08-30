@@ -28,6 +28,15 @@ glift.bridge = {
         }
       }
     }
+
+    if (fullBoardData.nextMoves.length > 1) {
+      for (var i = 0; i < fullBoardData.nextMoves.length; i++) {
+        var nextMove = fullBoardData.nextMoves[i];
+        display.intersections().addMarkPt(
+            nextMove.point, marks.VARIATION_MARKER, i + 1);
+      }
+    }
+
     if (fullBoardData.lastMove && fullBoardData.lastMove !== glift.util.none) {
       var lm = fullBoardData.lastMove;
       display.intersections().addMarkPt(lm.point, marks.STONE_MARKER);

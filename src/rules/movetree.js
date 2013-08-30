@@ -36,10 +36,8 @@ glift.rules.movetree = {
    * Create an empty MoveTree
    */
   getInstance: function(intersections) {
-    var intersections = intersections || 19;
-    var mt = new MoveTree(glift.rules.movenode());
-    mt.setIntersections(intersections);
-    return mt;
+    var ints = intersections || 19;
+    return new MoveTree(glift.rules.movenode()).setIntersections(ints);
   },
 
   /**
@@ -84,11 +82,19 @@ glift.rules.movetree = {
  * (usually) a processed parsed SGF, but could be created organically.
  *
  * The tree itself is tree structure made out of MoveNodes.
+ *
+ * Semantically, a MoveTree can be thought of as a game.  Thus, this is the
+ * place where such moves as currentPlayer or lastMove.
  */
 var MoveTree = function(rootNode) {
   // The moveHistory serves two purposes -- it allows travel backwards (i.e.,
   // up the tree), and it gives the current move, which is the last move in the
   // array.
+  //
+  // Really, this exists so that we don't have to make the nodes have to know
+  // about their parent node.  It would be nice to know linkkkkk
+  // Unfortunately, there's not good way to do this at parsing time, as far as I
+  // know.
   this._nodeHistory = [];
   this._nodeHistory.push(rootNode);
 };
@@ -107,14 +113,6 @@ MoveTree.prototype = {
    */
   getNode: function() {
     return this._nodeHistory[this._nodeHistory.length - 1];
-  },
-
-  /**
-   * Get the number of next variations.  This is a convenience method, since it
-   * delegates to getNode().numChildren().
-   */
-  numVariations: function() {
-    return this.getNode().numChildren();
   },
 
   /**
@@ -169,6 +167,30 @@ MoveTree.prototype = {
   },
 
   /**
+   * Get the next moves (i.e., nodes with either B or W properties);
+   *
+   * returns an array of dicts with the moves, e.g.,
+   *
+   *  [{
+   *    color: <BLACK or WHITE>
+   *    point: point
+   *  },
+   *  {...}]
+   */
+  nextMoves: function() {
+    var curNode = this.getNode();
+    var nextMoves = [];
+    for (var i = 0; i < curNode.numChildren(); i++) {
+      var nextNode = curNode.getChild(i);
+      var move = nextNode.properties.getMove();
+      if (move !== glift.util.none) {
+        nextMoves.push(move);
+      }
+    }
+    return nextMoves;
+  },
+
+  /**
    * Get the current player.  This is exactly the opposite of the last move that
    * was played -- i.e., the move on the current node.
    */
@@ -194,8 +216,8 @@ MoveTree.prototype = {
    */
   moveDown: function(variationNum) {
     var num = variationNum === undefined ? 0 : variationNum;
-    if (this.getNode().getNext(num) !== undefined) {
-      var next = this.getNode().getNext(num);
+    if (this.getNode().getChild(num) !== undefined) {
+      var next = this.getNode().getChild(num);
       this._nodeHistory.push(next);
     }
     return this;
@@ -217,6 +239,10 @@ MoveTree.prototype = {
     return this;
   },
 
+  /**
+   * Add a newNode and move to that position.  This is convenient becuase it
+   * means you can start adding properties.
+   */
   addNewNode: function() {
     this.getNode().addChild();
     this.moveDown(this.getNode().numChildren() - 1);
@@ -285,7 +311,7 @@ MoveTree.prototype = {
   },
 
   /**
-   * Used for Problems. Determine if a 'move' is correct
+   * Used for Problems. Determine if a 'move' is correct.
    *
    * Can return CORRECT, INCORRECT, or INDETERMINATE
    *

@@ -37,7 +37,7 @@ glift.rules.movetreeTest = function() {
   });
 
   test("that sgf point conversion works", function() {
-    var pt = glift.sgf.sgfCoordToPoint("ac");
+    var pt = glift.util.pointFromSgfCoord("ac");
     deepEqual(pt.x(), 0, "pt.x");
     deepEqual(pt.y(), 2, "pt.y");
     deepEqual(glift.sgf.pointToSgfCoord(pt), "ac", "pt to sgf coord");
@@ -144,7 +144,7 @@ glift.rules.movetreeTest = function() {
 
   test("Recursing through the nodes works", function() {
     var movt = movetree.getInstance(),
-        conv = glift.sgf.sgfCoordToPoint,
+        conv = glift.util.pointFromSgfCoord,
         expected = [
             'b_' + conv('pb'),
             'w_' + conv('nc'),
@@ -194,5 +194,25 @@ glift.rules.movetreeTest = function() {
         problemResults = glift.enums.problemResults;
     deepEqual(movt.isCorrectPosition(), problemResults.INDETERMINATE,
         "Starting position must be indeterminate");
+  });
+
+  test("Next Moves", function() {
+    var movt = glift.rules.movetree.getFromSgf(sgfs.complexproblem);
+    var states = glift.enums.states;
+    var next = movt.nextMoves();
+    var expected = [
+      {color: states.BLACK, point: glift.util.pointFromSgfCoord('mc') },
+      {color: states.BLACK, point: glift.util.pointFromSgfCoord('ma') }
+    ];
+    deepEqual(next, expected, 'Next Moves');
+
+    movt.moveDown(1);
+    var next = movt.nextMoves();
+    var expected = [
+      {color: states.WHITE, point: glift.util.pointFromSgfCoord('oa') },
+      {color: states.WHITE, point: glift.util.pointFromSgfCoord('mc') },
+      {color: states.WHITE, point: glift.util.pointFromSgfCoord('nd') }
+    ];
+    deepEqual(next, expected, 'Next Moves');
   });
 };

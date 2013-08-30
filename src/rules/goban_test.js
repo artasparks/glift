@@ -79,7 +79,7 @@ glift.rules.gobanTest = function() {
 
   test("Init from MoveTree", function() {
     var movetree = glift.rules.movetree.getFromSgf(testdata.sgfs.veryeasy),
-        conv = glift.sgf.sgfCoordToPoint,
+        conv = glift.util.pointFromSgfCoord,
         initPos = glift.rules.treepath.parseInitPosition('3'),
         goban = glift.rules.goban.getFromMoveTree(movetree, initPos),
         expPoint_pm = conv('ef'),

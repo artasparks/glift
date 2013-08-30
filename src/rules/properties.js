@@ -90,7 +90,7 @@ Properties.prototype = {
     if (out === util.none) {
       return out;
     } else {
-      return glift.sgf.sgfCoordToPoint(out);
+      return glift.util.pointFromSgfCoord(out);
     }
   },
 
@@ -145,7 +145,13 @@ Properties.prototype = {
   },
 
   /**
-   * Get the current Move
+   * Get the current Move.  Returns util.none if no move exists.
+   *
+   * Specifically, returns a dict:
+   *  {
+   *    color: <BLACK / WHITE>
+   *    point: point
+   *  }
    */
   getMove: function() {
     if (this.contains('B')) {

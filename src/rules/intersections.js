@@ -42,6 +42,10 @@ glift.rules.intersections = {
    *    }
    *    comment : "foo",
    *    lastMove : { color: <color>, point: <point> }
+   *    nextMoves : [
+   *      { color: <color>, point: <point> },
+   *      ...
+   *    ]
    *  }
    */
   getFullBoardData: function(movetree, goban) {
@@ -57,6 +61,8 @@ glift.rules.intersections = {
       pointsObj[pt.hash()] = sobj;
     }
     out.lastMove = movetree.getLastMove();
+
+    out.nextMoves = movetree.nextMoves();
 
     pointsObj = this.addCurrentMarks(pointsObj, movetree);
     out.points = pointsObj;
@@ -86,7 +92,7 @@ glift.rules.intersections = {
             pt = conv.point;
             value = conv.value
           } else {
-            var pt = glift.sgf.sgfCoordToPoint(data[i]);
+            var pt = glift.util.pointFromSgfCoord(data[i]);
           }
 
           var ptHash = pt.hash();

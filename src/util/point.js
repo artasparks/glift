@@ -21,32 +21,56 @@ glift.util.pointFromString = function(str) {
   }
 };
 
+/**
+ * Take an SGF point (e.g., 'mc') and return a GliftPoint.
+ * SGFs are indexed from the Upper Left:
+ *    _  _  _
+ *   |aa ba ca ...
+ *   |ab bb
+ *   |.
+ *   |.
+ *   |.
+ */
+glift.util.pointFromSgfCoord = function(str) {
+  if (str.length != 2) {
+    throw "Unknown SGF Coord length: " + str.length;
+  }
+  var a = 'a'.charCodeAt(0)
+  return glift.util.point(str.charCodeAt(0) - a, str.charCodeAt(1) - a);
+};
+
 glift.util.pointFromHash = function(str) {
   return glift.util.pointFromString(str);
 };
 
 
-// Private Point Class.  Because each point is cached, we have to be careful to
-// preserve immutability. As such, we use getters to access the x and y values.
-// Of course, you could still change functions themselves to be mysterious and
-// annoying, but the purpose of using getters is more to prevent accidental
-// mistakes.
+/**
+ * Basic Point class.
+ *
+ * As a historical note, this class has transformed more than any other class.
+ * It was originally cached, with private variables and immutability.  However,
+ * I found that all this protection was too tedious.
+ */
 var GliftPoint = function(xIn, yIn) {
-  var privateXval = xIn,
-      privateYval = yIn;
-  this.x = function() { return privateXval };
-  this.y = function() { return privateYval };
-
-  this.equals = function(pt) {
-      return privateXval === pt.x() && privateYval === pt.y();
-  };
-  this.toSgfCoord = function() {
-    return String.fromCharCode(privateXval + 97) +
-        String.fromCharCode(privateYval + 97);
-  };
+  this._x = xIn;
+  this._y = yIn;
 };
 
 GliftPoint.prototype = {
+  x: function() { return this._x },
+  y: function() { return this._y },
+  equals: function(pt) {
+    return this._x === pt.x() && this._y === pt.y();
+  },
+
+  /**
+   * Returns an SGF coord, e.g., 'ab' for (0,1)
+   */
+  toSgfCoord: function() {
+    return String.fromCharCode(this.x() + 97) +
+        String.fromCharCode(this.y() + 97);
+  },
+
   /**
    * Create the form used in objects.
    * TODO(kashomon): Replace with string form.  The term hash() is confusing and

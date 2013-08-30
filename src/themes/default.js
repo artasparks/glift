@@ -26,12 +26,16 @@ glift.themes.registered.DEFAULT = {
       'font-family' : 'sans-serif'
     },
 
-    "EMPTY" : {
+    EMPTY : {
       fill: 'blue',
       opacity: 0,
       marks: {
         fill: 'black',
-        stroke: 'black'
+        stroke: 'black',
+        VARIATION_MARKER : {
+          stroke: '',
+          fill: '#822'
+        }
       }
     },
 
@@ -46,6 +50,10 @@ glift.themes.registered.DEFAULT = {
         'STONE_MARKER' : {
           fill: 'cyan',
           opacity: 0.6
+        },
+        VARIATION_MARKER : {
+          stroke: '',
+          fill: '#822'
         }
       }
     },
@@ -64,6 +72,10 @@ glift.themes.registered.DEFAULT = {
         'STONE_MARKER' : {
           fill: 'blue',
           opacity: 0.6
+        },
+        VARIATION_MARKER : {
+          fill: '#DD0000',
+          stroke: '#A22'
         }
       }
     },

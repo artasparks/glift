@@ -6,7 +6,8 @@ glift.rules.movenode = function(properties, children) {
 var MoveNode = function(properties, children) {
   this.properties = properties || glift.rules.properties();
   this.children = children || [];
-  this.nodeId = { nodeNum: 0, varNum: 0 };
+  // TODO(kashomon): NodeId should be (probably) be assignable on creation.
+  this._nodeId = { nodeNum: 0, varNum: 0 };
 };
 
 MoveNode.prototype = {
@@ -14,32 +15,29 @@ MoveNode.prototype = {
    * Set the NodeId. Each node has an ID based on the depth and variation
    * number.
    *
-   * Note: Great caution should be exercised when using this method.  If you
+   * Great caution should be exercised when using this method.  If you
    * don't adjust the surrounding nodes, the movetree will get into a funky
    * state.
-   *
-   * TODO(kashomon): Maybe remove this or mark as private?
    */
-  setNodeId: function(nodeNum, varNum) {
-    this.nodeId = {
-        nodeNum: nodeNum,
-        varNum: varNum
-    }
+  _setNodeId: function(nodeNum, varNum) {
+    this._nodeId = { nodeNum: nodeNum, varNum: varNum };
     return this;
   },
 
   /**
-   * Get the node number (i.e., the depth number).
+   * Get the node number (i.e., the depth number).  For our purposes, we
+   * consider passes to be moves, but this is a special enough case that it
+   * shouldn't matter for most situations.
    */
   getNodeNum: function() {
-    return this.nodeId.nodeNum
+    return this._nodeId.nodeNum
   },
 
   /**
    * Get the variation number.
    */
   getVarNum: function() {
-    return this.nodeId.varNum
+    return this._nodeId.varNum
   },
 
   /**
@@ -54,16 +52,16 @@ MoveNode.prototype = {
    * Add a new child node.
    */
   addChild: function() {
-    this.children.push(glift.rules.movenode().setNodeId(
+    this.children.push(glift.rules.movenode()._setNodeId(
         this.getNodeNum() + 1, this.numChildren()));
     return this;
   },
 
   /**
    * Get the next child node.  This the same semantically as moving down the
-   * move tree.
+   * movetree.
    */
-  getNext: function(variationNum) {
+  getChild: function(variationNum) {
     if (variationNum === undefined) {
       return this.children[0];
     } else {
@@ -75,14 +73,14 @@ MoveNode.prototype = {
    * Renumber the nodes.  Useful for when nodes are deleted during SGF editing.
    */
   renumber: function() {
-    numberMoves(this, this.nodeId.nodeNum, this.nodeId.varNum);
+    numberMoves(this, this._nodeId.nodeNum, this._nodeId.varNum);
     return this;
   }
 };
 
 // Private number moves function
 var numberMoves = function(move, nodeNum, varNum) {
-  move.setNodeId(nodeNum, varNum);
+  move._setNodeId(nodeNum, varNum);
   for (var i = 0; i < move.children.length; i++) {
     var next = move.children[i];
     numberMoves(next, nodeNum + 1, i);

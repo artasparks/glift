@@ -71,6 +71,7 @@ glift.displays.board._Intersections.prototype = {
     var elems = glift.enums.svgElements;
     // Some STARPOINTs/BOARD_LINEs may have been 'turned-off' when adding marks.
     // It's easier just to manipulate them as a whole.
+    // TODO(kashomon): Is there much of a performance hit for doing this?
     this.svg.selectAll('.' + elems.STARPOINT).attr('opacity', 1);
     this.svg.selectAll('.' + elems.BOARD_LINE).attr('opacity', 1);
     this.svg.selectAll('.' + elems.MARK).remove();

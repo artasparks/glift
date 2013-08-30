@@ -2,7 +2,7 @@ glift.controllers.staticProblemTest = function() {
   module("Static Problem Controller");
   var cont = glift.controllers,
       util = glift.util,
-      conv = glift.sgf.sgfCoordToPoint,
+      conv = glift.util.pointFromSgfCoord,
       sgfs = testdata.sgfs,
       mk = glift.enums.marks,
       states = glift.enums.states,

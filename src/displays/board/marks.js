@@ -35,9 +35,10 @@ glift.displays.board.addMark = function(
       .attr('stone_color');
   var marksTheme = theme.stones[stoneColor].marks;
 
-  // If necessary, clear out intersections and starpoints.  This only applies
-  // to when a stone hasn't yet been set (stoneColor === 'EMPTY').
-  if (stoneColor === 'EMPTY' && mark === marks.LABEL) {
+  // If necessary, clear out intersection lines and starpoints.  This only applies
+  // when a stone hasn't yet been set (stoneColor === 'EMPTY').
+  if (stoneColor === 'EMPTY' &&
+      (mark === marks.LABEL || mark === marks.VARIATION_MARKER)) {
     svg.select('#' + glift.displays.gui.elementId(divId, STARPOINT, pt))
         .attr('opacity', 0);
     svg.select('#' + glift.displays.gui.elementId(divId, BOARD_LINE, pt))
@@ -49,7 +50,11 @@ glift.displays.board.addMark = function(
   // Although not strictly necessary to specify node, since scoping is based
   // on the function, it is semantically convenient to define the node first
   // as undefined, at least to this Java-trained programmer.
-  if (mark === marks.LABEL) {
+  if (mark === marks.LABEL || mark == marks.VARIATION_MARKER) {
+    if (mark === marks.VARIATION_MARKER) {
+      marksTheme = marksTheme.VARIATION_MARKER;
+    }
+
     svg.select('.' + MARK_CONTAINER).append('text')
         .text(label)
         .attr('fill', marksTheme.fill)
@@ -97,7 +102,7 @@ glift.displays.board.addMark = function(
         .attr('stroke-width', 2)
         .attr('class', MARK)
         .attr('stroke', marksTheme.stroke);
-  } else if (mark == marks.CIRCLE) {
+  } else if (mark === marks.CIRCLE) {
     svg.select('.' + MARK_CONTAINER).append('circle')
         .attr('cx', coordPt.x())
         .attr('cy', coordPt.y())
@@ -106,7 +111,7 @@ glift.displays.board.addMark = function(
         .attr('stroke-width', 2)
         .attr('class', MARK)
         .attr('stroke', marksTheme.stroke);
-  } else if (mark == marks.STONE_MARKER) {
+  } else if (mark === marks.STONE_MARKER) {
     var stoneMarkerTheme = theme.stones.marks['STONE_MARKER'];
     svg.select('.' + MARK_CONTAINER).append('circle')
         .attr('cx', coordPt.x())
