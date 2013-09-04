@@ -4,9 +4,11 @@ Done - add star point object
 Done - add lines object
 Done - Add marks.
 Done - Add a key-stroke mapping
+Done - Support displaying variations (movetree)
+Done - Add base widget
 
 Smaller Changes.
-- Add generic options parsing.
+- Add generic options parsing. (I'm not sure this is necessary)
 - Add tests for widgets.
 - Add tests for marks.
 - Remove argument guarding code.
@@ -15,35 +17,22 @@ Smaller Changes.
 - Add intersections on the edges.
 - Finish key-stroke mappings (add more keys)
 - Add movetree->SGF transformation
-- Make the comment box prettier.
-- figure out how to support pass
+- Make the comment box prettier. (actionable?)
 - add moveTree support for delete
-
 - support vert centered icons (editor).
-
 - Make the adding/removing stones smarter / more efficient.
-- Support displaying variations (movetree)
+- Change variation coloring so that it colors existing marks, rather than
+  overwriting them.
+- Create game editor.
+- Create option for glift to always show variations (useful for problems)
+- Add option for how variation numbers should be displayed
+- Make it possible to change the width of the go border
+
+- Support pass
+- Add hovering to the base controller
 
 
 Some ideas for future development:
-1. Make a base window configuration that does more for you.
-  - Should provide the Go board by default (display).
-  - Should provide a comment window by default.  Relatively easy.
-  - Should provide an icon bar by default.  Icons will have to be created by
-    user (parent widget).  Hover should be provided automatically. 'click' will
-    still need to added.
-  - Controller will still need to be added.  By default, I suppose the
-    BaseController could be added.  This would make testing a bit easier
-  - This would mean that new widgets could be reduced to:
-    FooWidget = function(options) {
-      this.controller = glift.controllers.fooController(...);
-      this.baseWidget = glift.widgets.baseWidget({
-        icons: ['foo', 'bar', 'biff'],
-        controller: controller,
-      })
-      this.baseWidget.setClickHandler(...);
-    }
-
 2. Make the base configuration totally resizeable.  This is a relatively
 difficult problem I'm not sure what the best way to approach it is.  Probably I
 will create a wrapper abstraction that automatically changes the dimensions of

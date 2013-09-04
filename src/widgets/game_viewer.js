@@ -100,9 +100,11 @@ GameViewer.prototype = {
 
   applyFullBoardData: function(fullBoardData) {
     // TODO(kashomon): Support incremental changes.
-    this.setCommentBox(fullBoardData);
-    this.display.intersections().clearAll();
-    glift.bridge.setDisplayState(fullBoardData, this.display);
+    if (fullBoardData) {
+      this.setCommentBox(fullBoardData);
+      this.display.intersections().clearAll();
+      glift.bridge.setDisplayState(fullBoardData, this.display);
+    }
   },
 
   setCommentBox: function(fullBoardData) {

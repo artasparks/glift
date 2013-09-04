@@ -34,16 +34,13 @@ var methods = {
    * Find the variation associated with the played move.
    */
   addStone: function(point, color) {
-    var addResult = this.goban.addStone(point, color);
-    if (!addResult.successful) {
-      return { message: FAILURE, reason: "Cannot add stone" };
-    }
-    var nextVarNum = this.movetree.findNextMove(point, color);
-    if (nextVarNum === glift.util.none) {
+    var possibleMap = this._possibleNextMoves();
+    var key = point.toString() + '-' + color;
+    if (possibleMap[key] === undefined) {
       return glift.util.none;
     }
-    this.setNextVariation(nextVarNum);
-    return this.nextMove();
+    var nextVariationNum = possibleMap[key];
+    return this.nextMove(nextVariationNum);
   },
 
   /**
@@ -105,8 +102,8 @@ var methods = {
    * Go to the end.
    */
   toEnd: function() {
-    while (this.movetree.getNode().numChildren() > 0) {
-      this._nextMoveNoState();
+    while (this._nextMoveNoState()) {
+      // All the action happens in nextMoveNoState.
     }
     return this.getEntireBoardState();
   },
@@ -133,24 +130,60 @@ var methods = {
    * Get the Next move in the game.  If the player has already traversed a path,
    * then we follow this previous path.
    */
-  nextMove: function() {
-    this._nextMoveNoState();
-    return this.getEntireBoardState();
+  nextMove: function(varNum) {
+    if (varNum === undefined) {
+      varNum = 0;
+    }
+    var wasPossible = this._nextMoveNoState(varNum);
+    if (wasPossible) {
+      return this.getEntireBoardState();
+    } else {
+      return false;
+    }
+  },
+
+  /**
+   * Get the possible next moves.  Used to verify that a click is actually
+   * reasonable.
+   *
+   * Implemented as a map from point-string+color to variationNumber:
+   *  e.g., pt-BLACK : 1
+   */
+  _possibleNextMoves: function() {
+    var possibleMap = {};
+    var nextMoves = this.movetree.nextMoves();
+    for (var i = 0; i < nextMoves.length; i++) {
+      var move = nextMoves[i];
+      var key = move.point.toString() + '-' + move.color;
+      possibleMap[key] = i;
+    }
+    return possibleMap;
   },
 
   /**
    * Get the next move without returning the updated state.
+   * TODO(kashomon): ...what? This description makes no sense.  Also, some of
+   * the edge-case logic looks wrong.
+   *
+   * return true on success. false otherwise.
    */
-  _nextMoveNoState: function() {
+  _nextMoveNoState: function(varNum) {
     if (this.gamePath[this.currentMoveNumber] !== undefined) {
       this.movetree.moveDown(this.gamePath[this.currentMoveNumber]);
     } else {
-      this.movetree.moveDown(0);
-      this.gamePath.push(0);
+      if (varNum >= 0 &&
+          varNum <= this.movetree.nextMoves().length - 1) {
+        this.movetree.moveDown(varNum);
+        this.gamePath.push(varNum);
+      } else {
+        // There are no moves available;
+        return false;
+      }
     }
     this.currentMoveNumber++;
     // Load all of: [B, W, AW, AB].
     this.goban.loadStonesFromMovetree(this.movetree);
+    return true;
   }
 };
 })();
