@@ -6,6 +6,7 @@ Done - Add marks.
 Done - Add a key-stroke mapping
 Done - Support displaying variations (movetree)
 Done - Add base widget
+Done - Add stone hovering to the base widget
 
 Smaller Changes.
 - Add generic options parsing. (I'm not sure this is necessary)
@@ -14,7 +15,7 @@ Smaller Changes.
 - Remove argument guarding code.
 - Change public createBlah(...) to just blah(...)
 - BUG: Getting to the end of a Game causes problems for some reason.
-- Add intersections on the edges.
+- Add intersections on the edges. (is this necessary?)
 - Finish key-stroke mappings (add more keys)
 - Add movetree->SGF transformation
 - Make the comment box prettier. (actionable?)
@@ -25,11 +26,12 @@ Smaller Changes.
   overwriting them.
 - Create game editor.
 - Create option for glift to always show variations (useful for problems)
-- Add option for how variation numbers should be displayed
+- Add theme option for how variation numbers should be displayed (i.e., the
+  color);
 - Make it possible to change the width of the go border
+- Add auto-cropping ability (useful for problems)
 
 - Support pass
-- Add hovering to the base controller
 
 
 Some ideas for future development:
