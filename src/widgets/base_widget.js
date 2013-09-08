@@ -1,7 +1,8 @@
 (function() {
 glift.widgets.baseWidget = function(options) {
   options = initOptions(options);
-  return new BaseWidget(options).draw();
+  var widget = new BaseWidget(options).draw();
+  return widget;
 };
 
 // TODO(kashomon): The options manipulation should be broken into its own file.
@@ -18,7 +19,7 @@ var initOptions = function(options) {
   options.useCommentBar = options.useCommentBar === undefined ?
       true : options.useCommentBar;
   options.icons = options.icons ||
-      [ 'start', 'end', 'arrowleft', 'arrowright', 'small-gear' ];
+      [ 'start', 'end', 'arrowleft', 'arrowright', 'detour', 'small-gear' ];
 
   options.actions = options.actions || {};
   options.actions.stones = options.actions.stones || {};
@@ -41,6 +42,34 @@ var initOptions = function(options) {
     if (widget.controller.canAddStone(pt, currentPlayer)) {
       widget.display.intersections().setStoneColor(pt, 'EMPTY');
     }
+  };
+
+  options.actions.icons = options.actions.icons || {
+    start: {
+      click:  function(widget) {
+        var fullBoardData = widget.controller.toBeginning();
+        widget.applyFullBoardData(fullBoardData);
+      },
+    },
+    end: {
+      click:  function(widget) {
+        var fullBoardData = widget.controller.toEnd();
+        widget.applyFullBoardData(fullBoardData);
+      }
+    },
+    arrowright: {
+      click: function(widget) {
+        var fullBoardData = widget.controller.nextMove();
+        widget.applyFullBoardData(fullBoardData);
+      }
+    },
+    arrowleft: {
+      click:  function(widget) {
+        var fullBoardData = widget.controller.prevMove();
+        widget.applyFullBoardData(fullBoardData);
+      }
+    }
+    // TODO(kashomon): Pass
   };
   return options;
 };
@@ -70,10 +99,10 @@ BaseWidget.prototype = {
     this.iconBarId = this.options.useCommentBar ? this.divInfo[2].id :
         this.divInfo[1].id;
     this._createIconBar(boundingWidth)
-    this.applyFullBoardData(this.controller.getEntireBoardState());
     this._initStoneActions();
-    this._initIconHover();
+    this._initIconActions();
     this._initKeyHandlers();
+    this.applyFullBoardData(this.controller.getEntireBoardState());
     return this;
   },
 
@@ -97,19 +126,31 @@ BaseWidget.prototype = {
     });
   },
 
-  _initIconHover: function() {
+  _initIconActions: function() {
     var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
-    var that = this;
-    this.iconBar.forEachIcon(function(icon) {
-      that.iconBar.setEvent('mouseover', icon.name, function() {
-        d3.select('#' + icon.iconId)
-            // TODO(kashomon): Make this color configurable
-            .attr('fill', 'red');
-      }).setEvent('mouseout', icon.name, function() {
-        d3.select('#' + icon.iconId)
-            .attr('fill', that.iconBar.theme.icons.DEFAULT.fill);
-      });
-    });
+    var widget = this;
+    var iconActions = this.options.actions.icons;
+
+    for (var iconName in iconActions) {
+      var mouseover = iconActions[iconName].mouseover || function(widget, name) {
+        var id = widget.iconBar.iconId(name);
+        d3.select('#' + id).attr('fill', 'red');
+      };
+      var mouseout = iconActions[iconName].mouseout || function(widget, name) {
+        var id = widget.iconBar.iconId(name);
+        d3.select('#' + id)
+            .attr('fill', widget.iconBar.theme.icons.DEFAULT.fill);
+      };
+      var click = iconActions[iconName].click || function() {};
+      var events = { mouseover: mouseover, mouseout: mouseout, click: click };
+      for (var eventName in events) {
+        (function(eventName, iconNameBound, event) { // lazy binding, bleh.
+          widget.iconBar.setEvent(eventName, iconName, function() {
+            event(widget, iconNameBound);
+          });
+        })(eventName, iconName, events[eventName]);
+      }
+    }
   },
 
   /**
@@ -165,6 +206,11 @@ BaseWidget.prototype = {
     } else {
       this.commentBox.clearText();
     }
+  },
+
+  redraw: function() {
+    this.destroy();
+    this.draw();
   },
 
   destroy: function() {

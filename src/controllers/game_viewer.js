@@ -129,11 +129,11 @@ var methods = {
   /**
    * Get the Next move in the game.  If the player has already traversed a path,
    * then we follow this previous path.
+   *
+   * If varNum is undefined, we try to 'guess' the next move based on the
+   * contents of the gamepath.
    */
   nextMove: function(varNum) {
-    if (varNum === undefined) {
-      varNum = 0;
-    }
     var wasPossible = this._nextMoveNoState(varNum);
     if (wasPossible) {
       return this.getEntireBoardState();
@@ -162,19 +162,29 @@ var methods = {
 
   /**
    * Get the next move without returning the updated state.
-   * TODO(kashomon): ...what? This description makes no sense.  Also, some of
-   * the edge-case logic looks wrong.
    *
-   * return true on success. false otherwise.
+   * TODO(kashomon): ...what? This description makes no sense.  Also, some of
+   * the edge-case logic looks wrong.  Morevore, this is a terrible, confusing
+   * name for this function.
+   *
+   * If varNum is undefined, we try to 'guess' the next move based on the
+   * contents of the gamepath.
+   *
+   * Return true on success. false otherwise.
    */
   _nextMoveNoState: function(varNum) {
-    if (this.gamePath[this.currentMoveNumber] !== undefined) {
+    if (this.gamePath[this.currentMoveNumber] !== undefined &&
+        (varNum === undefined ||
+        this.gamePath[this.currentMoveNumber] === varNum)) {
       this.movetree.moveDown(this.gamePath[this.currentMoveNumber]);
     } else {
+      if (varNum === undefined) {
+        varNum = 0;
+      }
       if (varNum >= 0 &&
           varNum <= this.movetree.nextMoves().length - 1) {
+        this.setNextVariation(varNum);
         this.movetree.moveDown(varNum);
-        this.gamePath.push(varNum);
       } else {
         // There are no moves available;
         return false;

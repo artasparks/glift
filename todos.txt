@@ -30,8 +30,9 @@ Smaller Changes.
   color);
 - Make it possible to change the width of the go border
 - Add auto-cropping ability (useful for problems)
+- Add default icon-actions to base widget
 
-- Support pass
+- Support pass.  I have a feeling the parser is going to barf.
 
 
 Some ideas for future development:
