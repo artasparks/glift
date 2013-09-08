@@ -13,7 +13,8 @@ glift.themes.registered.DEFAULT = {
   },
 
   lines: {
-    stroke: "#000000"
+    stroke: "#000000",
+    'stroke-width': 0.5
   },
 
   stones: {

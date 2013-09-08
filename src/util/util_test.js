@@ -20,24 +20,4 @@ glift.utilTest = function() {
   test("outbounds", function() {
     ok(!util.outBounds(2, 19), "2 is within bounds");
   });
-
-  test("checkArgsDefined", function() {
-    var errm = "";
-    try {
-      (function(a, b, c) {
-        util.checkArgsDefined(arguments, 3);
-      })("a", "b");
-    } catch(err) {
-      var errmsg = err;
-    }
-    ok(/Argument 2/.test(errmsg), "Must find arg 2 in error message: " + errm);
-  });
-
-  test("defined tests", function() {
-    ok(util.defined("Foo", "Bar"));
-    ok(util.defined());
-    ok(util.defined("Foo", {}, [], 0, 1));
-    ok(!util.defined("Foo", undefined, [], 0, 1));
-    ok(!util.defined("Foo", {}.print, 1));
-  });
 };

@@ -4,6 +4,7 @@
 <title> GameViewerTester </title>
 <script type="text/javascript" src="../libs/jquery-1.10.2.min.js"></script>
 <script type="text/javascript" src="../testdata/sgfs.js"></script>
+<script type="text/javascript" src="../testdata/gogameguru_commentary.js"></script>
 <script type="text/javascript" src="../libs/d3.min.js"></script>
 
 <!-- AUTO-GEN-DEPS -->
@@ -79,7 +80,6 @@
 <script type="text/javascript" src="../widgets/widgets.js"></script>
 <script type="text/javascript" src="../widgets/base_widget.js"></script>
 <script type="text/javascript" src="../widgets/basic_problem.js"></script>
-<script type="text/javascript" src="../widgets/game_viewer.js"></script>
 <script type="text/javascript" src="../widgets/problem_series.js"></script>
 <script type="text/javascript" src="../widgets/problem_service.js"></script>
 <!-- Otre Tests -->
@@ -135,14 +135,11 @@
       <div id="glift_display1"></div>
       <div id="extra_info"></div>
       <script type="text/javascript">
-        $.get("../testdata/Fujisawa-Hosai-vs-Go-Seigen-" +
-            "19430225-commentary-An-Younggil-8p.sgf", function(data) {
-          window.gameViewer = glift.widgets.gameViewer({
-            sgfString: data,
-            theme: 'DEPTH',
-            //goBoardBackground: '../themes/assets/bambootile_warm.jpg',
-            divId: "glift_display1"
-          })
+        gameViewer = glift.widgets.baseWidget({
+          sgfString: testdata.gogameguru_commentary,
+          theme: 'DEPTH',
+          goBoardBackground: '../themes/assets/bambootile_warm.jpg',
+          divId: "glift_display1"
         });
       </script>
     </div>

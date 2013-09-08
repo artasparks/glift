@@ -80,43 +80,6 @@ glift.util = {
     return size;
   },
 
-  varDefined: function(arg, label) {
-    var msg = label || "",
-        msg = msg !== "" ? ": " + msg : msg;
-    if (arg === undefined) {
-      throw "Argument cannot be undefined" + msg
-    }
-  },
-
-  /*
-   * Check to make sure that the variables specified are defined.
-   */
-  defined: function() { // args...
-    for (var i = 0; i < arguments.length; i++) {
-      if (arguments[i] === undefined) {
-        return false;
-      }
-    }
-    return true;
-  },
-
-  assertDefined: function(variable, msg) {
-    if (variable === undefined) {
-      throw msg;
-    }
-    return glift.util.none;
-  },
-
-  checkArgsDefined: function(args, expected) {
-    for (var i = 0; i < expected; i++) {
-      if (args[i] === undefined) {
-        throw "Argument " + i + " of " + args.length +
-            " must be defined, but is undefined";
-      }
-    }
-    return glift.util.none;
-  },
-
   setMethods: function(base, methods) {
     for (var key in methods) {
       base[key] = methods[key].bind(base);

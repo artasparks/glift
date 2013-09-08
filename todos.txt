@@ -7,12 +7,13 @@ Done - Add a key-stroke mapping
 Done - Support displaying variations (movetree)
 Done - Add base widget
 Done - Add stone hovering to the base widget
+Done - Add default icon-actions to base widget
+Done - Remove argument guarding code.
 
 Smaller Changes.
 - Add generic options parsing. (I'm not sure this is necessary)
 - Add tests for widgets.
 - Add tests for marks.
-- Remove argument guarding code.
 - Change public createBlah(...) to just blah(...)
 - BUG: Getting to the end of a Game causes problems for some reason.
 - Add intersections on the edges. (is this necessary?)
@@ -30,7 +31,6 @@ Smaller Changes.
   color);
 - Make it possible to change the width of the go border
 - Add auto-cropping ability (useful for problems)
-- Add default icon-actions to base widget
 
 - Support pass.  I have a feeling the parser is going to barf.
 
