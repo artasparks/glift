@@ -1,7 +1,7 @@
 /**
  * Create transparent buttons that overlay each intersection.
  */
-glift.displays.board.createButtons = function(divId, svg, boardPoints) {
+glift.displays.board.buttons = function(divId, svg, boardPoints) {
   var buttonMapping = {};
   var elems = glift.enums.svgElements;
   var BUTTON = elems.BUTTON;

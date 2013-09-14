@@ -55,6 +55,7 @@ glift.displays.board.Display.prototype = {
         .style('-moz-user-select', 'moz-none')
         .style('-ms-user-select', 'none')
         .style('user-select', 'none')
+        //.style('shape-rendering', 'crispEdges')
         .style('cursor', 'default');
       this._svg = d3.select('#' + this.divId())
         .append("svg")
@@ -78,13 +79,13 @@ glift.displays.board.Display.prototype = {
         divId = this.divId();
 
     board.initBlurFilter(divId, svg);
-    var boardId = board.createBoardBase(divId, svg, env.goBoardBox, theme);
-    var lineIds = board.createLines(divId, svg, boardPoints, theme);
-    var starPointIds = board.createStarPoints(divId, svg, boardPoints, theme);
-    var stoneShadowIds = board.createShadows(divId, svg, boardPoints, theme);
-    var stoneIds = board.createStones(divId, svg, boardPoints, theme);
-    var markIds = board.createMarkContainer(divId, svg, boardPoints, theme);
-    var buttons = board.createButtons(divId, svg, boardPoints);
+    var boardId = board.boardBase(divId, svg, env.goBoardBox, theme);
+    var lineIds = board.lines(divId, svg, boardPoints, theme);
+    var starPointIds = board.starPoints(divId, svg, boardPoints, theme);
+    var stoneShadowIds = board.shadows(divId, svg, boardPoints, theme);
+    var stoneIds = board.stones(divId, svg, boardPoints, theme);
+    var markIds = board.markContainer(divId, svg, boardPoints, theme);
+    var buttons = board.buttons(divId, svg, boardPoints);
     var intersectionData = {
         lineIds: lineIds,
         starPointIds: starPointIds,
@@ -93,9 +94,9 @@ glift.displays.board.Display.prototype = {
         markIds: markIds,
         buttons: buttons
     };
-    this._intersections = glift.displays.board.createIntersections(
+    this._intersections = glift.displays.board.intersections(
         divId, svg, intersectionData, boardPoints, theme);
-    return this; // required -- used in create(...);
+    return this; // required
   },
 
   /**

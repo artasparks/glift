@@ -12,12 +12,12 @@ glift.controllers.controllersTest = function() {
   });
 
   test("Must be able te create a controller", function() {
-    var controller = glift.controllers.createStaticProblem();
+    var controller = glift.controllers.staticProblem();
     ok(controller !== undefined, "Must me defined");
   });
 
   test("Must create a controller with non-empty string", function() {
-    var controller = glift.controllers.createStaticProblem({
+    var controller = glift.controllers.staticProblem({
         sgfString: testdata.sgfs.trivialproblem
     });
     ok(controller.sgfString !== undefined, "Must not be undefined");

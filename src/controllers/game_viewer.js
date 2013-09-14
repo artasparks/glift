@@ -5,7 +5,7 @@
 glift.controllers.gameViewer = function(rawOptions) {
   var options = glift.controllers.processOptions(rawOptions),
       controllers = glift.controllers,
-      baseController = glift.util.beget(controllers.createBase()),
+      baseController = glift.util.beget(controllers.base()),
       newController = glift.util.setMethods(baseController, methods),
       _ = newController.initOptions(options);
   return newController;
@@ -61,7 +61,7 @@ var methods = {
    */
   moveUpVariations: function() {
     return this.setNextVariation((this.getNextVariationNumber() + 1)
-        % this.movetree.getNode().numChildren());
+        % this.movetree.node().numChildren());
   },
 
   /**
@@ -71,8 +71,8 @@ var methods = {
     // Module is defined incorrectly for negative numbers.  So, we need to add n
     // to the result.
     return this.setNextVariation((this.getNextVariationNumber() - 1 +
-        + this.movetree.getNode().numChildren())
-        % this.movetree.getNode().numChildren());
+        + this.movetree.node().numChildren())
+        % this.movetree.node().numChildren());
   },
 
   /**
@@ -84,7 +84,7 @@ var methods = {
     // this.gamePath.length (if at the end).  Thus, if the old gamepath was
     // [0,1,2,0] and the currentMoveNumber was 2, we'll have [0, 1, num].
     this.gamePath = this.gamePath.slice(0, this.currentMoveNumber);
-    this.gamePath.push(num % this.movetree.getNode().numChildren());
+    this.gamePath.push(num % this.movetree.node().numChildren());
     return this;
   },
 

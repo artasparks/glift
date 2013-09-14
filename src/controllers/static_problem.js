@@ -8,10 +8,10 @@
  *  - There is actually a node somewhere beneath the variation that results in a
  *  'correct' outcome.
  */
-glift.controllers.createStaticProblem = function(rawOptions) {
+glift.controllers.staticProblem = function(rawOptions) {
   var options = glift.controllers.processOptions(rawOptions),
       controllers = glift.controllers,
-      baseController = glift.util.beget(controllers.createBase()),
+      baseController = glift.util.beget(controllers.base()),
       newController = glift.util.setMethods(baseController, methods),
       // At this point, options have already been processed
       _ = newController.initOptions(options);
@@ -20,15 +20,22 @@ glift.controllers.createStaticProblem = function(rawOptions) {
 
 var methods = {
   /**
+   * Extension to the base options.
+   */
+  extraOptions: function(opts) {
+    // So that we can try the problem again
+    this.originalSgf = opts.sgfString;
+  },
+
+  /**
    * Add a stone to the board.  Since this is a problem, we check for
    * 'correctness', which we check whether all child nodes are labeled (in some
    * fashion) as correct.
    *
    * Note: color must be one of enums.states (either BLACK or WHITE).
    *
-   * TODO: Refactor this into something less ridiculous.
-   *
-   * TODO(kashomon): Also, get rid of the stupid message nonsense.
+   * TODO: Refactor this into something less ridiculous -- i.e., shorter and
+   * easier to understand.
    */
   addStone: function(point, color) {
     var problemResults = glift.enums.problemResults,
@@ -47,46 +54,47 @@ var methods = {
     //  }
     var addResult = this.goban.addStone(point, color);
     if (!addResult.successful) {
-      return { message: FAILURE, reason: "Cannot add stone" };
+      return { result: FAILURE };
     }
+
     // At this point, the move is allowed by the rules of Go.  Now the task is
     // to determine whether tho move is 'correct' or not based on the data in
     // the movetree, presumably from an SGF.
     var nextVarNum = this.movetree.findNextMove(point, color);
 
-    // TODO(kashomon): What is this used for?
-    this.lastPlayed = {point: point, color: color};
-
     // There are no variations corresponding to the move made, so we assume that
-    // the move is INCORRECT.
+    // the move is INCORRECT. However, we still add the move down the movetree
     if (nextVarNum === glift.util.none) {
-      return { message: DONE, result: INCORRECT };
-    }
-
-    else {
+      //this.movetree.addNode();
+      //this.movetree.addNode().properties.add
+      return { result: INCORRECT };
+    } else {
       this.movetree.moveDown(nextVarNum);
       var correctness = this.movetree.isCorrectPosition();
-      // TODO(kashomon): Only retrieve the intersections that have changed.
-      var outData = glift.rules.intersections.getFullBoardData(
-          this.movetree, this.goban);
 
       if (correctness === CORRECT) {
-        return { message: DONE, result: CORRECT, data: outData };
+        // TODO(kashomon): Only retrieve the intersections that have changed.
+        var outData = glift.rules.intersections.getFullBoardData(
+            this.movetree, this.goban);
+        outData.result = CORRECT;
+        return outData;
       }
 
       else if (correctness === INDETERMINATE) {
         var randNext = glift.math.getRandomInt(
-            0, this.movetree.getNode().numChildren() - 1);
+            0, this.movetree.node().numChildren() - 1);
+        // We're playing for the opposite player, at this point (usu. white).
         this.movetree.moveDown(randNext);
-        var nextMove = this.movetree.getProperties().getMove();
+        var nextMove = this.movetree.properties().getMove();
         this.goban.addStone(nextMove.point, nextMove.color);
         var outData = glift.rules.intersections.getFullBoardData(
             this.movetree, this.goban);
-        return { message: CONTINUE, result: INDETERMINATE, data: outData };
+        outData.result = INDETERMINATE;
+        return outData;
       }
 
       else if (correctness === problemResults.INCORRECT) {
-        return { message: msgs.DONE, result: INCORRECT };
+        return { result: INCORRECT };
       }
 
       else {

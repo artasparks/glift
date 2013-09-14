@@ -1,4 +1,5 @@
 (function() {
+// TODO(kashomon): Make its own directory?
 glift.displays.cropbox = {
   LINE_EXTENSION: .5,
   DEFAULT_EXTENSION: 0,

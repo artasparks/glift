@@ -66,8 +66,8 @@ glift.rules.intersections = {
 
     pointsObj = this.addCurrentMarks(pointsObj, movetree);
     out.points = pointsObj;
-    if (movetree.getProperties().getComment() !== glift.util.none) {
-      out.comment = movetree.getProperties().getComment();
+    if (movetree.properties().getComment() !== glift.util.none) {
+      out.comment = movetree.properties().getComment();
     }
     return out;
   },
@@ -83,8 +83,8 @@ glift.rules.intersections = {
   addCurrentMarks: function(pointsObj, movetree) {
     for (var prop in glift.rules.intersections.propertiesToMarks) {
       var mark = glift.rules.intersections.propertiesToMarks[prop];
-      if (movetree.getProperties().contains(prop)) {
-        var data = movetree.getProperties().get(prop);
+      if (movetree.properties().contains(prop)) {
+        var data = movetree.properties().get(prop);
         for (var i = 0; i < data.length; i++) {
           var pt = {}, value = true;
           if (prop === glift.sgf.allProperties.LB) {

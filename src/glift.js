@@ -5,19 +5,15 @@
 (function() {
 var glift = window.glift || {};
 
-/**
- * Create a Glift Display
- *
- * TODO(kashomon): Perhaps remove this?
- */
-glift.createDisplay = function(options) {
-  return glift.displays.create(options);
-};
-
 glift.global = {
   // Neither of these are currently used
   debugMode: false,
-  performanceDebug: false
+  performanceDebug: false,
+  version: '0.1.0',
+  // The active registry.  Used to determine who has 'ownership' of key-presses.
+  active: {
+
+  }
 };
 
 window.glift = glift;

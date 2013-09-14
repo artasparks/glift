@@ -49,14 +49,8 @@ glift.enums = {
   problemResults: {
     CORRECT: "CORRECT",
     INCORRECT: "INCORRECT",
-    INDETERMINATE: "INDETERMINATE"
-  },
-
-  // TODO(kashomon): Delete these enums. or at least rethink them
-  controllerMessages: {
-    CONTINUE: "CONTINUE",
-    DONE: "DONE",
-    FAILURE: "FAILURE"
+    INDETERMINATE: "INDETERMINATE",
+    FAILURE: "FAILURE" // i.e., none of these (couldn't place stone).
   },
 
   /**
@@ -73,5 +67,11 @@ glift.enums = {
     STONE: 'stone',
     STONE_SHADOW: 'stone_shadow',
     ICON: 'icon'
+  },
+
+  showVariations: {
+    ALWAYS: 'ALWAYS',
+    NEVER: 'NEVER',
+    MORE_THAN_ONE: 'MORE_THAN_ONE'
   }
 };

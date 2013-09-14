@@ -4,13 +4,18 @@ glift.rules.movenode = function(properties, children) {
 };
 
 var MoveNode = function(properties, children) {
-  this.properties = properties || glift.rules.properties();
+  this._properties = properties || glift.rules.properties();
   this.children = children || [];
   // TODO(kashomon): NodeId should be (probably) be assignable on creation.
   this._nodeId = { nodeNum: 0, varNum: 0 };
 };
 
 MoveNode.prototype = {
+  /** Get properties */
+  properties:  function() {
+    return this._properties;
+  },
+
   /**
    * Set the NodeId. Each node has an ID based on the depth and variation
    * number.

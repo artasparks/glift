@@ -2,7 +2,7 @@
  * Create the Go stones.  They are initially invisible to the user, but they
  * all exist at the time of GoBoard creation.
  */
-glift.displays.board.createStones = function(divId, svg, boardPoints, theme) {
+glift.displays.board.stones = function(divId, svg, boardPoints, theme) {
   var STONE = glift.enums.svgElements.STONE;
   var stoneIdMap = {};
   svg.selectAll(STONE).data(boardPoints.data())
@@ -27,10 +27,8 @@ glift.displays.board.createStones = function(divId, svg, boardPoints, theme) {
  * Create the shadows for the Go stones.  They are initially invisible to the
  * user, but they may become visible later (e.g., via mousover).  Shadows are
  * only created if the theme has a shadow.
- *
- * TODO(kashomon): Probably, this should be merged with createStarPoints.
  */
-glift.displays.board.createShadows = function(
+glift.displays.board.shadows = function(
     divId, svg, boardPoints, theme) {
   if (theme.stones.shadows === undefined) {
     return {};
@@ -61,7 +59,7 @@ glift.displays.board.createShadows = function(
   return shadowMap;
 };
 
-
+// TODO(kashomon): This should be moved somewhere more general.
 glift.displays.board.initBlurFilter = function(divId, svg) {
   svg.append("svg:defs")
     .append("svg:filter")

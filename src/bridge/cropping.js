@@ -1,4 +1,4 @@
-glift.bridge.getFromMovetree = function(movetree) {
+glift.bridge.getCropFromMovetree = function(movetree) {
   var bbox = glift.displays.bboxFromPts,
       point = glift.util.point,
       boardRegions = glift.enums.boardRegions,
@@ -17,7 +17,7 @@ glift.bridge.getFromMovetree = function(movetree) {
   quads[boardRegions.BOTTOM_RIGHT] =
       bbox(point(middle - 1, middle - 1), point(ints, ints));
   movetree.recurseFromRoot(function(mt) {
-    var stones = mt.getProperties().getAllStones();
+    var stones = mt.properties().getAllStones();
     for (var color in stones) {
       var points = stones[color];
       for (var i = 0; i < points.length; i++) {

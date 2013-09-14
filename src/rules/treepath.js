@@ -67,7 +67,7 @@ glift.rules.treepath = {
   // are each a tree-path.
   flattenMoveTree: function(movetree) {
     var out = [];
-    for (var i = 0; i < movetree.getNode().numChildren(); i++) {
+    for (var i = 0; i < movetree.node().numChildren(); i++) {
       movetree.moveDown(i);
       var result = glift.rules.treepath._flattenMoveTree(movetree, []);
       movetree.moveUp();
@@ -80,9 +80,9 @@ glift.rules.treepath = {
 
   _flattenMoveTree: function(movetree, pathToHere) {
     if (pathToHere === undefined) pathToHere = [];
-    pathToHere.push(movetree.getNode().getVarNum());
+    pathToHere.push(movetree.node().getVarNum());
     var out = [];
-    for (var i = 0; i < movetree.getNode().numChildren(); i++) {
+    for (var i = 0; i < movetree.node().numChildren(); i++) {
       movetree.moveDown(i)
       var thisout = glift.rules.treepath._flattenMoveTree(
           movetree, pathToHere.slice());

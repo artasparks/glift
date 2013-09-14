@@ -23,14 +23,14 @@ glift.displays.boardTest = function() {
       assertEmptyPaper = testUtil.assertEmptyPaper;
 
   test("Create/Destroy base board box", function() {
-    var board = display.createBoardBase();
+    var board = display.boardBase();
     ok(board.rect !== none);
     board.destroy();
     assertEmptyPaper(displayPaper);
   });
 
   test("Create/Destroy board lines", function() {
-    var lines = display.createBoardLines();
+    var lines = display.boardLines();
     ok(lines.horzSet !== none);
     ok(lines.horzSet !== undefined);
     ok(lines.vertSet !== none);
@@ -40,14 +40,14 @@ glift.displays.boardTest = function() {
   });
 
   test("Create/Destroy star points", function() {
-    var starPoints = display.createBoardLines();
+    var starPoints = display.boardLines();
     ok(starPoints.starSet !== none);
     starPoints.destroy();
     assertEmptyPaper(displayPaper);
   });
 
   test("Create/Destroy stones", function() {
-    var stones = display.createStones(),
+    var stones = display.stones(),
         numStones = 0,
         clickCounter = 0,
         mouseOverCounter = 0,

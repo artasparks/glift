@@ -3,7 +3,7 @@
  * rather than as a whole so that we can clear theme out when we to draw marks
  * on the raw board (rather than on stones).
  */
-glift.displays.board.createLines = function(divId, svg, boardPoints, theme) {
+glift.displays.board.lines = function(divId, svg, boardPoints, theme) {
   // Mapping from int point (e.g., 3,3) hash to id;
   var lineMapping = {};
   var BOARD_LINE = glift.enums.svgElements.BOARD_LINE;

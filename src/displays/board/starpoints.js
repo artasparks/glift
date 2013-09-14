@@ -2,7 +2,7 @@
  * Create the star points.  See boardPoints.starPoints() for details about which
  * points are used
  */
-glift.displays.board.createStarPoints = function(
+glift.displays.board.starPoints = function(
     divId, svg, boardPoints, theme) {
   var size = theme.starPoints.sizeFraction * boardPoints.spacing;
   var starPointData = boardPoints.starPoints();

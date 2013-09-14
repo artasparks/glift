@@ -1,5 +1,5 @@
 (function() {
-glift.controllers.createBase = function() {
+glift.controllers.base = function() {
   return new BaseController();
 };
 
@@ -48,6 +48,8 @@ BaseController.prototype = {
    *  - goban -- data structure describing the go board.  Really, the goban is
    *  useful for telling you where stones can be placed, and (after placing)
    *  what stones were captured.
+   *
+   *  TODO(kashomon): Should this be named Load or Reload?
    */
   initialize: function() {
     var rules = glift.rules,

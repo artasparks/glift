@@ -40,11 +40,11 @@ glift.rules.treepathTest = function() {
 
   test("Flatten Movetree", function() {
     var mt = glift.rules.movetree.getInstance();
-    mt.addNewNode() .addNewNode() .addNewNode() .addNewNode()
+    mt.addNode() .addNode() .addNode() .addNode()
                     .moveUp()     .moveUp()     .moveUp()
-                    .addNewNode() .addNewNode()
+                    .addNode() .addNode()
       .moveToRoot()
-      .addNewNode() .addNewNode();
+      .addNode() .addNode();
     mt.moveToRoot();
     var out = flatten(mt);
     ok(true, "foo");

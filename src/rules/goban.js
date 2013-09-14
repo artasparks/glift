@@ -216,14 +216,14 @@ Goban.prototype = {
   loadStonesFromMovetree: function(movetree) {
     var cols = [glift.enums.states.BLACK, glift.enums.states.WHITE];
     for (var i = 0; i < cols.length; i++) {
-      var pm = movetree.getProperties().getPlacementsAsPoints(cols[i]);
+      var pm = movetree.properties().getPlacementsAsPoints(cols[i]);
       for (var j = 0; j < pm.length; j++) {
         if (this.placeable(pm[j]), cols[i]) {
           this.addStone(pm[j], cols[i]);;
         }
       }
     }
-    var mv = movetree.getProperties().getMove();
+    var mv = movetree.properties().getMove();
     if (mv !== glift.util.none) {
       this.addStone(mv.point, mv.color);
     }

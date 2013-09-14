@@ -9,30 +9,37 @@ Done - Add base widget
 Done - Add stone hovering to the base widget
 Done - Add default icon-actions to base widget
 Done - Remove argument guarding code.
+Done - Getting to the end of a Game causes problems for some reason.
+Done - Create option for glift to always show variations (useful for problems)
 
 Smaller Changes.
 - Add generic options parsing. (I'm not sure this is necessary)
 - Add tests for widgets.
 - Add tests for marks.
 - Change public createBlah(...) to just blah(...)
-- BUG: Getting to the end of a Game causes problems for some reason.
-- Add intersections on the edges. (is this necessary?)
-- Finish key-stroke mappings (add more keys)
+- Add support for numbering on the edges, beyond the lines. (Not surr
+- Finish key-stroke mappings -- add more keys, support two go boards on same screen.
 - Add movetree->SGF transformation
 - Make the comment box prettier. (actionable?)
 - add moveTree support for delete
-- support vert centered icons (editor).
+- support vertically centered icons (editor).
 - Make the adding/removing stones smarter / more efficient.
 - Change variation coloring so that it colors existing marks, rather than
   overwriting them.
-- Create game editor.
-- Create option for glift to always show variations (useful for problems)
+- Create game editor. (many dependencies)
 - Add theme option for how variation numbers should be displayed (i.e., the
   color);
-- Make it possible to change the width of the go border
-- Add auto-cropping ability (useful for problems)
+- Make it possible to change the width of the go board border
+- Support pass.  Currently the parsers barf on B[] and W[]
+- Borders seem to not be included as part of 'width', so lining up the comment
+  box has problems when the go board does/doesn't have a line-border
+  see: http://stackoverflow.com/questions/7401369/why-is-svg-stroke-width-1-making-lines-transparent
+- Make Sure KOGOs works (yikes)
+  -> depends on adding Poss support
 
-- Support pass.  I have a feeling the parser is going to barf.
+- Rework problem, problem series
+- Info...?
+- Add auto-cropping ability (useful for problems)
 
 
 Some ideas for future development:
@@ -43,7 +50,5 @@ the boxes, since everything is absolutely positioned.  How does the real world
 solve this problem?
   - Auto-resizes.
   - Changes orientations based on screen dimensions.  See the KGS window.
-
 3. Really make the Problem series work the way I want!
-
 4. Make a Problem Reviewer Widget.  Perhaps, generally, make an Info panel box.

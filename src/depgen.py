@@ -26,6 +26,7 @@ FILES_TO_AUTOGEN = {
     'htmltests/BboxFinder.html': True,
     'htmltests/GameViewerTester.html': True,
     'htmltests/BaseWidgetTest.html': True,
+    'htmltests/KogosTester.html': True,
     }
 
 COMBINED_LOC = 'compiled/glift_combined.js'

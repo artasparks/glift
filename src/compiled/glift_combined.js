@@ -104,43 +104,6 @@ glift.util = {
     return size;
   },
 
-  varDefined: function(arg, label) {
-    var msg = label || "",
-        msg = msg !== "" ? ": " + msg : msg;
-    if (arg === undefined) {
-      throw "Argument cannot be undefined" + msg
-    }
-  },
-
-  /*
-   * Check to make sure that the variables specified are defined.
-   */
-  defined: function() { // args...
-    for (var i = 0; i < arguments.length; i++) {
-      if (arguments[i] === undefined) {
-        return false;
-      }
-    }
-    return true;
-  },
-
-  assertDefined: function(variable, msg) {
-    if (variable === undefined) {
-      throw msg;
-    }
-    return glift.util.none;
-  },
-
-  checkArgsDefined: function(args, expected) {
-    for (var i = 0; i < expected; i++) {
-      if (args[i] === undefined) {
-        throw "Argument " + i + " of " + args.length +
-            " must be defined, but is undefined";
-      }
-    }
-    return glift.util.none;
-  },
-
   setMethods: function(base, methods) {
     for (var key in methods) {
       base[key] = methods[key].bind(base);
@@ -239,7 +202,8 @@ glift.enums = {
     SQUARE: "SQUARE",
     TRIANGLE: "TRIANGLE",
     XMARK: "XMARK",
-    STONE_MARKER: "STONE_MARKER"
+    STONE_MARKER: "STONE_MARKER",
+    VARIATION_MARKER: "VARIATION_MARKER"
   },
 
   problemResults: {
@@ -294,6 +258,46 @@ glift.util._IdGenerator.prototype = {
 };
 
 glift.util.idGenerator = new glift.util._IdGenerator(0);
+glift.keyMappings = {
+  _nameToCode: {
+    ARROW_LEFT:37,
+    ARROW_UP:38,
+    ARROW_RIGHT:39,
+    ARROW_:40,
+    BACKSPACE:8,
+    ENTER:13,
+    SHIFT:16,
+    FORWARD_SLASH:191,
+    A:65,
+    B:66,
+    C:67,
+    D:68,
+    E:69,
+    F:70,
+    G:71,
+    H:72,
+    I:73,
+    J:74,
+    K:75
+  },
+
+  nameToCode: function(name) {
+    return glift.keyMappings._nameToCode[name];
+  },
+
+  _codeToName: undefined, // lazilyDefined
+
+  codeToName: function(keyCode) {
+    if (glift.keyMappings._codeToName === undefined) {
+      var out = {};
+      for (var keyName in glift.keyMappings._nameToCode) {
+        out[glift.keyMappings._nameToCode[keyName]] = keyName;
+      }
+      glift.keyMappings._codeToName = out;
+    }
+    return glift.keyMappings._codeToName[keyCode];
+  }
+};
 glift.math = {
   abs: function(num) {
     if (num >= 0) return num;
@@ -343,32 +347,56 @@ glift.util.pointFromString = function(str) {
   }
 };
 
+/**
+ * Take an SGF point (e.g., 'mc') and return a GliftPoint.
+ * SGFs are indexed from the Upper Left:
+ *    _  _  _
+ *   |aa ba ca ...
+ *   |ab bb
+ *   |.
+ *   |.
+ *   |.
+ */
+glift.util.pointFromSgfCoord = function(str) {
+  if (str.length != 2) {
+    throw "Unknown SGF Coord length: " + str.length;
+  }
+  var a = 'a'.charCodeAt(0)
+  return glift.util.point(str.charCodeAt(0) - a, str.charCodeAt(1) - a);
+};
+
 glift.util.pointFromHash = function(str) {
   return glift.util.pointFromString(str);
 };
 
 
-// Private Point Class.  Because each point is cached, we have to be careful to
-// preserve immutability. As such, we use getters to access the x and y values.
-// Of course, you could still change functions themselves to be mysterious and
-// annoying, but the purpose of using getters is more to prevent accidental
-// mistakes.
+/**
+ * Basic Point class.
+ *
+ * As a historical note, this class has transformed more than any other class.
+ * It was originally cached, with private variables and immutability.  However,
+ * I found that all this protection was too tedious.
+ */
 var GliftPoint = function(xIn, yIn) {
-  var privateXval = xIn,
-      privateYval = yIn;
-  this.x = function() { return privateXval };
-  this.y = function() { return privateYval };
-
-  this.equals = function(pt) {
-      return privateXval === pt.x() && privateYval === pt.y();
-  };
-  this.toSgfCoord = function() {
-    return String.fromCharCode(privateXval + 97) +
-        String.fromCharCode(privateYval + 97);
-  };
+  this._x = xIn;
+  this._y = yIn;
 };
 
 GliftPoint.prototype = {
+  x: function() { return this._x },
+  y: function() { return this._y },
+  equals: function(pt) {
+    return this._x === pt.x() && this._y === pt.y();
+  },
+
+  /**
+   * Returns an SGF coord, e.g., 'ab' for (0,1)
+   */
+  toSgfCoord: function() {
+    return String.fromCharCode(this.x() + 97) +
+        String.fromCharCode(this.y() + 97);
+  },
+
   /**
    * Create the form used in objects.
    * TODO(kashomon): Replace with string form.  The term hash() is confusing and
@@ -534,7 +562,9 @@ glift.themes = {
 glift.themes.registered.DEFAULT = {
   board: {
     fill: "#f5be7e",
-    stroke: "#000000"
+    stroke: "#000000",
+    // imagefill -- defined on loading
+    'stroke-width': 1
   },
 
   starPoints: {
@@ -543,7 +573,8 @@ glift.themes.registered.DEFAULT = {
   },
 
   lines: {
-    stroke: "#000000"
+    stroke: "#000000",
+    'stroke-width': 0.5
   },
 
   stones: {
@@ -556,12 +587,16 @@ glift.themes.registered.DEFAULT = {
       'font-family' : 'sans-serif'
     },
 
-    "EMPTY" : {
+    EMPTY : {
       fill: 'blue',
       opacity: 0,
       marks: {
         fill: 'black',
-        stroke: 'black'
+        stroke: 'black',
+        VARIATION_MARKER : {
+          stroke: '',
+          fill: '#822'
+        }
       }
     },
 
@@ -576,6 +611,10 @@ glift.themes.registered.DEFAULT = {
         'STONE_MARKER' : {
           fill: 'cyan',
           opacity: 0.6
+        },
+        VARIATION_MARKER : {
+          stroke: '',
+          fill: '#822'
         }
       }
     },
@@ -594,6 +633,10 @@ glift.themes.registered.DEFAULT = {
         'STONE_MARKER' : {
           fill: 'blue',
           opacity: 0.6
+        },
+        VARIATION_MARKER : {
+          fill: '#DD0000',
+          stroke: '#A22'
         }
       }
     },
@@ -675,7 +718,7 @@ glift.displays = {
     var processed = glift.displays.processOptions(options),
         environment = glift.displays.environment.get(processed),
         theme = glift.themes.get(processed.theme); // get a theme copy.
-    if (processed.goBoardBackground !== '') {
+    if (processed.goBoardBackground && processed.goBoardBackground !== '') {
       glift.themes.setGoBoardBackground(theme, processed.goBoardBackground);
     }
     return glift.displays.board.create(environment, processed.theme, theme);
@@ -1442,7 +1485,8 @@ glift.displays.board.Display = function(inEnvironment, themeName, theme) {
   this._intersections = undefined // defined in draw;
   this.intersections = function() { return this._intersections; };
 
-  // Methods accessing private data
+  // Methods accessing private data. Most of these are no longer private and
+  // need to be moved out.
   this.intersectionPoints = function() { return this._environment.intersections; };
   this.boardPoints = function() { return this._environment.boardPoints; };
   this.divId = function() { return this._environment.divId };
@@ -1472,6 +1516,7 @@ glift.displays.board.Display.prototype = {
         .style('-moz-user-select', 'moz-none')
         .style('-ms-user-select', 'none')
         .style('user-select', 'none')
+        //.style('shape-rendering', 'crispEdges')
         .style('cursor', 'default');
       this._svg = d3.select('#' + this.divId())
         .append("svg")
@@ -1560,7 +1605,6 @@ glift.displays.board.createBoardBase = function(divId, svg, goBox, theme) {
   var BOARD = glift.enums.svgElements.BOARD;
   var id = glift.displays.gui.elementId(divId, BOARD)
 
-  // TODO(kashomon): Make this more DRY
   if (theme.board.imagefill) {
     svg.selectAll('goBoardRect').data([BOARD])
       .enter().append('svg:image')
@@ -1568,23 +1612,22 @@ glift.displays.board.createBoardBase = function(divId, svg, goBox, theme) {
         .attr('y', goBox.topLeft().y())
         .attr('width', goBox.width())
         .attr('height', goBox.height())
-        .attr('stroke', theme.board.stroke)
         .attr('xlink:href', theme.board.imagefill)
         .attr('preserveAspectRatio', 'none')
         .attr('id', id);
-  } else {
-    svg.selectAll('goBoardRect').data([BOARD])
-      .enter().append('rect')
-        .attr('x', goBox.topLeft().x() + 'px')
-        .attr('y', goBox.topLeft().y() + 'px')
-        .attr('width', goBox.width() + 'px')
-        .attr('height', goBox.height() + 'px')
-        .attr('height', goBox.height() + 'px')
-        .attr('fill', theme.board.fill)
-        .attr('background-image', theme.board.imagefill)
-        .attr('stroke', theme.board.stroke)
-        .attr('id', id);
   }
+
+  svg.selectAll('goBoardRect').data([BOARD])
+    .enter().append('rect')
+      .attr('x', goBox.topLeft().x() + 'px')
+      .attr('y', goBox.topLeft().y() + 'px')
+      .attr('width', goBox.width() + 'px')
+      .attr('height', goBox.height() + 'px')
+      .attr('height', goBox.height() + 'px')
+      .attr('fill', theme.board.imagefill ? 'none' : theme.board.fill)
+      .attr('stroke', theme.board.stroke)
+      .attr('stroke-width', theme.board['stroke-width'])
+      .attr('id', id);
   return id;
 };
 /**
@@ -1685,6 +1728,7 @@ glift.displays.board._Intersections.prototype = {
     var elems = glift.enums.svgElements;
     // Some STARPOINTs/BOARD_LINEs may have been 'turned-off' when adding marks.
     // It's easier just to manipulate them as a whole.
+    // TODO(kashomon): Is there much of a performance hit for doing this?
     this.svg.selectAll('.' + elems.STARPOINT).attr('opacity', 1);
     this.svg.selectAll('.' + elems.BOARD_LINE).attr('opacity', 1);
     this.svg.selectAll('.' + elems.MARK).remove();
@@ -1725,6 +1769,7 @@ glift.displays.board.createLines = function(divId, svg, boardPoints, theme) {
             pt, boardPoints.radius, boardPoints.numIntersections, theme);
       })
       .attr('stroke', theme.lines.stroke)
+      .attr('stroke-width', theme.lines['stroke-width'])
       .attr('class', BOARD_LINE)
       .attr('stroke-linecap', 'round')
       .attr('id', function(pt) {
@@ -1799,9 +1844,10 @@ glift.displays.board.addMark = function(
       .attr('stone_color');
   var marksTheme = theme.stones[stoneColor].marks;
 
-  // If necessary, clear out intersections and starpoints.  This only applies
-  // to when a stone hasn't yet been set (stoneColor === 'EMPTY').
-  if (stoneColor === 'EMPTY' && mark === marks.LABEL) {
+  // If necessary, clear out intersection lines and starpoints.  This only applies
+  // when a stone hasn't yet been set (stoneColor === 'EMPTY').
+  if (stoneColor === 'EMPTY' &&
+      (mark === marks.LABEL || mark === marks.VARIATION_MARKER)) {
     svg.select('#' + glift.displays.gui.elementId(divId, STARPOINT, pt))
         .attr('opacity', 0);
     svg.select('#' + glift.displays.gui.elementId(divId, BOARD_LINE, pt))
@@ -1813,7 +1859,11 @@ glift.displays.board.addMark = function(
   // Although not strictly necessary to specify node, since scoping is based
   // on the function, it is semantically convenient to define the node first
   // as undefined, at least to this Java-trained programmer.
-  if (mark === marks.LABEL) {
+  if (mark === marks.LABEL || mark == marks.VARIATION_MARKER) {
+    if (mark === marks.VARIATION_MARKER) {
+      marksTheme = marksTheme.VARIATION_MARKER;
+    }
+
     svg.select('.' + MARK_CONTAINER).append('text')
         .text(label)
         .attr('fill', marksTheme.fill)
@@ -1861,7 +1911,7 @@ glift.displays.board.addMark = function(
         .attr('stroke-width', 2)
         .attr('class', MARK)
         .attr('stroke', marksTheme.stroke);
-  } else if (mark == marks.CIRCLE) {
+  } else if (mark === marks.CIRCLE) {
     svg.select('.' + MARK_CONTAINER).append('circle')
         .attr('cx', coordPt.x())
         .attr('cy', coordPt.y())
@@ -1870,7 +1920,7 @@ glift.displays.board.addMark = function(
         .attr('stroke-width', 2)
         .attr('class', MARK)
         .attr('stroke', marksTheme.stroke);
-  } else if (mark == marks.STONE_MARKER) {
+  } else if (mark === marks.STONE_MARKER) {
     var stoneMarkerTheme = theme.stones.marks['STONE_MARKER'];
     svg.select('.' + MARK_CONTAINER).append('circle')
         .attr('cx', coordPt.x())
@@ -2086,6 +2136,7 @@ glift.displays.gui = {
     for (var i = 0; i < percents.length; i++) {
       totalPercent += percents[i];
     }
+
     if (totalPercent > 1 || totalPercent < 0) {
       throw 'Percents must sum to a number be between 0 and 1.' +
           'Was ' + totalPercent;
@@ -2120,6 +2171,35 @@ glift.displays.gui = {
     return boxData;
   }
 };
+(function() {
+/**
+ * A Box Container is a convenient wrapper that helps us split up a div into
+ * sub-divs.  It also provides methods to manipulate the parent divs.
+ *
+ *  {
+ *    divId: <id>
+ *    columns: [ .7 ]
+ *    rows: [[0.6], []]
+ *  }
+ *
+ *  This will produce the following:
+ *    X |
+ *    - | X
+ *    X |
+ */
+glift.displays.gui.boxContainer = function(options) {
+
+};
+
+BoxContainer = function(options) {
+
+};
+
+BoxContainer.prototype = {
+
+};
+
+})();
 /**
  * Return pair of
  *  {
@@ -2194,14 +2274,65 @@ glift.displays.gui.rowCenter = function(
   return { transforms: transforms, bboxes: finishedBoxes };
 };
 (function() {
-glift.displays.gui.commentBox = function(divId) {
-  return new CommentBox(divId, theme);
+glift.displays.gui.commentBox = function(
+    divId, displayWidth, boundingWidth, themeName, useBoardImage) {
+  return new CommentBox(divId, displayWidth, boundingWidth, themeName,
+      useBoardImage).draw();
 };
 
-var CommentBox = function(divId, theme) {
+var CommentBox = function(
+    divId, displayWidth, boundingWidth, themeName, useBoardImage) {
   this.divId = divId;
-  this.theme = theme;
+  this.displayWidth = displayWidth;
+  this.boundingWidth = boundingWidth;
+  this.themeName = themeName;
+  this.theme = glift.themes.get(themeName);
+  this.useBoardImage = useBoardImage;
+  this.commentBoxObj = undefined; // currently: jquery obj
 };
+
+CommentBox.prototype = {
+  draw: function() {
+    // TODO(kashomon): Remove JQuery References for purity.
+    this.commentBoxObj = $('#' + this.divId);
+    var commentBoxHeight = $('#' + this.divId).height();
+    var padding = 10; // TODO(kashomon): Make 'static' variable.
+    var borderWidth = 1;
+    var boardBorder = this.theme.board['stroke-width'];
+
+    // This apparently needs to be accounted for separately.
+    // TODO(kashomon): Get this from the theme.
+    var extra = padding + borderWidth;
+    this.commentBoxObj.css({
+      // TODO(kashomon): Get the theme info from the theme
+      background: '#CCCCFF',
+      border: borderWidth + 'px solid',
+      left: (this.boundingWidth - this.displayWidth) / 2 - boardBorder,
+      //right: (boundingWidth + this.display.width()), //- 2 * padding,
+      width: this.displayWidth - (extra * 2) + 1 * boardBorder,
+      height: commentBoxHeight - (extra * 2),
+      margin: 'auto',
+      'font-family': 'Baskerville',
+      overflow: 'auto',
+      padding: padding
+    });
+    return this;
+  },
+
+  setText: function(text) {
+    this.commentBoxObj.html('<p>' +
+        text.replace(/\n/g, '<br><p>'));
+  },
+
+  clearText: function() {
+    this.commentBoxObj.html('');
+  },
+
+  destroy: function() {
+    this.commentBoxObj.empty();
+  }
+};
+
 })();
 (function() {
 /**
@@ -2539,6 +2670,12 @@ glift.displays.gui.icons = {
   arrowleft: {
     string: "M20.834,8.037L9.641,14.5c-1.43,0.824-1.43,2.175,0,3l11.193,6.463c1.429,0.826,2.598,0.15,2.598-1.5V9.537C23.432,7.887,22.263,7.211,20.834,8.037z",
     bbox: {"x":8.5685,"y":7.684457,"x2":23.432,"y2":24.315543,"width":14.8635,"height":16.631086}
+  },
+
+  // http://raphaeljs.com/icons/#detour
+  detour: {
+    string: "M29.342,15.5l-7.556-4.363v2.614H18.75c-1.441-0.004-2.423,1.002-2.875,1.784c-0.735,1.222-1.056,2.561-1.441,3.522c-0.135,0.361-0.278,0.655-0.376,0.817c-1.626,0-0.998,0-2.768,0c-0.213-0.398-0.571-1.557-0.923-2.692c-0.237-0.676-0.5-1.381-1.013-2.071C8.878,14.43,7.89,13.726,6.75,13.75H2.812v3.499c0,0,0.358,0,1.031,0h2.741c0.008,0.013,0.018,0.028,0.029,0.046c0.291,0.401,0.634,1.663,1.031,2.888c0.218,0.623,0.455,1.262,0.92,1.897c0.417,0.614,1.319,1.293,2.383,1.293H11c2.25,0,1.249,0,3.374,0c0.696,0.01,1.371-0.286,1.809-0.657c1.439-1.338,1.608-2.886,2.13-4.127c0.218-0.608,0.453-1.115,0.605-1.314c0.006-0.01,0.012-0.018,0.018-0.025h2.85v2.614L29.342,15.5zM10.173,14.539c0.568,0.76,0.874,1.559,1.137,2.311c0.04,0.128,0.082,0.264,0.125,0.399h2.58c0.246-0.697,0.553-1.479,1.005-2.228c0.252-0.438,0.621-0.887,1.08-1.272H9.43C9.735,14.003,9.99,14.277,10.173,14.539z",
+    bbox: {"x":2.812,"y":11.137,"x2":29.342,"y2":23.37325,"width":26.53,"height":12.23625}
   }
 };
 /**
@@ -2919,6 +3056,10 @@ glift.rules.intersections = {
    *    }
    *    comment : "foo",
    *    lastMove : { color: <color>, point: <point> }
+   *    nextMoves : [
+   *      { color: <color>, point: <point> },
+   *      ...
+   *    ]
    *  }
    */
   getFullBoardData: function(movetree, goban) {
@@ -2934,6 +3075,8 @@ glift.rules.intersections = {
       pointsObj[pt.hash()] = sobj;
     }
     out.lastMove = movetree.getLastMove();
+
+    out.nextMoves = movetree.nextMoves();
 
     pointsObj = this.addCurrentMarks(pointsObj, movetree);
     out.points = pointsObj;
@@ -2963,7 +3106,7 @@ glift.rules.intersections = {
             pt = conv.point;
             value = conv.value
           } else {
-            var pt = glift.sgf.sgfCoordToPoint(data[i]);
+            var pt = glift.util.pointFromSgfCoord(data[i]);
           }
 
           var ptHash = pt.hash();
@@ -2987,7 +3130,8 @@ glift.rules.movenode = function(properties, children) {
 var MoveNode = function(properties, children) {
   this.properties = properties || glift.rules.properties();
   this.children = children || [];
-  this.nodeId = { nodeNum: 0, varNum: 0 };
+  // TODO(kashomon): NodeId should be (probably) be assignable on creation.
+  this._nodeId = { nodeNum: 0, varNum: 0 };
 };
 
 MoveNode.prototype = {
@@ -2995,32 +3139,29 @@ MoveNode.prototype = {
    * Set the NodeId. Each node has an ID based on the depth and variation
    * number.
    *
-   * Note: Great caution should be exercised when using this method.  If you
+   * Great caution should be exercised when using this method.  If you
    * don't adjust the surrounding nodes, the movetree will get into a funky
    * state.
-   *
-   * TODO(kashomon): Maybe remove this or mark as private?
    */
-  setNodeId: function(nodeNum, varNum) {
-    this.nodeId = {
-        nodeNum: nodeNum,
-        varNum: varNum
-    }
+  _setNodeId: function(nodeNum, varNum) {
+    this._nodeId = { nodeNum: nodeNum, varNum: varNum };
     return this;
   },
 
   /**
-   * Get the node number (i.e., the depth number).
+   * Get the node number (i.e., the depth number).  For our purposes, we
+   * consider passes to be moves, but this is a special enough case that it
+   * shouldn't matter for most situations.
    */
   getNodeNum: function() {
-    return this.nodeId.nodeNum
+    return this._nodeId.nodeNum
   },
 
   /**
    * Get the variation number.
    */
   getVarNum: function() {
-    return this.nodeId.varNum
+    return this._nodeId.varNum
   },
 
   /**
@@ -3035,16 +3176,16 @@ MoveNode.prototype = {
    * Add a new child node.
    */
   addChild: function() {
-    this.children.push(glift.rules.movenode().setNodeId(
+    this.children.push(glift.rules.movenode()._setNodeId(
         this.getNodeNum() + 1, this.numChildren()));
     return this;
   },
 
   /**
    * Get the next child node.  This the same semantically as moving down the
-   * move tree.
+   * movetree.
    */
-  getNext: function(variationNum) {
+  getChild: function(variationNum) {
     if (variationNum === undefined) {
       return this.children[0];
     } else {
@@ -3056,14 +3197,14 @@ MoveNode.prototype = {
    * Renumber the nodes.  Useful for when nodes are deleted during SGF editing.
    */
   renumber: function() {
-    numberMoves(this, this.nodeId.nodeNum, this.nodeId.varNum);
+    numberMoves(this, this._nodeId.nodeNum, this._nodeId.varNum);
     return this;
   }
 };
 
 // Private number moves function
 var numberMoves = function(move, nodeNum, varNum) {
-  move.setNodeId(nodeNum, varNum);
+  move._setNodeId(nodeNum, varNum);
   for (var i = 0; i < move.children.length; i++) {
     var next = move.children[i];
     numberMoves(next, nodeNum + 1, i);
@@ -3110,10 +3251,8 @@ glift.rules.movetree = {
    * Create an empty MoveTree
    */
   getInstance: function(intersections) {
-    var intersections = intersections || 19;
-    var mt = new MoveTree(glift.rules.movenode());
-    mt.setIntersections(intersections);
-    return mt;
+    var ints = intersections || 19;
+    return new MoveTree(glift.rules.movenode()).setIntersections(ints);
   },
 
   /**
@@ -3158,11 +3297,19 @@ glift.rules.movetree = {
  * (usually) a processed parsed SGF, but could be created organically.
  *
  * The tree itself is tree structure made out of MoveNodes.
+ *
+ * Semantically, a MoveTree can be thought of as a game.  Thus, this is the
+ * place where such moves as currentPlayer or lastMove.
  */
 var MoveTree = function(rootNode) {
   // The moveHistory serves two purposes -- it allows travel backwards (i.e.,
   // up the tree), and it gives the current move, which is the last move in the
   // array.
+  //
+  // Really, this exists so that we don't have to make the nodes have to know
+  // about their parent node.  It would be nice to know linkkkkk
+  // Unfortunately, there's not good way to do this at parsing time, as far as I
+  // know.
   this._nodeHistory = [];
   this._nodeHistory.push(rootNode);
 };
@@ -3181,14 +3328,6 @@ MoveTree.prototype = {
    */
   getNode: function() {
     return this._nodeHistory[this._nodeHistory.length - 1];
-  },
-
-  /**
-   * Get the number of next variations.  This is a convenience method, since it
-   * delegates to getNode().numChildren().
-   */
-  numVariations: function() {
-    return this.getNode().numChildren();
   },
 
   /**
@@ -3243,6 +3382,30 @@ MoveTree.prototype = {
   },
 
   /**
+   * Get the next moves (i.e., nodes with either B or W properties);
+   *
+   * returns an array of dicts with the moves, e.g.,
+   *
+   *  [{
+   *    color: <BLACK or WHITE>
+   *    point: point
+   *  },
+   *  {...}]
+   */
+  nextMoves: function() {
+    var curNode = this.getNode();
+    var nextMoves = [];
+    for (var i = 0; i < curNode.numChildren(); i++) {
+      var nextNode = curNode.getChild(i);
+      var move = nextNode.properties.getMove();
+      if (move !== glift.util.none) {
+        nextMoves.push(move);
+      }
+    }
+    return nextMoves;
+  },
+
+  /**
    * Get the current player.  This is exactly the opposite of the last move that
    * was played -- i.e., the move on the current node.
    */
@@ -3268,8 +3431,8 @@ MoveTree.prototype = {
    */
   moveDown: function(variationNum) {
     var num = variationNum === undefined ? 0 : variationNum;
-    if (this.getNode().getNext(num) !== undefined) {
-      var next = this.getNode().getNext(num);
+    if (this.getNode().getChild(num) !== undefined) {
+      var next = this.getNode().getChild(num);
       this._nodeHistory.push(next);
     }
     return this;
@@ -3291,6 +3454,10 @@ MoveTree.prototype = {
     return this;
   },
 
+  /**
+   * Add a newNode and move to that position.  This is convenient becuase it
+   * means you can start adding properties.
+   */
   addNewNode: function() {
     this.getNode().addChild();
     this.moveDown(this.getNode().numChildren() - 1);
@@ -3359,7 +3526,7 @@ MoveTree.prototype = {
   },
 
   /**
-   * Used for Problems. Determine if a 'move' is correct
+   * Used for Problems. Determine if a 'move' is correct.
    *
    * Can return CORRECT, INCORRECT, or INDETERMINATE
    *
@@ -3493,7 +3660,7 @@ Properties.prototype = {
     if (out === util.none) {
       return out;
     } else {
-      return glift.sgf.sgfCoordToPoint(out);
+      return glift.util.pointFromSgfCoord(out);
     }
   },
 
@@ -3548,7 +3715,13 @@ Properties.prototype = {
   },
 
   /**
-   * Get the current Move
+   * Get the current Move.  Returns util.none if no move exists.
+   *
+   * Specifically, returns a dict:
+   *  {
+   *    color: <BLACK / WHITE>
+   *    point: point
+   *  }
    */
   getMove: function() {
     if (this.contains('B')) {
@@ -3705,29 +3878,17 @@ glift.sgf = {
     }
   },
 
-  // SGFs are indexed from the Upper Left:
-  //  _  _  _
-  // |aa ba ca ...
-  // |ab bb
-  // |.
-  // |.
-  // |.
-  sgfCoordToPoint: function(c) {
-    var a = 'a'.charCodeAt(0)
-    return glift.util.point(c.charCodeAt(0) - a, c.charCodeAt(1) - a);
-  },
-
   allSgfCoordsToPoints: function(arr) {
     var out = [];
     for (var i = 0; i < arr.length; i++) {
-      out.push(glift.sgf.sgfCoordToPoint(arr[i]));
+      out.push(glift.util.pointFromSgfCoord(arr[i]));
     }
     return out;
   },
 
   convertFromLabelData: function(data) {
     var parts = data.split(":"),
-        pt = glift.sgf.sgfCoordToPoint(parts[0]),
+        pt = glift.util.pointFromSgfCoord(parts[0]),
         value = parts[1];
     return {point: pt, value: value};
   },
@@ -5005,7 +5166,7 @@ BaseController.prototype = {
 /**
  * A GameViewer encapsulates the idea of traversing a read-only SGF.
  */
-glift.controllers.createGameViewer = function(rawOptions) {
+glift.controllers.gameViewer = function(rawOptions) {
   var options = glift.controllers.processOptions(rawOptions),
       controllers = glift.controllers,
       baseController = glift.util.beget(controllers.createBase()),
@@ -5037,16 +5198,13 @@ var methods = {
    * Find the variation associated with the played move.
    */
   addStone: function(point, color) {
-    var addResult = this.goban.addStone(point, color);
-    if (!addResult.successful) {
-      return { message: FAILURE, reason: "Cannot add stone" };
-    }
-    var nextVarNum = this.movetree.findNextMove(point, color);
-    if (nextVarNum === glift.util.none) {
+    var possibleMap = this._possibleNextMoves();
+    var key = point.toString() + '-' + color;
+    if (possibleMap[key] === undefined) {
       return glift.util.none;
     }
-    this.setNextVariation(nextVarNum);
-    return this.nextMove();
+    var nextVariationNum = possibleMap[key];
+    return this.nextMove(nextVariationNum);
   },
 
   /**
@@ -5067,7 +5225,7 @@ var methods = {
    */
   moveUpVariations: function() {
     return this.setNextVariation((this.getNextVariationNumber() + 1)
-        % this.movetree.numVariations());
+        % this.movetree.getNode().numChildren());
   },
 
   /**
@@ -5077,8 +5235,8 @@ var methods = {
     // Module is defined incorrectly for negative numbers.  So, we need to add n
     // to the result.
     return this.setNextVariation((this.getNextVariationNumber() - 1 +
-        + this.movetree.numVariations())
-        % this.movetree.numVariations());
+        + this.movetree.getNode().numChildren())
+        % this.movetree.getNode().numChildren());
   },
 
   /**
@@ -5090,7 +5248,7 @@ var methods = {
     // this.gamePath.length (if at the end).  Thus, if the old gamepath was
     // [0,1,2,0] and the currentMoveNumber was 2, we'll have [0, 1, num].
     this.gamePath = this.gamePath.slice(0, this.currentMoveNumber);
-    this.gamePath.push(num % this.movetree.numVariations());
+    this.gamePath.push(num % this.movetree.getNode().numChildren());
     return this;
   },
 
@@ -5108,8 +5266,8 @@ var methods = {
    * Go to the end.
    */
   toEnd: function() {
-    while (this.movetree.numVariations() > 0) {
-      this._nextMoveNoState();
+    while (this._nextMoveNoState()) {
+      // All the action happens in nextMoveNoState.
     }
     return this.getEntireBoardState();
   },
@@ -5135,25 +5293,71 @@ var methods = {
   /**
    * Get the Next move in the game.  If the player has already traversed a path,
    * then we follow this previous path.
+   *
+   * If varNum is undefined, we try to 'guess' the next move based on the
+   * contents of the gamepath.
    */
-  nextMove: function() {
-    this._nextMoveNoState();
-    return this.getEntireBoardState();
+  nextMove: function(varNum) {
+    var wasPossible = this._nextMoveNoState(varNum);
+    if (wasPossible) {
+      return this.getEntireBoardState();
+    } else {
+      return false;
+    }
+  },
+
+  /**
+   * Get the possible next moves.  Used to verify that a click is actually
+   * reasonable.
+   *
+   * Implemented as a map from point-string+color to variationNumber:
+   *  e.g., pt-BLACK : 1
+   */
+  _possibleNextMoves: function() {
+    var possibleMap = {};
+    var nextMoves = this.movetree.nextMoves();
+    for (var i = 0; i < nextMoves.length; i++) {
+      var move = nextMoves[i];
+      var key = move.point.toString() + '-' + move.color;
+      possibleMap[key] = i;
+    }
+    return possibleMap;
   },
 
   /**
    * Get the next move without returning the updated state.
+   *
+   * TODO(kashomon): ...what? This description makes no sense.  Also, some of
+   * the edge-case logic looks wrong.  Morevore, this is a terrible, confusing
+   * name for this function.
+   *
+   * If varNum is undefined, we try to 'guess' the next move based on the
+   * contents of the gamepath.
+   *
+   * Return true on success. false otherwise.
    */
-  _nextMoveNoState: function() {
-    if (this.gamePath[this.currentMoveNumber] !== undefined) {
+  _nextMoveNoState: function(varNum) {
+    if (this.gamePath[this.currentMoveNumber] !== undefined &&
+        (varNum === undefined ||
+        this.gamePath[this.currentMoveNumber] === varNum)) {
       this.movetree.moveDown(this.gamePath[this.currentMoveNumber]);
     } else {
-      this.movetree.moveDown(0);
-      this.gamePath.push(0);
+      if (varNum === undefined) {
+        varNum = 0;
+      }
+      if (varNum >= 0 &&
+          varNum <= this.movetree.nextMoves().length - 1) {
+        this.setNextVariation(varNum);
+        this.movetree.moveDown(varNum);
+      } else {
+        // There are no moves available;
+        return false;
+      }
     }
     this.currentMoveNumber++;
     // Load all of: [B, W, AW, AB].
     this.goban.loadStonesFromMovetree(this.movetree);
+    return true;
   }
 };
 })();
@@ -5323,6 +5527,15 @@ glift.bridge = {
         }
       }
     }
+
+    if (fullBoardData.nextMoves.length > 1) {
+      for (var i = 0; i < fullBoardData.nextMoves.length; i++) {
+        var nextMove = fullBoardData.nextMoves[i];
+        display.intersections().addMarkPt(
+            nextMove.point, marks.VARIATION_MARKER, i + 1);
+      }
+    }
+
     if (fullBoardData.lastMove && fullBoardData.lastMove !== glift.util.none) {
       var lm = fullBoardData.lastMove;
       display.intersections().addMarkPt(lm.point, marks.STONE_MARKER);
@@ -5392,6 +5605,232 @@ glift.bridge._getRegionFromTracker = function(tracker, numstones) {
 // Widgets are toplevel objects, which combine display and
 // controller/rules bits together.
 glift.widgets = {};
+(function() {
+glift.widgets.baseWidget = function(options) {
+  options = initOptions(options);
+  var widget = new BaseWidget(options).draw();
+  return widget;
+};
+
+// TODO(kashomon): The options manipulation should be broken into its own file.
+var initOptions = function(options) {
+  options.controller = options.controller ||
+      glift.controllers.gameViewer(options);
+  options.divId = options.divId || 'glift_display';
+  options.theme = options.theme || 'DEFAULT';
+  // if (options.goBoardBackground !== undefined)  {
+    // glift.themes.setGoBoardBackground(options.theme, options.goBoardBackground);
+  // }
+  // keyMapping is a map from KeyCodes to iconNames
+  options.keyMapping = options.keyMapping || {
+      ARROW_LEFT: 'arrowleft',
+      ARROW_RIGHT: 'arrowright',
+      FORWARD_SLASH: 'small-gear'
+  };
+  options.useCommentBar = options.useCommentBar === undefined ?
+      true : options.useCommentBar;
+  options.icons = options.icons ||
+      [ 'start', 'end', 'arrowleft', 'arrowright'];
+
+  options.actions = options.actions || {};
+  options.actions.stones = options.actions.stones || {};
+
+  var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
+  options.actions.stones.click = function(widget, pt) {
+    var currentPlayer = widget.controller.getCurrentPlayer();
+    var fullBoardData = widget.controller.addStone(pt, currentPlayer);
+    widget.applyFullBoardData(fullBoardData);
+  };
+  options.actions.stones.mouseover = function(widget, pt) {
+    var currentPlayer = widget.controller.getCurrentPlayer();
+    if (widget.controller.canAddStone(pt, currentPlayer)) {
+      widget.display.intersections()
+          .setStoneColor(pt, hoverColors[currentPlayer]);
+    }
+  };
+  options.actions.stones.mouseout = function(widget, pt) {
+    var currentPlayer = widget.controller.getCurrentPlayer();
+    if (widget.controller.canAddStone(pt, currentPlayer)) {
+      widget.display.intersections().setStoneColor(pt, 'EMPTY');
+    }
+  };
+
+  options.actions.icons = options.actions.icons || {
+    start: {
+      click:  function(widget) {
+        var fullBoardData = widget.controller.toBeginning();
+        widget.applyFullBoardData(fullBoardData);
+      }
+    },
+    end: {
+      click:  function(widget) {
+        var fullBoardData = widget.controller.toEnd();
+        widget.applyFullBoardData(fullBoardData);
+      }
+    },
+    arrowright: {
+      click: function(widget) {
+        var fullBoardData = widget.controller.nextMove();
+        widget.applyFullBoardData(fullBoardData);
+      }
+    },
+    arrowleft: {
+      click:  function(widget) {
+        var fullBoardData = widget.controller.prevMove();
+        widget.applyFullBoardData(fullBoardData);
+      }
+    }
+    // TODO(kashomon): Pass
+  };
+  return options;
+};
+
+var BaseWidget = function(options) {
+  this.options = options;
+  this.wrapperDiv = options.divId;
+  this.controller = options.controller;
+  this.display = undefined; // Initialized by draw.
+};
+
+BaseWidget.prototype = {
+  draw: function() {
+    var divSplits = this.options.useCommentBar ? [.70,.20] : [.90];
+    this.divInfo = glift.displays.gui.splitDiv(
+        this.wrapperDiv, divSplits, 'horizontal');
+    this.goboxDivId = this.divInfo[0].id;
+    this.options.divId = this.goboxDivId;
+    this.display = glift.createDisplay(this.options);
+    var boundingWidth = $('#' +  this.goboxDivId).width();
+
+    if (this.options.useCommentBar) {
+      this.commentBoxId = this.divInfo[1].id;
+      this._createCommentBox(boundingWidth);
+    }
+
+    this.iconBarId = this.options.useCommentBar ? this.divInfo[2].id :
+        this.divInfo[1].id;
+    this._createIconBar(boundingWidth)
+    this._initStoneActions();
+    this._initIconActions();
+    this._initKeyHandlers();
+    this.applyFullBoardData(this.controller.getEntireBoardState());
+    return this;
+  },
+
+  _createCommentBox: function(boundingWidth) {
+    this.commentBox = glift.displays.gui.commentBox(
+        this.commentBoxId,
+        this.display.width(),
+        boundingWidth,
+        this.options.theme,
+        this.options.goBoardBackground !== undefined);
+  },
+
+  _createIconBar: function(boundingWidth) {
+    var that = this;
+    var margin = (boundingWidth - this.display.width()) / 2;
+    this.iconBar = glift.displays.gui.iconBar({
+      themeName: this.options.themeName,
+      divId: that.iconBarId,
+      vertMargin:  5, // For good measure
+      horzMargin: margin,
+      icons:  this.options.icons
+    });
+  },
+
+  _initIconActions: function() {
+    var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
+    var widget = this;
+    var iconActions = this.options.actions.icons;
+
+    for (var iconName in iconActions) {
+      var mouseover = iconActions[iconName].mouseover || function(widget, name) {
+        var id = widget.iconBar.iconId(name);
+        d3.select('#' + id).attr('fill', 'red');
+      };
+      var mouseout = iconActions[iconName].mouseout || function(widget, name) {
+        var id = widget.iconBar.iconId(name);
+        d3.select('#' + id)
+            .attr('fill', widget.iconBar.theme.icons.DEFAULT.fill);
+      };
+      var click = iconActions[iconName].click || function() {};
+      var events = { mouseover: mouseover, mouseout: mouseout, click: click };
+      for (var eventName in events) {
+        (function(eventName, iconNameBound, event) { // lazy binding, bleh.
+          widget.iconBar.setEvent(eventName, iconName, function() {
+            event(widget, iconNameBound);
+          });
+        })(eventName, iconName, events[eventName]);
+      }
+    }
+  },
+
+  /**
+   * Initialize the stone actions.
+   */
+  _initStoneActions: function() {
+    var stoneActions = this.options.actions.stones;
+    var that = this;
+    var actions = ['click', 'mouseover', 'mouseout'];
+    for (var i = 0; i < actions.length; i++) {
+      var action = actions[i];
+      if (stoneActions[action] !== undefined) {
+        (function(act, fn) { // bind the event -- required due to lazy binding.
+          that.display.intersections().setEvent(act, function(pt) {
+            fn(that, pt);
+          });
+        })(action, stoneActions[action]);
+      }
+    }
+  },
+
+  /**
+   * Assign Key handlers to icon action.
+   *
+   * Mapping: from key number to
+   */
+  _initKeyHandlers: function(mapping) {
+    var that = this;
+    $('body').keydown(function(e) {
+      var name = glift.keyMappings.codeToName(e.which);
+      if (name && that.options.keyMapping[name] !== undefined) {
+        that.iconBar.forceEvent(that.options.keyMapping[name]);
+      }
+    });
+  },
+
+  applyFullBoardData: function(fullBoardData) {
+    // TODO(kashomon): Support incremental changes.
+    if (fullBoardData && fullBoardData !== glift.util.none) {
+      this.setCommentBox(fullBoardData);
+      this.display.intersections().clearAll();
+      glift.bridge.setDisplayState(fullBoardData, this.display);
+    }
+  },
+
+  setCommentBox: function(fullBoardData) {
+    if (!this.commentBox) {
+      return;
+    }
+
+    if (fullBoardData.comment) {
+      this.commentBox.setText(fullBoardData.comment);
+    } else {
+      this.commentBox.clearText();
+    }
+  },
+
+  redraw: function() {
+    this.destroy();
+    this.draw();
+  },
+
+  destroy: function() {
+    $('#' + this.wrapperDiv).empty();
+    this.display = undefined;
+  }
+};
+})();
 glift.widgets.basicProblem = function(options) {
   var displayTypes = glift.enums.displayTypes;
   var boardRegions = glift.enums.boardRegions;
@@ -5469,136 +5908,6 @@ glift.widgets._BasicProblem.prototype = {
     });
   }
 };
-(function() {
-glift.widgets.gameViewer = function(options) {
-  var divId = '' + (options.divId || 'glift_display');
-  return new GameViewer(options, divId).draw();
-};
-
-GameViewer = function(options, wrapperDiv) {
-  this.options = options;
-  this.wrapperDiv = wrapperDiv;
-  this.controller = glift.controllers.createGameViewer(options);
-  this.display = undefined;
-  this.gameDisplay = undefined;
-  this.commentDisplay = undefined;
-  this.iconBar = undefined;
-};
-
-GameViewer.prototype = {
-  draw: function() {
-    var that = this;
-    this.divInfo = glift.displays.gui.splitDiv(
-        this.wrapperDiv, [.70,.20], 'horizontal');
-
-    this.goboxDivId = this.divInfo[0].id;
-    this.commentBoxId = this.divInfo[1].id;
-    this.iconBarId = this.divInfo[2].id;
-
-    this.options.divId = this.goboxDivId;
-    this.display = glift.createDisplay(this.options);
-
-    var boundingWidth = $('#' +  this.goboxDivId).width();
-
-    // note: divInfo[1] is for comments
-    this.commentBox = $('#' + this.commentBoxId);
-    this.commentBox.css({
-      // "border-radius": "10px",
-      // "-moz-border-radius": "10px",
-      // "-webkit-border-radius": "10px",
-      background: '#CCCCFF',
-      left: (boundingWidth - this.display.width()) / 2,
-      right: (boundingWidth + this.display.width()) / 2,
-      margin: 'auto',
-      'font-family': 'Baskerville',
-      overflow: 'auto',
-      width: this.display.width()
-    });
-
-    var margin = (boundingWidth - this.display.width()) / 2;
-    this.iconBar = glift.displays.gui.iconBar({
-      themeName: this.options.themeName,
-      divId: that.iconBarId,
-      vertMargin:  5, // For good measure
-      horzMargin: margin,
-      icons:  [ 'start', 'end', 'arrowleft', 'arrowright' ]
-    });
-
-    this.applyFullBoardData(this.controller.getEntireBoardState());
-    this.initIconHandlers();
-    this.initKeyHandlers();
-    return this;
-  },
-
-  initIconHandlers: function() {
-    var hoverColors = {
-      "BLACK": "BLACK_HOVER",
-      "WHITE": "WHITE_HOVER"
-    };
-    var that = this;
-
-    this.iconBar.forEachIcon(function(icon) {
-      that.iconBar.setEvent('mouseover', icon.name, function() {
-        d3.select('#' + icon.iconId)
-            .attr('fill', 'red');
-      }).setEvent('mouseout', icon.name, function() {
-        d3.select('#' + icon.iconId)
-            .attr('fill', that.iconBar.theme.icons.DEFAULT.fill);
-      });
-    });
-
-    this.iconBar.setEvent('click', 'arrowright', function() {
-      var fullBoardData = that.controller.nextMove();
-      that.applyFullBoardData(fullBoardData);
-    });
-
-    this.iconBar.setEvent('click', 'arrowleft', function() {
-      var fullBoardData = that.controller.prevMove();
-      that.applyFullBoardData(fullBoardData);
-    });
-
-    this.iconBar.setEvent('click', 'start', function() {
-      var fullBoardData = that.controller.toBeginning();
-      that.applyFullBoardData(fullBoardData);
-    });
-
-    this.iconBar.setEvent('click', 'end', function() {
-      var fullBoardData = that.controller.toEnd();
-      that.applyFullBoardData(fullBoardData);
-    });
-  },
-
-  initKeyHandlers: function() {
-    var that = this;
-    $('body').keydown(function(e) {
-      switch(e.which) {
-        case 39: that.iconBar.forceEvent('arrowright'); break;
-        case 37: that.iconBar.forceEvent('arrowleft'); break;
-      }
-    });
-  },
-
-  applyFullBoardData: function(fullBoardData) {
-    // TODO(kashomon): Support incremental changes.
-    this.setCommentBox(fullBoardData);
-    this.display.intersections().clearAll();
-    glift.bridge.setDisplayState(fullBoardData, this.display);
-  },
-
-  setCommentBox: function(fullBoardData) {
-    if (fullBoardData.comment) {
-      this.commentBox.html('<p>' +
-          fullBoardData.comment.replace(/\n/g, '<br><p>'));
-    } else {
-      this.commentBox.html('');
-    }
-  },
-
-  destroy: function() {
-    $('#' + this.wrapperDiv).empty();
-  }
-};
-})();
 (function() {
 glift.widgets.problemSeries = function(options) {
   var divId = '' + (options.divId || 'glift_display');

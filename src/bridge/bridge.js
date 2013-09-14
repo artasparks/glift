@@ -8,7 +8,7 @@ glift.bridge = {
    *
    * For a more detailed discussion, see intersections in glift.rules.
    */
-  setDisplayState: function(fullBoardData, display) {
+  setDisplayState: function(fullBoardData, display, showVariations) {
     var marks = glift.enums.marks;
     display.intersections().clearMarks();
     for (var ptHash in fullBoardData.points) {
@@ -29,7 +29,11 @@ glift.bridge = {
       }
     }
 
-    if (fullBoardData.nextMoves.length > 1) {
+    if (fullBoardData.nextMoves &&
+        ((fullBoardData.nextMoves.length > 1 &&
+            showVariations === glift.enums.showVariations.MORE_THAN_ONE) ||
+        (fullBoardData.nextMoves.length >= 1 &&
+            showVariations === glift.enums.showVariations.ALWAYS))) {
       for (var i = 0; i < fullBoardData.nextMoves.length; i++) {
         var nextMove = fullBoardData.nextMoves[i];
         display.intersections().addMarkPt(

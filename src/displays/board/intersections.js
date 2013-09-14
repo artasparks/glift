@@ -1,4 +1,4 @@
-glift.displays.board.createIntersections = function(
+glift.displays.board.intersections = function(
     divId, svg, ids, boardPoints, theme) {
   return new glift.displays.board._Intersections(
       divId, svg, ids, boardPoints, theme);

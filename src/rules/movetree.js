@@ -70,7 +70,7 @@ glift.rules.movetree = {
    */
   searchMoveTreeDFS: function(moveTree, func) {
     func(moveTree);
-    for (var i = 0; i < moveTree.getNode().numChildren(); i++) {
+    for (var i = 0; i < moveTree.node().numChildren(); i++) {
       glift.rules.movetree.searchMoveTreeDFS(moveTree.moveDown(i), func);
     }
     moveTree.moveUp();
@@ -111,15 +111,15 @@ MoveTree.prototype = {
   /**
    * Get the current node -- that is, the node at the current position.
    */
-  getNode: function() {
+  node: function() {
     return this._nodeHistory[this._nodeHistory.length - 1];
   },
 
   /**
    * Get the properties object on the current node.
    */
-  getProperties: function() {
-    return this.getNode().properties;
+  properties: function() {
+    return this.node().properties();
   },
 
   /**
@@ -129,13 +129,13 @@ MoveTree.prototype = {
    * return either the number or glift.util.none;
    */
   findNextMove: function(point, color) {
-    var nextNodes = this.getNode().children,
+    var nextNodes = this.node().children,
         token = glift.sgf.colorToToken(color),
         ptSet = {};
     for (var i = 0; i < nextNodes.length; i++) {
       var node = nextNodes[i];
-      if (node.properties.contains(token)) {
-        ptSet[node.properties.getAsPoint(token).hash()] =
+      if (node.properties().contains(token)) {
+        ptSet[node.properties().getAsPoint(token).hash()] =
           node.getVarNum();
       }
     }
@@ -148,7 +148,7 @@ MoveTree.prototype = {
 
   /**
    * Get the last move ([B] or [W]). This is a convenience method, since it
-   * delegates to getProperties().getMove();
+   * delegates to properties().getMove();
    *
    * Returns a simple object:
    *  {
@@ -163,7 +163,7 @@ MoveTree.prototype = {
    *  illustration (AW,AB).
    */
   getLastMove: function() {
-    return this.getProperties().getMove();
+    return this.properties().getMove();
   },
 
   /**
@@ -178,11 +178,11 @@ MoveTree.prototype = {
    *  {...}]
    */
   nextMoves: function() {
-    var curNode = this.getNode();
+    var curNode = this.node();
     var nextMoves = [];
     for (var i = 0; i < curNode.numChildren(); i++) {
       var nextNode = curNode.getChild(i);
-      var move = nextNode.properties.getMove();
+      var move = nextNode.properties().getMove();
       if (move !== glift.util.none) {
         nextMoves.push(move);
       }
@@ -195,7 +195,7 @@ MoveTree.prototype = {
    * was played -- i.e., the move on the current node.
    */
   getCurrentPlayer: function() {
-    var move = this.getProperties().getMove();
+    var move = this.properties().getMove();
     if (move === util.none) {
       return enums.states.BLACK;
     } else if (move.color === enums.states.BLACK) {
@@ -216,8 +216,8 @@ MoveTree.prototype = {
    */
   moveDown: function(variationNum) {
     var num = variationNum === undefined ? 0 : variationNum;
-    if (this.getNode().getChild(num) !== undefined) {
-      var next = this.getNode().getChild(num);
+    if (this.node().getChild(num) !== undefined) {
+      var next = this.node().getChild(num);
       this._nodeHistory.push(next);
     }
     return this;
@@ -243,9 +243,9 @@ MoveTree.prototype = {
    * Add a newNode and move to that position.  This is convenient becuase it
    * means you can start adding properties.
    */
-  addNewNode: function() {
-    this.getNode().addChild();
-    this.moveDown(this.getNode().numChildren() - 1);
+  addNode: function() {
+    this.node().addChild();
+    this.moveDown(this.node().numChildren() - 1);
     return this;
   },
 
@@ -279,9 +279,9 @@ MoveTree.prototype = {
     if (spaces === undefined) {
       spaces = "  ";
     }
-    glift.util.logz(spaces + this.getNode(i).getVarNum() + '-'
-        + this.getNode(i).getNodeNum());
-    for (var i = 0; i < this.getNode().numChildren(); i++) {
+    glift.util.logz(spaces + this.node(i).getVarNum() + '-'
+        + this.node(i).getNodeNum());
+    for (var i = 0; i < this.node().numChildren(); i++) {
       this.moveDown(i);
       this.debugLog(spaces);
       this.moveUp();
@@ -294,8 +294,8 @@ MoveTree.prototype = {
   setIntersections: function(intersections) {
     var mt = this.getTreeFromRoot(),
         allProperties = glift.sgf.allProperties;
-    if (!mt.getProperties().contains(allProperties.SZ)) {
-      this.getProperties().add(allProperties.SZ, intersections + "");
+    if (!mt.properties().contains(allProperties.SZ)) {
+      this.properties().add(allProperties.SZ, intersections + "");
     }
     return this;
   },
@@ -303,8 +303,8 @@ MoveTree.prototype = {
   getIntersections: function() {
     var mt = this.getTreeFromRoot(),
         allProperties = glift.sgf.allProperties;
-    if (mt.getNode().properties.contains(allProperties.SZ)) {
-      return parseInt(mt.getNode().properties.get(allProperties.SZ));
+    if (mt.node().properties().contains(allProperties.SZ)) {
+      return parseInt(mt.node().properties().get(allProperties.SZ));
     } else {
       return undefined;
     }
@@ -319,18 +319,18 @@ MoveTree.prototype = {
    */
   isCorrectPosition: function() {
     var problemResults = glift.enums.problemResults;
-    if (this.getProperties().isCorrect()) {
+    if (this.properties().isCorrect()) {
       return problemResults.CORRECT;
     } else {
       var flatPaths = glift.rules.treepath.flattenMoveTree(this);
       var successTracker = {};
       for (var i = 0; i < flatPaths.length; i++) {
         var path = flatPaths[i];
-        var newmt = glift.rules.movetree.getFromNode(this.getNode());
+        var newmt = glift.rules.movetree.getFromNode(this.node());
         var pathCorrect = false
         for (var j = 0; j < path.length; j++) {
           newmt.moveDown(path[j]);
-          if (newmt.getProperties().isCorrect()) {
+          if (newmt.properties().isCorrect()) {
             pathCorrect = true;
           }
         }

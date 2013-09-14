@@ -1,15 +1,19 @@
 (function() {
 glift.displays.gui.commentBox = function(
-    divId, displayWidth, boundingWidth, themeName) {
-  return new CommentBox(divId, displayWidth, boundingWidth, themeName).draw();
+    divId, displayWidth, boundingWidth, themeName, useBoardImage) {
+  return new CommentBox(divId, displayWidth, boundingWidth, themeName,
+      useBoardImage).draw();
 };
 
-var CommentBox = function(divId, displayWidth, boundingWidth, themeName) {
+var CommentBox = function(
+    divId, displayWidth, boundingWidth, themeName, useBoardImage) {
   this.divId = divId;
   this.displayWidth = displayWidth;
   this.boundingWidth = boundingWidth;
   this.themeName = themeName;
-  this.commentBoxObj = undefined;
+  this.theme = glift.themes.get(themeName);
+  this.useBoardImage = useBoardImage;
+  this.commentBoxObj = undefined; // currently: jquery obj
 };
 
 CommentBox.prototype = {
@@ -18,8 +22,8 @@ CommentBox.prototype = {
     this.commentBoxObj = $('#' + this.divId);
     var commentBoxHeight = $('#' + this.divId).height();
     var padding = 10; // TODO(kashomon): Make 'static' variable.
-    var borderWidth = 1
-    var boardBorder = 1;
+    var borderWidth = 1;
+    var boardBorder = this.theme.board['stroke-width'];
 
     // This apparently needs to be accounted for separately.
     // TODO(kashomon): Get this from the theme.

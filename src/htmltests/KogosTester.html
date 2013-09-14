@@ -1,10 +1,11 @@
 <html>
 <head>
 
-<title> MarksTester </title>
+<title> KogosTester </title>
 <script type="text/javascript" src="../libs/jquery-1.10.2.min.js"></script>
-<script type="text/javascript" src="../libs/d3.min.js"></script>
 <script type="text/javascript" src="../testdata/sgfs.js"></script>
+<script type="text/javascript" src="../testdata/kogos3.js"></script>
+<script type="text/javascript" src="../libs/d3.min.js"></script>
 
 <!-- AUTO-GEN-DEPS -->
 <!-- Otre -->
@@ -120,7 +121,7 @@
         padding: 0;
       }
       #glift_display1 {
-        height:95%;
+        height:100%;
         position:relative;
       }
     </style>
@@ -132,19 +133,14 @@
       <div id="glift_display1"></div>
       <div id="extra_info"></div>
       <script type="text/javascript">
-        var basicProblem = glift.widgets.basicProblem({
-          sgfString: testdata.sgfs.marktest,
-          divId: "glift_display1",
-          theme: "DEPTH",
-          goBoardBackground: '../themes/assets/bambootile_warm.jpg',
-          boardRegion: 'TOP_RIGHT'
-        });
-        basicProblem.display.intersections()
-            .addMark(9, 0, "STONE_MARKER");
-        basicProblem.display.intersections()
-            .addMark(9, 1, "STONE_MARKER");
-        basicProblem.display.intersections()
-            .addMark(9, 2, "STONE_MARKER");
+        (function() {
+          gameViewer = glift.widgets.baseWidget({
+            sgfString: testdata.kogos,
+            theme: 'DEPTH',
+            goBoardBackground: '../themes/assets/bambootile_warm.jpg',
+            divId: "glift_display1"
+          });
+        })();
       </script>
     </div>
   </body>

@@ -51,12 +51,11 @@ var IconBar = function(divId, themeName, iconNames, vertMargin, horzMargin) {
   this.divId = divId;
   this.themeName = themeName;
   this.theme = glift.themes.get(themeName);
-  this.iconNames = iconNames;
+  this.iconNames = iconNames; // array of names
   this.vertMargin = vertMargin;
   this.horzMargin = horzMargin;
-  this.iconObjects = {}; // init'd by draw
-  this.iconButtons = {}; // init'd by draw
   this.events = {};
+  this.newIconBboxes = {}; // initialized by draw
 };
 
 IconBar.prototype = {
@@ -199,8 +198,6 @@ IconBar.prototype = {
 
   destroy: function() {
     this.divId && d3.select('#' + this.divId).selectAll("svg").remove();
-    this.iconObjects = {};
-    this.iconButtons = {};
     this.events = {};
     return this;
   }

@@ -6,16 +6,16 @@ glift.bridge.croppingTest = function() {
   test("GetCropRegion: TOP_LEFT", function() {
     var mt = glift.rules.movetree.getInstance(),
         point = glift.util.point,
-        getCropRegion = glift.bridge.getFromMovetree;
-    mt.getProperties().add('B', point(0,0).toSgfCoord());
+        getCropRegion = glift.bridge.getCropFromMovetree;
+    mt.properties().add('B', point(0,0).toSgfCoord());
     deepEqual(getCropRegion(mt), boardRegions.TOP_LEFT, "Must be TOP_LEFT");
   });
 
   test("GetCropRegion: TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT", function() {
     var mt = glift.rules.movetree.getInstance(),
         point = glift.util.point,
-        getCropRegion = glift.bridge.getFromMovetree,
-        props = mt.getProperties();
+        getCropRegion = glift.bridge.getCropFromMovetree,
+        props = mt.properties();
     props.add('AB', point(17, 0).toSgfCoord());
     deepEqual(getCropRegion(mt), boardRegions.TOP_RIGHT, "Must be TOP_RIGHT");
     props.remove('AB');
@@ -31,8 +31,8 @@ glift.bridge.croppingTest = function() {
   test("GetCropRegion: TOP, BOTTOM, LEFT, RIGHT", function() {
     var mt = glift.rules.movetree.getInstance(),
         point = glift.util.point,
-        getCropRegion = glift.bridge.getFromMovetree,
-        props = mt.getProperties();
+        getCropRegion = glift.bridge.getCropFromMovetree,
+        props = mt.properties();
     props.add('AB', point(0, 0).toSgfCoord())
         .add('AB', point(18, 0).toSgfCoord());
     deepEqual(getCropRegion(mt), boardRegions.TOP);

@@ -4,7 +4,7 @@
  * the Marks are created / destroyed on demand, which is why we need a g
  * container.
  */
-glift.displays.board.createMarkContainer =
+glift.displays.board.markContainer =
     function(divId, svg, boardPoints, theme) {
   var markMapping = {};
   var svgutil = glift.displays.board.svgutil;

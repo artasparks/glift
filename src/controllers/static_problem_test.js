@@ -11,7 +11,7 @@ glift.controllers.staticProblemTest = function() {
       problemResults = glift.enums.problemResults;
 
   test("Test create & initialize problem controller", function() {
-    var c = cont.createStaticProblem(options),
+    var c = cont.staticProblem(options),
         wstone = conv("pc"),
         bstone = conv("oc");
     deepEqual(c.sgfString, sgfs.realproblem);
@@ -23,13 +23,13 @@ glift.controllers.staticProblemTest = function() {
   });
 
   test("Test Current Player Color", function() {
-    var c = cont.createStaticProblem(options)
+    var c = cont.staticProblem(options)
     c.initialize();
     deepEqual(c.getCurrentPlayer(), states.BLACK, "Must get player color");
   });
 
   test("Test Can-Add Stone", function() {
-    var c = cont.createStaticProblem(options),
+    var c = cont.staticProblem(options),
         yes1 = conv("ob"),
         yes2 = conv("aa"),
         nope = conv("pc");
@@ -42,52 +42,47 @@ glift.controllers.staticProblemTest = function() {
   });
 
   test("Test Add Stone: Failure", function() {
-    var c = cont.createStaticProblem(options),
+    var c = cont.staticProblem(options),
         pt = conv("pb");
     c.initialize();
     var result = c.addStone(pt, states.BLACK);
-    deepEqual(result.message, msgs.FAILURE, "Must be a failure");
-    deepEqual(result.reason, "Cannot add stone", "reason: cannot add");
+    deepEqual(result.result, problemResults.FAILURE, "Must be a failure");
   });
 
   test("Test Add Stone: Incorrect - no variation", function() {
-    var c = cont.createStaticProblem(options),
+    var c = cont.staticProblem(options),
         pt = conv("aa");
     c.initialize();
     var result = c.addStone(pt, states.BLACK);
-    deepEqual(result.message, msgs.DONE, "Must be done");
     deepEqual(result.result, problemResults.INCORRECT, "Must be incorrect");
   });
 
   test("Test Add Stone: Incorrect - variation", function() {
-    var c = cont.createStaticProblem(options),
+    var c = cont.staticProblem(options),
         pt = conv("ob");
     c.initialize();
     var result = c.addStone(pt, states.BLACK);
-    deepEqual(result.message, msgs.DONE, "Must be done");
     deepEqual(result.result, problemResults.INCORRECT, "Must be incorrect");
   });
 
   test("Test Add Stone: Correct", function() {
-    var c = cont.createStaticProblem(options),
+    var c = cont.staticProblem(options),
         pt = conv("nc");
     c.initialize();
     var result = c.addStone(pt, states.BLACK);
-    deepEqual(result.message, msgs.DONE, "Must be done");
     deepEqual(result.result, problemResults.CORRECT, "Must be correct");
   });
 
   //13,3; 12,2 Black
   test("Test Add Stone: Continue", function() {
-    var c = cont.createStaticProblem({sgfString: sgfs.complexproblem}),
+    var c = cont.staticProblem({sgfString: sgfs.complexproblem}),
         pt = conv("ma"),
         possNext = [conv('oa'), conv('mc'), conv('nd')];
     c.initialize();
     var result = c.addStone(pt, states.BLACK);
-    deepEqual(result.message, msgs.CONTINUE, "Must not be done");
     deepEqual(result.result, problemResults.INDETERMINATE,
         "The result must be indeterminate");
-    var pts = result.data.points;
+    var pts = result.points;
     ok(pts[possNext[0].hash()] !== undefined ||
        pts[possNext[1].hash()] !== undefined ||
        pts[possNext[2].hash()] !== undefined,

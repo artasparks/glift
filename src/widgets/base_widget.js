@@ -1,77 +1,6 @@
 (function() {
 glift.widgets.baseWidget = function(options) {
-  options = initOptions(options);
-  var widget = new BaseWidget(options).draw();
-  return widget;
-};
-
-// TODO(kashomon): The options manipulation should be broken into its own file.
-var initOptions = function(options) {
-  options.controller = options.controller ||
-      glift.controllers.gameViewer(options);
-  options.divId = options.divId || 'glift_display';
-  // keyMapping is a map from KeyCodes to iconNames
-  options.keyMapping = options.keyMapping || {
-      ARROW_LEFT: 'arrowleft',
-      ARROW_RIGHT: 'arrowright',
-      FORWARD_SLASH: 'small-gear'
-  };
-  options.useCommentBar = options.useCommentBar === undefined ?
-      true : options.useCommentBar;
-  options.icons = options.icons ||
-      [ 'start', 'end', 'arrowleft', 'arrowright', 'detour', 'small-gear' ];
-
-  options.actions = options.actions || {};
-  options.actions.stones = options.actions.stones || {};
-
-  var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
-  options.actions.stones.click = function(widget, pt) {
-    var currentPlayer = widget.controller.getCurrentPlayer();
-    var fullBoardData = widget.controller.addStone(pt, currentPlayer);
-    widget.applyFullBoardData(fullBoardData);
-  };
-  options.actions.stones.mouseover = function(widget, pt) {
-    var currentPlayer = widget.controller.getCurrentPlayer();
-    if (widget.controller.canAddStone(pt, currentPlayer)) {
-      widget.display.intersections()
-          .setStoneColor(pt, hoverColors[currentPlayer]);
-    }
-  };
-  options.actions.stones.mouseout = function(widget, pt) {
-    var currentPlayer = widget.controller.getCurrentPlayer();
-    if (widget.controller.canAddStone(pt, currentPlayer)) {
-      widget.display.intersections().setStoneColor(pt, 'EMPTY');
-    }
-  };
-
-  options.actions.icons = options.actions.icons || {
-    start: {
-      click:  function(widget) {
-        var fullBoardData = widget.controller.toBeginning();
-        widget.applyFullBoardData(fullBoardData);
-      },
-    },
-    end: {
-      click:  function(widget) {
-        var fullBoardData = widget.controller.toEnd();
-        widget.applyFullBoardData(fullBoardData);
-      }
-    },
-    arrowright: {
-      click: function(widget) {
-        var fullBoardData = widget.controller.nextMove();
-        widget.applyFullBoardData(fullBoardData);
-      }
-    },
-    arrowleft: {
-      click:  function(widget) {
-        var fullBoardData = widget.controller.prevMove();
-        widget.applyFullBoardData(fullBoardData);
-      }
-    }
-    // TODO(kashomon): Pass
-  };
-  return options;
+  return new BaseWidget(glift.widgets.defaultOptions(options)).draw();
 };
 
 var BaseWidget = function(options) {
@@ -79,6 +8,7 @@ var BaseWidget = function(options) {
   this.wrapperDiv = options.divId;
   this.controller = options.controller;
   this.display = undefined; // Initialized by draw.
+  this.iconBar = undefined; // Initialized by draw.
 };
 
 BaseWidget.prototype = {
@@ -88,7 +18,7 @@ BaseWidget.prototype = {
         this.wrapperDiv, divSplits, 'horizontal');
     this.goboxDivId = this.divInfo[0].id;
     this.options.divId = this.goboxDivId;
-    this.display = glift.createDisplay(this.options);
+    this.display = glift.displays.create(this.options);
     var boundingWidth = $('#' +  this.goboxDivId).width();
 
     if (this.options.useCommentBar) {
@@ -111,7 +41,8 @@ BaseWidget.prototype = {
         this.commentBoxId,
         this.display.width(),
         boundingWidth,
-        this.options.themeName);
+        this.options.theme,
+        this.options.goBoardBackground !== undefined);
   },
 
   _createIconBar: function(boundingWidth) {
@@ -132,23 +63,23 @@ BaseWidget.prototype = {
     var iconActions = this.options.actions.icons;
 
     for (var iconName in iconActions) {
-      var mouseover = iconActions[iconName].mouseover || function(widget, name) {
-        var id = widget.iconBar.iconId(name);
-        d3.select('#' + id).attr('fill', 'red');
-      };
-      var mouseout = iconActions[iconName].mouseout || function(widget, name) {
-        var id = widget.iconBar.iconId(name);
-        d3.select('#' + id)
-            .attr('fill', widget.iconBar.theme.icons.DEFAULT.fill);
-      };
-      var click = iconActions[iconName].click || function() {};
-      var events = { mouseover: mouseover, mouseout: mouseout, click: click };
-      for (var eventName in events) {
+      iconActions[iconName].mouseover = iconActions[iconName].mouseover ||
+          function(widget, name) {
+            var id = widget.iconBar.iconId(name);
+            d3.select('#' + id).attr('fill', 'red');
+          };
+      iconActions[iconName].mouseout = iconActions[iconName].mouseout ||
+          function(widget, name) {
+            var id = widget.iconBar.iconId(name);
+            d3.select('#' + id)
+                .attr('fill', widget.iconBar.theme.icons.DEFAULT.fill);
+          };
+      for (var eventName in iconActions[iconName]) {
         (function(eventName, iconNameBound, event) { // lazy binding, bleh.
           widget.iconBar.setEvent(eventName, iconName, function() {
             event(widget, iconNameBound);
           });
-        })(eventName, iconName, events[eventName]);
+        })(eventName, iconName, iconActions[iconName][eventName]);
       }
     }
   },
@@ -159,16 +90,13 @@ BaseWidget.prototype = {
   _initStoneActions: function() {
     var stoneActions = this.options.actions.stones;
     var that = this;
-    var actions = ['click', 'mouseover', 'mouseout'];
-    for (var i = 0; i < actions.length; i++) {
-      var action = actions[i];
-      if (stoneActions[action] !== undefined) {
-        (function(act, fn) { // bind the event -- required due to lazy binding.
-          that.display.intersections().setEvent(act, function(pt) {
-            fn(that, pt);
-          });
-        })(action, stoneActions[action]);
-      }
+    //var actions = ['click', 'mouseover', 'mouseout'];
+    for (var action in stoneActions) {
+      (function(act, fn) { // bind the event -- required due to lazy binding.
+        that.display.intersections().setEvent(act, function(pt) {
+          fn(that, pt);
+        });
+      })(action, stoneActions[action]);
     }
   },
 
@@ -192,7 +120,8 @@ BaseWidget.prototype = {
     if (fullBoardData && fullBoardData !== glift.util.none) {
       this.setCommentBox(fullBoardData);
       this.display.intersections().clearAll();
-      glift.bridge.setDisplayState(fullBoardData, this.display);
+      glift.bridge.setDisplayState(
+          fullBoardData, this.display, this.options.showVariations);
     }
   },
 
