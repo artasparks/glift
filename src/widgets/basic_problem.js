@@ -19,7 +19,7 @@ glift.widgets.basicProblem = function(options) {
     var currentPlayer = widget.controller.getCurrentPlayer();
     var data = widget.controller.addStone(pt, currentPlayer);
     var problemResults = glift.enums.problemResults;
-    if (data.result === problemResults.FAILURE){
+    if (data.result === problemResults.FAILURE) {
       // couldn't add the stone -- nothing to do.
       return;
     }
@@ -42,7 +42,9 @@ glift.widgets.basicProblem = function(options) {
     refresh: {
       // Try again
       mouseup: function(widget) {
-
+        widget.controller.reload();
+        widget.applyFullBoardData(
+            widget.controller.getEntireBoardState());
       }
     },
     roadmap: {

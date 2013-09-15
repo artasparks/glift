@@ -31,7 +31,7 @@ Smaller Changes.
   box has problems when the go board does/doesn't have a line-border
   see: http://stackoverflow.com/questions/7401369/why-is-svg-stroke-width-1-making-lines-transparent
 
-- Make Sure KOGOs works (yikes)
+- Make Sure viewing KOGOs works (yikes)
   -> depends on adding Poss support
 
 - For problems, support refreshing.  This means storing the old problem

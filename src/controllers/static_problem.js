@@ -27,6 +27,11 @@ var methods = {
     this.originalSgf = opts.sgfString;
   },
 
+  reload: function() {
+    this.sgfString = this.originalSgf;
+    this.initialize();
+  },
+
   /**
    * Add a stone to the board.  Since this is a problem, we check for
    * 'correctness', which we check whether all child nodes are labeled (in some
@@ -65,18 +70,23 @@ var methods = {
     // There are no variations corresponding to the move made, so we assume that
     // the move is INCORRECT. However, we still add the move down the movetree
     if (nextVarNum === glift.util.none) {
-      //this.movetree.addNode();
-      //this.movetree.addNode().properties.add
-      return { result: INCORRECT };
+      this.movetree.addNode();
+      this.movetree.properties().add(
+          glift.sgf.colorToToken(color),
+          point.toSgfCoord());
+      var outData = glift.rules.intersections.getFullBoardData(
+          this.movetree, this.goban);
+      outData.result = INCORRECT;
+      return outData;
     } else {
       this.movetree.moveDown(nextVarNum);
       var correctness = this.movetree.isCorrectPosition();
 
-      if (correctness === CORRECT) {
+      if (correctness === CORRECT || correctness == INCORRECT) {
         // TODO(kashomon): Only retrieve the intersections that have changed.
         var outData = glift.rules.intersections.getFullBoardData(
             this.movetree, this.goban);
-        outData.result = CORRECT;
+        outData.result = correctness;
         return outData;
       }
 
@@ -92,11 +102,6 @@ var methods = {
         outData.result = INDETERMINATE;
         return outData;
       }
-
-      else if (correctness === problemResults.INCORRECT) {
-        return { result: INCORRECT };
-      }
-
       else {
         throw "Unexpected result output: " + correctness
       }
