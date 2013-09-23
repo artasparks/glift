@@ -34,12 +34,11 @@ Smaller Changes.
 - Borders seem to not be included as part of 'width', so lining up the comment
   box has problems when the go board does/doesn't have a line-border
   see: http://stackoverflow.com/questions/7401369/why-is-svg-stroke-width-1-making-lines-transparent
-- Make sure viewing KOGOs works (yikes)
-  -> depends on adding Poss support
+- Make sure viewing KOGOs works (yikes) -> depends on adding Pass support
 - IconBars --> Do they need a background?  Probably yes.
 -  Ko support
 - Add an info panel (maybe).
-- Add the ability to create static images.
+- Add the ability to create static images (i.e., canvas support)
 
 Problem Widget
 - Add 'explain' support for problems.

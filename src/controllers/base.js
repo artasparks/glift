@@ -175,6 +175,9 @@ BaseController.prototype = {
    * Go back a move.
    */
   prevMove: function() {
+    if (this.currentMoveNumber === 0) {
+      return glift.util.none;
+    }
     var captures = this.getCaptures();
     var allStones = this.movetree.properties().getAllStones();
     this.captureHistory = this.captureHistory.slice(
