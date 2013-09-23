@@ -51,7 +51,7 @@ glift.themes.registered.DEFAULT = {
         fill: 'white',
         stroke: 'white',
         'STONE_MARKER' : {
-          fill: 'cyan',
+          fill: '#CCF',
           opacity: 0.6
         },
         VARIATION_MARKER : {
@@ -73,7 +73,7 @@ glift.themes.registered.DEFAULT = {
         fill: 'black',
         stroke: 'black',
         'STONE_MARKER' : {
-          fill: 'blue',
+          fill: '#33F',
           opacity: 0.6
         },
         VARIATION_MARKER : {

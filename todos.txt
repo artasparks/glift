@@ -12,6 +12,10 @@ Done - Remove argument guarding code.
 Done - Getting to the end of a Game causes problems for some reason.
 Done - Create option for glift to always show variations (useful for problems)
 Done - Change public createBlah(...) to just blah(...)
+Done - For problems, support retrying.  This implies storing the old problem
+  separately from what's currently being used.
+Done - Change the form of the fullBoardData should be of the form:
+Done! - Add more efficient next/prev move
 
 Smaller Changes.
 - Add generic options parsing. (I'm not sure this is necessary)
@@ -30,12 +34,18 @@ Smaller Changes.
 - Borders seem to not be included as part of 'width', so lining up the comment
   box has problems when the go board does/doesn't have a line-border
   see: http://stackoverflow.com/questions/7401369/why-is-svg-stroke-width-1-making-lines-transparent
-
-- Make Sure viewing KOGOs works (yikes)
+- Make sure viewing KOGOs works (yikes)
   -> depends on adding Poss support
+- IconBars --> Do they need a background?  Probably yes.
+-  Ko support
+- Add an info panel (maybe).
+- Add the ability to create static images.
 
-- For problems, support refreshing.  This means storing the old problem
-  separately from what's currently being used.
+Problem Widget
+- Add 'explain' support for problems.
+- Make Comments toggle-able.
+- Add 'right/wrong' indicators for problems
+  -> Maybe this should be part of the info display
 
 - Create game editor widget. (many dependencies)
   - add moveTree support for delete
@@ -43,9 +53,6 @@ Smaller Changes.
   - Add icons for game editor.
   - Add a game editor
   - Support pass.  Currently the parsers barf on B[] and W[]
-
-- Add an info panel (maybe).
-- Add the ability to create static images.
 
 Some ideas for future development:
 2. Make the base configuration totally resizeable.  This is a relatively
@@ -55,4 +62,3 @@ the boxes, since everything is absolutely positioned.  How does the real world
 solve this problem?
   - Auto-resizes.
   - Changes orientations based on screen dimensions.  See the KGS window.
-4. Make a Problem Reviewer Widget.  Perhaps, generally, make an Info panel box.

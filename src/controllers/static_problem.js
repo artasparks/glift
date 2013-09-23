@@ -20,15 +20,11 @@ glift.controllers.staticProblem = function(rawOptions) {
 
 var methods = {
   /**
-   * Extension to the base options.
+   * Reload the problems.
+   *
+   * TODO(kashomon): Remove this?
    */
-  extraOptions: function(opts) {
-    // So that we can try the problem again
-    this.originalSgf = opts.sgfString;
-  },
-
   reload: function() {
-    this.sgfString = this.originalSgf;
     this.initialize();
   },
 
@@ -44,13 +40,10 @@ var methods = {
    */
   addStone: function(point, color) {
     var problemResults = glift.enums.problemResults,
-        msgs = glift.enums.controllerMessages,
-        FAILURE = msgs.FAILURE,
-        DONE = msgs.DONE,
-        CONTINUE = msgs.CONTINUE,
         CORRECT = problemResults.CORRECT,
         INCORRECT = problemResults.INCORRECT,
-        INDETERMINATE = problemResults.INDETERMINATE;
+        INDETERMINATE = problemResults.INDETERMINATE,
+        FAILURE = problemResults.FAILURE;
 
     // Reminder -- the goban returns:
     //  {

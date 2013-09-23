@@ -90,7 +90,6 @@ BaseWidget.prototype = {
   _initStoneActions: function() {
     var stoneActions = this.options.actions.stones;
     var that = this;
-    //var actions = ['click', 'mouseover', 'mouseout'];
     for (var action in stoneActions) {
       (function(act, fn) { // bind the event -- required due to lazy binding.
         that.display.intersections().setEvent(act, function(pt) {
@@ -101,36 +100,52 @@ BaseWidget.prototype = {
   },
 
   /**
-   * Assign Key handlers to icon action.
-   *
-   * Mapping: from key number to
+   * Assign Key actions to some other action.
    */
-  _initKeyHandlers: function(mapping) {
+  _initKeyHandlers: function() {
     var that = this;
     $('body').keydown(function(e) {
       var name = glift.keyMappings.codeToName(e.which);
       if (name && that.options.keyMapping[name] !== undefined) {
-        that.iconBar.forceEvent(that.options.keyMapping[name]);
+        var actionName = that.options.keyMapping[name];
+        // actionNamespaces look like: icons.arrowleft.mouseup
+        var actionNamespace = actionName.split('.');
+        var action = that.options.actions[actionNamespace[0]];
+        for (var i = 1; i < actionNamespace.length; i++) {
+          action = action[actionNamespace[i]];
+        }
+        action(that);
       }
     });
   },
 
-  applyFullBoardData: function(fullBoardData) {
-    // TODO(kashomon): Support incremental changes.
-    if (fullBoardData && fullBoardData !== glift.util.none) {
-      this.setCommentBox(fullBoardData);
-      this.display.intersections().clearAll();
+  applyPartialData: function(data) {
+    this._applyBoardData(data, false);
+  },
+
+  applyFullBoardData: function(data) {
+    this._applyBoardData(data, true);
+  },
+
+  _applyBoardData: function(boardData, applyFullBoard) {
+    if (boardData && boardData !== glift.util.none) {
+      this.setCommentBox(boardData);
+      if (applyFullBoard) {
+        this.display.intersections().clearAll();
+      }
       glift.bridge.setDisplayState(
-          fullBoardData, this.display, this.options.showVariations);
+          boardData, this.display, this.options.showVariations);
     }
   },
+
 
   setCommentBox: function(fullBoardData) {
     if (!this.commentBox) {
       return;
     }
 
-    if (fullBoardData.comment) {
+    if (fullBoardData.comment &&
+        fullBoardData.comment !== glift.util.none) {
       this.commentBox.setText(fullBoardData.comment);
     } else {
       this.commentBox.clearText();

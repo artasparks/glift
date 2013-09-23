@@ -4,11 +4,10 @@ glift.widgets.defaultOptions = function(options) {
   options.divId = options.divId || 'glift_display';
   options.theme = options.theme || 'DEFAULT';
   options.boardRegion = options.boardRegion || 'ALL';
-  // keyMapping is a map from KeyCodes to iconNames
+  // keyMapping is a map from KeyCodes to actions.
   options.keyMapping = options.keyMapping || {
-      ARROW_LEFT: 'arrowleft',
-      ARROW_RIGHT: 'arrowright',
-      FORWARD_SLASH: 'small-gear'
+      ARROW_LEFT: 'icons.arrowleft.mouseup',
+      ARROW_RIGHT: 'icons.arrowright.mouseup',
   };
   options.showVariations = options.showVariations ||
       glift.enums.showVariations.MORE_THAN_ONE;
@@ -27,7 +26,7 @@ glift.widgets.defaultOptions = function(options) {
       function(widget, pt) {
         var currentPlayer = widget.controller.getCurrentPlayer();
         var fullBoardData = widget.controller.addStone(pt, currentPlayer);
-        widget.applyFullBoardData(fullBoardData);
+        widget.applyPartialData(fullBoardData);
       };
 
   options.actions.stones.mouseover = options.actions.stones.mouseover ||
@@ -49,27 +48,27 @@ glift.widgets.defaultOptions = function(options) {
 
   options.actions.icons = options.actions.icons || {
     start: {
-      click:  function(widget) {
+      mouseup:  function(widget) {
         var fullBoardData = widget.controller.toBeginning();
         widget.applyFullBoardData(fullBoardData);
       }
     },
     end: {
-      click:  function(widget) {
+      mouseup:  function(widget) {
         var fullBoardData = widget.controller.toEnd();
         widget.applyFullBoardData(fullBoardData);
       }
     },
     arrowright: {
-      click: function(widget) {
-        var fullBoardData = widget.controller.nextMove();
-        widget.applyFullBoardData(fullBoardData);
+      mouseup: function(widget) {
+        var boardData = widget.controller.nextMove();
+        widget.applyPartialData(boardData);
       }
     },
     arrowleft: {
-      click:  function(widget) {
-        var fullBoardData = widget.controller.prevMove();
-        widget.applyFullBoardData(fullBoardData);
+      mouseup:  function(widget) {
+        var boardData = widget.controller.prevMove();
+        widget.applyPartialData(boardData);
       }
     }
   };

@@ -1,10 +1,11 @@
-/*
+/**
  * The SGF library contains functions for dealing with SGFs.
  *
- * sgf_grammar.js: sgf parser generated, generated from
- * sgf_grammar.pegjs. To regenerate the parser from the peg grammar, use
- * jszip.py.
+ * sgf_grammar.js: sgf parser generated, generated from the pegjs grammar.
+ *  -> This is called with glift.rules.parser.parse(...);
  *
+ * sgf_grammar.pegjs. To regenerate the parser from the peg grammar, use
+ * depgen.py.
  */
 glift.sgf = {
   colorToToken: function(color) {

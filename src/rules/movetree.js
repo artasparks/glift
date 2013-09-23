@@ -44,14 +44,11 @@ glift.rules.movetree = {
    * Create a MoveTree from an SGF.
    */
   getFromSgf: function(sgfString, initPosition) {
-    if (initPosition === undefined) {
-      initPosition = []; // Should throw an error?
-    }
+    initPosition = initPosition || []; // treepath.
     if (sgfString === undefined || sgfString === "") {
       return glift.rules.movetree.getInstance(19);
     }
     var mt = new MoveTree(glift.sgf.parser.parse($.trim(sgfString)));
-    // Set the initial position
     for (var i = 0; i < initPosition.length; i++) {
       mt.moveDown(initPosition[i]);
     }
@@ -59,7 +56,8 @@ glift.rules.movetree = {
   },
 
   /**
-   * TODO(kashomon): This needs some explanation.
+   * Since a MoveTree is a tree of connected nodes, we can create a sub-tree
+   * from any position in the tree.  This can be useful for recursion.
    */
   getFromNode: function(node) {
     return new MoveTree(node);
@@ -315,8 +313,8 @@ MoveTree.prototype = {
    *
    * Can return CORRECT, INCORRECT, or INDETERMINATE
    *
-   * TODO(kashomon): Move this somewhere else.  It's too specific.
    */
+  // TODO(kashomon): Move this somewhere else.  It's too specific.
   isCorrectPosition: function() {
     var problemResults = glift.enums.problemResults;
     if (this.properties().isCorrect()) {

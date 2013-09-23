@@ -88,6 +88,9 @@ IconBar.prototype = {
     // Row center returns: { transforms: [...], bboxes: [...] }
     var centerObj = glift.displays.gui.rowCenter(
         divBbox, iconBboxes, this.vertMargin, this.horzMargin, 0, 0);
+    for (var i = 0; i < centerObj.bboxes.length; i++) {
+      this.newIconBboxes[this.iconNames[i]] = centerObj.bboxes[i];
+    }
 
     var that = this;
     svg.selectAll('icons').data(indicesData)

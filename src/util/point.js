@@ -91,10 +91,6 @@ GliftPoint.prototype = {
     return glift.util.point(this.x() + x, this.y() + y);
   },
 
-  value: function() {
-    return this.toString();
-  },
-
   log: function() {
     glift.util.logz(this.toString());
   }

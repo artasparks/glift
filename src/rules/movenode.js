@@ -11,7 +11,6 @@ var MoveNode = function(properties, children) {
 };
 
 MoveNode.prototype = {
-  /** Get properties */
   properties:  function() {
     return this._properties;
   },

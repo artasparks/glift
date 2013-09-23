@@ -88,6 +88,12 @@ testdata.sgfs = {
       ";W[oa]\n" +
       ";B[nc]GB[1]C[White dies.])))",
 
+  capturetest:
+    "(;GM[1]FF[4]CA[UTF-8]AP[CGoban:3]ST[2]" +
+    "RU[Japanese]SZ[19]KM[0.00]" +
+    "PW[White]PB[Black]AW[sa][qb][rb][qc][rc]AB[qa][ra][pb][pc][sc][qd][rd]" +
+    ";B[sb]C[Woo!])",
+
   marktest:
     "(;GM[1]FF[4]CA[UTF-8]AP[CGoban:3]ST[2]" +
     "RU[Japanese]SZ[19]KM[0.00]" +

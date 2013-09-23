@@ -1,6 +1,6 @@
-/*
- * The treepath is specified by a String, which specifies a series of moves
- * saying how to get to the move.
+/**
+ * The treepath is specified by a String, which tells how to get to particular
+ * position in a game / problem.
  *
  * Note: Both moves and and variations are 0 indexed.
  *
@@ -26,7 +26,6 @@
  * 0.0.0.0 becomes [0,0,0,0]
  * 2.3-4.1 becomes [0,0,3,0,1]
  */
-
 glift.rules.treepath = {
   parseInitPosition: function(initPos) {
     var errors = glift.errors
@@ -37,11 +36,7 @@ glift.rules.treepath = {
     } else if (glift.util.typeOf(initPos) === 'array') {
       return initPos;
     } else if (glift.util.typeOf(initPos) === 'string') {
-      // Do nothing. this is the expected type
-    // TODO(kashomon): throw some darn errors.
-    // } else if (glift.util.typeOf(initPos) === 'object') {
-      // throw new errors.ParseError("Cannot parse type " +
-          // glift.util.typeOf(initPos));
+
     } else {
       return [];
     }
@@ -64,7 +59,9 @@ glift.rules.treepath = {
   },
 
   // Flatten the move tree variations into a list of lists, where the sublists
-  // are each a tree-path.
+  // are each a treepath
+  //
+  // TODO(kashomon): Why does this exist?
   flattenMoveTree: function(movetree) {
     var out = [];
     for (var i = 0; i < movetree.node().numChildren(); i++) {

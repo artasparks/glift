@@ -12,21 +12,27 @@ glift.rules.goban = {
    * Create a goban, from a move tree and (optionally) a treePath, which defines
    * how to get from the start to a given location.  Usually, the treePath is
    * the initialPosition, but not necessarily.
+   *
+   * returns:
+   *  {
+   *    goban: Goban,
+   *    stoneDeltas: [StoneDelta, StoneDelta, ...]
+   *  }
    */
-  getFromMoveTree: function(mt, treePath) {
+  getFromMoveTree: function(mt, treepath) {
     var goban = new Goban(mt.getIntersections()),
-        movetree = mt.getTreeFromRoot();
-    if (treePath === undefined) {
-      treePath = [];
+        movetree = mt.getTreeFromRoot(),
+        treepath = treepath || [],
+        captures = []; // array of captures.
+    goban.loadStonesFromMovetree(movetree); // Load root placements.
+    for (var i = 0; i < treepath.length; i++) {
+      movetree.moveDown(treepath[i]);
+      captures.push(goban.loadStonesFromMovetree(movetree));
     }
-
-    // We assume the movetree is at root.
-    goban.loadStonesFromMovetree(movetree);
-    for (var i = 0; i < treePath.length; i++) {
-      movetree.moveDown(treePath[i]);
-      goban.loadStonesFromMovetree(movetree);
-    }
-    return goban;
+    return {
+      goban: goban,
+      captures: captures
+    };
   }
 };
 
@@ -44,6 +50,8 @@ glift.rules.goban = {
  * 0,19   : Lower Left
  * 19,0   : Upper Right
  * 19,19  : Lower Right
+ *
+ * As a historical note, this is the oldest part of Glift.
  */
 var Goban = function(ints) {
   if (ints <= 0) throw "Intersections must be greater than 0";
@@ -56,17 +64,21 @@ Goban.prototype = {
     return this.ints;
   },
 
-  // getStone helps abstract the nastiness and trickiness of having to use the x/y
-  // indices in the reverse order.
-  //
-  // Returns: a Color from glift.enums.states.
+  /**
+   * getStone helps abstract the nastiness and trickiness of having to use the x/y
+   * indices in the reverse order.
+   *
+   * Returns: a Color from glift.enums.states.
+   */
   getStone: function(point) {
     return this.stones[point.y()][point.x()];
   },
 
-  // Get all the placed stones on the board (BLACK or WHITE)
-  // Returns an array of the form:
-  // [ {point:<point>, color:<color>}, {...}, ...]
+  /**
+   * Get all the placed stones on the board (BLACK or WHITE)
+   * Returns an array of the form:
+   *  [ {point:<point>, color:<color>}, {...}, ...]
+   */
   getAllPlacedStones: function() {
     var out = [];
     for (var i = 0; i < this.stones.length; i++) {
@@ -120,19 +132,21 @@ Goban.prototype = {
     this.stones[point.y()][point.x()] = color;
   },
 
-  // addStone: Add a stone to the GoBoard (0-indexed).  Requires the
-  // intersection (a point) where the stone is to be placed, and the color of
-  // the stone to be placed.
-  //
-  // addStone always returns a StoneResult object.
-  //
-  // A diagram of a StoneResult:
-  // {
-  //    successful: true or false   // Was placing a stone successful?
-  //    captures : [ ... points ... ]  // the intersections of stones captured
-  //        by placing a stone at the intersection (pt).
-  // }
-  //
+  /**
+   * addStone: Add a stone to the GoBoard (0-indexed).  Requires the
+   * intersection (a point) where the stone is to be placed, and the color of
+   * the stone to be placed.
+   *
+   * addStone always returns a StoneResult object.
+   *
+   * A diagram of a StoneResult:
+   * {
+   *    successful: true or false   // Was placing a stone successful?
+   *    captures : [ ... points ... ]  // the intersections of stones captured
+   *        by placing a stone at the intersection (pt).
+   * }
+   *
+   */
   addStone: function(pt, color) {
     if (!glift.util.colors.isLegalColor(color)) throw "Unknown color: " + color;
 
@@ -212,20 +226,57 @@ Goban.prototype = {
   /**
    * For the current position in the movetree, load all the stone values into
    * the goban. This includes placements [AW,AB] and moves [B,W].
+   *
+   * returns captures -- an object that looks like the following
+   * {
+   *    WHITE: [{point},{point},{point},...],
+   *    BLACK: [{point},{point},{point},...]
+   * }
    */
   loadStonesFromMovetree: function(movetree) {
-    var cols = [glift.enums.states.BLACK, glift.enums.states.WHITE];
-    for (var i = 0; i < cols.length; i++) {
-      var pm = movetree.properties().getPlacementsAsPoints(cols[i]);
-      for (var j = 0; j < pm.length; j++) {
-        if (this.placeable(pm[j]), cols[i]) {
-          this.addStone(pm[j], cols[i]);;
+    var colors = [ glift.enums.states.BLACK, glift.enums.states.WHITE ];
+    var captures = { BLACK : [], WHITE : [] };
+    for (var i = 0; i < colors.length; i++) {
+      var color = colors[i]
+      var placements = movetree.properties().getPlacementsAsPoints(color);
+      for (var j = 0; j < placements.length; j++) {
+        this._loadStone({point: placements[j], color: color}, captures);
+      }
+    }
+    this._loadStone(movetree.properties().getMove(), captures);
+    return captures;
+  },
+
+  _loadStone: function(mv, captures) {
+    if (mv !== glift.util.none) {
+      var result = this.addStone(mv.point, mv.color);
+      if (result.successful) {
+        var oppositeColor = glift.util.colors.oppositeColor(mv.color);
+        for (var k = 0; k < result.captures.length; k++) {
+          captures[oppositeColor].push(result.captures[k]);
         }
       }
     }
-    var mv = movetree.properties().getMove();
-    if (mv !== glift.util.none) {
-      this.addStone(mv.point, mv.color);
+  },
+
+  /**
+   * Back out a movetree addition (used for going back a move).
+   *
+   * Recall that stones and captures both have the form:
+   *  { BLACK: [..pts..], WHITE: [..pts..] };
+   */
+  // TODO(kashomon): Add testing for this in goban_test
+  unloadStones: function(stones, captures) {
+    var colors = [ glift.enums.states.BLACK, glift.enums.states.WHITE ];
+    for (var color in stones) {
+      for (var j = 0; j < stones[color].length; j++) {
+        this.clearStone(stones[color][j]);
+      }
+    }
+    for (var color in captures) {
+      for (var i = 0; i < captures[color].length; i++) {
+        this.addStone(captures[color][i], color);
+      }
     }
   },
 

@@ -9,22 +9,23 @@ glift.bridge = {
    * For a more detailed discussion, see intersections in glift.rules.
    */
   setDisplayState: function(fullBoardData, display, showVariations) {
-    var marks = glift.enums.marks;
     display.intersections().clearMarks();
-    for (var ptHash in fullBoardData.points) {
-      var intersection = fullBoardData.points[ptHash];
-      var pt = intersection.point;
-      if ('stone' in intersection) {
-        var color = intersection.stone;
+    for (var color in fullBoardData.stones) {
+      for (var i = 0; i < fullBoardData.stones[color].length; i++) {
+        var pt = fullBoardData.stones[color][i];
         display.intersections().setStoneColor(pt, color);
       }
-      for (var mark in marks) {
-        if (mark in intersection) {
-          if (mark === marks.LABEL) {
-            display.intersections().addMarkPt(pt, mark, intersection[mark]);
-          } else {
-            display.intersections().addMarkPt(pt, mark);
-          }
+    }
+
+    var marks = glift.enums.marks;
+    for (var markType in fullBoardData.marks) {
+      for (var i = 0; i < fullBoardData.marks[markType].length; i++) {
+        var markData = fullBoardData.marks[markType][i];
+        if (markType === marks.LABEL) {
+          display.intersections().addMarkPt(
+              markData.point, markType, markData.value);
+        } else {
+          display.intersections().addMarkPt(markData, markType);
         }
       }
     }

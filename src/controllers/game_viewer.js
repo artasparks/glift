@@ -15,20 +15,11 @@ var methods = {
   /**
    * Called during initOptions, in the BaseController.
    *
-   * This creates a gamePath (a persisted treepath) and an index into the
-   * gamepath.  This allows us to 'remember' the last variation taken by the
+   * This creates a treepath (a persisted treepath) and an index into the
+   * treepath.  This allows us to 'remember' the last variation taken by the
    * player, which seems to be the standard behavior.
    */
-  extraOptions: function(options) {
-    if (options.initialPosition) {
-      this.gamePath = glift.rules.treepath.parseInitPosition(
-          this.initialPosition);
-      this.currentMoveNumber = this.gamePath.length;
-    } else {
-      this.gamePath = [];
-      this.currentMoveNumber = 0;
-    }
-  },
+  extraOptions: function(options) {},
 
   /**
    * Find the variation associated with the played move.
@@ -48,11 +39,11 @@ var methods = {
    * will be.
    */
   getNextVariationNumber: function() {
-    if (this.currentMoveNumber > this.gamePath.length ||
-        this.gamePath[this.currentMoveNumber] === undefined) {
+    if (this.currentMoveNumber > this.treepath.length ||
+        this.treepath[this.currentMoveNumber] === undefined) {
       return 0;
     } else {
-      return this.gamePath[this.currentMoveNumber];
+      return this.treepath[this.currentMoveNumber];
     }
   },
 
@@ -76,24 +67,12 @@ var methods = {
   },
 
   /**
-   * Set what the next variation will be.  The number is applied modulo the
-   * number of possible variations.
-   */
-  setNextVariation: function(num) {
-    // Recall that currentMoveNumber  s the same as the depth number ==
-    // this.gamePath.length (if at the end).  Thus, if the old gamepath was
-    // [0,1,2,0] and the currentMoveNumber was 2, we'll have [0, 1, num].
-    this.gamePath = this.gamePath.slice(0, this.currentMoveNumber);
-    this.gamePath.push(num % this.movetree.node().numChildren());
-    return this;
-  },
-
-  /**
    * Go back to the beginning.
    */
   toBeginning: function() {
     this.movetree = this.movetree.getTreeFromRoot();
-    this.goban = glift.rules.goban.getFromMoveTree(this.movetree, []);
+    this.goban = glift.rules.goban.getFromMoveTree(this.movetree, []).goban;
+    this.captureHistory = []
     this.currentMoveNumber = 0;
     return this.getEntireBoardState();
   },
@@ -102,44 +81,10 @@ var methods = {
    * Go to the end.
    */
   toEnd: function() {
-    while (this._nextMoveNoState()) {
+    while (this.nextMove() !== glift.util.none) {
       // All the action happens in nextMoveNoState.
     }
     return this.getEntireBoardState();
-  },
-
-  /**
-   * Get the Previous move in the game.  The path traversed by the player is
-   * preserved.
-   */
-  prevMove: function() {
-    // TODO(kashomon): Fix. PrevMove doesn't currently work for some reason.  It
-    // definitely needs more testing.
-    this.currentMoveNumber = this.currentMoveNumber === 0 ?
-        this.currentMoveNumber : this.currentMoveNumber - 1;
-    this.movetree.moveUp();
-    // There's no way to go backwards in time on the gobans, currently, unless
-    // we cache the old Gobans.  This seems fast enough for the time being,
-    // though.
-    this.goban = glift.rules.goban.getFromMoveTree(
-        this.movetree, this.gamePath.slice(0, this.currentMoveNumber));
-    return this.getEntireBoardState();
-  },
-
-  /**
-   * Get the Next move in the game.  If the player has already traversed a path,
-   * then we follow this previous path.
-   *
-   * If varNum is undefined, we try to 'guess' the next move based on the
-   * contents of the gamepath.
-   */
-  nextMove: function(varNum) {
-    var wasPossible = this._nextMoveNoState(varNum);
-    if (wasPossible) {
-      return this.getEntireBoardState();
-    } else {
-      return false;
-    }
   },
 
   /**
@@ -158,42 +103,6 @@ var methods = {
       possibleMap[key] = i;
     }
     return possibleMap;
-  },
-
-  /**
-   * Get the next move without returning the updated state.
-   *
-   * TODO(kashomon): ...what? This description makes no sense.  Also, some of
-   * the edge-case logic looks wrong.  Morevore, this is a terrible, confusing
-   * name for this function.
-   *
-   * If varNum is undefined, we try to 'guess' the next move based on the
-   * contents of the gamepath.
-   *
-   * Return true on success. false otherwise.
-   */
-  _nextMoveNoState: function(varNum) {
-    if (this.gamePath[this.currentMoveNumber] !== undefined &&
-        (varNum === undefined ||
-        this.gamePath[this.currentMoveNumber] === varNum)) {
-      this.movetree.moveDown(this.gamePath[this.currentMoveNumber]);
-    } else {
-      if (varNum === undefined) {
-        varNum = 0;
-      }
-      if (varNum >= 0 &&
-          varNum <= this.movetree.nextMoves().length - 1) {
-        this.setNextVariation(varNum);
-        this.movetree.moveDown(varNum);
-      } else {
-        // There are no moves available;
-        return false;
-      }
-    }
-    this.currentMoveNumber++;
-    // Load all of: [B, W, AW, AB].
-    this.goban.loadStonesFromMovetree(this.movetree);
-    return true;
   }
 };
 })();

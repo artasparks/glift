@@ -8,17 +8,20 @@ glift.controllers.staticProblemTest = function() {
       states = glift.enums.states,
       options = { sgfString: sgfs.realproblem },
       msgs = glift.enums.controllerMessages,
-      problemResults = glift.enums.problemResults;
+      problemResults = glift.enums.problemResults,
+      ptlistToMap = glift.testUtil.ptlistToMap;
 
   test("Test create & initialize problem controller", function() {
     var c = cont.staticProblem(options),
         wstone = conv("pc"),
         bstone = conv("oc");
     deepEqual(c.sgfString, sgfs.realproblem);
-    var result = c.initialize().getEntireBoardState();
-    deepEqual(result.points[wstone.hash()].stone, states.WHITE,
+    var data = c.initialize().getEntireBoardState();
+    var whiteStones = ptlistToMap(data.stones.WHITE)
+    var blackStones = ptlistToMap(data.stones.BLACK)
+    ok(whiteStones[wstone.toString()] !== undefined,
         "Must find a white stone where expected");
-    deepEqual(result.points[bstone.hash()].stone, states.BLACK,
+    ok(blackStones[bstone.toString()] !== undefined,
         "Must find a black stone where expected");
   });
 
@@ -82,7 +85,7 @@ glift.controllers.staticProblemTest = function() {
     var result = c.addStone(pt, states.BLACK);
     deepEqual(result.result, problemResults.INDETERMINATE,
         "The result must be indeterminate");
-    var pts = result.points;
+    var pts = ptlistToMap(result.stones.WHITE);
     ok(pts[possNext[0].hash()] !== undefined ||
        pts[possNext[1].hash()] !== undefined ||
        pts[possNext[2].hash()] !== undefined,

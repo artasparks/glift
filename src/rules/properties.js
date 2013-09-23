@@ -177,7 +177,15 @@ Properties.prototype = {
     }
   },
 
-  // Get all the stones (placements and moves)
+  /**
+   * Get all the stones (placements and moves)
+   *
+   * returns:
+   *  {
+   *    BLACK: <pts>
+   *    WHITE: <pts>
+   *  }
+   */
   getAllStones: function() {
     var states = glift.enums.states,
         out = {},

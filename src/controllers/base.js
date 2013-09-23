@@ -9,8 +9,11 @@ glift.controllers.base = function() {
  * this base class will implement addStone and extraOptions
  */
 var BaseController = function() {
-  this.sgfString = ""; // set with initOptions
-  this.initPosition = []; // can also be a string (and then parsed)
+  this.sgfString = ""; // Set with initOptions. Intended to be Immutable.
+  this.initialPosition = []; // Set with initOptions. Intended to be Immutable.
+  this.treepath = undefined; // Defined with initialize.
+  this.movetree = undefined; // Defined with initialize.
+  this.goban = undefined; // Defined with initialize.
 };
 
 BaseController.prototype = {
@@ -37,27 +40,27 @@ BaseController.prototype = {
   /**
    * Generally, this is the only thing you need to override.
    */
-  addStone: function(point, color) {
-    throw "Not Implemented";
-  },
+  addStone: function(point, color) { throw "Not Implemented"; },
 
   /**
    * Initialize the:
    *  - initPosition -- description of where to start
+   *  - treepath -- the path to the current position.  An array of variaton
+   *  numbers
    *  - movetree -- tree of move nodes from the SGF
    *  - goban -- data structure describing the go board.  Really, the goban is
    *  useful for telling you where stones can be placed, and (after placing)
    *  what stones were captured.
-   *
-   *  TODO(kashomon): Should this be named Load or Reload?
+   *  - capture history -- the history of the captures
    */
   initialize: function() {
-    var rules = glift.rules,
-        sgfString = this.sgfString,
-        initPos = this.initialPosition;
-    this.initPosition = rules.treepath.parseInitPosition(initPos);
-    this.movetree = rules.movetree.getFromSgf(sgfString, this.initPosition);
-    this.goban = rules.goban.getFromMoveTree(this.movetree, this.initPosition);
+    var rules = glift.rules;
+    this.treepath = rules.treepath.parseInitPosition(this.initialPosition);
+    this.currentMoveNumber  = this.treepath.length
+    this.movetree = rules.movetree.getFromSgf(this.sgfString, this.treepath);
+    var gobanData = rules.goban.getFromMoveTree(this.movetree, this.treepath);
+    this.goban = gobanData.goban;
+    this.captureHistory = gobanData.captures;
     return this;
   },
 
@@ -80,6 +83,24 @@ BaseController.prototype = {
    */
   getEntireBoardState: function() {
     return glift.rules.intersections.getFullBoardData(this.movetree, this.goban);
+  },
+
+  /**
+   * Return only the necessary information to update the board
+   */
+  getNextBoardState: function() {
+    return glift.rules.intersections.nextBoardData(
+        this.movetree, this.getCaptures());
+  },
+
+  /**
+   * Get the captures that occured for the current move.
+   */
+  getCaptures: function() {
+    if (this.captureHistory.length === 0) {
+      return { BLACK: [], WHITE: [] };
+    }
+    return this.captureHistory[this.currentMoveNumber - 1];
   },
 
   /**
@@ -111,6 +132,73 @@ BaseController.prototype = {
    */
   getIntersections: function() {
     return this.movetree.getIntersections();
+  },
+
+  /**
+   * Get the Next move in the game.  If the player has already traversed a path,
+   * then we follow this previous path.
+   *
+   * If varNum is undefined, we try to 'guess' the next move based on the
+   * contents of the treepath.
+   *
+   * Proceed to the next move.  This is slightly trickier than you might
+   * imagine:
+   *   - We need to either add to the Movetree or, if the movetree is readonly,
+   *   we need to make sure the move exists.
+   *   - We need to update the Goban.
+   *   - We need to store the captures.
+   *   - We need to update the current move number.
+   */
+  nextMove: function(varNum) {
+    if (this.treepath[this.currentMoveNumber] !== undefined &&
+        (varNum === undefined ||
+        this.treepath[this.currentMoveNumber] === varNum)) {
+      this.movetree.moveDown(this.treepath[this.currentMoveNumber]);
+    } else {
+      varNum = varNum === undefined ? 0 : varNum;
+      if (varNum >= 0 &&
+          varNum <= this.movetree.nextMoves().length - 1) {
+        this.setNextVariation(varNum);
+        this.movetree.moveDown(varNum);
+      } else {
+        // TODO(kashomon): Add case for non-readonly goboard.
+        return glift.util.none; // No moves available
+      }
+    }
+    this.currentMoveNumber++;
+    var captures = this.goban.loadStonesFromMovetree(this.movetree)
+    this.captureHistory.push(captures)
+    return this.getNextBoardState();
+  },
+
+  /**
+   * Go back a move.
+   */
+  prevMove: function() {
+    var captures = this.getCaptures();
+    var allStones = this.movetree.properties().getAllStones();
+    this.captureHistory = this.captureHistory.slice(
+        0, this.currentMoveNumber - 1);
+    this.goban.unloadStones(allStones, captures);
+    this.currentMoveNumber = this.currentMoveNumber === 0 ?
+        this.currentMoveNumber : this.currentMoveNumber - 1;
+    this.movetree.moveUp();
+    var displayData = glift.rules.intersections.previousBoardData(
+        this.movetree, allStones, captures);
+    return displayData;
+  },
+
+  /**
+   * Set what the next variation will be.  The number is applied modulo the
+   * number of possible variations.
+   */
+  setNextVariation: function(num) {
+    // Recall that currentMoveNumber  s the same as the depth number ==
+    // this.treepath.length (if at the end).  Thus, if the old treepath was
+    // [0,1,2,0] and the currentMoveNumber was 2, we'll have [0, 1, num].
+    this.treepath = this.treepath.slice(0, this.currentMoveNumber);
+    this.treepath.push(num % this.movetree.node().numChildren());
+    return this;
   }
 };
 })();
