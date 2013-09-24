@@ -37,11 +37,15 @@ Smaller Changes.
 - Make sure viewing KOGOs works (yikes) -> depends on adding Pass support
 - IconBars --> Do they need a background?  Probably yes.
 -  Ko support
-- Add an info panel (maybe).
+- Add an info panel.
 - Add the ability to create static images (i.e., canvas support)
+- Maybe supply a field as part of the boardData that says whether the data is
+  partial or not.  Then the methods could just be 'applyDisplayData' -- much
+  easier to use, and less error prone
 
 Problem Widget
 - Add 'explain' support for problems.
+  - Add ability/option to show which variation are right / wrong.
 - Make Comments toggle-able.
 - Add 'right/wrong' indicators for problems
   -> Maybe this should be part of the info display

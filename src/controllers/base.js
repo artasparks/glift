@@ -38,9 +38,26 @@ BaseController.prototype = {
   extraOptions: function(opt) { /* Implemented by other controllers. */ },
 
   /**
-   * Generally, this is the only thing you need to override.
+   * Add a stane.
    */
   addStone: function(point, color) { throw "Not Implemented"; },
+
+  /**
+   * Applies captures and increments the move number
+   *
+   * Captures is expected to have the form
+   *
+   * {
+   *  WHITE: []
+   *  BLACK: []
+   * }
+   */
+  // TODO(kashomon): Maybe this shouldn't increment move number?
+  recordCaptures: function(captures) {
+    this.currentMoveNumber++;
+    this.captureHistory.push(captures)
+    return this;
+  },
 
   /**
    * Initialize the:
@@ -165,9 +182,8 @@ BaseController.prototype = {
         return glift.util.none; // No moves available
       }
     }
-    this.currentMoveNumber++;
     var captures = this.goban.loadStonesFromMovetree(this.movetree)
-    this.captureHistory.push(captures)
+    this.recordCaptures(captures);
     return this.getNextBoardState();
   },
 

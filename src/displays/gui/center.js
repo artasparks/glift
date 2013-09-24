@@ -1,10 +1,14 @@
 /**
+ * Centers a bunch of icons (really, bounding boxes) within another bounding
+ * box.
+ *
  * Return pair of
  *  {
  *    transforms: [...]
  *    bboxes: [...]
  *  }
  */
+// TODO(kashomon): Support column centering.
 glift.displays.gui.rowCenter = function(
     outerBox, inBboxes, vertMargin, horzMargin, minSpacing, maxSpacing) {
   var outerWidth = outerBox.width(),

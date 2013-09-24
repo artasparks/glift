@@ -53,6 +53,10 @@ var methods = {
     var addResult = this.goban.addStone(point, color);
     if (!addResult.successful) {
       return { result: FAILURE };
+    } else {
+      var toRecord = {};
+      toRecord[color] = addResult.captures;
+      this.recordCaptures(toRecord);
     }
 
     // At this point, the move is allowed by the rules of Go.  Now the task is
@@ -61,37 +65,46 @@ var methods = {
     var nextVarNum = this.movetree.findNextMove(point, color);
 
     // There are no variations corresponding to the move made, so we assume that
-    // the move is INCORRECT. However, we still add the move down the movetree
+    // the move is INCORRECT. However, we still add the move down the movetree,
+    // adding a node if necessary.  This allows us to maintain a consistent
+    // state.
     if (nextVarNum === glift.util.none) {
       this.movetree.addNode();
       this.movetree.properties().add(
           glift.sgf.colorToToken(color),
           point.toSgfCoord());
-      var outData = glift.rules.intersections.getFullBoardData(
-          this.movetree, this.goban);
+      var outData = this.getNextBoardState();
       outData.result = INCORRECT;
       return outData;
     } else {
       this.movetree.moveDown(nextVarNum);
       var correctness = this.movetree.isCorrectPosition();
-
       if (correctness === CORRECT || correctness == INCORRECT) {
-        // TODO(kashomon): Only retrieve the intersections that have changed.
-        var outData = glift.rules.intersections.getFullBoardData(
-            this.movetree, this.goban);
+        var outData = this.getNextBoardState();
         outData.result = correctness;
         return outData;
       }
 
       else if (correctness === INDETERMINATE) {
+        var prevOutData = this.getNextBoardState();
+        // Play for the opposite player.
         var randNext = glift.math.getRandomInt(
             0, this.movetree.node().numChildren() - 1);
-        // We're playing for the opposite player, at this point (usu. white).
         this.movetree.moveDown(randNext);
         var nextMove = this.movetree.properties().getMove();
-        this.goban.addStone(nextMove.point, nextMove.color);
-        var outData = glift.rules.intersections.getFullBoardData(
-            this.movetree, this.goban);
+        // TODO(kashomon): Replace output of addStone with standard capture
+        // object.
+        var result = this.goban.addStone(nextMove.point, nextMove.color);
+        // TODO(kashomon): Is this guaranteed to be successful?
+        var toRecord = {};
+        toRecord[nextMove.color] = result.captures;
+        this.recordCaptures(toRecord);
+        var outData = this.getNextBoardState();
+        for (var color in prevOutData.stones) {
+          for (var i = 0; i < prevOutData.stones[color].length; i++) {
+            outData.stones[color].push(prevOutData.stones[color][i]);
+          }
+        }
         outData.result = INDETERMINATE;
         return outData;
       }

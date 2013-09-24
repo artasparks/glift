@@ -20,11 +20,9 @@ glift.widgets.basicProblem = function(options) {
     var data = widget.controller.addStone(pt, currentPlayer);
     var problemResults = glift.enums.problemResults;
     if (data.result === problemResults.FAILURE) {
-      // couldn't add the stone -- nothing to do.
-      return;
+      return; // Illegal move -- nothing to do.
     }
-
-    widget.applyFullBoardData(data);
+    widget.applyPartialData(data);
     if (data.result === problemResults.CORRECT) {
       // TODO(kashomon): Change the icons
     } else if (data.result == problemResults.INCORRECT) {

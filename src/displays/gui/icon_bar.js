@@ -153,6 +153,11 @@ IconBar.prototype = {
     return this;
   },
 
+  /**
+   * Force an event to be fired.
+   */
+  // TODO(kashomon): Based on the way widgets are structured now, we might be
+  // able to remove this.
   forceEvent: function(iconName) {
     if (this.events[iconName] !== undefined) {
       this.events[iconName]();
