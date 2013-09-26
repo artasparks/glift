@@ -1,17 +1,12 @@
 glift.widgets.basicProblem = function(options) {
   options.controller = glift.controllers.staticProblem(options);
-
   options.boardRegion =
       options.boardRegion ||
       glift.bridge.getCropFromMovetree(options.controller.movetree);
   options.showVariations = glift.enums.showVariations.NEVER;
   options.useCommentBar = false;
-
-  options.keyMapping = {}; // TODO(kashomon): Add problem mappings
-
-  options.icons = options.icons ||
-      [ 'play', 'refresh', 'roadmap', 'checkbox' ];
-
+  options.keyMapping = {}; // TODO(kashomon): Add key mappings for problems.
+  options.icons = options.icons || ['play', 'refresh', 'roadmap', 'checkbox'];
   options.actions = {};
   options.actions.stones = {};
   options.actions.stones.mouseup = function(widget, pt) {
@@ -22,54 +17,73 @@ glift.widgets.basicProblem = function(options) {
       return; // Illegal move -- nothing to do.
     }
     widget.applyPartialData(data);
-    if (data.result === problemResults.CORRECT) {
-      widget.iconBar.addNewObject(
-          'check', widget.iconBar.getIcon('checkbox').newBbox, '#0CC');
-    } else if (data.result == problemResults.INCORRECT) {
-      widget.iconBar.addNewObject(
-          'cross', widget.iconBar.getIcon('checkbox').newBbox, 'red');
+    if (widget.correctness === undefined) {
+      if (data.result === problemResults.CORRECT) {
+        widget.iconBar.addTempIcon(
+            'check', widget.iconBar.getIcon('checkbox').newBbox, '#0CC');
+        widget.correctness = problemResults.CORRECT;
+      } else if (data.result == problemResults.INCORRECT) {
+        widget.iconBar.addTempIcon(
+            'cross', widget.iconBar.getIcon('checkbox').newBbox, 'red');
+        widget.correctness = problemResults.INCORRECT;
+      }
     }
   };
 
   options.actions.icons = options.actions.icons || {
+    // Get next problem.  This will probably be the most often extended.
+    //
+    // TODO(kashomon): Think about ways for users to override a single action.
+    // Probably this will involve copying the relevant options and using the
+    // 'options' file as a template
     play: {
-      // Get next problem.
       mouseup: function(widget) {
-
       }
     },
+    // Try again
     refresh: {
-      // Try again
       mouseup: function(widget) {
         widget.controller.reload();
+        widget.correctness = undefined;
+        widget.iconBar.destroyTempIcons();
         widget.applyFullBoardData(
             widget.controller.getEntireBoardState());
       }
     },
+    // Go to the explain-board
     roadmap: {
-      // Go to the explain-board
       mouseup: function(widget) {
-        widget.problemDisplay = widget.display;
         widget.problemControllor = widget.controller;
         widget.problemOptions = widget.options;
         widget.destroy();
-        var divId = widget.options.divId;
-        var theme = widget.options.theme;
+        var returnAction = function(widget) {
+          widget.destroy();
+          widget.options = widget.problemOptions;
+          widget.controller = widget.problemControllor;
+          widget.draw();
+        };
         var optionsCopy = {
           divId: widget.options.divId,
           theme: widget.options.theme,
           sgfString: widget.options.sgfString,
-          showVariations: glift.enums.showVariations.ALWAYS
+          showVariations: glift.enums.showVariations.ALWAYS,
+          iconExtensions: ['undo'],
+          actionExtensions: {
+            icons: {
+              undo : {
+                mouseup : returnAction
+              }
+            }
+          }
         }
-        var options = glift.widgets.defaultOptions(optionsCopy);
-        widget.options = options;
-        widget.controller = glift.controllers.gameViewer(options);
+        widget.options = glift.widgets.defaultOptions(optionsCopy);
+        widget.controller = glift.controllers.gameViewer(widget.options);
         widget.options.boardRegion = glift.bridge.getCropFromMovetree(
-              options.controller.movetree);
+              widget.options.controller.movetree);
         widget.draw();
       }
     }
   };
-
+  glift.widgets.extendIconActions(options);
   return glift.widgets.baseWidget(options);
 };

@@ -57,6 +57,7 @@ var IconBar = function(divId, themeName, iconNames, vertMargin, horzMargin) {
   this.events = {};
   this.newIconBboxes = {}; // initialized by draw
   this.svg = undefined; // initialized by draw
+  this.tempIconIds = []; // from addTempIcon.
 };
 
 IconBar.prototype = {
@@ -118,12 +119,13 @@ IconBar.prototype = {
     return this;
   },
 
-  addNewObject: function(iconName, bbox, color) {
+  addTempIcon: function(iconName, bbox, color) {
     var icon = glift.displays.gui.icons[iconName];
     var iconBbox = glift.displays.bboxFromPts(
         glift.util.point(icon.bbox.x, icon.bbox.y),
         glift.util.point(icon.bbox.x2, icon.bbox.y2));
     var that = this;
+    var id = that.iconId(iconName);
     var centerObj = glift.displays.gui.centerWithin(bbox, iconBbox, 2, 2);
     this.svg.append('path')
       .attr('d', icon.string)
@@ -131,6 +133,16 @@ IconBar.prototype = {
       .attr('id', that.iconId(iconName))
       .attr('transform', glift.displays.gui.scaleAndMoveString(
           centerObj.bbox, centerObj.transform));
+    this.tempIconIds.push(id);
+    return this;
+  },
+
+  destroyTempIcons: function() {
+    for (var i = 0; i < this.tempIconIds.length; i++) {
+      this.svg.select('#' + this.tempIconIds[i]).remove();
+    }
+    this.tempIconIds = [];
+    return this;
   },
 
   /**

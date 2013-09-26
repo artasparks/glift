@@ -71,5 +71,24 @@ glift.widgets.defaultOptions = function(options) {
       }
     }
   };
+
+  glift.widgets.extendIconActions(options);
+
   return options;
+};
+
+/**
+ * Often, we're not interested in changing the basic options, only extending
+ * them.
+ */
+glift.widgets.extendIconActions = function(options) {
+  if (options.iconExtensions !== undefined) {
+    options.icons = options.icons.concat(options.iconExtensions);
+  }
+  if (options.actionExtensions !== undefined &&
+      options.actionExtensions.icons !== undefined) {
+    for (var key in options.actionExtensions.icons) {
+      options.actions.icons[key] = options.actionExtensions.icons[key];
+    }
+  }
 };
