@@ -22,9 +22,10 @@ Smaller Changes.
 - Add support for numbering on the edges, beyond the lines. (Not sure if this is necessary)
 - Add tests for widgets.
 - Add tests for marks.
-- Finish key-stroke mappings -- add more keys, support two go boards on same screen.
+- Finish key-stroke mappings -- add more keys, support two go boards on same
+  screen.
 - Add movetree->SGF transformation
-- Make the comment box prettier. (actionable?)
+- Add shadow (perhaps even border) to comment box.
 - Make the adding/removing stones smarter / more efficient.
 - Change variation coloring so that it colors existing marks, rather than
   overwriting them.
@@ -36,12 +37,15 @@ Smaller Changes.
   see: http://stackoverflow.com/questions/7401369/why-is-svg-stroke-width-1-making-lines-transparent
 - Make sure viewing KOGOs works (yikes) -> depends on adding Pass support
 - IconBars --> Do they need a background?  Probably yes.
--  Ko support
-- Add an info panel.
+- Ko support (less important?)
+- Add an info panel. (possibly...)
 - Add the ability to create static images (i.e., canvas support)
 - Maybe supply a field as part of the boardData that says whether the data is
   partial or not.  Then the methods could just be 'applyDisplayData' -- much
   easier to use, and less error prone
+- Change Goban addStone capture to return consistent capture object with
+  loadStonesFromMovetree
+
 
 Problem Widget
 - Add 'explain' support for problems.
@@ -49,6 +53,8 @@ Problem Widget
 - Make Comments toggle-able.
 - Add 'right/wrong' indicators for problems
   -> Maybe this should be part of the info display
+  - clear r/w display on reload.  Don't add new one if already set.
+- Change showVariations:  Should be supplied in the DisplayData
 
 - Create game editor widget. (many dependencies)
   - add moveTree support for delete

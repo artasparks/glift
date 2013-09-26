@@ -1,5 +1,4 @@
 glift.widgets.basicProblem = function(options) {
-  // Controller: The brains of the widget
   options.controller = glift.controllers.staticProblem(options);
 
   options.boardRegion =
@@ -24,9 +23,11 @@ glift.widgets.basicProblem = function(options) {
     }
     widget.applyPartialData(data);
     if (data.result === problemResults.CORRECT) {
-      // TODO(kashomon): Change the icons
+      widget.iconBar.addNewObject(
+          'check', widget.iconBar.getIcon('checkbox').newBbox, '#0CC');
     } else if (data.result == problemResults.INCORRECT) {
-      // TODO(kashomon): Change the icons
+      widget.iconBar.addNewObject(
+          'cross', widget.iconBar.getIcon('checkbox').newBbox, 'red');
     }
   };
 
@@ -48,7 +49,24 @@ glift.widgets.basicProblem = function(options) {
     roadmap: {
       // Go to the explain-board
       mouseup: function(widget) {
-
+        widget.problemDisplay = widget.display;
+        widget.problemControllor = widget.controller;
+        widget.problemOptions = widget.options;
+        widget.destroy();
+        var divId = widget.options.divId;
+        var theme = widget.options.theme;
+        var optionsCopy = {
+          divId: widget.options.divId,
+          theme: widget.options.theme,
+          sgfString: widget.options.sgfString,
+          showVariations: glift.enums.showVariations.ALWAYS
+        }
+        var options = glift.widgets.defaultOptions(optionsCopy);
+        widget.options = options;
+        widget.controller = glift.controllers.gameViewer(options);
+        widget.options.boardRegion = glift.bridge.getCropFromMovetree(
+              options.controller.movetree);
+        widget.draw();
       }
     }
   };

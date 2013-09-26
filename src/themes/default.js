@@ -42,7 +42,7 @@ glift.themes.registered.DEFAULT = {
       }
     },
 
-    "BLACK" : {
+    BLACK : {
       fill: "black",
       opacity: 1,
       "stroke-width": 1, // The default value
@@ -50,7 +50,7 @@ glift.themes.registered.DEFAULT = {
       marks: {
         fill: 'white',
         stroke: 'white',
-        'STONE_MARKER' : {
+        STONE_MARKER : {
           fill: '#CCF',
           opacity: 0.6
         },
@@ -60,19 +60,19 @@ glift.themes.registered.DEFAULT = {
         }
       }
     },
-    "BLACK_HOVER" : {
+    BLACK_HOVER : {
       fill: "black",
       opacity: 0.5
     },
-    "WHITE" : {
+    WHITE : {
       stroke: "black",
       fill: "white",
       opacity: 1,
-      "stroke-width": 1, // The default value
+      'stroke-width': 1, // The default value
       marks: {
         fill: 'black',
         stroke: 'black',
-        'STONE_MARKER' : {
+        STONE_MARKER : {
           fill: '#33F',
           opacity: 0.6
         },
@@ -82,7 +82,7 @@ glift.themes.registered.DEFAULT = {
         }
       }
     },
-    "WHITE_HOVER" : {
+    WHITE_HOVER : {
       fill: "white",
       stroke: "black",
       opacity: 0.5
@@ -93,12 +93,12 @@ glift.themes.registered.DEFAULT = {
   // requires that we attach defs at the beginning of the SVG.  Not hard, but a
   // little bit of work.
   icons: {
-    'DEFAULT' : {
+    DEFAULT : {
       fill: "#0000AA",
       stroke: 'black'
       //fill: "90-#337-#55B"
     },
-    'DEFAULT_HOVER' : {
+    DEFAULT_HOVER : {
       fill: 'cyan',
       stroke: 'black'
       //fill: "90-#337-#55D"

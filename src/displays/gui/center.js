@@ -25,7 +25,11 @@ glift.displays.gui.rowCenter = function(
   // Adjust all the bboxes so that they are the right height.
   for (var i = 0; i < inBboxes.length; i++) {
     var bbox = inBboxes[i];
-    var vscale = innerHeight / bbox.height();
+    if (innerHeight > innerWidth) {
+      var vscale = innerWidth / bbox.width();
+    } else {
+      var vscale = innerHeight / bbox.height();
+    }
     var partialTransform = { scale: vscale }
     // we have scale the bbox to account for the transform.
     var newBbox = bbox.scale(vscale);
@@ -74,4 +78,41 @@ glift.displays.gui.rowCenter = function(
   }
 
   return { transforms: transforms, bboxes: finishedBoxes };
+};
+
+glift.displays.gui.centerWithin = function(
+    outerBbox, bbox, vertMargin, horzMargin) {
+  var outerWidth = outerBbox.width(),
+      innerWidth = outerWidth - 2 * horzMargin,
+      outerHeight = outerBbox.height(),
+      innerHeight = outerHeight - 2 * vertMargin,
+      transforms = undefined,
+      newBboxes = undefined,
+      elemWidth = 0;
+
+  var scale = 1; // i.e., no scaling;
+  if (innerHeight / innerWidth >
+      bbox.height() / bbox.width()) {
+    // Outer box is a 'more-tall' box than the inner-box.  So, we scale the
+    // inner box by width (since the height has more wiggle room).
+    scale = innerWidth / bbox.width();
+  } else {
+    scale = innerHeight / bbox.width();
+  }
+  var newBbox = bbox.scale(scale);
+  var left = outerBbox.left() + horzMargin;
+  if (newBbox.width() < innerWidth) {
+    left = left + (innerWidth - newBbox.width()) / 2; // Center horz.
+  }
+  var top = outerBbox.top() + vertMargin;
+  if (newBbox.height() < innerHeight) {
+    top = top + (innerHeight -  newBbox.height()) / 2;
+  }
+  var transform = {
+    xMove: left - newBbox.left(),
+    yMove: top - newBbox.top(),
+    scale: scale
+  };
+  newBbox = newBbox.translate(transform.xMove, transform.yMove);
+  return { transform: transform, bbox: newBbox};
 };

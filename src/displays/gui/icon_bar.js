@@ -56,6 +56,7 @@ var IconBar = function(divId, themeName, iconNames, vertMargin, horzMargin) {
   this.horzMargin = horzMargin;
   this.events = {};
   this.newIconBboxes = {}; // initialized by draw
+  this.svg = undefined; // initialized by draw
 };
 
 IconBar.prototype = {
@@ -66,7 +67,6 @@ IconBar.prototype = {
     this.destroy();
     var divBbox = glift.displays.bboxFromDiv(this.divId),
         svg = d3.select('#' + this.divId).append("svg")
-            // TODO(kashomon): Make height / width directly configurable.
             .attr("width", '100%')
             .attr("height", '100%'),
         gui = glift.displays.gui,
@@ -74,6 +74,7 @@ IconBar.prototype = {
         iconStrings = [],
         indicesData = [],
         point = glift.util.point;
+    this.svg = svg;
 
     for (var i = 0; i < this.iconNames.length; i++) {
       var name = this.iconNames[i];
@@ -100,8 +101,7 @@ IconBar.prototype = {
         .attr('id', function(i) { return that.iconId(that.iconNames[i]); })
         .attr('transform', function(i) {
           return glift.displays.gui.scaleAndMoveString(
-              centerObj.bboxes[i],
-              centerObj.transforms[i]);
+              centerObj.bboxes[i], centerObj.transforms[i]);
         });
 
     var bboxes = centerObj.bboxes;
@@ -115,8 +115,22 @@ IconBar.prototype = {
         .attr('opacity', 0)
         .attr('_icon', function(i) { return that.iconNames[i]; })
         .attr('id', function(i) { return that.buttonId(that.iconNames[i]); });
-
     return this;
+  },
+
+  addNewObject: function(iconName, bbox, color) {
+    var icon = glift.displays.gui.icons[iconName];
+    var iconBbox = glift.displays.bboxFromPts(
+        glift.util.point(icon.bbox.x, icon.bbox.y),
+        glift.util.point(icon.bbox.x2, icon.bbox.y2));
+    var that = this;
+    var centerObj = glift.displays.gui.centerWithin(bbox, iconBbox, 2, 2);
+    this.svg.append('path')
+      .attr('d', icon.string)
+      .attr('fill', color) // that.theme.icons['DEFAULT'].fill)
+      .attr('id', that.iconId(iconName))
+      .attr('transform', glift.displays.gui.scaleAndMoveString(
+          centerObj.bbox, centerObj.transform));
   },
 
   /**
@@ -185,7 +199,8 @@ IconBar.prototype = {
   getIcon: function(name) {
     return {
       name: name,
-      iconId: this.iconId(name)
+      iconId: this.iconId(name),
+      newBbox: this.newIconBboxes[name]
     };
   },
 

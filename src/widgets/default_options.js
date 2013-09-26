@@ -11,12 +11,9 @@ glift.widgets.defaultOptions = function(options) {
   };
   options.showVariations = options.showVariations ||
       glift.enums.showVariations.MORE_THAN_ONE;
-
   options.useCommentBar = options.useCommentBar === undefined ?
       true : options.useCommentBar;
 
-  options.icons = options.icons ||
-      [ 'start', 'end', 'arrowleft', 'arrowright'];
 
   options.actions = options.actions || {};
   options.actions.stones = options.actions.stones || {};
@@ -46,6 +43,8 @@ glift.widgets.defaultOptions = function(options) {
         }
       };
 
+  options.icons = options.icons ||
+      [ 'start', 'end', 'arrowleft', 'arrowright'];
   options.actions.icons = options.actions.icons || {
     start: {
       mouseup:  function(widget) {
