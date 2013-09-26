@@ -17,10 +17,8 @@ import subprocess
 FILES_TO_AUTOGEN = {
     'htmltests/QunitTest.html': True, # What's going on with the 'True'?
     'htmltests/BoxDisplayTest.html': True,
-    'htmltests/RealBoardTest.html': True,
     'htmltests/ProblemTester.html': True,
     'htmltests/ThemeTester.html': True,
-    'htmltests/SeriesTester.html': True,
     'htmltests/IconBarTester.html': True,
     'htmltests/MarksTester.html': True,
     'htmltests/BboxFinder.html': True,

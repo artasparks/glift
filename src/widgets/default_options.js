@@ -7,7 +7,7 @@ glift.widgets.defaultOptions = function(options) {
   // keyMapping is a map from KeyCodes to actions.
   options.keyMapping = options.keyMapping || {
       ARROW_LEFT: 'icons.arrowleft.mouseup',
-      ARROW_RIGHT: 'icons.arrowright.mouseup',
+      ARROW_RIGHT: 'icons.arrowright.mouseup'
   };
   options.showVariations = options.showVariations ||
       glift.enums.showVariations.MORE_THAN_ONE;

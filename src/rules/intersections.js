@@ -63,7 +63,7 @@ glift.rules.intersections = {
       comment: glift.util.none,
       lastMove: glift.util.none,
       nextMoves: [],
-      captures: [],
+      captures: []
     };
     out.comment = movetree.properties().getComment();
     out.lastMove = movetree.getLastMove();

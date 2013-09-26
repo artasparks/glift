@@ -133,7 +133,10 @@
       <div id="extra_info"></div>
       <script type="text/javascript">
         var basicProblem = glift.widgets.basicProblem({
-          sgfString: testdata.sgfs.complexproblem,
+          sgfStringList: [
+              testdata.sgfs.complexproblem,
+              testdata.sgfs.realproblem
+          ],
           divId: "glift_display1"
         });
       </script>
