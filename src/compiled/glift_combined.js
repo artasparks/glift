@@ -5992,6 +5992,11 @@ BaseWidget.prototype = {
 };
 })();
 glift.widgets.basicProblem = function(options) {
+  options.sgfStringList = options.sgfStringList || [];
+  if (options.sgfStringList.length > 0) {
+    options.sgfString = options.sgfString || options.sgfStringList[0];
+    options.problemIndex = 0;
+  }
   options.controller = glift.controllers.staticProblem(options);
   options.boardRegion =
       options.boardRegion ||
@@ -6023,6 +6028,13 @@ glift.widgets.basicProblem = function(options) {
     }
   };
 
+  var reloadProblemWidget = function(widget) {
+    widget.controller.reload();
+    widget.correctness = undefined;
+    widget.iconBar.destroyTempIcons();
+    widget.applyFullBoardData(
+        widget.controller.getEntireBoardState());
+  };
   options.actions.icons = options.actions.icons || {
     // Get next problem.  This will probably be the most often extended.
     //
@@ -6031,16 +6043,24 @@ glift.widgets.basicProblem = function(options) {
     // 'options' file as a template
     play: {
       mouseup: function(widget) {
+        if (widget.options.sgfStringList.length > 0) {
+          widget.options.problemIndex = (widget.options.problemIndex + 1) %
+              widget.options.sgfStringList.length;
+          widget.options.sgfString = widget.options.sgfStringList[
+              widget.options.problemIndex];
+          widget.controller = glift.controllers.staticProblem(
+              widget.options);
+          options.boardRegion =
+              options.boardRegion ||
+              glift.bridge.getCropFromMovetree(options.controller.movetree);
+          reloadProblemWidget(widget);
+        }
       }
     },
     // Try again
     refresh: {
       mouseup: function(widget) {
-        widget.controller.reload();
-        widget.correctness = undefined;
-        widget.iconBar.destroyTempIcons();
-        widget.applyFullBoardData(
-            widget.controller.getEntireBoardState());
+        reloadProblemWidget(widget);
       }
     },
     // Go to the explain-board

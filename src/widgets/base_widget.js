@@ -1,22 +1,37 @@
-(function() {
+/**
+ * Public 'constructor' for the BaseWidget.
+ */
 glift.widgets.baseWidget = function(options) {
-  return new BaseWidget(glift.widgets.defaultOptions(options)).draw();
+  return new glift.widgets._BaseWidget(
+      glift.widgets.options.setDefaults(options)).draw();
 };
 
-var BaseWidget = function(options) {
+/**
+ * The base web UI widget.  It can be extended, if necessary.
+ */
+glift.widgets._BaseWidget = function(options) {
   this.options = options;
-  this.wrapperDiv = options.divId;
-  this.controller = options.controller;
+  this.wrapperDiv = options.divId; // We split the wrapper div.
+  this.controller = options.controllerFunc(options);
   this.display = undefined; // Initialized by draw.
   this.iconBar = undefined; // Initialized by draw.
 };
 
-BaseWidget.prototype = {
+glift.widgets._BaseWidget.prototype = {
+  /**
+   * Draw the widget.
+   * Returns this for convenience.
+   */
   draw: function() {
-    var divSplits = this.options.useCommentBar ? [.70,.20] : [.90];
+    var divSplits = this.options.useCommentBar
+        ? this.options.splitsWithComments : this.options.splitsWithoutComments;
     this.divInfo = glift.displays.gui.splitDiv(
         this.wrapperDiv, divSplits, 'horizontal');
     this.goboxDivId = this.divInfo[0].id;
+    this.options.boardRegion =
+        this.options.boardRegionType === glift.enums.boardRegions.AUTO
+        ? glift.bridge.getCropFromMovetree(this.controller.movetree)
+        : this.options.boardRegionType;
     this.options.divId = this.goboxDivId;
     this.display = glift.displays.create(this.options);
     var boundingWidth = $('#' +  this.goboxDivId).width();
@@ -119,6 +134,8 @@ BaseWidget.prototype = {
     });
   },
 
+  // TODO(kashomon): The board data object itself should specify whether or not
+  // it's partial data.
   applyPartialData: function(data) {
     this._applyBoardData(data, false);
   },
@@ -138,18 +155,28 @@ BaseWidget.prototype = {
     }
   },
 
-
   setCommentBox: function(fullBoardData) {
     if (!this.commentBox) {
-      return;
-    }
-
-    if (fullBoardData.comment &&
+      // Do nothing -- there is no comment box to set.
+    } else if (fullBoardData.comment &&
         fullBoardData.comment !== glift.util.none) {
       this.commentBox.setText(fullBoardData.comment);
     } else {
       this.commentBox.clearText();
     }
+    return this;
+  },
+
+  /**
+   * Reload the state of the widget.  This is particularly useful for problems.
+   * Unfortunatly, this also probably meants this is too problem-specific.
+   */
+  reload: function() {
+    this.controller.reload();
+    this.correctness = undefined; // TODO(kashomon): This shouldn't live here.
+    this.iconBar.destroyTempIcons();
+    this.applyFullBoardData(
+        this.controller.getEntireBoardState());
   },
 
   redraw: function() {
@@ -162,4 +189,3 @@ BaseWidget.prototype = {
     this.display = undefined;
   }
 };
-})();

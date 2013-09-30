@@ -1,4 +1,5 @@
 #! /usr/local/bin/python
+
 # I (kashomon) hacked together this script to concatenate and compile the
 # relevant parts of Glift. To get it working for yourself, you'll need the
 # following:
@@ -6,17 +7,14 @@
 # -pegjs on your path
 # -CLOSURE pointing to the closure jar
 
-
 import glob
 import os
 import sys
 import re
 import subprocess
 
-
 FILES_TO_AUTOGEN = {
     'htmltests/QunitTest.html': True, # What's going on with the 'True'?
-    'htmltests/BoxDisplayTest.html': True,
     'htmltests/ProblemTester.html': True,
     'htmltests/ThemeTester.html': True,
     'htmltests/IconBarTester.html': True,
@@ -25,6 +23,7 @@ FILES_TO_AUTOGEN = {
     'htmltests/GameViewerTester.html': True,
     'htmltests/BaseWidgetTest.html': True,
     'htmltests/KogosTester.html': True,
+    'htmltests/BoxOrientation.html': True,
     }
 
 COMBINED_LOC = 'compiled/glift_combined.js'
@@ -48,6 +47,7 @@ DIR_ORDER = [
     # Extra: These parts connect display and rules pieces.
     'bridge',
     'widgets',
+    'widgets/options',
     ]
 
 # Need a closure alias, e.g.,: export CLOSURE="java -jar ~/closure.jar"
@@ -118,7 +118,7 @@ def SeparateFiles(flist):
 
 def CreateHtmlImports(imps, suffix):
   """
-  Create the HTML imports.
+  Create the literal HTML import strings.
   """
   out = []
   for grouping in imps:
