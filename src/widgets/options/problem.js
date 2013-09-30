@@ -44,7 +44,7 @@ glift.widgets.options.problem = {
    * Keymappings for the problem widget
    */
   // TODO(kashomon): Add key mappings for problems.
-  keyMappings: {},
+  keyMapping: {},
 
   /**
    * Problem-specific actions.
