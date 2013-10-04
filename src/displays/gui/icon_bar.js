@@ -10,40 +10,19 @@
  */
 glift.displays.gui.iconBar = function(options) {
   var divId = options.divId,
-      icons = [],
-      vertMargin = 0,
-      horzMargin = 0
-      themeName = 'DEFAULT';
-
-  // TODO(kashomon): Replace this hackiness with legitimate options code.  Much
-  // better to keep this code from getting WETter.
+      icons = options.icons || [],
+      vertMargin = options.vertMargin || 0,
+      horzMargin = options.horzMargin || 0,
+      themeName = options.theme || 'DEFAULT';
   if (divId === undefined) {
-    throw "Must define 'divId' as an option"
+    throw "Must define an options 'divId' as an option";
   }
-
-  if (options.icons !== undefined) {
-    icons = options.icons;
-  }
-
-  if (options.vertMargin !== undefined) {
-    vertMargin = options.vertMargin;
-  }
-
-  if (options.horzMargin !== undefined) {
-    horzMargin = options.horzMargin;
-  }
-
-  if (options.theme !== undefined) {
-    this.themeName = options.theme;
-  }
-
   for (var i = 0; i < icons.length; i++) {
     if (glift.displays.gui.icons[icons[i]] === undefined) {
       throw "Icon string undefined in glift.displays.gui.icons [" +
           icons[i] + "]";
     }
   }
-
   return new IconBar(divId, themeName, icons, vertMargin, horzMargin).draw();
 };
 

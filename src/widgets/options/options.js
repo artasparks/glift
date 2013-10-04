@@ -33,12 +33,12 @@ glift.widgets.options = {
             optionsTemplate.actions.stones[event];
       }
     }
-    for (var icon in optionsTemplate.actions.stones.icons) {
+    for (var icon in optionsTemplate.actions.icons) {
       if (options.actions.icons[icon] === undefined) {
         options.actions.icons[icon] =
             optionsTemplate.actions.icons[icon];
       }
-      for (var action in optionsTemplate.actions.stones.icons[icon]) {
+      for (var action in optionsTemplate.actions.icons[icon]) {
         if (options.actions.icons[icon][action] === undefined) {
           options.actions.icons[icon][action] =
               optionsTemplate.actions.icons[icon][action];

@@ -37,8 +37,12 @@ glift.bridge = {
             showVariations === glift.enums.showVariations.ALWAYS))) {
       for (var i = 0; i < fullBoardData.nextMoves.length; i++) {
         var nextMove = fullBoardData.nextMoves[i];
-        display.intersections().addMarkPt(
-            nextMove.point, marks.VARIATION_MARKER, i + 1);
+        if (nextMove.point !== undefined) {
+          display.intersections().addMarkPt(
+              nextMove.point, marks.VARIATION_MARKER, i + 1);
+        } else {
+          // This is a pass: do nothing
+        }
       }
     }
 

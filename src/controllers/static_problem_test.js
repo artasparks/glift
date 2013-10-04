@@ -68,16 +68,9 @@ glift.controllers.staticProblemTest = function() {
     deepEqual(result.result, problemResults.INCORRECT, "Must be incorrect");
   });
 
-  test("Test Add Stone: Correct", function() {
-    var c = cont.staticProblem(options),
-        pt = conv("nc");
-    c.initialize();
-    var result = c.addStone(pt, states.BLACK);
-    deepEqual(result.result, problemResults.CORRECT, "Must be correct");
-  });
-
   //13,3; 12,2 Black
   test("Test Add Stone: Continue", function() {
+    glift.util.logz('AddStone');
     var c = cont.staticProblem({sgfString: sgfs.complexproblem}),
         pt = conv("ma"),
         possNext = [conv('oa'), conv('mc'), conv('nd')];
@@ -90,5 +83,13 @@ glift.controllers.staticProblemTest = function() {
        pts[possNext[1].hash()] !== undefined ||
        pts[possNext[2].hash()] !== undefined,
        "Must show the next white piece in the data.");
+  });
+
+  test("Test Add Stone: Correct", function() {
+    var c = cont.staticProblem(options),
+        pt = conv("nc");
+    c.initialize();
+    var result = c.addStone(pt, states.BLACK);
+    deepEqual(result.result, problemResults.CORRECT, "Must be correct");
   });
 };

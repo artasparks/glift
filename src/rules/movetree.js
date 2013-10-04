@@ -133,8 +133,12 @@ MoveTree.prototype = {
     for (var i = 0; i < nextNodes.length; i++) {
       var node = nextNodes[i];
       if (node.properties().contains(token)) {
-        ptSet[node.properties().getAsPoint(token).hash()] =
-          node.getVarNum();
+        if (node.properties().getFirst(token) == "") {
+          // This is a 'PASS'.  Ignore
+        } else {
+          ptSet[node.properties().getAsPoint(token).hash()] =
+            node.getVarNum();
+        }
       }
     }
     if (ptSet[point.hash()] !== undefined) {

@@ -92,14 +92,17 @@ var methods = {
    * reasonable.
    *
    * Implemented as a map from point-string+color to variationNumber:
-   *  e.g., pt-BLACK : 1
+   *  e.g., pt-BLACK : 1.  For pass, we use 'PASS' as the point string.  This is
+   *  sort of a hack and should maybe be rethought.
    */
   _possibleNextMoves: function() {
     var possibleMap = {};
     var nextMoves = this.movetree.nextMoves();
     for (var i = 0; i < nextMoves.length; i++) {
       var move = nextMoves[i];
-      var key = move.point.toString() + '-' + move.color;
+      var firstString = move.point !== undefined
+          ? move.point.toString() : 'PASS'
+      var key = firstString + '-' + (move.color);
       possibleMap[key] = i;
     }
     return possibleMap;

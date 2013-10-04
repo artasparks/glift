@@ -202,7 +202,9 @@ glift.rules.movetreeTest = function() {
     var next = movt.nextMoves();
     var expected = [
       {color: states.BLACK, point: glift.util.pointFromSgfCoord('mc') },
-      {color: states.BLACK, point: glift.util.pointFromSgfCoord('ma') }
+      {color: states.BLACK, point: glift.util.pointFromSgfCoord('ma') },
+      {color: states.BLACK, point: glift.util.pointFromSgfCoord('nc') },
+      {color: states.BLACK} // PASS
     ];
     deepEqual(next, expected, 'Next Moves');
 

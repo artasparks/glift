@@ -1,5 +1,8 @@
 /*
- * Peg grammar for SGF files
+ * Peg grammar for SGF files.
+ *
+ * To 'use', generate the Javascript with pegjs (via, hopefully depgen.py) and
+ * then call glift.sgf.parser.parse(...)
  */
 Start = '(;' props:Tokens children:Variations ')' {
   return glift.rules.movenode(glift.rules.properties(props), children).renumber();
@@ -26,7 +29,11 @@ MoreTokens = Tokens
     / '' { return {}; }
 
 Data = props:(( '\\]' / [^\]])*) {
-  return props.join("");
+  if (!props) {
+    return "";
+  } else {
+    return props.join("");
+  }
 }
 
 MoreData = '[' propdata: Data ']' white:WhiteSpace? more: MoreData {

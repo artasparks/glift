@@ -125,7 +125,7 @@ glift.widgets.options.problem = {
               }
             }
           }
-          widget.options = glift.widgets.options.setDefaults(optionsCopy);
+          widget.options = glift.widgets.options.setDefaults(optionsCopy, 'base');
           widget.controller = glift.controllers.gameViewer(widget.options);
           widget.draw();
         }

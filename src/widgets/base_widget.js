@@ -3,7 +3,7 @@
  */
 glift.widgets.baseWidget = function(options) {
   return new glift.widgets._BaseWidget(
-      glift.widgets.options.setDefaults(options)).draw();
+      glift.widgets.options.setDefaults(options, 'base')).draw();
 };
 
 /**

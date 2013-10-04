@@ -47,6 +47,13 @@ Properties.prototype = {
   },
 
   /**
+   * The the first element of a property
+   */
+  getFirst: function(strProp, index) {
+    return this.getDatum(strProp, 0);
+  },
+
+  /**
    * Return an array of data associated with a property key
    */
   get: function(strProp) {
@@ -152,18 +159,30 @@ Properties.prototype = {
    *    color: <BLACK / WHITE>
    *    point: point
    *  }
+   *
+   * If the move is a pass, then in the SGF, we'll see B[] or W[].  Thus,
+   * we will return { color: BLACK } or { color: WHITE }, but we won't have any
+   * point associated with this.
    */
   getMove: function() {
     if (this.contains('B')) {
-      return {
-        color: enums.states.BLACK,
-        point: this.getAsPoint('B')
-      };
+      if (this.get('B')[0] === "") {
+        return { color: enums.states.BLACK }; // This is a PASS
+      } else {
+        return {
+          color: enums.states.BLACK,
+          point: this.getAsPoint('B')
+        };
+      }
     } else if (this.contains('W')) {
-      return {
-        color: enums.states.WHITE,
-        point: this.getAsPoint('W')
-      };
+      if (this.get('W')[0] === "") {
+        return { color: enums.states.WHITE}; // This is a PASS
+      } else {
+        return {
+          color: enums.states.WHITE,
+          point: this.getAsPoint('W')
+        };
+      }
     } else {
       return util.none;
     }
@@ -178,7 +197,7 @@ Properties.prototype = {
   },
 
   /**
-   * Get all the stones (placements and moves)
+   * Get all the stones (placements and moves).  This ignores 'PASS' moves.
    *
    * returns:
    *  {
@@ -193,8 +212,8 @@ Properties.prototype = {
         WHITE = states.WHITE;
     out[BLACK] = this.getPlacementsAsPoints(states.BLACK);
     out[WHITE] = this.getPlacementsAsPoints(states.WHITE);
-    var move = this.getMove()
-    if (move != util.none) {
+    var move = this.getMove();
+    if (move != util.none && move.point !== undefined) {
       out[move.color].push(move.point);
     }
     return out;

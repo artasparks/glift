@@ -6,7 +6,8 @@
 var glift = window.glift || {};
 
 glift.global = {
-  // Neither of these are currently used
+  positionDebug: false,
+  // None of these are currently used
   debugMode: false,
   performanceDebug: false,
   version: '0.1.0',
