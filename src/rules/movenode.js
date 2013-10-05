@@ -6,7 +6,7 @@ glift.rules.movenode = function(properties, children) {
 var MoveNode = function(properties, children) {
   this._properties = properties || glift.rules.properties();
   this.children = children || [];
-  // TODO(kashomon): NodeId should be (probably) be assignable on creation.
+  // TODO(kashomon): NodeId should be assignable on creation.
   this._nodeId = { nodeNum: 0, varNum: 0 };
 };
 

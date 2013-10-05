@@ -129,15 +129,6 @@ def CreateHtmlImports(imps, suffix):
         out.append(CreateImport(os.path.join(direct, fname)))
   return out
 
-def CompilePegJs():
-  """
-  Compile the SGF Parser, using PEGJS.
-  This requires that you have a pegjs command on your PATH.
-  """
-  pegjs_call = "pegjs sgf/sgf_grammar.pegjs"
-  out, err = subprocess.Popen(pegjs_call, shell=True).communicate()
-  Replacer("sgf/sgf_grammar.js", PegjsTransform)
-
 def Replacer(filename, transform):
   """
   Utility method to take a function (transform) and apply that to the contents
@@ -149,9 +140,6 @@ def Replacer(filename, transform):
   out_file = open(filename, "w")
   out_file.write(out_con)
   out_file.close()
-
-def PegjsTransform(cont):
-  return cont.replace("module.exports", "glift.sgf.parser")
 
 def CombineSourceFiles(srcs):
   """
@@ -171,9 +159,6 @@ def main(argv=None):
   curdir = sys.argv[0]
   flags = set(sys.argv[1:])
   flist = GetFileList(sys.argv[0])
-
-  if '--pegjs' in flags or '--full' in flags:
-    CompilePegJs()
 
   srcs, tests = SeparateFiles(flist)
 

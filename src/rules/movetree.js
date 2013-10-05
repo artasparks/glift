@@ -8,6 +8,7 @@ var enums = glift.enums;
  *MoveTree {
  *  _history: [MoveNode, MoveNode, ... ]
  *}
+ *
  * And where a MoveNode looks like the following:
  * MoveNode: {
  *    nodeId: { ... }
@@ -48,7 +49,8 @@ glift.rules.movetree = {
     if (sgfString === undefined || sgfString === "") {
       return glift.rules.movetree.getInstance(19);
     }
-    var mt = new MoveTree(glift.sgf.parser.parse($.trim(sgfString)));
+    // var mt = new MoveTree(glift.sgf.parser.parse($.trim(sgfString)));
+    var mt = glift.sgf.parse(sgfString);
     for (var i = 0; i < initPosition.length; i++) {
       mt.moveDown(initPosition[i]);
     }

@@ -70,7 +70,6 @@ glift.controllers.staticProblemTest = function() {
 
   //13,3; 12,2 Black
   test("Test Add Stone: Continue", function() {
-    glift.util.logz('AddStone');
     var c = cont.staticProblem({sgfString: sgfs.complexproblem}),
         pt = conv("ma"),
         possNext = [conv('oa'), conv('mc'), conv('nd')];
