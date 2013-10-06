@@ -88,7 +88,7 @@ glift.widgets.options.base = {
       mouseup: function(widget, pt) {
         var currentPlayer = widget.controller.getCurrentPlayer();
         var partialData = widget.controller.addStone(pt, currentPlayer);
-        widget.applyPartialData(partialData);
+        widget.applyBoardData(partialData);
       },
 
       /**
@@ -120,26 +120,22 @@ glift.widgets.options.base = {
     icons: {
       start: {
         mouseup:  function(widget) {
-          var fullBoardData = widget.controller.toBeginning();
-          widget.applyFullBoardData(fullBoardData);
+          widget.applyBoardData(widget.controller.toBeginning());
         }
       },
       end: {
         mouseup:  function(widget) {
-          var fullBoardData = widget.controller.toEnd();
-          widget.applyFullBoardData(fullBoardData);
+          widget.applyBoardData(widget.controller.toEnd());
         }
       },
       arrowright: {
         mouseup: function(widget) {
-          var boardData = widget.controller.nextMove();
-          widget.applyPartialData(boardData);
+          widget.applyBoardData(widget.controller.nextMove());
         }
       },
       arrowleft: {
         mouseup:  function(widget) {
-          var boardData = widget.controller.prevMove();
-          widget.applyPartialData(boardData);
+          widget.applyBoardData(widget.controller.prevMove());
         }
       }
     }

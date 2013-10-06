@@ -47,7 +47,7 @@ glift.widgets._BaseWidget.prototype = {
     this._initStoneActions();
     this._initIconActions();
     this._initKeyHandlers();
-    this.applyFullBoardData(this.controller.getEntireBoardState());
+    this.applyBoardData(this.controller.getEntireBoardState());
     return this;
   },
 
@@ -134,33 +134,20 @@ glift.widgets._BaseWidget.prototype = {
     });
   },
 
-  // TODO(kashomon): The board data object itself should specify whether or not
-  // it's partial data.
-  applyPartialData: function(data) {
-    this._applyBoardData(data, false);
-  },
-
-  applyFullBoardData: function(data) {
-    this._applyBoardData(data, true);
-  },
-
-  _applyBoardData: function(boardData, applyFullBoard) {
+  applyBoardData: function(boardData, applyFullBoard) {
     if (boardData && boardData !== glift.util.none) {
       this.setCommentBox(boardData);
-      if (applyFullBoard) {
-        this.display.intersections().clearAll();
-      }
       glift.bridge.setDisplayState(
           boardData, this.display, this.options.showVariations);
     }
   },
 
-  setCommentBox: function(fullBoardData) {
+  setCommentBox: function(boardData) {
     if (!this.commentBox) {
       // Do nothing -- there is no comment box to set.
-    } else if (fullBoardData.comment &&
-        fullBoardData.comment !== glift.util.none) {
-      this.commentBox.setText(fullBoardData.comment);
+    } else if (boardData.comment &&
+        boardData.comment !== glift.util.none) {
+      this.commentBox.setText(boardData.comment);
     } else {
       this.commentBox.clearText();
     }
@@ -175,7 +162,7 @@ glift.widgets._BaseWidget.prototype = {
     this.controller.reload();
     this.correctness = undefined; // TODO(kashomon): This shouldn't live here.
     this.iconBar.destroyTempIcons();
-    this.applyFullBoardData(
+    this.applyBoardData(
         this.controller.getEntireBoardState());
   },
 

@@ -36,7 +36,7 @@ glift.themes.registered.DEFAULT = {
         fill: 'black',
         stroke: 'black',
         VARIATION_MARKER : {
-          stroke: '',
+          stroke: '#822',
           fill: '#822'
         }
       }
@@ -55,7 +55,7 @@ glift.themes.registered.DEFAULT = {
           opacity: 0.6
         },
         VARIATION_MARKER : {
-          stroke: '',
+          stroke: '#822',
           fill: '#822'
         }
       }

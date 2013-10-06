@@ -49,9 +49,10 @@ glift.rules.intersections = {
    *    comment : "foo",
    *    lastMove : { color: <color>, point: <point> }
    *    nextMoves : [ { color: <color>, point: <point> }, ...]
+   *    displayDataType : <Either PARTIAL or FULL>.  Defaults to partial.
    *  }
    */
-  // TODO(kashomon): Prehaps this should be a proper object?
+  // TODO(kashomon): Perhaps this should be a proper object?
   basePropertyData: function(movetree) {
     var out = {
       stones: {
@@ -63,7 +64,8 @@ glift.rules.intersections = {
       comment: glift.util.none,
       lastMove: glift.util.none,
       nextMoves: [],
-      captures: []
+      captures: [],
+      displayDataType: glift.enums.displayDataTypes.PARTIAL
     };
     out.comment = movetree.properties().getComment();
     out.lastMove = movetree.getLastMove();
@@ -77,6 +79,7 @@ glift.rules.intersections = {
    */
   getFullBoardData: function(movetree, goban) {
     var baseData = glift.rules.intersections.basePropertyData(movetree);
+    baseData.displayDataType = glift.enums.displayDataTypes.FULL;
     var gobanStones = goban.getAllPlacedStones();
     for (var i = 0; i < gobanStones.length; i++) {
       var stone = gobanStones[i];

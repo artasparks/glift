@@ -61,7 +61,7 @@ glift.widgets.options.problem = {
         if (data.result === problemResults.FAILURE) {
           return; // Illegal move -- nothing to do.
         }
-        widget.applyPartialData(data);
+        widget.applyBoardData(data);
         if (widget.correctness === undefined) {
           if (data.result === problemResults.CORRECT) {
             widget.iconBar.addTempIcon(

@@ -54,7 +54,6 @@ glift.displays.board.addMark = function(
     if (mark === marks.VARIATION_MARKER) {
       marksTheme = marksTheme.VARIATION_MARKER;
     }
-
     svg.select('.' + MARK_CONTAINER).append('text')
         .text(label)
         .attr('fill', marksTheme.fill)

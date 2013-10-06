@@ -2,8 +2,7 @@
 // Copyright (c) 2011-2013, Josh <jrhoak@gmail.com>
 // Code licensed under the MIT License
 glift.enums = {
-  // TODO(kashomon): Move enums to their own domains
-  // Also sometimes referred to as colors. See util.colors.
+  // Also sometimes referred to as colors. Might be good to change back
   states: {
     BLACK: "BLACK",
     WHITE: "WHITE",
@@ -52,6 +51,11 @@ glift.enums = {
     INCORRECT: "INCORRECT",
     INDETERMINATE: "INDETERMINATE",
     FAILURE: "FAILURE" // i.e., none of these (couldn't place stone).
+  },
+
+  displayDataTypes: {
+    PARTIAL: 'PARTIAL',
+    FULL: 'FULL'
   },
 
   /**
