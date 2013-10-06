@@ -62,8 +62,8 @@ glift.widgets.options.base = {
    * Key Mapping: From key-id to action-selector.
    */
   keyMapping: {
-    ARROW_LEFT: 'icons.arrowleft.mouseup',
-    ARROW_RIGHT: 'icons.arrowright.mouseup'
+    ARROW_LEFT: 'icons.arrowleft.click',
+    ARROW_RIGHT: 'icons.arrowright.click'
   },
 
   /**
@@ -85,7 +85,7 @@ glift.widgets.options.base = {
       /**
        * Actually adding a stone.
        */
-      mouseup: function(widget, pt) {
+      click: function(widget, pt) {
         var currentPlayer = widget.controller.getCurrentPlayer();
         var partialData = widget.controller.addStone(pt, currentPlayer);
         widget.applyBoardData(partialData);
@@ -119,22 +119,22 @@ glift.widgets.options.base = {
      */
     icons: {
       start: {
-        mouseup:  function(widget) {
+        click:  function(widget) {
           widget.applyBoardData(widget.controller.toBeginning());
         }
       },
       end: {
-        mouseup:  function(widget) {
+        click:  function(widget) {
           widget.applyBoardData(widget.controller.toEnd());
         }
       },
       arrowright: {
-        mouseup: function(widget) {
+        click: function(widget) {
           widget.applyBoardData(widget.controller.nextMove());
         }
       },
       arrowleft: {
-        mouseup:  function(widget) {
+        click:  function(widget) {
           widget.applyBoardData(widget.controller.prevMove());
         }
       }

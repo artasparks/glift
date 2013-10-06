@@ -54,7 +54,7 @@ glift.widgets.options.problem = {
       /**
        * Add a stone and report if it was correct.
        */
-      mouseup: function(widget, pt) {
+      click: function(widget, pt) {
         var currentPlayer = widget.controller.getCurrentPlayer();
         var data = widget.controller.addStone(pt, currentPlayer);
         var problemResults = glift.enums.problemResults;
@@ -79,7 +79,7 @@ glift.widgets.options.problem = {
     icons: {
       // Get next problem.
       play: {
-        mouseup: function(widget) {
+        click: function(widget) {
           if (widget.options.sgfStringList.length > 0) {
             widget.options.problemIndex = (widget.options.problemIndex + 1) %
                 widget.options.sgfStringList.length;
@@ -93,14 +93,14 @@ glift.widgets.options.problem = {
       },
       // Try again
       refresh: {
-        mouseup: function(widget) {
+        click: function(widget) {
           widget.reload();
         }
       },
 
       // Go to the explain-board.
       roadmap: {
-        mouseup: function(widget) {
+        click: function(widget) {
           widget.problemControllor = widget.controller;
           widget.problemOptions = widget.options;
           widget.destroy();
@@ -120,7 +120,7 @@ glift.widgets.options.problem = {
             actions: {
               icons: {
                 undo : {
-                  mouseup : returnAction
+                  click: returnAction
                 }
               }
             }

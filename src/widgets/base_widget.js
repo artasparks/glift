@@ -28,6 +28,7 @@ glift.widgets._BaseWidget.prototype = {
     this.divInfo = glift.displays.gui.splitDiv(
         this.wrapperDiv, divSplits, 'horizontal');
     this.goboxDivId = this.divInfo[0].id;
+    this._setNotSelectable(this.goboxDivId);
     this.options.boardRegion =
         this.options.boardRegionType === glift.enums.boardRegions.AUTO
         ? glift.bridge.getCropFromMovetree(this.controller.movetree)
@@ -38,16 +39,32 @@ glift.widgets._BaseWidget.prototype = {
 
     if (this.options.useCommentBar) {
       this.commentBoxId = this.divInfo[1].id;
+      this._setNotSelectable(this.commentBoxId);
       this._createCommentBox(boundingWidth);
     }
 
     this.iconBarId = this.options.useCommentBar ? this.divInfo[2].id :
         this.divInfo[1].id;
+    this._setNotSelectable(this.iconBarId);
     this._createIconBar(boundingWidth)
     this._initStoneActions();
     this._initIconActions();
     this._initKeyHandlers();
     this.applyBoardData(this.controller.getEntireBoardState());
+    return this;
+  },
+
+  _setNotSelectable: function(divId) {
+    $('#' + divId).css({
+        '-webkit-touch-callout': 'none',
+        '-webkit-user-select': 'none',
+        '-khtml-user-select': 'none',
+        '-moz-user-select': 'moz-none',
+        '-ms-user-select': 'none',
+        'user-select': 'none',
+        '-webkit-highlight': 'none',
+        '-webkit-tap-highlight-color': 'rgba(0,0,0,0)'
+    });
     return this;
   },
 
