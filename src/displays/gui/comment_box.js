@@ -39,6 +39,7 @@ CommentBox.prototype = {
       margin: 'auto',
       'font-family': 'Baskerville',
       overflow: 'auto',
+      'font-size': 'large',
       padding: padding
     });
     return this;

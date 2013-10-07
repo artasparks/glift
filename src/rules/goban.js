@@ -248,7 +248,8 @@ Goban.prototype = {
   },
 
   _loadStone: function(mv, captures) {
-    if (mv !== glift.util.none) {
+    // note: if mv is defined, but mv.point is undefined, this is a PASS.
+    if (mv !== glift.util.none && mv.point !== undefined) {
       var result = this.addStone(mv.point, mv.color);
       if (result.successful) {
         var oppositeColor = glift.util.colors.oppositeColor(mv.color);

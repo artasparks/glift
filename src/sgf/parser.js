@@ -7,7 +7,7 @@ glift.sgf.parse = function(sgfString) {
     BEGINNING: 1,
     PROPERTY: 2, // e.g., 'AB[oe]' or 'A_B[oe]' or 'AB_[oe]'
     PROP_DATA: 3, // 'AB[o_e]'
-    BETWEEN: 4, // 'AB[oe]_', '_AB[oe]'
+    BETWEEN: 4 // 'AB[oe]_', '_AB[oe]'
   };
   var statesToString = {
     1: 'BEGINNING',
@@ -32,13 +32,13 @@ glift.sgf.parse = function(sgfString) {
   var propData = []; // List of Strings.
   var branchMoveNums = []; // used for when we pop up.
   var curProp = '';
-  var char = '';
+  var curchar = '';
   var i = 0; // defined here for closing over
   var lineNum = 0;
   var colNum = 0;
 
   var perror = function(msg) {
-    glift.sgf.parseError(lineNum, colNum, char, msg);
+    glift.sgf.parseError(lineNum, colNum, curchar, msg);
   };
 
   var flushCharBuffer = function() {
@@ -67,9 +67,9 @@ glift.sgf.parse = function(sgfString) {
     // fullstop break.
     for (var i = 0; i < sgfString.length; i++) {
       colNum++; // This means that columns are 1 indexed.
-      char = sgfString.charAt(i);
+      curchar = sgfString.charAt(i);
 
-      if (char === "\n" && curstate !== states.PROP_DATA) {
+      if (curchar === "\n" && curstate !== states.PROP_DATA) {
         lineNum++;
         colNum = 0;
         continue;
@@ -78,29 +78,29 @@ glift.sgf.parse = function(sgfString) {
       //    + ' -- char[' + char + ']');
       switch (curstate) {
         case states.BEGINNING:
-          if (char === syn.LPAREN || wsRegex.test(char)) {
+          if (curchar === syn.LPAREN || wsRegex.test(curchar)) {
             branchMoveNums.push(movetree.node().getNodeNum()); // Should Be 0.
-          } else if (char === syn.SCOLON) {
+          } else if (curchar === syn.SCOLON) {
             curstate = states.BETWEEN; // The SGF Begins!
-          } else if (wsRegex.test(char)) {
+          } else if (wsRegex.test(curchar)) {
             // We can ignore whitespace.
           } else {
             perror("Unexpected character");
           }
           break;
         case states.PROPERTY:
-          if (propRegex.test(char)) {
-            charBuffer.push(char);
+          if (propRegex.test(curchar)) {
+            charBuffer.push(curchar);
             if (charBuffer.length > 2) {
               perror("Expected: length two proprety. Found: " + charBuffer);
             }
-          } else if (char === syn.LBRACE) {
+          } else if (curchar === syn.LBRACE) {
             curProp = flushCharBuffer();
             if (glift.sgf.allProperties[curProp] === undefined) {
               perror('Unknown property: ' + curProp);
             }
             curstate = states.PROP_DATA;
-          } else if (wsRegex.test(char)) {
+          } else if (wsRegex.test(curchar)) {
             // Should whitespace be allowed here?
             perror('Unexpected whitespace in Property')
           } else {
@@ -108,30 +108,31 @@ glift.sgf.parse = function(sgfString) {
           }
           break;
         case states.PROP_DATA:
-          if (char === syn.RBRACE && charBuffer[charBuffer.length - 1] === '\\') {
-            charBuffer.push(char);
-          } else if (char === syn.RBRACE) {
+          if (curchar === syn.RBRACE
+              && charBuffer[charBuffer.length - 1] === '\\') {
+            charBuffer.push(curchar);
+          } else if (curchar === syn.RBRACE) {
             propData.push(flushCharBuffer());
             curstate = states.BETWEEN;
           } else {
-            charBuffer.push(char);
+            charBuffer.push(curchar);
           }
           break;
         case states.BETWEEN:
-          if (propRegex.test(char)) {
+          if (propRegex.test(curchar)) {
             flushPropDataIfNecessary();
-            charBuffer.push(char);
+            charBuffer.push(curchar);
             curstate = states.PROPERTY;
-          } else if (char === syn.LBRACE) {
+          } else if (curchar === syn.LBRACE) {
             if (curProp.length > 0) {
               curstate = states.PROP_DATA; // more data to process
             } else {
               perror("Unexpected token.  Orphan property data.");
             }
-          } else if (char === syn.LPAREN) {
+          } else if (curchar === syn.LPAREN) {
             flushPropDataIfNecessary();
             branchMoveNums.push(movetree.node().getNodeNum());
-          } else if (char === syn.RPAREN) {
+          } else if (curchar === syn.RPAREN) {
             flushPropDataIfNecessary();
             if (branchMoveNums.length === 0) {
               while (movetree.node().getNodeNum() !== 0) {
@@ -143,10 +144,10 @@ glift.sgf.parse = function(sgfString) {
             while (movetree.node().getNodeNum() !== parentBranchNum) {
               movetree.moveUp();
             }
-          } else if (char === syn.SCOLON) {
+          } else if (curchar === syn.SCOLON) {
             flushPropDataIfNecessary();
             movetree.addNode();
-          } else if (wsRegex.test(char)) {
+          } else if (wsRegex.test(curchar)) {
             // Do nothing.  Whitespace can be ignored here.
           } else {
             perror('Unknown token');
@@ -166,9 +167,9 @@ glift.sgf.parse = function(sgfString) {
 /**
  * Throw a parser error.  The message is optional.
  */
-glift.sgf.parseError =  function(lineNum, colNum, char, message) {
+glift.sgf.parseError =  function(lineNum, colNum, curchar, message) {
   var err = 'SGF Parsing Error: At line [' + lineNum + '], column [' + colNum
-      + '], char [' + char + '], ' + message;
-  glift.util.logz(err);
+      + '], curchar [' + curchar + '], ' + message;
+  glift.util.logz(err); // Should this error be logged this way?
   throw err;
 };

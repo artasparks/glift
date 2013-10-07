@@ -61,4 +61,35 @@ glift.rules.intersectionsTest = function() {
     ok(blackStones[abstone.hash()], "BLACK placement stone must exist");
     deepEqual(data.comment, "foo", "Comment must be foo");
   });
+
+  test("Pass + movedown + intersections", function() {
+    var sgf = '(;C[MDTest];B[ab];W[];B[bb])';
+    var mt =  glift.rules.movetree.getFromSgf(sgf);
+    var conv = glift.util.pointFromSgfCoord;
+    var goban = glift.rules.goban.getFromMoveTree(mt, []).goban;
+    var data = glift.rules.intersections.getFullBoardData(mt, goban)
+
+    deepEqual(mt.properties().getFirst('C'), 'MDTest');
+    deepEqual(data.comment, 'MDTest');
+    deepEqual(data.stones.WHITE, []);
+    deepEqual(data.stones.BLACK, []);
+    deepEqual(data.stones.EMPTY, []);
+
+    mt.moveDown();
+    var captures = goban.loadStonesFromMovetree(mt);
+    var data = glift.rules.intersections.nextBoardData(mt, captures);
+    deepEqual(data.stones.BLACK, [conv('ab')]);
+
+    mt.moveDown();
+    var captures = goban.loadStonesFromMovetree(mt);
+    var data = glift.rules.intersections.nextBoardData(mt, captures);
+    deepEqual(data.stones.BLACK, []);
+    deepEqual(data.stones.WHITE, []);
+    deepEqual(data.stones.EMPTY, []);
+
+    mt.moveDown();
+    var captures = goban.loadStonesFromMovetree(mt);
+    var data = glift.rules.intersections.nextBoardData(mt, captures);
+    deepEqual(data.stones.BLACK, [conv('bb')]);
+  });
 };

@@ -6,13 +6,22 @@
 var glift = window.glift || {};
 
 glift.global = {
-  // Neither of these are currently used
+  /**
+   * Whether or not fast click is enabled, via Glift.
+   */
+  fastClickEnabled: false,
+  enableFastClick: function() {
+    if (!glift.global.fastClickEnabled) {
+      FastClick.attach(document.body);
+      glift.global.fastClickEnabled = true;
+    }
+  },
+  // None of these are currently used
   debugMode: false,
   performanceDebug: false,
   version: '0.1.0',
   // The active registry.  Used to determine who has 'ownership' of key-presses.
   active: {
-
   }
 };
 
@@ -158,8 +167,7 @@ glift.util.colors = {
 // Copyright (c) 2011-2013, Josh <jrhoak@gmail.com>
 // Code licensed under the MIT License
 glift.enums = {
-  // TODO(kashomon): Move enums to their own domains
-  // Also sometimes referred to as colors. See util.colors.
+  // Also sometimes referred to as colors. Might be good to change back
   states: {
     BLACK: "BLACK",
     WHITE: "WHITE",
@@ -189,7 +197,8 @@ glift.enums = {
     TOP_RIGHT: "TOP_RIGHT",
     BOTTOM_LEFT: "BOTTOM_LEFT",
     BOTTOM_RIGHT: "BOTTOM_RIGHT",
-    ALL: "ALL"
+    ALL: "ALL",
+    AUTO: "AUTO"
   },
 
   marks: {
@@ -207,6 +216,11 @@ glift.enums = {
     INCORRECT: "INCORRECT",
     INDETERMINATE: "INDETERMINATE",
     FAILURE: "FAILURE" // i.e., none of these (couldn't place stone).
+  },
+
+  displayDataTypes: {
+    PARTIAL: 'PARTIAL',
+    FULL: 'FULL'
   },
 
   /**
@@ -241,6 +255,771 @@ glift.errors.ParseError = function(message) {
 glift.errors.ParseError.prototype = new Error();
 
 })();
+/**
+ * @preserve FastClick: polyfill to remove click delays on browsers with touch UIs.
+ *
+ * @version 0.6.11
+ * @codingstandard ftlabs-jsv2
+ * @copyright The Financial Times Limited [All Rights Reserved]
+ * @license MIT License (see LICENSE.txt)
+ */
+
+/*jslint browser:true, node:true*/
+/*global define, Event, Node*/
+
+
+/**
+ * Instantiate fast-clicking listeners on the specificed layer.
+ *
+ * @constructor
+ * @param {Element} layer The layer to listen on
+ */
+function FastClick(layer) {
+  'use strict';
+  var oldOnClick, self = this;
+
+
+  /**
+   * Whether a click is currently being tracked.
+   *
+   * @type boolean
+   */
+  this.trackingClick = false;
+
+
+  /**
+   * Timestamp for when when click tracking started.
+   *
+   * @type number
+   */
+  this.trackingClickStart = 0;
+
+
+  /**
+   * The element being tracked for a click.
+   *
+   * @type EventTarget
+   */
+  this.targetElement = null;
+
+
+  /**
+   * X-coordinate of touch start event.
+   *
+   * @type number
+   */
+  this.touchStartX = 0;
+
+
+  /**
+   * Y-coordinate of touch start event.
+   *
+   * @type number
+   */
+  this.touchStartY = 0;
+
+
+  /**
+   * ID of the last touch, retrieved from Touch.identifier.
+   *
+   * @type number
+   */
+  this.lastTouchIdentifier = 0;
+
+
+  /**
+   * Touchmove boundary, beyond which a click will be cancelled.
+   *
+   * @type number
+   */
+  this.touchBoundary = 10;
+
+
+  /**
+   * The FastClick layer.
+   *
+   * @type Element
+   */
+  this.layer = layer;
+
+  if (!layer || !layer.nodeType) {
+    throw new TypeError('Layer must be a document node');
+  }
+
+  /** @type function() */
+  this.onClick = function() { return FastClick.prototype.onClick.apply(self, arguments); };
+
+  /** @type function() */
+  this.onMouse = function() { return FastClick.prototype.onMouse.apply(self, arguments); };
+
+  /** @type function() */
+  this.onTouchStart = function() { return FastClick.prototype.onTouchStart.apply(self, arguments); };
+
+  /** @type function() */
+  this.onTouchMove = function() { return FastClick.prototype.onTouchMove.apply(self, arguments); };
+
+  /** @type function() */
+  this.onTouchEnd = function() { return FastClick.prototype.onTouchEnd.apply(self, arguments); };
+
+  /** @type function() */
+  this.onTouchCancel = function() { return FastClick.prototype.onTouchCancel.apply(self, arguments); };
+
+  if (FastClick.notNeeded(layer)) {
+    return;
+  }
+
+  // Set up event handlers as required
+  if (this.deviceIsAndroid) {
+    layer.addEventListener('mouseover', this.onMouse, true);
+    layer.addEventListener('mousedown', this.onMouse, true);
+    layer.addEventListener('mouseup', this.onMouse, true);
+  }
+
+  layer.addEventListener('click', this.onClick, true);
+  layer.addEventListener('touchstart', this.onTouchStart, false);
+  layer.addEventListener('touchmove', this.onTouchMove, false);
+  layer.addEventListener('touchend', this.onTouchEnd, false);
+  layer.addEventListener('touchcancel', this.onTouchCancel, false);
+
+  // Hack is required for browsers that don't support Event#stopImmediatePropagation (e.g. Android 2)
+  // which is how FastClick normally stops click events bubbling to callbacks registered on the FastClick
+  // layer when they are cancelled.
+  if (!Event.prototype.stopImmediatePropagation) {
+    layer.removeEventListener = function(type, callback, capture) {
+      var rmv = Node.prototype.removeEventListener;
+      if (type === 'click') {
+        rmv.call(layer, type, callback.hijacked || callback, capture);
+      } else {
+        rmv.call(layer, type, callback, capture);
+      }
+    };
+
+    layer.addEventListener = function(type, callback, capture) {
+      var adv = Node.prototype.addEventListener;
+      if (type === 'click') {
+        adv.call(layer, type, callback.hijacked || (callback.hijacked = function(event) {
+          if (!event.propagationStopped) {
+            callback(event);
+          }
+        }), capture);
+      } else {
+        adv.call(layer, type, callback, capture);
+      }
+    };
+  }
+
+  // If a handler is already declared in the element's onclick attribute, it will be fired before
+  // FastClick's onClick handler. Fix this by pulling out the user-defined handler function and
+  // adding it as listener.
+  if (typeof layer.onclick === 'function') {
+
+    // Android browser on at least 3.2 requires a new reference to the function in layer.onclick
+    // - the old one won't work if passed to addEventListener directly.
+    oldOnClick = layer.onclick;
+    layer.addEventListener('click', function(event) {
+      oldOnClick(event);
+    }, false);
+    layer.onclick = null;
+  }
+}
+
+
+/**
+ * Android requires exceptions.
+ *
+ * @type boolean
+ */
+FastClick.prototype.deviceIsAndroid = navigator.userAgent.indexOf('Android') > 0;
+
+
+/**
+ * iOS requires exceptions.
+ *
+ * @type boolean
+ */
+FastClick.prototype.deviceIsIOS = /iP(ad|hone|od)/.test(navigator.userAgent);
+
+
+/**
+ * iOS 4 requires an exception for select elements.
+ *
+ * @type boolean
+ */
+FastClick.prototype.deviceIsIOS4 = FastClick.prototype.deviceIsIOS && (/OS 4_\d(_\d)?/).test(navigator.userAgent);
+
+
+/**
+ * iOS 6.0(+?) requires the target element to be manually derived
+ *
+ * @type boolean
+ */
+FastClick.prototype.deviceIsIOSWithBadTarget = FastClick.prototype.deviceIsIOS && (/OS ([6-9]|\d{2})_\d/).test(navigator.userAgent);
+
+
+/**
+ * Determine whether a given element requires a native click.
+ *
+ * @param {EventTarget|Element} target Target DOM element
+ * @returns {boolean} Returns true if the element needs a native click
+ */
+FastClick.prototype.needsClick = function(target) {
+  'use strict';
+  switch (target.nodeName.toLowerCase()) {
+
+  // Don't send a synthetic click to disabled inputs (issue #62)
+  case 'button':
+  case 'select':
+  case 'textarea':
+    if (target.disabled) {
+      return true;
+    }
+
+    break;
+  case 'input':
+
+    // File inputs need real clicks on iOS 6 due to a browser bug (issue #68)
+    if ((this.deviceIsIOS && target.type === 'file') || target.disabled) {
+      return true;
+    }
+
+    break;
+  case 'label':
+  case 'video':
+    return true;
+  }
+
+  return (/\bneedsclick\b/).test(target.className);
+};
+
+
+/**
+ * Determine whether a given element requires a call to focus to simulate click into element.
+ *
+ * @param {EventTarget|Element} target Target DOM element
+ * @returns {boolean} Returns true if the element requires a call to focus to simulate native click.
+ */
+FastClick.prototype.needsFocus = function(target) {
+  'use strict';
+  switch (target.nodeName.toLowerCase()) {
+  case 'textarea':
+  case 'select':
+    return true;
+  case 'input':
+    switch (target.type) {
+    case 'button':
+    case 'checkbox':
+    case 'file':
+    case 'image':
+    case 'radio':
+    case 'submit':
+      return false;
+    }
+
+    // No point in attempting to focus disabled inputs
+    return !target.disabled && !target.readOnly;
+  default:
+    return (/\bneedsfocus\b/).test(target.className);
+  }
+};
+
+
+/**
+ * Send a click event to the specified element.
+ *
+ * @param {EventTarget|Element} targetElement
+ * @param {Event} event
+ */
+FastClick.prototype.sendClick = function(targetElement, event) {
+  'use strict';
+  var clickEvent, touch;
+
+  // On some Android devices activeElement needs to be blurred otherwise the synthetic click will have no effect (#24)
+  if (document.activeElement && document.activeElement !== targetElement) {
+    document.activeElement.blur();
+  }
+
+  touch = event.changedTouches[0];
+
+  // Synthesise a click event, with an extra attribute so it can be tracked
+  clickEvent = document.createEvent('MouseEvents');
+  clickEvent.initMouseEvent('click', true, true, window, 1, touch.screenX, touch.screenY, touch.clientX, touch.clientY, false, false, false, false, 0, null);
+  clickEvent.forwardedTouchEvent = true;
+  targetElement.dispatchEvent(clickEvent);
+};
+
+
+/**
+ * @param {EventTarget|Element} targetElement
+ */
+FastClick.prototype.focus = function(targetElement) {
+  'use strict';
+  var length;
+
+  // Issue #160: on iOS 7, some input elements (e.g. date datetime) throw a vague TypeError on setSelectionRange. These elements don't have an integer value for the selectionStart and selectionEnd properties, but unfortunately that can't be used for detection because accessing the properties also throws a TypeError. Just check the type instead. Filed as Apple bug #15122724.
+  if (this.deviceIsIOS && targetElement.setSelectionRange && targetElement.type.indexOf('date') !== 0 && targetElement.type !== 'time') {
+    length = targetElement.value.length;
+    targetElement.setSelectionRange(length, length);
+  } else {
+    targetElement.focus();
+  }
+};
+
+
+/**
+ * Check whether the given target element is a child of a scrollable layer and if so, set a flag on it.
+ *
+ * @param {EventTarget|Element} targetElement
+ */
+FastClick.prototype.updateScrollParent = function(targetElement) {
+  'use strict';
+  var scrollParent, parentElement;
+
+  scrollParent = targetElement.fastClickScrollParent;
+
+  // Attempt to discover whether the target element is contained within a scrollable layer. Re-check if the
+  // target element was moved to another parent.
+  if (!scrollParent || !scrollParent.contains(targetElement)) {
+    parentElement = targetElement;
+    do {
+      if (parentElement.scrollHeight > parentElement.offsetHeight) {
+        scrollParent = parentElement;
+        targetElement.fastClickScrollParent = parentElement;
+        break;
+      }
+
+      parentElement = parentElement.parentElement;
+    } while (parentElement);
+  }
+
+  // Always update the scroll top tracker if possible.
+  if (scrollParent) {
+    scrollParent.fastClickLastScrollTop = scrollParent.scrollTop;
+  }
+};
+
+
+/**
+ * @param {EventTarget} targetElement
+ * @returns {Element|EventTarget}
+ */
+FastClick.prototype.getTargetElementFromEventTarget = function(eventTarget) {
+  'use strict';
+
+  // On some older browsers (notably Safari on iOS 4.1 - see issue #56) the event target may be a text node.
+  if (eventTarget.nodeType === Node.TEXT_NODE) {
+    return eventTarget.parentNode;
+  }
+
+  return eventTarget;
+};
+
+
+/**
+ * On touch start, record the position and scroll offset.
+ *
+ * @param {Event} event
+ * @returns {boolean}
+ */
+FastClick.prototype.onTouchStart = function(event) {
+  'use strict';
+  var targetElement, touch, selection;
+
+  // Ignore multiple touches, otherwise pinch-to-zoom is prevented if both fingers are on the FastClick element (issue #111).
+  if (event.targetTouches.length > 1) {
+    return true;
+  }
+
+  targetElement = this.getTargetElementFromEventTarget(event.target);
+  touch = event.targetTouches[0];
+
+  if (this.deviceIsIOS) {
+
+    // Only trusted events will deselect text on iOS (issue #49)
+    selection = window.getSelection();
+    if (selection.rangeCount && !selection.isCollapsed) {
+      return true;
+    }
+
+    if (!this.deviceIsIOS4) {
+
+      // Weird things happen on iOS when an alert or confirm dialog is opened from a click event callback (issue #23):
+      // when the user next taps anywhere else on the page, new touchstart and touchend events are dispatched
+      // with the same identifier as the touch event that previously triggered the click that triggered the alert.
+      // Sadly, there is an issue on iOS 4 that causes some normal touch events to have the same identifier as an
+      // immediately preceeding touch event (issue #52), so this fix is unavailable on that platform.
+      if (touch.identifier === this.lastTouchIdentifier) {
+        event.preventDefault();
+        return false;
+      }
+
+      this.lastTouchIdentifier = touch.identifier;
+
+      // If the target element is a child of a scrollable layer (using -webkit-overflow-scrolling: touch) and:
+      // 1) the user does a fling scroll on the scrollable layer
+      // 2) the user stops the fling scroll with another tap
+      // then the event.target of the last 'touchend' event will be the element that was under the user's finger
+      // when the fling scroll was started, causing FastClick to send a click event to that layer - unless a check
+      // is made to ensure that a parent layer was not scrolled before sending a synthetic click (issue #42).
+      this.updateScrollParent(targetElement);
+    }
+  }
+
+  this.trackingClick = true;
+  this.trackingClickStart = event.timeStamp;
+  this.targetElement = targetElement;
+
+  this.touchStartX = touch.pageX;
+  this.touchStartY = touch.pageY;
+
+  // Prevent phantom clicks on fast double-tap (issue #36)
+  if ((event.timeStamp - this.lastClickTime) < 200) {
+    event.preventDefault();
+  }
+
+  return true;
+};
+
+
+/**
+ * Based on a touchmove event object, check whether the touch has moved past a boundary since it started.
+ *
+ * @param {Event} event
+ * @returns {boolean}
+ */
+FastClick.prototype.touchHasMoved = function(event) {
+  'use strict';
+  var touch = event.changedTouches[0], boundary = this.touchBoundary;
+
+  if (Math.abs(touch.pageX - this.touchStartX) > boundary || Math.abs(touch.pageY - this.touchStartY) > boundary) {
+    return true;
+  }
+
+  return false;
+};
+
+
+/**
+ * Update the last position.
+ *
+ * @param {Event} event
+ * @returns {boolean}
+ */
+FastClick.prototype.onTouchMove = function(event) {
+  'use strict';
+  if (!this.trackingClick) {
+    return true;
+  }
+
+  // If the touch has moved, cancel the click tracking
+  if (this.targetElement !== this.getTargetElementFromEventTarget(event.target) || this.touchHasMoved(event)) {
+    this.trackingClick = false;
+    this.targetElement = null;
+  }
+
+  return true;
+};
+
+
+/**
+ * Attempt to find the labelled control for the given label element.
+ *
+ * @param {EventTarget|HTMLLabelElement} labelElement
+ * @returns {Element|null}
+ */
+FastClick.prototype.findControl = function(labelElement) {
+  'use strict';
+
+  // Fast path for newer browsers supporting the HTML5 control attribute
+  if (labelElement.control !== undefined) {
+    return labelElement.control;
+  }
+
+  // All browsers under test that support touch events also support the HTML5 htmlFor attribute
+  if (labelElement.htmlFor) {
+    return document.getElementById(labelElement.htmlFor);
+  }
+
+  // If no for attribute exists, attempt to retrieve the first labellable descendant element
+  // the list of which is defined here: http://www.w3.org/TR/html5/forms.html#category-label
+  return labelElement.querySelector('button, input:not([type=hidden]), keygen, meter, output, progress, select, textarea');
+};
+
+
+/**
+ * On touch end, determine whether to send a click event at once.
+ *
+ * @param {Event} event
+ * @returns {boolean}
+ */
+FastClick.prototype.onTouchEnd = function(event) {
+  'use strict';
+  var forElement, trackingClickStart, targetTagName, scrollParent, touch, targetElement = this.targetElement;
+
+  if (!this.trackingClick) {
+    return true;
+  }
+
+  // Prevent phantom clicks on fast double-tap (issue #36)
+  if ((event.timeStamp - this.lastClickTime) < 200) {
+    this.cancelNextClick = true;
+    return true;
+  }
+
+  // Reset to prevent wrong click cancel on input (issue #156).
+  this.cancelNextClick = false;
+
+  this.lastClickTime = event.timeStamp;
+
+  trackingClickStart = this.trackingClickStart;
+  this.trackingClick = false;
+  this.trackingClickStart = 0;
+
+  // On some iOS devices, the targetElement supplied with the event is invalid if the layer
+  // is performing a transition or scroll, and has to be re-detected manually. Note that
+  // for this to function correctly, it must be called *after* the event target is checked!
+  // See issue #57; also filed as rdar://13048589 .
+  if (this.deviceIsIOSWithBadTarget) {
+    touch = event.changedTouches[0];
+
+    // In certain cases arguments of elementFromPoint can be negative, so prevent setting targetElement to null
+    targetElement = document.elementFromPoint(touch.pageX - window.pageXOffset, touch.pageY - window.pageYOffset) || targetElement;
+    targetElement.fastClickScrollParent = this.targetElement.fastClickScrollParent;
+  }
+
+  targetTagName = targetElement.tagName.toLowerCase();
+  if (targetTagName === 'label') {
+    forElement = this.findControl(targetElement);
+    if (forElement) {
+      this.focus(targetElement);
+      if (this.deviceIsAndroid) {
+        return false;
+      }
+
+      targetElement = forElement;
+    }
+  } else if (this.needsFocus(targetElement)) {
+
+    // Case 1: If the touch started a while ago (best guess is 100ms based on tests for issue #36) then focus will be triggered anyway. Return early and unset the target element reference so that the subsequent click will be allowed through.
+    // Case 2: Without this exception for input elements tapped when the document is contained in an iframe, then any inputted text won't be visible even though the value attribute is updated as the user types (issue #37).
+    if ((event.timeStamp - trackingClickStart) > 100 || (this.deviceIsIOS && window.top !== window && targetTagName === 'input')) {
+      this.targetElement = null;
+      return false;
+    }
+
+    this.focus(targetElement);
+
+    // Select elements need the event to go through on iOS 4, otherwise the selector menu won't open.
+    if (!this.deviceIsIOS4 || targetTagName !== 'select') {
+      this.targetElement = null;
+      event.preventDefault();
+    }
+
+    return false;
+  }
+
+  if (this.deviceIsIOS && !this.deviceIsIOS4) {
+
+    // Don't send a synthetic click event if the target element is contained within a parent layer that was scrolled
+    // and this tap is being used to stop the scrolling (usually initiated by a fling - issue #42).
+    scrollParent = targetElement.fastClickScrollParent;
+    if (scrollParent && scrollParent.fastClickLastScrollTop !== scrollParent.scrollTop) {
+      return true;
+    }
+  }
+
+  // Prevent the actual click from going though - unless the target node is marked as requiring
+  // real clicks or if it is in the whitelist in which case only non-programmatic clicks are permitted.
+  if (!this.needsClick(targetElement)) {
+    event.preventDefault();
+    this.sendClick(targetElement, event);
+  }
+
+  return false;
+};
+
+
+/**
+ * On touch cancel, stop tracking the click.
+ *
+ * @returns {void}
+ */
+FastClick.prototype.onTouchCancel = function() {
+  'use strict';
+  this.trackingClick = false;
+  this.targetElement = null;
+};
+
+
+/**
+ * Determine mouse events which should be permitted.
+ *
+ * @param {Event} event
+ * @returns {boolean}
+ */
+FastClick.prototype.onMouse = function(event) {
+  'use strict';
+
+  // If a target element was never set (because a touch event was never fired) allow the event
+  if (!this.targetElement) {
+    return true;
+  }
+
+  if (event.forwardedTouchEvent) {
+    return true;
+  }
+
+  // Programmatically generated events targeting a specific element should be permitted
+  if (!event.cancelable) {
+    return true;
+  }
+
+  // Derive and check the target element to see whether the mouse event needs to be permitted;
+  // unless explicitly enabled, prevent non-touch click events from triggering actions,
+  // to prevent ghost/doubleclicks.
+  if (!this.needsClick(this.targetElement) || this.cancelNextClick) {
+
+    // Prevent any user-added listeners declared on FastClick element from being fired.
+    if (event.stopImmediatePropagation) {
+      event.stopImmediatePropagation();
+    } else {
+
+      // Part of the hack for browsers that don't support Event#stopImmediatePropagation (e.g. Android 2)
+      event.propagationStopped = true;
+    }
+
+    // Cancel the event
+    event.stopPropagation();
+    event.preventDefault();
+
+    return false;
+  }
+
+  // If the mouse event is permitted, return true for the action to go through.
+  return true;
+};
+
+
+/**
+ * On actual clicks, determine whether this is a touch-generated click, a click action occurring
+ * naturally after a delay after a touch (which needs to be cancelled to avoid duplication), or
+ * an actual click which should be permitted.
+ *
+ * @param {Event} event
+ * @returns {boolean}
+ */
+FastClick.prototype.onClick = function(event) {
+  'use strict';
+  var permitted;
+
+  // It's possible for another FastClick-like library delivered with third-party code to fire a click event before FastClick does (issue #44). In that case, set the click-tracking flag back to false and return early. This will cause onTouchEnd to return early.
+  if (this.trackingClick) {
+    this.targetElement = null;
+    this.trackingClick = false;
+    return true;
+  }
+
+  // Very odd behaviour on iOS (issue #18): if a submit element is present inside a form and the user hits enter in the iOS simulator or clicks the Go button on the pop-up OS keyboard the a kind of 'fake' click event will be triggered with the submit-type input element as the target.
+  if (event.target.type === 'submit' && event.detail === 0) {
+    return true;
+  }
+
+  permitted = this.onMouse(event);
+
+  // Only unset targetElement if the click is not permitted. This will ensure that the check for !targetElement in onMouse fails and the browser's click doesn't go through.
+  if (!permitted) {
+    this.targetElement = null;
+  }
+
+  // If clicks are permitted, return true for the action to go through.
+  return permitted;
+};
+
+
+/**
+ * Remove all FastClick's event listeners.
+ *
+ * @returns {void}
+ */
+FastClick.prototype.destroy = function() {
+  'use strict';
+  var layer = this.layer;
+
+  if (this.deviceIsAndroid) {
+    layer.removeEventListener('mouseover', this.onMouse, true);
+    layer.removeEventListener('mousedown', this.onMouse, true);
+    layer.removeEventListener('mouseup', this.onMouse, true);
+  }
+
+  layer.removeEventListener('click', this.onClick, true);
+  layer.removeEventListener('touchstart', this.onTouchStart, false);
+  layer.removeEventListener('touchmove', this.onTouchMove, false);
+  layer.removeEventListener('touchend', this.onTouchEnd, false);
+  layer.removeEventListener('touchcancel', this.onTouchCancel, false);
+};
+
+
+/**
+ * Check whether FastClick is needed.
+ *
+ * @param {Element} layer The layer to listen on
+ */
+FastClick.notNeeded = function(layer) {
+  'use strict';
+  var metaViewport;
+
+  // Devices that don't support touch don't need FastClick
+  if (typeof window.ontouchstart === 'undefined') {
+    return true;
+  }
+
+  if ((/Chrome\/[0-9]+/).test(navigator.userAgent)) {
+
+    // Chrome on Android with user-scalable="no" doesn't need FastClick (issue #89)
+    if (FastClick.prototype.deviceIsAndroid) {
+      metaViewport = document.querySelector('meta[name=viewport]');
+      if (metaViewport && metaViewport.content.indexOf('user-scalable=no') !== -1) {
+        return true;
+      }
+
+    // Chrome desktop doesn't need FastClick (issue #15)
+    } else {
+      return true;
+    }
+  }
+
+  // IE10 with -ms-touch-action: none, which disables double-tap-to-zoom (issue #97)
+  if (layer.style.msTouchAction === 'none') {
+    return true;
+  }
+
+  return false;
+};
+
+
+/**
+ * Factory method for creating a FastClick object
+ *
+ * @param {Element} layer The layer to listen on
+ */
+FastClick.attach = function(layer) {
+  'use strict';
+  return new FastClick(layer);
+};
+
+
+if (typeof define !== 'undefined' && define.amd) {
+
+  // AMD. Register as an anonymous module.
+  define(function() {
+    'use strict';
+    return FastClick;
+  });
+} else if (typeof module !== 'undefined' && module.exports) {
+  module.exports = FastClick.attach;
+  module.exports.FastClick = FastClick;
+} else {
+  window.FastClick = FastClick;
+}
 glift.util._IdGenerator = function(seed) {
   this.seed  = seed || 0;
 };
@@ -443,7 +1222,7 @@ glift.util.regions = {
 };
 glift.testUtil = {
   ptlistToMap: function(list) {
-    outMap = {};
+    var outMap = {};
     for (var i = 0; i < list.length; i++) {
       var item = list[i];
       if (item.value !== undefined) {
@@ -599,7 +1378,7 @@ glift.themes.registered.DEFAULT = {
         fill: 'black',
         stroke: 'black',
         VARIATION_MARKER : {
-          stroke: '',
+          stroke: '#822',
           fill: '#822'
         }
       }
@@ -618,7 +1397,7 @@ glift.themes.registered.DEFAULT = {
           opacity: 0.6
         },
         VARIATION_MARKER : {
-          stroke: '',
+          stroke: '#822',
           fill: '#822'
         }
       }
@@ -1869,7 +2648,6 @@ glift.displays.board.addMark = function(
     if (mark === marks.VARIATION_MARKER) {
       marksTheme = marksTheme.VARIATION_MARKER;
     }
-
     svg.select('.' + MARK_CONTAINER).append('text')
         .text(label)
         .attr('fill', marksTheme.fill)
@@ -2103,76 +2881,6 @@ glift.displays.gui = {
     } else {
       return base;
     }
-  },
-
-  /**
-   * Take a div, create multiple sub divs, absolutely positioned.
-   *
-   * divId: divId to be split.
-   * percents: Precent tall that each section is.  Note that the length of this
-   * == the number of splits - 1;
-   *
-   * direction: defaults to 'horizontal'.  Also can split 'vertical'-ly.
-   *
-   * Note:
-   *  X => XX (vertical split)
-   *
-   *  X => X  (horizontal split)
-   *       X
-   *
-   * return: an array of useful div info:
-   *  [{
-   *    id: foo
-   *    start: 0 // top for horz, left for vert
-   *    length: 100 // height for horz, width for vert
-   *  }, {...}
-   *  ]
-   */
-  splitDiv: function(divId, percents, direction) {
-    var bbox = glift.displays.bboxFromDiv(divId),
-        totalPercent = 0;
-    if (!direction) {
-      direction = 'horizontal';
-    } else if (direction !== 'vertical' && direction !== 'horizontal') {
-      direction = 'horizontal'
-    }
-
-    for (var i = 0; i < percents.length; i++) {
-      totalPercent += percents[i];
-    }
-
-    if (totalPercent > 1 || totalPercent < 0) {
-      throw 'Percents must sum to a number be between 0 and 1.' +
-          'Was ' + totalPercent;
-    }
-    percents.push(1 - totalPercent); // Add in last value.
-
-    // Create Data for D3.
-    var boxData = [];
-    var currentStart = direction === 'horizontal' ? bbox.top() : bbox.left();
-    var maxAmount = direction === 'horizontal' ? bbox.height() : bbox.width();
-    for (var i = 0; i < percents.length; i++) {
-      boxData.push({
-        id: 'glift_internal_div_' + glift.util.idGenerator.next(),
-        start: currentStart, // e.g., Top
-        length: maxAmount * percents[i] // e.g., Height
-      });
-      currentStart = currentStart + maxAmount * percents[i];
-    }
-
-    for (var i = 0; i < boxData.length; i++) {
-      // TODO(kashomon): Maybe replace with d3 for uniformity?
-      $('#' + divId).append('<div id="' + boxData[i].id + '"></div>');
-      var cssObj = {
-        width: direction === 'horizontal' ? '100%' : boxData[i].length,
-        height: direction === 'horizontal' ? boxData[i].length : '100%',
-        position: 'absolute'
-      };
-      var posKey =  (direction === 'horizontal' ? 'top' : 'left' )
-      cssObj[posKey] = boxData[i].start;
-      $('#' + boxData[i].id).css(cssObj);
-    }
-    return boxData;
   }
 };
 /**
@@ -2366,40 +3074,19 @@ CommentBox.prototype = {
  */
 glift.displays.gui.iconBar = function(options) {
   var divId = options.divId,
-      icons = [],
-      vertMargin = 0,
-      horzMargin = 0
-      themeName = 'DEFAULT';
-
-  // TODO(kashomon): Replace this hackiness with legitimate options code.  Much
-  // better to keep this code from getting WETter.
+      icons = options.icons || [],
+      vertMargin = options.vertMargin || 0,
+      horzMargin = options.horzMargin || 0,
+      themeName = options.theme || 'DEFAULT';
   if (divId === undefined) {
-    throw "Must define 'divId' as an option"
+    throw "Must define an options 'divId' as an option";
   }
-
-  if (options.icons !== undefined) {
-    icons = options.icons;
-  }
-
-  if (options.vertMargin !== undefined) {
-    vertMargin = options.vertMargin;
-  }
-
-  if (options.horzMargin !== undefined) {
-    horzMargin = options.horzMargin;
-  }
-
-  if (options.theme !== undefined) {
-    this.themeName = options.theme;
-  }
-
   for (var i = 0; i < icons.length; i++) {
     if (glift.displays.gui.icons[icons[i]] === undefined) {
       throw "Icon string undefined in glift.displays.gui.icons [" +
           icons[i] + "]";
     }
   }
-
   return new IconBar(divId, themeName, icons, vertMargin, horzMargin).draw();
 };
 
@@ -2776,6 +3463,75 @@ glift.displays.gui.scaleAndMoveString = function(objBbox, scaleObj) {
     'scale(' + scaleObj.scale + ')';
 };
 /**
+  * Take a div, create multiple sub divs, absolutely positioned.
+  *
+  * divId: divId to be split.
+  * percents: Precent tall that each section is.  Note that the length of this
+  * == the number of splits - 1;
+  *
+  * direction: defaults to 'horizontal'.  Also can split 'vertical'-ly.
+  *
+  * Note:
+  *  X => XX (vertical split)
+  *
+  *  X => X  (horizontal split)
+  *       X
+  *
+  * return: an array of useful div info:
+  *  [{
+  *    id: foo
+  *    start: 0 // top for horz, left for vert
+  *    length: 100 // height for horz, width for vert
+  *  }, {...}
+  *  ]
+  */
+glift.displays.gui.splitDiv = function(divId, percents, direction) {
+  var bbox = glift.displays.bboxFromDiv(divId),
+      totalPercent = 0;
+  if (!direction) {
+    direction = 'horizontal';
+  } else if (direction !== 'vertical' && direction !== 'horizontal') {
+    direction = 'horizontal'
+  }
+
+  for (var i = 0; i < percents.length; i++) {
+    totalPercent += percents[i];
+  }
+
+  if (totalPercent > 1 || totalPercent < 0) {
+    throw 'Percents must sum to a number be between 0 and 1.' +
+        'Was ' + totalPercent;
+  }
+  percents.push(1 - totalPercent); // Add in last value.
+
+  // Create Data for D3.
+  var boxData = [];
+  var currentStart = direction === 'horizontal' ? bbox.top() : bbox.left();
+  var maxAmount = direction === 'horizontal' ? bbox.height() : bbox.width();
+  for (var i = 0; i < percents.length; i++) {
+    boxData.push({
+      id: 'glift_internal_div_' + glift.util.idGenerator.next(),
+      start: currentStart, // e.g., Top
+      length: maxAmount * percents[i] // e.g., Height
+    });
+    currentStart = currentStart + maxAmount * percents[i];
+  }
+
+  for (var i = 0; i < boxData.length; i++) {
+    // TODO(kashomon): Replace with d3 for uniformity
+    $('#' + divId).append('<div id="' + boxData[i].id + '"></div>');
+    var cssObj = {
+      width: direction === 'horizontal' ? '100%' : boxData[i].length,
+      height: direction === 'horizontal' ? boxData[i].length : '100%',
+      position: 'absolute'
+    };
+    var posKey =  (direction === 'horizontal' ? 'top' : 'left' )
+    cssObj[posKey] = boxData[i].start;
+    $('#' + boxData[i].id).css(cssObj);
+  }
+  return boxData;
+}
+/**
  * Objects and methods that enforce the basic rules of Go.
  */
 glift.rules = {};
@@ -3029,7 +3785,8 @@ Goban.prototype = {
   },
 
   _loadStone: function(mv, captures) {
-    if (mv !== glift.util.none) {
+    // note: if mv is defined, but mv.point is undefined, this is a PASS.
+    if (mv !== glift.util.none && mv.point !== undefined) {
       var result = this.addStone(mv.point, mv.color);
       if (result.successful) {
         var oppositeColor = glift.util.colors.oppositeColor(mv.color);
@@ -3190,9 +3947,10 @@ glift.rules.intersections = {
    *    comment : "foo",
    *    lastMove : { color: <color>, point: <point> }
    *    nextMoves : [ { color: <color>, point: <point> }, ...]
+   *    displayDataType : <Either PARTIAL or FULL>.  Defaults to partial.
    *  }
    */
-  // TODO(kashomon): Prehaps this should be a proper object?
+  // TODO(kashomon): Perhaps this should be a proper object?
   basePropertyData: function(movetree) {
     var out = {
       stones: {
@@ -3204,7 +3962,8 @@ glift.rules.intersections = {
       comment: glift.util.none,
       lastMove: glift.util.none,
       nextMoves: [],
-      captures: []
+      captures: [],
+      displayDataType: glift.enums.displayDataTypes.PARTIAL
     };
     out.comment = movetree.properties().getComment();
     out.lastMove = movetree.getLastMove();
@@ -3218,6 +3977,7 @@ glift.rules.intersections = {
    */
   getFullBoardData: function(movetree, goban) {
     var baseData = glift.rules.intersections.basePropertyData(movetree);
+    baseData.displayDataType = glift.enums.displayDataTypes.FULL;
     var gobanStones = goban.getAllPlacedStones();
     for (var i = 0; i < gobanStones.length; i++) {
       var stone = gobanStones[i];
@@ -3300,7 +4060,7 @@ glift.rules.movenode = function(properties, children) {
 var MoveNode = function(properties, children) {
   this._properties = properties || glift.rules.properties();
   this.children = children || [];
-  // TODO(kashomon): NodeId should be (probably) be assignable on creation.
+  // TODO(kashomon): NodeId should be assignable on creation.
   this._nodeId = { nodeNum: 0, varNum: 0 };
 };
 
@@ -3397,6 +4157,7 @@ var enums = glift.enums;
  *MoveTree {
  *  _history: [MoveNode, MoveNode, ... ]
  *}
+ *
  * And where a MoveNode looks like the following:
  * MoveNode: {
  *    nodeId: { ... }
@@ -3437,7 +4198,8 @@ glift.rules.movetree = {
     if (sgfString === undefined || sgfString === "") {
       return glift.rules.movetree.getInstance(19);
     }
-    var mt = new MoveTree(glift.sgf.parser.parse($.trim(sgfString)));
+    // var mt = new MoveTree(glift.sgf.parser.parse($.trim(sgfString)));
+    var mt = glift.sgf.parse(sgfString);
     for (var i = 0; i < initPosition.length; i++) {
       mt.moveDown(initPosition[i]);
     }
@@ -3522,8 +4284,12 @@ MoveTree.prototype = {
     for (var i = 0; i < nextNodes.length; i++) {
       var node = nextNodes[i];
       if (node.properties().contains(token)) {
-        ptSet[node.properties().getAsPoint(token).hash()] =
-          node.getVarNum();
+        if (node.properties().getFirst(token) == "") {
+          // This is a 'PASS'.  Ignore
+        } else {
+          ptSet[node.properties().getAsPoint(token).hash()] =
+            node.getVarNum();
+        }
       }
     }
     if (ptSet[point.hash()] !== undefined) {
@@ -3789,6 +4555,13 @@ Properties.prototype = {
   },
 
   /**
+   * The the first element of a property
+   */
+  getFirst: function(strProp, index) {
+    return this.getDatum(strProp, 0);
+  },
+
+  /**
    * Return an array of data associated with a property key
    */
   get: function(strProp) {
@@ -3894,18 +4667,30 @@ Properties.prototype = {
    *    color: <BLACK / WHITE>
    *    point: point
    *  }
+   *
+   * If the move is a pass, then in the SGF, we'll see B[] or W[].  Thus,
+   * we will return { color: BLACK } or { color: WHITE }, but we won't have any
+   * point associated with this.
    */
   getMove: function() {
     if (this.contains('B')) {
-      return {
-        color: enums.states.BLACK,
-        point: this.getAsPoint('B')
-      };
+      if (this.get('B')[0] === "") {
+        return { color: enums.states.BLACK }; // This is a PASS
+      } else {
+        return {
+          color: enums.states.BLACK,
+          point: this.getAsPoint('B')
+        };
+      }
     } else if (this.contains('W')) {
-      return {
-        color: enums.states.WHITE,
-        point: this.getAsPoint('W')
-      };
+      if (this.get('W')[0] === "") {
+        return { color: enums.states.WHITE}; // This is a PASS
+      } else {
+        return {
+          color: enums.states.WHITE,
+          point: this.getAsPoint('W')
+        };
+      }
     } else {
       return util.none;
     }
@@ -3920,7 +4705,7 @@ Properties.prototype = {
   },
 
   /**
-   * Get all the stones (placements and moves)
+   * Get all the stones (placements and moves).  This ignores 'PASS' moves.
    *
    * returns:
    *  {
@@ -3935,8 +4720,8 @@ Properties.prototype = {
         WHITE = states.WHITE;
     out[BLACK] = this.getPlacementsAsPoints(states.BLACK);
     out[WHITE] = this.getPlacementsAsPoints(states.WHITE);
-    var move = this.getMove()
-    if (move != util.none) {
+    var move = this.getMove();
+    if (move != util.none && move.point !== undefined) {
       out[move.color].push(move.point);
     }
     return out;
@@ -4084,6 +4869,181 @@ glift.sgf = {
     return String.fromCharCode(pt.x() +  a) + String.fromCharCode(pt.y() + a);
   }
 };
+/**
+ * The new Glift SGF parser!
+ * Takes a string, returns a movetree.
+ */
+glift.sgf.parse = function(sgfString) {
+  var states = {
+    BEGINNING: 1,
+    PROPERTY: 2, // e.g., 'AB[oe]' or 'A_B[oe]' or 'AB_[oe]'
+    PROP_DATA: 3, // 'AB[o_e]'
+    BETWEEN: 4 // 'AB[oe]_', '_AB[oe]'
+  };
+  var statesToString = {
+    1: 'BEGINNING',
+    2: 'PROPERTY',
+    3: 'PROP_DATA',
+    4: 'BETWEEN'
+  };
+  var syn = {
+    LBRACE:  '[',
+    RBRACE:  ']',
+    LPAREN:  '(',
+    RPAREN:  ')',
+    SCOLON:  ';'
+  };
+
+  var wsRegex = /\s|\n/;
+  var propRegex = /[A-Z]/;
+
+  var curstate = states.BEGINNING;
+  var movetree = glift.rules.movetree.getInstance();
+  var charBuffer = []; // List of characters.
+  var propData = []; // List of Strings.
+  var branchMoveNums = []; // used for when we pop up.
+  var curProp = '';
+  var curchar = '';
+  var i = 0; // defined here for closing over
+  var lineNum = 0;
+  var colNum = 0;
+
+  var perror = function(msg) {
+    glift.sgf.parseError(lineNum, colNum, curchar, msg);
+  };
+
+  var flushCharBuffer = function() {
+    var strOut = charBuffer.join("");
+    charBuffer = [];
+    return strOut;
+  };
+
+  var flushPropDataIfNecessary = function() {
+    if (curProp.length > 0) {
+      movetree.properties().add(curProp, propData);
+      propData = [];
+      curProp = '';
+    }
+  };
+
+  var nextChar = function() {
+    i++;
+    i === sgfString.length ||
+        perror("Reached end of input, but expected a character.");
+    return sgfString.charAt(i);
+  };
+
+  (function() {
+    // Run everything inside an anonymous function so we can use 'return' as a
+    // fullstop break.
+    for (var i = 0; i < sgfString.length; i++) {
+      colNum++; // This means that columns are 1 indexed.
+      curchar = sgfString.charAt(i);
+
+      if (curchar === "\n" && curstate !== states.PROP_DATA) {
+        lineNum++;
+        colNum = 0;
+        continue;
+      }
+      // glift.util.logz('i[' + i + '] -- ' + statesToString[curstate]
+      //    + ' -- char[' + char + ']');
+      switch (curstate) {
+        case states.BEGINNING:
+          if (curchar === syn.LPAREN || wsRegex.test(curchar)) {
+            branchMoveNums.push(movetree.node().getNodeNum()); // Should Be 0.
+          } else if (curchar === syn.SCOLON) {
+            curstate = states.BETWEEN; // The SGF Begins!
+          } else if (wsRegex.test(curchar)) {
+            // We can ignore whitespace.
+          } else {
+            perror("Unexpected character");
+          }
+          break;
+        case states.PROPERTY:
+          if (propRegex.test(curchar)) {
+            charBuffer.push(curchar);
+            if (charBuffer.length > 2) {
+              perror("Expected: length two proprety. Found: " + charBuffer);
+            }
+          } else if (curchar === syn.LBRACE) {
+            curProp = flushCharBuffer();
+            if (glift.sgf.allProperties[curProp] === undefined) {
+              perror('Unknown property: ' + curProp);
+            }
+            curstate = states.PROP_DATA;
+          } else if (wsRegex.test(curchar)) {
+            // Should whitespace be allowed here?
+            perror('Unexpected whitespace in Property')
+          } else {
+            perror('Unexpected character');
+          }
+          break;
+        case states.PROP_DATA:
+          if (curchar === syn.RBRACE
+              && charBuffer[charBuffer.length - 1] === '\\') {
+            charBuffer.push(curchar);
+          } else if (curchar === syn.RBRACE) {
+            propData.push(flushCharBuffer());
+            curstate = states.BETWEEN;
+          } else {
+            charBuffer.push(curchar);
+          }
+          break;
+        case states.BETWEEN:
+          if (propRegex.test(curchar)) {
+            flushPropDataIfNecessary();
+            charBuffer.push(curchar);
+            curstate = states.PROPERTY;
+          } else if (curchar === syn.LBRACE) {
+            if (curProp.length > 0) {
+              curstate = states.PROP_DATA; // more data to process
+            } else {
+              perror("Unexpected token.  Orphan property data.");
+            }
+          } else if (curchar === syn.LPAREN) {
+            flushPropDataIfNecessary();
+            branchMoveNums.push(movetree.node().getNodeNum());
+          } else if (curchar === syn.RPAREN) {
+            flushPropDataIfNecessary();
+            if (branchMoveNums.length === 0) {
+              while (movetree.node().getNodeNum() !== 0) {
+                movetree.moveUp(); // Is this necessary?
+              }
+              return movetree;
+            }
+            var parentBranchNum = branchMoveNums.pop();
+            while (movetree.node().getNodeNum() !== parentBranchNum) {
+              movetree.moveUp();
+            }
+          } else if (curchar === syn.SCOLON) {
+            flushPropDataIfNecessary();
+            movetree.addNode();
+          } else if (wsRegex.test(curchar)) {
+            // Do nothing.  Whitespace can be ignored here.
+          } else {
+            perror('Unknown token');
+          }
+          break;
+        default:
+          perror("Fatal Error: Unknown State!"); // Shouldn't get here.
+      }
+    }
+    if (movetree.node().getNodeNum() !== 0) {
+      perror('Expected to end up at start.');
+    }
+  })();
+  return movetree;
+};
+
+/**
+ * Throw a parser error.  The message is optional.
+ */
+glift.sgf.parseError =  function(lineNum, colNum, curchar, message) {
+  var err = 'SGF Parsing Error: At line [' + lineNum + '], column [' + colNum
+      + '], curchar [' + curchar + '], ' + message;
+  glift.util.logz(err); // Should this error be logged this way?
+  throw err;
+};
 // The allProperties object is used to check to make sure that a given property is
 // actually a real property
 glift.sgf.allProperties = {
@@ -4093,1133 +5053,12 @@ CP: "CP", CR: "CR", DD: "DD", DM: "DM", DO: "DO", DT: "DT", EL: "EL", EV: "EV",
 EX: "EX", FF: "FF", FG: "FG", GB: "GB", GC: "GC", GM: "GM", GN: "GN", GW: "GW",
 HA: "HA", HO: "HO", ID: "ID", IP: "IP", IT: "IT", IY: "IY", KM: "KM", KO: "KO",
 L: "L", LB: "LB", LN: "LN", LT: "LT", M: "M", MA: "MA", MN: "MN", N: "N", OB:
-"OB", OM: "OM", ON: "ON", OP: "OP", OT: "OT", OV: "OV", OW: "OW", PB: "PB", PC:
-"PC", PL: "PL", PM: "PM", PW: "PW", RE: "RE", RG: "RG", RO: "RO", RU: "RU", SC:
-"SC", SE: "SE", SI: "SI", SL: "SL", SO: "SO", SQ: "SQ", ST: "ST", SU: "SU", SZ:
-"SZ", TB: "TB", TC: "TC", TE: "TE", TM: "TM", TR: "TR", TW: "TW", UC: "UC", US:
-"US", V: "V", VW: "VW", W: "W", WL: "WL", WR: "WR", WS: "WS", WT: "WT"
+"OB", OH: "OH", OM: "OM", ON: "ON", OP: "OP", OT: "OT", OV: "OV", OW: "OW", PB:
+"PB", PC: "PC", PL: "PL", PM: "PM", PW: "PW", RE: "RE", RG: "RG", RO: "RO", RU:
+"RU", SC: "SC", SE: "SE", SI: "SI", SL: "SL", SO: "SO", SQ: "SQ", ST: "ST", SU:
+"SU", SZ: "SZ", TB: "TB", TC: "TC", TE: "TE", TM: "TM", TR: "TR", TW: "TW", UC:
+"UC", US: "US", V: "V", VW: "VW", W: "W", WL: "WL", WR: "WR", WS: "WS", WT: "WT"
 };
-glift.sgf.parser = (function(){
-  /* Generated by PEG.js 0.6.2 (http://pegjs.majda.cz/). */
-  
-  var result = {
-    /*
-     * Parses the input with a generated parser. If the parsing is successfull,
-     * returns a value explicitly or implicitly specified by the grammar from
-     * which the parser was generated (see |PEG.buildParser|). If the parsing is
-     * unsuccessful, throws |PEG.parser.SyntaxError| describing the error.
-     */
-    parse: function(input, startRule) {
-      var parseFunctions = {
-        "Data": parse_Data,
-        "MoreData": parse_MoreData,
-        "MoreTokens": parse_MoreTokens,
-        "MoreVars": parse_MoreVars,
-        "Moves": parse_Moves,
-        "Start": parse_Start,
-        "TokenName": parse_TokenName,
-        "Tokens": parse_Tokens,
-        "Variations": parse_Variations,
-        "WhiteSpace": parse_WhiteSpace
-      };
-      
-      if (startRule !== undefined) {
-        if (parseFunctions[startRule] === undefined) {
-          throw new Error("Invalid rule name: " + quote(startRule) + ".");
-        }
-      } else {
-        startRule = "Start";
-      }
-      
-      var pos = 0;
-      var reportMatchFailures = true;
-      var rightmostMatchFailuresPos = 0;
-      var rightmostMatchFailuresExpected = [];
-      var cache = {};
-      
-      function padLeft(input, padding, length) {
-        var result = input;
-        
-        var padLength = length - input.length;
-        for (var i = 0; i < padLength; i++) {
-          result = padding + result;
-        }
-        
-        return result;
-      }
-      
-      function escape(ch) {
-        var charCode = ch.charCodeAt(0);
-        
-        if (charCode <= 0xFF) {
-          var escapeChar = 'x';
-          var length = 2;
-        } else {
-          var escapeChar = 'u';
-          var length = 4;
-        }
-        
-        return '\\' + escapeChar + padLeft(charCode.toString(16).toUpperCase(), '0', length);
-      }
-      
-      function quote(s) {
-        /*
-         * ECMA-262, 5th ed., 7.8.4: All characters may appear literally in a
-         * string literal except for the closing quote character, backslash,
-         * carriage return, line separator, paragraph separator, and line feed.
-         * Any character may appear in the form of an escape sequence.
-         */
-        return '"' + s
-          .replace(/\\/g, '\\\\')            // backslash
-          .replace(/"/g, '\\"')              // closing quote character
-          .replace(/\r/g, '\\r')             // carriage return
-          .replace(/\n/g, '\\n')             // line feed
-          .replace(/[\x80-\uFFFF]/g, escape) // non-ASCII characters
-          + '"';
-      }
-      
-      function matchFailed(failure) {
-        if (pos < rightmostMatchFailuresPos) {
-          return;
-        }
-        
-        if (pos > rightmostMatchFailuresPos) {
-          rightmostMatchFailuresPos = pos;
-          rightmostMatchFailuresExpected = [];
-        }
-        
-        rightmostMatchFailuresExpected.push(failure);
-      }
-      
-      function parse_Start() {
-        var cacheKey = 'Start@' + pos;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = cachedResult.nextPos;
-          return cachedResult.result;
-        }
-        
-        
-        var savedPos0 = pos;
-        var savedPos1 = pos;
-        if (input.substr(pos, 2) === "(;") {
-          var result3 = "(;";
-          pos += 2;
-        } else {
-          var result3 = null;
-          if (reportMatchFailures) {
-            matchFailed("\"(;\"");
-          }
-        }
-        if (result3 !== null) {
-          var result4 = parse_Tokens();
-          if (result4 !== null) {
-            var result5 = parse_Variations();
-            if (result5 !== null) {
-              if (input.substr(pos, 1) === ")") {
-                var result6 = ")";
-                pos += 1;
-              } else {
-                var result6 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\")\"");
-                }
-              }
-              if (result6 !== null) {
-                var result1 = [result3, result4, result5, result6];
-              } else {
-                var result1 = null;
-                pos = savedPos1;
-              }
-            } else {
-              var result1 = null;
-              pos = savedPos1;
-            }
-          } else {
-            var result1 = null;
-            pos = savedPos1;
-          }
-        } else {
-          var result1 = null;
-          pos = savedPos1;
-        }
-        var result2 = result1 !== null
-          ? (function(props, children) {
-            return glift.rules.movenode(glift.rules.properties(props), children).renumber();
-          })(result1[1], result1[2])
-          : null;
-        if (result2 !== null) {
-          var result0 = result2;
-        } else {
-          var result0 = null;
-          pos = savedPos0;
-        }
-        
-        
-        
-        cache[cacheKey] = {
-          nextPos: pos,
-          result:  result0
-        };
-        return result0;
-      }
-      
-      function parse_Variations() {
-        var cacheKey = 'Variations@' + pos;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = cachedResult.nextPos;
-          return cachedResult.result;
-        }
-        
-        
-        var savedPos1 = pos;
-        var savedPos2 = pos;
-        if (input.substr(pos, 1) === "(") {
-          var result7 = "(";
-          pos += 1;
-        } else {
-          var result7 = null;
-          if (reportMatchFailures) {
-            matchFailed("\"(\"");
-          }
-        }
-        if (result7 !== null) {
-          var result8 = parse_Moves();
-          if (result8 !== null) {
-            if (input.substr(pos, 1) === ")") {
-              var result9 = ")";
-              pos += 1;
-            } else {
-              var result9 = null;
-              if (reportMatchFailures) {
-                matchFailed("\")\"");
-              }
-            }
-            if (result9 !== null) {
-              var result17 = parse_WhiteSpace();
-              var result10 = result17 !== null ? result17 : '';
-              if (result10 !== null) {
-                if (input.substr(pos, 1) === "(") {
-                  var result11 = "(";
-                  pos += 1;
-                } else {
-                  var result11 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"(\"");
-                  }
-                }
-                if (result11 !== null) {
-                  var result12 = parse_Moves();
-                  if (result12 !== null) {
-                    if (input.substr(pos, 1) === ")") {
-                      var result13 = ")";
-                      pos += 1;
-                    } else {
-                      var result13 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\")\"");
-                      }
-                    }
-                    if (result13 !== null) {
-                      var result16 = parse_WhiteSpace();
-                      var result14 = result16 !== null ? result16 : '';
-                      if (result14 !== null) {
-                        var result15 = parse_MoreVars();
-                        if (result15 !== null) {
-                          var result5 = [result7, result8, result9, result10, result11, result12, result13, result14, result15];
-                        } else {
-                          var result5 = null;
-                          pos = savedPos2;
-                        }
-                      } else {
-                        var result5 = null;
-                        pos = savedPos2;
-                      }
-                    } else {
-                      var result5 = null;
-                      pos = savedPos2;
-                    }
-                  } else {
-                    var result5 = null;
-                    pos = savedPos2;
-                  }
-                } else {
-                  var result5 = null;
-                  pos = savedPos2;
-                }
-              } else {
-                var result5 = null;
-                pos = savedPos2;
-              }
-            } else {
-              var result5 = null;
-              pos = savedPos2;
-            }
-          } else {
-            var result5 = null;
-            pos = savedPos2;
-          }
-        } else {
-          var result5 = null;
-          pos = savedPos2;
-        }
-        var result6 = result5 !== null
-          ? (function(var1, white, var2, whiteAlso, more) { return [var1, var2].concat(more); })(result5[1], result5[3], result5[5], result5[7], result5[8])
-          : null;
-        if (result6 !== null) {
-          var result4 = result6;
-        } else {
-          var result4 = null;
-          pos = savedPos1;
-        }
-        if (result4 !== null) {
-          var result0 = result4;
-        } else {
-          var savedPos0 = pos;
-          var result2 = parse_Moves();
-          var result3 = result2 !== null
-            ? (function(move) { return (move === undefined ? [] : [move]); })(result2)
-            : null;
-          if (result3 !== null) {
-            var result1 = result3;
-          } else {
-            var result1 = null;
-            pos = savedPos0;
-          }
-          if (result1 !== null) {
-            var result0 = result1;
-          } else {
-            var result0 = null;;
-          };
-        }
-        
-        
-        
-        cache[cacheKey] = {
-          nextPos: pos,
-          result:  result0
-        };
-        return result0;
-      }
-      
-      function parse_MoreVars() {
-        var cacheKey = 'MoreVars@' + pos;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = cachedResult.nextPos;
-          return cachedResult.result;
-        }
-        
-        
-        var savedPos1 = pos;
-        var savedPos2 = pos;
-        if (input.substr(pos, 1) === "(") {
-          var result7 = "(";
-          pos += 1;
-        } else {
-          var result7 = null;
-          if (reportMatchFailures) {
-            matchFailed("\"(\"");
-          }
-        }
-        if (result7 !== null) {
-          var result8 = parse_Moves();
-          if (result8 !== null) {
-            if (input.substr(pos, 1) === ")") {
-              var result9 = ")";
-              pos += 1;
-            } else {
-              var result9 = null;
-              if (reportMatchFailures) {
-                matchFailed("\")\"");
-              }
-            }
-            if (result9 !== null) {
-              var result12 = parse_WhiteSpace();
-              var result10 = result12 !== null ? result12 : '';
-              if (result10 !== null) {
-                var result11 = parse_MoreVars();
-                if (result11 !== null) {
-                  var result5 = [result7, result8, result9, result10, result11];
-                } else {
-                  var result5 = null;
-                  pos = savedPos2;
-                }
-              } else {
-                var result5 = null;
-                pos = savedPos2;
-              }
-            } else {
-              var result5 = null;
-              pos = savedPos2;
-            }
-          } else {
-            var result5 = null;
-            pos = savedPos2;
-          }
-        } else {
-          var result5 = null;
-          pos = savedPos2;
-        }
-        var result6 = result5 !== null
-          ? (function(move, white, more) {
-              return [move].concat(more); })(result5[1], result5[3], result5[4])
-          : null;
-        if (result6 !== null) {
-          var result4 = result6;
-        } else {
-          var result4 = null;
-          pos = savedPos1;
-        }
-        if (result4 !== null) {
-          var result0 = result4;
-        } else {
-          var savedPos0 = pos;
-          if (input.substr(pos, 0) === "") {
-            var result2 = "";
-            pos += 0;
-          } else {
-            var result2 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"\"");
-            }
-          }
-          var result3 = result2 !== null
-            ? (function() { return []; })()
-            : null;
-          if (result3 !== null) {
-            var result1 = result3;
-          } else {
-            var result1 = null;
-            pos = savedPos0;
-          }
-          if (result1 !== null) {
-            var result0 = result1;
-          } else {
-            var result0 = null;;
-          };
-        }
-        
-        
-        
-        cache[cacheKey] = {
-          nextPos: pos,
-          result:  result0
-        };
-        return result0;
-      }
-      
-      function parse_Moves() {
-        var cacheKey = 'Moves@' + pos;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = cachedResult.nextPos;
-          return cachedResult.result;
-        }
-        
-        
-        var savedPos1 = pos;
-        var savedPos2 = pos;
-        if (input.substr(pos, 1) === ";") {
-          var result7 = ";";
-          pos += 1;
-        } else {
-          var result7 = null;
-          if (reportMatchFailures) {
-            matchFailed("\";\"");
-          }
-        }
-        if (result7 !== null) {
-          var result8 = parse_Tokens();
-          if (result8 !== null) {
-            var result9 = parse_Variations();
-            if (result9 !== null) {
-              var result5 = [result7, result8, result9];
-            } else {
-              var result5 = null;
-              pos = savedPos2;
-            }
-          } else {
-            var result5 = null;
-            pos = savedPos2;
-          }
-        } else {
-          var result5 = null;
-          pos = savedPos2;
-        }
-        var result6 = result5 !== null
-          ? (function(props, children) {
-                    return glift.rules.movenode(glift.rules.properties(props), children);
-                  })(result5[1], result5[2])
-          : null;
-        if (result6 !== null) {
-          var result4 = result6;
-        } else {
-          var result4 = null;
-          pos = savedPos1;
-        }
-        if (result4 !== null) {
-          var result0 = result4;
-        } else {
-          var savedPos0 = pos;
-          if (input.substr(pos, 0) === "") {
-            var result2 = "";
-            pos += 0;
-          } else {
-            var result2 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"\"");
-            }
-          }
-          var result3 = result2 !== null
-            ? (function() { return undefined; })()
-            : null;
-          if (result3 !== null) {
-            var result1 = result3;
-          } else {
-            var result1 = null;
-            pos = savedPos0;
-          }
-          if (result1 !== null) {
-            var result0 = result1;
-          } else {
-            var result0 = null;;
-          };
-        }
-        
-        
-        
-        cache[cacheKey] = {
-          nextPos: pos,
-          result:  result0
-        };
-        return result0;
-      }
-      
-      function parse_Tokens() {
-        var cacheKey = 'Tokens@' + pos;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = cachedResult.nextPos;
-          return cachedResult.result;
-        }
-        
-        
-        var savedPos0 = pos;
-        var savedPos1 = pos;
-        var result3 = parse_TokenName();
-        if (result3 !== null) {
-          if (input.substr(pos, 1) === "[") {
-            var result4 = "[";
-            pos += 1;
-          } else {
-            var result4 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"[\"");
-            }
-          }
-          if (result4 !== null) {
-            var result5 = parse_Data();
-            if (result5 !== null) {
-              if (input.substr(pos, 1) === "]") {
-                var result6 = "]";
-                pos += 1;
-              } else {
-                var result6 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"]\"");
-                }
-              }
-              if (result6 !== null) {
-                var result12 = parse_WhiteSpace();
-                var result7 = result12 !== null ? result12 : '';
-                if (result7 !== null) {
-                  var result8 = parse_MoreData();
-                  if (result8 !== null) {
-                    var result11 = parse_WhiteSpace();
-                    var result9 = result11 !== null ? result11 : '';
-                    if (result9 !== null) {
-                      var result10 = parse_MoreTokens();
-                      if (result10 !== null) {
-                        var result1 = [result3, result4, result5, result6, result7, result8, result9, result10];
-                      } else {
-                        var result1 = null;
-                        pos = savedPos1;
-                      }
-                    } else {
-                      var result1 = null;
-                      pos = savedPos1;
-                    }
-                  } else {
-                    var result1 = null;
-                    pos = savedPos1;
-                  }
-                } else {
-                  var result1 = null;
-                  pos = savedPos1;
-                }
-              } else {
-                var result1 = null;
-                pos = savedPos1;
-              }
-            } else {
-              var result1 = null;
-              pos = savedPos1;
-            }
-          } else {
-            var result1 = null;
-            pos = savedPos1;
-          }
-        } else {
-          var result1 = null;
-          pos = savedPos1;
-        }
-        var result2 = result1 !== null
-          ? (function(token, propdata, white, more, whiteAlso, tokens) {
-            tokens[token] = [propdata].concat(more);
-            return tokens;
-          })(result1[0], result1[2], result1[4], result1[5], result1[6], result1[7])
-          : null;
-        if (result2 !== null) {
-          var result0 = result2;
-        } else {
-          var result0 = null;
-          pos = savedPos0;
-        }
-        
-        
-        
-        cache[cacheKey] = {
-          nextPos: pos,
-          result:  result0
-        };
-        return result0;
-      }
-      
-      function parse_MoreTokens() {
-        var cacheKey = 'MoreTokens@' + pos;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = cachedResult.nextPos;
-          return cachedResult.result;
-        }
-        
-        
-        var result4 = parse_Tokens();
-        if (result4 !== null) {
-          var result0 = result4;
-        } else {
-          var savedPos0 = pos;
-          if (input.substr(pos, 0) === "") {
-            var result2 = "";
-            pos += 0;
-          } else {
-            var result2 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"\"");
-            }
-          }
-          var result3 = result2 !== null
-            ? (function() { return {}; })()
-            : null;
-          if (result3 !== null) {
-            var result1 = result3;
-          } else {
-            var result1 = null;
-            pos = savedPos0;
-          }
-          if (result1 !== null) {
-            var result0 = result1;
-          } else {
-            var result0 = null;;
-          };
-        }
-        
-        
-        
-        cache[cacheKey] = {
-          nextPos: pos,
-          result:  result0
-        };
-        return result0;
-      }
-      
-      function parse_Data() {
-        var cacheKey = 'Data@' + pos;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = cachedResult.nextPos;
-          return cachedResult.result;
-        }
-        
-        
-        var savedPos0 = pos;
-        var result1 = [];
-        if (input.substr(pos, 2) === "\\]") {
-          var result5 = "\\]";
-          pos += 2;
-        } else {
-          var result5 = null;
-          if (reportMatchFailures) {
-            matchFailed("\"\\\\]\"");
-          }
-        }
-        if (result5 !== null) {
-          var result3 = result5;
-        } else {
-          if (input.substr(pos).match(/^[^\]]/) !== null) {
-            var result4 = input.charAt(pos);
-            pos++;
-          } else {
-            var result4 = null;
-            if (reportMatchFailures) {
-              matchFailed("[^\\]]");
-            }
-          }
-          if (result4 !== null) {
-            var result3 = result4;
-          } else {
-            var result3 = null;;
-          };
-        }
-        while (result3 !== null) {
-          result1.push(result3);
-          if (input.substr(pos, 2) === "\\]") {
-            var result5 = "\\]";
-            pos += 2;
-          } else {
-            var result5 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"\\\\]\"");
-            }
-          }
-          if (result5 !== null) {
-            var result3 = result5;
-          } else {
-            if (input.substr(pos).match(/^[^\]]/) !== null) {
-              var result4 = input.charAt(pos);
-              pos++;
-            } else {
-              var result4 = null;
-              if (reportMatchFailures) {
-                matchFailed("[^\\]]");
-              }
-            }
-            if (result4 !== null) {
-              var result3 = result4;
-            } else {
-              var result3 = null;;
-            };
-          }
-        }
-        var result2 = result1 !== null
-          ? (function(props) {
-            return props.join("");
-          })(result1)
-          : null;
-        if (result2 !== null) {
-          var result0 = result2;
-        } else {
-          var result0 = null;
-          pos = savedPos0;
-        }
-        
-        
-        
-        cache[cacheKey] = {
-          nextPos: pos,
-          result:  result0
-        };
-        return result0;
-      }
-      
-      function parse_MoreData() {
-        var cacheKey = 'MoreData@' + pos;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = cachedResult.nextPos;
-          return cachedResult.result;
-        }
-        
-        
-        var savedPos1 = pos;
-        var savedPos2 = pos;
-        if (input.substr(pos, 1) === "[") {
-          var result7 = "[";
-          pos += 1;
-        } else {
-          var result7 = null;
-          if (reportMatchFailures) {
-            matchFailed("\"[\"");
-          }
-        }
-        if (result7 !== null) {
-          var result8 = parse_Data();
-          if (result8 !== null) {
-            if (input.substr(pos, 1) === "]") {
-              var result9 = "]";
-              pos += 1;
-            } else {
-              var result9 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"]\"");
-              }
-            }
-            if (result9 !== null) {
-              var result12 = parse_WhiteSpace();
-              var result10 = result12 !== null ? result12 : '';
-              if (result10 !== null) {
-                var result11 = parse_MoreData();
-                if (result11 !== null) {
-                  var result5 = [result7, result8, result9, result10, result11];
-                } else {
-                  var result5 = null;
-                  pos = savedPos2;
-                }
-              } else {
-                var result5 = null;
-                pos = savedPos2;
-              }
-            } else {
-              var result5 = null;
-              pos = savedPos2;
-            }
-          } else {
-            var result5 = null;
-            pos = savedPos2;
-          }
-        } else {
-          var result5 = null;
-          pos = savedPos2;
-        }
-        var result6 = result5 !== null
-          ? (function(propdata, white, more) {
-              return [propdata].concat(more); })(result5[1], result5[3], result5[4])
-          : null;
-        if (result6 !== null) {
-          var result4 = result6;
-        } else {
-          var result4 = null;
-          pos = savedPos1;
-        }
-        if (result4 !== null) {
-          var result0 = result4;
-        } else {
-          var savedPos0 = pos;
-          if (input.substr(pos, 0) === "") {
-            var result2 = "";
-            pos += 0;
-          } else {
-            var result2 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"\"");
-            }
-          }
-          var result3 = result2 !== null
-            ? (function() { return []; })()
-            : null;
-          if (result3 !== null) {
-            var result1 = result3;
-          } else {
-            var result1 = null;
-            pos = savedPos0;
-          }
-          if (result1 !== null) {
-            var result0 = result1;
-          } else {
-            var result0 = null;;
-          };
-        }
-        
-        
-        
-        cache[cacheKey] = {
-          nextPos: pos,
-          result:  result0
-        };
-        return result0;
-      }
-      
-      function parse_TokenName() {
-        var cacheKey = 'TokenName@' + pos;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = cachedResult.nextPos;
-          return cachedResult.result;
-        }
-        
-        
-        var savedPos0 = pos;
-        var savedPos1 = pos;
-        if (input.substr(pos).match(/^[a-zA-Z]/) !== null) {
-          var result5 = input.charAt(pos);
-          pos++;
-        } else {
-          var result5 = null;
-          if (reportMatchFailures) {
-            matchFailed("[a-zA-Z]");
-          }
-        }
-        if (result5 !== null) {
-          if (input.substr(pos).match(/^[a-zA-Z]/) !== null) {
-            var result6 = input.charAt(pos);
-            pos++;
-          } else {
-            var result6 = null;
-            if (reportMatchFailures) {
-              matchFailed("[a-zA-Z]");
-            }
-          }
-          if (result6 !== null) {
-            var result4 = [result5, result6];
-          } else {
-            var result4 = null;
-            pos = savedPos1;
-          }
-        } else {
-          var result4 = null;
-          pos = savedPos1;
-        }
-        if (result4 !== null) {
-          var result1 = result4;
-        } else {
-          if (input.substr(pos).match(/^[a-zA-Z]/) !== null) {
-            var result3 = input.charAt(pos);
-            pos++;
-          } else {
-            var result3 = null;
-            if (reportMatchFailures) {
-              matchFailed("[a-zA-Z]");
-            }
-          }
-          if (result3 !== null) {
-            var result1 = result3;
-          } else {
-            var result1 = null;;
-          };
-        }
-        var result2 = result1 !== null
-          ? (function(name) {
-            if (name.length === 1) return name[0];
-            else return name.join("").toUpperCase();
-          })(result1)
-          : null;
-        if (result2 !== null) {
-          var result0 = result2;
-        } else {
-          var result0 = null;
-          pos = savedPos0;
-        }
-        
-        
-        
-        cache[cacheKey] = {
-          nextPos: pos,
-          result:  result0
-        };
-        return result0;
-      }
-      
-      function parse_WhiteSpace() {
-        var cacheKey = 'WhiteSpace@' + pos;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = cachedResult.nextPos;
-          return cachedResult.result;
-        }
-        
-        
-        var result0 = [];
-        if (input.substr(pos, 1) === " ") {
-          var result3 = " ";
-          pos += 1;
-        } else {
-          var result3 = null;
-          if (reportMatchFailures) {
-            matchFailed("\" \"");
-          }
-        }
-        if (result3 !== null) {
-          var result1 = result3;
-        } else {
-          if (input.substr(pos, 1) === "\n") {
-            var result2 = "\n";
-            pos += 1;
-          } else {
-            var result2 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"\\n\"");
-            }
-          }
-          if (result2 !== null) {
-            var result1 = result2;
-          } else {
-            var result1 = null;;
-          };
-        }
-        while (result1 !== null) {
-          result0.push(result1);
-          if (input.substr(pos, 1) === " ") {
-            var result3 = " ";
-            pos += 1;
-          } else {
-            var result3 = null;
-            if (reportMatchFailures) {
-              matchFailed("\" \"");
-            }
-          }
-          if (result3 !== null) {
-            var result1 = result3;
-          } else {
-            if (input.substr(pos, 1) === "\n") {
-              var result2 = "\n";
-              pos += 1;
-            } else {
-              var result2 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"\\n\"");
-              }
-            }
-            if (result2 !== null) {
-              var result1 = result2;
-            } else {
-              var result1 = null;;
-            };
-          }
-        }
-        
-        
-        
-        cache[cacheKey] = {
-          nextPos: pos,
-          result:  result0
-        };
-        return result0;
-      }
-      
-      function buildErrorMessage() {
-        function buildExpected(failuresExpected) {
-          failuresExpected.sort();
-          
-          var lastFailure = null;
-          var failuresExpectedUnique = [];
-          for (var i = 0; i < failuresExpected.length; i++) {
-            if (failuresExpected[i] !== lastFailure) {
-              failuresExpectedUnique.push(failuresExpected[i]);
-              lastFailure = failuresExpected[i];
-            }
-          }
-          
-          switch (failuresExpectedUnique.length) {
-            case 0:
-              return 'end of input';
-            case 1:
-              return failuresExpectedUnique[0];
-            default:
-              return failuresExpectedUnique.slice(0, failuresExpectedUnique.length - 1).join(', ')
-                + ' or '
-                + failuresExpectedUnique[failuresExpectedUnique.length - 1];
-          }
-        }
-        
-        var expected = buildExpected(rightmostMatchFailuresExpected);
-        var actualPos = Math.max(pos, rightmostMatchFailuresPos);
-        var actual = actualPos < input.length
-          ? quote(input.charAt(actualPos))
-          : 'end of input';
-        
-        return 'Expected ' + expected + ' but ' + actual + ' found.';
-      }
-      
-      function computeErrorPosition() {
-        /*
-         * The first idea was to use |String.split| to break the input up to the
-         * error position along newlines and derive the line and column from
-         * there. However IE's |split| implementation is so broken that it was
-         * enough to prevent it.
-         */
-        
-        var line = 1;
-        var column = 1;
-        var seenCR = false;
-        
-        for (var i = 0; i <  rightmostMatchFailuresPos; i++) {
-          var ch = input.charAt(i);
-          if (ch === '\n') {
-            if (!seenCR) { line++; }
-            column = 1;
-            seenCR = false;
-          } else if (ch === '\r' | ch === '\u2028' || ch === '\u2029') {
-            line++;
-            column = 1;
-            seenCR = true;
-          } else {
-            column++;
-            seenCR = false;
-          }
-        }
-        
-        return { line: line, column: column };
-      }
-      
-      
-      
-      var result = parseFunctions[startRule]();
-      
-      /*
-       * The parser is now in one of the following three states:
-       *
-       * 1. The parser successfully parsed the whole input.
-       *
-       *    - |result !== null|
-       *    - |pos === input.length|
-       *    - |rightmostMatchFailuresExpected| may or may not contain something
-       *
-       * 2. The parser successfully parsed only a part of the input.
-       *
-       *    - |result !== null|
-       *    - |pos < input.length|
-       *    - |rightmostMatchFailuresExpected| may or may not contain something
-       *
-       * 3. The parser did not successfully parse any part of the input.
-       *
-       *   - |result === null|
-       *   - |pos === 0|
-       *   - |rightmostMatchFailuresExpected| contains at least one failure
-       *
-       * All code following this comment (including called functions) must
-       * handle these states.
-       */
-      if (result === null || pos !== input.length) {
-        var errorPosition = computeErrorPosition();
-        throw new this.SyntaxError(
-          buildErrorMessage(),
-          errorPosition.line,
-          errorPosition.column
-        );
-      }
-      
-      return result;
-    },
-    
-    /* Returns the parser source code. */
-    toSource: function() { return this._source; }
-  };
-  
-  /* Thrown when a parser encounters a syntax error. */
-  
-  result.SyntaxError = function(message, line, column) {
-    this.name = 'SyntaxError';
-    this.message = message;
-    this.line = line;
-    this.column = column;
-  };
-  
-  result.SyntaxError.prototype = Error.prototype;
-  
-  return result;
-})();
 /*
  * The controllers logical parts (the Brains!) of a Go board widget.  You can
  * use the movetree and rules directly, but it's usually easier to use the
@@ -5544,14 +5383,17 @@ var methods = {
    * reasonable.
    *
    * Implemented as a map from point-string+color to variationNumber:
-   *  e.g., pt-BLACK : 1
+   *  e.g., pt-BLACK : 1.  For pass, we use 'PASS' as the point string.  This is
+   *  sort of a hack and should maybe be rethought.
    */
   _possibleNextMoves: function() {
     var possibleMap = {};
     var nextMoves = this.movetree.nextMoves();
     for (var i = 0; i < nextMoves.length; i++) {
       var move = nextMoves[i];
-      var key = move.point.toString() + '-' + move.color;
+      var firstString = move.point !== undefined
+          ? move.point.toString() : 'PASS'
+      var key = firstString + '-' + (move.color);
       possibleMap[key] = i;
     }
     return possibleMap;
@@ -5723,46 +5565,79 @@ glift.bridge = {
    *
    * For a more detailed discussion, see intersections in glift.rules.
    */
-  setDisplayState: function(fullBoardData, display, showVariations) {
+  setDisplayState: function(boardData, display, showVariations) {
     display.intersections().clearMarks();
-    for (var color in fullBoardData.stones) {
-      for (var i = 0; i < fullBoardData.stones[color].length; i++) {
-        var pt = fullBoardData.stones[color][i];
+    if (boardData.displayDataType === glift.enums.displayDataTypes.FULL) {
+      display.intersections().clearAll();
+    }
+    for (var color in boardData.stones) {
+      for (var i = 0; i < boardData.stones[color].length; i++) {
+        var pt = boardData.stones[color][i];
         display.intersections().setStoneColor(pt, color);
       }
     }
 
+    var variationMapping = {};
+    if (glift.bridge.shouldShowNextMoves(boardData, showVariations)) {
+      variationMapping = glift.bridge.variationMapping(boardData);
+    }
+
     var marks = glift.enums.marks;
-    for (var markType in fullBoardData.marks) {
-      for (var i = 0; i < fullBoardData.marks[markType].length; i++) {
-        var markData = fullBoardData.marks[markType][i];
+    for (var markType in boardData.marks) {
+      for (var i = 0; i < boardData.marks[markType].length; i++) {
+        var markData = boardData.marks[markType][i];
         if (markType === marks.LABEL) {
-          display.intersections().addMarkPt(
-              markData.point, markType, markData.value);
+          if (variationMapping[markData.point.toString()] !== undefined) {
+            display.intersections().addMarkPt(
+                markData.point, marks.VARIATION_MARKER, markData.value);
+            delete variationMapping[markData.point.toString()];
+          } else {
+            display.intersections().addMarkPt(
+                markData.point, marks.LABEL, markData.value);
+          }
         } else {
           display.intersections().addMarkPt(markData, markType);
         }
       }
     }
 
-    if (fullBoardData.nextMoves &&
-        ((fullBoardData.nextMoves.length > 1 &&
-            showVariations === glift.enums.showVariations.MORE_THAN_ONE) ||
-        (fullBoardData.nextMoves.length >= 1 &&
-            showVariations === glift.enums.showVariations.ALWAYS))) {
-      for (var i = 0; i < fullBoardData.nextMoves.length; i++) {
-        var nextMove = fullBoardData.nextMoves[i];
-        display.intersections().addMarkPt(
-            nextMove.point, marks.VARIATION_MARKER, i + 1);
-      }
+    var i = 1;
+    for (var ptstring in variationMapping) {
+      var pt = variationMapping[ptstring];
+      display.intersections().addMarkPt(pt, marks.VARIATION_MARKER, i);
+      i += 1;
     }
 
-    if (fullBoardData.lastMove && fullBoardData.lastMove !== glift.util.none) {
-      var lm = fullBoardData.lastMove;
+    if (boardData.lastMove &&
+        boardData.lastMove !== glift.util.none &&
+        boardData.lastMove.point !== undefined) {
+      var lm = boardData.lastMove;
       display.intersections().addMarkPt(lm.point, marks.STONE_MARKER);
     }
+  },
+
+  shouldShowNextMoves: function(boardData, showVariations) {
+    return boardData.nextMoves &&
+      ((boardData.nextMoves.length > 1 &&
+          showVariations === glift.enums.showVariations.MORE_THAN_ONE) ||
+      (boardData.nextMoves.length >= 1 &&
+          showVariations === glift.enums.showVariations.ALWAYS));
+  },
+
+  variationMapping: function(boardData) {
+    var out = {};
+    for (var i = 0; i < boardData.nextMoves.length; i++) {
+      var nextMove = boardData.nextMoves[i];
+      if (nextMove.point !== undefined) {
+        out[nextMove.point.toString()] = nextMove.point;
+      } else {
+        // This is a 'pass'
+      }
+    }
+    return out;
   }
 };
+
 glift.bridge.getCropFromMovetree = function(movetree) {
   var bbox = glift.displays.bboxFromPts,
       point = glift.util.point,
@@ -5812,7 +5687,7 @@ glift.bridge._getRegionFromTracker = function(tracker, numstones) {
     }
   }
   if (regions.length !== 2) {
-    return glift.boardRegions.ALL; // Shouldn't be 1 element here...
+    return glift.enums.boardRegions.ALL; // Shouldn't be 1 element here...
   }
   var newset = glift.util.intersection(
     glift.util.regions.getComponents(regions[0]),
@@ -5826,41 +5701,76 @@ glift.bridge._getRegionFromTracker = function(tracker, numstones) {
 // Widgets are toplevel objects, which combine display and
 // controller/rules bits together.
 glift.widgets = {};
-(function() {
+/**
+ * Public 'constructor' for the BaseWidget.
+ */
 glift.widgets.baseWidget = function(options) {
-  return new BaseWidget(glift.widgets.defaultOptions(options)).draw();
+  if (options.enableFastClick) {
+    FastClick.attach(document.body);
+  }
+  return new glift.widgets._BaseWidget(
+      glift.widgets.options.setDefaults(options, 'base')).draw();
 };
 
-var BaseWidget = function(options) {
+/**
+ * The base web UI widget.  It can be extended, if necessary.
+ */
+glift.widgets._BaseWidget = function(options) {
   this.options = options;
-  this.wrapperDiv = options.divId;
-  this.controller = options.controller;
+  this.wrapperDiv = options.divId; // We split the wrapper div.
+  this.controller = options.controllerFunc(options);
   this.display = undefined; // Initialized by draw.
   this.iconBar = undefined; // Initialized by draw.
 };
 
-BaseWidget.prototype = {
+glift.widgets._BaseWidget.prototype = {
+  /**
+   * Draw the widget.
+   * Returns this for convenience.
+   */
   draw: function() {
-    var divSplits = this.options.useCommentBar ? [.70,.20] : [.90];
+    var divSplits = this.options.useCommentBar
+        ? this.options.splitsWithComments : this.options.splitsWithoutComments;
     this.divInfo = glift.displays.gui.splitDiv(
         this.wrapperDiv, divSplits, 'horizontal');
     this.goboxDivId = this.divInfo[0].id;
+    this._setNotSelectable(this.goboxDivId);
+    this.options.boardRegion =
+        this.options.boardRegionType === glift.enums.boardRegions.AUTO
+        ? glift.bridge.getCropFromMovetree(this.controller.movetree)
+        : this.options.boardRegionType;
     this.options.divId = this.goboxDivId;
     this.display = glift.displays.create(this.options);
     var boundingWidth = $('#' +  this.goboxDivId).width();
 
     if (this.options.useCommentBar) {
       this.commentBoxId = this.divInfo[1].id;
+      this._setNotSelectable(this.commentBoxId);
       this._createCommentBox(boundingWidth);
     }
 
     this.iconBarId = this.options.useCommentBar ? this.divInfo[2].id :
         this.divInfo[1].id;
+    this._setNotSelectable(this.iconBarId);
     this._createIconBar(boundingWidth)
     this._initStoneActions();
     this._initIconActions();
     this._initKeyHandlers();
-    this.applyFullBoardData(this.controller.getEntireBoardState());
+    this.applyBoardData(this.controller.getEntireBoardState());
+    return this;
+  },
+
+  _setNotSelectable: function(divId) {
+    $('#' + divId).css({
+        '-webkit-touch-callout': 'none',
+        '-webkit-user-select': 'none',
+        '-khtml-user-select': 'none',
+        '-moz-user-select': 'moz-none',
+        '-ms-user-select': 'none',
+        'user-select': 'none',
+        '-webkit-highlight': 'none',
+        '-webkit-tap-highlight-color': 'rgba(0,0,0,0)'
+    });
     return this;
   },
 
@@ -5932,7 +5842,7 @@ BaseWidget.prototype = {
    */
   _initKeyHandlers: function() {
     var that = this;
-    $('body').keydown(function(e) {
+    this.keyHandlerFunc = function(e) {
       var name = glift.keyMappings.codeToName(e.which);
       if (name && that.options.keyMapping[name] !== undefined) {
         var actionName = that.options.keyMapping[name];
@@ -5944,40 +5854,40 @@ BaseWidget.prototype = {
         }
         action(that);
       }
-    });
+    };
+    $('body').keydown(this.keyHandlerFunc);
   },
 
-  applyPartialData: function(data) {
-    this._applyBoardData(data, false);
-  },
-
-  applyFullBoardData: function(data) {
-    this._applyBoardData(data, true);
-  },
-
-  _applyBoardData: function(boardData, applyFullBoard) {
+  applyBoardData: function(boardData, applyFullBoard) {
     if (boardData && boardData !== glift.util.none) {
       this.setCommentBox(boardData);
-      if (applyFullBoard) {
-        this.display.intersections().clearAll();
-      }
       glift.bridge.setDisplayState(
           boardData, this.display, this.options.showVariations);
     }
   },
 
-
-  setCommentBox: function(fullBoardData) {
+  setCommentBox: function(boardData) {
     if (!this.commentBox) {
-      return;
-    }
-
-    if (fullBoardData.comment &&
-        fullBoardData.comment !== glift.util.none) {
-      this.commentBox.setText(fullBoardData.comment);
+      // Do nothing -- there is no comment box to set.
+    } else if (boardData.comment &&
+        boardData.comment !== glift.util.none) {
+      this.commentBox.setText(boardData.comment);
     } else {
       this.commentBox.clearText();
     }
+    return this;
+  },
+
+  /**
+   * Reload the state of the widget.  This is particularly useful for problems.
+   * Unfortunatly, this also probably meants this is too problem-specific.
+   */
+  reload: function() {
+    this.controller.reload();
+    this.correctness = undefined; // TODO(kashomon): This shouldn't live here.
+    this.iconBar.destroyTempIcons();
+    this.applyBoardData(
+        this.controller.getEntireBoardState());
   },
 
   redraw: function() {
@@ -5987,210 +5897,352 @@ BaseWidget.prototype = {
 
   destroy: function() {
     $('#' + this.wrapperDiv).empty();
+    this.keyHandlerFunc !== undefined
+      && $('body').unbind('keydown', this.keyHandlerFunc);
+    this.keyHandlerFunc = undefined;
     this.display = undefined;
   }
 };
-})();
+/**
+ * Create a Basic Problem.
+ */
 glift.widgets.basicProblem = function(options) {
-  options.sgfStringList = options.sgfStringList || [];
+  options = glift.widgets.options.setDefaults(options, 'problem');
+  options = glift.widgets.options.setDefaults(options, 'base');
   if (options.sgfStringList.length > 0) {
     options.sgfString = options.sgfString || options.sgfStringList[0];
-    options.problemIndex = 0;
   }
-  options.controller = glift.controllers.staticProblem(options);
-  options.boardRegion =
-      options.boardRegion ||
-      glift.bridge.getCropFromMovetree(options.controller.movetree);
-  options.showVariations = glift.enums.showVariations.NEVER;
-  options.useCommentBar = false;
-  options.keyMapping = {}; // TODO(kashomon): Add key mappings for problems.
-  options.icons = options.icons || ['play', 'refresh', 'roadmap', 'checkbox'];
-  options.actions = {};
-  options.actions.stones = {};
-  options.actions.stones.mouseup = function(widget, pt) {
-    var currentPlayer = widget.controller.getCurrentPlayer();
-    var data = widget.controller.addStone(pt, currentPlayer);
-    var problemResults = glift.enums.problemResults;
-    if (data.result === problemResults.FAILURE) {
-      return; // Illegal move -- nothing to do.
-    }
-    widget.applyPartialData(data);
-    if (widget.correctness === undefined) {
-      if (data.result === problemResults.CORRECT) {
-        widget.iconBar.addTempIcon(
-            'check', widget.iconBar.getIcon('checkbox').newBbox, '#0CC');
-        widget.correctness = problemResults.CORRECT;
-      } else if (data.result == problemResults.INCORRECT) {
-        widget.iconBar.addTempIcon(
-            'cross', widget.iconBar.getIcon('checkbox').newBbox, 'red');
-        widget.correctness = problemResults.INCORRECT;
-      }
-    }
-  };
-
-  var reloadProblemWidget = function(widget) {
-    widget.controller.reload();
-    widget.correctness = undefined;
-    widget.iconBar.destroyTempIcons();
-    widget.applyFullBoardData(
-        widget.controller.getEntireBoardState());
-  };
-  options.actions.icons = options.actions.icons || {
-    // Get next problem.  This will probably be the most often extended.
-    //
-    // TODO(kashomon): Think about ways for users to override a single action.
-    // Probably this will involve copying the relevant options and using the
-    // 'options' file as a template
-    play: {
-      mouseup: function(widget) {
-        if (widget.options.sgfStringList.length > 0) {
-          widget.options.problemIndex = (widget.options.problemIndex + 1) %
-              widget.options.sgfStringList.length;
-          widget.options.sgfString = widget.options.sgfStringList[
-              widget.options.problemIndex];
-          widget.controller = glift.controllers.staticProblem(
-              widget.options);
-          options.boardRegion =
-              options.boardRegion ||
-              glift.bridge.getCropFromMovetree(options.controller.movetree);
-          reloadProblemWidget(widget);
-        }
-      }
-    },
-    // Try again
-    refresh: {
-      mouseup: function(widget) {
-        reloadProblemWidget(widget);
-      }
-    },
-    // Go to the explain-board
-    roadmap: {
-      mouseup: function(widget) {
-        widget.problemControllor = widget.controller;
-        widget.problemOptions = widget.options;
-        widget.destroy();
-        var returnAction = function(widget) {
-          widget.destroy();
-          widget.options = widget.problemOptions;
-          widget.controller = widget.problemControllor;
-          widget.draw();
-        };
-        var optionsCopy = {
-          divId: widget.options.divId,
-          theme: widget.options.theme,
-          sgfString: widget.options.sgfString,
-          showVariations: glift.enums.showVariations.ALWAYS,
-          iconExtensions: ['undo'],
-          actionExtensions: {
-            icons: {
-              undo : {
-                mouseup : returnAction
-              }
-            }
-          }
-        }
-        widget.options = glift.widgets.defaultOptions(optionsCopy);
-        widget.controller = glift.controllers.gameViewer(widget.options);
-        widget.options.boardRegion = glift.bridge.getCropFromMovetree(
-              widget.options.controller.movetree);
-        widget.draw();
-      }
-    }
-  };
-  glift.widgets.extendIconActions(options);
   return glift.widgets.baseWidget(options);
 };
-glift.widgets.defaultOptions = function(options) {
-  options.controller = options.controller ||
-      glift.controllers.gameViewer(options);
-  options.divId = options.divId || 'glift_display';
-  options.theme = options.theme || 'DEFAULT';
-  options.boardRegion = options.boardRegion || 'ALL';
-  // keyMapping is a map from KeyCodes to actions.
-  options.keyMapping = options.keyMapping || {
-      ARROW_LEFT: 'icons.arrowleft.mouseup',
-      ARROW_RIGHT: 'icons.arrowright.mouseup'
-  };
-  options.showVariations = options.showVariations ||
-      glift.enums.showVariations.MORE_THAN_ONE;
-  options.useCommentBar = options.useCommentBar === undefined ?
-      true : options.useCommentBar;
+glift.widgets.options = {
+  setDefaults: function(options, defaultOptionSet) {
+    var defaultOptionSet = defaultOptionSet || 'base';
+    var optionsTemplate = glift.widgets.options[defaultOptionSet];
+    for (var optionName in optionsTemplate) {
+      if (options[optionName] === undefined) {
+        // Do a real copy for arrays.
+        if (glift.util.typeOf(optionsTemplate[optionName]) === 'array') {
+          options[optionName] = [];
+          for (var i = 0; i < optionsTemplate[optionName].length; i++) {
+            options[optionName].push(optionsTemplate[optionName][i]);
+          }
+        } else {
+          options[optionName] = optionsTemplate[optionName];
+        }
+      }
+    }
+    glift.widgets.options.setDefaultActions(options, optionsTemplate);
+    return options;
+  },
 
+  setDefaultActions: function(options, optionsTemplate) {
+    // If the user specifies only a partial set of actions, we try to fill the
+    // unspecified actions.
+    for (var category in optionsTemplate.actions) {
+      if (options.actions[category] === undefined) {
+        options.actions[category] = optionsTemplate.actions[category];
+      }
+    }
+    for (var event in optionsTemplate.actions.stones) {
+      if (options.actions.stones[event] === undefined) {
+        options.actions.stones[event] =
+            optionsTemplate.actions.stones[event];
+      }
+    }
+    for (var icon in optionsTemplate.actions.icons) {
+      if (options.actions.icons[icon] === undefined) {
+        options.actions.icons[icon] =
+            optionsTemplate.actions.icons[icon];
+      }
+      for (var action in optionsTemplate.actions.icons[icon]) {
+        if (options.actions.icons[icon][action] === undefined) {
+          options.actions.icons[icon][action] =
+              optionsTemplate.actions.icons[icon][action];
+        }
+      }
+    }
+  }
+};
+/**
+ * Option defaults used by the BaseWidget.
+ */
+glift.widgets.options.base = {
+  /**
+   * A function that returns the controller.
+   */
+  controllerFunc: glift.controllers.gameViewer,
 
-  options.actions = options.actions || {};
-  options.actions.stones = options.actions.stones || {};
+  /**
+   * This is expected to be overwritten with a SGF in string form.
+   */
+  sgfString: '',
 
-  var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
-  options.actions.stones.mouseup = options.actions.stones.mouseup ||
-      function(widget, pt) {
+  /**
+   * The default div id in which we create the go board.
+   */
+  divId: 'glift_display',
+
+  /**
+   * Enable FastClick (for mobile displays).
+   */
+  enableFastClick: true,
+
+  /**
+   * The name of the theme.
+   */
+  theme: 'DEFAULT',
+
+  /**
+   * The board region to display.  The boardRegion will be 'guessed' if it's set
+   * to 'AUTO'.
+   */
+  boardRegionType: glift.enums.boardRegions.ALL,
+
+  /**
+   * Whether not to show the variations (as numbers).
+   *
+   * Can be 'NEVER', 'ALWAYS' or 'MORE_THAN_ONE'
+   */
+  showVariations: glift.enums.showVariations.MORE_THAN_ONE,
+
+  /**
+   * Whether or not to use the comment bar.
+   */
+  useCommentBar: true,
+
+  /**
+   * Div splits with the CommentBar.  Thus, there are three resulting divs - the
+   * remainder is used by the last div - the icon bar.
+   */
+  splitsWithComments: [.70, .20],
+
+  /**
+   * Div splits without the comment bar.  Thus, there are two resulting divs -
+   * the remainder is used by the last div -- the icon bar
+   */
+  splitsWithoutComments: [.90],
+
+  /**
+   * The default icons used in the IconBar.  If the user specifies 'icons', then
+   * it completely overwrites the icons listed here.
+   */
+  icons: ['start', 'end', 'arrowleft', 'arrowright'],
+
+  /**
+   * Key Mapping: From key-id to action-selector.
+   */
+  keyMapping: {
+    ARROW_LEFT: 'icons.arrowleft.click',
+    ARROW_RIGHT: 'icons.arrowright.click'
+  },
+
+  /**
+   * The default 'actions' or 'events'.  If the user specifies an 'actions'
+   * block, then the users' actions take precedence, and these are used as a
+   * fallback (i.e., for when the icon exists, but the user didn't specify an
+   * action).
+   */
+  actions: {
+    /**
+     * Actions for stones.  If the user specifies his own actions, then the
+     * actions specified by the user will take precedence.
+     *
+     * TODO(kashomon): Support touch events.  This is of tremendous importance.
+     * The 300ms delay associated with click events on phones/tablets is
+     * terrible.
+     */
+    stones: {
+      /**
+       * Actually adding a stone.
+       */
+      click: function(widget, pt) {
         var currentPlayer = widget.controller.getCurrentPlayer();
-        var fullBoardData = widget.controller.addStone(pt, currentPlayer);
-        widget.applyPartialData(fullBoardData);
-      };
+        var partialData = widget.controller.addStone(pt, currentPlayer);
+        widget.applyBoardData(partialData);
+      },
 
-  options.actions.stones.mouseover = options.actions.stones.mouseover ||
-      function(widget, pt) {
+      /**
+       * Ghost-stone for hovering.
+       */
+      mouseover: function(widget, pt) {
+        var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
         var currentPlayer = widget.controller.getCurrentPlayer();
         if (widget.controller.canAddStone(pt, currentPlayer)) {
           widget.display.intersections()
               .setStoneColor(pt, hoverColors[currentPlayer]);
         }
-      };
+      },
 
-  options.actions.stones.mouseout = options.actions.stones.mouseout ||
-      function(widget, pt) {
+      /**
+       * Ghost-stone removal for hovering.
+       */
+      mouseout: function(widget, pt) {
         var currentPlayer = widget.controller.getCurrentPlayer();
         if (widget.controller.canAddStone(pt, currentPlayer)) {
           widget.display.intersections().setStoneColor(pt, 'EMPTY');
         }
-      };
+      }
+    },
 
-  options.icons = options.icons ||
-      [ 'start', 'end', 'arrowleft', 'arrowright'];
-  options.actions.icons = options.actions.icons || {
-    start: {
-      mouseup:  function(widget) {
-        var fullBoardData = widget.controller.toBeginning();
-        widget.applyFullBoardData(fullBoardData);
-      }
-    },
-    end: {
-      mouseup:  function(widget) {
-        var fullBoardData = widget.controller.toEnd();
-        widget.applyFullBoardData(fullBoardData);
-      }
-    },
-    arrowright: {
-      mouseup: function(widget) {
-        var boardData = widget.controller.nextMove();
-        widget.applyPartialData(boardData);
-      }
-    },
-    arrowleft: {
-      mouseup:  function(widget) {
-        var boardData = widget.controller.prevMove();
-        widget.applyPartialData(boardData);
+    /**
+     * Actions for Icons
+     */
+    icons: {
+      start: {
+        click:  function(widget) {
+          widget.applyBoardData(widget.controller.toBeginning());
+        }
+      },
+      end: {
+        click:  function(widget) {
+          widget.applyBoardData(widget.controller.toEnd());
+        }
+      },
+      arrowright: {
+        click: function(widget) {
+          widget.applyBoardData(widget.controller.nextMove());
+        }
+      },
+      arrowleft: {
+        click:  function(widget) {
+          widget.applyBoardData(widget.controller.prevMove());
+        }
       }
     }
-  };
-
-  glift.widgets.extendIconActions(options);
-
-  return options;
-};
-
-/**
- * Often, we're not interested in changing the basic options, only extending
- * them.
- */
-glift.widgets.extendIconActions = function(options) {
-  if (options.iconExtensions !== undefined) {
-    options.icons = options.icons.concat(options.iconExtensions);
   }
-  if (options.actionExtensions !== undefined &&
-      options.actionExtensions.icons !== undefined) {
-    for (var key in options.actionExtensions.icons) {
-      options.actions.icons[key] = options.actionExtensions.icons[key];
+};
+/**
+ * Option defaults used by the Problem Widget.
+ */
+glift.widgets.options.problem = {
+  /**
+   * List of problem strings to cycle through.
+   */
+  sgfStringList: [],
+
+  /**
+   * Index into the above array.  It seems unlikely that anybody would want to
+   * override this setting, but it's here or clarity.
+   */
+  problemIndex: 0,
+
+  /**
+   * The function that produces the problem controller.
+   */
+  controllerFunc: glift.controllers.staticProblem,
+
+  /**
+   * We want the problem widget to be smart about the relevant board region.
+   */
+  boardRegionType: glift.enums.boardRegions.AUTO,
+
+  /**
+   * Icons specified by the problem widget.
+   */
+  icons: ['play', 'refresh', 'roadmap', 'checkbox'],
+
+  /**
+   * Turn off the comment box, by default
+   */
+  // TODO(kashomon): Nevisit this idea later. Maybe problems just need a smaller
+  // comment box?
+  useCommentBar: false,
+
+  /**
+   * Don't show variations for problems, of course =).
+   */
+  showVariations: glift.enums.showVariations.NEVER,
+
+  /**
+   * Keymappings for the problem widget
+   */
+  // TODO(kashomon): Add key mappings for problems.
+  keyMapping: {},
+
+  /**
+   * Problem-specific actions.
+   */
+  actions: {
+    stones: {
+      /**
+       * Add a stone and report if it was correct.
+       */
+      click: function(widget, pt) {
+        var currentPlayer = widget.controller.getCurrentPlayer();
+        var data = widget.controller.addStone(pt, currentPlayer);
+        var problemResults = glift.enums.problemResults;
+        if (data.result === problemResults.FAILURE) {
+          return; // Illegal move -- nothing to do.
+        }
+        widget.applyBoardData(data);
+        if (widget.correctness === undefined) {
+          if (data.result === problemResults.CORRECT) {
+            widget.iconBar.addTempIcon(
+                'check', widget.iconBar.getIcon('checkbox').newBbox, '#0CC');
+            widget.correctness = problemResults.CORRECT;
+          } else if (data.result == problemResults.INCORRECT) {
+            widget.iconBar.addTempIcon(
+                'cross', widget.iconBar.getIcon('checkbox').newBbox, 'red');
+            widget.correctness = problemResults.INCORRECT;
+          }
+        }
+      }
+    },
+
+    icons: {
+      // Get next problem.
+      play: {
+        click: function(widget) {
+          if (widget.options.sgfStringList.length > 0) {
+            widget.options.problemIndex = (widget.options.problemIndex + 1) %
+                widget.options.sgfStringList.length;
+            widget.options.sgfString = widget.options.sgfStringList[
+                widget.options.problemIndex];
+            widget.controller = glift.controllers.staticProblem(
+                widget.options);
+            widget.reload();
+          }
+        }
+      },
+      // Try again
+      refresh: {
+        click: function(widget) {
+          widget.reload();
+        }
+      },
+
+      // Go to the explain-board.
+      roadmap: {
+        click: function(widget) {
+          widget.problemControllor = widget.controller;
+          widget.problemOptions = widget.options;
+          widget.destroy();
+          var returnAction = function(widget) {
+            widget.destroy();
+            widget.options = widget.problemOptions;
+            widget.controller = widget.problemControllor;
+            widget.draw();
+          };
+          var optionsCopy = {
+            divId: widget.options.divId,
+            theme: widget.options.theme,
+            sgfString: widget.options.sgfString,
+            showVariations: glift.enums.showVariations.ALWAYS,
+            boardRegionType: glift.enums.boardRegions.AUTO,
+            icons: ['start', 'end', 'arrowleft', 'arrowright', 'undo'],
+            actions: {
+              icons: {
+                undo : {
+                  click: returnAction
+                }
+              }
+            }
+          }
+          widget.options = glift.widgets.options.setDefaults(optionsCopy, 'base');
+          widget.controller = glift.controllers.gameViewer(widget.options);
+          widget.draw();
+        }
+      }
     }
   }
 };

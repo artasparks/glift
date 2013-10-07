@@ -18,6 +18,11 @@ glift.widgets.options.base = {
   divId: 'glift_display',
 
   /**
+   * Enable FastClick (for mobile displays).
+   */
+  enableFastClick: true,
+
+  /**
    * The name of the theme.
    */
   theme: 'DEFAULT',

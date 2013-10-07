@@ -2,6 +2,9 @@
  * Public 'constructor' for the BaseWidget.
  */
 glift.widgets.baseWidget = function(options) {
+  if (options.enableFastClick) {
+    FastClick.attach(document.body);
+  }
   return new glift.widgets._BaseWidget(
       glift.widgets.options.setDefaults(options, 'base')).draw();
 };
@@ -136,7 +139,7 @@ glift.widgets._BaseWidget.prototype = {
    */
   _initKeyHandlers: function() {
     var that = this;
-    $('body').keydown(function(e) {
+    this.keyHandlerFunc = function(e) {
       var name = glift.keyMappings.codeToName(e.which);
       if (name && that.options.keyMapping[name] !== undefined) {
         var actionName = that.options.keyMapping[name];
@@ -148,7 +151,8 @@ glift.widgets._BaseWidget.prototype = {
         }
         action(that);
       }
-    });
+    };
+    $('body').keydown(this.keyHandlerFunc);
   },
 
   applyBoardData: function(boardData, applyFullBoard) {
@@ -190,6 +194,9 @@ glift.widgets._BaseWidget.prototype = {
 
   destroy: function() {
     $('#' + this.wrapperDiv).empty();
+    this.keyHandlerFunc !== undefined
+      && $('body').unbind('keydown', this.keyHandlerFunc);
+    this.keyHandlerFunc = undefined;
     this.display = undefined;
   }
 };

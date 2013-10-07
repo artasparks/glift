@@ -47,7 +47,7 @@ glift.bridge._getRegionFromTracker = function(tracker, numstones) {
     }
   }
   if (regions.length !== 2) {
-    return glift.boardRegions.ALL; // Shouldn't be 1 element here...
+    return glift.enums.boardRegions.ALL; // Shouldn't be 1 element here...
   }
   var newset = glift.util.intersection(
     glift.util.regions.getComponents(regions[0]),
