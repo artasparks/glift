@@ -3,7 +3,7 @@
  */
 glift.widgets.baseWidget = function(options) {
   if (options.enableFastClick) {
-    FastClick.attach(document.body);
+    glift.global.enableFastClick();
   }
   return new glift.widgets._BaseWidget(
       glift.widgets.options.setDefaults(options, 'base')).draw();

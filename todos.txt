@@ -66,6 +66,8 @@ Smaller Changes.
 - Make a global registry of 'active board' so that key events can be assigned.
 - Change the Text Width dynamically.
 - Remove dependencies on external libraries!  Quite a big job.
+- On skinny windows, move the icon bar so it's flush with the window (a sort of flush-top)
+- Change font size to based on pixel size.
 
 Problem Widget
 - Make Comments toggle-able (should be part of settings)

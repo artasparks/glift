@@ -1,7 +1,11 @@
-// Glift: A lightweight Go frontend
-// Copyright (c) 2011-2013, Josh <jrhoak@gmail.com>
-// Code licensed under the MIT License
-
+/**
+ * @preserve Glift: A Responsive Javascript library for the game Go.
+ *
+ * @version 0.9.0
+ * @copyright Josh Hoak
+ * @license MIT License (see LICENSE.txt)
+ * --------------------------------------
+ */
 (function() {
 var glift = window.glift || {};
 

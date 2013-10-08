@@ -1,7 +1,11 @@
-// Glift: A lightweight Go frontend
-// Copyright (c) 2011-2013, Josh <jrhoak@gmail.com>
-// Code licensed under the MIT License
-
+/**
+ * @preserve Glift: A Responsive Javascript library for the game Go.
+ *
+ * @version 0.9.0
+ * @copyright Josh Hoak
+ * @license MIT License (see LICENSE.txt)
+ * --------------------------------------
+ */
 (function() {
 var glift = window.glift || {};
 
@@ -3008,6 +3012,7 @@ glift.displays.gui.commentBox = function(
       useBoardImage).draw();
 };
 
+// TODO(kashomon): Pass in an options argument.
 var CommentBox = function(
     divId, displayWidth, boundingWidth, themeName, useBoardImage) {
   this.divId = divId;
@@ -3021,27 +3026,29 @@ var CommentBox = function(
 
 CommentBox.prototype = {
   draw: function() {
-    // TODO(kashomon): Remove JQuery References for purity.
+    // TODO(kashomon): Remove JQuery References
     this.commentBoxObj = $('#' + this.divId);
     var commentBoxHeight = $('#' + this.divId).height();
-    var padding = 10; // TODO(kashomon): Make 'static' variable.
+    var padding = 10; // TODO(kashomon): Put in theme
     var borderWidth = 1;
     var boardBorder = this.theme.board['stroke-width'];
-
-    // This apparently needs to be accounted for separately.
-    // TODO(kashomon): Get this from the theme.
-    var extra = padding + borderWidth;
+    var width = this.displayWidth;
+    var textWidth = width / 25 < 15 ? 15 : width / 25;
     this.commentBoxObj.css({
       // TODO(kashomon): Get the theme info from the theme
       background: '#CCCCFF',
       border: borderWidth + 'px solid',
       left: (this.boundingWidth - this.displayWidth) / 2 - boardBorder,
-      //right: (boundingWidth + this.display.width()), //- 2 * padding,
-      width: this.displayWidth - (extra * 2) + 1 * boardBorder,
-      height: commentBoxHeight - (extra * 2),
+      width: this.displayWidth + boardBorder,
+      height: commentBoxHeight,
       margin: 'auto',
       'font-family': 'Baskerville',
       overflow: 'auto',
+      'font-size': textWidth,
+      // Prevent padding from affecting width
+      '-webkit-box-sizing': 'border-box', /* Safari/Chrome, other WebKit */
+      '-moz-box-sizing': 'border-box',    /* Firefox, other Gecko */
+      'box-sizing': 'border-box',         /* Opera/IE 8+ */
       padding: padding
     });
     return this;
@@ -5706,7 +5713,7 @@ glift.widgets = {};
  */
 glift.widgets.baseWidget = function(options) {
   if (options.enableFastClick) {
-    FastClick.attach(document.body);
+    glift.global.enableFastClick();
   }
   return new glift.widgets._BaseWidget(
       glift.widgets.options.setDefaults(options, 'base')).draw();

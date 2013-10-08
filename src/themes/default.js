@@ -105,10 +105,6 @@ glift.themes.registered.DEFAULT = {
     }
   },
 
-  commentBar: {
-    'font-size': 'normal'
-  },
-
   defs: {
     // TODO(kashomon): Support SVG Defs
   }
