@@ -12,6 +12,7 @@ var CommentBox = function(
   this.boundingWidth = boundingWidth;
   this.themeName = themeName;
   this.theme = glift.themes.get(themeName);
+  this.commentTheme = this.themes.commentBar;
   this.useBoardImage = useBoardImage;
   this.commentBoxObj = undefined; // currently: jquery obj
 };
@@ -39,7 +40,7 @@ CommentBox.prototype = {
       margin: 'auto',
       'font-family': 'Baskerville',
       overflow: 'auto',
-      'font-size': 'large',
+      'font-size': this.commentTheme['font-size'],
       padding: padding
     });
     return this;

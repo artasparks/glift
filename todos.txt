@@ -31,6 +31,7 @@ Done - Fix the text selection issue
 Done(ish) - Change variation coloring so that it colors existing marks, rather than
   overwriting them. (still need to support shape-marks).
 Done - Add 'right/wrong' indicators for problems
+Done - BUG: NextMove fails when the next move is a pass.
 
 Nope:
   Info Window / panel.
@@ -57,15 +58,14 @@ Smaller Changes.
 - Add the ability to create static images (i.e., canvas support)
 - Change Goban addStone capture to return consistent capture object with
   loadStonesFromMovetree.
-- BUG: NextMove fails when the next move is a pass.
 - Change Marks to optionally take a color-theme-cateory.  Not sure what this should be called
 - Make a 'settings' overlay.
 - Add Pass Button to GameViewer (base) widget.
 - Make orientation of GoBoard (widget?) configurable (flush left, center-h, flush-right, etc).
 - Change MoveNodes / Movetree to have parent information instead of movehistory.
 - Make a global registry of 'active board' so that key events can be assigned.
+- Change the Text Width dynamically.
 - Remove dependencies on external libraries!  Quite a big job.
-
 
 Problem Widget
 - Make Comments toggle-able (should be part of settings)
