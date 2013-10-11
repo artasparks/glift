@@ -1,3 +1,8 @@
+/**
+ * Resize the box optimally into the divBox (bounding box). Currently this finds
+ * the minimum of height and width, makes a box out of this value, and centers
+ * the box.
+ */
 glift.displays.getResizedBox = function(divBox, cropbox) {
   var util = glift.util,
       newDims = glift.displays.getCropDimensions(
@@ -14,21 +19,21 @@ glift.displays.getResizedBox = function(divBox, cropbox) {
       newTop = divBox.topLeft().y() + yDelta,
       newBox = glift.displays.bbox(
           util.point(newLeft, newTop), newWidth, newHeight);
-      if (glift.global.debugMode) {
-        newBox._debugInfo = function() {
-          return {
-            newDims: newDims,
-            newWidth: newWidth,
-            newHeight: newHeight,
-            xDiff: xDiff,
-            yDiff: yDiff,
-            xDelta: xDelta,
-            yDelta: yDelta,
-            newLeft: newLeft,
-            newTop: newTop
-          };
-        };
-      }
+  if (glift.global.debugMode) {
+    newBox._debugInfo = function() {
+      return {
+        newDims: newDims,
+        newWidth: newWidth,
+        newHeight: newHeight,
+        xDiff: xDiff,
+        yDiff: yDiff,
+        xDelta: xDelta,
+        yDelta: yDelta,
+        newLeft: newLeft,
+        newTop: newTop
+      };
+    };
+  }
   return newBox;
 };
 

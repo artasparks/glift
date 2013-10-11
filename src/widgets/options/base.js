@@ -18,6 +18,20 @@ glift.widgets.options.base = {
   divId: 'glift_display',
 
   /**
+   * Specify a background image for the go board.  You can specify an absolute
+   * or a relative path.
+   * Examples:
+   *    'images/kaya.jpg'
+   *    'http://www.mywebbie.com/images/kaya.jpg'
+   */
+  goBoardBackground: '',
+
+  /**
+   * Configuration data for the display.
+   */
+  displayConfig: {},
+
+  /**
    * Enable FastClick (for mobile displays).
    */
   enableFastClick: true,

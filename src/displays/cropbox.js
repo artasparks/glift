@@ -116,19 +116,25 @@ glift.displays.cropbox = {
  * it's a box based on points.
  */
 var CropBox = function(cbox, extBox, minIntersects, maxIntersects) {
-  var OVERFLOW = glift.displays.cropbox.OVERFLOW;
-  this.cbox = function() { return cbox; };
-  this.extBox = function() { return extBox; };
-  this.xPoints = function() { return cbox.width(); };
-  this.yPoints = function() { return cbox.height(); };
+  this._cbox = cbox;
+  this._extBox = extBox;
+};
 
-  // Modifications to the width/height to make the ratios work.
-  this.widthMod = function() {
-    return cbox.width() + extBox.topLeft().x() + extBox.botRight().x() + OVERFLOW;
-  };
-  this.heightMod = function() {
-    return cbox.height() + extBox.topLeft().y() + extBox.botRight().y() + OVERFLOW;
-  };
+CropBox.prototype = {
+  cbox: function() { return this._cbox; },
+  extBox: function() { return this._extBox; },
+  xPoints: function() { return this.cbox().width(); },
+  yPoints: function() { return this.cbox().height(); },
+  widthMod: function() {
+    var OVERFLOW = glift.displays.cropbox.OVERFLOW;
+    return this.cbox().width() + this.extBox().topLeft().x()
+        + this.extBox().botRight().x() + OVERFLOW;
+  },
+  heightMod: function() {
+    var OVERFLOW = glift.displays.cropbox.OVERFLOW;
+    return this.cbox().height() + this.extBox().topLeft().y()
+        + this.extBox().botRight().y() + OVERFLOW;
+  }
 };
 
 var getRegionFromTracker = function(tracker, numstones) {

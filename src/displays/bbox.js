@@ -4,22 +4,6 @@ glift.displays.bboxFromPts = function(topLeftPt, botRightPt) {
 };
 
 glift.displays.bboxFromDiv = function(divId) {
-  // Getting the height this might not work for Window or Documents.
-  // var e = document.getElementById(divId);
-  // var height =
-      // isNaN(parseFloat(e.style.height)) ? 0 : parseFloat(e.style.height) ||
-      // e.clientHeight ||
-      // e.offsetHeight;
-  // var width =
-      // isNaN(parseFloat(e.style.width)) ? 0 : parseFloat(e.style.width) ||
-      // e.clientWidth ||
-      // e.offsetWidth;
-  // glift.util.logz('width' + width);
-  // There is no reason to use jquery, but the above doesn't work...
-  //
-  // the Height method is really complicated in JQuery
-  // https://github.com/jquery/jquery/blob/master/src/css.js#L374
-  //
   return glift.displays.bbox(
       glift.util.point(0,0),
       $('#' + divId).width(),
@@ -34,24 +18,31 @@ glift.displays.bbox = function(topLeft, width, height) {
 // Might be nice to use the closure to create private variables.
 // A bounding box, generally for a graphical object.
 var BoundingBox = function(topLeftPtIn, botRightPtIn) {
-  var topLeftPt = topLeftPtIn,
-      botRightPt = botRightPtIn;
-  this.topLeft = function() { return topLeftPt; };
-  this.botRight = function() { return botRightPt; };
-  this.center = function() {
-    return glift.util.point(
-      glift.math.abs((botRightPt.x() - topLeftPt.x()) / 2) + topLeftPt.x(),
-      glift.math.abs((botRightPt.y() - topLeftPt.y()) / 2) + topLeftPt.y());
-  };
-  this.width = function() { return botRightPt.x() - topLeftPt.x(); };
-  this.height = function() { return botRightPt.y() - topLeftPt.y(); };
-  this.top = function() { return topLeftPt.y(); };
-  this.left = function() { return topLeftPt.x(); };
-  this.bottom = function() { return botRightPt.y(); };
-  this.right = function() { return botRightPt.x(); };
+  this._topLeftPt = topLeftPtIn;
+  this._botRightPt = botRightPtIn;
 };
 
 BoundingBox.prototype = {
+  topLeft: function() { return this._topLeftPt; },
+  botRight: function() { return this._botRightPt; },
+  width: function() { return this.botRight().x() - this.topLeft().x(); },
+  height: function() { return this.botRight().y() - this.topLeft().y(); },
+  top: function() { return this.topLeft().y(); },
+  left: function() { return this.topLeft().x(); },
+  bottom: function() { return this.botRight().y(); },
+  right: function() { return this.botRight().x(); },
+
+  /**
+   * Find the center of the box
+   */
+  center: function() {
+    return glift.util.point(
+      glift.math.abs((this.botRight().x() - this.topLeft().x()) / 2)
+          + this.topLeft().x(),
+      glift.math.abs((this.botRight().y() - this.topLeft().y()) / 2)
+          + this.topLeft().y());
+  },
+
   /**
    * Draw the bbox (for debugging).
    */

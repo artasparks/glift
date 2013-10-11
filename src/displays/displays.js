@@ -1,14 +1,15 @@
 glift.displays = {
   /**
-   * Create the display.  Delegates to board.create(...);
+   * Create the display.  Delegates to board.create(...), which currently
+   * creates an SVG based Go Board.
    */
   create: function(options) {
-    var processed = glift.displays.processOptions(options),
-        environment = glift.displays.environment.get(processed),
-        theme = glift.themes.get(processed.theme); // get a theme copy.
-    if (processed.goBoardBackground && processed.goBoardBackground !== '') {
-      glift.themes.setGoBoardBackground(theme, processed.goBoardBackground);
+    var environment = glift.displays.environment.get(options),
+        themeKey = options.theme || 'DEFAULT',
+        theme = glift.themes.get(themeKey); // Get a theme copy.
+    if (options.goBoardBackground && options.goBoardBackground !== '') {
+      glift.themes.setGoBoardBackground(theme, options.goBoardBackground);
     }
-    return glift.displays.board.create(environment, processed.theme, theme);
+    return glift.displays.board.create(environment, themeKey, theme);
   }
 };

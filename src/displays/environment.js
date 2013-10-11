@@ -13,43 +13,34 @@ glift.displays.environment = {
   get: function(options) {
     // TODO(kashomon): Remove the processOptions here.  It's only used for
     // tests.
-    return new GuiEnvironment(glift.displays.processOptions(options));
+    return new GuiEnvironment(options);
   },
 
   getInitialized: function(options) {
-    return glift.displays.environment.get(options).init();
-  },
-
-  environmentCopy: function(env) {
-    return new GuiEnvironment(glift.displays.processOptions({
-      divId: env.divId,
-      boardRegion: env.boardRegion,
-      intersections: env.intersections
-    }));
+    return new GuiEnvironment(options).init();
   }
 };
 
 var GuiEnvironment = function(options) {
-  this.divId = options.divId;
-  this.boardRegion = options.boardRegion
-  this.intersections = options.intersections
-  this.cropbox = options.displayConfig._cropbox ||
-      glift.displays.cropbox.getFromRegion(this.boardRegion, this.intersections);
+  this.divId = options.divId || 'glift_display';
+  this.boardRegion = options.boardRegion || glift.enums.boardRegions.ALL;
+  this.intersections = options.intersections || 19;
+  var displayConfig = options.displayConfig || {};
+  this.cropbox = displayConfig.cropbox !== undefined
+      ? displayConfig.cropbox
+      : glift.displays.cropbox.getFromRegion(this.boardRegion, this.intersections);
+  //glift.util.logz(this.cropbox);
   this.heightOverride = false;
   this.widthOverride = false;
 
-  // We allow the divHeight and divWidth to be specified explicitly, primarily
   // because it's extremely useful for testing.
-  //
-  // TODO(kashomon): Make this a first-class option. I now think it's totally
-  // reasonable to set the height/width explicitly.
-  if (options.displayConfig._divHeight !== undefined) {
-    this.divHeight = options.displayConfig._divHeight;
+  if (displayConfig.divHeight !== undefined) {
+    this.divHeight = displayConfig.divHeight;
     this.heightOverride = true;
   }
 
-  if (options.displayConfig._divWidth !== undefined) {
-    this.divWidth = options.displayConfig._divWidth;
+  if (displayConfig.divWidth !== undefined) {
+    this.divWidth = displayConfig.divWidth;
     this.widthOverride = true;
   }
 };
@@ -97,8 +88,6 @@ GuiEnvironment.prototype = {
     var bbox = glift.displays.bboxFromDiv(this.divId);
     this.divHeight = bbox.height();
     this.divWidth = bbox.width();
-    // -- no reason to use jquery
-    // this.divWidth =  ($("#" + this.divId).width());
     return this;
   },
 

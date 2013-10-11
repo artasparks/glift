@@ -10,16 +10,17 @@ module("Environment Test Suite");
 
 
   test("Test creation of square go board box", function() {
+    //glift.util.logz("farfar");
     var guiEnv = env.getInitialized({
         divId: 'glift_display',
-        displayConfig: { _divHeight: HEIGHT, _divWidth: WIDTH}
+        displayConfig: { divHeight: HEIGHT, divWidth: WIDTH}
     });
     deepEqual(guiEnv.goBoardBox.height(), guiEnv.goBoardBox.width(),
         "Must create a square board for a long box");
 
     var guiEnv = env.getInitialized({
         divId: 'glift_display',
-        displayConfig: { _divHeight: WIDTH, _divWidth: HEIGHT }
+        displayConfig: { divHeight: WIDTH, divWidth: HEIGHT }
     });
     deepEqual(
         Math.round(guiEnv.goBoardBox.height()),
@@ -29,7 +30,7 @@ module("Environment Test Suite");
 
   test("Test creation: tall div, square board", function() {
     var e = env.getInitialized({
-        displayConfig: { _divHeight: 400, _divWidth: 200}});
+        displayConfig: { divHeight: 400, divWidth: 200}});
     deepEqual(e.divBox.width(), 200, 'divBox width');
     deepEqual(e.divBox.height(), 400, 'divBox height');
     deepEqual(e.goBoardBox.height(), 200, 'goBoardBox height');
@@ -42,7 +43,7 @@ module("Environment Test Suite");
 
   test("Test creation: wide div, square board", function() {
     var e = env.getInitialized({
-        displayConfig: { _divHeight: 200, _divWidth: 400}});
+        displayConfig: { divHeight: 200, divWidth: 400}});
     deepEqual(e.divBox.width(), 400, 'divBox width');
     deepEqual(e.divBox.height(), 200, 'divBox height');
     deepEqual(e.goBoardBox.height(), 200, 'goBoardBox height');
