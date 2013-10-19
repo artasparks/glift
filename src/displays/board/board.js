@@ -14,28 +14,20 @@ glift.displays.board.Display = function(inEnvironment, themeName, theme) {
   this._environment = inEnvironment;
   this._themeName = themeName;
   this._theme = theme;
-
-  // TODO(kashomon): remove stones (or rework into intersections) now that we're
-  // using d3.
-  this._stones = undefined;
-  this.stones = function() { return this._stones; };
-
   this._svg = undefined; // defined in draw
   this._intersections = undefined // defined in draw;
-  this.intersections = function() { return this._intersections; };
-
-  // Methods accessing private data. Most of these are no longer private and
-  // need to be moved out.
-  this.intersectionPoints = function() { return this._environment.intersections; };
-  this.boardPoints = function() { return this._environment.boardPoints; };
-  this.divId = function() { return this._environment.divId };
-  this.theme = function() { return this._themeName; };
-  this.boardRegion = function() { return this._environment.boardRegion; };
-  this.width = function() { return this._environment.goBoardBox.width() };
-  this.height = function() { return this._environment.goBoardBox.height() };
 };
 
 glift.displays.board.Display.prototype = {
+  intersections: function() { return this._intersections; },
+  intersectionPoints: function() { return this._environment.intersections; },
+  boardPoints: function() { return this._environment.boardPoints; },
+  divId: function() { return this._environment.divId },
+  theme: function() { return this._themeName; },
+  boardRegion: function() { return this._environment.boardRegion; },
+  width: function() { return this._environment.goBoardBox.width() },
+  height: function() { return this._environment.goBoardBox.height() },
+
   /**
    * Initialize the SVG
    * This allows us to create a base display object without creating all drawing
@@ -44,19 +36,6 @@ glift.displays.board.Display.prototype = {
   init: function() {
     if (this._svg === undefined) {
       this.destroy(); // make sure everything is cleared out of the div.
-
-      // Make the text not selectable (there's no point and it's distracting)
-      // TODO(kashomon): Is this needed now that each point is covered with a
-      // transparent button element?
-      this._svg = d3.select('#' + this.divId())
-        .style('-webkit-touch-callout', 'none')
-        .style('-webkit-user-select', 'none')
-        .style('-khtml-user-select', 'none')
-        .style('-moz-user-select', 'moz-none')
-        .style('-ms-user-select', 'none')
-        .style('user-select', 'none')
-        //.style('shape-rendering', 'crispEdges')
-        .style('cursor', 'default');
       this._svg = d3.select('#' + this.divId())
         .append("svg")
           .attr("width", '100%')
@@ -94,7 +73,7 @@ glift.displays.board.Display.prototype = {
         markIds: markIds,
         buttons: buttons
     };
-    this._intersections = glift.displays.board.intersections(
+    this._intersections = new glift.displays.board._Intersections(
         divId, svg, intersectionData, boardPoints, theme);
     return this; // required
   },
@@ -125,14 +104,5 @@ glift.displays.board.Display.prototype = {
     this._themeName = processed.theme
     this._theme = glift.themes.get(processed.theme);
     return this;
-  },
-
-  /**
-   * Redraw the goboard.
-   *
-   * TODO(kashomon): Does this still need to exist?
-   */
-  redraw:  function() {
-    this.draw();
   }
 };

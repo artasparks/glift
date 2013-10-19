@@ -115,6 +115,7 @@ glift.widgets.options.problem = {
             theme: widget.options.theme,
             sgfString: widget.options.sgfString,
             showVariations: glift.enums.showVariations.ALWAYS,
+            showCorrectVariations: true,
             boardRegionType: glift.enums.boardRegions.AUTO,
             icons: ['start', 'end', 'arrowleft', 'arrowright', 'undo'],
             actions: {

@@ -49,11 +49,13 @@ glift.rules.intersections = {
    *    comment : "foo",
    *    lastMove : { color: <color>, point: <point> }
    *    nextMoves : [ { color: <color>, point: <point> }, ...]
+   *    correctNextMoves : [ {color: <color>, point: <point> }, ...]
    *    displayDataType : <Either PARTIAL or FULL>.  Defaults to partial.
    *  }
    */
-  // TODO(kashomon): Perhaps this should be a proper object?
-  basePropertyData: function(movetree) {
+  // TODO(kashomon): Make this a proper object constructor with accessors and
+  // methods and whatnot.  It's getting far too complicated.
+  basePropertyData: function(movetree, getCorrectMoves) {
     var out = {
       stones: {
         WHITE: [],
@@ -64,6 +66,7 @@ glift.rules.intersections = {
       comment: glift.util.none,
       lastMove: glift.util.none,
       nextMoves: [],
+      correctNextMoves: [],
       captures: [],
       displayDataType: glift.enums.displayDataTypes.PARTIAL
     };
@@ -71,14 +74,17 @@ glift.rules.intersections = {
     out.lastMove = movetree.getLastMove();
     out.marks = glift.rules.intersections.getCurrentMarks(movetree);
     out.nextMoves = movetree.nextMoves();
+    out.correctNextMoves = getCorrectMoves ?
+        movetree.correctNextMoves() : [];
     return out;
   },
 
   /**
    * Extends the basePropertyData with stone data.
    */
-  getFullBoardData: function(movetree, goban) {
-    var baseData = glift.rules.intersections.basePropertyData(movetree);
+  getFullBoardData: function(movetree, goban, getCorrectMoves) {
+    var baseData = glift.rules.intersections.basePropertyData(
+        movetree, getCorrectMoves);
     baseData.displayDataType = glift.enums.displayDataTypes.FULL;
     var gobanStones = goban.getAllPlacedStones();
     for (var i = 0; i < gobanStones.length; i++) {
@@ -96,8 +102,9 @@ glift.rules.intersections = {
    *    WHITE: [..pts..]
    * }
    */
-  nextBoardData: function(movetree, currentCaptures) {
-    var baseData = glift.rules.intersections.basePropertyData(movetree);
+  nextBoardData: function(movetree, currentCaptures, getCorrectMoves) {
+    var baseData = glift.rules.intersections.basePropertyData(
+        movetree, getCorrectMoves);
     baseData.stones = movetree.properties().getAllStones();
     baseData.stones.EMPTY = [];
     for (var color in currentCaptures) {
@@ -113,8 +120,9 @@ glift.rules.intersections = {
    * moves (stones) and captures were.
    */
   // TODO(kashomon): Reduce duplication with nextBoardData.
-  previousBoardData: function(movetree, stones, captures) {
-    var baseData = glift.rules.intersections.basePropertyData(movetree);
+  previousBoardData: function(movetree, stones, captures, getCorrectMoves) {
+    var baseData = glift.rules.intersections.basePropertyData(
+        movetree, getCorrectMoves);
     baseData.stones = captures;
     baseData.stones.EMPTY = [];
     for (var color in stones) {

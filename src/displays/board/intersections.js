@@ -1,24 +1,19 @@
-glift.displays.board.intersections = function(
-    divId, svg, ids, boardPoints, theme) {
-  return new glift.displays.board._Intersections(
-      divId, svg, ids, boardPoints, theme);
-};
-
 glift.displays.board._Intersections = function(
-    divId, svg, ids, boardPoints, theme) {
+    divId, svg, intersectionData, boardPoints, theme) {
   this.divId = divId;
   this.svg = svg;
   this.theme = theme;
   this.boardPoints = boardPoints;
 
   // elements by id.  Maps from point-string to element ID ('#...')
-  this.lineIds = ids.lineIds;
-  this.starPointIds = ids.starPointIds;
-  this.stoneShadowIds = ids.stoneShadowIds;
-  this.stoneIds = ids.stoneIds;
-  this.markIds = ids.markIds;
-  this.buttons = ids.buttons;
+  this.lineIds = intersectionData.lineIds;
+  this.starPointIds = intersectionData.starPointIds;
+  this.stoneShadowIds = intersectionData.stoneShadowIds;
+  this.stoneIds = intersectionData.stoneIds;
+  this.markIds = intersectionData.markIds;
+  this.buttons = intersectionData.buttons;
 
+  // TODO(kashomon): What's going on here?
   this.buttonsData = [];
   for (var key in this.buttons) {
     this.buttonsData.push(glift.util.pointFromString(key));
@@ -53,17 +48,9 @@ glift.displays.board._Intersections.prototype = {
     return this;
   },
 
-  // TODO(kashomon): Move to marks.js.  Besides the arguments below, the only
-  // data this method depends on is the divId, to generate the Element ID and
-  // boardPoints.  SVG can be passed in or inferred.
   addMarkPt: function(pt, mark, label) {
     glift.displays.board.addMark(
         this.divId, this.svg, this.boardPoints, this.theme, pt, mark, label);
-    return this;
-  },
-
-  addMark: function(x, y, mark, label) {
-    this.addMarkPt(glift.util.point(x, y), mark, label);
     return this;
   },
 

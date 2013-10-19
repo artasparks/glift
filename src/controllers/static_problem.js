@@ -9,7 +9,7 @@
  *  'correct' outcome.
  */
 glift.controllers.staticProblem = function(rawOptions) {
-  var options = glift.controllers.processOptions(rawOptions),
+  var options = rawOptions,
       controllers = glift.controllers,
       baseController = glift.util.beget(controllers.base()),
       newController = glift.util.setMethods(baseController, methods),
@@ -22,7 +22,8 @@ var methods = {
   /**
    * Reload the problems.
    *
-   * TODO(kashomon): Remove this?
+   * TODO(kashomon): Remove this?  Or perhaps rename initialize() to load() or
+   * reload() or something.
    */
   reload: function() {
     this.initialize();
@@ -35,8 +36,8 @@ var methods = {
    *
    * Note: color must be one of enums.states (either BLACK or WHITE).
    *
-   * TODO: Refactor this into something less ridiculous -- i.e., shorter and
-   * easier to understand.
+   * TODO(kashomon): Refactor this into something less ridiculous -- i.e.,
+   * shorter and easier to understand.
    */
   addStone: function(point, color) {
     var problemResults = glift.enums.problemResults,
@@ -78,22 +79,19 @@ var methods = {
       return outData;
     } else {
       this.movetree.moveDown(nextVarNum);
+
       var correctness = this.movetree.isCorrectPosition();
       if (correctness === CORRECT || correctness == INCORRECT) {
         var outData = this.getNextBoardState();
         outData.result = correctness;
         return outData;
-      }
-
-      else if (correctness === INDETERMINATE) {
+      } else if (correctness === INDETERMINATE) {
         var prevOutData = this.getNextBoardState();
         // Play for the opposite player.
         var randNext = glift.math.getRandomInt(
             0, this.movetree.node().numChildren() - 1);
         this.movetree.moveDown(randNext);
         var nextMove = this.movetree.properties().getMove();
-        // TODO(kashomon): Replace output of addStone with standard capture
-        // object.
         var result = this.goban.addStone(nextMove.point, nextMove.color);
         // TODO(kashomon): Is this guaranteed to be successful?
         var toRecord = {};

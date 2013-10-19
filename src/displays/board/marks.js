@@ -16,6 +16,10 @@ glift.displays.board.markContainer =
   return markMapping;
 };
 
+// This is a static method instead of a method on intersections because, due to
+// the way glift is compiled together, there'no s guarantee what order the files
+// come in (beyond the base package file).  So, either we need to combine
+// intersections.js with board.js or we week this a separate static method.
 glift.displays.board.addMark = function(
     divId, svg, boardPoints, theme, pt, mark, label) {
   var svgutil = glift.displays.board.svgutil;
@@ -25,12 +29,10 @@ glift.displays.board.addMark = function(
   var STARPOINT = elems.STARPOINT;
   var BOARD_LINE = elems.BOARD_LINE;
   var MARK_CONTAINER = elems.MARK_CONTAINER;
-
   var rootTwo = 1.41421356237;
   var rootThree = 1.73205080757;
   var marks = glift.enums.marks;
   var coordPt = boardPoints.getCoord(pt).coordPt;
-  var id = glift.displays.gui.elementId(divId, MARK, pt);
   var stoneColor = svg.select('#' + glift.displays.gui.elementId(divId, STONE, pt))
       .attr('stone_color');
   var marksTheme = theme.stones[stoneColor].marks;
@@ -38,21 +40,26 @@ glift.displays.board.addMark = function(
   // If necessary, clear out intersection lines and starpoints.  This only applies
   // when a stone hasn't yet been set (stoneColor === 'EMPTY').
   if (stoneColor === 'EMPTY' &&
-      (mark === marks.LABEL || mark === marks.VARIATION_MARKER)) {
+      (mark === marks.LABEL
+          || mark === marks.VARIATION_MARKER
+          || mark === marks.CORRECT_VARIATION)) {
     svg.select('#' + glift.displays.gui.elementId(divId, STARPOINT, pt))
         .attr('opacity', 0);
     svg.select('#' + glift.displays.gui.elementId(divId, BOARD_LINE, pt))
         .attr('opacity', 0);
   }
 
-  var node = undefined;
   var fudge = boardPoints.radius / 8;
-  // Although not strictly necessary to specify node, since scoping is based
-  // on the function, it is semantically convenient to define the node first
-  // as undefined, at least to this Java-trained programmer.
-  if (mark === marks.LABEL || mark == marks.VARIATION_MARKER) {
+  // TODO(kashomon): Move the labels code to a separate function.  It's pretty
+  // hacky right now.  It doesn't seem right that there should be a whole
+  // separate coditional based on what are essentially color requirements.
+  if (mark === marks.LABEL
+      || mark == marks.VARIATION_MARKER
+      || mark == marks.CORRECT_VARIATION) {
     if (mark === marks.VARIATION_MARKER) {
       marksTheme = marksTheme.VARIATION_MARKER;
+    } else if (mark === marks.CORRECT_VARIATION) {
+      marksTheme = marksTheme.CORRECT_VARIATION;
     }
     svg.select('.' + MARK_CONTAINER).append('text')
         .text(label)

@@ -1,5 +1,5 @@
 /**
- * The bridge is the only place where display and rules+controller code can
+ * The bridge is the only place where display and rules/widget code can
  * mingle.
  */
 glift.bridge = {
@@ -8,6 +8,7 @@ glift.bridge = {
    *
    * For a more detailed discussion, see intersections in glift.rules.
    */
+  // TODO(kashomon): move showVariations to intersections.
   setDisplayState: function(boardData, display, showVariations) {
     display.intersections().clearMarks();
     if (boardData.displayDataType === glift.enums.displayDataTypes.FULL) {
@@ -20,9 +21,9 @@ glift.bridge = {
       }
     }
 
-    var variationMapping = {};
+    var variationMap = {};
     if (glift.bridge.shouldShowNextMoves(boardData, showVariations)) {
-      variationMapping = glift.bridge.variationMapping(boardData);
+      variationMap = glift.bridge.variationMapping(boardData.nextMoves);
     }
 
     var marks = glift.enums.marks;
@@ -30,10 +31,10 @@ glift.bridge = {
       for (var i = 0; i < boardData.marks[markType].length; i++) {
         var markData = boardData.marks[markType][i];
         if (markType === marks.LABEL) {
-          if (variationMapping[markData.point.toString()] !== undefined) {
+          if (variationMap[markData.point.toString()] !== undefined) {
             display.intersections().addMarkPt(
                 markData.point, marks.VARIATION_MARKER, markData.value);
-            delete variationMapping[markData.point.toString()];
+            delete variationMap[markData.point.toString()];
           } else {
             display.intersections().addMarkPt(
                 markData.point, marks.LABEL, markData.value);
@@ -45,9 +46,15 @@ glift.bridge = {
     }
 
     var i = 1;
-    for (var ptstring in variationMapping) {
-      var pt = variationMapping[ptstring];
-      display.intersections().addMarkPt(pt, marks.VARIATION_MARKER, i);
+    var correctNextMap =
+        glift.bridge.variationMapping(boardData.correctNextMoves);
+    for (var ptstring in variationMap) {
+      var pt = variationMap[ptstring];
+      if (pt in correctNextMap) {
+        display.intersections().addMarkPt(pt, marks.CORRECT_VARIATION, i);
+      } else {
+        display.intersections().addMarkPt(pt, marks.VARIATION_MARKER, i);
+      }
       i += 1;
     }
 
@@ -59,6 +66,10 @@ glift.bridge = {
     }
   },
 
+  /**
+   * Logic for determining whether the next variations should be (automatically)
+   * shown.
+   */
   shouldShowNextMoves: function(boardData, showVariations) {
     return boardData.nextMoves &&
       ((boardData.nextMoves.length > 1 &&
@@ -67,10 +78,16 @@ glift.bridge = {
           showVariations === glift.enums.showVariations.ALWAYS));
   },
 
-  variationMapping: function(boardData) {
+  /**
+   * Make the next variations into in an object map.  This prevents us from
+   * adding variations twice, which can happen if variations are automatically
+   * shown and the SGF has explicit markings.  This happens quite frequently in
+   * the case of game reviews.
+   */
+  variationMapping: function(variations) {
     var out = {};
-    for (var i = 0; i < boardData.nextMoves.length; i++) {
-      var nextMove = boardData.nextMoves[i];
+    for (var i = 0; i < variations.length; i++) {
+      var nextMove = variations[i];
       if (nextMove.point !== undefined) {
         out[nextMove.point.toString()] = nextMove.point;
       } else {

@@ -1,4 +1,13 @@
 /**
+ * A simple object representing a DivSplit.
+ */
+glift.displays.gui.DivSplit = function(id, start, length) {
+  this.id = id;
+  this.start = start;
+  this.length = length;
+};
+
+/**
   * Take a div, create multiple sub divs, absolutely positioned.
   *
   * divId: divId to be split.
@@ -45,11 +54,11 @@ glift.displays.gui.splitDiv = function(divId, percents, direction) {
   var currentStart = direction === 'horizontal' ? bbox.top() : bbox.left();
   var maxAmount = direction === 'horizontal' ? bbox.height() : bbox.width();
   for (var i = 0; i < percents.length; i++) {
-    boxData.push({
-      id: 'glift_internal_div_' + glift.util.idGenerator.next(),
-      start: currentStart, // e.g., Top
-      length: maxAmount * percents[i] // e.g., Height
-    });
+    boxData.push(new glift.displays.gui.DivSplit(
+      'glift_internal_div_' + glift.util.idGenerator.next(),
+      currentStart, // e.g., Top
+      maxAmount * percents[i] // e.g., Height
+    ));
     currentStart = currentStart + maxAmount * percents[i];
   }
 
@@ -66,4 +75,7 @@ glift.displays.gui.splitDiv = function(divId, percents, direction) {
     $('#' + boxData[i].id).css(cssObj);
   }
   return boxData;
-}
+};
+
+glift.displays.gui.repack = function() {
+};

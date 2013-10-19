@@ -14,15 +14,17 @@ import re
 import subprocess
 
 FILES_TO_AUTOGEN = {
+    # Name / Add Tests
+    'htmltests/BaseWidgetTest.html': False,
+    'htmltests/BboxFinder.html': False,
+    'htmltests/GameViewerTester.html': False,
+    'htmltests/IconBarTester.html': False,
+    'htmltests/IconBoardTester.html': False,
+    'htmltests/KogosTester.html': False,
+    'htmltests/MarksTester.html': False,
+    'htmltests/ProblemTester.html': False,
     'htmltests/QunitTest.html': True, # What's going on with the 'True'?
-    'htmltests/ProblemTester.html': True,
-    'htmltests/ThemeTester.html': True,
-    'htmltests/IconBarTester.html': True,
-    'htmltests/MarksTester.html': True,
-    'htmltests/BboxFinder.html': True,
-    'htmltests/GameViewerTester.html': True,
-    'htmltests/BaseWidgetTest.html': True,
-    'htmltests/KogosTester.html': True,
+    'htmltests/ThemeTester.html': False,
     }
 
 COMBINED_LOC = 'compiled/glift_combined.js'

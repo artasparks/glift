@@ -4,16 +4,25 @@ glift.controllers.base = function() {
 };
 
 /**
- * The BaseConstructor provides, in classical-ish inheritance style, a base
- * implementation for interacting with SGFs.  Typically, those objects extending
- * this base class will implement addStone and extraOptions
+ * The BaseConstructor provides, in classical-ish inheritance style, an abstract
+ * base implementation for interacting with SGFs.  Typically, those objects
+ * extending this base class will implement addStone and [optionally]
+ * extraOptions.
+ *
+ * The options are generall set either with initOptions or initialize;
  */
 var BaseController = function() {
-  this.sgfString = ""; // Set with initOptions. Intended to be Immutable.
-  this.initialPosition = []; // Set with initOptions. Intended to be Immutable.
-  this.treepath = undefined; // Defined with initialize.
-  this.movetree = undefined; // Defined with initialize.
-  this.goban = undefined; // Defined with initialize.
+  // Options set with initOptions and intended to be immutable during the
+  // lifetime of the controller.
+  this.sgfString = "";
+  this.initialPosition = [];
+  this.showCorrectVariations = false;
+
+  // State variables that are defined on initialize and that could are
+  // necessarily mutable.
+  this.treepath = undefined;
+  this.movetree = undefined;
+  this.goban = undefined;
 };
 
 BaseController.prototype = {
@@ -26,6 +35,7 @@ BaseController.prototype = {
   initOptions: function(options) {
     this.sgfString = options.sgfString;
     this.initialPosition = options.initialPosition;
+    this.showCorrectVariations = options.showCorrectVariations;
     this.extraOptions(options); // Overridden by implementers
     this.initialize();
     return this;
@@ -38,7 +48,7 @@ BaseController.prototype = {
   extraOptions: function(opt) { /* Implemented by other controllers. */ },
 
   /**
-   * Add a stane.
+   * Add a stone.  This is intended to be overwritten.
    */
   addStone: function(point, color) { throw "Not Implemented"; },
 
@@ -99,7 +109,8 @@ BaseController.prototype = {
    *  }
    */
   getEntireBoardState: function() {
-    return glift.rules.intersections.getFullBoardData(this.movetree, this.goban);
+    return glift.rules.intersections.getFullBoardData(
+        this.movetree, this.goban, this.showCorrectVariations);
   },
 
   /**
@@ -107,7 +118,7 @@ BaseController.prototype = {
    */
   getNextBoardState: function() {
     return glift.rules.intersections.nextBoardData(
-        this.movetree, this.getCaptures());
+        this.movetree, this.getCaptures(), this.showCorrectVariations);
   },
 
   /**
@@ -195,15 +206,15 @@ BaseController.prototype = {
       return glift.util.none;
     }
     var captures = this.getCaptures();
-    var allStones = this.movetree.properties().getAllStones();
+    var allCurrentStones = this.movetree.properties().getAllStones();
     this.captureHistory = this.captureHistory.slice(
         0, this.currentMoveNumber - 1);
-    this.goban.unloadStones(allStones, captures);
+    this.goban.unloadStones(allCurrentStones, captures);
     this.currentMoveNumber = this.currentMoveNumber === 0 ?
         this.currentMoveNumber : this.currentMoveNumber - 1;
     this.movetree.moveUp();
     var displayData = glift.rules.intersections.previousBoardData(
-        this.movetree, allStones, captures);
+        this.movetree, allCurrentStones, captures, this.showCorrectVariations);
     return displayData;
   },
 

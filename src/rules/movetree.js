@@ -180,6 +180,9 @@ MoveTree.prototype = {
    *    point: point
    *  },
    *  {...}]
+   *
+   *  The ordering of the moves is guranteed to be the ordering of the
+   *  variations at the time of creation.
    */
   nextMoves: function() {
     var curNode = this.node();
@@ -354,6 +357,26 @@ MoveTree.prototype = {
         return problemResults.INCORRECT;
       }
     }
+  },
+
+  /**
+   * Get the correct next moves.
+   *
+   * returns: the 'correct' next moves.
+   */
+  // TODO(kashomon): Get this function out of movetree.js and into the static
+  // problem controller.  This is tricky because this is really only useful for
+  correctNextMoves: function() {
+    var nextMoves = this.nextMoves();
+    var correctNextMoves = [];
+    for (var i = 0; i < nextMoves.length; i++) {
+      this.moveDown(i);
+      if (this.isCorrectPosition() !== glift.enums.problemResults.INCORRECT) {
+        correctNextMoves.push(nextMoves[i]);
+      }
+      this.moveUp(); // reset the position
+    }
+    return correctNextMoves;
   }
 };
 })();

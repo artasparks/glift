@@ -32,6 +32,7 @@ Done(ish) - Change variation coloring so that it colors existing marks, rather t
   overwriting them. (still need to support shape-marks).
 Done - Add 'right/wrong' indicators for problems
 Done - BUG: NextMove fails when the next move is a pass.
+Done - Change font size to based on pixel size.
 
 Nope:
   Info Window / panel.
@@ -39,10 +40,10 @@ Nope:
     user of this library.  It's purpose is orthogonal to this library
   Add generic options parsing.
     Rationale: This is too heavy weight.  I've found that the simple options
-    parsing logic more maintainable and easier to understand.
+    parsing logic to be more maintainable and easier to understand.
 
 Smaller Changes.
-- Add support for numbering on the edges, beyond the lines. (Not sure if this is necessary)
+- Add support for numbering on the edges, beyond the lines.
 - Add tests for widgets.
 - Add tests for marks.
 - Finish key-stroke mappings -- add more keys, support two go boards on same
@@ -53,7 +54,7 @@ Smaller Changes.
 - Borders seem to not be included as part of 'width', so lining up the comment
   box has problems when the go board does/doesn't have a line-border
   see: http://stackoverflow.com/questions/7401369/why-is-svg-stroke-width-1-making-lines-transparent
-- IconBars --> Do they need a background?  Probably yes.
+- IconBars --> Do they need a background?
 - Ko support (less important?)
 - Add the ability to create static images (i.e., canvas support)
 - Change Goban addStone capture to return consistent capture object with
@@ -61,13 +62,13 @@ Smaller Changes.
 - Change Marks to optionally take a color-theme-cateory.  Not sure what this should be called
 - Make a 'settings' overlay.
 - Add Pass Button to GameViewer (base) widget.
-- Make orientation of GoBoard (widget?) configurable (flush left, center-h, flush-right, etc).
 - Change MoveNodes / Movetree to have parent information instead of movehistory.
 - Make a global registry of 'active board' so that key events can be assigned.
 - Change the Text Width dynamically.
 - Remove dependencies on external libraries!  Quite a big job.
+- Make orientation of GoBoard (widget?) configurable (flush left, center-h, flush-right, etc).
 - On skinny windows, move the icon bar so it's flush with the window (a sort of flush-top)
-- Change font size to based on pixel size.
+- Get the theme data out of the display.
 
 Problem Widget
 - Make Comments toggle-able (should be part of settings)

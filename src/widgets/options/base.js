@@ -55,6 +55,12 @@ glift.widgets.options.base = {
   showVariations: glift.enums.showVariations.MORE_THAN_ONE,
 
   /**
+   * Show the 'correct' variations in a different color.  This is really only
+   * used in the case of reviewing problems with the problem widget.
+   */
+  showCorrectVariations: false,
+
+  /**
    * Whether or not to use the comment bar.
    */
   useCommentBar: true,

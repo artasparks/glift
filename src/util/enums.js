@@ -38,12 +38,15 @@ glift.enums = {
 
   marks: {
     CIRCLE: "CIRCLE",
-    LABEL: "LABEL",
     SQUARE: "SQUARE",
     TRIANGLE: "TRIANGLE",
     XMARK: "XMARK",
     STONE_MARKER: "STONE_MARKER",
-    VARIATION_MARKER: "VARIATION_MARKER"
+    // These last three all have to do with Labels.
+    // TODO(kashomon): Consolidate these somehow.
+    LABEL: "LABEL",
+    VARIATION_MARKER: "VARIATION_MARKER",
+    CORRECT_VARIATION: "CORRECT_VARIATION"
   },
 
   problemResults: {
