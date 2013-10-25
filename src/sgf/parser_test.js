@@ -6,8 +6,8 @@ glift.sgf.newParserTest = function() {
     var mt = glift.sgf.parse(testdata.sgfs.realproblem);
     ok(mt !== undefined, 'must not be undefined');
     var rp = mt.properties();
-    ok(rp.get('GM') !== none, 'must find prop: GM');
-    deepEqual(rp.get('GM'), ['1'], 'GM must be 1');
+    ok(rp.getAllValues('GM') !== none, 'must find prop: GM');
+    deepEqual(rp.getAllValues('GM'), ['1'], 'GM must be 1');
   });
 
   test("Parse pass", function() {
@@ -15,11 +15,11 @@ glift.sgf.newParserTest = function() {
     var mt = glift.sgf.parse(sgf);
     ok(mt !== undefined);
     var rp = mt.properties();
-    deepEqual(rp.get('GM'), ['1']);
-    deepEqual(rp.get('C'), ["It begins"]);
+    deepEqual(rp.getAllValues('GM'), ['1']);
+    deepEqual(rp.getAllValues('C'), ["It begins"]);
     mt.moveDown();
     var rp = mt.properties();
-    deepEqual(rp.get('B'), [""]);
-    deepEqual(rp.get('C'), ['pass']);
+    deepEqual(rp.getAllValues('B'), [""]);
+    deepEqual(rp.getAllValues('C'), ['pass']);
   });
 };

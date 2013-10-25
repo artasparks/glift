@@ -16,7 +16,7 @@ var BaseController = function() {
   // lifetime of the controller.
   this.sgfString = "";
   this.initialPosition = [];
-  this.showCorrectVariations = false;
+  this.problemConditions = {};
 
   // State variables that are defined on initialize and that could are
   // necessarily mutable.
@@ -38,7 +38,7 @@ BaseController.prototype = {
     }
     this.sgfString = options.sgfString || "";
     this.initialPosition = options.initialPosition || [];
-    this.showCorrectVariations = options.showCorrectVariations || false;
+    this.problemConditions = options.problemConditions || undefined;
     this.extraOptions(options); // Overridden by implementers
     this.initialize();
     return this;
@@ -113,7 +113,7 @@ BaseController.prototype = {
    */
   getEntireBoardState: function() {
     return glift.rules.intersections.getFullBoardData(
-        this.movetree, this.goban, this.showCorrectVariations);
+        this.movetree, this.goban, this.problemConditions);
   },
 
   /**
@@ -121,7 +121,7 @@ BaseController.prototype = {
    */
   getNextBoardState: function() {
     return glift.rules.intersections.nextBoardData(
-        this.movetree, this.getCaptures(), this.showCorrectVariations);
+        this.movetree, this.getCaptures(), this.problemConditions);
   },
 
   /**
@@ -217,7 +217,7 @@ BaseController.prototype = {
         this.currentMoveNumber : this.currentMoveNumber - 1;
     this.movetree.moveUp();
     var displayData = glift.rules.intersections.previousBoardData(
-        this.movetree, allCurrentStones, captures, this.showCorrectVariations);
+        this.movetree, allCurrentStones, captures, this.problemConditions);
     return displayData;
   },
 

@@ -69,7 +69,7 @@ glift.rules.intersectionsTest = function() {
     var goban = glift.rules.goban.getFromMoveTree(mt, []).goban;
     var data = glift.rules.intersections.getFullBoardData(mt, goban)
 
-    deepEqual(mt.properties().getFirst('C'), 'MDTest');
+    deepEqual(mt.properties().getOneValue('C'), 'MDTest');
     deepEqual(data.comment, 'MDTest');
     deepEqual(data.stones.WHITE, []);
     deepEqual(data.stones.BLACK, []);

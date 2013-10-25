@@ -14,6 +14,20 @@ glift.widgets.options.problem = {
   problemIndex: 0,
 
   /**
+   * Conditions for determing whether a branch of a movetree is correct.  A map
+   * from property-keys, to an array of substring values.  If the array is
+   * empty, then we only test to see if the property exists at the current
+   * positien.
+   *
+   * The default tests whether there is a 'GB' property or a 'C' (comment)
+   * property containing 'Correct' or 'is correct'.
+   */
+  problemConditions: {
+    GB: [],
+    C: ['Correct', 'is correct'],
+  },
+
+  /**
    * The function that produces the problem controller.
    */
   controllerFunc: glift.controllers.staticProblem,
@@ -115,7 +129,8 @@ glift.widgets.options.problem = {
             theme: widget.options.theme,
             sgfString: widget.options.sgfString,
             showVariations: glift.enums.showVariations.ALWAYS,
-            showCorrectVariations: true,
+            problemConditions:
+                glift.widgets.options.problem.problemConditions,
             boardRegionType: glift.enums.boardRegions.AUTO,
             icons: ['start', 'end', 'arrowleft', 'arrowright', 'undo'],
             actions: {

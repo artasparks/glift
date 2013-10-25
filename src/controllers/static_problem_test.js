@@ -6,7 +6,7 @@ glift.controllers.staticProblemTest = function() {
       sgfs = testdata.sgfs,
       mk = glift.enums.marks,
       states = glift.enums.states,
-      options = { sgfString: sgfs.realproblem },
+      options = { sgfString: sgfs.realproblem, problemConditions: {GB: []} },
       msgs = glift.enums.controllerMessages,
       problemResults = glift.enums.problemResults,
       ptlistToMap = glift.testUtil.ptlistToMap;
@@ -15,6 +15,8 @@ glift.controllers.staticProblemTest = function() {
     var c = cont.staticProblem(options),
         wstone = conv("pc"),
         bstone = conv("oc");
+    ok(c.problemConditions !== undefined, 'problemConditions must be defined');
+    ok(c.problemConditions['GB'] !== undefined, 'GB must be specified');
     deepEqual(c.sgfString, sgfs.realproblem);
     var data = c.initialize().getEntireBoardState();
     var whiteStones = ptlistToMap(data.stones.WHITE)
@@ -23,6 +25,7 @@ glift.controllers.staticProblemTest = function() {
         "Must find a white stone where expected");
     ok(blackStones[bstone.toString()] !== undefined,
         "Must find a black stone where expected");
+
   });
 
   test("Test Current Player Color", function() {
@@ -70,9 +73,12 @@ glift.controllers.staticProblemTest = function() {
 
   //13,3; 12,2 Black
   test("Test Add Stone: Continue", function() {
-    var c = cont.staticProblem({sgfString: sgfs.complexproblem}),
-        pt = conv("ma"),
-        possNext = [conv('oa'), conv('mc'), conv('nd')];
+    var c = cont.staticProblem({
+        sgfString: sgfs.complexproblem,
+        problemConditions: { GB: [] }
+    });
+    var pt = conv("ma");
+    var possNext = [conv('oa'), conv('mc'), conv('nd')];
     c.initialize();
     var result = c.addStone(pt, states.BLACK);
     deepEqual(result.result, problemResults.INDETERMINATE,

@@ -11,27 +11,27 @@ glift.rules.movetreeTest = function() {
   test("that property retrieval works", function() {
     var mt = movetree.getFromSgf(sgfs.veryeasy);
     deepEqual(mt.node().getNodeNum(), 0, 'movenum');
-    var prop = mt.properties().getDatum("FF");
+    var prop = mt.properties().getOneValue("FF");
     ok(mt.properties().contains("FF"),
         "should return true for an existing prop");
     deepEqual(prop, "4", "should get an existing property");
 
     ok(!mt.properties().contains("ZZ"),
         "should return false for non-real prop");
-    deepEqual(mt.properties().get("ZZ"), util.none,
+    deepEqual(mt.properties().getAllValues("ZZ"), util.none,
         "should return nothing for a non-real prop");
 
     ok(!mt.properties().contains("B"),
         "should return false for non-existent prop");
-    deepEqual(mt.properties().get("B"), util.none,
+    deepEqual(mt.properties().getAllValues("B"), util.none,
         "should return nothing for a non-existent prop");
   });
 
   test("Test that property retrieval for multiple props works", function() {
     var mt = movetree.getFromSgf(sgfs.easy);
-    deepEqual(mt.properties().get("AB")[1], "qa",
+    deepEqual(mt.properties().getAllValues("AB")[1], "qa",
         "Should get the second property");
-    deepEqual(mt.properties().get("AW").toString(),
+    deepEqual(mt.properties().getAllValues("AW").toString(),
         ["pa", "pb", "sb", "pc", "qc", "sc", "qd","rd", "sd"].toString(),
         "should get a list of values");
   });
@@ -53,7 +53,7 @@ glift.rules.movetreeTest = function() {
     deepEqual(mt.node().getNodeNum(), 1, 'move num');
     deepEqual(mt.node().getVarNum(), 0, 'var num');
     deepEqual(mt.node().numChildren(), 1, 'next nodes');
-    deepEqual(mt.properties().getDatum("B"), "sa", "stoneMove");
+    deepEqual(mt.properties().getOneValue("B"), "sa", "stoneMove");
 
     mt.moveUp();
     deepEqual(mt.node().getNodeNum(), 0, 'move num');
@@ -64,7 +64,7 @@ glift.rules.movetreeTest = function() {
     deepEqual(mt.node().getNodeNum(), 1, 'move num');
     deepEqual(mt.node().getVarNum(), 1, 'var num');
     deepEqual(mt.node().numChildren(), 1, 'next nodes');
-    deepEqual(mt.properties().getDatum("B"), "ra", "stoneMove");
+    deepEqual(mt.properties().getOneValue("B"), "ra", "stoneMove");
   });
 
   test("that edge case of moving up: only one move left - works."
@@ -78,7 +78,7 @@ glift.rules.movetreeTest = function() {
 
   test("Test that deleting a property works", function() {
     var mt = movetree.getFromSgf(sgfs.veryeasy);
-    deepEqual(mt.properties().getDatum("AP"), "CGoban:3",
+    deepEqual(mt.properties().getOneValue("AP"), "CGoban:3",
         "should get the AP prop");
     deepEqual(mt.properties().remove("AP")[0],
         "CGoban:3", "should delete the prop");
@@ -90,9 +90,9 @@ glift.rules.movetreeTest = function() {
     movt.properties()
         .add("C", "foo")
         .add("EV", "tourny");
-    deepEqual(movt.properties().getDatum("C"), "foo",
+    deepEqual(movt.properties().getOneValue("C"), "foo",
         "Should get the correct comment");
-    deepEqual(movt.properties().getDatum("EV"), "tourny",
+    deepEqual(movt.properties().getOneValue("EV"), "tourny",
         "Chaining should work");
   });
 
@@ -108,20 +108,20 @@ glift.rules.movetreeTest = function() {
         .properties().add("C", "1.1");
     movt.moveToRoot();
 
-    deepEqual(movt.properties().getDatum("C"), "0th",
+    deepEqual(movt.properties().getOneValue("C"), "0th",
         "Should get the correct comment");
     deepEqual(movt.node().getNodeNum(), 0, "Should get the move num");
     deepEqual(movt.node().getVarNum(), 0, "Should get the var num");
 
     movt.moveDown()
-    deepEqual(movt.properties().getDatum("C"), "1.0",
+    deepEqual(movt.properties().getOneValue("C"), "1.0",
         "Should get the correct comment");
     deepEqual(movt.node().getNodeNum(), 1, "Should get the move num");
     deepEqual(movt.node().getVarNum(), 0, "Should get the var num");
 
     movt.moveUp()
     movt.moveDown(1)
-    deepEqual(movt.properties().getDatum("C"), "1.1",
+    deepEqual(movt.properties().getOneValue("C"), "1.1",
         "Should get the correct comment");
     deepEqual(movt.node().getNodeNum(), 1,
         "Should get the move num");

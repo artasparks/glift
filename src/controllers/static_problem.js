@@ -78,20 +78,20 @@ var methods = {
     } else {
       this.movetree.moveDown(nextVarNum);
 
-      var correctness = glift.rules.problems.isCorrectPosition(this.movetree);
+      var correctness = glift.rules.problems.isCorrectPosition(
+          this.movetree, this.problemConditions);
       if (correctness === CORRECT || correctness == INCORRECT) {
         var outData = this.getNextBoardState();
         outData.result = correctness;
         return outData;
       } else if (correctness === INDETERMINATE) {
         var prevOutData = this.getNextBoardState();
-        // Play for the opposite player.
+        // Play for the opposite player. Should this be deterministic?
         var randNext = glift.math.getRandomInt(
             0, this.movetree.node().numChildren() - 1);
         this.movetree.moveDown(randNext);
         var nextMove = this.movetree.properties().getMove();
         var result = this.goban.addStone(nextMove.point, nextMove.color);
-        // TODO(kashomon): Is this guaranteed to be successful?
         var toRecord = {};
         toRecord[nextMove.color] = result.captures;
         this.recordCaptures(toRecord);

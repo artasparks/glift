@@ -39,7 +39,7 @@ Properties.prototype = {
 
     // If the type is a string, make into an array or concat.
     if (this.contains(prop)) {
-      this.propMap[prop] = this.get(prop).concat(value);
+      this.propMap[prop] = this.getAllValues(prop).concat(value);
     } else {
       this.propMap[prop] = value;
     }
@@ -47,25 +47,14 @@ Properties.prototype = {
   },
 
   /**
-   * The the first element of a property
-   */
-  getFirst: function(strProp, index) {
-    return this.getDatum(strProp, 0);
-  },
-
-  /**
    * Return an array of data associated with a property key
    */
-  get: function(strProp) {
+  getAllValues: function(strProp) {
     if (glift.sgf.allProperties[strProp] === undefined) {
-      util.debugl("attempted to retrieve a property that is not part"
-           + " of the SGF Spec: " + strProp);
-      return util.none;
-    }
-    if (this.propMap[strProp] !== undefined) {
+      return util.none; // Not a valid Property
+    } else if (this.propMap[strProp] !== undefined) {
       return this.propMap[strProp];
     } else {
-      util.debugl("no property: " + strProp + " exists for the current move");
       return util.none;
     }
   },
@@ -74,14 +63,14 @@ Properties.prototype = {
    * Get one piece of data associated with a property. Default to the first
    * element in the data associated with a property.
    *
-   * Since the get() always returns an array, it's sometimes useful to return
-   * the first property in the list.  Like get(), if a property or value can't
-   * be found, util.none is returned.
+   * Since the getOneValue() always returns an array, it's sometimes useful to
+   * return the first property in the list.  Like getOneValue(), if a property
+   * or value can't be found, util.none is returned.
    */
-  getDatum: function(strProp, index) {
+  getOneValue: function(strProp, index) {
     var index = (index !== undefined
         && typeof index === 'number' && index >= 0) ? index : 0;
-    var arr = this.get(strProp);
+    var arr = this.getAllValues(strProp);
     if (arr !== util.none && arr.length >= 1) {
       return arr[index];
     } else {
@@ -89,11 +78,13 @@ Properties.prototype = {
     }
   },
 
-  // Get a value from a property and return the point representation.
-  // Optionally, the user can provide an index, since each property points to an
-  // array of values.
+  /**
+   * Get a value from a property and return the point representation.
+   * Optionally, the user can provide an index, since each property points to an
+   * array of values.
+   */
   getAsPoint: function(strProp, index) {
-    var out = this.getDatum(strProp, index);
+    var out = this.getOneValue(strProp, index);
     if (out === util.none) {
       return out;
     } else {
@@ -101,24 +92,26 @@ Properties.prototype = {
     }
   },
 
-  // contains: Return true if the current move has the property "prop".  Return
-  // false otherwise.
+  /**
+   * contains: Return true if the current move has the property "prop".  Return
+   * false otherwise.
+   */
   contains: function(prop) {
-    return this.get(prop) !== util.none;
+    return this.getAllValues(prop) !== util.none;
   },
 
-  // Delete the prop and return the value.
+  /** Delete the prop and return the value. */
   remove: function(prop) {
     if (this.contains(prop)) {
-      var value = this.get(prop);
+      var allValues = this.getAllValues(prop);
       delete this.propMap[prop];
-      return value;
+      return allValues;
     } else {
       return util.none;
     }
   },
 
-  // Replace replaces the current value if the property already exists.
+  /** Replace replaces the current value if the property already exists. */
   replace: function(prop, value) {
     this.propMap[prop] = value
   },
@@ -135,17 +128,15 @@ Properties.prototype = {
     } else if (color === enums.states.WHITE) {
       prop = glift.sgf.allProperties.AW;
     }
-
     if (prop === "" || !this.contains(prop)) {
       return [];
     }
-
-    return glift.sgf.allSgfCoordsToPoints(this.get(prop));
+    return glift.sgf.allSgfCoordsToPoints(this.getAllValues(prop));
   },
 
   getComment: function() {
     if (this.contains('C')) {
-      return this.getDatum('C');
+      return this.getOneValue('C');
     } else {
       return util.none;
     }
@@ -165,35 +156,59 @@ Properties.prototype = {
    * point associated with this.
    */
   getMove: function() {
+    var BLACK = glift.enums.states.BLACK;
+    var WHITE = glift.enums.states.WHITE;
     if (this.contains('B')) {
-      if (this.get('B')[0] === "") {
-        return { color: enums.states.BLACK }; // This is a PASS
+      if (this.getOneValue('B') === "") {
+        return { color: BLACK }; // This is a PASS
       } else {
-        return {
-          color: enums.states.BLACK,
-          point: this.getAsPoint('B')
-        };
+        return { color: BLACK, point: this.getAsPoint('B') }
       }
     } else if (this.contains('W')) {
-      if (this.get('W')[0] === "") {
-        return { color: enums.states.WHITE}; // This is a PASS
+      if (this.getOneValue('W') === "") {
+        return { color: WHITE }; // This is a PASS
       } else {
-        return {
-          color: enums.states.WHITE,
-          point: this.getAsPoint('W')
-        };
+        return { color: WHITE, point: this.getAsPoint('W') };
       }
     } else {
-      return util.none;
+      return glift.util.none;
     }
   },
 
-  isCorrect: function() {
-    if (this.contains('GB')) {
-      return true;
-    } else {
-      return false;
+  /**
+   * Test whether this set of properties match a series of conditions.  Returns
+   * true or false.  Conditions have the form:
+   *
+   * { <property>: [series,of,conditions,to,match], ... }
+   *
+   * Example:
+   *    Matches if there is a GB property or the words 'Correct' or 'is correct' in
+   *    the comment.
+   *    { GB: [], C: ['Correct', 'is correct'] }
+   *
+   * Note: This is an O(lnm) ~ O(n^3).  But practice, you'll want to test
+   * against singular properties, so it's more like O(n^2)
+   */
+  matches: function(conditions) {
+    for (var key in conditions) {
+      if (this.contains(key)) {
+        var substrings = conditions[key];
+        if (substrings.length === 0) {
+          return true;
+        }
+        var allValues = this.getAllValues(key);
+        for (var i = 0; i < allValues.length; i++) {
+          for (var j = 0; j < substrings.length; j++) {
+            var value = allValues[i];
+            var substr = substrings[j];
+            if (value.indexOf(substr) !== -1) {
+              return true;
+            }
+          }
+        }
+      }
     }
+    return false
   },
 
   /**

@@ -1,13 +1,28 @@
 glift.rules.problems = {
   /**
-   * Determines if a 'move' is correct.
+   * Determines if a 'move' is correct. Takes a movetree and a series of
+   * conditions, which is a map of properties to an array of possible substring
+   * matches.  Only one conditien must be met
    *
-   * Can return CORRECT, INCORRECT, or INDETERMINATE
+   * Some Examples:
+   *    Correct if there is a GB property or the words 'Correct' or 'is correct' in
+   *    the comment. This is the default.
+   *    { GB: [], C: ['Correct', 'is correct'] }
    *
+   *    Nothing is correct
+   *    {}
+   *
+   *    Correct as long as there is a comment tag.
+   *    { C: [] }
+   *
+   *    Correct as long as there is a black stone (a strange condition).
+   *    { B: [] }
+   *
+   * Returns one of enum.problemResults (CORRECT, INDETERMINATE, INCORRECT).
    */
-  isCorrectPosition: function(movetree) {
+  isCorrectPosition: function(movetree, conditions) {
     var problemResults = glift.enums.problemResults;
-    if (movetree.properties().isCorrect()) {
+    if (movetree.properties().matches(conditions)) {
       return problemResults.CORRECT;
     } else {
       var flatPaths = glift.rules.treepath.flattenMoveTree(movetree);
@@ -18,7 +33,7 @@ glift.rules.problems = {
         var pathCorrect = false
         for (var j = 0; j < path.length; j++) {
           newmt.moveDown(path[j]);
-          if (newmt.properties().isCorrect()) {
+          if (newmt.properties().matches(conditions)) {
             pathCorrect = true;
           }
         }
@@ -48,13 +63,14 @@ glift.rules.problems = {
    * [{ point: <point>, color: <color>  },..
    * ]
    */
-  correctNextMoves: function(movetree) {
+  correctNextMoves: function(movetree, conditions) {
     var nextMoves = movetree.nextMoves();
     var INCORRECT = glift.enums.problemResults.INCORRECT;
     var correctNextMoves = [];
     for (var i = 0; i < nextMoves.length; i++) {
       movetree.moveDown(i);
-      if (glift.rules.problems.isCorrectPosition(movetree) !== INCORRECT) {
+      if (glift.rules.problems.isCorrectPosition(movetree, conditions)
+          !== INCORRECT) {
         correctNextMoves.push(nextMoves[i]);
       }
       movetree.moveUp(); // reset the position

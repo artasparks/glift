@@ -135,7 +135,7 @@ MoveTree.prototype = {
     for (var i = 0; i < nextNodes.length; i++) {
       var node = nextNodes[i];
       if (node.properties().contains(token)) {
-        if (node.properties().getFirst(token) == "") {
+        if (node.properties().getOneValue(token) == "") {
           // This is a 'PASS'.  Ignore
         } else {
           ptSet[node.properties().getAsPoint(token).hash()] =
@@ -311,10 +311,10 @@ MoveTree.prototype = {
     var mt = this.getTreeFromRoot(),
         allProperties = glift.sgf.allProperties;
     if (mt.node().properties().contains(allProperties.SZ)) {
-      return parseInt(mt.node().properties().get(allProperties.SZ));
+      return parseInt(mt.node().properties().getAllValues(allProperties.SZ));
     } else {
       return undefined;
     }
-  },
+  }
 };
 })();
