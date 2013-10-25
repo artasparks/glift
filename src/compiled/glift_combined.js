@@ -3859,7 +3859,7 @@ glift.rules.intersections = {
    */
   // TODO(kashomon): Make this a proper object constructor with accessors and
   // methods and whatnot.  It's getting far too complicated.
-  basePropertyData: function(movetree, getCorrectMoves) {
+  basePropertyData: function(movetree, problemConditions) {
     var out = {
       stones: {
         WHITE: [],
@@ -3878,17 +3878,18 @@ glift.rules.intersections = {
     out.lastMove = movetree.getLastMove();
     out.marks = glift.rules.intersections.getCurrentMarks(movetree);
     out.nextMoves = movetree.nextMoves();
-    out.correctNextMoves = getCorrectMoves ?
-        movetree.correctNextMoves() : [];
+    out.correctNextMoves = problemConditions !== undefined
+        ? glift.rules.problems.correctNextMoves(movetree, problemConditions)
+        : [];
     return out;
   },
 
   /**
    * Extends the basePropertyData with stone data.
    */
-  getFullBoardData: function(movetree, goban, getCorrectMoves) {
+  getFullBoardData: function(movetree, goban, problemConditions) {
     var baseData = glift.rules.intersections.basePropertyData(
-        movetree, getCorrectMoves);
+        movetree, problemConditions);
     baseData.displayDataType = glift.enums.displayDataTypes.FULL;
     var gobanStones = goban.getAllPlacedStones();
     for (var i = 0; i < gobanStones.length; i++) {
@@ -3906,9 +3907,9 @@ glift.rules.intersections = {
    *    WHITE: [..pts..]
    * }
    */
-  nextBoardData: function(movetree, currentCaptures, getCorrectMoves) {
+  nextBoardData: function(movetree, currentCaptures, problemConditions) {
     var baseData = glift.rules.intersections.basePropertyData(
-        movetree, getCorrectMoves);
+        movetree, problemConditions);
     baseData.stones = movetree.properties().getAllStones();
     baseData.stones.EMPTY = [];
     for (var color in currentCaptures) {
@@ -3924,9 +3925,10 @@ glift.rules.intersections = {
    * moves (stones) and captures were.
    */
   // TODO(kashomon): Reduce duplication with nextBoardData.
-  previousBoardData: function(movetree, stones, captures, getCorrectMoves) {
+  previousBoardData: function(movetree, stones, captures,
+      problemConditions) {
     var baseData = glift.rules.intersections.basePropertyData(
-        movetree, getCorrectMoves);
+        movetree, problemConditions);
     baseData.stones = captures;
     baseData.stones.EMPTY = [];
     for (var color in stones) {
@@ -3947,7 +3949,7 @@ glift.rules.intersections = {
       var mark = glift.rules.intersections.propertiesToMarks[prop];
       if (movetree.properties().contains(prop)) {
         var marksToAdd = [];
-        var data = movetree.properties().get(prop);
+        var data = movetree.properties().getAllValues(prop);
         for (var i = 0; i < data.length; i++) {
           var pt = {}, value = true;
           if (prop === glift.sgf.allProperties.LB) {
@@ -4198,7 +4200,7 @@ MoveTree.prototype = {
     for (var i = 0; i < nextNodes.length; i++) {
       var node = nextNodes[i];
       if (node.properties().contains(token)) {
-        if (node.properties().getFirst(token) == "") {
+        if (node.properties().getOneValue(token) == "") {
           // This is a 'PASS'.  Ignore
         } else {
           ptSet[node.properties().getAsPoint(token).hash()] =
@@ -4374,33 +4376,49 @@ MoveTree.prototype = {
     var mt = this.getTreeFromRoot(),
         allProperties = glift.sgf.allProperties;
     if (mt.node().properties().contains(allProperties.SZ)) {
-      return parseInt(mt.node().properties().get(allProperties.SZ));
+      return parseInt(mt.node().properties().getAllValues(allProperties.SZ));
     } else {
       return undefined;
     }
-  },
-
+  }
+};
+})();
+glift.rules.problems = {
   /**
-   * Used for Problems. Determine if a 'move' is correct.
+   * Determines if a 'move' is correct. Takes a movetree and a series of
+   * conditions, which is a map of properties to an array of possible substring
+   * matches.  Only one conditien must be met
    *
-   * Can return CORRECT, INCORRECT, or INDETERMINATE
+   * Some Examples:
+   *    Correct if there is a GB property or the words 'Correct' or 'is correct' in
+   *    the comment. This is the default.
+   *    { GB: [], C: ['Correct', 'is correct'] }
    *
+   *    Nothing is correct
+   *    {}
+   *
+   *    Correct as long as there is a comment tag.
+   *    { C: [] }
+   *
+   *    Correct as long as there is a black stone (a strange condition).
+   *    { B: [] }
+   *
+   * Returns one of enum.problemResults (CORRECT, INDETERMINATE, INCORRECT).
    */
-  // TODO(kashomon): Move this somewhere else.  It's too specific.
-  isCorrectPosition: function() {
+  isCorrectPosition: function(movetree, conditions) {
     var problemResults = glift.enums.problemResults;
-    if (this.properties().isCorrect()) {
+    if (movetree.properties().matches(conditions)) {
       return problemResults.CORRECT;
     } else {
-      var flatPaths = glift.rules.treepath.flattenMoveTree(this);
+      var flatPaths = glift.rules.treepath.flattenMoveTree(movetree);
       var successTracker = {};
       for (var i = 0; i < flatPaths.length; i++) {
         var path = flatPaths[i];
-        var newmt = glift.rules.movetree.getFromNode(this.node());
+        var newmt = glift.rules.movetree.getFromNode(movetree.node());
         var pathCorrect = false
         for (var j = 0; j < path.length; j++) {
           newmt.moveDown(path[j]);
-          if (newmt.properties().isCorrect()) {
+          if (newmt.properties().matches(conditions)) {
             pathCorrect = true;
           }
         }
@@ -4425,24 +4443,26 @@ MoveTree.prototype = {
   /**
    * Get the correct next moves.
    *
-   * returns: the 'correct' next moves.
+   * returns: the 'correct' next moves. In other words
+   *
+   * [{ point: <point>, color: <color>  },..
+   * ]
    */
-  // TODO(kashomon): Get this function out of movetree.js and into the static
-  // problem controller.  This is tricky because this is really only useful for
-  correctNextMoves: function() {
-    var nextMoves = this.nextMoves();
+  correctNextMoves: function(movetree, conditions) {
+    var nextMoves = movetree.nextMoves();
+    var INCORRECT = glift.enums.problemResults.INCORRECT;
     var correctNextMoves = [];
     for (var i = 0; i < nextMoves.length; i++) {
-      this.moveDown(i);
-      if (this.isCorrectPosition() !== glift.enums.problemResults.INCORRECT) {
+      movetree.moveDown(i);
+      if (glift.rules.problems.isCorrectPosition(movetree, conditions)
+          !== INCORRECT) {
         correctNextMoves.push(nextMoves[i]);
       }
-      this.moveUp(); // reset the position
+      movetree.moveUp(); // reset the position
     }
     return correctNextMoves;
   }
 };
-})();
 (function() {
 var util = glift.util;
 var enums = glift.enums;
@@ -4484,7 +4504,7 @@ Properties.prototype = {
 
     // If the type is a string, make into an array or concat.
     if (this.contains(prop)) {
-      this.propMap[prop] = this.get(prop).concat(value);
+      this.propMap[prop] = this.getAllValues(prop).concat(value);
     } else {
       this.propMap[prop] = value;
     }
@@ -4492,25 +4512,14 @@ Properties.prototype = {
   },
 
   /**
-   * The the first element of a property
-   */
-  getFirst: function(strProp, index) {
-    return this.getDatum(strProp, 0);
-  },
-
-  /**
    * Return an array of data associated with a property key
    */
-  get: function(strProp) {
+  getAllValues: function(strProp) {
     if (glift.sgf.allProperties[strProp] === undefined) {
-      util.debugl("attempted to retrieve a property that is not part"
-           + " of the SGF Spec: " + strProp);
-      return util.none;
-    }
-    if (this.propMap[strProp] !== undefined) {
+      return util.none; // Not a valid Property
+    } else if (this.propMap[strProp] !== undefined) {
       return this.propMap[strProp];
     } else {
-      util.debugl("no property: " + strProp + " exists for the current move");
       return util.none;
     }
   },
@@ -4519,14 +4528,14 @@ Properties.prototype = {
    * Get one piece of data associated with a property. Default to the first
    * element in the data associated with a property.
    *
-   * Since the get() always returns an array, it's sometimes useful to return
-   * the first property in the list.  Like get(), if a property or value can't
-   * be found, util.none is returned.
+   * Since the getOneValue() always returns an array, it's sometimes useful to
+   * return the first property in the list.  Like getOneValue(), if a property
+   * or value can't be found, util.none is returned.
    */
-  getDatum: function(strProp, index) {
+  getOneValue: function(strProp, index) {
     var index = (index !== undefined
         && typeof index === 'number' && index >= 0) ? index : 0;
-    var arr = this.get(strProp);
+    var arr = this.getAllValues(strProp);
     if (arr !== util.none && arr.length >= 1) {
       return arr[index];
     } else {
@@ -4534,11 +4543,13 @@ Properties.prototype = {
     }
   },
 
-  // Get a value from a property and return the point representation.
-  // Optionally, the user can provide an index, since each property points to an
-  // array of values.
+  /**
+   * Get a value from a property and return the point representation.
+   * Optionally, the user can provide an index, since each property points to an
+   * array of values.
+   */
   getAsPoint: function(strProp, index) {
-    var out = this.getDatum(strProp, index);
+    var out = this.getOneValue(strProp, index);
     if (out === util.none) {
       return out;
     } else {
@@ -4546,24 +4557,26 @@ Properties.prototype = {
     }
   },
 
-  // contains: Return true if the current move has the property "prop".  Return
-  // false otherwise.
+  /**
+   * contains: Return true if the current move has the property "prop".  Return
+   * false otherwise.
+   */
   contains: function(prop) {
-    return this.get(prop) !== util.none;
+    return this.getAllValues(prop) !== util.none;
   },
 
-  // Delete the prop and return the value.
+  /** Delete the prop and return the value. */
   remove: function(prop) {
     if (this.contains(prop)) {
-      var value = this.get(prop);
+      var allValues = this.getAllValues(prop);
       delete this.propMap[prop];
-      return value;
+      return allValues;
     } else {
       return util.none;
     }
   },
 
-  // Replace replaces the current value if the property already exists.
+  /** Replace replaces the current value if the property already exists. */
   replace: function(prop, value) {
     this.propMap[prop] = value
   },
@@ -4580,17 +4593,15 @@ Properties.prototype = {
     } else if (color === enums.states.WHITE) {
       prop = glift.sgf.allProperties.AW;
     }
-
     if (prop === "" || !this.contains(prop)) {
       return [];
     }
-
-    return glift.sgf.allSgfCoordsToPoints(this.get(prop));
+    return glift.sgf.allSgfCoordsToPoints(this.getAllValues(prop));
   },
 
   getComment: function() {
     if (this.contains('C')) {
-      return this.getDatum('C');
+      return this.getOneValue('C');
     } else {
       return util.none;
     }
@@ -4610,35 +4621,59 @@ Properties.prototype = {
    * point associated with this.
    */
   getMove: function() {
+    var BLACK = glift.enums.states.BLACK;
+    var WHITE = glift.enums.states.WHITE;
     if (this.contains('B')) {
-      if (this.get('B')[0] === "") {
-        return { color: enums.states.BLACK }; // This is a PASS
+      if (this.getOneValue('B') === "") {
+        return { color: BLACK }; // This is a PASS
       } else {
-        return {
-          color: enums.states.BLACK,
-          point: this.getAsPoint('B')
-        };
+        return { color: BLACK, point: this.getAsPoint('B') }
       }
     } else if (this.contains('W')) {
-      if (this.get('W')[0] === "") {
-        return { color: enums.states.WHITE}; // This is a PASS
+      if (this.getOneValue('W') === "") {
+        return { color: WHITE }; // This is a PASS
       } else {
-        return {
-          color: enums.states.WHITE,
-          point: this.getAsPoint('W')
-        };
+        return { color: WHITE, point: this.getAsPoint('W') };
       }
     } else {
-      return util.none;
+      return glift.util.none;
     }
   },
 
-  isCorrect: function() {
-    if (this.contains('GB')) {
-      return true;
-    } else {
-      return false;
+  /**
+   * Test whether this set of properties match a series of conditions.  Returns
+   * true or false.  Conditions have the form:
+   *
+   * { <property>: [series,of,conditions,to,match], ... }
+   *
+   * Example:
+   *    Matches if there is a GB property or the words 'Correct' or 'is correct' in
+   *    the comment.
+   *    { GB: [], C: ['Correct', 'is correct'] }
+   *
+   * Note: This is an O(lnm) ~ O(n^3).  But practice, you'll want to test
+   * against singular properties, so it's more like O(n^2)
+   */
+  matches: function(conditions) {
+    for (var key in conditions) {
+      if (this.contains(key)) {
+        var substrings = conditions[key];
+        if (substrings.length === 0) {
+          return true;
+        }
+        var allValues = this.getAllValues(key);
+        for (var i = 0; i < allValues.length; i++) {
+          for (var j = 0; j < substrings.length; j++) {
+            var value = allValues[i];
+            var substr = substrings[j];
+            if (value.indexOf(substr) !== -1) {
+              return true;
+            }
+          }
+        }
+      }
     }
+    return false
   },
 
   /**
@@ -5021,7 +5056,7 @@ var BaseController = function() {
   // lifetime of the controller.
   this.sgfString = "";
   this.initialPosition = [];
-  this.showCorrectVariations = false;
+  this.problemConditions = {};
 
   // State variables that are defined on initialize and that could are
   // necessarily mutable.
@@ -5038,9 +5073,12 @@ BaseController.prototype = {
    * options.js in this same directory).  Thus, no special checks are made here.
    */
   initOptions: function(options) {
-    this.sgfString = options.sgfString;
-    this.initialPosition = options.initialPosition;
-    this.showCorrectVariations = options.showCorrectVariations;
+    if (options === undefined) {
+      throw "Options is undefined!  Can't create controller"
+    }
+    this.sgfString = options.sgfString || "";
+    this.initialPosition = options.initialPosition || [];
+    this.problemConditions = options.problemConditions || undefined;
     this.extraOptions(options); // Overridden by implementers
     this.initialize();
     return this;
@@ -5115,7 +5153,7 @@ BaseController.prototype = {
    */
   getEntireBoardState: function() {
     return glift.rules.intersections.getFullBoardData(
-        this.movetree, this.goban, this.showCorrectVariations);
+        this.movetree, this.goban, this.problemConditions);
   },
 
   /**
@@ -5123,7 +5161,7 @@ BaseController.prototype = {
    */
   getNextBoardState: function() {
     return glift.rules.intersections.nextBoardData(
-        this.movetree, this.getCaptures(), this.showCorrectVariations);
+        this.movetree, this.getCaptures(), this.problemConditions);
   },
 
   /**
@@ -5219,7 +5257,7 @@ BaseController.prototype = {
         this.currentMoveNumber : this.currentMoveNumber - 1;
     this.movetree.moveUp();
     var displayData = glift.rules.intersections.previousBoardData(
-        this.movetree, allCurrentStones, captures, this.showCorrectVariations);
+        this.movetree, allCurrentStones, captures, this.problemConditions);
     return displayData;
   },
 
@@ -5358,12 +5396,10 @@ var methods = {
  *  - There is actually a node somewhere beneath the variation that results in a
  *  'correct' outcome.
  */
-glift.controllers.staticProblem = function(rawOptions) {
-  var options = rawOptions,
-      controllers = glift.controllers,
+glift.controllers.staticProblem = function(options) {
+  var controllers = glift.controllers,
       baseController = glift.util.beget(controllers.base()),
       newController = glift.util.setMethods(baseController, methods),
-      // At this point, options have already been processed
       _ = newController.initOptions(options);
   return newController;
 };
@@ -5390,11 +5426,11 @@ var methods = {
    * shorter and easier to understand.
    */
   addStone: function(point, color) {
-    var problemResults = glift.enums.problemResults,
-        CORRECT = problemResults.CORRECT,
-        INCORRECT = problemResults.INCORRECT,
-        INDETERMINATE = problemResults.INDETERMINATE,
-        FAILURE = problemResults.FAILURE;
+    var problemResults = glift.enums.problemResults;
+    var CORRECT = problemResults.CORRECT;
+    var INCORRECT = problemResults.INCORRECT;
+    var INDETERMINATE = problemResults.INDETERMINATE;
+    var FAILURE = problemResults.FAILURE;
 
     // Reminder -- the goban returns:
     //  {
@@ -5430,20 +5466,20 @@ var methods = {
     } else {
       this.movetree.moveDown(nextVarNum);
 
-      var correctness = this.movetree.isCorrectPosition();
+      var correctness = glift.rules.problems.isCorrectPosition(
+          this.movetree, this.problemConditions);
       if (correctness === CORRECT || correctness == INCORRECT) {
         var outData = this.getNextBoardState();
         outData.result = correctness;
         return outData;
       } else if (correctness === INDETERMINATE) {
         var prevOutData = this.getNextBoardState();
-        // Play for the opposite player.
+        // Play for the opposite player. Should this be deterministic?
         var randNext = glift.math.getRandomInt(
             0, this.movetree.node().numChildren() - 1);
         this.movetree.moveDown(randNext);
         var nextMove = this.movetree.properties().getMove();
         var result = this.goban.addStone(nextMove.point, nextMove.color);
-        // TODO(kashomon): Is this guaranteed to be successful?
         var toRecord = {};
         toRecord[nextMove.color] = result.captures;
         this.recordCaptures(toRecord);
@@ -5946,12 +5982,6 @@ glift.widgets.options.base = {
   showVariations: glift.enums.showVariations.MORE_THAN_ONE,
 
   /**
-   * Show the 'correct' variations in a different color.  This is really only
-   * used in the case of reviewing problems with the problem widget.
-   */
-  showCorrectVariations: false,
-
-  /**
    * Whether or not to use the comment bar.
    */
   useCommentBar: true,
@@ -6073,6 +6103,20 @@ glift.widgets.options.problem = {
   problemIndex: 0,
 
   /**
+   * Conditions for determing whether a branch of a movetree is correct.  A map
+   * from property-keys, to an array of substring values.  If the array is
+   * empty, then we only test to see if the property exists at the current
+   * positien.
+   *
+   * The default tests whether there is a 'GB' property or a 'C' (comment)
+   * property containing 'Correct' or 'is correct'.
+   */
+  problemConditions: {
+    GB: [],
+    C: ['Correct', 'is correct']
+  },
+
+  /**
    * The function that produces the problem controller.
    */
   controllerFunc: glift.controllers.staticProblem,
@@ -6174,7 +6218,8 @@ glift.widgets.options.problem = {
             theme: widget.options.theme,
             sgfString: widget.options.sgfString,
             showVariations: glift.enums.showVariations.ALWAYS,
-            showCorrectVariations: true,
+            problemConditions:
+                glift.widgets.options.problem.problemConditions,
             boardRegionType: glift.enums.boardRegions.AUTO,
             icons: ['start', 'end', 'arrowleft', 'arrowright', 'undo'],
             actions: {

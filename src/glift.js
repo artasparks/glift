@@ -1,7 +1,7 @@
 /**
  * @preserve Glift: A Responsive Javascript library for the game Go.
  *
- * @version 0.9.0
+ * @version 1.0.1
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
  * --------------------------------------
@@ -23,10 +23,10 @@ glift.global = {
   // None of these are currently used
   debugMode: false,
   performanceDebug: false,
-  version: '0.1.0',
+  version: '1.0.1',
   // The active registry.  Used to determine who has 'ownership' of key-presses.
-  active: {
-  }
+  // (not used yet)
+  active: {}
 };
 
 window.glift = glift;

@@ -24,7 +24,7 @@ glift.widgets.options.problem = {
    */
   problemConditions: {
     GB: [],
-    C: ['Correct', 'is correct'],
+    C: ['Correct', 'is correct']
   },
 
   /**
