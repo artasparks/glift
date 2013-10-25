@@ -33,9 +33,12 @@ BaseController.prototype = {
    * options.js in this same directory).  Thus, no special checks are made here.
    */
   initOptions: function(options) {
-    this.sgfString = options.sgfString;
-    this.initialPosition = options.initialPosition;
-    this.showCorrectVariations = options.showCorrectVariations;
+    if (options === undefined) {
+      throw "Options is undefined!  Can't create controller"
+    }
+    this.sgfString = options.sgfString || "";
+    this.initialPosition = options.initialPosition || [];
+    this.showCorrectVariations = options.showCorrectVariations || false;
     this.extraOptions(options); // Overridden by implementers
     this.initialize();
     return this;

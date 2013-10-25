@@ -75,7 +75,7 @@ glift.rules.intersections = {
     out.marks = glift.rules.intersections.getCurrentMarks(movetree);
     out.nextMoves = movetree.nextMoves();
     out.correctNextMoves = getCorrectMoves ?
-        movetree.correctNextMoves() : [];
+        glift.rules.problems.correctNextMoves(movetree) : [];
     return out;
   },
 

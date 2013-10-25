@@ -33,6 +33,8 @@ Done(ish) - Change variation coloring so that it colors existing marks, rather t
 Done - Add 'right/wrong' indicators for problems
 Done - BUG: NextMove fails when the next move is a pass.
 Done - Change font size to based on pixel size.
+Done - Change viewer to color the right variations differently.  This is a bit
+    hacky and will probably need to be redone.
 
 Nope:
   Info Window / panel.
@@ -69,10 +71,10 @@ Smaller Changes.
 - Make orientation of GoBoard (widget?) configurable (flush left, center-h, flush-right, etc).
 - On skinny windows, move the icon bar so it's flush with the window (a sort of flush-top)
 - Get the theme data out of the display.
+- Create a problem explorer widget / controller.
 
 Problem Widget
 - Make Comments toggle-able (should be part of settings)
-- Change viewer to color the right variations differently
 
 - Create game editor widget. (many dependencies)
   - add moveTree support for delete

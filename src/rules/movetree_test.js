@@ -171,31 +171,6 @@ glift.rules.movetreeTest = function() {
         'simple DFS recursing should work');
   });
 
-  test("IsCorrectPosition: trivial correctness", function() {
-    var movt = glift.rules.movetree.getFromSgf(sgfs.trivialproblem),
-        problemResults = glift.enums.problemResults;
-    deepEqual(movt.isCorrectPosition(), problemResults.CORRECT,
-        "Starting position must be correct");
-  });
-
-  test("IsCorrectPosition: Make sure it works for simple cases", function() {
-    var movt = glift.rules.movetree.getFromSgf(sgfs.realproblem),
-        problemResults = glift.enums.problemResults;
-    movt.moveDown(0);
-    deepEqual(movt.isCorrectPosition(), problemResults.INCORRECT,
-        "Must return incorrect");
-    movt.moveUp().moveDown(1);
-    deepEqual(movt.isCorrectPosition(), problemResults.CORRECT,
-        "Must return correct if a move is correct");
-  });
-
-  test("IsCorrectPosition: Indeterminate first position", function() {
-    var movt = glift.rules.movetree.getFromSgf(sgfs.realproblem),
-        problemResults = glift.enums.problemResults;
-    deepEqual(movt.isCorrectPosition(), problemResults.INDETERMINATE,
-        "Starting position must be indeterminate");
-  });
-
   test("Next Moves", function() {
     var movt = glift.rules.movetree.getFromSgf(sgfs.complexproblem);
     var states = glift.enums.states;

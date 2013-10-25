@@ -1,19 +1,10 @@
 glift.controllers.controllersTest = function() {
   module("Controllers Test");
 
-  test("Process options", function() {
-    var options = glift.controllers.processOptions({});
-    deepEqual(options.sgfString, '');
-
-    var options = glift.controllers.processOptions({
-      sgfString: "foo"
-    });
-    deepEqual(options.sgfString, "foo");
-  });
-
   test("Must be able te create a controller", function() {
-    var controller = glift.controllers.staticProblem();
-    ok(controller !== undefined, "Must me defined");
+    throws(function() {
+      var controller = glift.controllers.staticProblem();
+    }, /Options is undefined/);
   });
 
   test("Must create a controller with non-empty string", function() {

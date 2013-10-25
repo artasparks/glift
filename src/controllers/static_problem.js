@@ -8,12 +8,10 @@
  *  - There is actually a node somewhere beneath the variation that results in a
  *  'correct' outcome.
  */
-glift.controllers.staticProblem = function(rawOptions) {
-  var options = rawOptions,
-      controllers = glift.controllers,
+glift.controllers.staticProblem = function(options) {
+  var controllers = glift.controllers,
       baseController = glift.util.beget(controllers.base()),
       newController = glift.util.setMethods(baseController, methods),
-      // At this point, options have already been processed
       _ = newController.initOptions(options);
   return newController;
 };
@@ -40,11 +38,11 @@ var methods = {
    * shorter and easier to understand.
    */
   addStone: function(point, color) {
-    var problemResults = glift.enums.problemResults,
-        CORRECT = problemResults.CORRECT,
-        INCORRECT = problemResults.INCORRECT,
-        INDETERMINATE = problemResults.INDETERMINATE,
-        FAILURE = problemResults.FAILURE;
+    var problemResults = glift.enums.problemResults;
+    var CORRECT = problemResults.CORRECT;
+    var INCORRECT = problemResults.INCORRECT;
+    var INDETERMINATE = problemResults.INDETERMINATE;
+    var FAILURE = problemResults.FAILURE;
 
     // Reminder -- the goban returns:
     //  {
@@ -80,7 +78,7 @@ var methods = {
     } else {
       this.movetree.moveDown(nextVarNum);
 
-      var correctness = this.movetree.isCorrectPosition();
+      var correctness = glift.rules.problems.isCorrectPosition(this.movetree);
       if (correctness === CORRECT || correctness == INCORRECT) {
         var outData = this.getNextBoardState();
         outData.result = correctness;
