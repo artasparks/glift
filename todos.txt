@@ -35,6 +35,9 @@ Done - BUG: NextMove fails when the next move is a pass.
 Done - Change font size to based on pixel size.
 Done - Change viewer to color the right variations differently.  This is a bit
     hacky and will probably need to be redone.
+Done - Make Comments toggle-able (should be part of settings window ultimately)
+Done - Change the Text Width dynamically (I think this is done.
+Done - Make Problem correctness configurable.
 
 Nope:
   Info Window / panel.
@@ -66,15 +69,11 @@ Smaller Changes.
 - Add Pass Button to GameViewer (base) widget.
 - Change MoveNodes / Movetree to have parent information instead of movehistory.
 - Make a global registry of 'active board' so that key events can be assigned.
-- Change the Text Width dynamically.
-- Remove dependencies on external libraries!  Quite a big job.
+- Remove dependencies on external libraries.  Quite a big job.
 - Make orientation of GoBoard (widget?) configurable (flush left, center-h, flush-right, etc).
 - On skinny windows, move the icon bar so it's flush with the window (a sort of flush-top)
 - Get the theme data out of the display.
 - Create a problem explorer widget / controller.
-
-Problem Widget
-- Make Comments toggle-able (should be part of settings)
 
 - Create game editor widget. (many dependencies)
   - add moveTree support for delete
@@ -84,4 +83,4 @@ Problem Widget
 
 Some ideas for future development:
 2. Make the base configuration changes orientations based on screen dimensions.
-See the KGS window for an example of this.
+See the KGS/cgoban window for a great example of this.
