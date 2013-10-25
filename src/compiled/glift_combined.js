@@ -1,7 +1,7 @@
 /**
  * @preserve Glift: A Responsive Javascript library for the game Go.
  *
- * @version 0.9.0
+ * @version 1.0.1
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
  * --------------------------------------
@@ -23,10 +23,10 @@ glift.global = {
   // None of these are currently used
   debugMode: false,
   performanceDebug: false,
-  version: '0.1.0',
+  version: '1.0.1',
   // The active registry.  Used to determine who has 'ownership' of key-presses.
-  active: {
-  }
+  // (not used yet)
+  active: {}
 };
 
 window.glift = glift;
@@ -5853,6 +5853,7 @@ glift.widgets._BaseWidget.prototype = {
   },
 
   redraw: function() {
+    this.correctness = undefined; // TODO(kashomon): This shouldn't live here.
     this.destroy();
     this.draw();
   },
@@ -6190,7 +6191,19 @@ glift.widgets.options.problem = {
                 widget.options.problemIndex];
             widget.controller = glift.controllers.staticProblem(
                 widget.options);
-            widget.reload();
+
+            // Test to see if we need to redraw.
+            var testMovetree = glift.rules.movetree.getFromSgf(
+                widget.options.sgfString);
+            if (widget.options.boardRegionType ===
+                glift.enums.boardRegions.AUTO &&
+                glift.bridge.getCropFromMovetree(testMovetree) !==
+                widget.options.boardRegion)  {
+              widget.redraw();
+            } else {
+              widget.reload();
+              widget.reload();
+            }
           }
         }
       },
