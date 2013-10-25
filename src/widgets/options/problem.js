@@ -101,7 +101,19 @@ glift.widgets.options.problem = {
                 widget.options.problemIndex];
             widget.controller = glift.controllers.staticProblem(
                 widget.options);
-            widget.reload();
+
+            // Test to see if we need to redraw.
+            var testMovetree = glift.rules.movetree.getFromSgf(
+                widget.options.sgfString);
+            if (widget.options.boardRegionType ===
+                glift.enums.boardRegions.AUTO &&
+                glift.bridge.getCropFromMovetree(testMovetree) !==
+                widget.options.boardRegion)  {
+              widget.redraw();
+            } else {
+              widget.reload();
+              widget.reload();
+            }
           }
         }
       },

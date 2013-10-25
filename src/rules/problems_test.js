@@ -49,4 +49,16 @@ glift.rules.problemsTest = function() {
     deepEqual(glift.rules.problems.isCorrectPosition(movt, {GB: []}),
         problemResults.CORRECT, "No longer Indeterminate ");
   });
+
+  test("GoGameGuru Problem", function() {
+    var problemResults = glift.enums.problemResults;
+    var movt = glift.rules.movetree.getFromSgf(testdata.sgfs.gogameguruHard);
+    deepEqual(glift.rules.problems.isCorrectPosition(movt,
+          {GB: [], C: ['Correct', 'is correct']}),
+        problemResults.INDETERMINATE, "Should be Indeterminate at beginning");
+    movt.moveDown(0);
+    deepEqual(glift.rules.problems.isCorrectPosition(movt,
+          {GB: [], C: ['Correct', 'is correct']}),
+        problemResults.CORRECT, "Should be correct");
+  });
 };

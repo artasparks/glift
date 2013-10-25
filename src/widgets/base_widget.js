@@ -188,6 +188,7 @@ glift.widgets._BaseWidget.prototype = {
   },
 
   redraw: function() {
+    this.correctness = undefined; // TODO(kashomon): This shouldn't live here.
     this.destroy();
     this.draw();
   },
