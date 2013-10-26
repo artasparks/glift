@@ -2,7 +2,7 @@
 // TODO(kashomon): Make its own directory?
 glift.displays.cropbox = {
   LINE_EXTENSION: .5,
-  DEFAULT_EXTENSION: 0,
+  DEFAULT_EXTENSION: 0, // Wut.
   OVERFLOW: 1.5, // The line spacing that goes around the edge.
 
   create: function(cbox, extBox, minIntersects, maxIntersects) {
@@ -96,7 +96,7 @@ glift.displays.cropbox = {
           top = halfInts - 1;
           topExtension = this.LINE_EXTENSION;
           left = halfInts - 2;
-          rightExtension = this.LINE_EXTENSION;
+          leftExtension = this.LINE_EXTENSION;
           break;
       default: break;
     };
@@ -125,6 +125,13 @@ CropBox.prototype = {
   extBox: function() { return this._extBox; },
   xPoints: function() { return this.cbox().width(); },
   yPoints: function() { return this.cbox().height(); },
+
+  /**
+   * Returns the number of 'intersections' we need to allocate for the height.
+   * In otherwords:
+   *    - The base intersections (e.g., 19x19).
+   *    -
+   */
   widthMod: function() {
     var OVERFLOW = glift.displays.cropbox.OVERFLOW;
     return this.cbox().width() + this.extBox().topLeft().x()
