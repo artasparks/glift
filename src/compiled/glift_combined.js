@@ -1800,7 +1800,7 @@ BoardPoints.prototype = {
 // TODO(kashomon): Make its own directory?
 glift.displays.cropbox = {
   LINE_EXTENSION: .5,
-  DEFAULT_EXTENSION: 0,
+  DEFAULT_EXTENSION: 0, // Wut.
   OVERFLOW: 1.5, // The line spacing that goes around the edge.
 
   create: function(cbox, extBox, minIntersects, maxIntersects) {
@@ -1894,7 +1894,7 @@ glift.displays.cropbox = {
           top = halfInts - 1;
           topExtension = this.LINE_EXTENSION;
           left = halfInts - 2;
-          rightExtension = this.LINE_EXTENSION;
+          leftExtension = this.LINE_EXTENSION;
           break;
       default: break;
     };
@@ -1923,6 +1923,13 @@ CropBox.prototype = {
   extBox: function() { return this._extBox; },
   xPoints: function() { return this.cbox().width(); },
   yPoints: function() { return this.cbox().height(); },
+
+  /**
+   * Returns the number of 'intersections' we need to allocate for the height.
+   * In otherwords:
+   *    - The base intersections (e.g., 19x19).
+   *    -
+   */
   widthMod: function() {
     var OVERFLOW = glift.displays.cropbox.OVERFLOW;
     return this.cbox().width() + this.extBox().topLeft().x()
@@ -2067,18 +2074,20 @@ GuiEnvironment.prototype = {
 })();
 (function() {
 glift.displays.getLineBox = function(boardBox, cropbox) {
-  var overflow = glift.displays.cropbox.OVERFLOW,
-      xSpacing = boardBox.width() / cropbox.widthMod(),
-      ySpacing = boardBox.height() / cropbox.heightMod(),
-      top = ySpacing * overflow / 2,
-      left = xSpacing * overflow / 2,
-      bot = ySpacing * (cropbox.heightMod() - overflow / 2),
-      right = xSpacing * (cropbox.widthMod() - overflow / 2),
-      leftBase = boardBox.topLeft().x(),
-      topBase = boardBox.topLeft().y(),
+  var totalOverflow = glift.displays.cropbox.OVERFLOW;
+  var oneSidedOverflow = totalOverflow / 2;
+  // TODO(kashomon): This is very mysterious. Provide more documentation.
+  var xSpacing = boardBox.width() / cropbox.widthMod();
+  var ySpacing = boardBox.height() / cropbox.heightMod();
+  var top = ySpacing * oneSidedOverflow; // Scale the overflow by spacing
+  var left = xSpacing * oneSidedOverflow; // Scale the overflow by spacing
+  var bot = ySpacing * (cropbox.heightMod() - oneSidedOverflow)
+  var right = xSpacing * (cropbox.widthMod() - oneSidedOverflow)
+  var leftBase = boardBox.topLeft().x();
+  var topBase = boardBox.topLeft().y();
 
       // The Line Box is an extended cropbox.
-      lineBoxBoundingBox = glift.displays.bboxFromPts(
+  var lineBoxBoundingBox = glift.displays.bboxFromPts(
           glift.util.point(left + leftBase, top + topBase),
           glift.util.point(right + leftBase, bot + topBase));
       return new LineBox(lineBoxBoundingBox, xSpacing, ySpacing, cropbox);
@@ -2095,18 +2104,6 @@ var LineBox = function(boundingBox, xSpacing, ySpacing, cropbox) {
   this.xPoints = cropbox.xPoints();
   this.yPoints = cropbox.yPoints();
 };
-
-LineBox.prototype = {
-  _debugDrawLines: function(paper, color) {
-    for (var i = this.bbox.left(), j = this.bbox.top();
-          i <= this.bbox.right();
-          i += this.spacing, j += this.spacing) {
-      var obj = paper.rect(i, j, this.spacing, this.spacing);
-      obj.attr({fill:color, opacity:0.5});
-    }
-  }
-};
-
 
 })();
 /**

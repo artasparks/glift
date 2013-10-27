@@ -72,6 +72,12 @@ glift.widgets.options.base = {
   splitsWithoutComments: [.90],
 
   /**
+   * Rules for determining when a problem is correct.  Usually only set for
+   * problem-type widgets.
+   */
+  problemConditions: {},
+
+  /**
    * The default icons used in the IconBar.  If the user specifies 'icons', then
    * it completely overwrites the icons listed here.
    */
