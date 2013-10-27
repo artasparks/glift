@@ -4,7 +4,7 @@ Glift
 ### The Go Lightweight Frontend
 
 Glift is a modern javascript client for the game
-<a href=http://en.wikipedia.org/wiki/Go_(game)">Go</a>
+<a href="http://en.wikipedia.org/wiki/Go_(game)">Go</a>
 
 Glift is still in beta.  Until Glift is fully out of it's beta period, the API
 may change at any point, without warning.  I do plan on using semantic
