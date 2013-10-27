@@ -49,7 +49,7 @@ CommentBox.prototype = {
 
   setText: function(text) {
     this.commentBoxObj.html('<p>' +
-        text.replace(/\n/g, '<br><p>'));
+        text.replace(/\n/g, '<br>') + '</p>');
   },
 
   clearText: function() {

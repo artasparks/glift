@@ -1,7 +1,7 @@
 Glift
 =====
 
-### he Go Lightweight Frontend
+### The Go Lightweight Frontend
 
 Glift is a modern javascript client for the game
 [Go](http://en.wikipedia.org/wiki/Go_(game)).

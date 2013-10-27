@@ -2934,7 +2934,7 @@ CommentBox.prototype = {
 
   setText: function(text) {
     this.commentBoxObj.html('<p>' +
-        text.replace(/\n/g, '<br><p>'));
+        text.replace(/\n/g, '<br>') + '</p>');
   },
 
   clearText: function() {
@@ -3273,8 +3273,13 @@ glift.displays.gui.icons = {
 
   // http://raphaeljs.com/icons/#play
   play: {
-    string: "M6.684,25.682L24.316,15.5L6.684,5.318V25.682z",
-    bbox:{"x":6.684,"y":5.318,"x2":24.316,"y2":25.682,"width":17.632,"height":20.364}
+    string: "m 58.250001,41.61219 0,40 34.69375,-20.03045 z",
+    bbox:{"x":58.250001,"y":41.61219,"x2":92.94375099999999,"y2":81.61219,"width":34.693749999999994,"height":40}
+  },
+
+  unplay: {
+    string: "m 74.987245,22.583592 0,39.978487 L 40,42.362183 z",
+    bbox: {"x":40,"y":22.583592,"x2":74.987245,"y2":62.562079,"width":34.987245,"height":39.978487}
   },
 
   // http://raphaeljs.com/icons/#end
@@ -5874,6 +5879,9 @@ glift.widgets.basicProblem = function(options) {
   }
   return glift.widgets.baseWidget(options);
 };
+glift.widgets.boardEditor = function(options) {
+  // TODO(kashomon): This is going to take some work
+};
 glift.widgets.options = {
   setDefaults: function(options, defaultOptionSet) {
     var defaultOptionSet = defaultOptionSet || 'base';
@@ -5997,6 +6005,12 @@ glift.widgets.options.base = {
   splitsWithoutComments: [.90],
 
   /**
+   * Rules for determining when a problem is correct.  Usually only set for
+   * problem-type widgets.
+   */
+  problemConditions: {},
+
+  /**
    * The default icons used in the IconBar.  If the user specifies 'icons', then
    * it completely overwrites the icons listed here.
    */
@@ -6086,6 +6100,18 @@ glift.widgets.options.base = {
   }
 };
 /**
+ * Option defaults used by the Board Editor.
+ */
+glift.widgets.options.boardEditor = {
+  icons: ['next', 'prev', 'pass', 'comment', 'delete', 'undo'],
+
+  /**
+   * We need more icons.
+   */
+  rowTwoIcons:['move', 'placement', 'triangleMove', 'squareMove', 'letterLabel',
+      'numberLabel']
+};
+/**
  * Option defaults used by the Problem Widget.
  */
 glift.widgets.options.problem = {
@@ -6115,6 +6141,12 @@ glift.widgets.options.problem = {
   },
 
   /**
+   * A callback, so that users can take some action based on the result of a
+   * problem. Provides one argument: one of enums.problemResults.INCORRECT.
+   */
+  problemCallback: function(problemResult) {},
+
+  /**
    * The function that produces the problem controller.
    */
   controllerFunc: glift.controllers.staticProblem,
@@ -6127,7 +6159,7 @@ glift.widgets.options.problem = {
   /**
    * Icons specified by the problem widget.
    */
-  icons: ['play', 'refresh', 'roadmap', 'checkbox'],
+  icons: ['unplay', 'play', 'refresh', 'roadmap', 'checkbox'],
 
   /**
    * Turn off the comment box, by default
@@ -6144,8 +6176,10 @@ glift.widgets.options.problem = {
   /**
    * Keymappings for the problem widget
    */
-  // TODO(kashomon): Add key mappings for problems.
-  keyMapping: {},
+  keyMapping: {
+    ARROW_LEFT: 'icons.play.click',
+    ARROW_RIGHT: 'icons.unplay.click'
+  },
 
   /**
    * Problem-specific actions.
@@ -6160,10 +6194,13 @@ glift.widgets.options.problem = {
         var data = widget.controller.addStone(pt, currentPlayer);
         var problemResults = glift.enums.problemResults;
         if (data.result === problemResults.FAILURE) {
-          return; // Illegal move -- nothing to do.
+          // Illegal move -- nothing to do.  Don't make the player fail based on
+          // an illegal move.
+          return;
         }
         widget.applyBoardData(data);
         if (widget.correctness === undefined) {
+          widget.options.problemCallback(data.result);
           if (data.result === problemResults.CORRECT) {
             widget.iconBar.addTempIcon(
                 'check', widget.iconBar.getIcon('checkbox').newBbox, '#0CC');
@@ -6178,32 +6215,44 @@ glift.widgets.options.problem = {
     },
 
     icons: {
-      // Get next problem.
-      play: {
-        click: function(widget) {
-          if (widget.options.sgfStringList.length > 0) {
-            widget.options.problemIndex = (widget.options.problemIndex + 1) %
-                widget.options.sgfStringList.length;
-            widget.options.sgfString = widget.options.sgfStringList[
-                widget.options.problemIndex];
-            widget.controller = glift.controllers.staticProblem(
-                widget.options);
+      _nextProblemInternal: function(widget, indexChange) {
+        if (widget.options.sgfStringList.length > 0) {
+          widget.options.problemIndex = (widget.options.problemIndex
+              + indexChange + widget.options.sgfStringList.length)
+              % widget.options.sgfStringList.length;
+          widget.options.sgfString = widget.options.sgfStringList[
+              widget.options.problemIndex];
+          widget.controller = glift.controllers.staticProblem(
+              widget.options);
 
-            // Test to see if we need to redraw.
-            var testMovetree = glift.rules.movetree.getFromSgf(
-                widget.options.sgfString);
-            if (widget.options.boardRegionType ===
-                glift.enums.boardRegions.AUTO &&
-                glift.bridge.getCropFromMovetree(testMovetree) !==
-                widget.options.boardRegion)  {
-              widget.redraw();
-            } else {
-              widget.reload();
-              widget.reload();
-            }
+          // Test to see if we need to redraw.
+          var testMovetree = glift.rules.movetree.getFromSgf(
+              widget.options.sgfString);
+          if (widget.options.boardRegionType ===
+              glift.enums.boardRegions.AUTO &&
+              glift.bridge.getCropFromMovetree(testMovetree) !==
+              widget.options.boardRegion)  {
+            widget.redraw();
+          } else {
+            widget.reload();
+            widget.reload();
           }
         }
       },
+
+      // Get next problem.
+      play: {
+        click: function(widget) {
+          widget.options.actions.icons._nextProblemInternal(widget, 1)
+        }
+      },
+
+      unplay: {
+        click: function(widget) {
+          widget.options.actions.icons._nextProblemInternal(widget, -1)
+        }
+      },
+
       // Try again
       refresh: {
         click: function(widget) {
@@ -6229,7 +6278,7 @@ glift.widgets.options.problem = {
             sgfString: widget.options.sgfString,
             showVariations: glift.enums.showVariations.ALWAYS,
             problemConditions:
-                glift.widgets.options.problem.problemConditions,
+                widget.options.problemConditions,
             boardRegionType: glift.enums.boardRegions.AUTO,
             icons: ['start', 'end', 'arrowleft', 'arrowright', 'undo'],
             actions: {
