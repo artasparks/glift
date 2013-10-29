@@ -18,6 +18,7 @@
 <script type="text/javascript" src="../util/id_generator.js"></script>
 <script type="text/javascript" src="../util/key_mappings.js"></script>
 <script type="text/javascript" src="../util/math.js"></script>
+<script type="text/javascript" src="../util/performance.js"></script>
 <script type="text/javascript" src="../util/point.js"></script>
 <script type="text/javascript" src="../util/regions.js"></script>
 <script type="text/javascript" src="../util/test_util.js"></script>
@@ -106,7 +107,7 @@
       <div id="glift_display1"></div>
       <div id="extra_info"></div>
       <script type="text/javascript">
-        // FastClick.attach(document.body);
+        //glift.global.performanceDebugLevel = 'info'
         var basicProblem = glift.widgets.basicProblem({
           sgfStringList: [
               testdata.sgfs.complexproblem,

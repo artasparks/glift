@@ -20,12 +20,17 @@ glift.global = {
       glift.global.fastClickEnabled = true;
     }
   },
-  // None of these are currently used
   debugMode: false,
-  performanceDebug: false,
+  // Options for performanceDebugLevel: none, fine, info
+  performanceDebugLevel: 'none',
+  // Map of performance timestamps.
+  perf: {},
+  // TODO(kashomon): Update the minor minor version based on commits.
   version: '1.0.1',
   // The active registry.  Used to determine who has 'ownership' of key-presses.
-  // (not used yet)
+  // The problem is that key presses have to be captured in a global scope (or
+  // at least at the <body> level.  Unfortunate.
+  // (not used yet).
   active: {}
 };
 

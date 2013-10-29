@@ -2,11 +2,16 @@
  * Public 'constructor' for the BaseWidget.
  */
 glift.widgets.baseWidget = function(options) {
+  glift.util.perfInit();
   if (options.enableFastClick) {
     glift.global.enableFastClick();
   }
-  return new glift.widgets._BaseWidget(
+  glift.util.majorPerfLog("Before Widget Creation");
+  var baseWidget = new glift.widgets._BaseWidget(
       glift.widgets.options.setDefaults(options, 'base')).draw();
+  glift.util.majorPerfLog("After Widget Creation");
+  glift.util.perfDone();
+  return baseWidget;
 };
 
 /**

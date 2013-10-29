@@ -4,9 +4,11 @@ glift.displays = {
    * creates an SVG based Go Board.
    */
   create: function(options) {
-    var environment = glift.displays.environment.get(options),
-        themeKey = options.theme || 'DEFAULT',
-        theme = glift.themes.get(themeKey); // Get a theme copy.
+    glift.util.majorPerfLog("Before environment creation");
+    var environment = glift.displays.environment.get(options);
+    glift.util.majorPerfLog("After environment creation");
+    var themeKey = options.theme || 'DEFAULT';
+    var theme = glift.themes.get(themeKey); // Get a theme copy.
     if (options.goBoardBackground && options.goBoardBackground !== '') {
       glift.themes.setGoBoardBackground(theme, options.goBoardBackground);
     }
