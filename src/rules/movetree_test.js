@@ -88,7 +88,7 @@ glift.rules.movetreeTest = function() {
   test("Test that adding properties works", function() {
     var movt = movetree.getFromSgf(sgfs.veryeasy);
     movt.properties()
-        .add("C", "foo")
+        .set("C", "foo")
         .add("EV", "tourny");
     deepEqual(movt.properties().getOneValue("C"), "foo",
         "Should get the correct comment");

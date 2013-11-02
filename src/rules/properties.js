@@ -111,9 +111,18 @@ Properties.prototype = {
     }
   },
 
-  /** Replace replaces the current value if the property already exists. */
-  replace: function(prop, value) {
-    this.propMap[prop] = value
+  /**
+   * Sets current value, even if the property already exists.
+   */
+  set: function(prop, value) {
+    if (prop !== undefined && value !== undefined) {
+      if (glift.util.typeOf(value) === 'string') {
+        this.propMap[prop] = [value]
+      } else if (glift.util.typeOf(value) === 'array') {
+        this.propMap[prop] = value
+      }
+    }
+    return this;
   },
 
   //---------------------//
@@ -183,7 +192,7 @@ Properties.prototype = {
    *
    * Example:
    *    Matches if there is a GB property or the words 'Correct' or 'is correct' in
-   *    the comment.
+   *    the commentj
    *    { GB: [], C: ['Correct', 'is correct'] }
    *
    * Note: This is an O(lnm) ~ O(n^3).  But practice, you'll want to test

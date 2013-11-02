@@ -29,7 +29,6 @@ var GuiEnvironment = function(options) {
   this.cropbox = displayConfig.cropbox !== undefined
       ? displayConfig.cropbox
       : glift.displays.cropbox.getFromRegion(this.boardRegion, this.intersections);
-  //glift.util.logz(this.cropbox);
   this.heightOverride = false;
   this.widthOverride = false;
 
@@ -55,8 +54,8 @@ GuiEnvironment.prototype = {
     var displays = glift.displays,
         env = displays.environment,
         divHeight = this.divHeight,
-        divWidth  = this.divWidth,
-        cropbox   = this.cropbox,
+        divWidth = this.divWidth,
+        cropbox = this.cropbox,
         dirs = glift.enums.directions,
 
         // The box for the entire div.

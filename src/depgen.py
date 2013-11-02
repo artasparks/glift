@@ -15,6 +15,7 @@ import subprocess
 
 FILES_TO_AUTOGEN = {
     # Name / Add Tests
+    'htmltests/AjaxProblemTester.html': False,
     'htmltests/BaseWidgetTest.html': False,
     'htmltests/BboxFinder.html': False,
     'htmltests/GameViewerTester.html': False,

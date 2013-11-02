@@ -13,6 +13,11 @@ glift.widgets.options.base = {
   sgfString: '',
 
   /**
+   * An url to an SGF. Note that sgfString takes precedence if it is non-empty.
+   */
+  sgfUrl: '',
+
+  /**
    * The default div id in which we create the go board.
    */
   divId: 'glift_display',
@@ -82,6 +87,11 @@ glift.widgets.options.base = {
    * it completely overwrites the icons listed here.
    */
   icons: ['start', 'end', 'arrowleft', 'arrowright'],
+
+  /**
+   * Reduced set of icons for examples (when there are no variations).
+   */
+  reducedIconsForExample: [],
 
   /**
    * Key Mapping: From key-id to action-selector.

@@ -2,6 +2,7 @@
 if (testdata === undefined) var testdata = {};
 
 testdata.sgfs = {
+  descriptionTest: "(;GM[1]C[Try these Problems out!])",
   base:
     "(;GM[1]FF[4]CA[UTF-8]AP[CGoban:3]ST[2]\n" +
     "RU[Japanese]SZ[19]KM[0.00]\n" +
@@ -9,6 +10,7 @@ testdata.sgfs = {
 
   veryeasy:
     "(;GM[1]FF[4]CA[UTF-8]AP[CGoban:3]ST[2]\n" +
+    "C[Here's a basic example problem]" +
     "RU[Japanese]SZ[19]KM[0.00]\n" +
     "PW[j]PB[j]AW[ef]\n" +
     ";B[pd]\n" +
@@ -41,7 +43,12 @@ testdata.sgfs = {
   trivialproblem:
     "(;GM[1]FF[4]CA[UTF-8]AP[CGoban:3]ST[2]\n" +
     "RU[Japanese]SZ[19]KM[0.00]\n" +
-    "PW[White]PB[Black]GB[1]AW[pb][mc][pc][qd][rd][qf][pg][qg]" +
+    "PW[White]PB[Black]GB[1]" +
+    "C[Here's an example diagram. I have marked 1 on the diagram. " +
+    "Let's pretend it was white's last move.  Think on this move, since " +
+    "it may be a problem in the near future!]" +
+    "LB[pb:1]" +
+    "AW[pb][mc][pc][qd][rd][qf][pg][qg]" +
     "AB[jc][oc][qc][pd][pe][pf])",
 
   realproblem:
@@ -49,6 +56,7 @@ testdata.sgfs = {
     "RU[Japanese]SZ[19]KM[0.00]\n" +
     "PW[White]PB[Black]AW[pb][mc][pc][qd][rd][qf][pg][qg]\n" +
     "AB[jc][oc][qc][pd][pe][pf]\n" +
+    "C[Look Familiar?]" +
     "(;B[ob]C[Bad style.]\n" +
     ";W[qb]\n" +
     "(;B[nd]C[White's stone can easily escape.])\n" +
@@ -122,5 +130,5 @@ testdata.sgfs = {
     "SQ[ra][rb][rc]" +
     ")",
 
-    gogameguruHard: "(;GM[2]FF[4]CA[UTF-8]AP[CGoban:3]ST[2]RU[Japanese]SZ[19]KM[0.00]AW[po][qo][ro][so][np][op][pq][nr][pr][qr][rs]AB[qm][on][pn][oo][pp][qp][rp][sp][qq][rr][qs](;B[sr](;W[rq];B[sq];W[ps];B[rn]C[Correct])(;W[ps](;B[rn];W[rq];B[sq];W[qs](;B[sn]C[Correct])(;B[qn]C[Correct]))(;B[qn];W[rq];B[sq];W[qs];B[rn]C[Correct])(;B[sn];W[rq];B[sq];W[qs];B[rn]C[Correct])))(;B[sq];W[ps](;B[rn];W[sr];B[ss]C[It's a ko, but black can do better.])(;B[sr];W[qs];B[rn];W[ss])(;B[qn];W[sr];B[ss]C[It's a ko, but black can do better.])(;B[sn];W[sr];B[ss]C[It's a ko, but black can do better.]))(;B[ss];W[sq];B[rq];W[ps](;B[rn];W[rs]C[It's a ko, but black can do better.])(;B[qn];W[rs]C[It's a ko, but black can do better.])(;B[sn];W[rs]C[It's a ko, but black can do better.]))(;B[rq];W[ps](;B[sr];W[qs](;B[rn];W[ss])(;B[qn];W[ss]))(;B[rn];W[sr])(;B[qn];W[sr]))(;B[rn];W[sq])(;B[qn];W[sq])(;B[sn];W[sq]))"
+    gogameguruHard: "(;GM[2]FF[4]CA[UTF-8]AP[CGoban:3]ST[2]RU[Japanese]SZ[19]KM[0.00]C[A Problem from GoGameGuru]AW[po][qo][ro][so][np][op][pq][nr][pr][qr][rs]AB[qm][on][pn][oo][pp][qp][rp][sp][qq][rr][qs](;B[sr](;W[rq];B[sq];W[ps];B[rn]C[Correct])(;W[ps](;B[rn];W[rq];B[sq];W[qs](;B[sn]C[Correct])(;B[qn]C[Correct]))(;B[qn];W[rq];B[sq];W[qs];B[rn]C[Correct])(;B[sn];W[rq];B[sq];W[qs];B[rn]C[Correct])))(;B[sq];W[ps](;B[rn];W[sr];B[ss]C[It's a ko, but black can do better.])(;B[sr];W[qs];B[rn];W[ss])(;B[qn];W[sr];B[ss]C[It's a ko, but black can do better.])(;B[sn];W[sr];B[ss]C[It's a ko, but black can do better.]))(;B[ss];W[sq];B[rq];W[ps](;B[rn];W[rs]C[It's a ko, but black can do better.])(;B[qn];W[rs]C[It's a ko, but black can do better.])(;B[sn];W[rs]C[It's a ko, but black can do better.]))(;B[rq];W[ps](;B[sr];W[qs](;B[rn];W[ss])(;B[qn];W[ss]))(;B[rn];W[sr])(;B[qn];W[sr]))(;B[rn];W[sq])(;B[qn];W[sq])(;B[sn];W[sq]))"
 };

@@ -8,6 +8,12 @@ glift.widgets.options.problem = {
   sgfStringList: [],
 
   /**
+   * List of URLs from which to load the SGF via AJAX. Note that sgfStringList
+   * takes precedence, if it is non-empty
+   */
+  sgfUrlList: [],
+
+  /**
    * Index into the above array.  It seems unlikely that anybody would want to
    * override this setting, but it's here or clarity.
    */
@@ -46,7 +52,12 @@ glift.widgets.options.problem = {
   /**
    * Icons specified by the problem widget.
    */
-  icons: ['unplay', 'play', 'refresh', 'roadmap', 'checkbox'],
+  icons: ['chevron-left' , 'refresh', 'roadmap', 'checkbox', 'chevron-right'],
+
+  /**
+   * A reduced set of Icons used for examples (when there are no variations).
+   */
+  reducedIconsForExample: ['chevron-left', 'chevron-right'],
 
   /**
    * Turn off the comment box, by default
@@ -64,8 +75,8 @@ glift.widgets.options.problem = {
    * Keymappings for the problem widget
    */
   keyMapping: {
-    ARROW_LEFT: 'icons.play.click',
-    ARROW_RIGHT: 'icons.unplay.click'
+    ARROW_LEFT: 'icons.chevron-left.click',
+    ARROW_RIGHT: 'icons.chevron-right.click'
   },
 
   /**
@@ -86,7 +97,9 @@ glift.widgets.options.problem = {
           return;
         }
         widget.applyBoardData(data);
-        if (widget.correctness === undefined) {
+        if (widget.correctness === undefined &&
+            !glift.util.arrayEquals(widget.iconBar.iconNames,
+                widget.options.reducedIconsForExample)) {
           widget.options.problemCallback(data.result);
           if (data.result === problemResults.CORRECT) {
             widget.iconBar.addTempIcon(
@@ -103,38 +116,41 @@ glift.widgets.options.problem = {
 
     icons: {
       _nextProblemInternal: function(widget, indexChange) {
-        if (widget.options.sgfStringList.length > 0) {
-          widget.options.problemIndex = (widget.options.problemIndex
-              + indexChange + widget.options.sgfStringList.length)
-              % widget.options.sgfStringList.length;
-          widget.options.sgfString = widget.options.sgfStringList[
-              widget.options.problemIndex];
-          widget.controller = glift.controllers.staticProblem(
-              widget.options);
+        if (widget.options.sgfStringList.length > 0 ||
+            widget.options.sgfUrlList.length > 0) {
+          var listLength = widget.options.sgfUrlList.length > 0 ?
+              widget.options.sgfUrlList.length:
+              widget.options.sgfStringList.length;
+          var index = (widget.options.problemIndex
+              + indexChange + listLength) % listLength;
+          widget.options.problemIndex = index
 
-          // Test to see if we need to redraw.
-          var testMovetree = glift.rules.movetree.getFromSgf(
-              widget.options.sgfString);
-          if (widget.options.boardRegionType ===
-              glift.enums.boardRegions.AUTO &&
-              glift.bridge.getCropFromMovetree(testMovetree) !==
-              widget.options.boardRegion)  {
+          // Internal function used for ajax / non-ajax calls
+          var loadSgfString = function(inputString) {
+            widget.options.sgfString = inputString;
             widget.redraw();
-          } else {
-            widget.reload();
-            widget.reload();
+          }
+
+          if (widget.options.sgfStringList.length > 0) {
+            loadSgfString(widget.options.sgfStringList[index]);
+          } else if (widget.options.sgfUrlList.length > 0) {
+            var url = widget.options.sgfUrlList[index];
+            $.get(url, function(data) {
+              loadSgfString(data);
+            });
           }
         }
       },
 
       // Get next problem.
-      play: {
+      'chevron-right': {
         click: function(widget) {
           widget.options.actions.icons._nextProblemInternal(widget, 1)
         }
       },
 
-      unplay: {
+      // Get the previous problem.
+      'chevron-left': {
         click: function(widget) {
           widget.options.actions.icons._nextProblemInternal(widget, -1)
         }
@@ -150,13 +166,14 @@ glift.widgets.options.problem = {
       // Go to the explain-board.
       roadmap: {
         click: function(widget) {
-          widget.problemControllor = widget.controller;
-          widget.problemOptions = widget.options;
+          // This is a terrible hack.  High yuck factor.
+          widget._problemControllor = widget.controller;
+          widget._problemOptions = widget.options;
           widget.destroy();
           var returnAction = function(widget) {
             widget.destroy();
-            widget.options = widget.problemOptions;
-            widget.controller = widget.problemControllor;
+            widget.options = widget._problemOptions;
+            widget.controller = widget._problemControllor;
             widget.draw();
           };
           var optionsCopy = {

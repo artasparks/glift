@@ -37,8 +37,11 @@ glift.rules.movetree = {
    * Create an empty MoveTree
    */
   getInstance: function(intersections) {
-    var ints = intersections || 19;
-    return new MoveTree(glift.rules.movenode()).setIntersections(ints);
+    var mt = new MoveTree(glift.rules.movenode());
+    if (intersections !== undefined) {
+      mt.setIntersections(ints);
+    }
+    return mt;
   },
 
   /**
@@ -310,8 +313,9 @@ MoveTree.prototype = {
   getIntersections: function() {
     var mt = this.getTreeFromRoot(),
         allProperties = glift.sgf.allProperties;
-    if (mt.node().properties().contains(allProperties.SZ)) {
-      return parseInt(mt.node().properties().getAllValues(allProperties.SZ));
+    if (mt.properties().contains(allProperties.SZ)) {
+      var ints = parseInt(mt.properties().getAllValues(allProperties.SZ));
+      return ints;
     } else {
       return undefined;
     }

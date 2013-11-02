@@ -20,4 +20,19 @@ glift.utilTest = function() {
   test("outbounds", function() {
     ok(!util.outBounds(2, 19), "2 is within bounds");
   });
+
+  test("Copy obj", function() {
+    var testObj = {
+      inner: {
+        foo: 'bar',
+        fizz: ['baz']
+      },
+      isTrue: true,
+      flam: 1234,
+      flag: function() { return 'fizzbizz'; }
+    };
+    var clone = glift.util.simpleClone(testObj);
+    ok(testObj !== clone);
+    deepEqual(clone, testObj);
+  });
 };

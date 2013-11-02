@@ -1,13 +1,19 @@
 glift.bridge.getCropFromMovetree = function(movetree) {
-  var bbox = glift.displays.bboxFromPts,
-      point = glift.util.point,
-      boardRegions = glift.enums.boardRegions,
-      // Intersections need to be 0 rather than 1 indexed.
-      ints = movetree.getIntersections() - 1,
-      middle = Math.ceil(ints / 2),
-      quads = {},
-      tracker = {},
-      numstones = 0;
+  var bbox = glift.displays.bboxFromPts;
+  var point = glift.util.point;
+  var boardRegions = glift.enums.boardRegions;
+  // Intersections need to be 0 rather than 1 indexed for this method.
+  var ints = movetree.getIntersections() - 1;
+  var middle = Math.ceil(ints / 2);
+  var quads = {};
+  var tracker = {};
+  var numstones = 0;
+
+  // TODO(kashomon): Reevaluate this later.  It's not clear to me if we should
+  // be cropping boards smaller than 19.  It usually looks pretty weird.
+  if (movetree.getIntersections() !== 19) {
+    return glift.enums.boardRegions.ALL;
+  }
   quads[boardRegions.TOP_LEFT] =
       bbox(point(0, 0), point(middle + 1, middle + 1));
   quads[boardRegions.TOP_RIGHT] =

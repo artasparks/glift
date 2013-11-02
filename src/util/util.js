@@ -9,13 +9,6 @@ glift.util = {
     return glift.util.none; // default value to return.
   },
 
-  // A utility method -- for prototypal inheritence.
-  beget: function (o) {
-    var F = function () {};
-    F.prototype = o;
-    return new F();
-  },
-
   /**
    * Via Crockford / StackOverflow: Determine the type of a value in robust way.
    */
@@ -39,7 +32,23 @@ glift.util = {
     return value && typeof value === 'object' && value.constructor === Array;
   },
 
-  // Checks to make sure a number is inbounds
+  /**
+   * Test whether two arrays are (shallowly) equal.  We only test references on
+   * the elements of the array.
+   */
+  arrayEquals: function(arr1, arr2) {
+    if (arr1 === undefined || arr2 == undefined) return false;
+    if (arr1.length !== arr2.length) return false;
+    for (var i = 0; i < arr1.length; i++) {
+      if (arr1[i] !== arr2[i]) return false;
+    }
+    return true;
+  },
+
+  /**
+   * Checks to make sure a number is inbounds.  In other words, whether a number
+   * is between 0 (inclusive) and bounds (exclusive).
+   */
   inBounds: function(num, bounds) {
     return ((num < bounds) && (num >= 0));
   },
@@ -80,11 +89,63 @@ glift.util = {
     return size;
   },
 
+  /**
+   * Set methods in the base object.  Usually used in conjunction with beget.
+   */
   setMethods: function(base, methods) {
     for (var key in methods) {
       base[key] = methods[key].bind(base);
     }
     return base;
+  },
+
+  /**
+   * A utility method -- for prototypal inheritence.
+   */
+  beget: function (o) {
+    var F = function () {};
+    F.prototype = o;
+    return new F();
+  },
+
+  /**
+   * Simple Clone creates copies for all string, number, boolean, date and array
+   * types.  It does not copy functions (which it leaves alone), nor does it
+   * address problems with recursive objects.
+   *
+   * Taken from stack overflow, with some modification to handle functions and
+   * to take advantage of util.typeOf above.  Note: This does not handle
+   * recursive objects gracefully.
+   *
+   * Reference:
+   * http://stackoverflow.com/questions/728360/
+   * most-elegant-way-to-clone-a-javascript-object
+   */
+  simpleClone: function(obj) {
+    // Handle immutable types (null, Boolean, Number, String) and functions.
+    if (glift.util.typeOf(obj) !== 'array' &&
+        glift.util.typeOf(obj) !== 'object') return obj;
+    if (obj instanceof Date) {
+      var copy = new Date();
+      copy.setTime(obj.getTime());
+      return copy;
+    }
+    if (glift.util.typeOf(obj) === 'array') {
+      var copy = [];
+      for (var i = 0, len = obj.length; i < len; i++) {
+        copy[i] = glift.util.simpleClone(obj[i]);
+      }
+      return copy;
+    }
+    if (glift.util.typeOf(obj) === 'object') {
+      var copy = {};
+      for (var attr in obj) {
+        if (obj.hasOwnProperty(attr)) copy[attr] =
+            glift.util.simpleClone(obj[attr]);
+      }
+      return copy;
+    }
+    throw new Error("Unable to copy obj! Its type isn't supported.");
   }
 };
 

@@ -169,7 +169,7 @@ glift.sgf.parse = function(sgfString) {
  */
 glift.sgf.parseError =  function(lineNum, colNum, curchar, message) {
   var err = 'SGF Parsing Error: At line [' + lineNum + '], column [' + colNum
-      + '], curchar [' + curchar + '], ' + message;
+      + '], char [' + curchar + '], ' + message;
   glift.util.logz(err); // Should this error be logged this way?
   throw err;
 };

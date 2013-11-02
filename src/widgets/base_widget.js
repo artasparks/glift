@@ -20,7 +20,7 @@ glift.widgets.baseWidget = function(options) {
 glift.widgets._BaseWidget = function(options) {
   this.options = options;
   this.wrapperDiv = options.divId; // We split the wrapper div.
-  this.controller = options.controllerFunc(options);
+  this.controller = undefined; // Initialized with draw.
   this.display = undefined; // Initialized by draw.
   this.iconBar = undefined; // Initialized by draw.
 };
@@ -28,9 +28,10 @@ glift.widgets._BaseWidget = function(options) {
 glift.widgets._BaseWidget.prototype = {
   /**
    * Draw the widget.
-   * Returns this for convenience.
    */
   draw: function() {
+    this.controller = this.options.controllerFunc(this.options);
+    this.options.intersections = this.controller.getIntersections();
     var divSplits = this.options.useCommentBar
         ? this.options.splitsWithComments : this.options.splitsWithoutComments;
     this.divInfo = glift.displays.gui.splitDiv(
@@ -88,12 +89,16 @@ glift.widgets._BaseWidget.prototype = {
   _createIconBar: function(boundingWidth) {
     var that = this;
     var margin = (boundingWidth - this.display.width()) / 2;
+    var icons = this.options.icons;
+    if (this.controller.movetree.nextMoves().length === 0) {
+      icons = this.options.reducedIconsForExample || icons;
+    }
     this.iconBar = glift.displays.gui.iconBar({
       themeName: this.options.themeName,
       divId: that.iconBarId,
       vertMargin:  5, // For good measure
       horzMargin: margin,
-      icons:  this.options.icons
+      icons: icons
     });
   },
 
@@ -160,20 +165,26 @@ glift.widgets._BaseWidget.prototype = {
     $('body').keydown(this.keyHandlerFunc);
   },
 
-  applyBoardData: function(boardData, applyFullBoard) {
+  /**
+   * Apply the BoardData to both the comments box and the board. Uses
+   * glift.bridge to communicate with the display.
+   */
+  applyBoardData: function(boardData) {
     if (boardData && boardData !== glift.util.none) {
-      this.setCommentBox(boardData);
+      this.setCommentBox(boardData.comment);
       glift.bridge.setDisplayState(
           boardData, this.display, this.options.showVariations);
     }
   },
 
-  setCommentBox: function(boardData) {
-    if (!this.commentBox) {
+  /**
+   * Set the CommentBox with some specified text, if the comment box exists.
+   */
+  setCommentBox: function(text) {
+    if (this.commentBox === undefined) {
       // Do nothing -- there is no comment box to set.
-    } else if (boardData.comment &&
-        boardData.comment !== glift.util.none) {
-      this.commentBox.setText(boardData.comment);
+    } else if (text && text !== glift.util.none) {
+      this.commentBox.setText(text);
     } else {
       this.commentBox.clearText();
     }
@@ -205,4 +216,4 @@ glift.widgets._BaseWidget.prototype = {
     this.keyHandlerFunc = undefined;
     this.display = undefined;
   }
-};
+}
