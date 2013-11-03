@@ -17,7 +17,7 @@ glift.widgets.options.problem = {
    * Index into the above array.  It seems unlikely that anybody would want to
    * override this setting, but it's here or clarity.
    */
-  problemIndex: 0,
+  sgfIndex: 0,
 
   /**
    * Conditions for determing whether a branch of a movetree is correct.  A map
@@ -40,6 +40,11 @@ glift.widgets.options.problem = {
   problemCallback: function(problemResult) {},
 
   /**
+   * The problem type.
+   */
+  problemType: glift.enums.problemTypes.AUTO,
+
+  /**
    * The function that produces the problem controller.
    */
   controllerFunc: glift.controllers.staticProblem,
@@ -47,7 +52,7 @@ glift.widgets.options.problem = {
   /**
    * We want the problem widget to be smart about the relevant board region.
    */
-  boardRegionType: glift.enums.boardRegions.AUTO,
+  boardRegion: glift.enums.boardRegions.AUTO,
 
   /**
    * Icons specified by the problem widget.
@@ -82,12 +87,16 @@ glift.widgets.options.problem = {
   /**
    * Problem-specific actions.
    */
+  // TODO(kashomon): Move actions to a separate file.
   actions: {
     stones: {
       /**
        * Add a stone and report if it was correct.
        */
       click: function(widget, pt) {
+        if (widget.options.problemType === glift.enums.problemTypes.EXAMPLE) {
+          return;
+        }
         var currentPlayer = widget.controller.getCurrentPlayer();
         var data = widget.controller.addStone(pt, currentPlayer);
         var problemResults = glift.enums.problemResults;
@@ -97,18 +106,51 @@ glift.widgets.options.problem = {
           return;
         }
         widget.applyBoardData(data);
+        var probTypes = glift.enums.problemTypes;
+        var callback = widget.options.problemCallback;
         if (widget.correctness === undefined &&
-            !glift.util.arrayEquals(widget.iconBar.iconNames,
-                widget.options.reducedIconsForExample)) {
-          widget.options.problemCallback(data.result);
+            widget.options.problemType !== probTypes.EXAMPLE) {
+
           if (data.result === problemResults.CORRECT) {
-            widget.iconBar.addTempIcon(
-                'check', widget.iconBar.getIcon('checkbox').newBbox, '#0CC');
-            widget.correctness = problemResults.CORRECT;
+            if (widget.options.problemType === probTypes.STANDARD) {
+              widget.iconBar.addTempIcon(
+                  widget.iconBar.getIcon('checkbox').newBbox, 'check', '#0CC');
+              widget.correctness = problemResults.CORRECT;
+              callback(problemResults.CORRECT);
+
+            } else if (widget.options.problemType === probTypes.ALL_CORRECT) {
+              widget.iconBar.destroyTempIcons();
+              if (widget.correctNextSet[pt.toString()] === undefined) {
+                widget.correctNextSet[pt.toString()] = true;
+                widget.numCorrectAnswers++;
+                if (widget.numCorrectAnswers === widget.totalCorrectAnswers) {
+                  widget.correctness = problemResults.CORRECT;
+                  widget.iconBar.addTempText(
+                      widget.iconBar.getIcon('checkbox').newBbox,
+                      widget.numCorrectAnswers + '/' + widget.totalCorrectAnswers,
+                      '#0CC');
+                  callback(problemResults.CORRECT);
+                } else {
+                  widget.iconBar.addTempText(
+                      widget.iconBar.getIcon('checkbox').newBbox,
+                      widget.numCorrectAnswers + '/' + widget.totalCorrectAnswers,
+                      '#000');
+                  setTimeout(function() {
+                    widget.controller.reload();
+                    widget.applyBoardData(
+                        widget.controller.getEntireBoardState());
+                  }, 500);
+                }
+              } else {
+                // we've already seen this point
+              }
+            }
           } else if (data.result == problemResults.INCORRECT) {
+            widget.iconBar.destroyTempIcons();
             widget.iconBar.addTempIcon(
-                'cross', widget.iconBar.getIcon('checkbox').newBbox, 'red');
+                widget.iconBar.getIcon('checkbox').newBbox, 'cross', 'red');
             widget.correctness = problemResults.INCORRECT;
+            callback(problemResults.INCORRECT);
           }
         }
       }
@@ -121,13 +163,12 @@ glift.widgets.options.problem = {
           var listLength = widget.options.sgfUrlList.length > 0 ?
               widget.options.sgfUrlList.length:
               widget.options.sgfStringList.length;
-          var index = (widget.options.problemIndex
-              + indexChange + listLength) % listLength;
-          widget.options.problemIndex = index
+          var index = (widget.sgfIndex + indexChange + listLength) % listLength;
+          widget.sgfIndex = index
 
           // Internal function used for ajax / non-ajax calls
           var loadSgfString = function(inputString) {
-            widget.options.sgfString = inputString;
+            widget.sgfString = inputString;
             widget.redraw();
           }
 
@@ -167,34 +208,26 @@ glift.widgets.options.problem = {
       roadmap: {
         click: function(widget) {
           // This is a terrible hack.  High yuck factor.
-          widget._problemControllor = widget.controller;
-          widget._problemOptions = widget.options;
+          widget._problemOptions = widget.originalOptions;
           widget.destroy();
           var returnAction = function(widget) {
             widget.destroy();
-            widget.options = widget._problemOptions;
-            widget.controller = widget._problemControllor;
+            widget.originalOptions = widget._problemOptions;
             widget.draw();
           };
           var optionsCopy = {
-            divId: widget.options.divId,
-            theme: widget.options.theme,
-            sgfString: widget.options.sgfString,
+            divId: widget.originalOptions.divId,
+            theme: widget.originalOptions.theme,
+            sgfString: widget.originalOptions.sgfString,
             showVariations: glift.enums.showVariations.ALWAYS,
-            problemConditions:
-                widget.options.problemConditions,
-            boardRegionType: glift.enums.boardRegions.AUTO,
+            problemConditions: widget.originalOptions.problemConditions,
+            controllerFunc: glift.controllers.gameViewer,
+            boardRegion: glift.enums.boardRegions.AUTO,
             icons: ['start', 'end', 'arrowleft', 'arrowright', 'undo'],
-            actions: {
-              icons: {
-                undo : {
-                  click: returnAction
-                }
-              }
-            }
+            actions: { icons: { undo : { click: returnAction }}}
           }
-          widget.options = glift.widgets.options.setDefaults(optionsCopy, 'base');
-          widget.controller = glift.controllers.gameViewer(widget.options);
+          widget.originalOptions = glift.widgets.options.setDefaults(
+            optionsCopy, 'base');
           widget.draw();
         }
       }

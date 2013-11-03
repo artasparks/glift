@@ -18,7 +18,19 @@ glift.widgets.baseWidget = function(options) {
  * The base web UI widget.  It can be extended, if necessary.
  */
 glift.widgets._BaseWidget = function(options) {
-  this.options = options;
+  this.originalOptions = options;
+  this.options = undefined; // Defined in draw.
+
+  // Mutable state
+  this.sgfString = options.sgfString;
+  this.sgfIndex = options.sgfIndex;
+
+  // Used for problems, exclusively
+  this.correctness = undefined;
+  this.correctNextSet = undefined;
+  this.numCorrectAnswers = undefined;
+  this.totalCorrectAnswers = undefined;
+
   this.wrapperDiv = options.divId; // We split the wrapper div.
   this.controller = undefined; // Initialized with draw.
   this.display = undefined; // Initialized by draw.
@@ -30,7 +42,12 @@ glift.widgets._BaseWidget.prototype = {
    * Draw the widget.
    */
   draw: function() {
+    this.options = glift.util.simpleClone(this.originalOptions);
+    this.options.sgfString = this.sgfString;
     this.controller = this.options.controllerFunc(this.options);
+    if (this.options.problemType === glift.enums.problemTypes.AUTO) {
+      this.options.problemType = this._getProblemType();
+    }
     this.options.intersections = this.controller.getIntersections();
     var divSplits = this.options.useCommentBar
         ? this.options.splitsWithComments : this.options.splitsWithoutComments;
@@ -39,9 +56,9 @@ glift.widgets._BaseWidget.prototype = {
     this.goboxDivId = this.divInfo[0].id;
     this._setNotSelectable(this.goboxDivId);
     this.options.boardRegion =
-        this.options.boardRegionType === glift.enums.boardRegions.AUTO
+        this.options.boardRegion === glift.enums.boardRegions.AUTO
         ? glift.bridge.getCropFromMovetree(this.controller.movetree)
-        : this.options.boardRegionType;
+        : this.options.boardRegion;
     this.options.divId = this.goboxDivId;
     this.display = glift.displays.create(this.options);
     var boundingWidth = $('#' +  this.goboxDivId).width();
@@ -59,8 +76,24 @@ glift.widgets._BaseWidget.prototype = {
     this._initStoneActions();
     this._initIconActions();
     this._initKeyHandlers();
+    this._initProblemType();
     this.applyBoardData(this.controller.getEntireBoardState());
     return this;
+  },
+
+  _getProblemType: function() {
+    var props = this.controller.movetree.properties();
+    var probTypes = glift.enums.problemTypes;
+    if (props.contains('EV')) {
+      var value = props.getOneValue('EV').toUpperCase();
+      if (probTypes[value] !== undefined && value !== probTypes.AUTO) {
+        return value;
+      }
+    }
+    if (this.controller.movetree.nextMoves().length === 0) {
+      return probTypes.EXAMPLE;
+    }
+    return probTypes.STANDARD;
   },
 
   _setNotSelectable: function(divId) {
@@ -72,7 +105,8 @@ glift.widgets._BaseWidget.prototype = {
         '-ms-user-select': 'none',
         'user-select': 'none',
         '-webkit-highlight': 'none',
-        '-webkit-tap-highlight-color': 'rgba(0,0,0,0)'
+        '-webkit-tap-highlight-color': 'rgba(0,0,0,0)',
+        'cursor': 'default'
     });
     return this;
   },
@@ -90,7 +124,7 @@ glift.widgets._BaseWidget.prototype = {
     var that = this;
     var margin = (boundingWidth - this.display.width()) / 2;
     var icons = this.options.icons;
-    if (this.controller.movetree.nextMoves().length === 0) {
+    if (this.options.problemType === glift.enums.problemTypes.EXAMPLE) {
       icons = this.options.reducedIconsForExample || icons;
     }
     this.iconBar = glift.displays.gui.iconBar({
@@ -106,7 +140,6 @@ glift.widgets._BaseWidget.prototype = {
     var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
     var widget = this;
     var iconActions = this.options.actions.icons;
-
     for (var iconName in iconActions) {
       iconActions[iconName].mouseover = iconActions[iconName].mouseover ||
           function(widget, name) {
@@ -166,6 +199,25 @@ glift.widgets._BaseWidget.prototype = {
   },
 
   /**
+   * Initialize properties based on problem type.
+   */
+  _initProblemType: function() {
+    if (this.options.problemType === glift.enums.problemTypes.ALL_CORRECT) {
+      // TODO(kashomon): This is a bad hack.  What if we don't include the
+      // checkbox?  This ties the problem options to this code in a very strange
+      // way / yucky way.
+      var correctNext = glift.rules.problems.correctNextMoves(
+          this.controller.movetree, this.options.problemConditions);
+      // A Set: i.e., a map of points to true
+      this.correctNextSet = {};
+      this.numCorrectAnswers = 0;
+      this.totalCorrectAnswers = correctNext.length;
+      this.iconBar.addTempText(this.iconBar.getIcon('checkbox').newBbox,
+          this.numCorrectAnswers + '/' + this.totalCorrectAnswers, '#000');
+    }
+  },
+
+  /**
    * Apply the BoardData to both the comments box and the board. Uses
    * glift.bridge to communicate with the display.
    */
@@ -196,15 +248,22 @@ glift.widgets._BaseWidget.prototype = {
    * Unfortunatly, this also probably meants this is too problem-specific.
    */
   reload: function() {
-    this.controller.reload();
-    this.correctness = undefined; // TODO(kashomon): This shouldn't live here.
-    this.iconBar.destroyTempIcons();
-    this.applyBoardData(
-        this.controller.getEntireBoardState());
+    // this.controller.reload();
+    this.redraw();
+
+    // Clear out problem specific values.
+    // this.correctness = undefined;
+
+    // this.iconBar.destroyTempIcons();
+    // this.applyBoardData(
+        // this.controller.getEntireBoardState());
   },
 
   redraw: function() {
     this.correctness = undefined; // TODO(kashomon): This shouldn't live here.
+    this.correctNextSet = undefined;
+    this.numCorrectAnswers = undefined;
+    this.totalCorrectAnswers = undefined;
     this.destroy();
     this.draw();
   },

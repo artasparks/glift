@@ -1,0 +1,5 @@
+(;GM[1]FF[4]CA[UTF-8]AP[CGoban:3]ST[2]
+RU[Japanese]SZ[19]KM[0.00]
+PW[White]PB[Black]EV[ALL_CORRECT]AW[mc][qd][qg]AB[oc][pe]C[Black has two possibilities to consider for his next move: what are they?]
+(;B[qe]C[Correct])
+(;B[me]C[Correct]))

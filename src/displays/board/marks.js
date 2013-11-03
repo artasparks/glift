@@ -67,7 +67,7 @@ glift.displays.board.addMark = function(
         .attr('stroke', marksTheme.stroke)
         .attr('class', MARK)
         .attr('text-anchor', 'middle')
-        .attr('dy', '.35em') // for vertical centering
+        .attr('dy', '.33em') // for vertical centering
         .attr('x', coordPt.x()) // x and y are the anchor points.
         .attr('y', coordPt.y())
         .attr('font-family', theme.stones.marks['font-family'])

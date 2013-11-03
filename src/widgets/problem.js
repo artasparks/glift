@@ -11,13 +11,16 @@ glift.widgets.problem = function(options) {
   }
   var widget = new glift.widgets._BaseWidget(options);
   if (options.sgfStringList.length > 0) {
-    widget.options.sgfString = options.sgfStringList[0];
+    widget.sgfString = options.sgfStringList[widget.sgfIndex];
     widget.draw();
   } else if (options.sgfUrlList.length > 0) {
-    $.get(options.sgfUrlList[0], function(data) {
-      widget.options.sgfString = data;
+    $.get(options.sgfUrlList[widget.sgfIndex], function(data) {
+      widget.sgfString = data;
       widget.draw();
     });
+  } else {
+    // assume sgfString is defined
+    widget.draw();
   }
   // May be in a drawn or un-drawn state at this point, due to the asynchronous
   // nature of loading the SGFs.

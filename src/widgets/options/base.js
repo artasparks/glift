@@ -50,7 +50,7 @@ glift.widgets.options.base = {
    * The board region to display.  The boardRegion will be 'guessed' if it's set
    * to 'AUTO'.
    */
-  boardRegionType: glift.enums.boardRegions.ALL,
+  boardRegion: glift.enums.boardRegions.ALL,
 
   /**
    * Whether not to show the variations (as numbers).

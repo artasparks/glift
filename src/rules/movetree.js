@@ -39,7 +39,7 @@ glift.rules.movetree = {
   getInstance: function(intersections) {
     var mt = new MoveTree(glift.rules.movenode());
     if (intersections !== undefined) {
-      mt.setIntersections(ints);
+      mt.setIntersections(intersections);
     }
     return mt;
   },

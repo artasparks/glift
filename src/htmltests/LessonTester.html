@@ -1,7 +1,7 @@
 <html>
 <head>
 
-<title> ProblemTester </title>
+<title> LessonTester </title>
 <script type="text/javascript" src="../libs/jquery-1.10.2.min.js"></script>
 <script type="text/javascript" src="../testdata/sgfs.js"></script>
 <script type="text/javascript" src="../libs/d3.min.js"></script>
@@ -107,13 +107,11 @@
       <div id="glift_display1"></div>
       <div id="extra_info"></div>
       <script type="text/javascript">
-        //glift.global.performanceDebugLevel = 'info'
         var basicProblem = glift.widgets.problem({
-          sgfStringList: [
-              testdata.sgfs.complexproblem,
-              testdata.sgfs.trivialproblem,
-              testdata.sgfs.realproblem,
-              testdata.sgfs.gogameguruHard
+          sgfUrlList: [
+              "../testdata/tm_lesson/19pt_1.sgf",
+              "../testdata/tm_lesson/19pt_2.sgf",
+              "../testdata/tm_lesson/19Pt_CorrectNext.sgf",
           ],
           useCommentBar: true,
           divId: "glift_display1"

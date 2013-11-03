@@ -98,7 +98,7 @@ IconBar.prototype = {
     return this;
   },
 
-  addTempIcon: function(iconName, bbox, color) {
+  addTempIcon: function(bbox, iconName, color) {
     var icon = glift.displays.gui.icons[iconName];
     var iconBbox = glift.displays.bboxFromPts(
         glift.util.point(icon.bbox.x, icon.bbox.y),
@@ -110,16 +110,34 @@ IconBar.prototype = {
       .attr('d', icon.string)
       .attr('fill', color) // that.theme.icons['DEFAULT'].fill)
       .attr('id', that.iconId(iconName))
+      .attr('class', 'tempIcon')
       .attr('transform', glift.displays.gui.scaleAndMoveString(
           centerObj.bbox, centerObj.transform));
     this.tempIconIds.push(id);
     return this;
   },
 
+  addTempText: function(bbox, text, color) {
+    var fontSize = bbox.width() * .54;
+    var boxStrokeWidth = 7
+    this.svg.append('text')
+      .text(text)
+      .attr('fill', color)
+      .attr('stroke', color)
+      .attr('class', 'tempIcon')
+      .attr('font-family', 'sans-serif') // TODO(kashomon): Put in themes.
+      .attr('font-size', fontSize + 'px')
+      .attr('x', bbox.center().x()) // + boxStrokeWidth + 'px')
+      .attr('y', bbox.center().y()) //+ fontSize)
+      .attr('dy', '.33em') // Move down, for centering purposes
+      .attr('style', 'text-anchor: middle; vertical-align: middle;')
+      // .attr('textLength', bbox.width() - (2 * boxStrokeWidth) + 'px')
+      .attr('lengthAdjust', 'spacing'); // also an opt: spacingAndGlyphs
+    return this;
+  },
+
   destroyTempIcons: function() {
-    for (var i = 0; i < this.tempIconIds.length; i++) {
-      this.svg.select('#' + this.tempIconIds[i]).remove();
-    }
+    this.svg.selectAll('.tempIcon').remove();
     this.tempIconIds = [];
     return this;
   },

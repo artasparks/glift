@@ -22,6 +22,7 @@ FILES_TO_AUTOGEN = {
     'htmltests/IconBarTester.html': False,
     'htmltests/IconBoardTester.html': False,
     'htmltests/KogosTester.html': False,
+    'htmltests/LessonTester.html': False,
     'htmltests/MarksTester.html': False,
     'htmltests/ProblemTester.html': False,
     'htmltests/QunitTest.html': True, # What's going on with the 'True'?
