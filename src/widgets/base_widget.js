@@ -24,6 +24,8 @@ glift.widgets._BaseWidget = function(options) {
   // Mutable state
   this.sgfString = options.sgfString;
   this.sgfIndex = options.sgfIndex;
+  this.sgfStringList = options.sgfStringList;
+  this.sgfUrlList = options.sgfUrlList;
 
   // Used for problems, exclusively
   this.correctness = undefined;
@@ -248,15 +250,7 @@ glift.widgets._BaseWidget.prototype = {
    * Unfortunatly, this also probably meants this is too problem-specific.
    */
   reload: function() {
-    // this.controller.reload();
     this.redraw();
-
-    // Clear out problem specific values.
-    // this.correctness = undefined;
-
-    // this.iconBar.destroyTempIcons();
-    // this.applyBoardData(
-        // this.controller.getEntireBoardState());
   },
 
   redraw: function() {

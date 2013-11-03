@@ -176,7 +176,7 @@ glift.widgets.options.problem = {
             loadSgfString(widget.options.sgfStringList[index]);
           } else if (widget.options.sgfUrlList.length > 0) {
             var url = widget.options.sgfUrlList[index];
-            $.get(url, function(data) {
+            glift.widgets.loadWithAjax(url, function(data) {
               loadSgfString(data);
             });
           }

@@ -5840,7 +5840,16 @@ glift.bridge._getRegionFromTracker = function(tracker, numstones) {
 };
 // Widgets are toplevel objects, which combine display and
 // controller/rules bits together.
-glift.widgets = {};
+glift.widgets = {
+  loadWithAjax: function(url, callback) {
+    $.ajax({
+      url: url,
+      dataType: 'text',
+      cache: false,
+      success: callback
+    });
+  }
+};
 /**
  * Public 'constructor' for the BaseWidget.
  */
@@ -5867,6 +5876,8 @@ glift.widgets._BaseWidget = function(options) {
   // Mutable state
   this.sgfString = options.sgfString;
   this.sgfIndex = options.sgfIndex;
+  this.sgfStringList = options.sgfStringList;
+  this.sgfUrlList = options.sgfUrlList;
 
   // Used for problems, exclusively
   this.correctness = undefined;
@@ -6091,15 +6102,7 @@ glift.widgets._BaseWidget.prototype = {
    * Unfortunatly, this also probably meants this is too problem-specific.
    */
   reload: function() {
-    // this.controller.reload();
     this.redraw();
-
-    // Clear out problem specific values.
-    // this.correctness = undefined;
-
-    // this.iconBar.destroyTempIcons();
-    // this.applyBoardData(
-        // this.controller.getEntireBoardState());
   },
 
   redraw: function() {
@@ -6135,10 +6138,11 @@ glift.widgets.problem = function(options) {
   }
   var widget = new glift.widgets._BaseWidget(options);
   if (options.sgfStringList.length > 0) {
-    widget.sgfString = options.sgfStringList[widget.sgfIndex];
+    widget.sgfString = widget.sgfStringList[widget.sgfIndex];
     widget.draw();
   } else if (options.sgfUrlList.length > 0) {
-    $.get(options.sgfUrlList[widget.sgfIndex], function(data) {
+    var url = widget.sgfUrlList[widget.sgfIndex]
+    glift.widgets.loadWithAjax(url, function(data) {
       widget.sgfString = data;
       widget.draw();
     });
@@ -6567,7 +6571,7 @@ glift.widgets.options.problem = {
             loadSgfString(widget.options.sgfStringList[index]);
           } else if (widget.options.sgfUrlList.length > 0) {
             var url = widget.options.sgfUrlList[index];
-            $.get(url, function(data) {
+            glift.widgets.loadWithAjax(url, function(data) {
               loadSgfString(data);
             });
           }

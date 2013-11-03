@@ -11,10 +11,11 @@ glift.widgets.problem = function(options) {
   }
   var widget = new glift.widgets._BaseWidget(options);
   if (options.sgfStringList.length > 0) {
-    widget.sgfString = options.sgfStringList[widget.sgfIndex];
+    widget.sgfString = widget.sgfStringList[widget.sgfIndex];
     widget.draw();
   } else if (options.sgfUrlList.length > 0) {
-    $.get(options.sgfUrlList[widget.sgfIndex], function(data) {
+    var url = widget.sgfUrlList[widget.sgfIndex]
+    glift.widgets.loadWithAjax(url, function(data) {
       widget.sgfString = data;
       widget.draw();
     });
