@@ -94,9 +94,9 @@ glift.widgets.options.base = {
   previousSgfIcon: 'chevron-left',
 
   /**
-   * Previous SGF icon
+   * Next SGF Icon
    */
-  previousSgfIcon: 'chevron-left',
+  nextSgfIcon: 'chevron-right',
 
   /**
    * Actions for stones.  If the user specifies his own actions, then the
@@ -126,5 +126,5 @@ glift.widgets.options.base = {
     }
   },
 
-  iconActions: glift.widgets.options.iconActions
+  iconActions: undefined // filled in later
 };

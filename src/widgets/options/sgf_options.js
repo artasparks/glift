@@ -30,7 +30,8 @@ glift.widgets.options.sgf = {
    * Widget type and problem conditions are set from the widgetOptions defaults.
    */
   widgetType: undefined,
-  problemConditions: undefined,
+
+  problemConditions: {},
 
   /**
    * Thes options are configured via the widget type extensions, e.g.,

@@ -15,6 +15,8 @@ glift.widgets.options.EXAMPLE = {
 
   icons: [],
 
+  problemConditions: {},
+
   showVariations: glift.enums.showVariations.MORE_THAN_ONE,
 
   controllerFunc: glift.controllers.gameViewer

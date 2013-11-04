@@ -17,5 +17,7 @@ glift.widgets.options.GAME_VIEWER = {
 
   showVariations: glift.enums.showVariations.MORE_THAN_ONE,
 
+  problemConditions: {},
+
   controllerFunc: glift.controllers.gameViewer
 };

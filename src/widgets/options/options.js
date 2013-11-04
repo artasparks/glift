@@ -6,6 +6,7 @@ glift.widgets.options = {
   setWidgetOptionDefaults: function(options) {
     var options = glift.util.simpleClone(options);
     var baseTemplate = glift.util.simpleClone(glift.widgets.options.base);
+    options.iconActions = glift.widgets.options.iconActions;
     for (var optionName in baseTemplate) {
       if (options[optionName] === undefined) {
         options[optionName] = baseTemplate[optionName];
@@ -17,11 +18,8 @@ glift.widgets.options = {
   setSgfOptionDefaults: function(sgfObj, widgetOptions) {
     var sgfTemplate = glift.util.simpleClone(glift.widgets.options.sgf);
     sgfObj.widgetType = sgfObj.widgetType || widgetOptions.defaultWidgetType;
-    sgfObj.problemConditions = sgfObj.problemConditions
-        || widgetOptions.defaultProblemConditions;
     var widgetTypeTemplate = glift.util.simpleClone(
         glift.widgets.options[sgfObj.widgetType]);
-    glift.util.logz(sgfObj.widgetType);
     for (var key in sgfTemplate) {
       if (key in sgfObj) {
         // Leave it alone: we don't want to override user provided defaults.
@@ -31,6 +29,8 @@ glift.widgets.options = {
         sgfObj[key] = sgfTemplate[key];
       }
     }
+    sgfObj.problemConditions = sgfObj.problemConditions
+        || widgetOptions.defaultProblemConditions;
     return sgfObj;
   },
 

@@ -41,8 +41,13 @@ glift.widgets.WidgetManager.prototype = {
       }
       curSgfObj = out;
     }
-    return glift.widgets.options.setSgfOptionDefaults(
+    var processedObj = glift.widgets.options.setSgfOptionDefaults(
         curSgfObj, this.widgetOptions);
+    if (this.sgfList.length > 1) {
+      processedObj.icons.push(this.widgetOptions.nextSgfIcon);
+      processedObj.icons.splice(0, 0, this.widgetOptions.previousSgfIcon);
+    }
+    return processedObj;
   },
 
   /**

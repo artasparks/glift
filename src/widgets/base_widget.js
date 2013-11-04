@@ -119,26 +119,29 @@ glift.widgets.BaseWidget.prototype = {
     var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
     var widget = this;
     var iconActions = this.widgetOptions.iconActions;
-    for (var iconName in iconActions) {
-      if (this.iconBar.hasIcon(iconName)) {
-        iconActions[iconName].mouseover = iconActions[iconName].mouseover ||
-            function(widget, name) {
-              var id = widget.iconBar.iconId(name);
-              d3.select('#' + id).attr('fill', 'red');
-            };
-        iconActions[iconName].mouseout = iconActions[iconName].mouseout ||
-            function(widget, name) {
-              var id = widget.iconBar.iconId(name);
-              d3.select('#' + id)
-                  .attr('fill', widget.iconBar.theme.icons.DEFAULT.fill);
-            };
-        for (var eventName in iconActions[iconName]) {
-          (function(eventName, iconNameBound, event) { // lazy binding, bleh.
-            widget.iconBar.setEvent(eventName, iconName, function() {
-              event(widget, iconNameBound);
-            });
-          })(eventName, iconName, iconActions[iconName][eventName]);
-        }
+    var icons = this.sgfOptions.icons;
+    for (var i = 0; i < icons.length; i++) {
+      var iconName = icons[i];
+      if (!iconActions.hasOwnProperty(iconName)) {
+        continue;
+      }
+      iconActions[iconName].mouseover = iconActions[iconName].mouseover ||
+          function(widget, name) {
+            var id = widget.iconBar.iconId(name);
+            d3.select('#' + id).attr('fill', 'red');
+          };
+      iconActions[iconName].mouseout = iconActions[iconName].mouseout ||
+          function(widget, name) {
+            var id = widget.iconBar.iconId(name);
+            d3.select('#' + id)
+                .attr('fill', widget.iconBar.theme.icons.DEFAULT.fill);
+          };
+      for (var eventName in iconActions[iconName]) {
+        (function(eventName, iconNameBound, event) { // lazy binding, bleh.
+          widget.iconBar.setEvent(eventName, iconName, function() {
+            event(widget, iconNameBound);
+          });
+        })(eventName, iconName, iconActions[iconName][eventName]);
       }
     }
   },
