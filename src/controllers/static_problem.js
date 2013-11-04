@@ -8,11 +8,11 @@
  *  - There is actually a node somewhere beneath the variation that results in a
  *  'correct' outcome.
  */
-glift.controllers.staticProblem = function(options) {
+glift.controllers.staticProblem = function(sgfOptions) {
   var controllers = glift.controllers,
       baseController = glift.util.beget(controllers.base()),
       newController = glift.util.setMethods(baseController, methods),
-      _ = newController.initOptions(options);
+      _ = newController.initOptions(sgfOptions);
   return newController;
 };
 

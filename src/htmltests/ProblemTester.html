@@ -79,13 +79,15 @@
 <!-- Widgets -->
 <script type="text/javascript" src="../widgets/widgets.js"></script>
 <script type="text/javascript" src="../widgets/base_widget.js"></script>
-<script type="text/javascript" src="../widgets/board_editor.js"></script>
-<script type="text/javascript" src="../widgets/problem.js"></script>
+<script type="text/javascript" src="../widgets/manager.js"></script>
 <!-- Widgets options -->
 <script type="text/javascript" src="../widgets/options/options.js"></script>
-<script type="text/javascript" src="../widgets/options/base.js"></script>
-<script type="text/javascript" src="../widgets/options/board_editor.js"></script>
-<script type="text/javascript" src="../widgets/options/problem.js"></script>
+<script type="text/javascript" src="../widgets/options/base_options.js"></script>
+<script type="text/javascript" src="../widgets/options/example_options.js"></script>
+<script type="text/javascript" src="../widgets/options/game_viewer_options.js"></script>
+<script type="text/javascript" src="../widgets/options/icon_actions.js"></script>
+<script type="text/javascript" src="../widgets/options/sgf_options.js"></script>
+<script type="text/javascript" src="../widgets/options/standard_problem_options.js"></script>
 
 <!-- END-AUTO-GEN-DEPS -->
 
@@ -108,14 +110,15 @@
       <div id="extra_info"></div>
       <script type="text/javascript">
         //glift.global.performanceDebugLevel = 'info'
-        var basicProblem = glift.widgets.problem({
-          sgfStringList: [
-              testdata.sgfs.complexproblem,
-              testdata.sgfs.trivialproblem,
-              testdata.sgfs.realproblem,
-              testdata.sgfs.gogameguruHard
+        var basicProblem = glift.widgets.create({
+          sgfList: [
+            testdata.sgfs.complexproblem,
+            testdata.sgfs.trivialproblem,
+            testdata.sgfs.realproblem,
+            testdata.sgfs.gogameguruHard
           ],
           useCommentBar: true,
+          defaultWidgetType: 'STANDARD_PROBLEM',
           divId: "glift_display1"
         });
       </script>

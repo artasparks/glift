@@ -1,31 +1,11 @@
 /**
- * Public 'constructor' for the BaseWidget.
- */
-glift.widgets.baseWidget = function(options) {
-  glift.util.perfInit();
-  if (options.enableFastClick) {
-    glift.global.enableFastClick();
-  }
-  glift.util.majorPerfLog("Before Widget Creation");
-  var baseWidget = new glift.widgets._BaseWidget(
-      glift.widgets.options.setDefaults(options, 'base')).draw();
-  glift.util.majorPerfLog("After Widget Creation");
-  glift.util.perfDone();
-  return baseWidget;
-};
-
-/**
  * The base web UI widget.  It can be extended, if necessary.
  */
-glift.widgets._BaseWidget = function(options) {
-  this.originalOptions = options;
-  this.options = undefined; // Defined in draw.
-
-  // Mutable state
-  this.sgfString = options.sgfString;
-  this.sgfIndex = options.sgfIndex;
-  this.sgfStringList = options.sgfStringList;
-  this.sgfUrlList = options.sgfUrlList;
+glift.widgets.BaseWidget = function(sgfOptions, widgetOptions, manager) {
+  this.type = sgfOptions.type;
+  this.sgfOptions = glift.util.simpleClone(sgfOptions);
+  this.widgetOptions = glift.util.simpleClone(widgetOptions);
+  this.manager = manager;
 
   // Used for problems, exclusively
   this.correctness = undefined;
@@ -33,45 +13,43 @@ glift.widgets._BaseWidget = function(options) {
   this.numCorrectAnswers = undefined;
   this.totalCorrectAnswers = undefined;
 
-  this.wrapperDiv = options.divId; // We split the wrapper div.
+  this.wrapperDiv = widgetOptions.divId; // We split the wrapper div.
   this.controller = undefined; // Initialized with draw.
   this.display = undefined; // Initialized by draw.
   this.iconBar = undefined; // Initialized by draw.
+  this.boardRegion = undefined; // Initialized by draw.
 };
 
-glift.widgets._BaseWidget.prototype = {
+glift.widgets.BaseWidget.prototype = {
   /**
    * Draw the widget.
    */
   draw: function() {
-    this.options = glift.util.simpleClone(this.originalOptions);
-    this.options.sgfString = this.sgfString;
-    this.controller = this.options.controllerFunc(this.options);
-    if (this.options.problemType === glift.enums.problemTypes.AUTO) {
-      this.options.problemType = this._getProblemType();
-    }
-    this.options.intersections = this.controller.getIntersections();
-    var divSplits = this.options.useCommentBar
-        ? this.options.splitsWithComments : this.options.splitsWithoutComments;
+    this.controller = this.sgfOptions.controllerFunc(this.sgfOptions);
+    var divSplits = this.widgetOptions.useCommentBar ?
+        this.widgetOptions.splitsWithComments :
+        this.widgetOptions.splitsWithoutComments;
     this.divInfo = glift.displays.gui.splitDiv(
         this.wrapperDiv, divSplits, 'horizontal');
     this.goboxDivId = this.divInfo[0].id;
     this._setNotSelectable(this.goboxDivId);
-    this.options.boardRegion =
-        this.options.boardRegion === glift.enums.boardRegions.AUTO
+    this.widgetOptions.boardRegion =
+        this.sgfOptions.boardRegion === glift.enums.boardRegions.AUTO
         ? glift.bridge.getCropFromMovetree(this.controller.movetree)
-        : this.options.boardRegion;
-    this.options.divId = this.goboxDivId;
-    this.display = glift.displays.create(this.options);
+        : this.sgfOptions.boardRegion;
+
+    this.widgetOptions.divId = this.goboxDivId;
+    this.display = glift.displays.create(this.widgetOptions);
     var boundingWidth = $('#' +  this.goboxDivId).width();
 
-    if (this.options.useCommentBar) {
+    if (this.widgetOptions.useCommentBar) {
       this.commentBoxId = this.divInfo[1].id;
       this._setNotSelectable(this.commentBoxId);
       this._createCommentBox(boundingWidth);
     }
 
-    this.iconBarId = this.options.useCommentBar ? this.divInfo[2].id :
+    this.iconBarId = this.widgetOptions.useCommentBar ?
+        this.divInfo[2].id :
         this.divInfo[1].id;
     this._setNotSelectable(this.iconBarId);
     this._createIconBar(boundingWidth)
@@ -118,20 +96,19 @@ glift.widgets._BaseWidget.prototype = {
         this.commentBoxId,
         this.display.width(),
         boundingWidth,
-        this.options.theme,
-        this.options.goBoardBackground !== undefined);
+        this.widgetOptions.theme,
+        this.widgetOptions.goBoardBackground !== undefined);
   },
 
   _createIconBar: function(boundingWidth) {
-    var that = this;
     var margin = (boundingWidth - this.display.width()) / 2;
-    var icons = this.options.icons;
-    if (this.options.problemType === glift.enums.problemTypes.EXAMPLE) {
-      icons = this.options.reducedIconsForExample || icons;
+    var icons = this.sgfOptions.icons;
+    if (this.type === glift.enums.widgetTypes.EXAMPLE) {
+      icons = this.widgetOptions.reducedIconsForExample || icons;
     }
     this.iconBar = glift.displays.gui.iconBar({
-      themeName: this.options.themeName,
-      divId: that.iconBarId,
+      themeName: this.widgetOptions.theme,
+      divId: this.iconBarId,
       vertMargin:  5, // For good measure
       horzMargin: margin,
       icons: icons
@@ -141,25 +118,27 @@ glift.widgets._BaseWidget.prototype = {
   _initIconActions: function() {
     var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
     var widget = this;
-    var iconActions = this.options.actions.icons;
+    var iconActions = this.widgetOptions.iconActions;
     for (var iconName in iconActions) {
-      iconActions[iconName].mouseover = iconActions[iconName].mouseover ||
-          function(widget, name) {
-            var id = widget.iconBar.iconId(name);
-            d3.select('#' + id).attr('fill', 'red');
-          };
-      iconActions[iconName].mouseout = iconActions[iconName].mouseout ||
-          function(widget, name) {
-            var id = widget.iconBar.iconId(name);
-            d3.select('#' + id)
-                .attr('fill', widget.iconBar.theme.icons.DEFAULT.fill);
-          };
-      for (var eventName in iconActions[iconName]) {
-        (function(eventName, iconNameBound, event) { // lazy binding, bleh.
-          widget.iconBar.setEvent(eventName, iconName, function() {
-            event(widget, iconNameBound);
-          });
-        })(eventName, iconName, iconActions[iconName][eventName]);
+      if (this.iconBar.hasIcon(iconName)) {
+        iconActions[iconName].mouseover = iconActions[iconName].mouseover ||
+            function(widget, name) {
+              var id = widget.iconBar.iconId(name);
+              d3.select('#' + id).attr('fill', 'red');
+            };
+        iconActions[iconName].mouseout = iconActions[iconName].mouseout ||
+            function(widget, name) {
+              var id = widget.iconBar.iconId(name);
+              d3.select('#' + id)
+                  .attr('fill', widget.iconBar.theme.icons.DEFAULT.fill);
+            };
+        for (var eventName in iconActions[iconName]) {
+          (function(eventName, iconNameBound, event) { // lazy binding, bleh.
+            widget.iconBar.setEvent(eventName, iconName, function() {
+              event(widget, iconNameBound);
+            });
+          })(eventName, iconName, iconActions[iconName][eventName]);
+        }
       }
     }
   },
@@ -168,7 +147,8 @@ glift.widgets._BaseWidget.prototype = {
    * Initialize the stone actions.
    */
   _initStoneActions: function() {
-    var stoneActions = this.options.actions.stones;
+    var stoneActions = this.widgetOptions.stoneActions
+    stoneActions.click = this.sgfOptions.stoneClick;
     var that = this;
     for (var action in stoneActions) {
       (function(act, fn) { // bind the event -- required due to lazy binding.
@@ -186,11 +166,11 @@ glift.widgets._BaseWidget.prototype = {
     var that = this;
     this.keyHandlerFunc = function(e) {
       var name = glift.keyMappings.codeToName(e.which);
-      if (name && that.options.keyMapping[name] !== undefined) {
-        var actionName = that.options.keyMapping[name];
+      if (name && that.sgfOptions.keyMapping[name] !== undefined) {
+        var actionName = that.sgfOptions.keyMapping[name];
         // actionNamespaces look like: icons.arrowleft.mouseup
         var actionNamespace = actionName.split('.');
-        var action = that.options.actions[actionNamespace[0]];
+        var action = that.widgetOptions[actionNamespace[0]];
         for (var i = 1; i < actionNamespace.length; i++) {
           action = action[actionNamespace[i]];
         }
@@ -204,16 +184,16 @@ glift.widgets._BaseWidget.prototype = {
    * Initialize properties based on problem type.
    */
   _initProblemType: function() {
-    if (this.options.problemType === glift.enums.problemTypes.ALL_CORRECT) {
+    if (this.sgfOptions.widgetType === glift.enums.widgetTypes.ALL_CORRECT) {
       // TODO(kashomon): This is a bad hack.  What if we don't include the
       // checkbox?  This ties the problem options to this code in a very strange
       // way / yucky way.
       var correctNext = glift.rules.problems.correctNextMoves(
-          this.controller.movetree, this.options.problemConditions);
+          this.controller.movetree, this.sgfOptions.problemConditions);
       // A Set: i.e., a map of points to true
-      this.correctNextSet = {};
-      this.numCorrectAnswers = 0;
-      this.totalCorrectAnswers = correctNext.length;
+      this.correctNextSet = this.correctNextSet || {};
+      this.numCorrectAnswers = this.numCorrectAnswers || 0;
+      this.totalCorrectAnswers = this.totalCorrectAnswers || correctNext.length;
       this.iconBar.addTempText(this.iconBar.getIcon('checkbox').newBbox,
           this.numCorrectAnswers + '/' + this.totalCorrectAnswers, '#000');
     }
@@ -227,7 +207,7 @@ glift.widgets._BaseWidget.prototype = {
     if (boardData && boardData !== glift.util.none) {
       this.setCommentBox(boardData.comment);
       glift.bridge.setDisplayState(
-          boardData, this.display, this.options.showVariations);
+          boardData, this.display, this.sgfOptions.showVariations);
     }
   },
 
@@ -245,19 +225,21 @@ glift.widgets._BaseWidget.prototype = {
     return this;
   },
 
-  /**
-   * Reload the state of the widget.  This is particularly useful for problems.
-   * Unfortunatly, this also probably meants this is too problem-specific.
-   */
   reload: function() {
+    if (this.correctness !== undefined) {
+      this.correctNextSet = undefined;
+      this.numCorrectAnswers = undefined;
+      this.totalCorrectAnswers = undefined;
+    }
     this.redraw();
   },
 
+  /**
+   * Redraw the widget.  This also resets the widget state in perhaps confusing
+   * ways.
+   */
   redraw: function() {
-    this.correctness = undefined; // TODO(kashomon): This shouldn't live here.
-    this.correctNextSet = undefined;
-    this.numCorrectAnswers = undefined;
-    this.totalCorrectAnswers = undefined;
+    this.correctness = undefined;
     this.destroy();
     this.draw();
   },

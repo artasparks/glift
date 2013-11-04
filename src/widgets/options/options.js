@@ -1,49 +1,53 @@
 glift.widgets.options = {
-  setDefaults: function(options, defaultOptionSet) {
-    var defaultOptionSet = defaultOptionSet || 'base';
-    var optionsTemplate = glift.widgets.options[defaultOptionSet];
-    for (var optionName in optionsTemplate) {
+  /**
+   * Set the defaults on options.  Note: This makes a copy and so is (sort of)
+   * an immutable operation on options.
+   */
+  setWidgetOptionDefaults: function(options) {
+    var options = glift.util.simpleClone(options);
+    var baseTemplate = glift.util.simpleClone(glift.widgets.options.base);
+    for (var optionName in baseTemplate) {
       if (options[optionName] === undefined) {
-        // Do a real copy for arrays.
-        if (glift.util.typeOf(optionsTemplate[optionName]) === 'array') {
-          options[optionName] = [];
-          for (var i = 0; i < optionsTemplate[optionName].length; i++) {
-            options[optionName].push(optionsTemplate[optionName][i]);
-          }
-        } else {
-          options[optionName] = optionsTemplate[optionName];
-        }
+        options[optionName] = baseTemplate[optionName];
       }
     }
-    glift.widgets.options.setDefaultActions(options, optionsTemplate);
-    return options;
+    return options
   },
 
-  setDefaultActions: function(options, optionsTemplate) {
-    // If the user specifies only a partial set of actions, we try to fill the
-    // unspecified actions.
-    for (var category in optionsTemplate.actions) {
-      if (options.actions[category] === undefined) {
-        options.actions[category] = optionsTemplate.actions[category];
+  setSgfOptionDefaults: function(sgfObj, widgetOptions) {
+    var sgfTemplate = glift.util.simpleClone(glift.widgets.options.sgf);
+    sgfObj.widgetType = sgfObj.widgetType || widgetOptions.defaultWidgetType;
+    sgfObj.problemConditions = sgfObj.problemConditions
+        || widgetOptions.defaultProblemConditions;
+    var widgetTypeTemplate = glift.util.simpleClone(
+        glift.widgets.options[sgfObj.widgetType]);
+    glift.util.logz(sgfObj.widgetType);
+    for (var key in sgfTemplate) {
+      if (key in sgfObj) {
+        // Leave it alone: we don't want to override user provided defaults.
+      } else if (key in widgetTypeTemplate) {
+        sgfObj[key] = widgetTypeTemplate[key];
+      } else {
+        sgfObj[key] = sgfTemplate[key];
       }
     }
-    for (var event in optionsTemplate.actions.stones) {
-      if (options.actions.stones[event] === undefined) {
-        options.actions.stones[event] =
-            optionsTemplate.actions.stones[event];
+    return sgfObj;
+  },
+
+  getWidgetOptions: function(fullOptions) {
+    var outOptions = {};
+    for (var key in fullOptions) {
+      if (key !== 'sgfList' && key !== 'sgf' && key !== 'initialListIndex') {
+        outOptions[key] = fullOptions[key];
       }
     }
-    for (var icon in optionsTemplate.actions.icons) {
-      if (options.actions.icons[icon] === undefined) {
-        options.actions.icons[icon] =
-            optionsTemplate.actions.icons[icon];
-      }
-      for (var action in optionsTemplate.actions.icons[icon]) {
-        if (options.actions.icons[icon][action] === undefined) {
-          options.actions.icons[icon][action] =
-              optionsTemplate.actions.icons[icon][action];
-        }
-      }
-    }
+    return outOptions;
+  },
+
+  getMangerOptions: function(fullOptions) {
+    return {
+      sgfList: fullOptions.sgfList,
+      initialListIndex: fullOptions.initialListIndex
+    };
   }
 };

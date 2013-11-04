@@ -1,0 +1,21 @@
+(;GM[1]FF[4]CA[UTF-8]AP[CGoban:3]ST[2]
+RU[Japanese]SZ[19]KM[0.00]
+PW[White]PB[Black]EV[ALL_CORRECT]AW[mc][qd]AB[oc][pe]
+;B[]C[White to play. Before we look at the trick move in depth, what does white usually play next? 
+Click the 'roadmap' to see possible followups. ]
+(;W[qe]C[Correct. ]
+;B[pf]
+(;W[qg]LB[kc:A][qc:B]C[Usually Black will follow up with A or B next.])
+(;W[qf]
+;B[pg]
+;W[qh]
+;B[jd]SQ[pg]C[Black can make a looser pincer because he has the marked stone.]))
+(;W[pd]C[Correct.]
+;B[od]
+;W[oe]
+(;B[ne]
+;W[of]
+;B[md]
+;W[pf]
+;B[lc]C[This is a common variation.])
+(;B[md]C[This is the most complicated variation and can lead to complicated fighting.])))

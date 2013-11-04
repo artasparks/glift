@@ -198,6 +198,13 @@ IconBar.prototype = {
   },
 
   /**
+   * Return whether the iconBar has instantiated said icon or not
+   */
+  hasIcon: function(name) {
+    return this.newIconBboxes[name] === undefined;
+  },
+
+  /**
    * Return a simple object containing the
    *
    * {

@@ -32,14 +32,14 @@ BaseController.prototype = {
    * Note that these options should be protected by the options parsing (see
    * options.js in this same directory).  Thus, no special checks are made here.
    */
-  initOptions: function(options) {
-    if (options === undefined) {
+  initOptions: function(sgfOptions) {
+    if (sgfOptions === undefined) {
       throw "Options is undefined!  Can't create controller"
     }
-    this.sgfString = options.sgfString || "";
-    this.initialPosition = options.initialPosition || [];
-    this.problemConditions = options.problemConditions || undefined;
-    this.extraOptions(options); // Overridden by implementers
+    this.sgfString = sgfOptions.sgfString || "";
+    this.initialPosition = sgfOptions.initialPosition || [];
+    this.problemConditions = sgfOptions.problemConditions || undefined;
+    this.extraOptions(sgfOptions); // Overridden by implementers
     this.initialize();
     return this;
   },
