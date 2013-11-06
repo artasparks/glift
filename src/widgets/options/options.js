@@ -1,53 +1,69 @@
 glift.widgets.options = {
   /**
    * Set the defaults on options.  Note: This makes a copy and so is (sort of)
-   * an immutable operation on options.
+   * an immutable operation on a set of options.
    */
-  setWidgetOptionDefaults: function(options) {
+  setBaseOptionDefaults: function(options) {
     var options = glift.util.simpleClone(options);
-    var baseTemplate = glift.util.simpleClone(glift.widgets.options.base);
-    options.iconActions = glift.widgets.options.iconActions;
+    var baseTemplate = glift.util.simpleClone(
+        glift.widgets.options.baseOptions);
     for (var optionName in baseTemplate) {
-      if (options[optionName] === undefined) {
+      if (optionName === 'sgfDefaults') {
+        options.sgfDefaults = options.sgfDefaults || {};
+        for (var key in baseTemplate.sgfDefaults) {
+          if (options.sgfDefaults[key] === undefined) {
+            options.sgfDefaults[key] = baseTemplate.sgfDefaults[key];
+          }
+        }
+      } else if (options[optionName] === undefined) {
         options[optionName] = baseTemplate[optionName];
       }
     }
     return options
   },
 
-  setSgfOptionDefaults: function(sgfObj, widgetOptions) {
-    var sgfTemplate = glift.util.simpleClone(glift.widgets.options.sgf);
-    sgfObj.widgetType = sgfObj.widgetType || widgetOptions.defaultWidgetType;
-    var widgetTypeTemplate = glift.util.simpleClone(
+  /**
+   * Set the default SGF Options.  At this point, we assume that that
+   * baseOptions has alreday been copied and filled in.  The process of
+   * setting the sgf options goes as follows:
+   *
+   * 1. Get the default WidgetType from the sgfDefaults.
+   * 2. Retrieve the WidgetType overrides.
+   * Then:
+   *  3. Prefer first options set explicitly in the sgfObj
+   *  4. Then, prefer options set in the WidgetType Overrides
+   *  5. Finally, prefer options set in baseOptions.sgfDefaults
+   */
+  setSgfOptionDefaults: function(sgfObj, sgfDefaults) {
+    sgfObj = glift.util.simpleClone(sgfObj);
+    sgfDefaults = glift.util.simpleClone(sgfDefaults);
+    sgfObj.widgetType = sgfObj.widgetType || sgfDefaults.widgetType;
+    var widgetTypeOverrides = glift.util.simpleClone(
         glift.widgets.options[sgfObj.widgetType]);
-    for (var key in sgfTemplate) {
+    for (var key in sgfDefaults) {
       if (key in sgfObj) {
-        // Leave it alone: we don't want to override user provided defaults.
-      } else if (key in widgetTypeTemplate) {
-        sgfObj[key] = widgetTypeTemplate[key];
+      } else if (key in widgetTypeOverrides) {
+        sgfObj[key] = widgetTypeOverrides[key];
       } else {
-        sgfObj[key] = sgfTemplate[key];
+        sgfObj[key] = sgfDefaults[key];
       }
     }
-    sgfObj.problemConditions = sgfObj.problemConditions
-        || widgetOptions.defaultProblemConditions;
     return sgfObj;
   },
 
-  getWidgetOptions: function(fullOptions) {
+  /**
+   * Get only the widget specific options -- i.e. not manager options nor sgf
+   * options.
+   */
+  getDisplayOptions: function(fullOptions) {
     var outOptions = {};
+    var ignore =
+        {sgfList:true, sgf:true, initialListIndex:true, sgfDefaults:true};
     for (var key in fullOptions) {
-      if (key !== 'sgfList' && key !== 'sgf' && key !== 'initialListIndex') {
+      if (!ignore[key]) {
         outOptions[key] = fullOptions[key];
       }
     }
     return outOptions;
-  },
-
-  getMangerOptions: function(fullOptions) {
-    return {
-      sgfList: fullOptions.sgfList,
-      initialListIndex: fullOptions.initialListIndex
-    };
   }
 };

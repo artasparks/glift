@@ -2,14 +2,12 @@
  * The Widget Manager manages state across widgets.  When widgets are created,
  * they are always created in the context of a Widget Manager.
  */
-glift.widgets.WidgetManager = function(sgfList, sgfListIndex, widgetOptions) {
+glift.widgets.WidgetManager = function(
+    sgfList, sgfListIndex, sgfDefaults, displayOptions) {
   this.sgfList = sgfList;
   this.sgfListIndex = sgfListIndex;
-
-  /**
-   * Immptable widget options.
-   */
-  this.widgetOptions = widgetOptions;
+  this.sgfDefaults = sgfDefaults;
+  this.displayOptions = displayOptions;
 
   // Defined on draw
   this.currentWidget = undefined;
@@ -17,10 +15,11 @@ glift.widgets.WidgetManager = function(sgfList, sgfListIndex, widgetOptions) {
 
 glift.widgets.WidgetManager.prototype = {
   draw: function() {
-    this.destroy();
     var that = this;
     this.getSgfString(function(sgfObj) {
-      this.currentWidget = that.createWidget(sgfObj).draw();
+      // Prevent flickering by destroying after loading the SGF.
+      that.destroy();
+      that.currentWidget = that.createWidget(sgfObj).draw();
     });
     return this;
   },
@@ -42,10 +41,10 @@ glift.widgets.WidgetManager.prototype = {
       curSgfObj = out;
     }
     var processedObj = glift.widgets.options.setSgfOptionDefaults(
-        curSgfObj, this.widgetOptions);
+        curSgfObj, this.sgfDefaults);
     if (this.sgfList.length > 1) {
-      processedObj.icons.push(this.widgetOptions.nextSgfIcon);
-      processedObj.icons.splice(0, 0, this.widgetOptions.previousSgfIcon);
+      processedObj.icons.push(this.displayOptions.nextSgfIcon);
+      processedObj.icons.splice(0, 0, this.displayOptions.previousSgfIcon);
     }
     return processedObj;
   },
@@ -57,7 +56,7 @@ glift.widgets.WidgetManager.prototype = {
   getSgfString: function(callback) {
     var sgfObj = this.getCurrentSgfObj();
     if (sgfObj.url) {
-      loadSgfWithAjax(sgfObj.url, sgfObj, callback);
+      this.loadSgfWithAjax(sgfObj.url, sgfObj, callback);
     } else {
       callback(sgfObj);
     }
@@ -67,27 +66,56 @@ glift.widgets.WidgetManager.prototype = {
    * Create a Sgf Widget.
    */
   createWidget: function(sgfObj) {
-    return new glift.widgets.BaseWidget(sgfObj, this.widgetOptions, this);
+    return new glift.widgets.BaseWidget(sgfObj, this.displayOptions, this);
   },
 
   /**
    * Temporarily replace the current widget with another widget.  Used in the
    * case of the PROBLEM_SOLUTION_VIEWER.
    */
-  createTemporaryWidget: function(options) {
-
+  createTemporaryWidget: function(sgfObj) {
+    this.currentWidget.destroy();
+    sgfObj = glift.widgets.options.setSgfOptionDefaults(
+        sgfObj, this.sgfDefaults);
+    this.temporaryWidget = this.createWidget(sgfObj).draw();
   },
 
-  _nextSgfInternal: function(index) {
-
+  returnToOriginalWidget: function() {
+    this.temporaryWidget && this.temporaryWidget.destroy();
+    this.temporaryWidget = undefined;
+    this.currentWidget.draw();
   },
 
+  /**
+   * Internal implementation of nextSgf/previous sgf..
+   */
+  _nextSgfInternal: function(indexChange) {
+    if (!this.sgfList.length > 1) {
+      return; // Nothing to do
+    }
+    this.sgfListIndex = (this.sgfListIndex + indexChange + this.sgfList.length)
+        % this.sgfList.length;
+    this.draw();
+  },
+
+  /**
+   * Get the next SGF.  Requires that the list be non-empty.
+   */
   nextSgf: function() { this._nextSgfInternal(1); },
 
+  /**
+   * Get the next SGF.  Requires that the list be non-empty.
+   */
   prevSgf: function() { this._nextSgfInternal(-1); },
 
+  /**
+   * Undraw the most recent widget and remove references to it.
+   */
   destroy: function() {
     this.currentWidget && this.currentWidget.destroy();
+    this.currentWidget = undefined;
+    this.temporaryWidget && this.temporaryWidget.destroy();
+    this.temporaryWidget = undefined;
   },
 
   /**

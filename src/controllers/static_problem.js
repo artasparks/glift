@@ -1,4 +1,3 @@
-(function() {
 /**
  * The static problem controller encapsulates the idea of trying to solve a
  * problem.  Thus, when a player adds a stone, the controller checks to make
@@ -9,14 +8,15 @@
  *  'correct' outcome.
  */
 glift.controllers.staticProblem = function(sgfOptions) {
-  var controllers = glift.controllers,
-      baseController = glift.util.beget(controllers.base()),
-      newController = glift.util.setMethods(baseController, methods),
-      _ = newController.initOptions(sgfOptions);
+  var controllers = glift.controllers;
+  var baseController = glift.util.beget(controllers.base());
+  var newController = glift.util.setMethods(baseController,
+          glift.controllers.StaticProblemMethods);
+  newController.initOptions(sgfOptions);
   return newController;
 };
 
-var methods = {
+glift.controllers.StaticProblemMethods = {
   /**
    * Reload the problems.
    *
@@ -110,5 +110,3 @@ var methods = {
     }
   }
 };
-
-})();

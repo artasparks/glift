@@ -1,10 +1,10 @@
 /**
  * The base web UI widget.  It can be extended, if necessary.
  */
-glift.widgets.BaseWidget = function(sgfOptions, widgetOptions, manager) {
+glift.widgets.BaseWidget = function(sgfOptions, displayOptions, manager) {
   this.type = sgfOptions.type;
   this.sgfOptions = glift.util.simpleClone(sgfOptions);
-  this.widgetOptions = glift.util.simpleClone(widgetOptions);
+  this.displayOptions= glift.util.simpleClone(displayOptions);
   this.manager = manager;
 
   // Used for problems, exclusively
@@ -13,7 +13,7 @@ glift.widgets.BaseWidget = function(sgfOptions, widgetOptions, manager) {
   this.numCorrectAnswers = undefined;
   this.totalCorrectAnswers = undefined;
 
-  this.wrapperDiv = widgetOptions.divId; // We split the wrapper div.
+  this.wrapperDiv = displayOptions.divId; // We split the wrapper div.
   this.controller = undefined; // Initialized with draw.
   this.display = undefined; // Initialized by draw.
   this.iconBar = undefined; // Initialized by draw.
@@ -26,29 +26,31 @@ glift.widgets.BaseWidget.prototype = {
    */
   draw: function() {
     this.controller = this.sgfOptions.controllerFunc(this.sgfOptions);
-    var divSplits = this.widgetOptions.useCommentBar ?
-        this.widgetOptions.splitsWithComments :
-        this.widgetOptions.splitsWithoutComments;
+    var divSplits = this.displayOptions.useCommentBar ?
+        this.displayOptions.splitsWithComments :
+        this.displayOptions.splitsWithoutComments;
     this.divInfo = glift.displays.gui.splitDiv(
         this.wrapperDiv, divSplits, 'horizontal');
     this.goboxDivId = this.divInfo[0].id;
     this._setNotSelectable(this.goboxDivId);
-    this.widgetOptions.boardRegion =
+    this.displayOptions.boardRegion =
         this.sgfOptions.boardRegion === glift.enums.boardRegions.AUTO
         ? glift.bridge.getCropFromMovetree(this.controller.movetree)
         : this.sgfOptions.boardRegion;
 
-    this.widgetOptions.divId = this.goboxDivId;
-    this.display = glift.displays.create(this.widgetOptions);
+    // TODO(kashomon): Remove this hack. We shouldn't be modifying
+    // displayOptions.
+    this.displayOptions.divId = this.goboxDivId;
+    this.display = glift.displays.create(this.displayOptions);
     var boundingWidth = $('#' +  this.goboxDivId).width();
 
-    if (this.widgetOptions.useCommentBar) {
+    if (this.displayOptions.useCommentBar) {
       this.commentBoxId = this.divInfo[1].id;
       this._setNotSelectable(this.commentBoxId);
       this._createCommentBox(boundingWidth);
     }
 
-    this.iconBarId = this.widgetOptions.useCommentBar ?
+    this.iconBarId = this.displayOptions.useCommentBar ?
         this.divInfo[2].id :
         this.divInfo[1].id;
     this._setNotSelectable(this.iconBarId);
@@ -96,18 +98,18 @@ glift.widgets.BaseWidget.prototype = {
         this.commentBoxId,
         this.display.width(),
         boundingWidth,
-        this.widgetOptions.theme,
-        this.widgetOptions.goBoardBackground !== undefined);
+        this.displayOptions.theme,
+        this.displayOptions.goBoardBackground !== undefined);
   },
 
   _createIconBar: function(boundingWidth) {
     var margin = (boundingWidth - this.display.width()) / 2;
     var icons = this.sgfOptions.icons;
     if (this.type === glift.enums.widgetTypes.EXAMPLE) {
-      icons = this.widgetOptions.reducedIconsForExample || icons;
+      icons = this.displayOptions.reducedIconsForExample || icons;
     }
     this.iconBar = glift.displays.gui.iconBar({
-      themeName: this.widgetOptions.theme,
+      themeName: this.displayOptions.theme,
       divId: this.iconBarId,
       vertMargin:  5, // For good measure
       horzMargin: margin,
@@ -118,7 +120,7 @@ glift.widgets.BaseWidget.prototype = {
   _initIconActions: function() {
     var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
     var widget = this;
-    var iconActions = this.widgetOptions.iconActions;
+    var iconActions = this.displayOptions.iconActions;
     var icons = this.sgfOptions.icons;
     for (var i = 0; i < icons.length; i++) {
       var iconName = icons[i];
@@ -137,7 +139,7 @@ glift.widgets.BaseWidget.prototype = {
                 .attr('fill', widget.iconBar.theme.icons.DEFAULT.fill);
           };
       for (var eventName in iconActions[iconName]) {
-        (function(eventName, iconNameBound, event) { // lazy binding, bleh.
+        (function(eventName, iconNameBound, event) { // lazy binding pattern.
           widget.iconBar.setEvent(eventName, iconName, function() {
             event(widget, iconNameBound);
           });
@@ -150,14 +152,14 @@ glift.widgets.BaseWidget.prototype = {
    * Initialize the stone actions.
    */
   _initStoneActions: function() {
-    var stoneActions = this.widgetOptions.stoneActions
+    var stoneActions = this.displayOptions.stoneActions
     stoneActions.click = this.sgfOptions.stoneClick;
     var that = this;
     for (var action in stoneActions) {
       (function(act, fn) { // bind the event -- required due to lazy binding.
         that.display.intersections().setEvent(act, function(pt) {
           fn(that, pt);
-        });
+       });
       })(action, stoneActions[action]);
     }
   },
@@ -169,11 +171,11 @@ glift.widgets.BaseWidget.prototype = {
     var that = this;
     this.keyHandlerFunc = function(e) {
       var name = glift.keyMappings.codeToName(e.which);
-      if (name && that.sgfOptions.keyMapping[name] !== undefined) {
-        var actionName = that.sgfOptions.keyMapping[name];
+      if (name && that.sgfOptions.keyMappings[name] !== undefined) {
+        var actionName = that.sgfOptions.keyMappings[name];
         // actionNamespaces look like: icons.arrowleft.mouseup
         var actionNamespace = actionName.split('.');
-        var action = that.widgetOptions[actionNamespace[0]];
+        var action = that.displayOptions[actionNamespace[0]];
         for (var i = 1; i < actionNamespace.length; i++) {
           action = action[actionNamespace[i]];
         }
@@ -187,10 +189,8 @@ glift.widgets.BaseWidget.prototype = {
    * Initialize properties based on problem type.
    */
   _initProblemType: function() {
-    if (this.sgfOptions.widgetType === glift.enums.widgetTypes.ALL_CORRECT) {
-      // TODO(kashomon): This is a bad hack.  What if we don't include the
-      // checkbox?  This ties the problem options to this code in a very strange
-      // way / yucky way.
+    if (this.sgfOptions.widgetType ===
+        glift.enums.widgetTypes.ALL_CORRECT_PROBLEM) {
       var correctNext = glift.rules.problems.correctNextMoves(
           this.controller.movetree, this.sgfOptions.problemConditions);
       // A Set: i.e., a map of points to true

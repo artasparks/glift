@@ -66,27 +66,6 @@ var methods = {
   },
 
   /**
-   * Go back to the beginning.
-   */
-  toBeginning: function() {
-    this.movetree = this.movetree.getTreeFromRoot();
-    this.goban = glift.rules.goban.getFromMoveTree(this.movetree, []).goban;
-    this.captureHistory = []
-    this.currentMoveNumber = 0;
-    return this.getEntireBoardState();
-  },
-
-  /**
-   * Go to the end.
-   */
-  toEnd: function() {
-    while (this.nextMove() !== glift.util.none) {
-      // All the action happens in nextMoveNoState.
-    }
-    return this.getEntireBoardState();
-  },
-
-  /**
    * Get the possible next moves.  Used to verify that a click is actually
    * reasonable.
    *

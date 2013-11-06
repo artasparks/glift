@@ -19,6 +19,7 @@ glift.keyMappings = {
     I:73,
     J:74,
     K:75
+    // TODO(kashomon): Complete this.
   },
 
   nameToCode: function(name) {

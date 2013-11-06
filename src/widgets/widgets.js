@@ -7,7 +7,7 @@ glift.widgets = {
    * Returns a widgetManager.
    */
   create: function(options) {
-    options = glift.widgets.options.setWidgetOptionDefaults(options);
+    options = glift.widgets.options.setBaseOptionDefaults(options);
     if (options.sgf && options.sgfList.length === 0) {
       options.sgfList = [options.sgf];
     }
@@ -17,6 +17,7 @@ glift.widgets = {
     return new glift.widgets.WidgetManager(
       options.sgfList,
       options.initialListIndex,
-      glift.widgets.options.getWidgetOptions(options)).draw();
+      options.sgfDefaults,
+      glift.widgets.options.getDisplayOptions(options)).draw();
   }
 };

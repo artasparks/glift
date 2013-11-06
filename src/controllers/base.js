@@ -232,6 +232,27 @@ BaseController.prototype = {
     this.treepath = this.treepath.slice(0, this.currentMoveNumber);
     this.treepath.push(num % this.movetree.node().numChildren());
     return this;
-  }
+  },
+
+  /**
+   * Go back to the beginning.
+   */
+  toBeginning: function() {
+    this.movetree = this.movetree.getTreeFromRoot();
+    this.goban = glift.rules.goban.getFromMoveTree(this.movetree, []).goban;
+    this.captureHistory = []
+    this.currentMoveNumber = 0;
+    return this.getEntireBoardState();
+  },
+
+  /**
+   * Go to the end.
+   */
+  toEnd: function() {
+    while (this.nextMove() !== glift.util.none) {
+      // All the action happens in nextMoveNoState.
+    }
+    return this.getEntireBoardState();
+  },
 };
 })();

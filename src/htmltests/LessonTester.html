@@ -82,11 +82,10 @@
 <script type="text/javascript" src="../widgets/manager.js"></script>
 <!-- Widgets options -->
 <script type="text/javascript" src="../widgets/options/options.js"></script>
+<script type="text/javascript" src="../widgets/options/all_correct_problem_options.js"></script>
 <script type="text/javascript" src="../widgets/options/base_options.js"></script>
 <script type="text/javascript" src="../widgets/options/example_options.js"></script>
 <script type="text/javascript" src="../widgets/options/game_viewer_options.js"></script>
-<script type="text/javascript" src="../widgets/options/icon_actions.js"></script>
-<script type="text/javascript" src="../widgets/options/sgf_options.js"></script>
 <script type="text/javascript" src="../widgets/options/standard_problem_options.js"></script>
 
 <!-- END-AUTO-GEN-DEPS -->
@@ -109,18 +108,23 @@
       <div id="glift_display1"></div>
       <div id="extra_info"></div>
       <script type="text/javascript">
-        var basicProblem = glift.widgets.problem({
-          useCommentBar: true,
+        var basicProblem = glift.widgets.create({
           divId: "glift_display1",
-          sgfUrlList: [
-              "../testdata/tm_lesson/19pt_1.sgf",
-              "../testdata/tm_lesson/19pt_2.sgf",
-              {
-                sgfUrl: "../testdata/tm_lesson/19Pt_CorrectJoseki_WhiteToPlay.sgf",
-                initialPosition: '1', // b's first move is a pass.
-                problemType: 'ALL_CORRECT'
-              },
-          ]
+          sgfList: [{
+              url: "../testdata/tm_lesson/19pt_1.sgf",
+              widgetType: 'EXAMPLE'
+            },{
+              url: "../testdata/tm_lesson/19pt_2.sgf",
+              widgetType: 'EXAMPLE'
+            },{
+              url: "../testdata/tm_lesson/19Pt_CorrectJoseki_WhiteToPlay.sgf",
+              initialPosition: '1', // b's first move is a pass.
+              widgetType: 'ALL_CORRECT_PROBLEM'
+            }
+          ],
+          sgfOptions: {
+            widgetType: 'STANDARD_PROBLEM'
+          }
         });
       </script>
     </div>

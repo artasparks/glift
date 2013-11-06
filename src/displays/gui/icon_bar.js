@@ -33,7 +33,6 @@ var IconBar = function(divId, themeName, iconNames, vertMargin, horzMargin) {
   this.iconNames = iconNames; // array of names
   this.vertMargin = vertMargin;
   this.horzMargin = horzMargin;
-  this.events = {};
   this.newIconBboxes = {}; // initialized by draw
   this.svg = undefined; // initialized by draw
   this.tempIconIds = []; // from addTempIcon.
@@ -170,21 +169,8 @@ IconBar.prototype = {
    */
   setEvent: function(event, iconName, func) {
     var that = this; // not sure if this is necessary
-    this.events[iconName] = func;
-    d3.select('#' + that.buttonId(iconName))
+    d3.select('#' + this.buttonId(iconName))
       .on(event, function() { func(that.getIcon(iconName)); });
-    return this;
-  },
-
-  /**
-   * Force an event to be fired.
-   */
-  // TODO(kashomon): Based on the way widgets are structured now, we might be
-  // able to remove this.
-  forceEvent: function(iconName) {
-    if (this.events[iconName] !== undefined) {
-      this.events[iconName]();
-    }
     return this;
   },
 
@@ -237,7 +223,6 @@ IconBar.prototype = {
 
   destroy: function() {
     this.divId && d3.select('#' + this.divId).selectAll("svg").remove();
-    this.events = {};
     return this;
   }
 };
