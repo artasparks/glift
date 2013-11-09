@@ -71,6 +71,7 @@
 <script type="text/javascript" src="../sgf/props.js"></script>
 <!-- Controllers -->
 <script type="text/javascript" src="../controllers/controllers.js"></script>
+<script type="text/javascript" src="../controllers/all_correct_problem.js"></script>
 <script type="text/javascript" src="../controllers/base.js"></script>
 <script type="text/javascript" src="../controllers/game_viewer.js"></script>
 <script type="text/javascript" src="../controllers/static_problem.js"></script>
@@ -83,8 +84,8 @@
 <script type="text/javascript" src="../widgets/manager.js"></script>
 <!-- Widgets options -->
 <script type="text/javascript" src="../widgets/options/options.js"></script>
-<script type="text/javascript" src="../widgets/options/all_correct_problem_options.js"></script>
 <script type="text/javascript" src="../widgets/options/base_options.js"></script>
+<script type="text/javascript" src="../widgets/options/correct_variations_problem_options.js"></script>
 <script type="text/javascript" src="../widgets/options/example_options.js"></script>
 <script type="text/javascript" src="../widgets/options/game_viewer_options.js"></script>
 <script type="text/javascript" src="../widgets/options/standard_problem_options.js"></script>
@@ -109,8 +110,8 @@
       <div id="glift_display1"></div>
       <div id="extra_info"></div>
       <script type="text/javascript">
-        var gameViewer = glift.widgets.baseWidget({
-          sgfString: testdata.gogameguru_commentary,
+        var gameViewer = glift.widgets.create({
+          sgf: testdata.gogameguru_commentary,
           theme: 'DEPTH',
           goBoardBackground: '../themes/assets/bambootile_warm.jpg',
           divId: "glift_display1"

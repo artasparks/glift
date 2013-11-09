@@ -3,9 +3,10 @@
  * they are always created in the context of a Widget Manager.
  */
 glift.widgets.WidgetManager = function(
-    sgfList, sgfListIndex, sgfDefaults, displayOptions) {
+    sgfList, sgfListIndex, allowWrapAround, sgfDefaults, displayOptions) {
   this.sgfList = sgfList;
   this.sgfListIndex = sgfListIndex;
+  this.allowWrapAround = allowWrapAround
   this.sgfDefaults = sgfDefaults;
   this.displayOptions = displayOptions;
 
@@ -17,7 +18,7 @@ glift.widgets.WidgetManager.prototype = {
   draw: function() {
     var that = this;
     this.getSgfString(function(sgfObj) {
-      // Prevent flickering by destroying after loading the SGF.
+      // Prevent flickering by destroying the widget _after_ loading the SGF.
       that.destroy();
       that.currentWidget = that.createWidget(sgfObj).draw();
     });
@@ -43,8 +44,19 @@ glift.widgets.WidgetManager.prototype = {
     var processedObj = glift.widgets.options.setSgfOptionDefaults(
         curSgfObj, this.sgfDefaults);
     if (this.sgfList.length > 1) {
-      processedObj.icons.push(this.displayOptions.nextSgfIcon);
-      processedObj.icons.splice(0, 0, this.displayOptions.previousSgfIcon);
+      if (this.allowWrapAround) {
+        processedObj.icons.push(this.displayOptions.nextSgfIcon);
+        processedObj.icons.splice(0, 0, this.displayOptions.previousSgfIcon);
+      } else {
+        if (this.sgfListIndex === 0) {
+          processedObj.icons.push(this.displayOptions.nextSgfIcon);
+        } else if (this.sgfListIndex === this.sgfList.length - 1) {
+          processedObj.icons.splice(0, 0, this.displayOptions.previousSgfIcon);
+        } else {
+          processedObj.icons.push(this.displayOptions.nextSgfIcon);
+          processedObj.icons.splice(0, 0, this.displayOptions.previousSgfIcon);
+        }
+      }
     }
     return processedObj;
   },
@@ -93,8 +105,17 @@ glift.widgets.WidgetManager.prototype = {
     if (!this.sgfList.length > 1) {
       return; // Nothing to do
     }
-    this.sgfListIndex = (this.sgfListIndex + indexChange + this.sgfList.length)
-        % this.sgfList.length;
+    if (this.allowWrapAround) {
+      this.sgfListIndex = (this.sgfListIndex + indexChange + this.sgfList.length)
+          % this.sgfList.length;
+    } else {
+      this.sgfListIndex = this.sgfListIndex + indexChange;
+      if (this.sgfListIndex < 0) {
+        this.sgfListIndex = 0;
+      } else if (this.sgfListIndex >= this.sgfList.length) {
+        this.sgfListIndex = this.sgfList.length - 1;
+      }
+    }
     this.draw();
   },
 

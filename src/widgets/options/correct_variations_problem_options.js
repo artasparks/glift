@@ -1,7 +1,7 @@
 /**
  * Additional Options for the GameViewers
  */
-glift.widgets.options.ALL_CORRECT_PROBLEM = {
+glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
   stoneClick: function(widget, pt) {
     var currentPlayer = widget.controller.getCurrentPlayer();
     var data = widget.controller.addStone(pt, currentPlayer);
@@ -35,7 +35,7 @@ glift.widgets.options.ALL_CORRECT_PROBLEM = {
             setTimeout(function() {
               widget.controller.initialize();
               widget.applyBoardData(widget.controller.getEntireBoardState());
-            }, widget.sgfOptions.allCorrectResetTime);
+            }, widget.sgfOptions.correctVariationsResetTime);
           }
         }
       } else if (data.result == problemResults.INCORRECT) {
@@ -54,5 +54,5 @@ glift.widgets.options.ALL_CORRECT_PROBLEM = {
 
   controllerFunc: glift.controllers.staticProblem,
 
-  allCorrectResetTime: 500 // In milliseconds.
+  correctVariationsResetTime: 500 // In milliseconds.
 };

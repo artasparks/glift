@@ -26,18 +26,19 @@ CommentBox.prototype = {
     var borderWidth = 1;
     var boardBorder = this.theme.board['stroke-width'];
     var width = this.displayWidth;
-    var textWidth = width / 25 < 15 ? 15 : width / 25;
+    // var fontSize = width / 25 < 15 ? 15 : width / 25;
+    var fontSize = commentBoxHeight * .13 < 15 ? 15 : commentBoxHeight * .13;
     this.commentBoxObj.css({
       // TODO(kashomon): Get the theme info from the theme
       background: '#CCCCFF',
       border: borderWidth + 'px solid',
-      left: (this.boundingWidth - this.displayWidth) / 2 - boardBorder,
-      width: this.displayWidth + boardBorder,
+      left: Math.ceil((this.boundingWidth - this.displayWidth) / 2 - boardBorder),
+      width: Math.ceil(this.displayWidth + boardBorder),
       height: commentBoxHeight,
       margin: 'auto',
       'font-family': 'Baskerville',
       overflow: 'auto',
-      'font-size': textWidth,
+      'font-size': fontSize,
       // Prevent padding from affecting width
       '-webkit-box-sizing': 'border-box', /* Safari/Chrome, other WebKit */
       '-moz-box-sizing': 'border-box',    /* Firefox, other Gecko */

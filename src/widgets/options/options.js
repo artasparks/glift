@@ -35,6 +35,9 @@ glift.widgets.options = {
    *  5. Finally, prefer options set in baseOptions.sgfDefaults
    */
   setSgfOptionDefaults: function(sgfObj, sgfDefaults) {
+    if (!sgfObj) throw "SGF Obj undefined";
+    if (!sgfDefaults) throw "SGF Defaults undefined";
+
     sgfObj = glift.util.simpleClone(sgfObj);
     sgfDefaults = glift.util.simpleClone(sgfDefaults);
     sgfObj.widgetType = sgfObj.widgetType || sgfDefaults.widgetType;
@@ -57,8 +60,13 @@ glift.widgets.options = {
    */
   getDisplayOptions: function(fullOptions) {
     var outOptions = {};
-    var ignore =
-        {sgfList:true, sgf:true, initialListIndex:true, sgfDefaults:true};
+    var ignore = {
+      sgfList: true,
+      sgf: true,
+      initialListIndex: true,
+      allowWrapAround: true,
+      sgfDefaults: true
+    };
     for (var key in fullOptions) {
       if (!ignore[key]) {
         outOptions[key] = fullOptions[key];

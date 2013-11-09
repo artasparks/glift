@@ -100,6 +100,7 @@ glift.widgets.options.baseOptions = {
 
     /**
      * Whether or not to show variations.  See glift.enums.showVariations
+     * Values: NEVER, ALWAYS, MORE_THAN_ONE
      */
     showVariations: undefined,
 
@@ -125,12 +126,19 @@ glift.widgets.options.baseOptions = {
      * This allows us to specify (in ms) how long the user has until the problem
      * is automatically reset.
      */
-    allCorrectResetTime: undefined
+    correctVariationsResetTime: undefined,
+
+    /**
+     * You can, if you wish, override the total number of correct variations
+     * that a user must get correct.
+     */
+    totalCorrectVariationsOverride: undefined
   },
 
-  //---------------------------------------------
-  // These are two really widget Manager Options
-  //---------------------------------------------
+  //----------------------------------------------------------------------
+  // These are really widget Manager Options.  Any update to here must be
+  // accompanied with an update to options.getDisplayOptions.
+  //----------------------------------------------------------------------
 
   /**
    * The SGF list is a list of SGF objects (given above)
@@ -143,6 +151,12 @@ glift.widgets.options.baseOptions = {
     * configurability.
     */
   initialListIndex: 0,
+
+  /**
+   * If there are multiple SGFs in the SGF list, this flag indicates whether or
+   * not to allow the user to go back to the beginnig (or conversely, the end).
+   */
+  allowWrapAround: false,
 
   //--------------------------------------------------------------------------
   // The rest of the options are the set of display options for the widget
@@ -183,6 +197,11 @@ glift.widgets.options.baseOptions = {
    * the remainder is used by the last div -- the icon bar
    */
   splitsWithoutComments: [.90],
+
+  /**
+   * Div splits with only the comment bar.
+   */
+  splitsWithOnlyComments: [.80],
 
   /**
    * The name of the theme.
@@ -306,7 +325,7 @@ glift.widgets.options.baseOptions = {
           showVariations: glift.enums.showVariations.ALWAYS,
           problemConditions: glift.util.simpleClone(
               widget.sgfOptions.problemConditions),
-          icons: ['start', 'end', 'arrowleft', 'arrowright', 'undo'],
+          icons: ['start', 'end', 'arrowleft', 'arrowright', 'undo']
         }
         manager.createTemporaryWidget(sgfObj);
       }

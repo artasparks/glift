@@ -70,6 +70,7 @@
 <script type="text/javascript" src="../sgf/props.js"></script>
 <!-- Controllers -->
 <script type="text/javascript" src="../controllers/controllers.js"></script>
+<script type="text/javascript" src="../controllers/all_correct_problem.js"></script>
 <script type="text/javascript" src="../controllers/base.js"></script>
 <script type="text/javascript" src="../controllers/game_viewer.js"></script>
 <script type="text/javascript" src="../controllers/static_problem.js"></script>
@@ -82,8 +83,8 @@
 <script type="text/javascript" src="../widgets/manager.js"></script>
 <!-- Widgets options -->
 <script type="text/javascript" src="../widgets/options/options.js"></script>
-<script type="text/javascript" src="../widgets/options/all_correct_problem_options.js"></script>
 <script type="text/javascript" src="../widgets/options/base_options.js"></script>
+<script type="text/javascript" src="../widgets/options/correct_variations_problem_options.js"></script>
 <script type="text/javascript" src="../widgets/options/example_options.js"></script>
 <script type="text/javascript" src="../widgets/options/game_viewer_options.js"></script>
 <script type="text/javascript" src="../widgets/options/standard_problem_options.js"></script>
@@ -109,15 +110,17 @@
       <div id="extra_info"></div>
       <script type="text/javascript">
         //glift.global.performanceDebugLevel = 'info'
-        var basicProblem = glift.widgets.problem({
-          sgfUrlList: [
-              "../testdata/ajax3_13.sgf",
-              "../testdata/ajax_problem.sgf",
-              "../testdata/ajax_problem2.sgf",
-              "../testdata/9x9prob.sgf"
-          ],
-          useCommentBar: true,
+        var basicProblem = glift.widgets.create({
           divId: "glift_display1"
+          sgfList: [
+            "../testdata/ajax3_13.sgf",
+            "../testdata/ajax_problem.sgf",
+            "../testdata/ajax_problem2.sgf",
+            "../testdata/9x9prob.sgf"
+          ],
+          sgfOptions: {
+            widgetType: 'STANDARD_PROBLEM
+          }
         });
       </script>
     </div>

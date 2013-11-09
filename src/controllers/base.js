@@ -253,6 +253,6 @@ BaseController.prototype = {
       // All the action happens in nextMoveNoState.
     }
     return this.getEntireBoardState();
-  },
+  }
 };
 })();

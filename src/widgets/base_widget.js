@@ -29,6 +29,9 @@ glift.widgets.BaseWidget.prototype = {
     var divSplits = this.displayOptions.useCommentBar ?
         this.displayOptions.splitsWithComments :
         this.displayOptions.splitsWithoutComments;
+    if (this.sgfOptions.icons.length === 0) {
+      divSplits = this.displayOptions.splitsWithOnlyComments;
+    }
     this.divInfo = glift.displays.gui.splitDiv(
         this.wrapperDiv, divSplits, 'horizontal');
     this.goboxDivId = this.divInfo[0].id;
@@ -50,15 +53,17 @@ glift.widgets.BaseWidget.prototype = {
       this._createCommentBox(boundingWidth);
     }
 
-    this.iconBarId = this.displayOptions.useCommentBar ?
-        this.divInfo[2].id :
-        this.divInfo[1].id;
-    this._setNotSelectable(this.iconBarId);
-    this._createIconBar(boundingWidth)
+    if (this.sgfOptions.icons.length > 0) {
+      this.iconBarId = this.displayOptions.useCommentBar ?
+          this.divInfo[2].id :
+          this.divInfo[1].id;
+      this._setNotSelectable(this.iconBarId);
+      this._createIconBar(boundingWidth)
+    }
     this._initStoneActions();
     this._initIconActions();
     this._initKeyHandlers();
-    this._initProblemType();
+    this._initProblemData();
     this.applyBoardData(this.controller.getEntireBoardState());
     return this;
   },
@@ -188,15 +193,17 @@ glift.widgets.BaseWidget.prototype = {
   /**
    * Initialize properties based on problem type.
    */
-  _initProblemType: function() {
+  _initProblemData: function() {
     if (this.sgfOptions.widgetType ===
-        glift.enums.widgetTypes.ALL_CORRECT_PROBLEM) {
+        glift.enums.widgetTypes.CORRECT_VARIATIONS_PROBLEM) {
       var correctNext = glift.rules.problems.correctNextMoves(
           this.controller.movetree, this.sgfOptions.problemConditions);
       // A Set: i.e., a map of points to true
       this.correctNextSet = this.correctNextSet || {};
       this.numCorrectAnswers = this.numCorrectAnswers || 0;
-      this.totalCorrectAnswers = this.totalCorrectAnswers || correctNext.length;
+      this.totalCorrectAnswers = this.totalCorrectAnswers
+          || this.sgfOptions.totalCorrectVariationsOverride
+          || correctNext.length;
       this.iconBar.addTempText(this.iconBar.getIcon('checkbox').newBbox,
           this.numCorrectAnswers + '/' + this.totalCorrectAnswers, '#000');
     }

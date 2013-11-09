@@ -13,7 +13,7 @@ glift.global = {
    * Semantic versioning is used to determine the version.
    * See: http://semver.org/
    */
-  version: '0.7.2',
+  version: '0.7.3',
   /**
    * Whether or not fast click is enabled, via Glift.
    */
@@ -324,11 +324,11 @@ glift.enums = {
     MORE_THAN_ONE: 'MORE_THAN_ONE'
   },
 
-  problemTypes: {
-    STANDARD: 'STANDARD',
+  widgetTypes: {
+    CORRECT_VARIATIONS_PROBLEM: 'CORRECT_VARIATIONS_PROBLEM',
     EXAMPLE: 'EXAMPLE',
-    ALL_CORRECT: 'ALL_CORRECT',
-    AUTO: 'AUTO'
+    GAME_VIEWER: 'GAME_VIEWER',
+    STANDARD_PROBLEM: 'STANDARD_PROBLEM'
   }
 };
 (function() {
@@ -1140,6 +1140,7 @@ glift.keyMappings = {
     I:73,
     J:74,
     K:75
+    // TODO(kashomon): Complete this.
   },
 
   nameToCode: function(name) {
@@ -3111,7 +3112,6 @@ var IconBar = function(divId, themeName, iconNames, vertMargin, horzMargin) {
   this.iconNames = iconNames; // array of names
   this.vertMargin = vertMargin;
   this.horzMargin = horzMargin;
-  this.events = {};
   this.newIconBboxes = {}; // initialized by draw
   this.svg = undefined; // initialized by draw
   this.tempIconIds = []; // from addTempIcon.
@@ -3248,21 +3248,8 @@ IconBar.prototype = {
    */
   setEvent: function(event, iconName, func) {
     var that = this; // not sure if this is necessary
-    this.events[iconName] = func;
-    d3.select('#' + that.buttonId(iconName))
+    d3.select('#' + this.buttonId(iconName))
       .on(event, function() { func(that.getIcon(iconName)); });
-    return this;
-  },
-
-  /**
-   * Force an event to be fired.
-   */
-  // TODO(kashomon): Based on the way widgets are structured now, we might be
-  // able to remove this.
-  forceEvent: function(iconName) {
-    if (this.events[iconName] !== undefined) {
-      this.events[iconName]();
-    }
     return this;
   },
 
@@ -3273,6 +3260,13 @@ IconBar.prototype = {
   setHover: function(name, hoverin, hoverout) {
     this.setEvent('mouseover', name, hoverin);
     this.setEvent('mouseout', name, hoverout);
+  },
+
+  /**
+   * Return whether the iconBar has instantiated said icon or not
+   */
+  hasIcon: function(name) {
+    return this.newIconBboxes[name] === undefined;
   },
 
   /**
@@ -3308,7 +3302,6 @@ IconBar.prototype = {
 
   destroy: function() {
     this.divId && d3.select('#' + this.divId).selectAll("svg").remove();
-    this.events = {};
     return this;
   }
 };
@@ -5210,6 +5203,23 @@ L: "L", LB: "LB", LN: "LN", LT: "LT", M: "M", MA: "MA", MN: "MN", N: "N", OB:
  * for testing logic as distinct from UI changes.
  */
 glift.controllers = {};
+/**
+ * The all correct problem controller encapsulates the idea of trying to get
+ * everything right about a problem.  Every branch in the tree is thus
+ * considered 'correct'.  This is useful for practicing joseki.
+ */
+glift.controllers.allCorrectProblem = function(sgfOptions) {
+  var controllers = glift.controllers;
+  var baseController = glift.util.beget(controllers.base());
+  var newController = glift.util.setMethods(baseController,
+          glift.controllers.AllCorrectProblemMethods);
+  newController.initOptions(sgfOptions);
+  return newController;
+};
+
+glift.controllers.AllCorrectProblemMethods = {
+
+};
 (function() {
 glift.controllers.base = function() {
   return new BaseController();
@@ -5244,14 +5254,14 @@ BaseController.prototype = {
    * Note that these options should be protected by the options parsing (see
    * options.js in this same directory).  Thus, no special checks are made here.
    */
-  initOptions: function(options) {
-    if (options === undefined) {
+  initOptions: function(sgfOptions) {
+    if (sgfOptions === undefined) {
       throw "Options is undefined!  Can't create controller"
     }
-    this.sgfString = options.sgfString || "";
-    this.initialPosition = options.initialPosition || [];
-    this.problemConditions = options.problemConditions || undefined;
-    this.extraOptions(options); // Overridden by implementers
+    this.sgfString = sgfOptions.sgfString || "";
+    this.initialPosition = sgfOptions.initialPosition || [];
+    this.problemConditions = sgfOptions.problemConditions || undefined;
+    this.extraOptions(sgfOptions); // Overridden by implementers
     this.initialize();
     return this;
   },
@@ -5444,6 +5454,27 @@ BaseController.prototype = {
     this.treepath = this.treepath.slice(0, this.currentMoveNumber);
     this.treepath.push(num % this.movetree.node().numChildren());
     return this;
+  },
+
+  /**
+   * Go back to the beginning.
+   */
+  toBeginning: function() {
+    this.movetree = this.movetree.getTreeFromRoot();
+    this.goban = glift.rules.goban.getFromMoveTree(this.movetree, []).goban;
+    this.captureHistory = []
+    this.currentMoveNumber = 0;
+    return this.getEntireBoardState();
+  },
+
+  /**
+   * Go to the end.
+   */
+  toEnd: function() {
+    while (this.nextMove() !== glift.util.none) {
+      // All the action happens in nextMoveNoState.
+    }
+    return this.getEntireBoardState();
   }
 };
 })();
@@ -5451,12 +5482,11 @@ BaseController.prototype = {
 /**
  * A GameViewer encapsulates the idea of traversing a read-only SGF.
  */
-glift.controllers.gameViewer = function(rawOptions) {
-  var options = rawOptions,
-      controllers = glift.controllers,
+glift.controllers.gameViewer = function(sgfOptions) {
+  var controllers = glift.controllers,
       baseController = glift.util.beget(controllers.base()),
       newController = glift.util.setMethods(baseController, methods),
-      _ = newController.initOptions(options);
+      _ = newController.initOptions(sgfOptions);
   return newController;
 };
 
@@ -5516,27 +5546,6 @@ var methods = {
   },
 
   /**
-   * Go back to the beginning.
-   */
-  toBeginning: function() {
-    this.movetree = this.movetree.getTreeFromRoot();
-    this.goban = glift.rules.goban.getFromMoveTree(this.movetree, []).goban;
-    this.captureHistory = []
-    this.currentMoveNumber = 0;
-    return this.getEntireBoardState();
-  },
-
-  /**
-   * Go to the end.
-   */
-  toEnd: function() {
-    while (this.nextMove() !== glift.util.none) {
-      // All the action happens in nextMoveNoState.
-    }
-    return this.getEntireBoardState();
-  },
-
-  /**
    * Get the possible next moves.  Used to verify that a click is actually
    * reasonable.
    *
@@ -5558,7 +5567,6 @@ var methods = {
   }
 };
 })();
-(function() {
 /**
  * The static problem controller encapsulates the idea of trying to solve a
  * problem.  Thus, when a player adds a stone, the controller checks to make
@@ -5568,15 +5576,16 @@ var methods = {
  *  - There is actually a node somewhere beneath the variation that results in a
  *  'correct' outcome.
  */
-glift.controllers.staticProblem = function(options) {
-  var controllers = glift.controllers,
-      baseController = glift.util.beget(controllers.base()),
-      newController = glift.util.setMethods(baseController, methods),
-      _ = newController.initOptions(options);
+glift.controllers.staticProblem = function(sgfOptions) {
+  var controllers = glift.controllers;
+  var baseController = glift.util.beget(controllers.base());
+  var newController = glift.util.setMethods(baseController,
+          glift.controllers.StaticProblemMethods);
+  newController.initOptions(sgfOptions);
   return newController;
 };
 
-var methods = {
+glift.controllers.StaticProblemMethods = {
   /**
    * Reload the problems.
    *
@@ -5670,8 +5679,6 @@ var methods = {
     }
   }
 };
-
-})();
 /**
  * The bridge is the only place where display and rules/widget code can
  * mingle.
@@ -5838,46 +5845,38 @@ glift.bridge._getRegionFromTracker = function(tracker, numstones) {
   }
   return glift.boardRegions.ALL;
 };
-// Widgets are toplevel objects, which combine display and
-// controller/rules bits together.
-glift.widgets = {
-  loadWithAjax: function(url, callback) {
-    $.ajax({
-      url: url,
-      dataType: 'text',
-      cache: false,
-      success: callback
-    });
-  }
-};
 /**
- * Public 'constructor' for the BaseWidget.
+ * Widgets are toplevel objects, which combine display and
+ * controller/rules bits together.
  */
-glift.widgets.baseWidget = function(options) {
-  glift.util.perfInit();
-  if (options.enableFastClick) {
-    glift.global.enableFastClick();
+glift.widgets = {
+  /**
+   * Returns a widgetManager.
+   */
+  create: function(options) {
+    options = glift.widgets.options.setBaseOptionDefaults(options);
+    if (options.sgf && options.sgfList.length === 0) {
+      options.sgfList = [options.sgf];
+    }
+    if (options.enableFastClick) {
+      glift.global.enableFastClick();
+    }
+    return new glift.widgets.WidgetManager(
+      options.sgfList,
+      options.initialListIndex,
+      options.allowWrapAround,
+      options.sgfDefaults,
+      glift.widgets.options.getDisplayOptions(options)).draw();
   }
-  glift.util.majorPerfLog("Before Widget Creation");
-  var baseWidget = new glift.widgets._BaseWidget(
-      glift.widgets.options.setDefaults(options, 'base')).draw();
-  glift.util.majorPerfLog("After Widget Creation");
-  glift.util.perfDone();
-  return baseWidget;
 };
-
 /**
  * The base web UI widget.  It can be extended, if necessary.
  */
-glift.widgets._BaseWidget = function(options) {
-  this.originalOptions = options;
-  this.options = undefined; // Defined in draw.
-
-  // Mutable state
-  this.sgfString = options.sgfString;
-  this.sgfIndex = options.sgfIndex;
-  this.sgfStringList = options.sgfStringList;
-  this.sgfUrlList = options.sgfUrlList;
+glift.widgets.BaseWidget = function(sgfOptions, displayOptions, manager) {
+  this.type = sgfOptions.type;
+  this.sgfOptions = glift.util.simpleClone(sgfOptions);
+  this.displayOptions= glift.util.simpleClone(displayOptions);
+  this.manager = manager;
 
   // Used for problems, exclusively
   this.correctness = undefined;
@@ -5885,52 +5884,57 @@ glift.widgets._BaseWidget = function(options) {
   this.numCorrectAnswers = undefined;
   this.totalCorrectAnswers = undefined;
 
-  this.wrapperDiv = options.divId; // We split the wrapper div.
+  this.wrapperDiv = displayOptions.divId; // We split the wrapper div.
   this.controller = undefined; // Initialized with draw.
   this.display = undefined; // Initialized by draw.
   this.iconBar = undefined; // Initialized by draw.
+  this.boardRegion = undefined; // Initialized by draw.
 };
 
-glift.widgets._BaseWidget.prototype = {
+glift.widgets.BaseWidget.prototype = {
   /**
    * Draw the widget.
    */
   draw: function() {
-    this.options = glift.util.simpleClone(this.originalOptions);
-    this.options.sgfString = this.sgfString;
-    this.controller = this.options.controllerFunc(this.options);
-    if (this.options.problemType === glift.enums.problemTypes.AUTO) {
-      this.options.problemType = this._getProblemType();
+    this.controller = this.sgfOptions.controllerFunc(this.sgfOptions);
+    var divSplits = this.displayOptions.useCommentBar ?
+        this.displayOptions.splitsWithComments :
+        this.displayOptions.splitsWithoutComments;
+    if (this.sgfOptions.icons.length === 0) {
+      divSplits = this.displayOptions.splitsWithOnlyComments;
     }
-    this.options.intersections = this.controller.getIntersections();
-    var divSplits = this.options.useCommentBar
-        ? this.options.splitsWithComments : this.options.splitsWithoutComments;
     this.divInfo = glift.displays.gui.splitDiv(
         this.wrapperDiv, divSplits, 'horizontal');
     this.goboxDivId = this.divInfo[0].id;
     this._setNotSelectable(this.goboxDivId);
-    this.options.boardRegion =
-        this.options.boardRegion === glift.enums.boardRegions.AUTO
+    this.displayOptions.boardRegion =
+        this.sgfOptions.boardRegion === glift.enums.boardRegions.AUTO
         ? glift.bridge.getCropFromMovetree(this.controller.movetree)
-        : this.options.boardRegion;
-    this.options.divId = this.goboxDivId;
-    this.display = glift.displays.create(this.options);
+        : this.sgfOptions.boardRegion;
+
+    // TODO(kashomon): Remove this hack. We shouldn't be modifying
+    // displayOptions.
+    this.displayOptions.divId = this.goboxDivId;
+    this.display = glift.displays.create(this.displayOptions);
     var boundingWidth = $('#' +  this.goboxDivId).width();
 
-    if (this.options.useCommentBar) {
+    if (this.displayOptions.useCommentBar) {
       this.commentBoxId = this.divInfo[1].id;
       this._setNotSelectable(this.commentBoxId);
       this._createCommentBox(boundingWidth);
     }
 
-    this.iconBarId = this.options.useCommentBar ? this.divInfo[2].id :
-        this.divInfo[1].id;
-    this._setNotSelectable(this.iconBarId);
-    this._createIconBar(boundingWidth)
+    if (this.sgfOptions.icons.length > 0) {
+      this.iconBarId = this.displayOptions.useCommentBar ?
+          this.divInfo[2].id :
+          this.divInfo[1].id;
+      this._setNotSelectable(this.iconBarId);
+      this._createIconBar(boundingWidth)
+    }
     this._initStoneActions();
     this._initIconActions();
     this._initKeyHandlers();
-    this._initProblemType();
+    this._initProblemData();
     this.applyBoardData(this.controller.getEntireBoardState());
     return this;
   },
@@ -5970,20 +5974,19 @@ glift.widgets._BaseWidget.prototype = {
         this.commentBoxId,
         this.display.width(),
         boundingWidth,
-        this.options.theme,
-        this.options.goBoardBackground !== undefined);
+        this.displayOptions.theme,
+        this.displayOptions.goBoardBackground !== undefined);
   },
 
   _createIconBar: function(boundingWidth) {
-    var that = this;
     var margin = (boundingWidth - this.display.width()) / 2;
-    var icons = this.options.icons;
-    if (this.options.problemType === glift.enums.problemTypes.EXAMPLE) {
-      icons = this.options.reducedIconsForExample || icons;
+    var icons = this.sgfOptions.icons;
+    if (this.type === glift.enums.widgetTypes.EXAMPLE) {
+      icons = this.displayOptions.reducedIconsForExample || icons;
     }
     this.iconBar = glift.displays.gui.iconBar({
-      themeName: this.options.themeName,
-      divId: that.iconBarId,
+      themeName: this.displayOptions.theme,
+      divId: this.iconBarId,
       vertMargin:  5, // For good measure
       horzMargin: margin,
       icons: icons
@@ -5993,8 +5996,13 @@ glift.widgets._BaseWidget.prototype = {
   _initIconActions: function() {
     var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
     var widget = this;
-    var iconActions = this.options.actions.icons;
-    for (var iconName in iconActions) {
+    var iconActions = this.displayOptions.iconActions;
+    var icons = this.sgfOptions.icons;
+    for (var i = 0; i < icons.length; i++) {
+      var iconName = icons[i];
+      if (!iconActions.hasOwnProperty(iconName)) {
+        continue;
+      }
       iconActions[iconName].mouseover = iconActions[iconName].mouseover ||
           function(widget, name) {
             var id = widget.iconBar.iconId(name);
@@ -6007,7 +6015,7 @@ glift.widgets._BaseWidget.prototype = {
                 .attr('fill', widget.iconBar.theme.icons.DEFAULT.fill);
           };
       for (var eventName in iconActions[iconName]) {
-        (function(eventName, iconNameBound, event) { // lazy binding, bleh.
+        (function(eventName, iconNameBound, event) { // lazy binding pattern.
           widget.iconBar.setEvent(eventName, iconName, function() {
             event(widget, iconNameBound);
           });
@@ -6020,13 +6028,14 @@ glift.widgets._BaseWidget.prototype = {
    * Initialize the stone actions.
    */
   _initStoneActions: function() {
-    var stoneActions = this.options.actions.stones;
+    var stoneActions = this.displayOptions.stoneActions
+    stoneActions.click = this.sgfOptions.stoneClick;
     var that = this;
     for (var action in stoneActions) {
       (function(act, fn) { // bind the event -- required due to lazy binding.
         that.display.intersections().setEvent(act, function(pt) {
           fn(that, pt);
-        });
+       });
       })(action, stoneActions[action]);
     }
   },
@@ -6038,11 +6047,11 @@ glift.widgets._BaseWidget.prototype = {
     var that = this;
     this.keyHandlerFunc = function(e) {
       var name = glift.keyMappings.codeToName(e.which);
-      if (name && that.options.keyMapping[name] !== undefined) {
-        var actionName = that.options.keyMapping[name];
+      if (name && that.sgfOptions.keyMappings[name] !== undefined) {
+        var actionName = that.sgfOptions.keyMappings[name];
         // actionNamespaces look like: icons.arrowleft.mouseup
         var actionNamespace = actionName.split('.');
-        var action = that.options.actions[actionNamespace[0]];
+        var action = that.displayOptions[actionNamespace[0]];
         for (var i = 1; i < actionNamespace.length; i++) {
           action = action[actionNamespace[i]];
         }
@@ -6055,17 +6064,17 @@ glift.widgets._BaseWidget.prototype = {
   /**
    * Initialize properties based on problem type.
    */
-  _initProblemType: function() {
-    if (this.options.problemType === glift.enums.problemTypes.ALL_CORRECT) {
-      // TODO(kashomon): This is a bad hack.  What if we don't include the
-      // checkbox?  This ties the problem options to this code in a very strange
-      // way / yucky way.
+  _initProblemData: function() {
+    if (this.sgfOptions.widgetType ===
+        glift.enums.widgetTypes.CORRECT_VARIATIONS_PROBLEM) {
       var correctNext = glift.rules.problems.correctNextMoves(
-          this.controller.movetree, this.options.problemConditions);
+          this.controller.movetree, this.sgfOptions.problemConditions);
       // A Set: i.e., a map of points to true
-      this.correctNextSet = {};
-      this.numCorrectAnswers = 0;
-      this.totalCorrectAnswers = correctNext.length;
+      this.correctNextSet = this.correctNextSet || {};
+      this.numCorrectAnswers = this.numCorrectAnswers || 0;
+      this.totalCorrectAnswers = this.totalCorrectAnswers
+          || this.sgfOptions.totalCorrectVariationsOverride
+          || correctNext.length;
       this.iconBar.addTempText(this.iconBar.getIcon('checkbox').newBbox,
           this.numCorrectAnswers + '/' + this.totalCorrectAnswers, '#000');
     }
@@ -6079,7 +6088,7 @@ glift.widgets._BaseWidget.prototype = {
     if (boardData && boardData !== glift.util.none) {
       this.setCommentBox(boardData.comment);
       glift.bridge.setDisplayState(
-          boardData, this.display, this.options.showVariations);
+          boardData, this.display, this.sgfOptions.showVariations);
     }
   },
 
@@ -6097,19 +6106,21 @@ glift.widgets._BaseWidget.prototype = {
     return this;
   },
 
-  /**
-   * Reload the state of the widget.  This is particularly useful for problems.
-   * Unfortunatly, this also probably meants this is too problem-specific.
-   */
   reload: function() {
+    if (this.correctness !== undefined) {
+      this.correctNextSet = undefined;
+      this.numCorrectAnswers = undefined;
+      this.totalCorrectAnswers = undefined;
+    }
     this.redraw();
   },
 
+  /**
+   * Redraw the widget.  This also resets the widget state in perhaps confusing
+   * ways.
+   */
   redraw: function() {
-    this.correctness = undefined; // TODO(kashomon): This shouldn't live here.
-    this.correctNextSet = undefined;
-    this.numCorrectAnswers = undefined;
-    this.totalCorrectAnswers = undefined;
+    this.correctness = undefined;
     this.destroy();
     this.draw();
   },
@@ -6122,150 +6133,424 @@ glift.widgets._BaseWidget.prototype = {
     this.display = undefined;
   }
 }
-glift.widgets.boardEditor = function(options) {
-  // TODO(kashomon): This is going to take some work
-};
 /**
- * Create a Problem widget.  Optional callback for
+ * The Widget Manager manages state across widgets.  When widgets are created,
+ * they are always created in the context of a Widget Manager.
  */
-glift.widgets.problem = function(options) {
-  // First overwrite with problem defaults.
-  options = glift.widgets.options.setDefaults(options, 'problem');
-  // Then overwrite with problem defaults.
-  options = glift.widgets.options.setDefaults(options, 'base');
-  if (options.enableFastClick) {
-    glift.global.enableFastClick();
-  }
-  var widget = new glift.widgets._BaseWidget(options);
-  if (options.sgfStringList.length > 0) {
-    widget.sgfString = widget.sgfStringList[widget.sgfIndex];
-    widget.draw();
-  } else if (options.sgfUrlList.length > 0) {
-    var url = widget.sgfUrlList[widget.sgfIndex]
-    glift.widgets.loadWithAjax(url, function(data) {
-      widget.sgfString = data;
-      widget.draw();
-    });
-  } else {
-    // assume sgfString is defined
-    widget.draw();
-  }
-  // May be in a drawn or un-drawn state at this point, due to the asynchronous
-  // nature of loading the SGFs.
-  return widget;
+glift.widgets.WidgetManager = function(
+    sgfList, sgfListIndex, allowWrapAround, sgfDefaults, displayOptions) {
+  this.sgfList = sgfList;
+  this.sgfListIndex = sgfListIndex;
+  this.allowWrapAround = allowWrapAround
+  this.sgfDefaults = sgfDefaults;
+  this.displayOptions = displayOptions;
+
+  // Defined on draw
+  this.currentWidget = undefined;
 };
-glift.widgets.options = {
-  setDefaults: function(options, defaultOptionSet) {
-    var defaultOptionSet = defaultOptionSet || 'base';
-    var optionsTemplate = glift.widgets.options[defaultOptionSet];
-    for (var optionName in optionsTemplate) {
-      if (options[optionName] === undefined) {
-        // Do a real copy for arrays.
-        if (glift.util.typeOf(optionsTemplate[optionName]) === 'array') {
-          options[optionName] = [];
-          for (var i = 0; i < optionsTemplate[optionName].length; i++) {
-            options[optionName].push(optionsTemplate[optionName][i]);
-          }
-        } else {
-          options[optionName] = optionsTemplate[optionName];
-        }
-      }
-    }
-    glift.widgets.options.setDefaultActions(options, optionsTemplate);
-    return options;
+
+glift.widgets.WidgetManager.prototype = {
+  draw: function() {
+    var that = this;
+    this.getSgfString(function(sgfObj) {
+      // Prevent flickering by destroying the widget _after_ loading the SGF.
+      that.destroy();
+      that.currentWidget = that.createWidget(sgfObj).draw();
+    });
+    return this;
   },
 
-  setDefaultActions: function(options, optionsTemplate) {
-    // If the user specifies only a partial set of actions, we try to fill the
-    // unspecified actions.
-    for (var category in optionsTemplate.actions) {
-      if (options.actions[category] === undefined) {
-        options.actions[category] = optionsTemplate.actions[category];
+  /**
+   * Get the current SGF Object from the SGF List.
+   */
+  getCurrentSgfObj: function() {
+    var curSgfObj = this.sgfList[this.sgfListIndex];
+    if (glift.util.typeOf(curSgfObj) === 'string') {
+      var out = {};
+      if (/^\s*\(;/.test(curSgfObj)) {
+        // This is a standard SGF String.
+        out.sgfString = curSgfObj;
+      } else {
+        // assume a URL.
+        out.url = curSgfObj
       }
+      curSgfObj = out;
     }
-    for (var event in optionsTemplate.actions.stones) {
-      if (options.actions.stones[event] === undefined) {
-        options.actions.stones[event] =
-            optionsTemplate.actions.stones[event];
-      }
-    }
-    for (var icon in optionsTemplate.actions.icons) {
-      if (options.actions.icons[icon] === undefined) {
-        options.actions.icons[icon] =
-            optionsTemplate.actions.icons[icon];
-      }
-      for (var action in optionsTemplate.actions.icons[icon]) {
-        if (options.actions.icons[icon][action] === undefined) {
-          options.actions.icons[icon][action] =
-              optionsTemplate.actions.icons[icon][action];
+    var processedObj = glift.widgets.options.setSgfOptionDefaults(
+        curSgfObj, this.sgfDefaults);
+    if (this.sgfList.length > 1) {
+      if (this.allowWrapAround) {
+        processedObj.icons.push(this.displayOptions.nextSgfIcon);
+        processedObj.icons.splice(0, 0, this.displayOptions.previousSgfIcon);
+      } else {
+        if (this.sgfListIndex === 0) {
+          processedObj.icons.push(this.displayOptions.nextSgfIcon);
+        } else if (this.sgfListIndex === this.sgfList.length - 1) {
+          processedObj.icons.splice(0, 0, this.displayOptions.previousSgfIcon);
+        } else {
+          processedObj.icons.push(this.displayOptions.nextSgfIcon);
+          processedObj.icons.splice(0, 0, this.displayOptions.previousSgfIcon);
         }
       }
     }
+    return processedObj;
+  },
+
+  /**
+   * Get the SGF string.  Since these can be loaded with ajax, the data needs to
+   * be returned with a callback.
+   */
+  getSgfString: function(callback) {
+    var sgfObj = this.getCurrentSgfObj();
+    if (sgfObj.url) {
+      this.loadSgfWithAjax(sgfObj.url, sgfObj, callback);
+    } else {
+      callback(sgfObj);
+    }
+  },
+
+  /**
+   * Create a Sgf Widget.
+   */
+  createWidget: function(sgfObj) {
+    return new glift.widgets.BaseWidget(sgfObj, this.displayOptions, this);
+  },
+
+  /**
+   * Temporarily replace the current widget with another widget.  Used in the
+   * case of the PROBLEM_SOLUTION_VIEWER.
+   */
+  createTemporaryWidget: function(sgfObj) {
+    this.currentWidget.destroy();
+    sgfObj = glift.widgets.options.setSgfOptionDefaults(
+        sgfObj, this.sgfDefaults);
+    this.temporaryWidget = this.createWidget(sgfObj).draw();
+  },
+
+  returnToOriginalWidget: function() {
+    this.temporaryWidget && this.temporaryWidget.destroy();
+    this.temporaryWidget = undefined;
+    this.currentWidget.draw();
+  },
+
+  /**
+   * Internal implementation of nextSgf/previous sgf..
+   */
+  _nextSgfInternal: function(indexChange) {
+    if (!this.sgfList.length > 1) {
+      return; // Nothing to do
+    }
+    if (this.allowWrapAround) {
+      this.sgfListIndex = (this.sgfListIndex + indexChange + this.sgfList.length)
+          % this.sgfList.length;
+    } else {
+      this.sgfListIndex = this.sgfListIndex + indexChange;
+      if (this.sgfListIndex < 0) {
+        this.sgfListIndex = 0;
+      } else if (this.sgfListIndex >= this.sgfList.length) {
+        this.sgfListIndex = this.sgfList.length - 1;
+      }
+    }
+    this.draw();
+  },
+
+  /**
+   * Get the next SGF.  Requires that the list be non-empty.
+   */
+  nextSgf: function() { this._nextSgfInternal(1); },
+
+  /**
+   * Get the next SGF.  Requires that the list be non-empty.
+   */
+  prevSgf: function() { this._nextSgfInternal(-1); },
+
+  /**
+   * Undraw the most recent widget and remove references to it.
+   */
+  destroy: function() {
+    this.currentWidget && this.currentWidget.destroy();
+    this.currentWidget = undefined;
+    this.temporaryWidget && this.temporaryWidget.destroy();
+    this.temporaryWidget = undefined;
+  },
+
+  /**
+   * Load a urlOrObject with AJAX.  If the urlOrObject is an object, then we
+   * assume that the caller is trying to set some objects in the widget.
+   */
+  loadSgfWithAjax: function(url, sgfObj, callback) {
+    $.ajax({
+      url: url,
+      dataType: 'text',
+      cache: false,
+      success: function(data) {
+        sgfObj.sgfString = data;
+        callback(sgfObj);
+      }
+    });
+  }
+};
+glift.widgets.options = {
+  /**
+   * Set the defaults on options.  Note: This makes a copy and so is (sort of)
+   * an immutable operation on a set of options.
+   */
+  setBaseOptionDefaults: function(options) {
+    var options = glift.util.simpleClone(options);
+    var baseTemplate = glift.util.simpleClone(
+        glift.widgets.options.baseOptions);
+    for (var optionName in baseTemplate) {
+      if (optionName === 'sgfDefaults') {
+        options.sgfDefaults = options.sgfDefaults || {};
+        for (var key in baseTemplate.sgfDefaults) {
+          if (options.sgfDefaults[key] === undefined) {
+            options.sgfDefaults[key] = baseTemplate.sgfDefaults[key];
+          }
+        }
+      } else if (options[optionName] === undefined) {
+        options[optionName] = baseTemplate[optionName];
+      }
+    }
+    return options
+  },
+
+  /**
+   * Set the default SGF Options.  At this point, we assume that that
+   * baseOptions has alreday been copied and filled in.  The process of
+   * setting the sgf options goes as follows:
+   *
+   * 1. Get the default WidgetType from the sgfDefaults.
+   * 2. Retrieve the WidgetType overrides.
+   * Then:
+   *  3. Prefer first options set explicitly in the sgfObj
+   *  4. Then, prefer options set in the WidgetType Overrides
+   *  5. Finally, prefer options set in baseOptions.sgfDefaults
+   */
+  setSgfOptionDefaults: function(sgfObj, sgfDefaults) {
+    if (!sgfObj) throw "SGF Obj undefined";
+    if (!sgfDefaults) throw "SGF Defaults undefined";
+
+    sgfObj = glift.util.simpleClone(sgfObj);
+    sgfDefaults = glift.util.simpleClone(sgfDefaults);
+    sgfObj.widgetType = sgfObj.widgetType || sgfDefaults.widgetType;
+    var widgetTypeOverrides = glift.util.simpleClone(
+        glift.widgets.options[sgfObj.widgetType]);
+    for (var key in sgfDefaults) {
+      if (key in sgfObj) {
+      } else if (key in widgetTypeOverrides) {
+        sgfObj[key] = widgetTypeOverrides[key];
+      } else {
+        sgfObj[key] = sgfDefaults[key];
+      }
+    }
+    return sgfObj;
+  },
+
+  /**
+   * Get only the widget specific options -- i.e. not manager options nor sgf
+   * options.
+   */
+  getDisplayOptions: function(fullOptions) {
+    var outOptions = {};
+    var ignore = {
+      sgfList: true,
+      sgf: true,
+      initialListIndex: true,
+      allowWrapAround: true,
+      sgfDefaults: true
+    };
+    for (var key in fullOptions) {
+      if (!ignore[key]) {
+        outOptions[key] = fullOptions[key];
+      }
+    }
+    return outOptions;
   }
 };
 /**
- * Option defaults used by the BaseWidget.
+ * Option defaults.
+ *
+ * Generally, there are three classes of options:
+ *
+ * 1. Manager Options. Meta options hoving to do with managing widgets
+ * 2. Display Options. Options having to do with how widgets are displayed
+ * 3. Sgf Options. Options having to do specifically with each SGF.
  */
-glift.widgets.options.base = {
+glift.widgets.options.baseOptions = {
   /**
-   * A function that returns the controller.
+   * The sgf parameter can be one of the following:
+   *  - An SGF in literal string form.
+   *  - A URL to an SGF.
+   *  - An SGF Object.
+   *
+   * If sgf is specified as an object in can contain any of the options
+   * specified in sgfDefaults.  In addition, the follow parameters may be
+   * specified:
+   *  - sgfString: a literal SGF String
+   *  - initialPosition: where to start in the SGF
+   *  - url: a url to
+   *
+   * As you might expect, if the user sets sgf to a literal string form or to a
+   * url, it is transformed into an SGF object internally.
    */
-  controllerFunc: glift.controllers.gameViewer,
+  sgf: undefined,
 
   /**
-   * This is expected to be overwritten with a SGF in string form.
+   * The defaults or SGF objects.
    */
-  sgfString: '',
+  sgfDefaults: {
+    /**
+     * The default widget type. Specifies what type of widget to create.
+     */
+    widgetType: glift.enums.widgetTypes.GAME_VIEWER,
+
+    /**
+     * Defines where to start on the go board. An empty string implies the very
+     * beginning. Rather than describe how you can detail the paths, here are
+     * some examples of ways to specify an initial position.
+     * 0         - Start at the 0th move (the root node)
+     * 1         - Start at the 1st move. This is often used in combination with
+     *             a black pass to specify that white should play in a
+     *             particular problem.
+     * 53        - Start at the 53rd move, taking the primary path
+     * 2.3       - Start at the 3rd variation on move 2 (actually move 3)
+     * 3         - Start at the 3rd move, going through all the top variations
+     * 2.0       - Start at the 3rd move, going through all the top variations
+     * 0.0.0.0   - Start at the 3rd move, going through all the top variations
+     * 2.3-4.1   - Start at the 1st variation of the 4th move, arrived at by
+     *             traveling through the 3rd varition on the 2nd move
+     */
+    initialPosition: '',
+
+    /**
+     * The board region to display.  The boardRegion will be 'guessed' if it's set
+     * to 'AUTO'.
+     */
+    boardRegion: glift.enums.boardRegions.AUTO,
+
+    /**
+     * Callback to perform once a problem is considered correct / incorrect.
+     */
+    problemCallback: function() {},
+
+    /**
+     * Conditions for determing whether a branch of a movetree is correct.  A
+     * map from property-keys, to an array of substring values.  If the array is
+     * empty, then we only test to see if the property exists at the current
+     * positien.
+     *
+     * The default tests whether there is a 'GB' property or a 'C' (comment)
+     * property containing 'Correct' or 'is correct'.
+     */
+    problemConditions: {
+      GB: [],
+      C: ['Correct', 'is correct']
+    },
+
+    /**
+     * Specifies what action to perform based on a particular keystroke.  In
+     * otherwords, a mapping from key-enum to action path.
+     *
+     * See glift.keyMappings
+     */
+    keyMappings: {
+      ARROW_LEFT: 'iconActions.chevron-left.click',
+      ARROW_RIGHT: 'iconActions.chevron-right.click'
+    },
+
+    //-------------------------------------------------------------------------
+    // These options must always be overriden by the widget type overrides.
+    //
+    // This could easily be changed, but right now this exists as a reminder to
+    // the widget creator that they should override these options. In practice,
+    // it seems that these particular options need to be set on a per-widget
+    // basis anyway.
+    //-------------------------------------------------------------------------
+
+    /**
+     * Whether or not to show variations.  See glift.enums.showVariations
+     */
+    showVariations: undefined,
+
+    /**
+     * The function that creates the controller at widget-creation time.
+     * See glift.controllers for more detail
+     */
+    controllerFunc: undefined,
+
+    /**
+     * The icons to use in the icon-bar.  This is a list of icon-names, which
+     * must be spceified in glift.displays.gui.icons.
+     */
+    icons: undefined,
+
+    /**
+     * The action that is performed when a sure clicks on an intersection.
+     */
+    stoneClick: undefined,
+
+    /**
+     * For all correct, there are multiple correct answers that a user must get.
+     * This allows us to specify (in ms) how long the user has until the problem
+     * is automatically reset.
+     */
+    correctVariationsResetTime: undefined,
+
+    /**
+     * You can, if you wish, override the total number of correct variations
+     * that a user must get correct.
+     */
+    totalCorrectVariationsOverride: undefined
+  },
+
+  //----------------------------------------------------------------------
+  // These are really widget Manager Options.  Any update to here must be
+  // accompanied with an update to options.getDisplayOptions.
+  //----------------------------------------------------------------------
 
   /**
-   * An url to an SGF. Note that sgfString takes precedence if it is non-empty.
+   * The SGF list is a list of SGF objects (given above)
    */
-  sgfUrl: '',
+  sgfList: [],
 
   /**
-   * The default div id in which we create the go board.
+    * Index into the above list.  I can't imagine why anyone would want to change
+    * the initial index for the sgfList, but it's here anyway for
+    * configurability.
+    */
+  initialListIndex: 0,
+
+  /**
+   * If there are multiple SGFs in the SGF list, this flag indicates whether or
+   * not to allow the user to go back to the beginnig (or conversely, the end).
+   */
+  allowWrapAround: false,
+
+  //--------------------------------------------------------------------------
+  // The rest of the options are the set of display options for the widget
+  // It is assumed that these options are immutable for the life the widget
+  // manager instance.
+  //--------------------------------------------------------------------------
+
+  /**
+   * The div id in which we create the go board.  The default is glift_display,
+   * but this will almost certainly need to be set by the user.
    */
   divId: 'glift_display',
 
   /**
-   * Specify a background image for the go board.  You can specify an absolute
-   * or a relative path.
+   * Specify a background image for the go board.  You can specify an
+   * absolute or a relative path.
+   *
    * Examples:
-   *    'images/kaya.jpg'
-   *    'http://www.mywebbie.com/images/kaya.jpg'
+   * 'images/kaya.jpg'
+   * 'http://www.mywebbie.com/images/kaya.jpg'
    */
   goBoardBackground: '',
 
   /**
-   * Configuration data for the display.
-   */
-  displayConfig: {},
-
-  /**
-   * Enable FastClick (for mobile displays).
-   */
-  enableFastClick: true,
-
-  /**
-   * The name of the theme.
-   */
-  theme: 'DEFAULT',
-
-  /**
-   * The board region to display.  The boardRegion will be 'guessed' if it's set
-   * to 'AUTO'.
-   */
-  boardRegion: glift.enums.boardRegions.ALL,
-
-  /**
-   * Whether not to show the variations (as numbers).
-   *
-   * Can be 'NEVER', 'ALWAYS' or 'MORE_THAN_ONE'
-   */
-  showVariations: glift.enums.showVariations.MORE_THAN_ONE,
-
-  /**
-   * Whether or not to use the comment bar.
+   * Whether or not to use the comment bar. It's possible this should be made
+   * part of the SGF.
    */
   useCommentBar: true,
 
@@ -6282,350 +6567,269 @@ glift.widgets.options.base = {
   splitsWithoutComments: [.90],
 
   /**
-   * Rules for determining when a problem is correct.  Usually only set for
-   * problem-type widgets.
+   * Div splits with only the comment bar.
    */
-  problemConditions: {},
+  splitsWithOnlyComments: [.80],
 
   /**
-   * The default icons used in the IconBar.  If the user specifies 'icons', then
-   * it completely overwrites the icons listed here.
+   * The name of the theme.
    */
-  icons: ['start', 'end', 'arrowleft', 'arrowright'],
+  theme: 'DEFAULT',
 
   /**
-   * Reduced set of icons for examples (when there are no variations).
+   * Enable FastClick (for mobile displays).
    */
-  reducedIconsForExample: [],
+  enableFastClick: true,
 
   /**
-   * Key Mapping: From key-id to action-selector.
+   * Previous SGF icon
    */
-  keyMapping: {
-    ARROW_LEFT: 'icons.arrowleft.click',
-    ARROW_RIGHT: 'icons.arrowright.click'
-  },
+  previousSgfIcon: 'chevron-left',
 
   /**
-   * The default 'actions' or 'events'.  If the user specifies an 'actions'
-   * block, then the users' actions take precedence, and these are used as a
-   * fallback (i.e., for when the icon exists, but the user didn't specify an
-   * action).
+   * Next SGF Icon
    */
-  actions: {
+  nextSgfIcon: 'chevron-right',
+
+  /**
+   * Actions for stones.  If the user specifies his own actions, then the
+   * actions specified by the user will take precedence.
+   */
+  stoneActions: {
     /**
-     * Actions for stones.  If the user specifies his own actions, then the
-     * actions specified by the user will take precedence.
-     *
-     * TODO(kashomon): Support touch events.  This is of tremendous importance.
-     * The 300ms delay associated with click events on phones/tablets is
-     * terrible.
+     * click is specified in sgfOptions as stoneClick.  The actions that must
+     * happen on each click vary for each widget, so we can't make a general
+     * click function here.
      */
-    stones: {
-      /**
-       * Actually adding a stone.
-       */
-      click: function(widget, pt) {
-        var currentPlayer = widget.controller.getCurrentPlayer();
-        var partialData = widget.controller.addStone(pt, currentPlayer);
-        widget.applyBoardData(partialData);
-      },
+    click: undefined,
 
-      /**
-       * Ghost-stone for hovering.
-       */
-      mouseover: function(widget, pt) {
-        var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
-        var currentPlayer = widget.controller.getCurrentPlayer();
-        if (widget.controller.canAddStone(pt, currentPlayer)) {
-          widget.display.intersections()
-              .setStoneColor(pt, hoverColors[currentPlayer]);
-        }
-      },
-
-      /**
-       * Ghost-stone removal for hovering.
-       */
-      mouseout: function(widget, pt) {
-        var currentPlayer = widget.controller.getCurrentPlayer();
-        if (widget.controller.canAddStone(pt, currentPlayer)) {
-          widget.display.intersections().setStoneColor(pt, 'EMPTY');
-        }
+    /**
+     * Ghost-stone for hovering.
+     */
+    mouseover: function(widget, pt) {
+      var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
+      var currentPlayer = widget.controller.getCurrentPlayer();
+      if (widget.controller.canAddStone(pt, currentPlayer)) {
+        widget.display.intersections()
+            .setStoneColor(pt, hoverColors[currentPlayer]);
       }
     },
 
     /**
-     * Actions for Icons
+     * Ghost-stone removal for hovering.
      */
-    icons: {
-      start: {
-        click:  function(widget) {
-          widget.applyBoardData(widget.controller.toBeginning());
+    mouseout: function(widget, pt) {
+      var currentPlayer = widget.controller.getCurrentPlayer();
+      if (widget.controller.canAddStone(pt, currentPlayer)) {
+        widget.display &&
+            widget.display.intersections().setStoneColor(pt, 'EMPTY');
+      }
+    }
+  },
+
+  /**
+   * The actions for the icons.  The keys in iconACtions
+   */
+  iconActions: {
+    start: {
+      click:  function(widget) {
+        widget.applyBoardData(widget.controller.toBeginning());
+      }
+    },
+
+    end: {
+      click:  function(widget) {
+        widget.applyBoardData(widget.controller.toEnd());
+      }
+    },
+
+    arrowright: {
+      click: function(widget) {
+        widget.applyBoardData(widget.controller.nextMove());
+      }
+    },
+
+    arrowleft: {
+      click:  function(widget) {
+        widget.applyBoardData(widget.controller.prevMove());
+      }
+    },
+
+    // Get next problem.
+    'chevron-right': {
+      click: function(widget) {
+        widget.manager.nextSgf();
+      }
+    },
+
+    // Get the previous problem.
+    'chevron-left': {
+      click: function(widget) {
+        widget.manager.prevSgf();
+      }
+    },
+
+    // Try again
+    refresh: {
+      click: function(widget) {
+        widget.reload();
+      }
+    },
+
+    undo: {
+      click: function(widget) {
+        widget.manager.returnToOriginalWidget();
+      }
+    },
+
+    // Go to the explain-board.
+    roadmap: {
+      click: function(widget) {
+        var manager = widget.manager;
+        var sgfObj = {
+          widgetType: glift.enums.widgetTypes.GAME_VIEWER,
+          initialPosition: widget.sgfOptions.initialPosition,
+          sgfString: widget.sgfOptions.sgfString,
+          showVariations: glift.enums.showVariations.ALWAYS,
+          problemConditions: glift.util.simpleClone(
+              widget.sgfOptions.problemConditions),
+          icons: ['start', 'end', 'arrowleft', 'arrowright', 'undo']
         }
-      },
-      end: {
-        click:  function(widget) {
-          widget.applyBoardData(widget.controller.toEnd());
-        }
-      },
-      arrowright: {
-        click: function(widget) {
-          widget.applyBoardData(widget.controller.nextMove());
-        }
-      },
-      arrowleft: {
-        click:  function(widget) {
-          widget.applyBoardData(widget.controller.prevMove());
-        }
+        manager.createTemporaryWidget(sgfObj);
       }
     }
   }
 };
 /**
- * Option defaults used by the Board Editor.
+ * Additional Options for the GameViewers
  */
-glift.widgets.options.boardEditor = {
-  icons: ['next', 'prev', 'pass', 'comment', 'delete', 'undo'],
-
-  /**
-   * We need more icons.
-   */
-  rowTwoIcons:['move', 'placement', 'triangleMove', 'squareMove', 'letterLabel',
-      'numberLabel']
-};
-/**
- * Option defaults used by the Problem Widget.
- */
-glift.widgets.options.problem = {
-  /**
-   * List of problem strings to cycle through.
-   */
-  sgfStringList: [],
-
-  /**
-   * List of URLs from which to load the SGF via AJAX. Note that sgfStringList
-   * takes precedence, if it is non-empty
-   */
-  sgfUrlList: [],
-
-  /**
-   * Index into the above array.  It seems unlikely that anybody would want to
-   * override this setting, but it's here or clarity.
-   */
-  sgfIndex: 0,
-
-  /**
-   * Conditions for determing whether a branch of a movetree is correct.  A map
-   * from property-keys, to an array of substring values.  If the array is
-   * empty, then we only test to see if the property exists at the current
-   * positien.
-   *
-   * The default tests whether there is a 'GB' property or a 'C' (comment)
-   * property containing 'Correct' or 'is correct'.
-   */
-  problemConditions: {
-    GB: [],
-    C: ['Correct', 'is correct']
+glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
+  stoneClick: function(widget, pt) {
+    var currentPlayer = widget.controller.getCurrentPlayer();
+    var data = widget.controller.addStone(pt, currentPlayer);
+    var problemResults = glift.enums.problemResults;
+    if (data.result === problemResults.FAILURE) {
+      // Illegal move -- nothing to do.  Don't make the player fail based on
+      // an illegal move.
+      return;
+    }
+    widget.applyBoardData(data);
+    var probTypes = glift.enums.problemTypes;
+    var callback = widget.sgfOptions.problemCallback;
+    if (widget.correctness === undefined) {
+      if (data.result === problemResults.CORRECT) {
+        widget.iconBar.destroyTempIcons();
+        if (widget.correctNextSet[pt.toString()] === undefined) {
+          widget.correctNextSet[pt.toString()] = true;
+          widget.numCorrectAnswers++;
+          if (widget.numCorrectAnswers === widget.totalCorrectAnswers) {
+            widget.correctness = problemResults.CORRECT;
+            widget.iconBar.addTempText(
+                widget.iconBar.getIcon('checkbox').newBbox,
+                widget.numCorrectAnswers + '/' + widget.totalCorrectAnswers,
+                '#0CC');
+            callback(problemResults.CORRECT);
+          } else {
+            widget.iconBar.addTempText(
+                widget.iconBar.getIcon('checkbox').newBbox,
+                widget.numCorrectAnswers + '/' + widget.totalCorrectAnswers,
+                '#000');
+            setTimeout(function() {
+              widget.controller.initialize();
+              widget.applyBoardData(widget.controller.getEntireBoardState());
+            }, widget.sgfOptions.correctVariationsResetTime);
+          }
+        }
+      } else if (data.result == problemResults.INCORRECT) {
+        widget.iconBar.destroyTempIcons();
+        widget.iconBar.addTempIcon(
+            widget.iconBar.getIcon('checkbox').newBbox, 'cross', 'red');
+        widget.correctness = problemResults.INCORRECT;
+        callback(problemResults.INCORRECT);
+      }
+    }
   },
 
-  /**
-   * A callback, so that users can take some action based on the result of a
-   * problem. Provides one argument: one of enums.problemResults.INCORRECT.
-   */
-  problemCallback: function(problemResult) {},
-
-  /**
-   * The problem type.
-   */
-  problemType: glift.enums.problemTypes.AUTO,
-
-  /**
-   * The function that produces the problem controller.
-   */
-  controllerFunc: glift.controllers.staticProblem,
-
-  /**
-   * We want the problem widget to be smart about the relevant board region.
-   */
-  boardRegion: glift.enums.boardRegions.AUTO,
-
-  /**
-   * Icons specified by the problem widget.
-   */
-  icons: ['chevron-left' , 'refresh', 'roadmap', 'checkbox', 'chevron-right'],
-
-  /**
-   * A reduced set of Icons used for examples (when there are no variations).
-   */
-  reducedIconsForExample: ['chevron-left', 'chevron-right'],
-
-  /**
-   * Turn off the comment box, by default
-   */
-  // TODO(kashomon): Nevisit this idea later. Maybe problems just need a smaller
-  // comment box?
-  useCommentBar: false,
-
-  /**
-   * Don't show variations for problems, of course =).
-   */
   showVariations: glift.enums.showVariations.NEVER,
 
-  /**
-   * Keymappings for the problem widget
-   */
-  keyMapping: {
-    ARROW_LEFT: 'icons.chevron-left.click',
-    ARROW_RIGHT: 'icons.chevron-right.click'
+  icons: ['refresh', 'roadmap', 'checkbox'],
+
+  controllerFunc: glift.controllers.staticProblem,
+
+  correctVariationsResetTime: 500 // In milliseconds.
+};
+/**
+ * Additional Options for EXAMPLEs
+ */
+glift.widgets.options.EXAMPLE = {
+  stoneClick: function(widget, pt) {},
+
+  icons: [],
+
+  problemConditions: {},
+
+  showVariations: glift.enums.showVariations.MORE_THAN_ONE,
+
+  controllerFunc: glift.controllers.gameViewer
+};
+/**
+ * Additional Options for the GameViewers
+ */
+glift.widgets.options.GAME_VIEWER = {
+  stoneClick: function(widget, pt) {
+    var currentPlayer = widget.controller.getCurrentPlayer();
+    var partialData = widget.controller.addStone(pt, currentPlayer);
+    widget.applyBoardData(partialData);
   },
 
-  /**
-   * Problem-specific actions.
-   */
-  // TODO(kashomon): Move actions to a separate file.
-  actions: {
-    stones: {
-      /**
-       * Add a stone and report if it was correct.
-       */
-      click: function(widget, pt) {
-        if (widget.options.problemType === glift.enums.problemTypes.EXAMPLE) {
-          return;
-        }
-        var currentPlayer = widget.controller.getCurrentPlayer();
-        var data = widget.controller.addStone(pt, currentPlayer);
-        var problemResults = glift.enums.problemResults;
-        if (data.result === problemResults.FAILURE) {
-          // Illegal move -- nothing to do.  Don't make the player fail based on
-          // an illegal move.
-          return;
-        }
-        widget.applyBoardData(data);
-        var probTypes = glift.enums.problemTypes;
-        var callback = widget.options.problemCallback;
-        if (widget.correctness === undefined &&
-            widget.options.problemType !== probTypes.EXAMPLE) {
+  keyMappings: {
+    ARROW_LEFT: 'iconActions.arrowleft.click',
+    ARROW_RIGHT: 'iconActions.arrowright.click'
+  },
 
-          if (data.result === problemResults.CORRECT) {
-            if (widget.options.problemType === probTypes.STANDARD) {
-              widget.iconBar.addTempIcon(
-                  widget.iconBar.getIcon('checkbox').newBbox, 'check', '#0CC');
-              widget.correctness = problemResults.CORRECT;
-              callback(problemResults.CORRECT);
+  icons: ['start', 'end', 'arrowleft', 'arrowright'],
 
-            } else if (widget.options.problemType === probTypes.ALL_CORRECT) {
-              widget.iconBar.destroyTempIcons();
-              if (widget.correctNextSet[pt.toString()] === undefined) {
-                widget.correctNextSet[pt.toString()] = true;
-                widget.numCorrectAnswers++;
-                if (widget.numCorrectAnswers === widget.totalCorrectAnswers) {
-                  widget.correctness = problemResults.CORRECT;
-                  widget.iconBar.addTempText(
-                      widget.iconBar.getIcon('checkbox').newBbox,
-                      widget.numCorrectAnswers + '/' + widget.totalCorrectAnswers,
-                      '#0CC');
-                  callback(problemResults.CORRECT);
-                } else {
-                  widget.iconBar.addTempText(
-                      widget.iconBar.getIcon('checkbox').newBbox,
-                      widget.numCorrectAnswers + '/' + widget.totalCorrectAnswers,
-                      '#000');
-                  setTimeout(function() {
-                    widget.controller.reload();
-                    widget.applyBoardData(
-                        widget.controller.getEntireBoardState());
-                  }, 500);
-                }
-              } else {
-                // we've already seen this point
-              }
-            }
-          } else if (data.result == problemResults.INCORRECT) {
-            widget.iconBar.destroyTempIcons();
-            widget.iconBar.addTempIcon(
-                widget.iconBar.getIcon('checkbox').newBbox, 'cross', 'red');
-            widget.correctness = problemResults.INCORRECT;
-            callback(problemResults.INCORRECT);
-          }
-        }
-      }
-    },
+  showVariations: glift.enums.showVariations.MORE_THAN_ONE,
 
-    icons: {
-      _nextProblemInternal: function(widget, indexChange) {
-        if (widget.options.sgfStringList.length > 0 ||
-            widget.options.sgfUrlList.length > 0) {
-          var listLength = widget.options.sgfUrlList.length > 0 ?
-              widget.options.sgfUrlList.length:
-              widget.options.sgfStringList.length;
-          var index = (widget.sgfIndex + indexChange + listLength) % listLength;
-          widget.sgfIndex = index
+  problemConditions: {},
 
-          // Internal function used for ajax / non-ajax calls
-          var loadSgfString = function(inputString) {
-            widget.sgfString = inputString;
-            widget.redraw();
-          }
-
-          if (widget.options.sgfStringList.length > 0) {
-            loadSgfString(widget.options.sgfStringList[index]);
-          } else if (widget.options.sgfUrlList.length > 0) {
-            var url = widget.options.sgfUrlList[index];
-            glift.widgets.loadWithAjax(url, function(data) {
-              loadSgfString(data);
-            });
-          }
-        }
-      },
-
-      // Get next problem.
-      'chevron-right': {
-        click: function(widget) {
-          widget.options.actions.icons._nextProblemInternal(widget, 1)
-        }
-      },
-
-      // Get the previous problem.
-      'chevron-left': {
-        click: function(widget) {
-          widget.options.actions.icons._nextProblemInternal(widget, -1)
-        }
-      },
-
-      // Try again
-      refresh: {
-        click: function(widget) {
-          widget.reload();
-        }
-      },
-
-      // Go to the explain-board.
-      roadmap: {
-        click: function(widget) {
-          // This is a terrible hack.  High yuck factor.
-          widget._problemOptions = widget.originalOptions;
-          widget.destroy();
-          var returnAction = function(widget) {
-            widget.destroy();
-            widget.originalOptions = widget._problemOptions;
-            widget.draw();
-          };
-          var optionsCopy = {
-            divId: widget.originalOptions.divId,
-            theme: widget.originalOptions.theme,
-            sgfString: widget.originalOptions.sgfString,
-            showVariations: glift.enums.showVariations.ALWAYS,
-            problemConditions: widget.originalOptions.problemConditions,
-            controllerFunc: glift.controllers.gameViewer,
-            boardRegion: glift.enums.boardRegions.AUTO,
-            icons: ['start', 'end', 'arrowleft', 'arrowright', 'undo'],
-            actions: { icons: { undo : { click: returnAction }}}
-          }
-          widget.originalOptions = glift.widgets.options.setDefaults(
-            optionsCopy, 'base');
-          widget.draw();
-        }
+  controllerFunc: glift.controllers.gameViewer
+};
+/**
+ * Additional Options for the GameViewers
+ */
+glift.widgets.options.STANDARD_PROBLEM = {
+  stoneClick: function(widget, pt) {
+    var currentPlayer = widget.controller.getCurrentPlayer();
+    var data = widget.controller.addStone(pt, currentPlayer);
+    var problemResults = glift.enums.problemResults;
+    if (data.result === problemResults.FAILURE) {
+      // Illegal move -- nothing to do.  Don't make the player fail based on
+      // an illegal move.
+      return;
+    }
+    widget.applyBoardData(data);
+    var probTypes = glift.enums.problemTypes;
+    var callback = widget.sgfOptions.problemCallback;
+    if (widget.correctness === undefined) {
+      if (data.result === problemResults.CORRECT) {
+          widget.iconBar.addTempIcon(
+              widget.iconBar.getIcon('checkbox').newBbox, 'check', '#0CC');
+          widget.correctness = problemResults.CORRECT;
+          callback(problemResults.CORRECT);
+      } else if (data.result == problemResults.INCORRECT) {
+        widget.iconBar.destroyTempIcons();
+        widget.iconBar.addTempIcon(
+            widget.iconBar.getIcon('checkbox').newBbox, 'cross', 'red');
+        widget.correctness = problemResults.INCORRECT;
+        callback(problemResults.INCORRECT);
       }
     }
-  }
+  },
+
+  showVariations: glift.enums.showVariations.NEVER,
+
+  icons: ['refresh', 'roadmap', 'checkbox'],
+
+  controllerFunc: glift.controllers.staticProblem
 };

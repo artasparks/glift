@@ -17,6 +17,7 @@ glift.widgets = {
     return new glift.widgets.WidgetManager(
       options.sgfList,
       options.initialListIndex,
+      options.allowWrapAround,
       options.sgfDefaults,
       glift.widgets.options.getDisplayOptions(options)).draw();
   }
