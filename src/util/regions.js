@@ -12,10 +12,16 @@ glift.util.regions = {
       out[br.BOTTOM] = 1;
       out[br.LEFT] = 1;
     } else if (boardRegion === br.BOTTOM_RIGHT) {
-      out[br.BOTTOM] = 1
-      out[br.RIGHT] = 1
-    } else {
-      // TODO: Complete this
+      out[br.BOTTOM] = 1;
+      out[br.RIGHT] = 1;
+    } else if (boardRegion == br.TOP) {
+      out[br.TOP] = 1;
+    } else if (boardRegion == br.BOTTOM) {
+      out[br.BOTTOM] = 1;
+    } else if (boardRegion == br.LEFT) {
+      out[br.LEFT] = 1;
+    } else if (boardRegion == br.RIGHT) {
+      out[br.RIGHT] = 1;
     }
     return out;
   }

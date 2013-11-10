@@ -41,8 +41,9 @@ glift.widgets.BaseWidget.prototype = {
         ? glift.bridge.getCropFromMovetree(this.controller.movetree)
         : this.sgfOptions.boardRegion;
 
-    // TODO(kashomon): Remove this hack. We shouldn't be modifying
+    // TODO(kashomon): Remove these hacks. We shouldn't be modifying
     // displayOptions.
+    this.displayOptions.intersections = this.controller.getIntersections();
     this.displayOptions.divId = this.goboxDivId;
     this.display = glift.displays.create(this.displayOptions);
     var boundingWidth = $('#' +  this.goboxDivId).width();

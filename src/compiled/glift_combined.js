@@ -12,8 +12,10 @@ glift.global = {
   /**
    * Semantic versioning is used to determine the version.
    * See: http://semver.org/
+   *
+   * Currently in beta.
    */
-  version: '0.7.3',
+  version: '0.7.4',
   /**
    * Whether or not fast click is enabled, via Glift.
    */
@@ -1348,10 +1350,16 @@ glift.util.regions = {
       out[br.BOTTOM] = 1;
       out[br.LEFT] = 1;
     } else if (boardRegion === br.BOTTOM_RIGHT) {
-      out[br.BOTTOM] = 1
-      out[br.RIGHT] = 1
-    } else {
-      // TODO: Complete this
+      out[br.BOTTOM] = 1;
+      out[br.RIGHT] = 1;
+    } else if (boardRegion == br.TOP) {
+      out[br.TOP] = 1;
+    } else if (boardRegion == br.BOTTOM) {
+      out[br.BOTTOM] = 1;
+    } else if (boardRegion == br.LEFT) {
+      out[br.LEFT] = 1;
+    } else if (boardRegion == br.RIGHT) {
+      out[br.RIGHT] = 1;
     }
     return out;
   }
@@ -3041,18 +3049,19 @@ CommentBox.prototype = {
     var borderWidth = 1;
     var boardBorder = this.theme.board['stroke-width'];
     var width = this.displayWidth;
-    var textWidth = width / 25 < 15 ? 15 : width / 25;
+    // var fontSize = width / 25 < 15 ? 15 : width / 25;
+    var fontSize = commentBoxHeight * .13 < 15 ? 15 : commentBoxHeight * .13;
     this.commentBoxObj.css({
       // TODO(kashomon): Get the theme info from the theme
       background: '#CCCCFF',
       border: borderWidth + 'px solid',
-      left: (this.boundingWidth - this.displayWidth) / 2 - boardBorder,
-      width: this.displayWidth + boardBorder,
+      left: Math.ceil((this.boundingWidth - this.displayWidth) / 2 - boardBorder),
+      width: Math.ceil(this.displayWidth + boardBorder),
       height: commentBoxHeight,
       margin: 'auto',
       'font-family': 'Baskerville',
       overflow: 'auto',
-      'font-size': textWidth,
+      'font-size': fontSize,
       // Prevent padding from affecting width
       '-webkit-box-sizing': 'border-box', /* Safari/Chrome, other WebKit */
       '-moz-box-sizing': 'border-box',    /* Firefox, other Gecko */
@@ -5779,6 +5788,9 @@ glift.bridge = {
   }
 };
 
+/**
+ * Takes a movetree and returns the optimal BoardRegion for cropping purposes.
+ */
 glift.bridge.getCropFromMovetree = function(movetree) {
   var bbox = glift.displays.bboxFromPts;
   var point = glift.util.point;
@@ -5786,7 +5798,12 @@ glift.bridge.getCropFromMovetree = function(movetree) {
   // Intersections need to be 0 rather than 1 indexed for this method.
   var ints = movetree.getIntersections() - 1;
   var middle = Math.ceil(ints / 2);
+
+  // Quads is a map from BoardRegion to the points that the board region
+  // represents.
   var quads = {};
+
+  // Tracker is a mapfrom 
   var tracker = {};
   var numstones = 0;
 
@@ -5796,13 +5813,13 @@ glift.bridge.getCropFromMovetree = function(movetree) {
     return glift.enums.boardRegions.ALL;
   }
   quads[boardRegions.TOP_LEFT] =
-      bbox(point(0, 0), point(middle + 1, middle + 1));
+      bbox(point(0, 0), point(middle, middle));
   quads[boardRegions.TOP_RIGHT] =
-      bbox(point(middle - 1, 0), point(ints, middle + 1));
+      bbox(point(middle, 0), point(ints, middle));
   quads[boardRegions.BOTTOM_LEFT] =
-      bbox(point(0, middle - 1), point(middle + 1, ints));
+      bbox(point(0, middle), point(middle, ints));
   quads[boardRegions.BOTTOM_RIGHT] =
-      bbox(point(middle - 1, middle - 1), point(ints, ints));
+      bbox(point(middle, middle), point(ints, ints));
   movetree.recurseFromRoot(function(mt) {
     var stones = mt.properties().getAllStones();
     for (var color in stones) {
@@ -5812,7 +5829,10 @@ glift.bridge.getCropFromMovetree = function(movetree) {
         numstones += 1
         for (var quadkey in quads) {
           var box = quads[quadkey];
-          if (box.contains(pt)) {
+          if (middle === pt.x() || middle === pt.y()) {
+            // Ignore points right on the middle.  It shouldn't make a different
+            // for cropping, anyway.
+          } else if (box.contains(pt)) {
             if (tracker[quadkey] === undefined) tracker[quadkey] = [];
             tracker[quadkey].push(pt);
           }
@@ -5827,14 +5847,13 @@ glift.bridge._getRegionFromTracker = function(tracker, numstones) {
   var regions = [], br = glift.enums.boardRegions;
   for (var quadkey in tracker) {
     var quadlist = tracker[quadkey];
-    if (quadlist.length === numstones) {
-      return quadkey;
-    } else {
-      regions.push(quadkey);
-    }
+    regions.push(quadkey);
+  }
+  if (regions.length === 1) {
+    return regions[0];
   }
   if (regions.length !== 2) {
-    return glift.enums.boardRegions.ALL; // Shouldn't be 1 element here...
+    return glift.enums.boardRegions.ALL;
   }
   var newset = glift.util.intersection(
     glift.util.regions.getComponents(regions[0]),
@@ -5912,8 +5931,9 @@ glift.widgets.BaseWidget.prototype = {
         ? glift.bridge.getCropFromMovetree(this.controller.movetree)
         : this.sgfOptions.boardRegion;
 
-    // TODO(kashomon): Remove this hack. We shouldn't be modifying
+    // TODO(kashomon): Remove these hacks. We shouldn't be modifying
     // displayOptions.
+    this.displayOptions.intersections = this.controller.getIntersections();
     this.displayOptions.divId = this.goboxDivId;
     this.display = glift.displays.create(this.displayOptions);
     var boundingWidth = $('#' +  this.goboxDivId).width();
@@ -6469,6 +6489,7 @@ glift.widgets.options.baseOptions = {
 
     /**
      * Whether or not to show variations.  See glift.enums.showVariations
+     * Values: NEVER, ALWAYS, MORE_THAN_ONE
      */
     showVariations: undefined,
 

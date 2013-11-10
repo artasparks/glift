@@ -1,0 +1,13 @@
+(;GM[1]FF[4]CA[UTF-8]AP[CGoban:3]ST[2]
+RU[Japanese]SZ[19]KM[0.00]
+PW[White]PB[Black]AW[qq]AB[pj][po]
+;B[oq]C[White invaded Black's corner at the 3-3.  What's the follow-up we covered?]
+;W[pp]
+;B[op]
+;W[qo]
+;B[qn]
+;W[rn]
+;B[pn]LB[qm:A]C[Black should play here.  If Black plays at A, Black leaves open two cutting points.]
+(;W[rm]C[Correct!  This is an excellent way for White to play -- White gets to break into Black's right side.])
+(;W[ro]
+;B[rm]C[White shouldn't be worried about the cut.]))
