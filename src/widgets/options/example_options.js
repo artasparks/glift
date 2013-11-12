@@ -2,7 +2,7 @@
  * Additional Options for EXAMPLEs
  */
 glift.widgets.options.EXAMPLE = {
-  stoneClick: function(widget, pt) {},
+  stoneClick: function(event, widget, pt) {},
 
   icons: [],
 

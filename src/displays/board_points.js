@@ -84,7 +84,8 @@ BoardPoints.prototype = {
 
   /**
    * Get the coordinate for a given integer point string.  Note: the integer
-   * points are 0 indexed, i.e., 0->18.
+   * points are 0 indexed, i.e., 0->18 for a 19x19.  Recall that board points
+   * from the the top left (0,0) to the bottom right (18, 18).
    *
    * Ex. :  (0,2) =>
    *  {

@@ -4,7 +4,7 @@
 glift.widgets.BaseWidget = function(sgfOptions, displayOptions, manager) {
   this.type = sgfOptions.type;
   this.sgfOptions = glift.util.simpleClone(sgfOptions);
-  this.displayOptions= glift.util.simpleClone(displayOptions);
+  this.displayOptions = glift.util.simpleClone(displayOptions);
   this.manager = manager;
 
   // Used for problems, exclusively
@@ -134,20 +134,26 @@ glift.widgets.BaseWidget.prototype = {
         continue;
       }
       iconActions[iconName].mouseover = iconActions[iconName].mouseover ||
-          function(widget, name) {
-            var id = widget.iconBar.iconId(name);
-            d3.select('#' + id).attr('fill', 'red');
-          };
+        function(event, widget, name) {
+          var id = widget.iconBar.iconId(name);
+          d3.select('#' + id).attr('fill', 'red');
+        };
       iconActions[iconName].mouseout = iconActions[iconName].mouseout ||
-          function(widget, name) {
-            var id = widget.iconBar.iconId(name);
-            d3.select('#' + id)
-                .attr('fill', widget.iconBar.theme.icons.DEFAULT.fill);
-          };
+        function(event, widget, name) {
+          var id = widget.iconBar.iconId(name);
+          d3.select('#' + id)
+              .attr('fill', widget.iconBar.theme.icons.DEFAULT.fill);
+        };
+      iconActions[iconName].touchend = iconActions[iconName].touchend ||
+        function(event, widget, name) {
+          event.preventDefault && event.preventDefault();
+          event.stopPropagation && event.stopPropagation();
+          widget.displayOptions.iconActions[name].click(event, widget);
+        };
       for (var eventName in iconActions[iconName]) {
         (function(eventName, iconNameBound, event) { // lazy binding pattern.
           widget.iconBar.setEvent(eventName, iconName, function() {
-            event(widget, iconNameBound);
+            event(d3.event, widget, iconNameBound);
           });
         })(eventName, iconName, iconActions[iconName][eventName]);
       }
@@ -164,8 +170,8 @@ glift.widgets.BaseWidget.prototype = {
     for (var action in stoneActions) {
       (function(act, fn) { // bind the event -- required due to lazy binding.
         that.display.intersections().setEvent(act, function(pt) {
-          fn(that, pt);
-       });
+          fn(d3.event, that, pt);
+      });
       })(action, stoneActions[action]);
     }
   },
@@ -185,7 +191,7 @@ glift.widgets.BaseWidget.prototype = {
         for (var i = 1; i < actionNamespace.length; i++) {
           action = action[actionNamespace[i]];
         }
-        action(that);
+        action(e, that);
       }
     };
     $('body').keydown(this.keyHandlerFunc);

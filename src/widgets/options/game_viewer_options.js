@@ -2,7 +2,7 @@
  * Additional Options for the GameViewers
  */
 glift.widgets.options.GAME_VIEWER = {
-  stoneClick: function(widget, pt) {
+  stoneClick: function(event, widget, pt) {
     var currentPlayer = widget.controller.getCurrentPlayer();
     var partialData = widget.controller.addStone(pt, currentPlayer);
     widget.applyBoardData(partialData);

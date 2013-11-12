@@ -211,7 +211,7 @@ glift.widgets.options.baseOptions = {
   /**
    * Enable FastClick (for mobile displays).
    */
-  enableFastClick: true,
+  enableFastClick: false,
 
   /**
    * Previous SGF icon
@@ -238,7 +238,7 @@ glift.widgets.options.baseOptions = {
     /**
      * Ghost-stone for hovering.
      */
-    mouseover: function(widget, pt) {
+    mouseover: function(event, widget, pt) {
       var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
       var currentPlayer = widget.controller.getCurrentPlayer();
       if (widget.controller.canAddStone(pt, currentPlayer)) {
@@ -250,12 +250,19 @@ glift.widgets.options.baseOptions = {
     /**
      * Ghost-stone removal for hovering.
      */
-    mouseout: function(widget, pt) {
+    mouseout: function(event, widget, pt) {
       var currentPlayer = widget.controller.getCurrentPlayer();
       if (widget.controller.canAddStone(pt, currentPlayer)) {
         widget.display &&
             widget.display.intersections().setStoneColor(pt, 'EMPTY');
       }
+    },
+
+    // TODO(kashomon): It's not clear if we want this. Revisit later.
+    touchend: function(event, widget, pt) {
+      event.preventDefault && event.preventDefault();
+      event.stopPropagation && event.stopPropagation();
+      widget.sgfOptions.stoneClick(event, widget, pt);
     }
   },
 
@@ -264,59 +271,59 @@ glift.widgets.options.baseOptions = {
    */
   iconActions: {
     start: {
-      click:  function(widget) {
+      click:  function(event, widget) {
         widget.applyBoardData(widget.controller.toBeginning());
       }
     },
 
     end: {
-      click:  function(widget) {
+      click:  function(event, widget) {
         widget.applyBoardData(widget.controller.toEnd());
       }
     },
 
     arrowright: {
-      click: function(widget) {
+      click: function(event, widget) {
         widget.applyBoardData(widget.controller.nextMove());
       }
     },
 
     arrowleft: {
-      click:  function(widget) {
+      click:  function(event, widget) {
         widget.applyBoardData(widget.controller.prevMove());
       }
     },
 
     // Get next problem.
     'chevron-right': {
-      click: function(widget) {
+      click: function(event, widget) {
         widget.manager.nextSgf();
       }
     },
 
     // Get the previous problem.
     'chevron-left': {
-      click: function(widget) {
+      click: function(event, widget) {
         widget.manager.prevSgf();
       }
     },
 
     // Try again
     refresh: {
-      click: function(widget) {
+      click: function(event, widget) {
         widget.reload();
       }
     },
 
     undo: {
-      click: function(widget) {
+      click: function(event, widget) {
         widget.manager.returnToOriginalWidget();
       }
     },
 
     // Go to the explain-board.
     roadmap: {
-      click: function(widget) {
+      click: function(event, widget) {
         var manager = widget.manager;
         var sgfObj = {
           widgetType: glift.enums.widgetTypes.GAME_VIEWER,

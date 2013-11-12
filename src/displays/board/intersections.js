@@ -54,6 +54,24 @@ glift.displays.board._Intersections.prototype = {
     return this;
   },
 
+  addGuideLines: function(pt) {
+    var elems = glift.enums.svgElements;
+    this.svg.select('#' + elems.GUIDE_LINE).remove();
+    var bpt = this.boardPoints.getCoord(pt);
+    var boardPoints = this.boardPoints;
+    this.svg.select('.' + elems.MARK_CONTAINER).append('path')
+      .attr('d', glift.displays.board.intersectionLine(
+          bpt, boardPoints.radius * 8, boardPoints.numIntersections))
+      .attr('stroke-width', 3)
+      .attr('stroke', 'blue')
+      .attr('id', elems.GUIDE_LINE);
+  },
+
+  clearGuideLines: function() {
+    var elems = glift.enums.svgElements;
+    this.svg.select('#' + elems.GUIDE_LINE).remove();
+  },
+
   clearMarks: function() {
     var elems = glift.enums.svgElements;
     // Some STARPOINTs/BOARD_LINEs may have been 'turned-off' when adding marks.
@@ -62,6 +80,7 @@ glift.displays.board._Intersections.prototype = {
     this.svg.selectAll('.' + elems.STARPOINT).attr('opacity', 1);
     this.svg.selectAll('.' + elems.BOARD_LINE).attr('opacity', 1);
     this.svg.selectAll('.' + elems.MARK).remove();
+    this.svg.selectAll('.' + elems.GUIDE_LINE).remove();
     return this;
   },
 

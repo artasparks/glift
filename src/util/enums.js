@@ -75,7 +75,9 @@ glift.enums = {
     STARPOINT: 'starpoint',
     STONE: 'stone',
     STONE_SHADOW: 'stone_shadow',
-    ICON: 'icon'
+    ICON: 'icon',
+    // GuideLines are used only for mobile.
+    GUIDE_LINE: 'guide_line'
   },
 
   showVariations: {

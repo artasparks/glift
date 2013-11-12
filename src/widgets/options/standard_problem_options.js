@@ -2,7 +2,7 @@
  * Additional Options for the GameViewers
  */
 glift.widgets.options.STANDARD_PROBLEM = {
-  stoneClick: function(widget, pt) {
+  stoneClick: function(event, widget, pt) {
     var currentPlayer = widget.controller.getCurrentPlayer();
     var data = widget.controller.addStone(pt, currentPlayer);
     var problemResults = glift.enums.problemResults;

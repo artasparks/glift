@@ -5,6 +5,7 @@
 <script type="text/javascript" src="../libs/jquery-1.10.2.min.js"></script>
 <script type="text/javascript" src="../libs/d3.min.js"></script>
 <script type="text/javascript" src="../testdata/sgfs.js"></script>
+<script src="../libs/modernizr.js"></script>
 
 <!-- AUTO-GEN-DEPS -->
 <!-- Otre -->
@@ -109,15 +110,19 @@
       <div id="glift_display1"></div>
       <div id="extra_info"></div>
       <script type="text/javascript">
-        var created = glift.widgets.create({
-          sgf: testdata.sgfs.marktest,
-          divId: "glift_display1",
-          theme: "DEPTH",
-          goBoardBackground: '../themes/assets/bambootile_warm.jpg',
-          sgfDefaults : {
-            widgetType: 'EXAMPLE'
-          }
-        });
+        (function() {
+          window.gliftWidget = glift.widgets.create({
+            sgf: testdata.sgfs.marktest,
+            divId: "glift_display1",
+            theme: "DEPTH",
+            goBoardBackground: '../themes/assets/bambootile_warm.jpg',
+            sgfDefaults : {
+              widgetType: 'EXAMPLE'
+            }
+          });
+          var pt = glift.util.point(8, 10);
+          gliftWidget.getCurrentWidget().display.intersections().addGuideLines(pt);
+        })();
       </script>
     </div>
   </body>

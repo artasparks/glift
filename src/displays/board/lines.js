@@ -11,7 +11,7 @@ glift.displays.board.lines = function(divId, svg, boardPoints, theme) {
     .enter().append("path")
       .attr('d', function(pt) {
         return glift.displays.board.intersectionLine(
-            pt, boardPoints.radius, boardPoints.numIntersections, theme);
+            pt, boardPoints.radius, boardPoints.numIntersections);
       })
       .attr('stroke', theme.lines.stroke)
       .attr('stroke-width', theme.lines['stroke-width'])

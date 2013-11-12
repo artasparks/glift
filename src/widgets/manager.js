@@ -25,6 +25,10 @@ glift.widgets.WidgetManager.prototype = {
     return this;
   },
 
+  getCurrentWidget: function() {
+    return this.currentWidget;
+  },
+
   /**
    * Get the current SGF Object from the SGF List.
    */
