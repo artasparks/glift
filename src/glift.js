@@ -15,7 +15,7 @@ glift.global = {
    *
    * Currently in beta.
    */
-  version: '0.7.5',
+  version: '0.8.0',
   /**
    * Whether or not fast click is enabled, via Glift.
    */

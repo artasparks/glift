@@ -18,12 +18,14 @@ glift.displays.positionWidget = function(
 
   // These are simple heuristics.  They do not optimally place the board, but I
   // prefer the simplicity.
-  if (boardRegion === glift.enums.boardRegions.TOP ||
-      boardRegion === glift.enums.boardRegions.BOTTOM ||
-      !bcMap.hasOwnProperty(comps.COMMENT_BOX)) {
+  var longBoxRegions = { TOP: true, BOTTOM: true };
+  if (!bcMap.hasOwnProperty(comps.COMMENT_BOX)) {
     return glift.displays.positionWidgetVert(
         divBox, cropbox, boardRegion, bcMap);
-  } else if (divBox.hwRatio() < 0.667) {
+  } else if (divBox.hwRatio() < 0.45 && longBoxRegions[boardRegion]) {
+    return glift.displays.positionWidgetHorz(
+        divBox, cropbox, boardRegion, bcMap);
+  } else if (divBox.hwRatio() < 0.667 && !longBoxRegions[boardRegion]) {
     // In other words, the width == 1.5 * height;
     // Also: Requires a comment box
     return glift.displays.positionWidgetHorz(
@@ -119,10 +121,6 @@ glift.displays.positionWidgetHorz = function(
   var comps = glift.enums.boardComponents;
   if (!comps.hasOwnProperty(comps.COMMENT_BOX)) {
     throw "The component map must contain a comment box";
-  }
-  if (boardRegion === glift.enums.boardRegions.TOP ||
-      boardRegion === glift.enums.boardRegions.BOTTOM) {
-    throw "TOP and BOTTOM boardregions are now allowed for horz positioning";
   }
   var boardBox = glift.displays.getResizedBox(divBox, cropbox, aligns.RIGHT);
   var outBoxes = {};

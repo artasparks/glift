@@ -127,7 +127,7 @@ glift.displays._BoundingBox.prototype = {
   _splitBox: function(d, bboxSplits) {
     if (glift.util.typeOf(bboxSplits) !== 'array') {
       throw "bboxSplits must be specified as an array. Was: "
-          glift.util.typeOf(bboxSplits);
+          + glift.util.typeOf(bboxSplits);
     }
     if (!(d === 'h' || d === 'v')) {
       throw "What!? The only splits allowed are 'v' or 'h'.  " +

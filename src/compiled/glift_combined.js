@@ -15,7 +15,7 @@ glift.global = {
    *
    * Currently in beta.
    */
-  version: '0.7.5',
+  version: '0.8.0',
   /**
    * Whether or not fast click is enabled, via Glift.
    */
@@ -240,7 +240,7 @@ glift.util.colors = {
     else return color;
   }
 };
-// Otre: A Go Studying Program
+// Glift: A Go Studying Program
 // Copyright (c) 2011-2013, Josh <jrhoak@gmail.com>
 // Code licensed under the MIT License
 glift.enums = {
@@ -251,17 +251,17 @@ glift.enums = {
     EMPTY: 'EMPTY'
   },
 
+  boardAlignments: {
+    TOP: "TOP",
+    RIGHT: "RIGHT",
+    CENTER: "CENTER"
+  },
+
   directions: {
     LEFT: 'LEFT',
     RIGHT: 'RIGHT',
     TOP: 'TOP',
     BOTTOM: 'BOTTOM'
-  },
-
-  controllerMessages: {
-    CONTINUE: 'CONTINUE',
-    DONE: 'DONE',
-    FAILURE: 'FAILURE'
   },
 
   // The directions should work with the boardRegions.
@@ -274,8 +274,16 @@ glift.enums = {
     TOP_RIGHT: 'TOP_RIGHT',
     BOTTOM_LEFT: 'BOTTOM_LEFT',
     BOTTOM_RIGHT: 'BOTTOM_RIGHT',
+    // TODO(kashomon): Perhaps remove these last two, or at least 'AUTO'
     ALL: 'ALL',
     AUTO: 'AUTO'
+  },
+
+
+  controllerMessages: {
+    CONTINUE: 'CONTINUE',
+    DONE: 'DONE',
+    FAILURE: 'FAILURE'
   },
 
   marks: {
@@ -333,6 +341,12 @@ glift.enums = {
     EXAMPLE: 'EXAMPLE',
     GAME_VIEWER: 'GAME_VIEWER',
     STANDARD_PROBLEM: 'STANDARD_PROBLEM'
+  },
+
+  boardComponents: {
+    BOARD: 'BOARD',
+    COMMENT_BOX: 'COMMENT_BOX',
+    ICONBAR: 'ICONBAR'
   }
 };
 (function() {
@@ -1304,6 +1318,10 @@ GliftPoint.prototype = {
     return this._x === pt.x() && this._y === pt.y();
   },
 
+  clone: function() {
+    return glift.util.point(this.x(), this.y());
+  },
+
   /**
    * Returns an SGF coord, e.g., 'ab' for (0,1)
    */
@@ -1315,7 +1333,7 @@ GliftPoint.prototype = {
   /**
    * Create the form used in objects.
    * TODO(kashomon): Replace with string form.  The term hash() is confusing and
-   * it makes it seem like I'm converting it to an int (which I was, long ago)
+   * it makes it seem like I'm converting it to an int (which I was, long ago).
    */
   hash: function() {
     return this.toString();
@@ -1597,7 +1615,7 @@ glift.themes.registered.DEPTH = {
   stones: {
     shadows: {
       stroke: "none",
-      fill: "#555"
+      fill: "#777"
     },
     "WHITE" : {
       stroke: "white",
@@ -1653,9 +1671,8 @@ glift.displays = {
     return glift.displays.board.create(environment, themeKey, theme);
   }
 };
-(function() {
 glift.displays.bboxFromPts = function(topLeftPt, botRightPt) {
-  return new BoundingBox(topLeftPt, botRightPt);
+  return new glift.displays._BoundingBox(topLeftPt, botRightPt);
 };
 
 glift.displays.bboxFromDiv = function(divId) {
@@ -1666,18 +1683,21 @@ glift.displays.bboxFromDiv = function(divId) {
 };
 
 glift.displays.bbox = function(topLeft, width, height) {
-  return new BoundingBox(
+  return new glift.displays._BoundingBox(
       topLeft, glift.util.point(topLeft.x() + width, topLeft.y() + height));
 };
 
-// Might be nice to use the closure to create private variables.
-// A bounding box, generally for a graphical object.
-var BoundingBox = function(topLeftPtIn, botRightPtIn) {
+/**
+ * A bounding box, represented by a top left point and bottom right point.
+ * This is how we represent space in glift, from GoBoards to sections allocated
+ * for widgets.
+ */
+glift.displays._BoundingBox = function(topLeftPtIn, botRightPtIn) {
   this._topLeftPt = topLeftPtIn;
   this._botRightPt = botRightPtIn;
 };
 
-BoundingBox.prototype = {
+glift.displays._BoundingBox.prototype = {
   topLeft: function() { return this._topLeftPt; },
   botRight: function() { return this._botRightPt; },
   width: function() { return this.botRight().x() - this.topLeft().x(); },
@@ -1686,9 +1706,10 @@ BoundingBox.prototype = {
   left: function() { return this.topLeft().x(); },
   bottom: function() { return this.botRight().y(); },
   right: function() { return this.botRight().x(); },
+  hwRatio: function() { return this.height() / this.width(); },
 
   /**
-   * Find the center of the box
+   * Find the center of the box. Returns a point representing the center.
    */
   center: function() {
     return glift.util.point(
@@ -1696,25 +1717,6 @@ BoundingBox.prototype = {
           + this.topLeft().x(),
       glift.math.abs((this.botRight().y() - this.topLeft().y()) / 2)
           + this.topLeft().y());
-  },
-
-  /**
-   * Draw the bbox (for debugging).
-   */
-  draw: function(paper, color) {
-    var obj = paper.rect(
-        this.topLeft().x(), this.topLeft().y(), this.width(), this.height());
-    obj.attr({fill:color, opacity:0.5});
-  },
-
-  /**
-   * Log the points to the console (for debugging).
-   */
-  log: function() {
-    glift.util.logz("TopLeft: " + JSON.stringify(this.topLeft()));
-    glift.util.logz("BotRight: " + JSON.stringify(this.botRight()));
-    glift.util.logz("Width: " + this.width());
-    glift.util.logz("Height: " + this.height());
   },
 
   /**
@@ -1729,7 +1731,7 @@ BoundingBox.prototype = {
   },
 
   /**
-   * Test to see if two points are equal.
+   * Test to see if two bboxes are equal by comparing whether their points.
    */
   equals: function(other) {
     return other.topLeft() && this.topLeft().equals(other.topLeft()) &&
@@ -1756,10 +1758,99 @@ BoundingBox.prototype = {
     return glift.displays.bboxFromPts(
         glift.util.point(this.topLeft().x() + dx, this.topLeft().y() + dy),
         glift.util.point(this.botRight().x() + dx, this.botRight().y() + dy));
+  },
+
+  /**
+   * Split this bbox into two or more divs across a horizontal axis.  The
+   * variable bboxSplits is an array of decimals -- the box will be split via
+   * these decimals.
+   *
+   * In other words, splits a box like so:
+   *
+   * X ->  X
+   *       X
+   *
+   * Note: There is always one less split decimal specified, so that we don't
+   * have rounding errors.In other words: [0.7] uses 0.7 and 0.3 for splits and
+   * [0.7, 0.2] uses 0.7, 0.2, and 0.1 for splits.
+   */
+  hSplit: function(bboxSplits) {
+    return this._splitBox('h', bboxSplits);
+  },
+
+  /**
+   * Split this bbox into two or more divs across a horizontal axis.  The
+   * variable bboxSplits is an array of decimals -- the box will be split via
+   * these decimals.  They must sum to 1, or an exception is thrown.
+   *
+   * In other words, splits a box like so:
+   * X ->  X X
+   *
+   * Note: There is always one less split decimal specified, so that we don't
+   * have rounding errors.In other words: [0.7] uses 0.7 and 0.3 for splits and
+   * [0.7, 0.2] uses 0.7, 0.2, and 0.1 for splits.
+   */
+  vSplit: function(bboxSplits) {
+    return this._splitBox('v', bboxSplits);
+  },
+
+  /**
+   * Internal method for vSplit and hSplit.
+   */
+  _splitBox: function(d, bboxSplits) {
+    if (glift.util.typeOf(bboxSplits) !== 'array') {
+      throw "bboxSplits must be specified as an array. Was: "
+          + glift.util.typeOf(bboxSplits);
+    }
+    if (!(d === 'h' || d === 'v')) {
+      throw "What!? The only splits allowed are 'v' or 'h'.  " +
+          "You supplied: " + d;
+    }
+    var totalSplitAmount = 0;
+    for (var i = 0; i < bboxSplits.length; i++) {
+      totalSplitAmount += bboxSplits[i];
+    }
+    if (totalSplitAmount >= 1) {
+      throw "The box splits must sum to less than 1, but instead summed to: " +
+          totalSplitAmount;
+    }
+
+    // Note: this is really just used as marker.  We use the final
+    // this.botRight().x() / y() for the final marker to prevent rounding
+    // errors.
+    bboxSplits.push(1 - totalSplitAmount);
+
+    var currentSplitPercentage = 0;
+    var outBboxes = [];
+    var currentTopLeft = this.topLeft().clone();
+    for (var i = 0; i < bboxSplits.length; i++) {
+      if (i === bboxSplits.length - 1) {
+        currentSplitPercentage = 1;
+      } else {
+        currentSplitPercentage += bboxSplits[i];
+      }
+
+      // TODO(kashomon): All this switching makes me think there should be a
+      // separate method for a single split.
+      var nextBotRightX = d === 'h' ?
+          this.botRight().x() :
+          this.topLeft().x() + this.width() * currentSplitPercentage;
+      var nextBotRightY = d === 'h' ?
+          this.topLeft().y() + this.height() * currentSplitPercentage :
+          this.botRight().y();
+      var nextBotRight = glift.util.point(nextBotRightX, nextBotRightY);
+      outBboxes.push(glift.displays.bboxFromPts(currentTopLeft, nextBotRight));
+      var nextTopLeftX = d === 'h' ?
+          currentTopLeft.x() :
+          this.topLeft().x() + this.width() * currentSplitPercentage;
+      var nextTopLeftY = d === 'h' ?
+          this.topLeft().y() + this.height() * currentSplitPercentage :
+          currentTopLeft.y();
+      currentTopLeft = glift.util.point(nextTopLeftX, nextTopLeftY);
+    }
+    return outBboxes;
   }
 };
-
-})();
 (function() {
 // TODO(kashomon): Add much better tests for these methods.  The BoardPoints are
 // pivotal to creating the go board, so we want them to really work.
@@ -2121,13 +2212,11 @@ glift.displays.environment = {
   BOTTOMBAR_SIZE: 0.10,
 
   get: function(options) {
-    // TODO(kashomon): Remove the processOptions here.  It's only used for
-    // tests.
     return new GuiEnvironment(options);
   },
 
   getInitialized: function(options) {
-    return new GuiEnvironment(options).init();
+    return glift.displays.environment.get(options).init();
   }
 };
 
@@ -2136,18 +2225,15 @@ var GuiEnvironment = function(options) {
   this.boardRegion = options.boardRegion || glift.enums.boardRegions.ALL;
   this.intersections = options.intersections || 19;
   var displayConfig = options.displayConfig || {};
-  this.cropbox = displayConfig.cropbox !== undefined
-      ? displayConfig.cropbox
-      : glift.displays.cropbox.getFromRegion(this.boardRegion, this.intersections);
+  this.cropbox = displayConfig.cropbox !== undefined ?
+      displayConfig.cropbox :
+      glift.displays.cropbox.getFromRegion(this.boardRegion, this.intersections);
   this.heightOverride = false;
   this.widthOverride = false;
-
-  // because it's extremely useful for testing.
   if (displayConfig.divHeight !== undefined) {
     this.divHeight = displayConfig.divHeight;
     this.heightOverride = true;
   }
-
   if (displayConfig.divWidth !== undefined) {
     this.divWidth = displayConfig.divWidth;
     this.widthOverride = true;
@@ -2248,22 +2334,219 @@ var LineBox = function(boundingBox, xSpacing, ySpacing, cropbox) {
 
 })();
 /**
+ * Find the optimal positioning of the widget. Creates divs for all the
+ * necessary elements and then returns the divIds. Specifically, returns:
+ * {
+ *  commentBox: ...
+ *  goBox: ...
+ *  iconBox: ...
+ * }
+ */
+glift.displays.positionWidget = function(
+    divBox, boardRegion, ints, boardComponentsList) {
+  var comps = glift.enums.boardComponents;
+  var bcMap = {}
+  for (var i = 0; i < boardComponentsList.length; i++) {
+    bcMap[boardComponentsList[i]] = true;
+  }
+  var cropbox = glift.displays.cropbox.getFromRegion(boardRegion, ints);
+
+  // These are simple heuristics.  They do not optimally place the board, but I
+  // prefer the simplicity.
+  var longBoxRegions = { TOP: true, BOTTOM: true };
+  if (!bcMap.hasOwnProperty(comps.COMMENT_BOX)) {
+    return glift.displays.positionWidgetVert(
+        divBox, cropbox, boardRegion, bcMap);
+  } else if (divBox.hwRatio() < 0.45 && longBoxRegions[boardRegion]) {
+    return glift.displays.positionWidgetHorz(
+        divBox, cropbox, boardRegion, bcMap);
+  } else if (divBox.hwRatio() < 0.667 && !longBoxRegions[boardRegion]) {
+    // In other words, the width == 1.5 * height;
+    // Also: Requires a comment box
+    return glift.displays.positionWidgetHorz(
+        divBox, cropbox, boardRegion, bcMap);
+  } else {
+    // Default: Vertically aligned.
+    return glift.displays.positionWidgetVert(
+        divBox, cropbox, boardRegion, bcMap);
+  }
+};
+
+glift.displays.positionWidgetVert = function(
+    divBox, cropbox, boardRegion, boardComponentsMap) {
+  var point = glift.util.point;
+  var aligns = glift.enums.boardAlignments;
+  var comps = glift.enums.boardComponents;
+  var outBoxes = {};
+  var splitPercentages = [];
+  var boardBase = undefined;
+  var iconBarBase = undefined;
+  var commentBase = undefined;
+  if (boardComponentsMap.hasOwnProperty(comps.COMMENT_BOX) &&
+      boardComponentsMap.hasOwnProperty(comps.ICONBAR)) {
+    var splits = divBox.hSplit([0.7, 0.2, 0.1]);
+    boardBase = splits[0];
+    commentBase = splits[1];
+    iconBarBase = splits[2];
+  } else if (boardComponentsMap.hasOwnProperty(comps.ICONBAR)) {
+    var splits = divBox.hSplit([0.9, 0.1]);
+    boardBase = splits[0];
+    iconBarBase = splits[1];
+  } else if (boardComponentsMap.hasOwnProperty(comps.COMMENT_BOX)) {
+    var splits = divBox.hSplit([0.8, 0.2]);
+    boardBase = splits[0];
+    commentBase = splits[1];
+  } else {
+    boardBase = divBox;
+  }
+
+  var board = glift.displays.getResizedBox(boardBase, cropbox, aligns.TOP);
+  outBoxes.boardBox = board;
+  if (commentBase) {
+    var bb = outBoxes.boardBase;
+    var commentHeight = commentBase.height();
+    var boardWidth = board.width();
+    var boardLeft = board.left();
+    var boardBottom = board.bottom();
+    outBoxes.commentBox = glift.displays.bbox(
+        point(boardLeft, boardBottom), boardWidth, commentHeight);
+  }
+  if (iconBarBase) {
+    var bb = outBoxes.boardBase;
+    var barHeight = iconBarBase.height();
+    var boardLeft = board.left();
+    var boardWidth = board.width();
+    if (outBoxes.commentBox) {
+      var bottom = outBoxes.commentBox.bottom();
+    } else {
+      var bottom = outBoxes.board.bottom();
+    }
+    outBoxes.iconBarBox = glift.displays.bbox(
+        point(boardLeft, bottom), boardWidth, barHeight);
+  }
+  return outBoxes;
+};
+
+/**
+ * Position a widget horizontally, i.e.,
+ * |   X   X   |
+ *
+ * Since a resizedBox is designed to fill up either the h or w dimension. There
+ * are only three scenarios:
+ *  1. The GoBoardBox naturally touches the top & bottom
+ *  2. The GoBoardBox naturally touches the left & right
+ *  2. The GoBoardBox fits perfectly.
+ *
+ * Note, we should never position horizontally for TOP and BOTTOM board regions.
+ *
+ * returns:
+ *
+ *  {
+ *    boardBox,
+ *    commentBox,
+ *    iconBarBox,
+ *    rightSide,
+ *    leftSide
+ *  }
+ */
+glift.displays.positionWidgetHorz = function(
+    divBox, cropbox, boardRegion, boardComponentsMap) {
+  var point = glift.util.point;
+  var aligns = glift.enums.boardAlignments;
+  var comps = glift.enums.boardComponents;
+  if (!comps.hasOwnProperty(comps.COMMENT_BOX)) {
+    throw "The component map must contain a comment box";
+  }
+  var boardBox = glift.displays.getResizedBox(divBox, cropbox, aligns.RIGHT);
+  var outBoxes = {};
+
+  // These are precentages of boardWidth.  We require a minimum width of 1/2 the
+  // GoBoardWidth.
+  // TODO(kashomon): Make this configurable.
+  var minCommentPercent = 0.5;
+  var minCommentBoxSize = boardBox.width() * minCommentPercent;
+  var maxCommentPercent = 0.75;
+  var maxCommentBoxSize = boardBox.width() * maxCommentPercent;
+  var widthDiff = divBox.width() - boardBox.width();
+
+  // The commentBoxPercentage is percentage of the width of the goboard that
+  // we want the comment box to be.
+  if (widthDiff < minCommentBoxSize) {
+    var commentBoxPercentage = minCommentPercent;
+  } else if (widthDiff >= minCommentBoxSize
+      && widthDiff < maxCommentBoxSize) {
+    var commentBoxPercentage = widthDiff / boardBox.width();
+  } else {
+    var commentBoxPercentage = maxCommentPercent;
+  }
+  outBoxes.commentBoxPercentage = commentBoxPercentage;
+
+  // Split percentage is how much we want to split the boxes by.
+  var desiredWidth = commentBoxPercentage * boardBox.width();
+  var splitPercentage = boardBox.width() / (desiredWidth + boardBox.width());
+  // This means that if the divBox is very wide (> maxCommentBoxSize +
+  // boardWidth), so we just need to partition the box.
+  var splits = divBox.vSplit([splitPercentage]);
+  outBoxes.leftSide = splits[0];
+  // Find out what the resized box look like now.
+  var newResizedBox = glift.displays.getResizedBox(
+      splits[0], cropbox, aligns.RIGHT);
+
+  var rightSide = splits[1];
+  outBoxes.rightSide = rightSide;
+  var baseCommentBox = glift.displays.bboxFromPts(
+      point(rightSide.topLeft().x(), newResizedBox.topLeft().y()),
+      point(rightSide.botRight().x(), newResizedBox.botRight().y()));
+  if (rightSide.width() > (0.75 * newResizedBox.width())) {
+    baseCommentBox = baseCommentBox.vSplit(
+      [0.75 * newResizedBox.width() / baseCommentBox.width()])[0];
+  }
+
+  if (boardComponentsMap.hasOwnProperty(comps.ICONBAR)) {
+    var finishedBoxes = baseCommentBox.hSplit([0.9]);
+    outBoxes.commentBox = finishedBoxes[0];
+    outBoxes.iconBarBox = finishedBoxes[1];
+  } else {
+    outBoxes.commentBox = baseCommentBox;
+  }
+  outBoxes.boardBox = newResizedBox;
+  return outBoxes;
+};
+
+glift.displays.setNotSelectable = function(divId) {
+  $('#' + divId).css({
+      '-webkit-touch-callout': 'none',
+      '-webkit-user-select': 'none',
+      '-khtml-user-select': 'none',
+      '-moz-user-select': 'moz-none',
+      '-ms-user-select': 'none',
+      'user-select': 'none',
+      '-webkit-highlight': 'none',
+      '-webkit-tap-highlight-color': 'rgba(0,0,0,0)',
+      'cursor': 'default'
+  });
+};
+/**
  * Resize the box optimally into the divBox (bounding box). Currently this finds
  * the minimum of height and width, makes a box out of this value, and centers
  * the box.
  */
-glift.displays.getResizedBox = function(divBox, cropbox) {
-  var util = glift.util,
+glift.displays.getResizedBox = function(divBox, cropbox, alignment) {
+  var aligns = glift.enums.boardAlignments,
+      alignment = alignment || aligns.CENTER,
+      util = glift.util,
       newDims = glift.displays.getCropDimensions(
           divBox.width(),
           divBox.height(),
           cropbox),
-      newWidth = newDims.width(),
-      newHeight = newDims.height(),
+      newWidth = newDims.width,
+      newHeight = newDims.height,
       xDiff = divBox.width() - newWidth,
       yDiff = divBox.height() - newHeight,
-      xDelta = xDiff === 0 ? 0 : xDiff / 2,
-      yDelta = yDiff === 0 ? 0 : yDiff / 2,
+      // These are used to center the box.  However, it's not always the case
+      // that we really do want to center the box.
+      xDelta = alignment === aligns.RIGHT ? xDiff : xDiff / 2,
+      yDelta = alignment === aligns.TOP ? 0 : yDiff / 2,
       newLeft = divBox.topLeft().x() + xDelta,
       newTop = divBox.topLeft().y() + yDelta,
       newBox = glift.displays.bbox(
@@ -2299,8 +2582,8 @@ glift.displays.getCropDimensions = function(width, height, cropbox) {
     newWidth = height / cropRatio;
   }
   return {
-    height: function() { return newHeight; },
-    width: function() { return newWidth; }
+    height: newHeight,
+    width: newWidth
   };
 };
 glift.displays.board = {
@@ -2810,7 +3093,7 @@ glift.displays.board.stones = function(divId, svg, boardPoints, theme) {
     .enter().append("circle")
       .attr("cx", function(pt) { return pt.coordPt.x(); })
       .attr("cy", function(pt) { return pt.coordPt.y(); })
-      .attr("r", boardPoints.radius - .2) // for stroke
+      .attr("r", boardPoints.radius - .5) // for stroke
       .attr("opacity", 0)
       .attr('class', glift.enums.svgElements.STONE)
       .attr("stone_color", "EMPTY")
@@ -2849,7 +3132,7 @@ glift.displays.board.shadows = function(
       .attr("opacity", 0)
       .attr("class", STONE_SHADOW)
       .attr("fill", theme.stones.shadows.fill)
-      .attr("stroke", theme.stones.shadows.stroke)
+      // .attr("stroke", theme.stones.shadows.stroke)
       // .attr("filter", 'url(#' + divId + "_svg_blur)")
       .attr("id", function(pt) {
         var intPt = pt.intPt;
@@ -3044,22 +3327,17 @@ glift.displays.gui.centerWithin = function(
   return { transform: transform, bbox: newBbox};
 };
 (function() {
-glift.displays.gui.commentBox = function(
-    divId, displayWidth, boundingWidth, themeName, useBoardImage) {
-  return new CommentBox(divId, displayWidth, boundingWidth, themeName,
-      useBoardImage).draw();
+glift.displays.gui.commentBox = function(divId, themeName) {
+  return new CommentBox(divId, themeName).draw();
 };
 
 // TODO(kashomon): Pass in an options argument.
 var CommentBox = function(
-    divId, displayWidth, boundingWidth, themeName, useBoardImage) {
+    divId, themeName) {
   this.divId = divId;
-  this.displayWidth = displayWidth;
-  this.boundingWidth = boundingWidth;
   this.themeName = themeName;
   this.theme = glift.themes.get(themeName);
-  this.useBoardImage = useBoardImage;
-  this.commentBoxObj = undefined; // currently: jquery obj
+  this.commentBoxObj = undefined; // JQuery obj
 };
 
 CommentBox.prototype = {
@@ -3070,16 +3348,13 @@ CommentBox.prototype = {
     var padding = 10; // TODO(kashomon): Put in theme
     var borderWidth = 1;
     var boardBorder = this.theme.board['stroke-width'];
-    var width = this.displayWidth;
     // var fontSize = width / 25 < 15 ? 15 : width / 25;
-    var fontSize = commentBoxHeight * .13 < 15 ? 15 : commentBoxHeight * .13;
+    var fontSize = commentBoxHeight * .13 < 14 ? 14 : commentBoxHeight * .13;
+    fontSize = fontSize > 16 ? 16 : fontSize;
     this.commentBoxObj.css({
       // TODO(kashomon): Get the theme info from the theme
       background: '#CCCCFF',
       border: borderWidth + 'px solid',
-      left: Math.ceil((this.boundingWidth - this.displayWidth) / 2 - boardBorder),
-      width: Math.ceil(this.displayWidth + boardBorder),
-      height: commentBoxHeight,
       margin: 'auto',
       'font-family': 'Baskerville',
       overflow: 'auto',
@@ -3088,7 +3363,7 @@ CommentBox.prototype = {
       '-webkit-box-sizing': 'border-box', /* Safari/Chrome, other WebKit */
       '-moz-box-sizing': 'border-box',    /* Firefox, other Gecko */
       'box-sizing': 'border-box',         /* Opera/IE 8+ */
-      padding: padding
+      'padding': padding
     });
     return this;
   },
@@ -3602,9 +3877,7 @@ glift.displays.gui.splitDiv = function(divId, percents, direction) {
     ));
     currentStart = currentStart + maxAmount * percents[i];
   }
-
   for (var i = 0; i < boxData.length; i++) {
-    // TODO(kashomon): Replace with d3 for uniformity
     $('#' + divId).append('<div id="' + boxData[i].id + '"></div>');
     var cssObj = {
       width: direction === 'horizontal' ? '100%' : boxData[i].length,
@@ -3616,9 +3889,6 @@ glift.displays.gui.splitDiv = function(divId, percents, direction) {
     $('#' + boxData[i].id).css(cssObj);
   }
   return boxData;
-};
-
-glift.displays.gui.repack = function() {
 };
 /**
  * Objects and methods that enforce the basic rules of Go.
@@ -5825,7 +6095,7 @@ glift.bridge.getCropFromMovetree = function(movetree) {
   // represents.
   var quads = {};
 
-  // Tracker is a mapfrom 
+  // Tracker is a mapfrom
   var tracker = {};
   var numstones = 0;
 
@@ -5938,47 +6208,62 @@ glift.widgets.BaseWidget.prototype = {
    */
   draw: function() {
     this.controller = this.sgfOptions.controllerFunc(this.sgfOptions);
-    var divSplits = this.displayOptions.useCommentBar ?
-        this.displayOptions.splitsWithComments :
-        this.displayOptions.splitsWithoutComments;
-    if (this.sgfOptions.icons.length === 0) {
-      divSplits = this.displayOptions.splitsWithOnlyComments;
-    }
-    this.divInfo = glift.displays.gui.splitDiv(
-        this.wrapperDiv, divSplits, 'horizontal');
-    this.goboxDivId = this.divInfo[0].id;
-    this._setNotSelectable(this.goboxDivId);
+    this.displayOptions.intersections = this.controller.getIntersections();
+    var comps = glift.enums.boardComponents;
+    var requiredComponents = [comps.BOARD];
     this.displayOptions.boardRegion =
         this.sgfOptions.boardRegion === glift.enums.boardRegions.AUTO
         ? glift.bridge.getCropFromMovetree(this.controller.movetree)
         : this.sgfOptions.boardRegion;
+    if (this.displayOptions.useCommentBar) {
+      requiredComponents.push(comps.COMMENT_BOX);
+    }
+    if (this.sgfOptions.icons.length > 0) {
+      requiredComponents.push(comps.ICONBAR);
+    }
+    var positioning = glift.displays.positionWidget(
+      glift.displays.bboxFromDiv(this.wrapperDiv),
+      this.displayOptions.boardRegion,
+      this.displayOptions.intersections,
+      requiredComponents);
+    var divIds = this._createDivsForPositioning(positioning, this.wrapperDiv);
 
     // TODO(kashomon): Remove these hacks. We shouldn't be modifying
     // displayOptions.
-    this.displayOptions.intersections = this.controller.getIntersections();
-    this.displayOptions.divId = this.goboxDivId;
+    this.displayOptions.divId = divIds.boardBoxId;
     this.display = glift.displays.create(this.displayOptions);
-    var boundingWidth = $('#' +  this.goboxDivId).width();
-
-    if (this.displayOptions.useCommentBar) {
-      this.commentBoxId = this.divInfo[1].id;
-      this._setNotSelectable(this.commentBoxId);
-      this._createCommentBox(boundingWidth);
-    }
-
-    if (this.sgfOptions.icons.length > 0) {
-      this.iconBarId = this.displayOptions.useCommentBar ?
-          this.divInfo[2].id :
-          this.divInfo[1].id;
-      this._setNotSelectable(this.iconBarId);
-      this._createIconBar(boundingWidth)
-    }
+    divIds.commentBoxId && this._createCommentBox(divIds.commentBoxId);
+    divIds.iconBarBoxId && this._createIconBar(divIds.iconBarBoxId);
     this._initStoneActions();
     this._initIconActions();
     this._initKeyHandlers();
     this._initProblemData();
     this.applyBoardData(this.controller.getEntireBoardState());
     return this;
+  },
+
+  _createDivsForPositioning: function(positioning, wrapperDiv) {
+    var expectedKeys = [ 'boardBox', 'iconBarBox', 'commentBox' ];
+    var out = {};
+    var createDiv = function(bbox) {
+      var newId = 'glift_internal_div_' + glift.util.idGenerator.next();
+      $('#' + wrapperDiv).append('<div id="' + newId + '"></div>');
+      var cssObj = {
+        top: bbox.top(),
+        left: bbox.left(),
+        width: bbox.width(),
+        height: bbox.height(),
+        position: 'absolute'
+      };
+      $('#' + newId).css(cssObj);
+      return newId;
+    };
+    for (var i = 0; i < expectedKeys.length; i++) {
+      if (positioning[expectedKeys[i]]) {
+        out[expectedKeys[i] + 'Id'] = createDiv(positioning[expectedKeys[i]]);
+      }
+    }
+    return out;
   },
 
   _getProblemType: function() {
@@ -6011,26 +6296,18 @@ glift.widgets.BaseWidget.prototype = {
     return this;
   },
 
-  _createCommentBox: function(boundingWidth) {
+  _createCommentBox: function(commentBoxId) {
     this.commentBox = glift.displays.gui.commentBox(
-        this.commentBoxId,
-        this.display.width(),
-        boundingWidth,
-        this.displayOptions.theme,
-        this.displayOptions.goBoardBackground !== undefined);
+        commentBoxId, this.displayOptions.theme);
   },
 
-  _createIconBar: function(boundingWidth) {
-    var margin = (boundingWidth - this.display.width()) / 2;
+  _createIconBar: function(iconId) {
     var icons = this.sgfOptions.icons;
-    if (this.type === glift.enums.widgetTypes.EXAMPLE) {
-      icons = this.displayOptions.reducedIconsForExample || icons;
-    }
     this.iconBar = glift.displays.gui.iconBar({
       themeName: this.displayOptions.theme,
-      divId: this.iconBarId,
+      divId: iconId,
       vertMargin:  5, // For good measure
-      horzMargin: margin,
+      horzMargin: 5,
       icons: icons
     });
   },
@@ -6324,6 +6601,7 @@ glift.widgets.WidgetManager.prototype = {
     this.currentWidget = undefined;
     this.temporaryWidget && this.temporaryWidget.destroy();
     this.temporaryWidget = undefined;
+    return this;
   },
 
   /**
