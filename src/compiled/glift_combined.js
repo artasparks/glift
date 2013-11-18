@@ -15,7 +15,7 @@ glift.global = {
    *
    * Currently in beta.
    */
-  version: '0.7.4',
+  version: '0.7.5',
   /**
    * Whether or not fast click is enabled, via Glift.
    */
@@ -317,7 +317,9 @@ glift.enums = {
     STARPOINT: 'starpoint',
     STONE: 'stone',
     STONE_SHADOW: 'stone_shadow',
-    ICON: 'icon'
+    ICON: 'icon',
+    // GuideLines are used only for mobile.
+    GUIDE_LINE: 'guide_line'
   },
 
   showVariations: {
@@ -1844,7 +1846,8 @@ BoardPoints.prototype = {
 
   /**
    * Get the coordinate for a given integer point string.  Note: the integer
-   * points are 0 indexed, i.e., 0->18.
+   * points are 0 indexed, i.e., 0->18 for a 19x19.  Recall that board points
+   * from the the top left (0,0) to the bottom right (18, 18).
    *
    * Ex. :  (0,2) =>
    *  {
@@ -2522,6 +2525,24 @@ glift.displays.board._Intersections.prototype = {
     return this;
   },
 
+  addGuideLines: function(pt) {
+    var elems = glift.enums.svgElements;
+    this.svg.select('#' + elems.GUIDE_LINE).remove();
+    var bpt = this.boardPoints.getCoord(pt);
+    var boardPoints = this.boardPoints;
+    this.svg.select('.' + elems.MARK_CONTAINER).append('path')
+      .attr('d', glift.displays.board.intersectionLine(
+          bpt, boardPoints.radius * 8, boardPoints.numIntersections))
+      .attr('stroke-width', 3)
+      .attr('stroke', 'blue')
+      .attr('id', elems.GUIDE_LINE);
+  },
+
+  clearGuideLines: function() {
+    var elems = glift.enums.svgElements;
+    this.svg.select('#' + elems.GUIDE_LINE).remove();
+  },
+
   clearMarks: function() {
     var elems = glift.enums.svgElements;
     // Some STARPOINTs/BOARD_LINEs may have been 'turned-off' when adding marks.
@@ -2530,6 +2551,7 @@ glift.displays.board._Intersections.prototype = {
     this.svg.selectAll('.' + elems.STARPOINT).attr('opacity', 1);
     this.svg.selectAll('.' + elems.BOARD_LINE).attr('opacity', 1);
     this.svg.selectAll('.' + elems.MARK).remove();
+    this.svg.selectAll('.' + elems.GUIDE_LINE).remove();
     return this;
   },
 
@@ -2564,7 +2586,7 @@ glift.displays.board.lines = function(divId, svg, boardPoints, theme) {
     .enter().append("path")
       .attr('d', function(pt) {
         return glift.displays.board.intersectionLine(
-            pt, boardPoints.radius, boardPoints.numIntersections, theme);
+            pt, boardPoints.radius, boardPoints.numIntersections);
       })
       .attr('stroke', theme.lines.stroke)
       .attr('stroke-width', theme.lines['stroke-width'])
@@ -5894,7 +5916,7 @@ glift.widgets = {
 glift.widgets.BaseWidget = function(sgfOptions, displayOptions, manager) {
   this.type = sgfOptions.type;
   this.sgfOptions = glift.util.simpleClone(sgfOptions);
-  this.displayOptions= glift.util.simpleClone(displayOptions);
+  this.displayOptions = glift.util.simpleClone(displayOptions);
   this.manager = manager;
 
   // Used for problems, exclusively
@@ -6024,20 +6046,26 @@ glift.widgets.BaseWidget.prototype = {
         continue;
       }
       iconActions[iconName].mouseover = iconActions[iconName].mouseover ||
-          function(widget, name) {
-            var id = widget.iconBar.iconId(name);
-            d3.select('#' + id).attr('fill', 'red');
-          };
+        function(event, widget, name) {
+          var id = widget.iconBar.iconId(name);
+          d3.select('#' + id).attr('fill', 'red');
+        };
       iconActions[iconName].mouseout = iconActions[iconName].mouseout ||
-          function(widget, name) {
-            var id = widget.iconBar.iconId(name);
-            d3.select('#' + id)
-                .attr('fill', widget.iconBar.theme.icons.DEFAULT.fill);
-          };
+        function(event, widget, name) {
+          var id = widget.iconBar.iconId(name);
+          d3.select('#' + id)
+              .attr('fill', widget.iconBar.theme.icons.DEFAULT.fill);
+        };
+      iconActions[iconName].touchend = iconActions[iconName].touchend ||
+        function(event, widget, name) {
+          event.preventDefault && event.preventDefault();
+          event.stopPropagation && event.stopPropagation();
+          widget.displayOptions.iconActions[name].click(event, widget);
+        };
       for (var eventName in iconActions[iconName]) {
         (function(eventName, iconNameBound, event) { // lazy binding pattern.
           widget.iconBar.setEvent(eventName, iconName, function() {
-            event(widget, iconNameBound);
+            event(d3.event, widget, iconNameBound);
           });
         })(eventName, iconName, iconActions[iconName][eventName]);
       }
@@ -6054,8 +6082,8 @@ glift.widgets.BaseWidget.prototype = {
     for (var action in stoneActions) {
       (function(act, fn) { // bind the event -- required due to lazy binding.
         that.display.intersections().setEvent(act, function(pt) {
-          fn(that, pt);
-       });
+          fn(d3.event, that, pt);
+      });
       })(action, stoneActions[action]);
     }
   },
@@ -6075,7 +6103,7 @@ glift.widgets.BaseWidget.prototype = {
         for (var i = 1; i < actionNamespace.length; i++) {
           action = action[actionNamespace[i]];
         }
-        action(that);
+        action(e, that);
       }
     };
     $('body').keydown(this.keyHandlerFunc);
@@ -6178,6 +6206,10 @@ glift.widgets.WidgetManager.prototype = {
       that.currentWidget = that.createWidget(sgfObj).draw();
     });
     return this;
+  },
+
+  getCurrentWidget: function() {
+    return this.currentWidget;
   },
 
   /**
@@ -6600,7 +6632,7 @@ glift.widgets.options.baseOptions = {
   /**
    * Enable FastClick (for mobile displays).
    */
-  enableFastClick: true,
+  enableFastClick: false,
 
   /**
    * Previous SGF icon
@@ -6627,7 +6659,7 @@ glift.widgets.options.baseOptions = {
     /**
      * Ghost-stone for hovering.
      */
-    mouseover: function(widget, pt) {
+    mouseover: function(event, widget, pt) {
       var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
       var currentPlayer = widget.controller.getCurrentPlayer();
       if (widget.controller.canAddStone(pt, currentPlayer)) {
@@ -6639,12 +6671,19 @@ glift.widgets.options.baseOptions = {
     /**
      * Ghost-stone removal for hovering.
      */
-    mouseout: function(widget, pt) {
+    mouseout: function(event, widget, pt) {
       var currentPlayer = widget.controller.getCurrentPlayer();
       if (widget.controller.canAddStone(pt, currentPlayer)) {
         widget.display &&
             widget.display.intersections().setStoneColor(pt, 'EMPTY');
       }
+    },
+
+    // TODO(kashomon): It's not clear if we want this. Revisit later.
+    touchend: function(event, widget, pt) {
+      event.preventDefault && event.preventDefault();
+      event.stopPropagation && event.stopPropagation();
+      widget.sgfOptions.stoneClick(event, widget, pt);
     }
   },
 
@@ -6653,59 +6692,59 @@ glift.widgets.options.baseOptions = {
    */
   iconActions: {
     start: {
-      click:  function(widget) {
+      click:  function(event, widget) {
         widget.applyBoardData(widget.controller.toBeginning());
       }
     },
 
     end: {
-      click:  function(widget) {
+      click:  function(event, widget) {
         widget.applyBoardData(widget.controller.toEnd());
       }
     },
 
     arrowright: {
-      click: function(widget) {
+      click: function(event, widget) {
         widget.applyBoardData(widget.controller.nextMove());
       }
     },
 
     arrowleft: {
-      click:  function(widget) {
+      click:  function(event, widget) {
         widget.applyBoardData(widget.controller.prevMove());
       }
     },
 
     // Get next problem.
     'chevron-right': {
-      click: function(widget) {
+      click: function(event, widget) {
         widget.manager.nextSgf();
       }
     },
 
     // Get the previous problem.
     'chevron-left': {
-      click: function(widget) {
+      click: function(event, widget) {
         widget.manager.prevSgf();
       }
     },
 
     // Try again
     refresh: {
-      click: function(widget) {
+      click: function(event, widget) {
         widget.reload();
       }
     },
 
     undo: {
-      click: function(widget) {
+      click: function(event, widget) {
         widget.manager.returnToOriginalWidget();
       }
     },
 
     // Go to the explain-board.
     roadmap: {
-      click: function(widget) {
+      click: function(event, widget) {
         var manager = widget.manager;
         var sgfObj = {
           widgetType: glift.enums.widgetTypes.GAME_VIEWER,
@@ -6725,7 +6764,7 @@ glift.widgets.options.baseOptions = {
  * Additional Options for the GameViewers
  */
 glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
-  stoneClick: function(widget, pt) {
+  stoneClick: function(event, widget, pt) {
     var currentPlayer = widget.controller.getCurrentPlayer();
     var data = widget.controller.addStone(pt, currentPlayer);
     var problemResults = glift.enums.problemResults;
@@ -6783,7 +6822,7 @@ glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
  * Additional Options for EXAMPLEs
  */
 glift.widgets.options.EXAMPLE = {
-  stoneClick: function(widget, pt) {},
+  stoneClick: function(event, widget, pt) {},
 
   icons: [],
 
@@ -6797,7 +6836,7 @@ glift.widgets.options.EXAMPLE = {
  * Additional Options for the GameViewers
  */
 glift.widgets.options.GAME_VIEWER = {
-  stoneClick: function(widget, pt) {
+  stoneClick: function(event, widget, pt) {
     var currentPlayer = widget.controller.getCurrentPlayer();
     var partialData = widget.controller.addStone(pt, currentPlayer);
     widget.applyBoardData(partialData);
@@ -6820,7 +6859,7 @@ glift.widgets.options.GAME_VIEWER = {
  * Additional Options for the GameViewers
  */
 glift.widgets.options.STANDARD_PROBLEM = {
-  stoneClick: function(widget, pt) {
+  stoneClick: function(event, widget, pt) {
     var currentPlayer = widget.controller.getCurrentPlayer();
     var data = widget.controller.addStone(pt, currentPlayer);
     var problemResults = glift.enums.problemResults;

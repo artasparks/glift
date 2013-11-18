@@ -12,13 +12,13 @@ glift.displays.resizedBoxTest = function() {
   test("Test get CropDimensions: ALL must make dims square", function() {
     var cropbox = displays.cropbox.getFromRegion(boardRegions.ALL, 19);
     var outDims = displays.getCropDimensions(120, 60, cropbox);
-    deepEqual(outDims.height(), outDims.width(), "Width and height must be equal");
+    deepEqual(outDims.height, outDims.width, "Width and height must be equal");
   });
 
   test("Test get CropDimensions: LEFT", function() {
     var cropbox = displays.cropbox.getFromRegion(boardRegions.LEFT, 19);
     var outDims = displays.getCropDimensions(120, 60, cropbox);
-    deepEqual(Math.round(outDims.height() / outDims.width()),
+    deepEqual(Math.round(outDims.height / outDims.width),
         Math.round(cropbox.heightMod() /  cropbox.widthMod()),
         "CropBox Ratio and dim ration must be the same");
   });
@@ -34,7 +34,7 @@ glift.displays.resizedBoxTest = function() {
 
     var resized = getResizedBox(divBox, cb);
     var d = resized._debugInfo();
-    deepEqual(d.newDims.height(), d.newDims.width());
+    deepEqual(d.newDims.height, d.newDims.width);
     deepEqual(d.yDiff, 100);
     deepEqual(d.xDiff, 0);
     deepEqual(d.yDelta, 50);
@@ -69,7 +69,7 @@ glift.displays.resizedBoxTest = function() {
 
     var resized = getResizedBox(divBox, cb);
     var d = resized._debugInfo();
-    deepEqual(d.newDims.height(), d.newDims.width());
+    deepEqual(d.newDims.height, d.newDims.width);
     deepEqual(d.yDiff, 0);
     deepEqual(d.xDiff, 100)
     deepEqual(d.yDelta, 0);

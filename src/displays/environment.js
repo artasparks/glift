@@ -11,13 +11,11 @@ glift.displays.environment = {
   BOTTOMBAR_SIZE: 0.10,
 
   get: function(options) {
-    // TODO(kashomon): Remove the processOptions here.  It's only used for
-    // tests.
     return new GuiEnvironment(options);
   },
 
   getInitialized: function(options) {
-    return new GuiEnvironment(options).init();
+    return glift.displays.environment.get(options).init();
   }
 };
 
@@ -26,18 +24,15 @@ var GuiEnvironment = function(options) {
   this.boardRegion = options.boardRegion || glift.enums.boardRegions.ALL;
   this.intersections = options.intersections || 19;
   var displayConfig = options.displayConfig || {};
-  this.cropbox = displayConfig.cropbox !== undefined
-      ? displayConfig.cropbox
-      : glift.displays.cropbox.getFromRegion(this.boardRegion, this.intersections);
+  this.cropbox = displayConfig.cropbox !== undefined ?
+      displayConfig.cropbox :
+      glift.displays.cropbox.getFromRegion(this.boardRegion, this.intersections);
   this.heightOverride = false;
   this.widthOverride = false;
-
-  // because it's extremely useful for testing.
   if (displayConfig.divHeight !== undefined) {
     this.divHeight = displayConfig.divHeight;
     this.heightOverride = true;
   }
-
   if (displayConfig.divWidth !== undefined) {
     this.divWidth = displayConfig.divWidth;
     this.widthOverride = true;

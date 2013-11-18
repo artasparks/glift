@@ -63,6 +63,10 @@ GliftPoint.prototype = {
     return this._x === pt.x() && this._y === pt.y();
   },
 
+  clone: function() {
+    return glift.util.point(this.x(), this.y());
+  },
+
   /**
    * Returns an SGF coord, e.g., 'ab' for (0,1)
    */
@@ -74,7 +78,7 @@ GliftPoint.prototype = {
   /**
    * Create the form used in objects.
    * TODO(kashomon): Replace with string form.  The term hash() is confusing and
-   * it makes it seem like I'm converting it to an int (which I was, long ago)
+   * it makes it seem like I'm converting it to an int (which I was, long ago).
    */
   hash: function() {
     return this.toString();

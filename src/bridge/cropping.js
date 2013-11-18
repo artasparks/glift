@@ -13,7 +13,7 @@ glift.bridge.getCropFromMovetree = function(movetree) {
   // represents.
   var quads = {};
 
-  // Tracker is a mapfrom 
+  // Tracker is a mapfrom
   var tracker = {};
   var numstones = 0;
 

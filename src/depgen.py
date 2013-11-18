@@ -4,8 +4,7 @@
 # relevant parts of Glift. To get it working for yourself, you'll need the
 # following:
 #
-# -pegjs on your path
-# -CLOSURE pointing to the closure jar
+# export a CLOSURE var pointing to the closure jar
 
 import glob
 import os
@@ -14,7 +13,7 @@ import re
 import subprocess
 
 FILES_TO_AUTOGEN = {
-    # Name / Add Tests
+    # Name / Add Tests to Imports
     'htmltests/AjaxProblemTester.html': False,
     'htmltests/BaseWidgetTest.html': False,
     'htmltests/BboxFinder.html': False,
@@ -24,7 +23,7 @@ FILES_TO_AUTOGEN = {
     'htmltests/KogosTester.html': False,
     'htmltests/MarksTester.html': False,
     'htmltests/ProblemTester.html': False,
-    'htmltests/QunitTest.html': True, # What's going on with the 'True'?
+    'htmltests/QunitTest.html': True,
     'htmltests/ThemeTester.html': False,
     }
 

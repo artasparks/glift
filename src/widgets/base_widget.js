@@ -26,47 +26,62 @@ glift.widgets.BaseWidget.prototype = {
    */
   draw: function() {
     this.controller = this.sgfOptions.controllerFunc(this.sgfOptions);
-    var divSplits = this.displayOptions.useCommentBar ?
-        this.displayOptions.splitsWithComments :
-        this.displayOptions.splitsWithoutComments;
-    if (this.sgfOptions.icons.length === 0) {
-      divSplits = this.displayOptions.splitsWithOnlyComments;
-    }
-    this.divInfo = glift.displays.gui.splitDiv(
-        this.wrapperDiv, divSplits, 'horizontal');
-    this.goboxDivId = this.divInfo[0].id;
-    this._setNotSelectable(this.goboxDivId);
+    this.displayOptions.intersections = this.controller.getIntersections();
+    var comps = glift.enums.boardComponents;
+    var requiredComponents = [comps.BOARD];
     this.displayOptions.boardRegion =
         this.sgfOptions.boardRegion === glift.enums.boardRegions.AUTO
         ? glift.bridge.getCropFromMovetree(this.controller.movetree)
         : this.sgfOptions.boardRegion;
+    if (this.displayOptions.useCommentBar) {
+      requiredComponents.push(comps.COMMENT_BOX);
+    }
+    if (this.sgfOptions.icons.length > 0) {
+      requiredComponents.push(comps.ICONBAR);
+    }
+    var positioning = glift.displays.positionWidget(
+      glift.displays.bboxFromDiv(this.wrapperDiv),
+      this.displayOptions.boardRegion,
+      this.displayOptions.intersections,
+      requiredComponents);
+    var divIds = this._createDivsForPositioning(positioning, this.wrapperDiv);
 
     // TODO(kashomon): Remove these hacks. We shouldn't be modifying
     // displayOptions.
-    this.displayOptions.intersections = this.controller.getIntersections();
-    this.displayOptions.divId = this.goboxDivId;
+    this.displayOptions.divId = divIds.boardBoxId;
     this.display = glift.displays.create(this.displayOptions);
-    var boundingWidth = $('#' +  this.goboxDivId).width();
-
-    if (this.displayOptions.useCommentBar) {
-      this.commentBoxId = this.divInfo[1].id;
-      this._setNotSelectable(this.commentBoxId);
-      this._createCommentBox(boundingWidth);
-    }
-
-    if (this.sgfOptions.icons.length > 0) {
-      this.iconBarId = this.displayOptions.useCommentBar ?
-          this.divInfo[2].id :
-          this.divInfo[1].id;
-      this._setNotSelectable(this.iconBarId);
-      this._createIconBar(boundingWidth)
-    }
+    divIds.commentBoxId && this._createCommentBox(divIds.commentBoxId);
+    divIds.iconBarBoxId && this._createIconBar(divIds.iconBarBoxId);
     this._initStoneActions();
     this._initIconActions();
     this._initKeyHandlers();
     this._initProblemData();
     this.applyBoardData(this.controller.getEntireBoardState());
     return this;
+  },
+
+  _createDivsForPositioning: function(positioning, wrapperDiv) {
+    var expectedKeys = [ 'boardBox', 'iconBarBox', 'commentBox' ];
+    var out = {};
+    var createDiv = function(bbox) {
+      var newId = 'glift_internal_div_' + glift.util.idGenerator.next();
+      $('#' + wrapperDiv).append('<div id="' + newId + '"></div>');
+      var cssObj = {
+        top: bbox.top(),
+        left: bbox.left(),
+        width: bbox.width(),
+        height: bbox.height(),
+        position: 'absolute'
+      };
+      $('#' + newId).css(cssObj);
+      return newId;
+    };
+    for (var i = 0; i < expectedKeys.length; i++) {
+      if (positioning[expectedKeys[i]]) {
+        out[expectedKeys[i] + 'Id'] = createDiv(positioning[expectedKeys[i]]);
+      }
+    }
+    return out;
   },
 
   _getProblemType: function() {
@@ -99,26 +114,18 @@ glift.widgets.BaseWidget.prototype = {
     return this;
   },
 
-  _createCommentBox: function(boundingWidth) {
+  _createCommentBox: function(commentBoxId) {
     this.commentBox = glift.displays.gui.commentBox(
-        this.commentBoxId,
-        this.display.width(),
-        boundingWidth,
-        this.displayOptions.theme,
-        this.displayOptions.goBoardBackground !== undefined);
+        commentBoxId, this.displayOptions.theme);
   },
 
-  _createIconBar: function(boundingWidth) {
-    var margin = (boundingWidth - this.display.width()) / 2;
+  _createIconBar: function(iconId) {
     var icons = this.sgfOptions.icons;
-    if (this.type === glift.enums.widgetTypes.EXAMPLE) {
-      icons = this.displayOptions.reducedIconsForExample || icons;
-    }
     this.iconBar = glift.displays.gui.iconBar({
       themeName: this.displayOptions.theme,
-      divId: this.iconBarId,
+      divId: iconId,
       vertMargin:  5, // For good measure
-      horzMargin: margin,
+      horzMargin: 5,
       icons: icons
     });
   },

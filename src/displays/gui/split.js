@@ -61,9 +61,7 @@ glift.displays.gui.splitDiv = function(divId, percents, direction) {
     ));
     currentStart = currentStart + maxAmount * percents[i];
   }
-
   for (var i = 0; i < boxData.length; i++) {
-    // TODO(kashomon): Replace with d3 for uniformity
     $('#' + divId).append('<div id="' + boxData[i].id + '"></div>');
     var cssObj = {
       width: direction === 'horizontal' ? '100%' : boxData[i].length,
@@ -75,7 +73,4 @@ glift.displays.gui.splitDiv = function(divId, percents, direction) {
     $('#' + boxData[i].id).css(cssObj);
   }
   return boxData;
-};
-
-glift.displays.gui.repack = function() {
 };

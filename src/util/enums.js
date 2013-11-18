@@ -1,4 +1,4 @@
-// Otre: A Go Studying Program
+// Glift: A Go Studying Program
 // Copyright (c) 2011-2013, Josh <jrhoak@gmail.com>
 // Code licensed under the MIT License
 glift.enums = {
@@ -9,17 +9,17 @@ glift.enums = {
     EMPTY: 'EMPTY'
   },
 
+  boardAlignments: {
+    TOP: "TOP",
+    RIGHT: "RIGHT",
+    CENTER: "CENTER"
+  },
+
   directions: {
     LEFT: 'LEFT',
     RIGHT: 'RIGHT',
     TOP: 'TOP',
     BOTTOM: 'BOTTOM'
-  },
-
-  controllerMessages: {
-    CONTINUE: 'CONTINUE',
-    DONE: 'DONE',
-    FAILURE: 'FAILURE'
   },
 
   // The directions should work with the boardRegions.
@@ -32,8 +32,16 @@ glift.enums = {
     TOP_RIGHT: 'TOP_RIGHT',
     BOTTOM_LEFT: 'BOTTOM_LEFT',
     BOTTOM_RIGHT: 'BOTTOM_RIGHT',
+    // TODO(kashomon): Perhaps remove these last two, or at least 'AUTO'
     ALL: 'ALL',
     AUTO: 'AUTO'
+  },
+
+
+  controllerMessages: {
+    CONTINUE: 'CONTINUE',
+    DONE: 'DONE',
+    FAILURE: 'FAILURE'
   },
 
   marks: {
@@ -91,5 +99,11 @@ glift.enums = {
     EXAMPLE: 'EXAMPLE',
     GAME_VIEWER: 'GAME_VIEWER',
     STANDARD_PROBLEM: 'STANDARD_PROBLEM'
+  },
+
+  boardComponents: {
+    BOARD: 'BOARD',
+    COMMENT_BOX: 'COMMENT_BOX',
+    ICONBAR: 'ICONBAR'
   }
 };

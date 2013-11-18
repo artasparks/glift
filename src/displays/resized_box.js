@@ -3,18 +3,22 @@
  * the minimum of height and width, makes a box out of this value, and centers
  * the box.
  */
-glift.displays.getResizedBox = function(divBox, cropbox) {
-  var util = glift.util,
+glift.displays.getResizedBox = function(divBox, cropbox, alignment) {
+  var aligns = glift.enums.boardAlignments,
+      alignment = alignment || aligns.CENTER,
+      util = glift.util,
       newDims = glift.displays.getCropDimensions(
           divBox.width(),
           divBox.height(),
           cropbox),
-      newWidth = newDims.width(),
-      newHeight = newDims.height(),
+      newWidth = newDims.width,
+      newHeight = newDims.height,
       xDiff = divBox.width() - newWidth,
       yDiff = divBox.height() - newHeight,
-      xDelta = xDiff === 0 ? 0 : xDiff / 2,
-      yDelta = yDiff === 0 ? 0 : yDiff / 2,
+      // These are used to center the box.  However, it's not always the case
+      // that we really do want to center the box.
+      xDelta = alignment === aligns.RIGHT ? xDiff : xDiff / 2,
+      yDelta = alignment === aligns.TOP ? 0 : yDiff / 2,
       newLeft = divBox.topLeft().x() + xDelta,
       newTop = divBox.topLeft().y() + yDelta,
       newBox = glift.displays.bbox(
@@ -50,7 +54,7 @@ glift.displays.getCropDimensions = function(width, height, cropbox) {
     newWidth = height / cropRatio;
   }
   return {
-    height: function() { return newHeight; },
-    width: function() { return newWidth; }
+    height: newHeight,
+    width: newWidth
   };
 };

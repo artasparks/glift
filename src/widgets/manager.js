@@ -141,6 +141,7 @@ glift.widgets.WidgetManager.prototype = {
     this.currentWidget = undefined;
     this.temporaryWidget && this.temporaryWidget.destroy();
     this.temporaryWidget = undefined;
+    return this;
   },
 
   /**

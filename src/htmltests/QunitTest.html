@@ -61,6 +61,7 @@
 <script type="text/javascript" src="../displays/cropbox.js"></script>
 <script type="text/javascript" src="../displays/environment.js"></script>
 <script type="text/javascript" src="../displays/line_box.js"></script>
+<script type="text/javascript" src="../displays/position_widget.js"></script>
 <script type="text/javascript" src="../displays/resized_box.js"></script>
 <!-- Displays board -->
 <script type="text/javascript" src="../displays/board/board.js"></script>
@@ -125,6 +126,7 @@
 <script type="text/javascript" src="../displays/board_points_test.js"></script>
 <script type="text/javascript" src="../displays/cropbox_test.js"></script>
 <script type="text/javascript" src="../displays/environment_test.js"></script>
+<script type="text/javascript" src="../displays/position_widget_test.js"></script>
 <script type="text/javascript" src="../displays/resized_box_test.js"></script>
 <!-- Displays board Tests -->
 <script type="text/javascript" src="../displays/board/board_test.js"></script>
@@ -165,8 +167,10 @@ $(document).ready(function() {
   glift.displays.environmentTest();
   glift.displays.boardpointsTest();
   glift.displays.resizedBoxTest();
+  glift.displays.positionWidgetTest();
 
   // TODO(kashomon): recreate the board tests.
+
   glift.sgf.newParserTest();
 
   glift.rules.movetreeTest();

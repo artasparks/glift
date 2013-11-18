@@ -2,7 +2,7 @@ glift.themes.registered.DEPTH = {
   stones: {
     shadows: {
       stroke: "none",
-      fill: "#555"
+      fill: "#777"
     },
     "WHITE" : {
       stroke: "white",
