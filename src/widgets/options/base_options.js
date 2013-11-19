@@ -89,6 +89,24 @@ glift.widgets.options.baseOptions = {
       ARROW_RIGHT: 'iconActions.chevron-right.click'
     },
 
+    /**
+     * For all correct, there are multiple correct answers that a user must get.
+     * This allows us to specify (in ms) how long the user has until the problem
+     * is automatically reset.
+     */
+    correctVariationsResetTime: undefined,
+
+    /**
+     * You can, if you wish, override the total number of correct variations
+     * that a user must get correct.
+     */
+    totalCorrectVariationsOverride: undefined,
+
+    /**
+     * The extra icons.  This will
+     */
+    extraIcons: undefined,
+
     //-------------------------------------------------------------------------
     // These options must always be overriden by the widget type overrides.
     //
@@ -119,20 +137,7 @@ glift.widgets.options.baseOptions = {
     /**
      * The action that is performed when a sure clicks on an intersection.
      */
-    stoneClick: undefined,
-
-    /**
-     * For all correct, there are multiple correct answers that a user must get.
-     * This allows us to specify (in ms) how long the user has until the problem
-     * is automatically reset.
-     */
-    correctVariationsResetTime: undefined,
-
-    /**
-     * You can, if you wish, override the total number of correct variations
-     * that a user must get correct.
-     */
-    totalCorrectVariationsOverride: undefined
+    stoneClick: undefined
   },
 
   //----------------------------------------------------------------------

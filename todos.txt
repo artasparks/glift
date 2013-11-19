@@ -34,10 +34,21 @@ Done - Add 'right/wrong' indicators for problems
 Done - BUG: NextMove fails when the next move is a pass.
 Done - Change font size to based on pixel size.
 Done - Change viewer to color the right variations differently.  This is a bit
-    hacky and will probably need to be redone.
+  hacky and will probably need to be redone.
 Done - Make Comments toggle-able (should be part of settings window ultimately)
 Done - Change the Text Width dynamically (I think this is done.
 Done - Make Problem correctness configurable.
+Done - Add tests for widgets.
+Done - Borders seem to not be included as part of 'width', so lining up the comment
+  box has problems when the go board does/doesn't have a line-border see:
+  http://stackoverflow.com/questions/7401369/why-is-svg-stroke-width-1-making-lines-transparent
+  Note -- This was solved by positioning the widget correctly.
+Done - Make orientation of GoBoard (widget?) configurable (flush left, center-h, flush-right, etc).
+  Note -- This has only been done for alignment to the TOP, CENTER, and RIGHT,
+  but it's easy to add more alignments if necessary
+Done - On skinny windows, move the icon bar so it's flush with the window (a sort of flush-top)
+Done - Make the base configuration changes orientations based on screen
+dimensions.  See the KGS/cgoban window for a great example of this.
 
 Nope:
   Info Window / panel.
@@ -46,19 +57,16 @@ Nope:
   Add generic options parsing.
     Rationale: This is too heavy weight.  I've found that the simple options
     parsing logic to be more maintainable and easier to understand.
+  Create a problem explorer widget / controller.
+    Rationale: Too similar to the game viewer -- turned out not to be necessary.
+  Support vertically centered icons (editor).
+    Rationale: It's a lot of work and I don't see the benefit here.
 
 Smaller Changes.
 - Add support for numbering on the edges, beyond the lines.
-- Add tests for widgets.
 - Add tests for marks.
-- Finish key-stroke mappings -- add more keys, support two go boards on same
-  screen.
-- Add movetree->SGF transformation
 - Add shadow (perhaps even border) to comment box.
 - Make it possible to change the width of the go board border.
-- Borders seem to not be included as part of 'width', so lining up the comment
-  box has problems when the go board does/doesn't have a line-border
-  see: http://stackoverflow.com/questions/7401369/why-is-svg-stroke-width-1-making-lines-transparent
 - IconBars --> Do they need a background?
 - Ko support (less important?)
 - Add the ability to create static images (i.e., canvas support)
@@ -70,17 +78,14 @@ Smaller Changes.
 - Change MoveNodes / Movetree to have parent information instead of movehistory.
 - Make a global registry of 'active board' so that key events can be assigned.
 - Remove dependencies on external libraries.  Quite a big job.
-- Make orientation of GoBoard (widget?) configurable (flush left, center-h, flush-right, etc).
-- On skinny windows, move the icon bar so it's flush with the window (a sort of flush-top)
 - Get the theme data out of the display.
-- Create a problem explorer widget / controller.
+- Finish key-stroke mappings -- add more keys, support two go boards on same
+  screen.
+- Add move slider
+- Add title bar
 
 - Create game editor widget. (many dependencies)
-  - add moveTree support for delete
-  - support vertically centered icons (editor).  ( I
-  - Add icons for game editor.
-  - Add a game editor
-
-Some ideas for future development:
-2. Make the base configuration changes orientations based on screen dimensions.
-See the KGS/cgoban window for a great example of this.
+  - Add movetree->SGF transformation
+  - Add moveTree support for deleting properties
+  - Add moveTree support for deleting variations
+  - Add icons for game editor

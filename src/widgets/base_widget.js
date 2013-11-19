@@ -63,9 +63,11 @@ glift.widgets.BaseWidget.prototype = {
   _createDivsForPositioning: function(positioning, wrapperDiv) {
     var expectedKeys = [ 'boardBox', 'iconBarBox', 'commentBox' ];
     var out = {};
+    var that = this;
     var createDiv = function(bbox) {
       var newId = 'glift_internal_div_' + glift.util.idGenerator.next();
       $('#' + wrapperDiv).append('<div id="' + newId + '"></div>');
+      that._setNotSelectable(newId);
       var cssObj = {
         top: bbox.top(),
         left: bbox.left(),
@@ -151,7 +153,7 @@ glift.widgets.BaseWidget.prototype = {
           d3.select('#' + id)
               .attr('fill', widget.iconBar.theme.icons.DEFAULT.fill);
         };
-      iconActions[iconName].touchend = iconActions[iconName].touchend ||
+      iconActions[iconName].touchstart = iconActions[iconName].touchstart ||
         function(event, widget, name) {
           event.preventDefault && event.preventDefault();
           event.stopPropagation && event.stopPropagation();
@@ -271,7 +273,7 @@ glift.widgets.BaseWidget.prototype = {
   destroy: function() {
     $('#' + this.wrapperDiv).empty();
     this.keyHandlerFunc !== undefined
-      && $('body').unbind('keydown', this.keyHandlerFunc);
+        && $('body').unbind('keydown', this.keyHandlerFunc);
     this.keyHandlerFunc = undefined;
     this.display = undefined;
   }
