@@ -15,20 +15,7 @@ glift.global = {
    *
    * Currently in alpha.
    */
-  version: '0.8.1',
-  /**
-   * Whether or not fast click is enabled, via Glift.
-   */
-  fastClickEnabled: false,
-  /**
-   * Enable fast click.
-   */
-  enableFastClick: function() {
-    if (!glift.global.fastClickEnabled) {
-      FastClick.attach(document.body);
-      glift.global.fastClickEnabled = true;
-    }
-  },
+  version: '0.8.2',
   debugMode: false,
   // Options for performanceDebugLevel: none, fine, info
   performanceDebugLevel: 'none',

@@ -11,9 +11,6 @@ glift.widgets = {
     if (options.sgf && options.sgfList.length === 0) {
       options.sgfList = [options.sgf];
     }
-    if (options.enableFastClick) {
-      glift.global.enableFastClick();
-    }
     return new glift.widgets.WidgetManager(
       options.sgfList,
       options.initialListIndex,

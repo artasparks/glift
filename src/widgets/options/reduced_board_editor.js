@@ -1,10 +1,10 @@
 /**
- * Board Editor options.
+ * Board Editor options for when used as part of a widget
  */
-glift.widgets.options.BOARD_EDITOR = {
+glift.widgets.options.REDUCED_BOARD_EDITOR = {
   stoneClick: function(event, widget, pt) {},
 
-  icons: ['start', 'end', 'arrowleft', 'arrowright'],
+  icons: ['arrowleft', 'arrowright'],
 
   problemConditions: {},
 

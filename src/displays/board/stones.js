@@ -9,7 +9,7 @@ glift.displays.board.stones = function(divId, svg, boardPoints, theme) {
     .enter().append("circle")
       .attr("cx", function(pt) { return pt.coordPt.x(); })
       .attr("cy", function(pt) { return pt.coordPt.y(); })
-      .attr("r", boardPoints.radius - .5) // for stroke
+      .attr("r", boardPoints.radius - .4) // subtract for stroke
       .attr("opacity", 0)
       .attr('class', glift.enums.svgElements.STONE)
       .attr("stone_color", "EMPTY")
