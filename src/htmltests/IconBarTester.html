@@ -6,9 +6,6 @@
 <script type="text/javascript" src="../testdata/sgfs.js"></script>
 <script type="text/javascript" src="../libs/d3.min.js"></script>
 
-<link href="testlibs/bootstrap/css/bootstrap.css" rel="stylesheet">
-<link href="testlibs/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
-
 <!-- AUTO-GEN-DEPS -->
 <!-- Otre -->
 <script type="text/javascript" src=".././glift.js"></script>
@@ -55,10 +52,11 @@
 <script type="text/javascript" src="../displays/gui/gui.js"></script>
 <script type="text/javascript" src="../displays/gui/center.js"></script>
 <script type="text/javascript" src="../displays/gui/comment_box.js"></script>
-<script type="text/javascript" src="../displays/gui/icon_bar.js"></script>
-<script type="text/javascript" src="../displays/gui/icons.js"></script>
 <script type="text/javascript" src="../displays/gui/position.js"></script>
 <script type="text/javascript" src="../displays/gui/split.js"></script>
+<!-- Displays icons -->
+<script type="text/javascript" src="../displays/icons/bar.js"></script>
+<script type="text/javascript" src="../displays/icons/svg.js"></script>
 <!-- Rules -->
 <script type="text/javascript" src="../rules/rules.js"></script>
 <script type="text/javascript" src="../rules/goban.js"></script>
@@ -122,11 +120,11 @@
       <div id="glift_display"></div>
       <div id="extra_info"></div>
       <script type="text/javascript">
-        var iconBar = glift.displays.gui.iconBar({
+        var iconBar = glift.displays.icons.bar({
             divId: 'glift_display',
             vertMargin:  5,
-            icons:  ['chevron-left', 'refresh', 'chevron-right', 'roadmap',
-                'small-gear']
+            icons:  ['chevron-left', 'refresh', 'chevron-right', 'roadmap', 'small-gear',
+                ['question-bubble', 'undo', 'twostones']]
         });
 
         iconBar.forEachIcon(function(icon) {

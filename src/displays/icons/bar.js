@@ -1,4 +1,3 @@
-(function() {
 /**
  * Options:
  *    - divId (if need to create paper)
@@ -8,7 +7,7 @@
  *    - vertMargin (in pixels)
  *    - theme (default: DEFAULT)
  */
-glift.displays.gui.iconBar = function(options) {
+glift.displays.icons.bar = function(options) {
   var divId = options.divId,
       icons = options.icons || [],
       vertMargin = options.vertMargin || 0,
@@ -17,20 +16,46 @@ glift.displays.gui.iconBar = function(options) {
   if (divId === undefined) {
     throw "Must define an options 'divId' as an option";
   }
-  for (var i = 0; i < icons.length; i++) {
-    if (glift.displays.gui.icons[icons[i]] === undefined) {
-      throw "Icon string undefined in glift.displays.gui.icons [" +
-          icons[i] + "]";
-    }
-  }
-  return new IconBar(divId, themeName, icons, vertMargin, horzMargin).draw();
+  var modIconNames = glift.displays.icons.validateIcons(icons);
+  return new glift.displays.icons._IconBar(
+      divId, themeName, icons, modIconNames, vertMargin, horzMargin).draw();
 };
 
-var IconBar = function(divId, themeName, iconNames, vertMargin, horzMargin) {
+/**
+ * Do some basic validation on the icons.
+ *
+ * For convenience, this method returns a 1 layer deep array of icon names.  In
+ * other words, Replace arrays of icons with 'multiopen' icons.
+ */
+glift.displays.icons.validateIcons = function(icons) {
+  var iconNames = [];
+  for (var i = 0; i < icons.length; i++) {
+    if (glift.util.typeOf(icons[i]) === 'array') {
+      var sublist = icons[i]
+      for (var j = 0; j < sublist.length; j++) {
+        if (glift.displays.icons.svg[icons[j]] === undefined) {
+          throw "Icon unknown: [" + icons[j] + "]";
+        }
+      }
+      iconNames.push('multiopen')
+    } else {
+      if (glift.displays.icons.svg[icons[i]] === undefined) {
+        throw "Icon unknown: [" + icons[i] + "]";
+      }
+      iconNames.push(icons[i]);
+    }
+  }
+  return iconNames;
+};
+
+glift.displays.icons._IconBar = function(
+    divId, themeName, icons, iconNames, vertMargin, horzMargin) {
   this.divId = divId;
   this.themeName = themeName;
   this.theme = glift.themes.get(themeName);
-  this.iconNames = iconNames; // array of names
+  // Array of icons.
+  this.icons = icons;
+  this.iconNames = iconNames;
   this.vertMargin = vertMargin;
   this.horzMargin = horzMargin;
   this.newIconBboxes = {}; // initialized by draw
@@ -38,7 +63,7 @@ var IconBar = function(divId, themeName, iconNames, vertMargin, horzMargin) {
   this.tempIconIds = []; // from addTempIcon.
 };
 
-IconBar.prototype = {
+glift.displays.icons._IconBar.prototype = {
   /**
    * Draw the IconBar!
    */
@@ -49,6 +74,7 @@ IconBar.prototype = {
             .attr("width", '100%')
             .attr("height", '100%'),
         gui = glift.displays.gui,
+        svgData = glift.displays.icons.svgData,
         iconBboxes = [],
         iconStrings = [],
         indicesData = [],
@@ -57,7 +83,7 @@ IconBar.prototype = {
 
     for (var i = 0; i < this.iconNames.length; i++) {
       var name = this.iconNames[i];
-      var iconData = gui.icons[name];
+      var iconData = svgData[name];
       iconStrings.push(iconData.string);
       iconBboxes.push(glift.displays.bboxFromPts(
           point(iconData.bbox.x, iconData.bbox.y),
@@ -98,7 +124,7 @@ IconBar.prototype = {
   },
 
   addTempIcon: function(bbox, iconName, color) {
-    var icon = glift.displays.gui.icons[iconName];
+    var icon = glift.displays.icons.svg[iconName];
     var iconBbox = glift.displays.bboxFromPts(
         glift.util.point(icon.bbox.x, icon.bbox.y),
         glift.util.point(icon.bbox.x2, icon.bbox.y2));

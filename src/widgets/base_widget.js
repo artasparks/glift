@@ -39,6 +39,10 @@ glift.widgets.BaseWidget.prototype = {
     if (this.sgfOptions.icons.length > 0) {
       requiredComponents.push(comps.ICONBAR);
     }
+    if (this.sgfOptions.extraIcons &&
+        this.sgfOptions.extraIcons.length > 0) {
+      requiredComponents.push(comps.EXTRA_ICONBAR);
+    }
     var positioning = glift.displays.positionWidget(
       glift.displays.bboxFromDiv(this.wrapperDiv),
       this.displayOptions.boardRegion,
@@ -51,9 +55,19 @@ glift.widgets.BaseWidget.prototype = {
     this.displayOptions.divId = divIds.boardBoxId;
     this.display = glift.displays.create(this.displayOptions);
     divIds.commentBoxId && this._createCommentBox(divIds.commentBoxId);
-    divIds.iconBarBoxId && this._createIconBar(divIds.iconBarBoxId);
+    if (divIds.iconBarBoxId) {
+      this.iconBar = this._createIconBar(
+          divIds.iconBarBoxId, this.sgfOptions.icons);
+    }
+    if (divIds.extraIconBarBoxId) {
+      this.extraIconBar = this._createIconBar(
+          divIds.extraIconBarBoxId, this.sgfOptions.extraIcons);
+    }
+    divIds.iconBarBoxId &&
+        this._initIconActions(this.sgfOptions.icons);
+    divIds.extraIconBarBoxId &&
+        this._initIconActions(this.sgfOptions.extraIcons);
     this._initStoneActions();
-    this._initIconActions();
     this._initKeyHandlers();
     this._initProblemData();
     this.applyBoardData(this.controller.getEntireBoardState());
@@ -61,7 +75,8 @@ glift.widgets.BaseWidget.prototype = {
   },
 
   _createDivsForPositioning: function(positioning, wrapperDiv) {
-    var expectedKeys = [ 'boardBox', 'iconBarBox', 'commentBox' ];
+    var expectedKeys = [
+        'boardBox', 'iconBarBox', 'commentBox', 'extraIconBarBox' ];
     var out = {};
     var that = this;
     var createDiv = function(bbox) {
@@ -121,9 +136,8 @@ glift.widgets.BaseWidget.prototype = {
         commentBoxId, this.displayOptions.theme);
   },
 
-  _createIconBar: function(iconId) {
-    var icons = this.sgfOptions.icons;
-    this.iconBar = glift.displays.gui.iconBar({
+  _createIconBar: function(iconId, icons) {
+    return glift.displays.icons.bar({
       themeName: this.displayOptions.theme,
       divId: iconId,
       vertMargin:  5, // For good measure
@@ -132,11 +146,10 @@ glift.widgets.BaseWidget.prototype = {
     });
   },
 
-  _initIconActions: function() {
+  _initIconActions: function(icons) {
     var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
     var widget = this;
     var iconActions = this.displayOptions.iconActions;
-    var icons = this.sgfOptions.icons;
     for (var i = 0; i < icons.length; i++) {
       var iconName = icons[i];
       if (!iconActions.hasOwnProperty(iconName)) {

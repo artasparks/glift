@@ -4,15 +4,12 @@
  * the Marks are created / destroyed on demand, which is why we need a g
  * container.
  */
-glift.displays.board.markContainer =
-    function(divId, svg, boardPoints, theme) {
+glift.displays.board.markContainer = function(divId, svg, boardPoints, theme) {
   var markMapping = {};
   var svgutil = glift.displays.board.svgutil;
   var MARK_CONTAINER = glift.enums.svgElements.MARK_CONTAINER;
-
   svg.selectAll(MARK_CONTAINER).data([1]) // dummy data;
-      .enter().append("g")
-          .attr('class', MARK_CONTAINER);
+    .enter().append("g").attr('class', MARK_CONTAINER);
   return markMapping;
 };
 
@@ -34,7 +31,7 @@ glift.displays.board.addMark = function(
   var marks = glift.enums.marks;
   var coordPt = boardPoints.getCoord(pt).coordPt;
   var stoneColor = svg.select('#' + glift.displays.gui.elementId(divId, STONE, pt))
-      .attr('stone_color');
+    .attr('stone_color');
   var marksTheme = theme.stones[stoneColor].marks;
 
   // If necessary, clear out intersection lines and starpoints.  This only applies

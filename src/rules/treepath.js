@@ -23,7 +23,7 @@
  * 0.1     becomes [1]
  * 53      becomes [0,0,0,...,0] (53 times)
  * 2.3     becomes [0,0,3]
- * 0.0.0.0 becomes [0,0,0,0]
+ * 0.0.0.0 becomes [0,0,0]
  * 2.3-4.1 becomes [0,0,3,0,1]
  */
 glift.rules.treepath = {

@@ -4,9 +4,9 @@
 glift.widgets.options.BOARD_EDITOR = {
   stoneClick: function(event, widget, pt) {},
 
-  icons: ['cross', 'check', 'cross', 'check', 'cross', 'check'],
+  icons: ['start', 'arrowleft', 'arrowright', 'twostones', 'cross'],
 
-  extraIcons: ['check', 'cross', 'check', 'cross', 'check', 'cross'],
+  // extraIcons: ['twostones', 'cross', 'check', 'cross', 'check'],
 
   problemConditions: {},
 

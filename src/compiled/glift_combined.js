@@ -340,12 +340,14 @@ glift.enums = {
     CORRECT_VARIATIONS_PROBLEM: 'CORRECT_VARIATIONS_PROBLEM',
     EXAMPLE: 'EXAMPLE',
     GAME_VIEWER: 'GAME_VIEWER',
-    STANDARD_PROBLEM: 'STANDARD_PROBLEM'
+    STANDARD_PROBLEM: 'STANDARD_PROBLEM',
+    BOARD_EDITOR: 'BOARD_EDITOR'
   },
 
   boardComponents: {
     BOARD: 'BOARD',
     COMMENT_BOX: 'COMMENT_BOX',
+    EXTRA_ICONBAR: 'EXTRA_ICONBAR',
     ICONBAR: 'ICONBAR'
   }
 };
@@ -2382,18 +2384,27 @@ glift.displays.positionWidgetVert = function(
   var boardBase = undefined;
   var iconBarBase = undefined;
   var commentBase = undefined;
+  var extraIconBarBase = undefined;
   if (boardComponentsMap.hasOwnProperty(comps.COMMENT_BOX) &&
+      boardComponentsMap.hasOwnProperty(comps.ICONBAR) &&
+      boardComponentsMap.hasOwnProperty(comps.EXTRA_ICONBAR)) {
+    var splits = divBox.hSplit([0.6, 0.2, 0.1]);
+    boardBase = splits[0];
+    commentBase = splits[1];
+    iconBarBase = splits[2];
+    extraIconBarBase = splits[3];
+  } else if (boardComponentsMap.hasOwnProperty(comps.COMMENT_BOX) &&
       boardComponentsMap.hasOwnProperty(comps.ICONBAR)) {
-    var splits = divBox.hSplit([0.7, 0.2, 0.1]);
+    var splits = divBox.hSplit([0.7, 0.2]);
     boardBase = splits[0];
     commentBase = splits[1];
     iconBarBase = splits[2];
   } else if (boardComponentsMap.hasOwnProperty(comps.ICONBAR)) {
-    var splits = divBox.hSplit([0.9, 0.1]);
+    var splits = divBox.hSplit([0.9]);
     boardBase = splits[0];
     iconBarBase = splits[1];
   } else if (boardComponentsMap.hasOwnProperty(comps.COMMENT_BOX)) {
-    var splits = divBox.hSplit([0.8, 0.2]);
+    var splits = divBox.hSplit([0.8]);
     boardBase = splits[0];
     commentBase = splits[1];
   } else {
@@ -2419,9 +2430,22 @@ glift.displays.positionWidgetVert = function(
     if (outBoxes.commentBox) {
       var bottom = outBoxes.commentBox.bottom();
     } else {
-      var bottom = outBoxes.board.bottom();
+      var bottom = outBoxes.boardBox.bottom();
     }
     outBoxes.iconBarBox = glift.displays.bbox(
+        point(boardLeft, bottom), boardWidth, barHeight);
+  }
+  if (extraIconBarBase) {
+    var bb = outBoxes.boardBase;
+    var barHeight = extraIconBarBase.height();
+    var boardLeft = board.left();
+    var boardWidth = board.width();
+    if (outBoxes.iconBarBox) {
+      var bottom = outBoxes.iconBarBox.bottom();
+    } else {
+      var bottom = outBoxes.boardBox.bottom();
+    }
+    outBoxes.extraIconBarBox = glift.displays.bbox(
         point(boardLeft, bottom), boardWidth, barHeight);
   }
   return outBoxes;
@@ -2488,6 +2512,7 @@ glift.displays.positionWidgetHorz = function(
   // boardWidth), so we just need to partition the box.
   var splits = divBox.vSplit([splitPercentage]);
   outBoxes.leftSide = splits[0];
+
   // Find out what the resized box look like now.
   var newResizedBox = glift.displays.getResizedBox(
       splits[0], cropbox, aligns.RIGHT);
@@ -2499,10 +2524,16 @@ glift.displays.positionWidgetHorz = function(
       point(rightSide.botRight().x(), newResizedBox.botRight().y()));
   if (rightSide.width() > (0.75 * newResizedBox.width())) {
     baseCommentBox = baseCommentBox.vSplit(
-      [0.75 * newResizedBox.width() / baseCommentBox.width()])[0];
+        [0.75 * newResizedBox.width() / baseCommentBox.width()])[0];
   }
 
-  if (boardComponentsMap.hasOwnProperty(comps.ICONBAR)) {
+  if (boardComponentsMap.hasOwnProperty(comps.ICONBAR) &&
+      boardComponentsMap.hasOwnProperty(comps.EXTRA_ICONBAR)) {
+    var finishedBoxes = baseCommentBox.hSplit([0.8, 0.1]);
+    outBoxes.commentBox = finishedBoxes[0];
+    outBoxes.iconBarBox = finishedBoxes[1];
+    outBoxes.extraIconBarBox = finishedBoxes[2];
+  } else if (boardComponentsMap.hasOwnProperty(comps.ICONBAR)) {
     var finishedBoxes = baseCommentBox.hSplit([0.9]);
     outBoxes.commentBox = finishedBoxes[0];
     outBoxes.iconBarBox = finishedBoxes[1];
@@ -2916,15 +2947,12 @@ glift.displays.board.intersectionLine = function(
  * the Marks are created / destroyed on demand, which is why we need a g
  * container.
  */
-glift.displays.board.markContainer =
-    function(divId, svg, boardPoints, theme) {
+glift.displays.board.markContainer = function(divId, svg, boardPoints, theme) {
   var markMapping = {};
   var svgutil = glift.displays.board.svgutil;
   var MARK_CONTAINER = glift.enums.svgElements.MARK_CONTAINER;
-
   svg.selectAll(MARK_CONTAINER).data([1]) // dummy data;
-      .enter().append("g")
-          .attr('class', MARK_CONTAINER);
+    .enter().append("g").attr('class', MARK_CONTAINER);
   return markMapping;
 };
 
@@ -2946,7 +2974,7 @@ glift.displays.board.addMark = function(
   var marks = glift.enums.marks;
   var coordPt = boardPoints.getCoord(pt).coordPt;
   var stoneColor = svg.select('#' + glift.displays.gui.elementId(divId, STONE, pt))
-      .attr('stone_color');
+    .attr('stone_color');
   var marksTheme = theme.stones[stoneColor].marks;
 
   // If necessary, clear out intersection lines and starpoints.  This only applies
@@ -5504,23 +5532,6 @@ L: "L", LB: "LB", LN: "LN", LT: "LT", M: "M", MA: "MA", MN: "MN", N: "N", OB:
  * for testing logic as distinct from UI changes.
  */
 glift.controllers = {};
-/**
- * The all correct problem controller encapsulates the idea of trying to get
- * everything right about a problem.  Every branch in the tree is thus
- * considered 'correct'.  This is useful for practicing joseki.
- */
-glift.controllers.allCorrectProblem = function(sgfOptions) {
-  var controllers = glift.controllers;
-  var baseController = glift.util.beget(controllers.base());
-  var newController = glift.util.setMethods(baseController,
-          glift.controllers.AllCorrectProblemMethods);
-  newController.initOptions(sgfOptions);
-  return newController;
-};
-
-glift.controllers.AllCorrectProblemMethods = {
-
-};
 (function() {
 glift.controllers.base = function() {
   return new BaseController();
@@ -5779,6 +5790,14 @@ BaseController.prototype = {
   }
 };
 })();
+glift.controllers.boardEditor = function(sgfOptions) {
+  var controllers = glift.controllers;
+  var baseController = glift.util.beget(controllers.base());
+  // var newController = glift.util.setMethods(baseController,
+          // glift.controllers.StaticProblemMethods);
+  baseController.initOptions(sgfOptions);
+  return baseController;
+};
 (function() {
 /**
  * A GameViewer encapsulates the idea of traversing a read-only SGF.
@@ -6221,6 +6240,10 @@ glift.widgets.BaseWidget.prototype = {
     if (this.sgfOptions.icons.length > 0) {
       requiredComponents.push(comps.ICONBAR);
     }
+    if (this.sgfOptions.extraIcons &&
+        this.sgfOptions.extraIcons.length > 0) {
+      requiredComponents.push(comps.EXTRA_ICONBAR);
+    }
     var positioning = glift.displays.positionWidget(
       glift.displays.bboxFromDiv(this.wrapperDiv),
       this.displayOptions.boardRegion,
@@ -6233,9 +6256,19 @@ glift.widgets.BaseWidget.prototype = {
     this.displayOptions.divId = divIds.boardBoxId;
     this.display = glift.displays.create(this.displayOptions);
     divIds.commentBoxId && this._createCommentBox(divIds.commentBoxId);
-    divIds.iconBarBoxId && this._createIconBar(divIds.iconBarBoxId);
+    if (divIds.iconBarBoxId) {
+      this.iconBar = this._createIconBar(
+          divIds.iconBarBoxId, this.sgfOptions.icons);
+    }
+    if (divIds.extraIconBarBoxId) {
+      this.extraIconBar = this._createIconBar(
+          divIds.extraIconBarBoxId, this.sgfOptions.extraIcons);
+    }
+    divIds.iconBarBoxId &&
+        this._initIconActions(this.sgfOptions.icons);
+    divIds.extraIconBarBoxId &&
+        this._initIconActions(this.sgfOptions.extraIcons);
     this._initStoneActions();
-    this._initIconActions();
     this._initKeyHandlers();
     this._initProblemData();
     this.applyBoardData(this.controller.getEntireBoardState());
@@ -6243,11 +6276,14 @@ glift.widgets.BaseWidget.prototype = {
   },
 
   _createDivsForPositioning: function(positioning, wrapperDiv) {
-    var expectedKeys = [ 'boardBox', 'iconBarBox', 'commentBox' ];
+    var expectedKeys = [
+        'boardBox', 'iconBarBox', 'commentBox', 'extraIconBarBox' ];
     var out = {};
+    var that = this;
     var createDiv = function(bbox) {
       var newId = 'glift_internal_div_' + glift.util.idGenerator.next();
       $('#' + wrapperDiv).append('<div id="' + newId + '"></div>');
+      that._setNotSelectable(newId);
       var cssObj = {
         top: bbox.top(),
         left: bbox.left(),
@@ -6301,9 +6337,8 @@ glift.widgets.BaseWidget.prototype = {
         commentBoxId, this.displayOptions.theme);
   },
 
-  _createIconBar: function(iconId) {
-    var icons = this.sgfOptions.icons;
-    this.iconBar = glift.displays.gui.iconBar({
+  _createIconBar: function(iconId, icons) {
+    return glift.displays.gui.iconBar({
       themeName: this.displayOptions.theme,
       divId: iconId,
       vertMargin:  5, // For good measure
@@ -6312,11 +6347,10 @@ glift.widgets.BaseWidget.prototype = {
     });
   },
 
-  _initIconActions: function() {
+  _initIconActions: function(icons) {
     var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
     var widget = this;
     var iconActions = this.displayOptions.iconActions;
-    var icons = this.sgfOptions.icons;
     for (var i = 0; i < icons.length; i++) {
       var iconName = icons[i];
       if (!iconActions.hasOwnProperty(iconName)) {
@@ -6333,7 +6367,7 @@ glift.widgets.BaseWidget.prototype = {
           d3.select('#' + id)
               .attr('fill', widget.iconBar.theme.icons.DEFAULT.fill);
         };
-      iconActions[iconName].touchend = iconActions[iconName].touchend ||
+      iconActions[iconName].touchstart = iconActions[iconName].touchstart ||
         function(event, widget, name) {
           event.preventDefault && event.preventDefault();
           event.stopPropagation && event.stopPropagation();
@@ -6453,11 +6487,11 @@ glift.widgets.BaseWidget.prototype = {
   destroy: function() {
     $('#' + this.wrapperDiv).empty();
     this.keyHandlerFunc !== undefined
-      && $('body').unbind('keydown', this.keyHandlerFunc);
+        && $('body').unbind('keydown', this.keyHandlerFunc);
     this.keyHandlerFunc = undefined;
     this.display = undefined;
   }
-}
+};
 /**
  * The Widget Manager manages state across widgets.  When widgets are created,
  * they are always created in the context of a Widget Manager.
@@ -6788,6 +6822,24 @@ glift.widgets.options.baseOptions = {
       ARROW_RIGHT: 'iconActions.chevron-right.click'
     },
 
+    /**
+     * For all correct, there are multiple correct answers that a user must get.
+     * This allows us to specify (in ms) how long the user has until the problem
+     * is automatically reset.
+     */
+    correctVariationsResetTime: undefined,
+
+    /**
+     * You can, if you wish, override the total number of correct variations
+     * that a user must get correct.
+     */
+    totalCorrectVariationsOverride: undefined,
+
+    /**
+     * The extra icons.  This will
+     */
+    extraIcons: undefined,
+
     //-------------------------------------------------------------------------
     // These options must always be overriden by the widget type overrides.
     //
@@ -6818,20 +6870,7 @@ glift.widgets.options.baseOptions = {
     /**
      * The action that is performed when a sure clicks on an intersection.
      */
-    stoneClick: undefined,
-
-    /**
-     * For all correct, there are multiple correct answers that a user must get.
-     * This allows us to specify (in ms) how long the user has until the problem
-     * is automatically reset.
-     */
-    correctVariationsResetTime: undefined,
-
-    /**
-     * You can, if you wish, override the total number of correct variations
-     * that a user must get correct.
-     */
-    totalCorrectVariationsOverride: undefined
+    stoneClick: undefined
   },
 
   //----------------------------------------------------------------------
@@ -7037,6 +7076,22 @@ glift.widgets.options.baseOptions = {
       }
     }
   }
+};
+/**
+ * Board Editor options.
+ */
+glift.widgets.options.BOARD_EDITOR = {
+  stoneClick: function(event, widget, pt) {},
+
+  icons: ['start', 'arrowleft', 'arrowright', 'twostones', 'cross'],
+
+  // extraIcons: ['twostones', 'cross', 'check', 'cross', 'check'],
+
+  problemConditions: {},
+
+  showVariations: glift.enums.showVariations.ALWAYS,
+
+  controllerFunc: glift.controllers.boardEditor
 };
 /**
  * Additional Options for the GameViewers

@@ -1,11 +1,11 @@
 /**
  * Find the optimal positioning of the widget. Creates divs for all the
  * necessary elements and then returns the divIds. Specifically, returns:
- * {
- *  commentBox: ...
- *  goBox: ...
- *  iconBox: ...
- * }
+ *  {
+ *    commentBox: ...
+ *    goBox: ...
+ *    iconBox: ...
+ *  }
  */
 glift.displays.positionWidget = function(
     divBox, boardRegion, ints, boardComponentsList) {
@@ -25,7 +25,7 @@ glift.displays.positionWidget = function(
   } else if (divBox.hwRatio() < 0.45 && longBoxRegions[boardRegion]) {
     return glift.displays.positionWidgetHorz(
         divBox, cropbox, boardRegion, bcMap);
-  } else if (divBox.hwRatio() < 0.667 && !longBoxRegions[boardRegion]) {
+  } else if (divBox.hwRatio() < 0.600 && !longBoxRegions[boardRegion]) {
     // In other words, the width == 1.5 * height;
     // Also: Requires a comment box
     return glift.displays.positionWidgetHorz(
@@ -47,18 +47,27 @@ glift.displays.positionWidgetVert = function(
   var boardBase = undefined;
   var iconBarBase = undefined;
   var commentBase = undefined;
+  var extraIconBarBase = undefined;
   if (boardComponentsMap.hasOwnProperty(comps.COMMENT_BOX) &&
+      boardComponentsMap.hasOwnProperty(comps.ICONBAR) &&
+      boardComponentsMap.hasOwnProperty(comps.EXTRA_ICONBAR)) {
+    var splits = divBox.hSplit([0.6, 0.2, 0.1]);
+    boardBase = splits[0];
+    commentBase = splits[1];
+    iconBarBase = splits[2];
+    extraIconBarBase = splits[3];
+  } else if (boardComponentsMap.hasOwnProperty(comps.COMMENT_BOX) &&
       boardComponentsMap.hasOwnProperty(comps.ICONBAR)) {
-    var splits = divBox.hSplit([0.7, 0.2, 0.1]);
+    var splits = divBox.hSplit([0.7, 0.2]);
     boardBase = splits[0];
     commentBase = splits[1];
     iconBarBase = splits[2];
   } else if (boardComponentsMap.hasOwnProperty(comps.ICONBAR)) {
-    var splits = divBox.hSplit([0.9, 0.1]);
+    var splits = divBox.hSplit([0.9]);
     boardBase = splits[0];
     iconBarBase = splits[1];
   } else if (boardComponentsMap.hasOwnProperty(comps.COMMENT_BOX)) {
-    var splits = divBox.hSplit([0.8, 0.2]);
+    var splits = divBox.hSplit([0.8]);
     boardBase = splits[0];
     commentBase = splits[1];
   } else {
@@ -84,9 +93,22 @@ glift.displays.positionWidgetVert = function(
     if (outBoxes.commentBox) {
       var bottom = outBoxes.commentBox.bottom();
     } else {
-      var bottom = outBoxes.board.bottom();
+      var bottom = outBoxes.boardBox.bottom();
     }
     outBoxes.iconBarBox = glift.displays.bbox(
+        point(boardLeft, bottom), boardWidth, barHeight);
+  }
+  if (extraIconBarBase) {
+    var bb = outBoxes.boardBase;
+    var barHeight = extraIconBarBase.height();
+    var boardLeft = board.left();
+    var boardWidth = board.width();
+    if (outBoxes.iconBarBox) {
+      var bottom = outBoxes.iconBarBox.bottom();
+    } else {
+      var bottom = outBoxes.boardBox.bottom();
+    }
+    outBoxes.extraIconBarBox = glift.displays.bbox(
         point(boardLeft, bottom), boardWidth, barHeight);
   }
   return outBoxes;
@@ -153,6 +175,7 @@ glift.displays.positionWidgetHorz = function(
   // boardWidth), so we just need to partition the box.
   var splits = divBox.vSplit([splitPercentage]);
   outBoxes.leftSide = splits[0];
+
   // Find out what the resized box look like now.
   var newResizedBox = glift.displays.getResizedBox(
       splits[0], cropbox, aligns.RIGHT);
@@ -164,10 +187,16 @@ glift.displays.positionWidgetHorz = function(
       point(rightSide.botRight().x(), newResizedBox.botRight().y()));
   if (rightSide.width() > (0.75 * newResizedBox.width())) {
     baseCommentBox = baseCommentBox.vSplit(
-      [0.75 * newResizedBox.width() / baseCommentBox.width()])[0];
+        [0.75 * newResizedBox.width() / baseCommentBox.width()])[0];
   }
 
-  if (boardComponentsMap.hasOwnProperty(comps.ICONBAR)) {
+  if (boardComponentsMap.hasOwnProperty(comps.ICONBAR) &&
+      boardComponentsMap.hasOwnProperty(comps.EXTRA_ICONBAR)) {
+    var finishedBoxes = baseCommentBox.hSplit([0.8, 0.1]);
+    outBoxes.commentBox = finishedBoxes[0];
+    outBoxes.iconBarBox = finishedBoxes[1];
+    outBoxes.extraIconBarBox = finishedBoxes[2];
+  } else if (boardComponentsMap.hasOwnProperty(comps.ICONBAR)) {
     var finishedBoxes = baseCommentBox.hSplit([0.9]);
     outBoxes.commentBox = finishedBoxes[0];
     outBoxes.iconBarBox = finishedBoxes[1];

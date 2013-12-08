@@ -105,6 +105,7 @@ glift.enums = {
   boardComponents: {
     BOARD: 'BOARD',
     COMMENT_BOX: 'COMMENT_BOX',
+    EXTRA_ICONBAR: 'EXTRA_ICONBAR',
     ICONBAR: 'ICONBAR'
   }
 };

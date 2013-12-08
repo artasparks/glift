@@ -16,6 +16,7 @@ FILES_TO_AUTOGEN = {
     # Name / Add Tests to Imports
     'htmltests/AjaxProblemTester.html': False,
     'htmltests/BaseWidgetTest.html': False,
+    'htmltests/BoardEditorTester.html': False,
     'htmltests/BboxFinder.html': False,
     'htmltests/GameViewerTester.html': False,
     'htmltests/IconBarTester.html': False,
@@ -41,7 +42,8 @@ DIR_ORDER = [
     'displays',
     'displays/board',
     'displays/gui',
-    # Rules and display are not linked
+    'displays/icons',
+    # Rules and display are not linked (woo!)
     'rules',
     'sgf',
     'controllers',

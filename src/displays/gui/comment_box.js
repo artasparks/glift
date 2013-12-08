@@ -21,16 +21,25 @@ CommentBox.prototype = {
     var borderWidth = 1;
     var boardBorder = this.theme.board['stroke-width'];
     // var fontSize = width / 25 < 15 ? 15 : width / 25;
-    var fontSize = commentBoxHeight * .13 < 14 ? 14 : commentBoxHeight * .13;
-    fontSize = fontSize > 16 ? 16 : fontSize;
+    var fontSize = 16;
+    // commentBoxHeight * .13 < 14 ? 14 : commentBoxHeight * .13;
+    // fontSize = fontSize > 16 ? 16 : fontSize;
     this.commentBoxObj.css({
       // TODO(kashomon): Get the theme info from the theme
       background: '#CCCCFF',
       border: borderWidth + 'px solid',
       margin: 'auto',
       'font-family': 'Baskerville',
-      overflow: 'auto',
+      'overflow-y': 'auto',
       'font-size': fontSize,
+
+      // prevent Chrome/web kit from resizing the text (font boosting)
+      // ... which doesn't work for me, unfortunately.
+      // '-webkit-text-size-adjust': 'none',
+      // 'min-height': '1px',
+      // 'max-height': '5000em',
+      // 'max-height': '1000000px',
+
       // Prevent padding from affecting width
       '-webkit-box-sizing': 'border-box', /* Safari/Chrome, other WebKit */
       '-moz-box-sizing': 'border-box',    /* Firefox, other Gecko */

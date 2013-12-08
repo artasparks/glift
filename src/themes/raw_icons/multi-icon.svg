@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   width="744.09448"
+   height="1052.3622"
+   id="svg2998">
+  <defs
+     id="defs3000">
+    <inkscape:path-effect
+       effect="skeletal"
+       id="path-effect3046" />
+    <inkscape:path-effect
+       effect="skeletal"
+       id="path-effect3042" />
+    <inkscape:path-effect
+       effect="skeletal"
+       id="path-effect3036" />
+    <inkscape:path-effect
+       effect="spiro"
+       id="path-effect3034" />
+    <inkscape:path-effect
+       effect="skeletal"
+       id="path-effect3030" />
+    <inkscape:path-effect
+       effect="spiro"
+       id="path-effect3028" />
+    <inkscape:path-effect
+       effect="skeletal"
+       id="path-effect3024" />
+    <inkscape:path-effect
+       effect="spiro"
+       id="path-effect3022" />
+  </defs>
+  <metadata
+     id="metadata3003">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     id="layer1">
+    <rect
+       width="65.04409"
+       height="63.143581"
+       rx="10.214529"
+       ry="9.9160738"
+       x="60.50021"
+       y="37.863392"
+       id="rect3008"
+       style="fill:none;stroke:#000000;stroke-width:1.0064193;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+    <rect
+       width="58.964722"
+       height="56.85672"
+       rx="9.2598248"
+       ry="8.9287853"
+       x="63.521641"
+       y="40.983826"
+       id="rect3016"
+       style="fill:none;stroke:#000000;stroke-width:0.90928012;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+    <path
+       d="m 130,60.862183 6.5,13 6.5,-13 z"
+       id="path3048"
+       style="fill:none;stroke:#000000;stroke-width:1.29999995px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+  </g>
+</svg>

@@ -1,6 +1,6 @@
 /**
  * The new Glift SGF parser!
- * Takes a string, returns a movetree.
+ * Takes a string, returns a movetree.  Probably needs refactoring.
  */
 glift.sgf.parse = function(sgfString) {
   var states = {
@@ -55,13 +55,6 @@ glift.sgf.parse = function(sgfString) {
     }
   };
 
-  var nextChar = function() {
-    i++;
-    i === sgfString.length ||
-        perror("Reached end of input, but expected a character.");
-    return sgfString.charAt(i);
-  };
-
   (function() {
     // Run everything inside an anonymous function so we can use 'return' as a
     // fullstop break.
@@ -69,16 +62,17 @@ glift.sgf.parse = function(sgfString) {
       colNum++; // This means that columns are 1 indexed.
       curchar = sgfString.charAt(i);
 
-      if (curchar === "\n" && curstate !== states.PROP_DATA) {
+      if (curchar === "\n" ) {
         lineNum++;
         colNum = 0;
-        continue;
+        if (curstate !== states.PROP_DATA) {
+          continue;
+        }
       }
-      // glift.util.logz('i[' + i + '] -- ' + statesToString[curstate]
-      //    + ' -- char[' + char + ']');
+
       switch (curstate) {
         case states.BEGINNING:
-          if (curchar === syn.LPAREN || wsRegex.test(curchar)) {
+          if (curchar === syn.LPAREN) {
             branchMoveNums.push(movetree.node().getNodeNum()); // Should Be 0.
           } else if (curchar === syn.SCOLON) {
             curstate = states.BETWEEN; // The SGF Begins!

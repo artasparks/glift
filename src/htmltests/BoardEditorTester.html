@@ -1,9 +1,10 @@
 <html>
 <head>
 
-<title> BaseWidgetTest </title>
+<title> BoardEditorTester </title>
 <script type="text/javascript" src="../libs/jquery-1.10.2.min.js"></script>
 <script type="text/javascript" src="../testdata/sgfs.js"></script>
+<script type="text/javascript" src="../testdata/gogameguru_commentary.js"></script>
 <script type="text/javascript" src="../libs/d3.min.js"></script>
 
 <!-- AUTO-GEN-DEPS -->
@@ -93,7 +94,6 @@
 <script type="text/javascript" src="../widgets/options/standard_problem_options.js"></script>
 
 <!-- END-AUTO-GEN-DEPS -->
-
     <style>
       * {
         margin: 0;
@@ -112,12 +112,15 @@
       <div id="glift_display1"></div>
       <div id="extra_info"></div>
       <script type="text/javascript">
-        var basicWidget = glift.widgets.create({
-          sgfString: testdata.sgfs.complexproblem,
+        var boardEditor = glift.widgets.create({
+          sgf: {},
+          theme: 'DEPTH',
+          goBoardBackground: '../themes/assets/bambootile_warm.jpg',
           divId: "glift_display1",
-          sgfOptions: {
-            widgetType: 'STANDARD_PROBLEM'
-          }
+          sgfDefaults: { widgetType: 'BOARD_EDITOR' }
+        });
+        $(window).resize(function() {
+          boardEditor.destroy().draw();
         });
       </script>
     </div>
