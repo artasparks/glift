@@ -94,13 +94,16 @@ glift.enums = {
     MORE_THAN_ONE: 'MORE_THAN_ONE'
   },
 
+  /**
+   * Widget types.  These tell the widget manager what widgets to create.
+   */
   widgetTypes: {
     CORRECT_VARIATIONS_PROBLEM: 'CORRECT_VARIATIONS_PROBLEM',
     EXAMPLE: 'EXAMPLE',
     GAME_VIEWER: 'GAME_VIEWER',
+    REDUCED_GAME_VIEWER: 'REDUCED_GAME_VIEWER',
     STANDARD_PROBLEM: 'STANDARD_PROBLEM',
-    BOARD_EDITOR: 'BOARD_EDITOR',
-    REDUCED_BOARD_EDITOR: 'REDUCED_BOARD_EDITOR'
+    BOARD_EDITOR: 'BOARD_EDITOR'
   },
 
   boardComponents: {
