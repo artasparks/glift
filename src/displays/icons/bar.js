@@ -55,6 +55,7 @@ glift.displays.icons._IconBar = function(
   this.theme = glift.themes.get(themeName);
   // Array of icons.
   this.icons = icons;
+  // Array of the icon names.
   this.iconNames = iconNames;
   this.vertMargin = vertMargin;
   this.horzMargin = horzMargin;
@@ -74,7 +75,7 @@ glift.displays.icons._IconBar.prototype = {
             .attr("width", '100%')
             .attr("height", '100%'),
         gui = glift.displays.gui,
-        svgData = glift.displays.icons.svgData,
+        svgData = glift.displays.icons.svg,
         iconBboxes = [],
         iconStrings = [],
         indicesData = [],
@@ -252,5 +253,3 @@ glift.displays.icons._IconBar.prototype = {
     return this;
   }
 };
-
-})();

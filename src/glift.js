@@ -13,9 +13,9 @@ glift.global = {
    * Semantic versioning is used to determine the version.
    * See: http://semver.org/
    *
-   * Currently in beta.
+   * Currently in alpha.
    */
-  version: '0.8.0',
+  version: '0.8.1',
   /**
    * Whether or not fast click is enabled, via Glift.
    */
