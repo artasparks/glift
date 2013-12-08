@@ -13,22 +13,9 @@ glift.global = {
    * Semantic versioning is used to determine the version.
    * See: http://semver.org/
    *
-   * Currently in beta.
+   * Currently in alpha.
    */
-  version: '0.8.0',
-  /**
-   * Whether or not fast click is enabled, via Glift.
-   */
-  fastClickEnabled: false,
-  /**
-   * Enable fast click.
-   */
-  enableFastClick: function() {
-    if (!glift.global.fastClickEnabled) {
-      FastClick.attach(document.body);
-      glift.global.fastClickEnabled = true;
-    }
-  },
+  version: '0.8.2',
   debugMode: false,
   // Options for performanceDebugLevel: none, fine, info
   performanceDebugLevel: 'none',
@@ -336,10 +323,14 @@ glift.enums = {
     MORE_THAN_ONE: 'MORE_THAN_ONE'
   },
 
+  /**
+   * Widget types.  These tell the widget manager what widgets to create.
+   */
   widgetTypes: {
     CORRECT_VARIATIONS_PROBLEM: 'CORRECT_VARIATIONS_PROBLEM',
     EXAMPLE: 'EXAMPLE',
     GAME_VIEWER: 'GAME_VIEWER',
+    REDUCED_GAME_VIEWER: 'REDUCED_GAME_VIEWER',
     STANDARD_PROBLEM: 'STANDARD_PROBLEM',
     BOARD_EDITOR: 'BOARD_EDITOR'
   },
@@ -361,771 +352,6 @@ glift.errors.ParseError = function(message) {
 glift.errors.ParseError.prototype = new Error();
 
 })();
-/**
- * @preserve FastClick: polyfill to remove click delays on browsers with touch UIs.
- *
- * @version 0.6.11
- * @codingstandard ftlabs-jsv2
- * @copyright The Financial Times Limited [All Rights Reserved]
- * @license MIT License (see LICENSE.txt)
- */
-
-/*jslint browser:true, node:true*/
-/*global define, Event, Node*/
-
-
-/**
- * Instantiate fast-clicking listeners on the specificed layer.
- *
- * @constructor
- * @param {Element} layer The layer to listen on
- */
-function FastClick(layer) {
-  'use strict';
-  var oldOnClick, self = this;
-
-
-  /**
-   * Whether a click is currently being tracked.
-   *
-   * @type boolean
-   */
-  this.trackingClick = false;
-
-
-  /**
-   * Timestamp for when when click tracking started.
-   *
-   * @type number
-   */
-  this.trackingClickStart = 0;
-
-
-  /**
-   * The element being tracked for a click.
-   *
-   * @type EventTarget
-   */
-  this.targetElement = null;
-
-
-  /**
-   * X-coordinate of touch start event.
-   *
-   * @type number
-   */
-  this.touchStartX = 0;
-
-
-  /**
-   * Y-coordinate of touch start event.
-   *
-   * @type number
-   */
-  this.touchStartY = 0;
-
-
-  /**
-   * ID of the last touch, retrieved from Touch.identifier.
-   *
-   * @type number
-   */
-  this.lastTouchIdentifier = 0;
-
-
-  /**
-   * Touchmove boundary, beyond which a click will be cancelled.
-   *
-   * @type number
-   */
-  this.touchBoundary = 10;
-
-
-  /**
-   * The FastClick layer.
-   *
-   * @type Element
-   */
-  this.layer = layer;
-
-  if (!layer || !layer.nodeType) {
-    throw new TypeError('Layer must be a document node');
-  }
-
-  /** @type function() */
-  this.onClick = function() { return FastClick.prototype.onClick.apply(self, arguments); };
-
-  /** @type function() */
-  this.onMouse = function() { return FastClick.prototype.onMouse.apply(self, arguments); };
-
-  /** @type function() */
-  this.onTouchStart = function() { return FastClick.prototype.onTouchStart.apply(self, arguments); };
-
-  /** @type function() */
-  this.onTouchMove = function() { return FastClick.prototype.onTouchMove.apply(self, arguments); };
-
-  /** @type function() */
-  this.onTouchEnd = function() { return FastClick.prototype.onTouchEnd.apply(self, arguments); };
-
-  /** @type function() */
-  this.onTouchCancel = function() { return FastClick.prototype.onTouchCancel.apply(self, arguments); };
-
-  if (FastClick.notNeeded(layer)) {
-    return;
-  }
-
-  // Set up event handlers as required
-  if (this.deviceIsAndroid) {
-    layer.addEventListener('mouseover', this.onMouse, true);
-    layer.addEventListener('mousedown', this.onMouse, true);
-    layer.addEventListener('mouseup', this.onMouse, true);
-  }
-
-  layer.addEventListener('click', this.onClick, true);
-  layer.addEventListener('touchstart', this.onTouchStart, false);
-  layer.addEventListener('touchmove', this.onTouchMove, false);
-  layer.addEventListener('touchend', this.onTouchEnd, false);
-  layer.addEventListener('touchcancel', this.onTouchCancel, false);
-
-  // Hack is required for browsers that don't support Event#stopImmediatePropagation (e.g. Android 2)
-  // which is how FastClick normally stops click events bubbling to callbacks registered on the FastClick
-  // layer when they are cancelled.
-  if (!Event.prototype.stopImmediatePropagation) {
-    layer.removeEventListener = function(type, callback, capture) {
-      var rmv = Node.prototype.removeEventListener;
-      if (type === 'click') {
-        rmv.call(layer, type, callback.hijacked || callback, capture);
-      } else {
-        rmv.call(layer, type, callback, capture);
-      }
-    };
-
-    layer.addEventListener = function(type, callback, capture) {
-      var adv = Node.prototype.addEventListener;
-      if (type === 'click') {
-        adv.call(layer, type, callback.hijacked || (callback.hijacked = function(event) {
-          if (!event.propagationStopped) {
-            callback(event);
-          }
-        }), capture);
-      } else {
-        adv.call(layer, type, callback, capture);
-      }
-    };
-  }
-
-  // If a handler is already declared in the element's onclick attribute, it will be fired before
-  // FastClick's onClick handler. Fix this by pulling out the user-defined handler function and
-  // adding it as listener.
-  if (typeof layer.onclick === 'function') {
-
-    // Android browser on at least 3.2 requires a new reference to the function in layer.onclick
-    // - the old one won't work if passed to addEventListener directly.
-    oldOnClick = layer.onclick;
-    layer.addEventListener('click', function(event) {
-      oldOnClick(event);
-    }, false);
-    layer.onclick = null;
-  }
-}
-
-
-/**
- * Android requires exceptions.
- *
- * @type boolean
- */
-FastClick.prototype.deviceIsAndroid = navigator.userAgent.indexOf('Android') > 0;
-
-
-/**
- * iOS requires exceptions.
- *
- * @type boolean
- */
-FastClick.prototype.deviceIsIOS = /iP(ad|hone|od)/.test(navigator.userAgent);
-
-
-/**
- * iOS 4 requires an exception for select elements.
- *
- * @type boolean
- */
-FastClick.prototype.deviceIsIOS4 = FastClick.prototype.deviceIsIOS && (/OS 4_\d(_\d)?/).test(navigator.userAgent);
-
-
-/**
- * iOS 6.0(+?) requires the target element to be manually derived
- *
- * @type boolean
- */
-FastClick.prototype.deviceIsIOSWithBadTarget = FastClick.prototype.deviceIsIOS && (/OS ([6-9]|\d{2})_\d/).test(navigator.userAgent);
-
-
-/**
- * Determine whether a given element requires a native click.
- *
- * @param {EventTarget|Element} target Target DOM element
- * @returns {boolean} Returns true if the element needs a native click
- */
-FastClick.prototype.needsClick = function(target) {
-  'use strict';
-  switch (target.nodeName.toLowerCase()) {
-
-  // Don't send a synthetic click to disabled inputs (issue #62)
-  case 'button':
-  case 'select':
-  case 'textarea':
-    if (target.disabled) {
-      return true;
-    }
-
-    break;
-  case 'input':
-
-    // File inputs need real clicks on iOS 6 due to a browser bug (issue #68)
-    if ((this.deviceIsIOS && target.type === 'file') || target.disabled) {
-      return true;
-    }
-
-    break;
-  case 'label':
-  case 'video':
-    return true;
-  }
-
-  return (/\bneedsclick\b/).test(target.className);
-};
-
-
-/**
- * Determine whether a given element requires a call to focus to simulate click into element.
- *
- * @param {EventTarget|Element} target Target DOM element
- * @returns {boolean} Returns true if the element requires a call to focus to simulate native click.
- */
-FastClick.prototype.needsFocus = function(target) {
-  'use strict';
-  switch (target.nodeName.toLowerCase()) {
-  case 'textarea':
-  case 'select':
-    return true;
-  case 'input':
-    switch (target.type) {
-    case 'button':
-    case 'checkbox':
-    case 'file':
-    case 'image':
-    case 'radio':
-    case 'submit':
-      return false;
-    }
-
-    // No point in attempting to focus disabled inputs
-    return !target.disabled && !target.readOnly;
-  default:
-    return (/\bneedsfocus\b/).test(target.className);
-  }
-};
-
-
-/**
- * Send a click event to the specified element.
- *
- * @param {EventTarget|Element} targetElement
- * @param {Event} event
- */
-FastClick.prototype.sendClick = function(targetElement, event) {
-  'use strict';
-  var clickEvent, touch;
-
-  // On some Android devices activeElement needs to be blurred otherwise the synthetic click will have no effect (#24)
-  if (document.activeElement && document.activeElement !== targetElement) {
-    document.activeElement.blur();
-  }
-
-  touch = event.changedTouches[0];
-
-  // Synthesise a click event, with an extra attribute so it can be tracked
-  clickEvent = document.createEvent('MouseEvents');
-  clickEvent.initMouseEvent('click', true, true, window, 1, touch.screenX, touch.screenY, touch.clientX, touch.clientY, false, false, false, false, 0, null);
-  clickEvent.forwardedTouchEvent = true;
-  targetElement.dispatchEvent(clickEvent);
-};
-
-
-/**
- * @param {EventTarget|Element} targetElement
- */
-FastClick.prototype.focus = function(targetElement) {
-  'use strict';
-  var length;
-
-  // Issue #160: on iOS 7, some input elements (e.g. date datetime) throw a vague TypeError on setSelectionRange. These elements don't have an integer value for the selectionStart and selectionEnd properties, but unfortunately that can't be used for detection because accessing the properties also throws a TypeError. Just check the type instead. Filed as Apple bug #15122724.
-  if (this.deviceIsIOS && targetElement.setSelectionRange && targetElement.type.indexOf('date') !== 0 && targetElement.type !== 'time') {
-    length = targetElement.value.length;
-    targetElement.setSelectionRange(length, length);
-  } else {
-    targetElement.focus();
-  }
-};
-
-
-/**
- * Check whether the given target element is a child of a scrollable layer and if so, set a flag on it.
- *
- * @param {EventTarget|Element} targetElement
- */
-FastClick.prototype.updateScrollParent = function(targetElement) {
-  'use strict';
-  var scrollParent, parentElement;
-
-  scrollParent = targetElement.fastClickScrollParent;
-
-  // Attempt to discover whether the target element is contained within a scrollable layer. Re-check if the
-  // target element was moved to another parent.
-  if (!scrollParent || !scrollParent.contains(targetElement)) {
-    parentElement = targetElement;
-    do {
-      if (parentElement.scrollHeight > parentElement.offsetHeight) {
-        scrollParent = parentElement;
-        targetElement.fastClickScrollParent = parentElement;
-        break;
-      }
-
-      parentElement = parentElement.parentElement;
-    } while (parentElement);
-  }
-
-  // Always update the scroll top tracker if possible.
-  if (scrollParent) {
-    scrollParent.fastClickLastScrollTop = scrollParent.scrollTop;
-  }
-};
-
-
-/**
- * @param {EventTarget} targetElement
- * @returns {Element|EventTarget}
- */
-FastClick.prototype.getTargetElementFromEventTarget = function(eventTarget) {
-  'use strict';
-
-  // On some older browsers (notably Safari on iOS 4.1 - see issue #56) the event target may be a text node.
-  if (eventTarget.nodeType === Node.TEXT_NODE) {
-    return eventTarget.parentNode;
-  }
-
-  return eventTarget;
-};
-
-
-/**
- * On touch start, record the position and scroll offset.
- *
- * @param {Event} event
- * @returns {boolean}
- */
-FastClick.prototype.onTouchStart = function(event) {
-  'use strict';
-  var targetElement, touch, selection;
-
-  // Ignore multiple touches, otherwise pinch-to-zoom is prevented if both fingers are on the FastClick element (issue #111).
-  if (event.targetTouches.length > 1) {
-    return true;
-  }
-
-  targetElement = this.getTargetElementFromEventTarget(event.target);
-  touch = event.targetTouches[0];
-
-  if (this.deviceIsIOS) {
-
-    // Only trusted events will deselect text on iOS (issue #49)
-    selection = window.getSelection();
-    if (selection.rangeCount && !selection.isCollapsed) {
-      return true;
-    }
-
-    if (!this.deviceIsIOS4) {
-
-      // Weird things happen on iOS when an alert or confirm dialog is opened from a click event callback (issue #23):
-      // when the user next taps anywhere else on the page, new touchstart and touchend events are dispatched
-      // with the same identifier as the touch event that previously triggered the click that triggered the alert.
-      // Sadly, there is an issue on iOS 4 that causes some normal touch events to have the same identifier as an
-      // immediately preceeding touch event (issue #52), so this fix is unavailable on that platform.
-      if (touch.identifier === this.lastTouchIdentifier) {
-        event.preventDefault();
-        return false;
-      }
-
-      this.lastTouchIdentifier = touch.identifier;
-
-      // If the target element is a child of a scrollable layer (using -webkit-overflow-scrolling: touch) and:
-      // 1) the user does a fling scroll on the scrollable layer
-      // 2) the user stops the fling scroll with another tap
-      // then the event.target of the last 'touchend' event will be the element that was under the user's finger
-      // when the fling scroll was started, causing FastClick to send a click event to that layer - unless a check
-      // is made to ensure that a parent layer was not scrolled before sending a synthetic click (issue #42).
-      this.updateScrollParent(targetElement);
-    }
-  }
-
-  this.trackingClick = true;
-  this.trackingClickStart = event.timeStamp;
-  this.targetElement = targetElement;
-
-  this.touchStartX = touch.pageX;
-  this.touchStartY = touch.pageY;
-
-  // Prevent phantom clicks on fast double-tap (issue #36)
-  if ((event.timeStamp - this.lastClickTime) < 200) {
-    event.preventDefault();
-  }
-
-  return true;
-};
-
-
-/**
- * Based on a touchmove event object, check whether the touch has moved past a boundary since it started.
- *
- * @param {Event} event
- * @returns {boolean}
- */
-FastClick.prototype.touchHasMoved = function(event) {
-  'use strict';
-  var touch = event.changedTouches[0], boundary = this.touchBoundary;
-
-  if (Math.abs(touch.pageX - this.touchStartX) > boundary || Math.abs(touch.pageY - this.touchStartY) > boundary) {
-    return true;
-  }
-
-  return false;
-};
-
-
-/**
- * Update the last position.
- *
- * @param {Event} event
- * @returns {boolean}
- */
-FastClick.prototype.onTouchMove = function(event) {
-  'use strict';
-  if (!this.trackingClick) {
-    return true;
-  }
-
-  // If the touch has moved, cancel the click tracking
-  if (this.targetElement !== this.getTargetElementFromEventTarget(event.target) || this.touchHasMoved(event)) {
-    this.trackingClick = false;
-    this.targetElement = null;
-  }
-
-  return true;
-};
-
-
-/**
- * Attempt to find the labelled control for the given label element.
- *
- * @param {EventTarget|HTMLLabelElement} labelElement
- * @returns {Element|null}
- */
-FastClick.prototype.findControl = function(labelElement) {
-  'use strict';
-
-  // Fast path for newer browsers supporting the HTML5 control attribute
-  if (labelElement.control !== undefined) {
-    return labelElement.control;
-  }
-
-  // All browsers under test that support touch events also support the HTML5 htmlFor attribute
-  if (labelElement.htmlFor) {
-    return document.getElementById(labelElement.htmlFor);
-  }
-
-  // If no for attribute exists, attempt to retrieve the first labellable descendant element
-  // the list of which is defined here: http://www.w3.org/TR/html5/forms.html#category-label
-  return labelElement.querySelector('button, input:not([type=hidden]), keygen, meter, output, progress, select, textarea');
-};
-
-
-/**
- * On touch end, determine whether to send a click event at once.
- *
- * @param {Event} event
- * @returns {boolean}
- */
-FastClick.prototype.onTouchEnd = function(event) {
-  'use strict';
-  var forElement, trackingClickStart, targetTagName, scrollParent, touch, targetElement = this.targetElement;
-
-  if (!this.trackingClick) {
-    return true;
-  }
-
-  // Prevent phantom clicks on fast double-tap (issue #36)
-  if ((event.timeStamp - this.lastClickTime) < 200) {
-    this.cancelNextClick = true;
-    return true;
-  }
-
-  // Reset to prevent wrong click cancel on input (issue #156).
-  this.cancelNextClick = false;
-
-  this.lastClickTime = event.timeStamp;
-
-  trackingClickStart = this.trackingClickStart;
-  this.trackingClick = false;
-  this.trackingClickStart = 0;
-
-  // On some iOS devices, the targetElement supplied with the event is invalid if the layer
-  // is performing a transition or scroll, and has to be re-detected manually. Note that
-  // for this to function correctly, it must be called *after* the event target is checked!
-  // See issue #57; also filed as rdar://13048589 .
-  if (this.deviceIsIOSWithBadTarget) {
-    touch = event.changedTouches[0];
-
-    // In certain cases arguments of elementFromPoint can be negative, so prevent setting targetElement to null
-    targetElement = document.elementFromPoint(touch.pageX - window.pageXOffset, touch.pageY - window.pageYOffset) || targetElement;
-    targetElement.fastClickScrollParent = this.targetElement.fastClickScrollParent;
-  }
-
-  targetTagName = targetElement.tagName.toLowerCase();
-  if (targetTagName === 'label') {
-    forElement = this.findControl(targetElement);
-    if (forElement) {
-      this.focus(targetElement);
-      if (this.deviceIsAndroid) {
-        return false;
-      }
-
-      targetElement = forElement;
-    }
-  } else if (this.needsFocus(targetElement)) {
-
-    // Case 1: If the touch started a while ago (best guess is 100ms based on tests for issue #36) then focus will be triggered anyway. Return early and unset the target element reference so that the subsequent click will be allowed through.
-    // Case 2: Without this exception for input elements tapped when the document is contained in an iframe, then any inputted text won't be visible even though the value attribute is updated as the user types (issue #37).
-    if ((event.timeStamp - trackingClickStart) > 100 || (this.deviceIsIOS && window.top !== window && targetTagName === 'input')) {
-      this.targetElement = null;
-      return false;
-    }
-
-    this.focus(targetElement);
-
-    // Select elements need the event to go through on iOS 4, otherwise the selector menu won't open.
-    if (!this.deviceIsIOS4 || targetTagName !== 'select') {
-      this.targetElement = null;
-      event.preventDefault();
-    }
-
-    return false;
-  }
-
-  if (this.deviceIsIOS && !this.deviceIsIOS4) {
-
-    // Don't send a synthetic click event if the target element is contained within a parent layer that was scrolled
-    // and this tap is being used to stop the scrolling (usually initiated by a fling - issue #42).
-    scrollParent = targetElement.fastClickScrollParent;
-    if (scrollParent && scrollParent.fastClickLastScrollTop !== scrollParent.scrollTop) {
-      return true;
-    }
-  }
-
-  // Prevent the actual click from going though - unless the target node is marked as requiring
-  // real clicks or if it is in the whitelist in which case only non-programmatic clicks are permitted.
-  if (!this.needsClick(targetElement)) {
-    event.preventDefault();
-    this.sendClick(targetElement, event);
-  }
-
-  return false;
-};
-
-
-/**
- * On touch cancel, stop tracking the click.
- *
- * @returns {void}
- */
-FastClick.prototype.onTouchCancel = function() {
-  'use strict';
-  this.trackingClick = false;
-  this.targetElement = null;
-};
-
-
-/**
- * Determine mouse events which should be permitted.
- *
- * @param {Event} event
- * @returns {boolean}
- */
-FastClick.prototype.onMouse = function(event) {
-  'use strict';
-
-  // If a target element was never set (because a touch event was never fired) allow the event
-  if (!this.targetElement) {
-    return true;
-  }
-
-  if (event.forwardedTouchEvent) {
-    return true;
-  }
-
-  // Programmatically generated events targeting a specific element should be permitted
-  if (!event.cancelable) {
-    return true;
-  }
-
-  // Derive and check the target element to see whether the mouse event needs to be permitted;
-  // unless explicitly enabled, prevent non-touch click events from triggering actions,
-  // to prevent ghost/doubleclicks.
-  if (!this.needsClick(this.targetElement) || this.cancelNextClick) {
-
-    // Prevent any user-added listeners declared on FastClick element from being fired.
-    if (event.stopImmediatePropagation) {
-      event.stopImmediatePropagation();
-    } else {
-
-      // Part of the hack for browsers that don't support Event#stopImmediatePropagation (e.g. Android 2)
-      event.propagationStopped = true;
-    }
-
-    // Cancel the event
-    event.stopPropagation();
-    event.preventDefault();
-
-    return false;
-  }
-
-  // If the mouse event is permitted, return true for the action to go through.
-  return true;
-};
-
-
-/**
- * On actual clicks, determine whether this is a touch-generated click, a click action occurring
- * naturally after a delay after a touch (which needs to be cancelled to avoid duplication), or
- * an actual click which should be permitted.
- *
- * @param {Event} event
- * @returns {boolean}
- */
-FastClick.prototype.onClick = function(event) {
-  'use strict';
-  var permitted;
-
-  // It's possible for another FastClick-like library delivered with third-party code to fire a click event before FastClick does (issue #44). In that case, set the click-tracking flag back to false and return early. This will cause onTouchEnd to return early.
-  if (this.trackingClick) {
-    this.targetElement = null;
-    this.trackingClick = false;
-    return true;
-  }
-
-  // Very odd behaviour on iOS (issue #18): if a submit element is present inside a form and the user hits enter in the iOS simulator or clicks the Go button on the pop-up OS keyboard the a kind of 'fake' click event will be triggered with the submit-type input element as the target.
-  if (event.target.type === 'submit' && event.detail === 0) {
-    return true;
-  }
-
-  permitted = this.onMouse(event);
-
-  // Only unset targetElement if the click is not permitted. This will ensure that the check for !targetElement in onMouse fails and the browser's click doesn't go through.
-  if (!permitted) {
-    this.targetElement = null;
-  }
-
-  // If clicks are permitted, return true for the action to go through.
-  return permitted;
-};
-
-
-/**
- * Remove all FastClick's event listeners.
- *
- * @returns {void}
- */
-FastClick.prototype.destroy = function() {
-  'use strict';
-  var layer = this.layer;
-
-  if (this.deviceIsAndroid) {
-    layer.removeEventListener('mouseover', this.onMouse, true);
-    layer.removeEventListener('mousedown', this.onMouse, true);
-    layer.removeEventListener('mouseup', this.onMouse, true);
-  }
-
-  layer.removeEventListener('click', this.onClick, true);
-  layer.removeEventListener('touchstart', this.onTouchStart, false);
-  layer.removeEventListener('touchmove', this.onTouchMove, false);
-  layer.removeEventListener('touchend', this.onTouchEnd, false);
-  layer.removeEventListener('touchcancel', this.onTouchCancel, false);
-};
-
-
-/**
- * Check whether FastClick is needed.
- *
- * @param {Element} layer The layer to listen on
- */
-FastClick.notNeeded = function(layer) {
-  'use strict';
-  var metaViewport;
-
-  // Devices that don't support touch don't need FastClick
-  if (typeof window.ontouchstart === 'undefined') {
-    return true;
-  }
-
-  if ((/Chrome\/[0-9]+/).test(navigator.userAgent)) {
-
-    // Chrome on Android with user-scalable="no" doesn't need FastClick (issue #89)
-    if (FastClick.prototype.deviceIsAndroid) {
-      metaViewport = document.querySelector('meta[name=viewport]');
-      if (metaViewport && metaViewport.content.indexOf('user-scalable=no') !== -1) {
-        return true;
-      }
-
-    // Chrome desktop doesn't need FastClick (issue #15)
-    } else {
-      return true;
-    }
-  }
-
-  // IE10 with -ms-touch-action: none, which disables double-tap-to-zoom (issue #97)
-  if (layer.style.msTouchAction === 'none') {
-    return true;
-  }
-
-  return false;
-};
-
-
-/**
- * Factory method for creating a FastClick object
- *
- * @param {Element} layer The layer to listen on
- */
-FastClick.attach = function(layer) {
-  'use strict';
-  return new FastClick(layer);
-};
-
-
-if (typeof define !== 'undefined' && define.amd) {
-
-  // AMD. Register as an anonymous module.
-  define(function() {
-    'use strict';
-    return FastClick;
-  });
-} else if (typeof module !== 'undefined' && module.exports) {
-  module.exports = FastClick.attach;
-  module.exports.FastClick = FastClick;
-} else {
-  window.FastClick = FastClick;
-}
 glift.util._IdGenerator = function(seed) {
   this.seed  = seed || 0;
 };
@@ -2338,11 +1564,11 @@ var LineBox = function(boundingBox, xSpacing, ySpacing, cropbox) {
 /**
  * Find the optimal positioning of the widget. Creates divs for all the
  * necessary elements and then returns the divIds. Specifically, returns:
- * {
- *  commentBox: ...
- *  goBox: ...
- *  iconBox: ...
- * }
+ *  {
+ *    commentBox: ...
+ *    goBox: ...
+ *    iconBox: ...
+ *  }
  */
 glift.displays.positionWidget = function(
     divBox, boardRegion, ints, boardComponentsList) {
@@ -2362,7 +1588,7 @@ glift.displays.positionWidget = function(
   } else if (divBox.hwRatio() < 0.45 && longBoxRegions[boardRegion]) {
     return glift.displays.positionWidgetHorz(
         divBox, cropbox, boardRegion, bcMap);
-  } else if (divBox.hwRatio() < 0.667 && !longBoxRegions[boardRegion]) {
+  } else if (divBox.hwRatio() < 0.600 && !longBoxRegions[boardRegion]) {
     // In other words, the width == 1.5 * height;
     // Also: Requires a comment box
     return glift.displays.positionWidgetHorz(
@@ -3121,7 +2347,7 @@ glift.displays.board.stones = function(divId, svg, boardPoints, theme) {
     .enter().append("circle")
       .attr("cx", function(pt) { return pt.coordPt.x(); })
       .attr("cy", function(pt) { return pt.coordPt.y(); })
-      .attr("r", boardPoints.radius - .5) // for stroke
+      .attr("r", boardPoints.radius - .4) // subtract for stroke
       .attr("opacity", 0)
       .attr('class', glift.enums.svgElements.STONE)
       .attr("stone_color", "EMPTY")
@@ -3377,16 +2603,25 @@ CommentBox.prototype = {
     var borderWidth = 1;
     var boardBorder = this.theme.board['stroke-width'];
     // var fontSize = width / 25 < 15 ? 15 : width / 25;
-    var fontSize = commentBoxHeight * .13 < 14 ? 14 : commentBoxHeight * .13;
-    fontSize = fontSize > 16 ? 16 : fontSize;
+    var fontSize = 16;
+    // commentBoxHeight * .13 < 14 ? 14 : commentBoxHeight * .13;
+    // fontSize = fontSize > 16 ? 16 : fontSize;
     this.commentBoxObj.css({
       // TODO(kashomon): Get the theme info from the theme
       background: '#CCCCFF',
       border: borderWidth + 'px solid',
       margin: 'auto',
       'font-family': 'Baskerville',
-      overflow: 'auto',
+      'overflow-y': 'auto',
       'font-size': fontSize,
+
+      // prevent Chrome/web kit from resizing the text (font boosting)
+      // ... which doesn't work for me, unfortunately.
+      // '-webkit-text-size-adjust': 'none',
+      // 'min-height': '1px',
+      // 'max-height': '5000em',
+      // 'max-height': '1000000px',
+
       // Prevent padding from affecting width
       '-webkit-box-sizing': 'border-box', /* Safari/Chrome, other WebKit */
       '-moz-box-sizing': 'border-box',    /* Firefox, other Gecko */
@@ -3411,7 +2646,107 @@ CommentBox.prototype = {
 };
 
 })();
-(function() {
+/**
+ * Get the scaling string based on the raphael bbox and the scaling object.
+ * This scales the object, with the scale centered at the top left.
+ *
+ * The arguments ar a scaling object and an object bounding box.
+ *
+ * The Bounding Box is the original bounding box.  It's used to specify the
+ * center of the scale operation.
+ *
+ * The scaleObject looks like the following:
+ *  {
+ *    scale: num,
+ *    xMove: num,
+ *    yMove: num
+ *  }
+ *
+ * Returned is the transformation string. To apply, one only needs to set the
+ * transform attribute on the SVG element, e.g.,
+ *    d3.select('foo').attr('transform', transformString);
+ */
+glift.displays.gui.scaleAndMoveString = function(objBbox, scaleObj) {
+  return 'translate(' + scaleObj.xMove + ',' + scaleObj.yMove + ') ' +
+    'scale(' + scaleObj.scale + ')';
+};
+/**
+ * A simple object representing a DivSplit.
+ */
+glift.displays.gui.DivSplit = function(id, start, length) {
+  this.id = id;
+  this.start = start;
+  this.length = length;
+};
+
+/**
+  * Take a div, create multiple sub divs, absolutely positioned.
+  *
+  * divId: divId to be split.
+  * percents: Precent tall that each section is.  Note that the length of this
+  * == the number of splits - 1;
+  *
+  * direction: defaults to 'horizontal'.  Also can split 'vertical'-ly.
+  *
+  * Note:
+  *  X => XX (vertical split)
+  *
+  *  X => X  (horizontal split)
+  *       X
+  *
+  * return: an array of useful div info:
+  *  [{
+  *    id: foo
+  *    start: 0 // top for horz, left for vert
+  *    length: 100 // height for horz, width for vert
+  *  }, {...}
+  *  ]
+  */
+glift.displays.gui.splitDiv = function(divId, percents, direction) {
+  var bbox = glift.displays.bboxFromDiv(divId),
+      totalPercent = 0;
+  if (!direction) {
+    direction = 'horizontal';
+  } else if (direction !== 'vertical' && direction !== 'horizontal') {
+    direction = 'horizontal'
+  }
+
+  for (var i = 0; i < percents.length; i++) {
+    totalPercent += percents[i];
+  }
+
+  if (totalPercent > 1 || totalPercent < 0) {
+    throw 'Percents must sum to a number be between 0 and 1.' +
+        'Was ' + totalPercent;
+  }
+  percents.push(1 - totalPercent); // Add in last value.
+
+  // Create Data for D3.
+  var boxData = [];
+  var currentStart = direction === 'horizontal' ? bbox.top() : bbox.left();
+  var maxAmount = direction === 'horizontal' ? bbox.height() : bbox.width();
+  for (var i = 0; i < percents.length; i++) {
+    boxData.push(new glift.displays.gui.DivSplit(
+      'glift_internal_div_' + glift.util.idGenerator.next(),
+      currentStart, // e.g., Top
+      maxAmount * percents[i] // e.g., Height
+    ));
+    currentStart = currentStart + maxAmount * percents[i];
+  }
+  for (var i = 0; i < boxData.length; i++) {
+    $('#' + divId).append('<div id="' + boxData[i].id + '"></div>');
+    var cssObj = {
+      width: direction === 'horizontal' ? '100%' : boxData[i].length,
+      height: direction === 'horizontal' ? boxData[i].length : '100%',
+      position: 'absolute'
+    };
+    var posKey =  (direction === 'horizontal' ? 'top' : 'left' )
+    cssObj[posKey] = boxData[i].start;
+    $('#' + boxData[i].id).css(cssObj);
+  }
+  return boxData;
+};
+glift.displays.icons = {};
 /**
  * Options:
  *    - divId (if need to create paper)
@@ -3421,7 +2756,7 @@ CommentBox.prototype = {
  *    - vertMargin (in pixels)
  *    - theme (default: DEFAULT)
  */
-glift.displays.gui.iconBar = function(options) {
+glift.displays.icons.bar = function(options) {
   var divId = options.divId,
       icons = options.icons || [],
       vertMargin = options.vertMargin || 0,
@@ -3430,20 +2765,47 @@ glift.displays.gui.iconBar = function(options) {
   if (divId === undefined) {
     throw "Must define an options 'divId' as an option";
   }
-  for (var i = 0; i < icons.length; i++) {
-    if (glift.displays.gui.icons[icons[i]] === undefined) {
-      throw "Icon string undefined in glift.displays.gui.icons [" +
-          icons[i] + "]";
-    }
-  }
-  return new IconBar(divId, themeName, icons, vertMargin, horzMargin).draw();
+  var modIconNames = glift.displays.icons.validateIcons(icons);
+  return new glift.displays.icons._IconBar(
+      divId, themeName, icons, modIconNames, vertMargin, horzMargin).draw();
 };
 
-var IconBar = function(divId, themeName, iconNames, vertMargin, horzMargin) {
+/**
+ * Do some basic validation on the icons.
+ *
+ * For convenience, this method returns a 1 layer deep array of icon names.  In
+ * other words, Replace arrays of icons with 'multiopen' icons.
+ */
+glift.displays.icons.validateIcons = function(icons) {
+  var iconNames = [];
+  for (var i = 0; i < icons.length; i++) {
+    if (glift.util.typeOf(icons[i]) === 'array') {
+      var sublist = icons[i]
+      for (var j = 0; j < sublist.length; j++) {
+        if (glift.displays.icons.svg[icons[j]] === undefined) {
+          throw "Icon unknown: [" + icons[j] + "]";
+        }
+      }
+      iconNames.push('multiopen')
+    } else {
+      if (glift.displays.icons.svg[icons[i]] === undefined) {
+        throw "Icon unknown: [" + icons[i] + "]";
+      }
+      iconNames.push(icons[i]);
+    }
+  }
+  return iconNames;
+};
+
+glift.displays.icons._IconBar = function(
+    divId, themeName, icons, iconNames, vertMargin, horzMargin) {
   this.divId = divId;
   this.themeName = themeName;
   this.theme = glift.themes.get(themeName);
-  this.iconNames = iconNames; // array of names
+  // Array of icons.
+  this.icons = icons;
+  // Array of the icon names.
+  this.iconNames = iconNames;
   this.vertMargin = vertMargin;
   this.horzMargin = horzMargin;
   this.newIconBboxes = {}; // initialized by draw
@@ -3451,7 +2813,7 @@ var IconBar = function(divId, themeName, iconNames, vertMargin, horzMargin) {
   this.tempIconIds = []; // from addTempIcon.
 };
 
-IconBar.prototype = {
+glift.displays.icons._IconBar.prototype = {
   /**
    * Draw the IconBar!
    */
@@ -3462,6 +2824,7 @@ IconBar.prototype = {
             .attr("width", '100%')
             .attr("height", '100%'),
         gui = glift.displays.gui,
+        svgData = glift.displays.icons.svg,
         iconBboxes = [],
         iconStrings = [],
         indicesData = [],
@@ -3470,7 +2833,7 @@ IconBar.prototype = {
 
     for (var i = 0; i < this.iconNames.length; i++) {
       var name = this.iconNames[i];
-      var iconData = gui.icons[name];
+      var iconData = svgData[name];
       iconStrings.push(iconData.string);
       iconBboxes.push(glift.displays.bboxFromPts(
           point(iconData.bbox.x, iconData.bbox.y),
@@ -3511,7 +2874,7 @@ IconBar.prototype = {
   },
 
   addTempIcon: function(bbox, iconName, color) {
-    var icon = glift.displays.gui.icons[iconName];
+    var icon = glift.displays.icons.svg[iconName];
     var iconBbox = glift.displays.bboxFromPts(
         glift.util.point(icon.bbox.x, icon.bbox.y),
         glift.util.point(icon.bbox.x2, icon.bbox.y2));
@@ -3639,8 +3002,6 @@ IconBar.prototype = {
     return this;
   }
 };
-
-})();
 /**
  * Icons taken from: http://raphaeljs.com/icons
  *
@@ -3648,7 +3009,7 @@ IconBar.prototype = {
  *
  * Current supported icons:
  */
-glift.displays.gui.icons = {
+glift.displays.icons.svg = {
    // http://raphaeljs.com/icons/#cross
   cross: {
     string: "M24.778,21.419 19.276,15.917 24.777,10.415 21.949,7.585 16.447,13.087 10.945,7.585 8.117,10.415 13.618,15.917 8.116,21.419 10.946,24.248 16.447,18.746 21.948,24.248z",
@@ -3816,107 +3177,26 @@ glift.displays.gui.icons = {
   rw: {
     string: "M5.5,15.499,15.8,21.447,15.8,15.846,25.5,21.447,25.5,9.552,15.8,15.152,15.8,9.552z",
     bbox: {}
-  }
-};
-/**
- * Get the scaling string based on the raphael bbox and the scaling object.
- * This scales the object, with the scale centered at the top left.
- *
- * The arguments ar a scaling object and an object bounding box.
- *
- * The Bounding Box is the original bounding box.  It's used to specify the
- * center of the scale operation.
- *
- * The scaleObject looks like the following:
- *  {
- *    scale: num,
- *    xMove: num,
- *    yMove: num
- *  }
- *
- * Returned is the transformation string. To apply, one only needs to set the
- * transform attribute on the SVG element, e.g.,
- *    d3.select('foo').attr('transform', transformString);
- */
-glift.displays.gui.scaleAndMoveString = function(objBbox, scaleObj) {
-  return 'translate(' + scaleObj.xMove + ',' + scaleObj.yMove + ') ' +
-    'scale(' + scaleObj.scale + ')';
-};
-/**
- * A simple object representing a DivSplit.
- */
-glift.displays.gui.DivSplit = function(id, start, length) {
-  this.id = id;
-  this.start = start;
-  this.length = length;
-};
+  },
 
-/**
-  * Take a div, create multiple sub divs, absolutely positioned.
-  *
-  * divId: divId to be split.
-  * percents: Precent tall that each section is.  Note that the length of this
-  * == the number of splits - 1;
-  *
-  * direction: defaults to 'horizontal'.  Also can split 'vertical'-ly.
-  *
-  * Note:
-  *  X => XX (vertical split)
-  *
-  *  X => X  (horizontal split)
-  *       X
-  *
-  * return: an array of useful div info:
-  *  [{
-  *    id: foo
-  *    start: 0 // top for horz, left for vert
-  *    length: 100 // height for horz, width for vert
-  *  }, {...}
-  *  ]
-  */
-glift.displays.gui.splitDiv = function(divId, percents, direction) {
-  var bbox = glift.displays.bboxFromDiv(divId),
-      totalPercent = 0;
-  if (!direction) {
-    direction = 'horizontal';
-  } else if (direction !== 'vertical' && direction !== 'horizontal') {
-    direction = 'horizontal'
-  }
+  // My own creation.  For multipule layered icons.
+  multiopen: {
+    string: "m 130,73.862183 6.5,-13 6.5,13 z M 70.709141,37.871643 c -5.658849,0 -10.21875,4.412745 -10.21875,9.90625 l 0,43.3125 c 0,5.493505 4.559901,9.906247 10.21875,9.906247 l 44.624999,0 c 5.65885,0 10.21875,-4.412742 10.21875,-9.906247 l 0,-43.3125 c 0,-5.493505 -4.5599,-9.90625 -10.21875,-9.90625 l -44.624999,0 z m 2.0625,3.125 40.468749,0 c 5.12994,0 9.25,3.959703 9.25,8.90625 l 0,39 c 0,4.946547 -4.12006,8.9375 -9.25,8.9375 l -40.468749,0 c -5.129943,0 -9.25,-3.990953 -9.25,-8.9375 l 0,-39 c 0,-4.946547 4.120057,-8.90625 9.25,-8.90625 z",
+    bbox: {"x":60.490391,"y":37.871643,"x2":143,"y2":100.99664,"width":82.509609,"height":63.124997}
+  },
 
-  for (var i = 0; i < percents.length; i++) {
-    totalPercent += percents[i];
-  }
+  // The above minus the arrow.
+  "multiopen-boxonly": {
+    string: "m 71.1875,38.25 c -5.658849,0 -10.21875,4.412745 -10.21875,9.90625 l 0,43.3125 c 0,5.493505 4.559901,9.90625 10.21875,9.90625 l 44.625,0 c 5.65885,0 10.21875,-4.412745 10.21875,-9.90625 l 0,-43.3125 c 0,-5.493505 -4.5599,-9.90625 -10.21875,-9.90625 l -44.625,0 z m 2.0625,3.125 40.46875,0 c 5.12994,0 9.25,3.959703 9.25,8.90625 l 0,39 c 0,4.946547 -4.12006,8.9375 -9.25,8.9375 l -40.46875,0 c -5.129943,0 -9.25,-3.990953 -9.25,-8.9375 l 0,-39 C 64,45.334703 68.120057,41.375 73.25,41.375 z",
+    bbox: {"x":60.96875,"y":38.25,"x2":126.03125,"y2":101.375,"width":65.0625,"height":63.125}
+  },
 
-  if (totalPercent > 1 || totalPercent < 0) {
-    throw 'Percents must sum to a number be between 0 and 1.' +
-        'Was ' + totalPercent;
+  // Used to indicate where the inside box lives, which is in turn used to
+  // position icons with the box.
+  "multiopen-boxonly-inside": {
+    string: "m 73.259825,41.362183 40.445075,0 c 5.12994,0 9.25982,3.982238 9.25982,8.928785 l 0,38.999149 c 0,4.946547 -4.12988,8.928786 -9.25982,8.928786 l -40.445075,0 C 68.129882,98.218903 64,94.236664 64,89.290117 l 0,-38.999149 c 0,-4.946547 4.129882,-8.928785 9.259825,-8.928785 z",
+    bbox: {"x":64,"y":41.362183,"x2":122.96472,"y2":98.218903,"width":58.96472,"height":56.85672}
   }
-  percents.push(1 - totalPercent); // Add in last value.
-
-  // Create Data for D3.
-  var boxData = [];
-  var currentStart = direction === 'horizontal' ? bbox.top() : bbox.left();
-  var maxAmount = direction === 'horizontal' ? bbox.height() : bbox.width();
-  for (var i = 0; i < percents.length; i++) {
-    boxData.push(new glift.displays.gui.DivSplit(
-      'glift_internal_div_' + glift.util.idGenerator.next(),
-      currentStart, // e.g., Top
-      maxAmount * percents[i] // e.g., Height
-    ));
-    currentStart = currentStart + maxAmount * percents[i];
-  }
-  for (var i = 0; i < boxData.length; i++) {
-    $('#' + divId).append('<div id="' + boxData[i].id + '"></div>');
-    var cssObj = {
-      width: direction === 'horizontal' ? '100%' : boxData[i].length,
-      height: direction === 'horizontal' ? boxData[i].length : '100%',
-      position: 'absolute'
-    };
-    var posKey =  (direction === 'horizontal' ? 'top' : 'left' )
-    cssObj[posKey] = boxData[i].start;
-    $('#' + boxData[i].id).css(cssObj);
-  }
-  return boxData;
 };
 /**
  * Objects and methods that enforce the basic rules of Go.
@@ -5220,7 +4500,7 @@ Properties.prototype = {
  * 0.1     becomes [1]
  * 53      becomes [0,0,0,...,0] (53 times)
  * 2.3     becomes [0,0,3]
- * 0.0.0.0 becomes [0,0,0,0]
+ * 0.0.0.0 becomes [0,0,0]
  * 2.3-4.1 becomes [0,0,3,0,1]
  */
 glift.rules.treepath = {
@@ -5337,7 +4617,7 @@ glift.sgf = {
 };
 /**
  * The new Glift SGF parser!
- * Takes a string, returns a movetree.
+ * Takes a string, returns a movetree.  Probably needs refactoring.
  */
 glift.sgf.parse = function(sgfString) {
   var states = {
@@ -5392,13 +4672,6 @@ glift.sgf.parse = function(sgfString) {
     }
   };
 
-  var nextChar = function() {
-    i++;
-    i === sgfString.length ||
-        perror("Reached end of input, but expected a character.");
-    return sgfString.charAt(i);
-  };
-
   (function() {
     // Run everything inside an anonymous function so we can use 'return' as a
     // fullstop break.
@@ -5406,16 +4679,17 @@ glift.sgf.parse = function(sgfString) {
       colNum++; // This means that columns are 1 indexed.
       curchar = sgfString.charAt(i);
 
-      if (curchar === "\n" && curstate !== states.PROP_DATA) {
+      if (curchar === "\n" ) {
         lineNum++;
         colNum = 0;
-        continue;
+        if (curstate !== states.PROP_DATA) {
+          continue;
+        }
       }
-      // glift.util.logz('i[' + i + '] -- ' + statesToString[curstate]
-      //    + ' -- char[' + char + ']');
+
       switch (curstate) {
         case states.BEGINNING:
-          if (curchar === syn.LPAREN || wsRegex.test(curchar)) {
+          if (curchar === syn.LPAREN) {
             branchMoveNums.push(movetree.node().getNodeNum()); // Should Be 0.
           } else if (curchar === syn.SCOLON) {
             curstate = states.BETWEEN; // The SGF Begins!
@@ -6188,9 +5462,6 @@ glift.widgets = {
     if (options.sgf && options.sgfList.length === 0) {
       options.sgfList = [options.sgf];
     }
-    if (options.enableFastClick) {
-      glift.global.enableFastClick();
-    }
     return new glift.widgets.WidgetManager(
       options.sgfList,
       options.initialListIndex,
@@ -6338,7 +5609,7 @@ glift.widgets.BaseWidget.prototype = {
   },
 
   _createIconBar: function(iconId, icons) {
-    return glift.displays.gui.iconBar({
+    return glift.displays.icons.bar({
       themeName: this.displayOptions.theme,
       divId: iconId,
       vertMargin:  5, // For good measure
@@ -6491,7 +5762,7 @@ glift.widgets.BaseWidget.prototype = {
     this.keyHandlerFunc = undefined;
     this.display = undefined;
   }
-};
+}
 /**
  * The Widget Manager manages state across widgets.  When widgets are created,
  * they are always created in the context of a Widget Manager.
@@ -7083,9 +6354,7 @@ glift.widgets.options.baseOptions = {
 glift.widgets.options.BOARD_EDITOR = {
   stoneClick: function(event, widget, pt) {},
 
-  icons: ['start', 'arrowleft', 'arrowright', 'twostones', 'cross'],
-
-  // extraIcons: ['twostones', 'cross', 'check', 'cross', 'check'],
+  icons: ['start', 'end', 'arrowleft', 'arrowright'],
 
   problemConditions: {},
 
@@ -7185,6 +6454,24 @@ glift.widgets.options.GAME_VIEWER = {
   showVariations: glift.enums.showVariations.MORE_THAN_ONE,
 
   problemConditions: {},
+
+  controllerFunc: glift.controllers.gameViewer
+};
+/**
+ * Game Viewer options for when used as part of a widget
+ */
+glift.widgets.options.REDUCED_GAME_VIEWER = {
+  stoneClick: function(event, widget, pt) {
+    var currentPlayer = widget.controller.getCurrentPlayer();
+    var partialData = widget.controller.addStone(pt, currentPlayer);
+    widget.applyBoardData(partialData);
+  },
+
+  icons: ['arrowleft', 'arrowright'],
+
+  problemConditions: {},
+
+  showVariations: glift.enums.showVariations.MORE_THAN_ONE,
 
   controllerFunc: glift.controllers.gameViewer
 };

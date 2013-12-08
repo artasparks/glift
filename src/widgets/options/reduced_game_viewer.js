@@ -12,8 +12,6 @@ glift.widgets.options.REDUCED_GAME_VIEWER = {
 
   problemConditions: {},
 
-  keyMappings: {},
-
   showVariations: glift.enums.showVariations.MORE_THAN_ONE,
 
   controllerFunc: glift.controllers.gameViewer
