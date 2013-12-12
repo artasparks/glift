@@ -19,7 +19,8 @@ glift.displays.gui.rowCenter = function(
       newBboxes = [],
       elemWidth = 0;
   if (maxSpacing <= 0) {
-    maxSpacing = 10000000; // some arbitrarily large number
+    // Use some arbitrarily large number as an upper bound default
+    maxSpacing = 10000000;
   }
 
   // Adjust all the bboxes so that they are the right height.

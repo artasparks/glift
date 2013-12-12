@@ -81,6 +81,7 @@
 <script type="text/javascript" src="../displays/icons/icons.js"></script>
 <script type="text/javascript" src="../displays/icons/bar.js"></script>
 <script type="text/javascript" src="../displays/icons/svg.js"></script>
+<script type="text/javascript" src="../displays/icons/wrapped_icon.js"></script>
 <!-- Rules -->
 <script type="text/javascript" src="../rules/rules.js"></script>
 <script type="text/javascript" src="../rules/goban.js"></script>
@@ -135,6 +136,8 @@
 <!-- Displays gui Tests -->
 <script type="text/javascript" src="../displays/gui/center_test.js"></script>
 <script type="text/javascript" src="../displays/gui/split_test.js"></script>
+<!-- Displays icons Tests -->
+<script type="text/javascript" src="../displays/icons/wrapped_icon_test.js"></script>
 <!-- Rules Tests -->
 <script type="text/javascript" src="../rules/goban_test.js"></script>
 <script type="text/javascript" src="../rules/intersections_test.js"></script>
@@ -170,6 +173,8 @@ $(document).ready(function() {
   glift.displays.boardpointsTest();
   glift.displays.resizedBoxTest();
   glift.displays.positionWidgetTest();
+
+  glift.displays.icons.wrappedIconTest();
 
   // TODO(kashomon): recreate the board tests.
 

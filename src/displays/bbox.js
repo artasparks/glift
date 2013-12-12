@@ -66,7 +66,7 @@ glift.displays._BoundingBox.prototype = {
   },
 
   /**
-   * Return a new Bbox with the width and the height scaled by some fraction.
+   * Return a new bbox with the width and the height scaled by some fraction.
    * The TopLeft point is also scaled by the amount.
    */
   scale: function(amount) {

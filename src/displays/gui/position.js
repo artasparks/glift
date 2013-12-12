@@ -18,7 +18,7 @@
  * transform attribute on the SVG element, e.g.,
  *    d3.select('foo').attr('transform', transformString);
  */
-glift.displays.gui.scaleAndMoveString = function(objBbox, scaleObj) {
+glift.displays.gui.scaleAndMoveString = function(scaleObj) {
   return 'translate(' + scaleObj.xMove + ',' + scaleObj.yMove + ') ' +
     'scale(' + scaleObj.scale + ')';
 };

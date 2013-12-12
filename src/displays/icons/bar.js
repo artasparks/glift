@@ -49,12 +49,13 @@ glift.displays.icons.validateIcons = function(icons) {
 };
 
 glift.displays.icons._IconBar = function(
-    divId, themeName, icons, iconNames, vertMargin, horzMargin) {
+    divId, themeName, iconsRaw, iconNames, vertMargin, horzMargin) {
   this.divId = divId;
   this.themeName = themeName;
   this.theme = glift.themes.get(themeName);
-  // Array of icons.
-  this.icons = icons;
+  // Array of icons. This is separated from iconNames since now, it is possible
+  // to have an array of array of icons. (The MultiIcon)
+  this.iconsRaw = iconsRaw;
   // Array of the icon names.
   this.iconNames = iconNames;
   this.vertMargin = vertMargin;
@@ -72,8 +73,8 @@ glift.displays.icons._IconBar.prototype = {
     this.destroy();
     var divBbox = glift.displays.bboxFromDiv(this.divId),
         svg = d3.select('#' + this.divId).append("svg")
-            .attr("width", '100%')
-            .attr("height", '100%'),
+          .attr("width", '100%')
+          .attr("height", '100%'),
         gui = glift.displays.gui,
         svgData = glift.displays.icons.svg,
         iconBboxes = [],
@@ -81,7 +82,6 @@ glift.displays.icons._IconBar.prototype = {
         indicesData = [],
         point = glift.util.point;
     this.svg = svg;
-
     for (var i = 0; i < this.iconNames.length; i++) {
       var name = this.iconNames[i];
       var iconData = svgData[name];
@@ -106,8 +106,7 @@ glift.displays.icons._IconBar.prototype = {
         .attr('fill', this.theme.icons['DEFAULT'].fill)
         .attr('id', function(i) { return that.iconId(that.iconNames[i]); })
         .attr('transform', function(i) {
-          return glift.displays.gui.scaleAndMoveString(
-              centerObj.bboxes[i], centerObj.transforms[i]);
+          return glift.displays.gui.scaleAndMoveString(centerObj.transforms[i]);
         });
 
     var bboxes = centerObj.bboxes;
@@ -117,7 +116,7 @@ glift.displays.icons._IconBar.prototype = {
         .attr('y', function(i) { return bboxes[i].topLeft().y(); })
         .attr('width', function(i) { return bboxes[i].width(); })
         .attr('height', function(i) { return bboxes[i].height(); })
-        .attr('fill', 'blue') // doesn't matter the color.
+        .attr('fill', 'blue') // Color doesn't matter, but we need a fill.
         .attr('opacity', 0)
         .attr('_icon', function(i) { return that.iconNames[i]; })
         .attr('id', function(i) { return that.buttonId(that.iconNames[i]); });
@@ -131,14 +130,18 @@ glift.displays.icons._IconBar.prototype = {
         glift.util.point(icon.bbox.x2, icon.bbox.y2));
     var that = this;
     var id = that.iconId(iconName);
-    var centerObj = glift.displays.gui.centerWithin(bbox, iconBbox, 2, 2);
+    // TODO(kashomon): Store these magic variables somewhere. Themes, maybe?
+    var hMargin = 2;
+    var vMargin = 2;
+    var centerObj = glift.displays.gui.centerWithin(
+        bbox, iconBbox, vMargin, hMargin);
     this.svg.append('path')
       .attr('d', icon.string)
       .attr('fill', color) // that.theme.icons['DEFAULT'].fill)
       .attr('id', that.iconId(iconName))
       .attr('class', 'tempIcon')
       .attr('transform', glift.displays.gui.scaleAndMoveString(
-          centerObj.bbox, centerObj.transform));
+          centerObj.transform));
     this.tempIconIds.push(id);
     return this;
   },
@@ -250,6 +253,7 @@ glift.displays.icons._IconBar.prototype = {
 
   destroy: function() {
     this.divId && d3.select('#' + this.divId).selectAll("svg").remove();
+    this.svg = undefined;
     return this;
   }
 };
