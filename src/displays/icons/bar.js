@@ -59,7 +59,7 @@ glift.displays.icons._IconBar.prototype = {
 
   /** Draw the IconBar! */
   draw: function() {
-    this.destroy();
+    this.destroy(); // TODO(kashomon): Superfluous? Remove?
     var divBbox = glift.displays.bboxFromDiv(this.divId),
         svg = d3.select('#' + this.divId).append("svg:svg")
           .attr("width", '100%')
@@ -143,7 +143,9 @@ glift.displays.icons._IconBar.prototype = {
     // TODO(kashomon): Remove this hack.
     var bbox = this.getIcon(iconName).bbox;
     var fontSize = bbox.width() * .54;
+    var id = this.tempTextId(iconName);
     var boxStrokeWidth = 7
+    this.clearTempText(iconName);
     this.svg.append('text')
       .text(text)
       .attr('fill', color)
@@ -155,8 +157,13 @@ glift.displays.icons._IconBar.prototype = {
       .attr('y', bbox.center().y()) //+ fontSize)
       .attr('dy', '.33em') // Move down, for centering purposes
       .attr('style', 'text-anchor: middle; vertical-align: middle;')
+      .attr('id', id)
       .attr('lengthAdjust', 'spacing'); // also an opt: spacingAndGlyphs
     return this;
+  },
+
+  clearTempText: function(iconName) {
+    this.svg.select('#' + this.tempTextId(iconName)).remove();
   },
 
   destroyTempIcons: function() {
@@ -178,6 +185,10 @@ glift.displays.icons._IconBar.prototype = {
   buttonId: function(iconName) {
     return glift.displays.gui.elementId(
         this.divId, glift.enums.svgElements.BUTTON, iconName);
+  },
+
+  tempTextId: function(iconName) {
+    return this.divId +  '_' + iconName + '_temptext'
   },
 
   /**

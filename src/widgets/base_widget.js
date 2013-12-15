@@ -39,10 +39,6 @@ glift.widgets.BaseWidget.prototype = {
     if (this.sgfOptions.icons.length > 0) {
       requiredComponents.push(comps.ICONBAR);
     }
-    if (this.sgfOptions.extraIcons &&
-        this.sgfOptions.extraIcons.length > 0) {
-      requiredComponents.push(comps.EXTRA_ICONBAR);
-    }
     var positioning = glift.displays.positionWidget(
       glift.displays.bboxFromDiv(this.wrapperDiv),
       this.displayOptions.boardRegion,
@@ -59,8 +55,8 @@ glift.widgets.BaseWidget.prototype = {
       this.iconBar = this._createIconBar(
           divIds.iconBarBoxId, this.sgfOptions.icons);
     }
-    divIds.iconBarBoxId &&
-        this._initIconActions(this.iconBar);
+
+    divIds.iconBarBoxId && this._initIconActions(this.iconBar);
     this._initStoneActions();
     this._initKeyHandlers();
     this._initProblemData();
@@ -144,36 +140,41 @@ glift.widgets.BaseWidget.prototype = {
     var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
     var widget = this;
     var iconActions = this.displayOptions.iconActions;
-    for (var i = 0; i < iconBar.icons.length; i++) {
-      var icon = icons[i];
+    iconBar.forEachIcon(function(icon) {
+      var iconName = icon.iconName;
       if (!iconActions.hasOwnProperty(icon.iconName)) {
         // Make sure that there exists an action specified in the
         // displayOptions, before we add any options.
-        continue;
+        return
       }
-      iconActions[iconName].mouseover = iconActions[icon.iconName].mouseover ||
-        function(event, widget, name) {
-          d3.select('#' + icon.elementId).attr('fill', 'red');
-        };
-      iconActions[iconName].mouseout = iconActions[icon.iconName].mouseout ||
-        function(event, widget, name) {
-          d3.select('#' + icon.elementId)
+      var actionsForIcon = {};
+
+      actionsForIcon.click = iconActions[iconName].click;
+      actionsForIcon.mouseover = iconActions[iconName].mouseover ||
+          function(d3Event, widgetRef, iconObj) {
+            d3.select('#' + iconObj.elementId).attr('fill', 'red');
+          };
+      actionsForIcon.mouseout = iconActions[iconName].mouseout ||
+          function(d3Event, widgetRef, iconObj) {
+            d3.select('#' + iconObj.elementId)
               .attr('fill', widget.iconBar.theme.icons.DEFAULT.fill);
-        };
-      iconActions[iconName].touchstart = iconActions[iconName].touchstart ||
-        function(event, widget, name) {
-          event.preventDefault && event.preventDefault();
-          event.stopPropagation && event.stopPropagation();
-          widget.displayOptions.iconActions[name].click(event, widget);
-        };
-      for (var eventName in iconActions[iconName]) {
-        (function(eventName, iconNameBound, event) { // lazy binding pattern.
+          };
+      actionsForIcon.touchstart = iconActions[iconName].touchstart ||
+          function(d3Event,  widgetRef, iconObj) {
+            d3Event.preventDefault && d3Event.preventDefault();
+            d3Event.stopPropagation && d3Event.stopPropagation();
+            widgetRef.displayOptions.iconActions[
+                iconObj.iconName].click(d3Event, widgetRef, iconObj);
+          };
+      for (var eventName in actionsForIcon) {
+        var eventFunc = actionsForIcon[eventName];
+        (function(eventName, iconNameBound, eventFunction) { // lazy binding pattern.
           widget.iconBar.setEvent(eventName, iconName, function() {
-            event(d3.event, widget, iconNameBound);
+            eventFunction(d3.event, widget, iconBar.getIcon(iconNameBound));
           });
-        })(eventName, iconName, iconActions[iconName][eventName]);
+        })(eventName, iconName, eventFunc);
       }
-    }
+    });
   },
 
   /**
@@ -227,8 +228,12 @@ glift.widgets.BaseWidget.prototype = {
       this.totalCorrectAnswers = this.totalCorrectAnswers
           || this.sgfOptions.totalCorrectVariationsOverride
           || correctNext.length;
-      this.iconBar.addTempText(this.iconBar.getIcon('checkbox').newBbox,
-          this.numCorrectAnswers + '/' + this.totalCorrectAnswers, '#000');
+      // TODO(kashomon): Remove this hack: The icon should be specified with
+      // some sort of options.
+      this.iconBar.addTempText(
+          'multiopen-boxonly',
+          this.numCorrectAnswers + '/' + this.totalCorrectAnswers,
+          'black');
     }
   },
 

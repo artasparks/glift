@@ -15,7 +15,7 @@ glift.global = {
    *
    * Currently in alpha.
    */
-  version: '0.8.2',
+  version: '0.8.3',
   debugMode: false,
   // Options for performanceDebugLevel: none, fine, info
   performanceDebugLevel: 'none',

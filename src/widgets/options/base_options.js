@@ -276,59 +276,59 @@ glift.widgets.options.baseOptions = {
    */
   iconActions: {
     start: {
-      click:  function(event, widget) {
+      click:  function(event, widget, icon) {
         widget.applyBoardData(widget.controller.toBeginning());
       }
     },
 
     end: {
-      click:  function(event, widget) {
+      click:  function(event, widget, icon) {
         widget.applyBoardData(widget.controller.toEnd());
       }
     },
 
     arrowright: {
-      click: function(event, widget) {
+      click: function(event, widget, icon) {
         widget.applyBoardData(widget.controller.nextMove());
       }
     },
 
     arrowleft: {
-      click:  function(event, widget) {
+      click:  function(event, widget, icon) {
         widget.applyBoardData(widget.controller.prevMove());
       }
     },
 
     // Get next problem.
     'chevron-right': {
-      click: function(event, widget) {
+      click: function(event, widget, icon) {
         widget.manager.nextSgf();
       }
     },
 
     // Get the previous problem.
     'chevron-left': {
-      click: function(event, widget) {
+      click: function(event, widget, icon) {
         widget.manager.prevSgf();
       }
     },
 
     // Try again
     refresh: {
-      click: function(event, widget) {
+      click: function(event, widget, icon) {
         widget.reload();
       }
     },
 
     undo: {
-      click: function(event, widget) {
+      click: function(event, widget, icon) {
         widget.manager.returnToOriginalWidget();
       }
     },
 
     // Go to the explain-board.
     roadmap: {
-      click: function(event, widget) {
+      click: function(event, widget, iconObj) {
         var manager = widget.manager;
         var sgfObj = {
           widgetType: glift.enums.widgetTypes.GAME_VIEWER,
