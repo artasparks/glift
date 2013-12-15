@@ -23,13 +23,13 @@ glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
           if (widget.numCorrectAnswers === widget.totalCorrectAnswers) {
             widget.correctness = problemResults.CORRECT;
             widget.iconBar.addTempText(
-                widget.iconBar.getIcon('checkbox').newBbox,
+                'multiopen-boxonly',
                 widget.numCorrectAnswers + '/' + widget.totalCorrectAnswers,
                 '#0CC');
             callback(problemResults.CORRECT);
           } else {
             widget.iconBar.addTempText(
-                widget.iconBar.getIcon('checkbox').newBbox,
+                'multiopen-boxonly',
                 widget.numCorrectAnswers + '/' + widget.totalCorrectAnswers,
                 '#000');
             setTimeout(function() {
@@ -40,8 +40,7 @@ glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
         }
       } else if (data.result == problemResults.INCORRECT) {
         widget.iconBar.destroyTempIcons();
-        widget.iconBar.addTempIcon(
-            widget.iconBar.getIcon('checkbox').newBbox, 'cross', 'red');
+        widget.iconBar.addCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
         widget.correctness = problemResults.INCORRECT;
         callback(problemResults.INCORRECT);
       }
@@ -50,7 +49,7 @@ glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
 
   showVariations: glift.enums.showVariations.NEVER,
 
-  icons: ['refresh', 'roadmap', 'checkbox'],
+  icons: ['refresh', 'roadmap', 'multiopen-boxonly'],
 
   controllerFunc: glift.controllers.staticProblem,
 

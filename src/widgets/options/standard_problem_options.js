@@ -16,14 +16,12 @@ glift.widgets.options.STANDARD_PROBLEM = {
     var callback = widget.sgfOptions.problemCallback;
     if (widget.correctness === undefined) {
       if (data.result === problemResults.CORRECT) {
-          widget.iconBar.addTempIcon(
-              widget.iconBar.getIcon('checkbox').newBbox, 'check', '#0CC');
+          widget.iconBar.addCenteredTempIcon('multiopen-boxonly', 'check', '#0CC');
           widget.correctness = problemResults.CORRECT;
           callback(problemResults.CORRECT);
       } else if (data.result == problemResults.INCORRECT) {
         widget.iconBar.destroyTempIcons();
-        widget.iconBar.addTempIcon(
-            widget.iconBar.getIcon('checkbox').newBbox, 'cross', 'red');
+        widget.iconBar.addCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
         widget.correctness = problemResults.INCORRECT;
         callback(problemResults.INCORRECT);
       }
@@ -32,7 +30,8 @@ glift.widgets.options.STANDARD_PROBLEM = {
 
   showVariations: glift.enums.showVariations.NEVER,
 
-  icons: ['refresh', 'roadmap', 'checkbox'],
+  // TODO(kashomon): Consider using multiopen-boxonly instead of checkbox
+  icons: ['refresh', 'roadmap', 'multiopen-boxonly'],
 
   controllerFunc: glift.controllers.staticProblem
 };

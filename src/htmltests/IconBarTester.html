@@ -51,11 +51,11 @@
 <script type="text/javascript" src="../displays/gui/gui.js"></script>
 <script type="text/javascript" src="../displays/gui/center.js"></script>
 <script type="text/javascript" src="../displays/gui/comment_box.js"></script>
-<script type="text/javascript" src="../displays/gui/position.js"></script>
 <script type="text/javascript" src="../displays/gui/split.js"></script>
 <!-- Displays icons -->
 <script type="text/javascript" src="../displays/icons/icons.js"></script>
 <script type="text/javascript" src="../displays/icons/bar.js"></script>
+<script type="text/javascript" src="../displays/icons/icon_centering.js"></script>
 <script type="text/javascript" src="../displays/icons/svg.js"></script>
 <script type="text/javascript" src="../displays/icons/wrapped_icon.js"></script>
 <!-- Rules -->
@@ -108,7 +108,7 @@
       #glift_display {
         position:absolute;
         background-color: cyan;
-        top: 200;
+        bottom: 0;
         height: 100;
         left: 100;
         right: 100;
@@ -125,17 +125,21 @@
         var iconBar = glift.displays.icons.bar({
             divId: 'glift_display',
             vertMargin:  5,
-            icons:  ['chevron-left', 'refresh', 'chevron-right', 'roadmap', 'small-gear', 'multiopen-boxonly',
+            icons:  ['chevron-left', 'refresh', 'chevron-right',
+                'roadmap', 'small-gear', 'multiopen-boxonly',
                 ['question-bubble', 'undo', 'twostones']]
         });
 
         iconBar.forEachIcon(function(icon) {
-          iconBar.setEvent('mouseover', icon.name, function() {
-            d3.select('#' + icon.iconId).attr('fill', 'red');
-          }).setEvent('mouseout', icon.name, function() {
-            d3.select('#' + icon.iconId).attr('fill', iconBar.theme.icons.DEFAULT.fill);
+          iconBar.setEvent('mouseover', icon.iconName, function() {
+            d3.select('#' + icon.elementId).attr('fill', 'red');
+          }).setEvent('mouseout', icon.iconName, function() {
+            d3.select('#' + icon.elementId).attr('fill', iconBar.theme.icons.DEFAULT.fill);
           });
         });
+        iconBar.addCenteredTempIcon('multiopen-boxonly', 'check', 'blue');
+        var multi = iconBar.getIconFromIndex(6);
+        iconBar.addCenteredTempIcon('multiopen', multi.getActive(), 'black');
       </script>
     </div>
   </body>

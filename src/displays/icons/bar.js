@@ -16,137 +16,132 @@ glift.displays.icons.bar = function(options) {
   if (divId === undefined) {
     throw "Must define an options 'divId' as an option";
   }
-  var modIconNames = glift.displays.icons.validateIcons(icons);
   return new glift.displays.icons._IconBar(
-      divId, themeName, icons, modIconNames, vertMargin, horzMargin).draw();
-};
-
-/**
- * Do some basic validation on the icons.
- *
- * For convenience, this method returns a 1 layer deep array of icon names.  In
- * other words, Replace arrays of icons with 'multiopen' icons.
- */
-glift.displays.icons.validateIcons = function(icons) {
-  var iconNames = [];
-  for (var i = 0; i < icons.length; i++) {
-    if (glift.util.typeOf(icons[i]) === 'array') {
-      var sublist = icons[i]
-      for (var j = 0; j < sublist.length; j++) {
-        if (glift.displays.icons.svg[icons[j]] === undefined) {
-          throw "Icon unknown: [" + icons[j] + "]";
-        }
-      }
-      iconNames.push('multiopen')
-    } else {
-      if (glift.displays.icons.svg[icons[i]] === undefined) {
-        throw "Icon unknown: [" + icons[i] + "]";
-      }
-      iconNames.push(icons[i]);
-    }
-  }
-  return iconNames;
+      divId, themeName, icons, vertMargin, horzMargin).draw();
 };
 
 glift.displays.icons._IconBar = function(
-    divId, themeName, iconsRaw, iconNames, vertMargin, horzMargin) {
+    divId, themeName, iconsRaw, vertMargin, horzMargin) {
   this.divId = divId;
   this.themeName = themeName;
   this.theme = glift.themes.get(themeName);
-  // Array of icons. This is separated from iconNames since now, it is possible
-  // to have an array of array of icons. (The MultiIcon)
-  this.iconsRaw = iconsRaw;
-  // Array of the icon names.
-  this.iconNames = iconNames;
+  // Array of wrapped icons. See wrapped_icon.js.
+  this.icons = glift.displays.icons.wrapIcons(iconsRaw);
+  this.nameMapping = {};
   this.vertMargin = vertMargin;
   this.horzMargin = horzMargin;
-  this.newIconBboxes = {}; // initialized by draw
   this.svg = undefined; // initialized by draw
-  this.tempIconIds = []; // from addTempIcon.
+
+  this.ICON_CONTAINER = "IconBarIconContainer";
+  this.BUTTON_CONTAINER = "IconBarButtonContainer";
+  this.TEMP_ICON_CLASS = "IconBarTempIcon";
+
+  // Post constructor initializiation
+  this._initIconIds(); // Set the ids for the icons above.
+  this._initNameMapping(); // Init the name mapping.
 };
 
 glift.displays.icons._IconBar.prototype = {
-  /**
-   * Draw the IconBar!
-   */
+  _initNameMapping: function() {
+    var that = this;
+    this.forEachIcon(function(icon) {
+      that.nameMapping[icon.iconName] = icon;
+    });
+  },
+
+  _initIconIds: function() {
+    var that = this;
+    this.forEachIcon(function(icon) {
+      var elementId = that.iconId(icon.iconName);
+      icon.setElementId(elementId);
+    });
+  },
+
+  /** Draw the IconBar! */
   draw: function() {
     this.destroy();
     var divBbox = glift.displays.bboxFromDiv(this.divId),
-        svg = d3.select('#' + this.divId).append("svg")
+        svg = d3.select('#' + this.divId).append("svg:svg")
           .attr("width", '100%')
           .attr("height", '100%'),
-        gui = glift.displays.gui,
         svgData = glift.displays.icons.svg,
-        iconBboxes = [],
-        iconStrings = [],
-        indicesData = [],
         point = glift.util.point;
     this.svg = svg;
-    for (var i = 0; i < this.iconNames.length; i++) {
-      var name = this.iconNames[i];
-      var iconData = svgData[name];
-      iconStrings.push(iconData.string);
-      iconBboxes.push(glift.displays.bboxFromPts(
-          point(iconData.bbox.x, iconData.bbox.y),
-          point(iconData.bbox.x2, iconData.bbox.y2)));
-      indicesData.push(i);
-    }
 
-    // Row center returns: { transforms: [...], bboxes: [...] }
-    var centerObj = glift.displays.gui.rowCenter(
-        divBbox, iconBboxes, this.vertMargin, this.horzMargin, 0, 0);
-    for (var i = 0; i < centerObj.bboxes.length; i++) {
-      this.newIconBboxes[this.iconNames[i]] = centerObj.bboxes[i];
-    }
+    glift.displays.icons.centerWrapped(
+        divBbox, this.icons, this.vertMargin, this.horzMargin)
 
+    this._createIcons();
+    this._createIconButtons();
+    return this;
+  },
+
+  _createIcons: function() {
     var that = this;
-    svg.selectAll('icons').data(indicesData)
-      .enter().append('path')
-        .attr('d', function(i) { return iconStrings[i]; })
-        .attr('fill', this.theme.icons['DEFAULT'].fill)
-        .attr('id', function(i) { return that.iconId(that.iconNames[i]); })
-        .attr('transform', function(i) {
-          return glift.displays.gui.scaleAndMoveString(centerObj.transforms[i]);
-        });
+    var group = this.svg.append("svg:g")
+    group.attr('id', this.ICON_CONTAINER);
+    group.selectAll('icons_toadd').data(this.icons).enter()
+      .append('path')
+        .attr('d', function(icon) { return icon.iconStr; })
+        .attr('fill', that.theme.icons['DEFAULT'].fill)
+        .attr('id', function(icon) { return icon.elementId; })
+        .attr('transform', function(icon) { return icon.transformString(); });
+  },
 
-    var bboxes = centerObj.bboxes;
-    svg.selectAll('buttons').data(indicesData)
+  _createIconButtons: function() {
+    var that = this;
+    // this.svg.selectAll(this.BUTTON_CONTAINER).data([1]) // dummy data;
+      // .enter().append("g").attr('class', this.BUTTON_CONTAINER);
+    this.svg.selectAll('buttons').data(this.icons)
       .enter().append('rect')
-        .attr('x', function(i) { return bboxes[i].topLeft().x(); })
-        .attr('y', function(i) { return bboxes[i].topLeft().y(); })
-        .attr('width', function(i) { return bboxes[i].width(); })
-        .attr('height', function(i) { return bboxes[i].height(); })
+        .attr('x', function(icon) { return icon.bbox.topLeft().x(); })
+        .attr('y', function(icon) { return icon.bbox.topLeft().y(); })
+        .attr('width', function(icon) { return icon.bbox.width(); })
+        .attr('height', function(icon) { return icon.bbox.height(); })
         .attr('fill', 'blue') // Color doesn't matter, but we need a fill.
         .attr('opacity', 0)
-        .attr('_icon', function(i) { return that.iconNames[i]; })
-        .attr('id', function(i) { return that.buttonId(that.iconNames[i]); });
-    return this;
+        .attr('_icon', function(icon) { return icon.iconName; })
+        .attr('id', function(icon) { return that.buttonId(icon.iconName); });
   },
 
-  addTempIcon: function(bbox, iconName, color) {
-    var icon = glift.displays.icons.svg[iconName];
-    var iconBbox = glift.displays.bboxFromPts(
-        glift.util.point(icon.bbox.x, icon.bbox.y),
-        glift.util.point(icon.bbox.x2, icon.bbox.y2));
-    var that = this;
-    var id = that.iconId(iconName);
-    // TODO(kashomon): Store these magic variables somewhere. Themes, maybe?
-    var hMargin = 2;
-    var vMargin = 2;
-    var centerObj = glift.displays.gui.centerWithin(
-        bbox, iconBbox, vMargin, hMargin);
-    this.svg.append('path')
-      .attr('d', icon.string)
+  /**
+   * Add a temporary associated icon and center it.  If the parentIcon has a
+   * subbox specified, then use that.  Otherwise, just center within the
+   * parent icon's bbox.
+   *
+   * If the tempIcon is specified as a string, it is wrapped first.
+   */
+  addCenteredTempIcon: function(
+      parentIconName, tempIcon, color, vMargin, hMargin) {
+    // Move these defaults into the Theme.
+    var hm = hMargin || 2,
+        vm = vMargin || 2;
+    var parentIcon = this.nameMapping[parentIconName];
+    if (glift.util.typeOf(tempIcon) === 'string') {
+      tempIcon = glift.displays.icons.wrappedIcon(tempIcon);
+    }
+
+    if (parentIcon.subboxIcon !== undefined) {
+      tempIcon = parentIcon.centerWithinSubbox(tempIcon, vm, hm);
+    } else {
+      tempIcon = parentIcon.centerWithinIcon(tempIcon, vm, hm);
+    }
+    tempIcon.setElementId(this.iconId(tempIcon.iconName));
+    this.svg.select('#' + this.ICON_CONTAINER).append('path')
+      .attr('d', tempIcon.iconStr)
       .attr('fill', color) // that.theme.icons['DEFAULT'].fill)
-      .attr('id', that.iconId(iconName))
-      .attr('class', 'tempIcon')
-      .attr('transform', glift.displays.gui.scaleAndMoveString(
-          centerObj.transform));
-    this.tempIconIds.push(id);
+      .attr('id', tempIcon.elementId)
+      .attr('class', this.TEMP_ICON_CLASS)
+      .attr('transform', tempIcon.transformString());
     return this;
   },
 
-  addTempText: function(bbox, text, color) {
+  /**
+   * Add some temporary text on top of an icon.
+   */
+  addTempText: function(iconName, text, color) {
+    // TODO(kashomon): Remove this hack.
+    var bbox = this.getIcon(iconName).bbox;
     var fontSize = bbox.width() * .54;
     var boxStrokeWidth = 7
     this.svg.append('text')
@@ -160,14 +155,12 @@ glift.displays.icons._IconBar.prototype = {
       .attr('y', bbox.center().y()) //+ fontSize)
       .attr('dy', '.33em') // Move down, for centering purposes
       .attr('style', 'text-anchor: middle; vertical-align: middle;')
-      // .attr('textLength', bbox.width() - (2 * boxStrokeWidth) + 'px')
       .attr('lengthAdjust', 'spacing'); // also an opt: spacingAndGlyphs
     return this;
   },
 
   destroyTempIcons: function() {
-    this.svg.selectAll('.tempIcon').remove();
-    this.tempIconIds = [];
+    this.svg.selectAll('.' + this.TEMP_ICON_CLASS).remove();
     return this;
   },
 
@@ -175,8 +168,8 @@ glift.displays.icons._IconBar.prototype = {
    * Get the Element ID of the Icon.
    */
   iconId: function(iconName) {
-    return glift.displays.gui.elementId(
-        this.divId, glift.enums.svgElements.ICON, iconName);
+    return this.divId + '_' + glift.enums.svgElements.ICON + '_' + iconName
+      + '_' + glift.util.idGenerator.next();
   },
 
   /**
@@ -199,8 +192,9 @@ glift.displays.icons._IconBar.prototype = {
    */
   setEvent: function(event, iconName, func) {
     var that = this; // not sure if this is necessary
-    d3.select('#' + this.buttonId(iconName))
-      .on(event, function() { func(that.getIcon(iconName)); });
+    d3.select('#' + this.buttonId(iconName)).on(event, function() {
+      func(that.getIcon(iconName));
+    });
     return this;
   },
 
@@ -221,19 +215,17 @@ glift.displays.icons._IconBar.prototype = {
   },
 
   /**
-   * Return a simple object containing the
-   *
-   * {
-   *  name: name of the icon
-   *  iconId: the element id of the icon (for convenience)
-   * }
+   * Return a wrapped icon.
    */
   getIcon: function(name) {
-    return {
-      name: name,
-      iconId: this.iconId(name),
-      newBbox: this.newIconBboxes[name]
-    };
+    return this.nameMapping[name];
+  },
+
+  /**
+   * Return a index
+   */
+  getIconFromIndex: function(index) {
+    return this.icons[index || 0];
   },
 
   /**
@@ -241,8 +233,8 @@ glift.displays.icons._IconBar.prototype = {
    * adding events.
    */
   forEachIcon: function(func) {
-    for (var i = 0; i < this.iconNames.length; i++) {
-      func(this.getIcon(this.iconNames[i]));
+    for (var i = 0; i < this.icons.length; i++) {
+      func(this.icons[i]);
     }
   },
 

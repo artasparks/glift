@@ -59,14 +59,8 @@ glift.widgets.BaseWidget.prototype = {
       this.iconBar = this._createIconBar(
           divIds.iconBarBoxId, this.sgfOptions.icons);
     }
-    if (divIds.extraIconBarBoxId) {
-      this.extraIconBar = this._createIconBar(
-          divIds.extraIconBarBoxId, this.sgfOptions.extraIcons);
-    }
     divIds.iconBarBoxId &&
-        this._initIconActions(this.sgfOptions.icons);
-    divIds.extraIconBarBoxId &&
-        this._initIconActions(this.sgfOptions.extraIcons);
+        this._initIconActions(this.iconBar);
     this._initStoneActions();
     this._initKeyHandlers();
     this._initProblemData();
@@ -146,24 +140,24 @@ glift.widgets.BaseWidget.prototype = {
     });
   },
 
-  _initIconActions: function(icons) {
+  _initIconActions: function(iconBar) {
     var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
     var widget = this;
     var iconActions = this.displayOptions.iconActions;
-    for (var i = 0; i < icons.length; i++) {
-      var iconName = icons[i];
-      if (!iconActions.hasOwnProperty(iconName)) {
+    for (var i = 0; i < iconBar.icons.length; i++) {
+      var icon = icons[i];
+      if (!iconActions.hasOwnProperty(icon.iconName)) {
+        // Make sure that there exists an action specified in the
+        // displayOptions, before we add any options.
         continue;
       }
-      iconActions[iconName].mouseover = iconActions[iconName].mouseover ||
+      iconActions[iconName].mouseover = iconActions[icon.iconName].mouseover ||
         function(event, widget, name) {
-          var id = widget.iconBar.iconId(name);
-          d3.select('#' + id).attr('fill', 'red');
+          d3.select('#' + icon.elementId).attr('fill', 'red');
         };
-      iconActions[iconName].mouseout = iconActions[iconName].mouseout ||
+      iconActions[iconName].mouseout = iconActions[icon.iconName].mouseout ||
         function(event, widget, name) {
-          var id = widget.iconBar.iconId(name);
-          d3.select('#' + id)
+          d3.select('#' + icon.elementId)
               .attr('fill', widget.iconBar.theme.icons.DEFAULT.fill);
         };
       iconActions[iconName].touchstart = iconActions[iconName].touchstart ||
@@ -278,13 +272,13 @@ glift.widgets.BaseWidget.prototype = {
    * ways.
    */
   redraw: function() {
-    this.correctness = undefined;
     this.destroy();
     this.draw();
   },
 
   destroy: function() {
     $('#' + this.wrapperDiv).empty();
+    this.correctness = undefined;
     this.keyHandlerFunc !== undefined
         && $('body').unbind('keydown', this.keyHandlerFunc);
     this.keyHandlerFunc = undefined;

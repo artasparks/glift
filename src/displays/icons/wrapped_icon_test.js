@@ -39,7 +39,8 @@ glift.displays.icons.wrappedIconTest = function() {
       xMove: 10,
       yMove: 20
     });
-    var centered = wrapped.centerWithinSubbox('cross', 0, 0);
+    var centered = wrapped.centerWithinSubbox(
+        glift.displays.icons.wrappedIcon('cross'), 0, 0);
     ok(wrapped != undefined);
     deepEqual(
       oneDec(centered.bbox.topLeft().x() - subboxIcon.bbox.topLeft().x()),
@@ -54,7 +55,8 @@ glift.displays.icons.wrappedIconTest = function() {
 
   test("Center cross within icon", function() {
     var wrapped = glift.displays.icons.wrappedIcon('multiopen');
-    var centered = wrapped.centerWithinIcon('cross', 0, 0);
+    var centered = wrapped.centerWithinIcon(
+        glift.displays.icons.wrappedIcon('cross'), 0, 0);
     ok(wrapped != undefined);
     deepEqual(
       oneDec(centered.bbox.topLeft().x() - wrapped.bbox.topLeft().x()),

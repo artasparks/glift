@@ -6,6 +6,27 @@ glift.displays.icons.wrappedIcon = function(iconName) {
 };
 
 /**
+ * Wrap an array of iconNames.
+ */
+glift.displays.icons.wrapIcons = function(iconsRaw) {
+  var out = [];
+  for (var i = 0; i < iconsRaw.length; i++) {
+    var item = iconsRaw[i];
+    if (glift.util.typeOf(item) === 'string') {
+      out.push(glift.displays.icons.wrappedIcon(item));
+    } else if (glift.util.typeOf(item) === 'array') {
+      var subIcons = item;
+      var outerIcon = glift.displays.icons.wrappedIcon('multiopen')
+      for (var j = 0; j < subIcons.length; j++) {
+        outerIcon.addAssociatedIcon(subIcons[j]);
+      }
+      out.push(outerIcon);
+    }
+  }
+  return out;
+};
+
+/**
  * Validate that an iconName is valid.
  */
 glift.displays.icons.validateIcon = function(iconName) {
@@ -28,10 +49,14 @@ glift.displays.icons._WrappedIcon = function(iconName) {
       glift.util.point(iconData.bbox.x, iconData.bbox.y),
       glift.util.point(iconData.bbox.x2, iconData.bbox.y2));
   this.associatedIcons = [];
+  this.activeAssociated = 0; // Index into the above array
   this.bbox = this.originalBbox; // can change on "translate"
-
-  this._transform = undefined; // Set if the icon is transformed
+  this.transformObj = undefined; // Set if the icon is transformed
+  this.elementId = undefined; // set with setElementId.  The id in the DOM.
   this.subboxIcon = undefined; // Set from setSubboxIcon(...);
+  if (iconData.subboxName !== undefined) {
+    this.setSubboxIcon(iconData.subboxName);
+  }
 };
 
 /**
@@ -39,36 +64,55 @@ glift.displays.icons._WrappedIcon = function(iconName) {
  */
 glift.displays.icons._WrappedIcon.prototype = {
   /**
-   * Add an associated icon.
+   * Add an associated icon and return the new icon.
    */
   addAssociatedIcon: function(iconName) {
-    this.associatedIcons.push(glift.displays.icons.wrappedIcon(iconName));
+    var newIcon = glift.displays.icons.wrappedIcon(iconName)
+    this.associatedIcons.push(newIcon);
+    return newIcon;
   },
 
   /**
-   * Add an associated icon.
+   * Add an associated icon and return the icon (for parity with the above).
    */
-  addAssociatedWrapped: function(wrapped) {
+  _addAssociatedWrapped: function(wrapped) {
     if (wrapped.originalBbox === undefined) {
       throw "Wrapped icon not actually a wrapped icon: " + wrapped;
     }
     this.associatedIcons.push(wrapped);
+    return wrapped;
   },
 
   /**
-   * Clear the associated icons.  This is useful for handling temporary icons.
+   * Clear the associated icons, returning the old list.
    */
   clearAssociatedIcons: function() {
+    var oldIcons = this.associatedIcons;
     this.associatedIcons = [];
+    return oldIcons;
   },
 
   /**
    * Return a the wrapped icon from the associated icon list. If index isn't
-   * specified, the assumption is that the index is 0;
+   * specified, the assumption is that the index is the active index;
    */
-  fromAssociated: function(index) {
-    index = index || 0;
+  getAssociated: function(index) {
+    index = index || this.activeAssociated;
     return this.associatedIcons[index];
+  },
+
+  /**
+   * Get the active associated icon.
+   */
+  getActive: function() {
+    return this.associatedIcons[this.activeAssociated];
+  },
+
+  /**
+   * Set the div element id.
+   */
+  setElementId: function(id) {
+    this.elementId = id;
   },
 
   /**
@@ -81,31 +125,27 @@ glift.displays.icons._WrappedIcon.prototype = {
   },
 
   /**
-   * Center a icon (specified with iconName) within a subbox. Returns a new
+   * Center a icon (specified as a wrapped icon) within a subbox. Returns the
    * wrapped icon with the proper scaling.
    */
-  centerWithinSubbox: function(iconName, vMargin, hMargin) {
+  centerWithinSubbox: function(wrapped, vMargin, hMargin) {
     if (this.subboxIcon === undefined) {
       throw "No subbox defined, so cannot centerWithin.";
     }
-    var wrapped = glift.displays.icons.wrappedIcon(iconName);
     var centerObj = glift.displays.gui.centerWithin(
         this.subboxIcon.bbox, wrapped.bbox, vMargin, hMargin);
     wrapped.performTransform(centerObj.transform);
-    this.addAssociatedWrapped(wrapped);
     return wrapped;
   },
 
   /**
-   * Center a icon (specified with iconName) within the cur icon. Returns a new
-   * wrapped icon with the proper scaling.
+   * Center a icon (specified as a wrapped icon) within the current icon.
+   * Returns the wrapped icon with the proper scaling.
    */
-  centerWithinIcon: function(iconName, vMargin, hMargin) {
-    var wrapped = glift.displays.icons.wrappedIcon(iconName);
+  centerWithinIcon: function(wrapped, vMargin, hMargin) {
     var centerObj = glift.displays.gui.centerWithin(
         this.bbox, wrapped.bbox, vMargin, hMargin);
     wrapped.performTransform(centerObj.transform);
-    this.addAssociatedWrapped(wrapped);
     return wrapped;
   },
 
@@ -132,7 +172,7 @@ glift.displays.icons._WrappedIcon.prototype = {
       this.subboxIcon.performTransform(transformObj);
     }
     // TODO(kashomon): Should we transform the associated icons?
-    this._transform = transformObj;
+    this.transformObj = transformObj;
     return this;
   },
 
@@ -141,18 +181,18 @@ glift.displays.icons._WrappedIcon.prototype = {
    */
   resetTransform: function() {
     this.bbox = this.originalBbox;
-    this._transform = undefined;
+    this.transformObj = undefined;
     return this;
   },
 
   /**
    * Get the scaling string to be used as a SVG transform parameter.
    */
-  getTransformString: function() {
-    if (this._transform != undefined) {
-      return 'translate(' + this._transform.xMove + ','
-          + this._transform.yMove + ') '
-        + 'scale(' + this._transform.scale + ')';
+  transformString: function() {
+    if (this.transformObj != undefined) {
+      return 'translate(' + this.transformObj.xMove + ','
+          + this.transformObj.yMove + ') '
+        + 'scale(' + this.transformObj.scale + ')';
     } else {
       return "";
     }
