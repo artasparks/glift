@@ -6,11 +6,18 @@
  * --------------------------------------
  */
 (function() {
-var glift = window.glift || {};
-
+var glift = glift || window.glift || {};
+var exports = exports || {};
+if (window) { // For in-browser
+  window.glift = glift;
+}
+if (exports) { // For NodeJs
+  exports.glift = glift;
+}
+})();
 glift.global = {
   /**
-   * Semantic versioning is used to determine the version.
+   * Semantic versioning is used to determine the behavior at a version.
    * See: http://semver.org/
    *
    * Currently in alpha.
@@ -27,9 +34,6 @@ glift.global = {
   // (not used yet).
   active: {}
 };
-
-window.glift = glift;
-})();
 glift.util = {
   logz: function(msg) {
     var modmsg = msg;
@@ -1258,7 +1262,6 @@ BoardPoints.prototype = {
 
 })();
 (function() {
-// TODO(kashomon): Make its own directory?
 glift.displays.cropbox = {
   LINE_EXTENSION: .5,
   DEFAULT_EXTENSION: 0, // Wut.
@@ -2472,7 +2475,6 @@ glift.displays.gui = {
  *    bboxes: [...]
  *  }
  */
-// TODO(kashomon): Support column centering.
 glift.displays.gui.rowCenter = function(
     outerBox, inBboxes, vertMargin, horzMargin, minSpacing, maxSpacing) {
   var outerWidth = outerBox.width(),
@@ -2542,7 +2544,7 @@ glift.displays.gui.rowCenter = function(
     left += newBbox.width() + elementSpacing;
   }
 
-  return { transforms: transforms, bboxes: finishedBoxes };
+  return { transforms: transforms, bboxes: finishedBoxes, unfit: unfitTransforms };
 };
 
 glift.displays.gui.centerWithin = function(
@@ -5738,7 +5740,6 @@ glift.widgets.BaseWidget.prototype = {
           divIds.iconBarBoxId, this.sgfOptions.icons);
     }
 
-    glift.util.logz(divIds.iconBarBoxId);
     divIds.iconBarBoxId && this._initIconActions(this.iconBar);
     this._initStoneActions();
     this._initKeyHandlers();
@@ -5830,27 +5831,32 @@ glift.widgets.BaseWidget.prototype = {
         // displayOptions, before we add any options.
         return
       }
-      iconActions[iconName].mouseover = iconActions[iconName].mouseover ||
-        function(event, widget, name) {
-          d3.select('#' + icon.elementId).attr('fill', 'red');
-        };
-      iconActions[iconName].mouseout = iconActions[iconName].mouseout ||
-        function(event, widget, name) {
-          d3.select('#' + icon.elementId)
+      var actionsForIcon = {};
+
+      actionsForIcon.click = iconActions[iconName].click;
+      actionsForIcon.mouseover = iconActions[iconName].mouseover ||
+          function(d3Event, widgetRef, iconObj) {
+            d3.select('#' + iconObj.elementId).attr('fill', 'red');
+          };
+      actionsForIcon.mouseout = iconActions[iconName].mouseout ||
+          function(d3Event, widgetRef, iconObj) {
+            d3.select('#' + iconObj.elementId)
               .attr('fill', widget.iconBar.theme.icons.DEFAULT.fill);
-        };
-      iconActions[iconName].touchstart = iconActions[iconName].touchstart ||
-        function(event, widget, name) {
-          event.preventDefault && event.preventDefault();
-          event.stopPropagation && event.stopPropagation();
-          widget.displayOptions.iconActions[name].click(event, widget);
-        };
-      for (var eventName in iconActions[iconName]) {
-        (function(eventName, iconNameBound, event) { // lazy binding pattern.
+          };
+      actionsForIcon.touchstart = iconActions[iconName].touchstart ||
+          function(d3Event,  widgetRef, iconObj) {
+            d3Event.preventDefault && d3Event.preventDefault();
+            d3Event.stopPropagation && d3Event.stopPropagation();
+            widgetRef.displayOptions.iconActions[
+                iconObj.iconName].click(d3Event, widgetRef, iconObj);
+          };
+      for (var eventName in actionsForIcon) {
+        var eventFunc = actionsForIcon[eventName];
+        (function(eventName, iconNameBound, eventFunction) { // lazy binding pattern.
           widget.iconBar.setEvent(eventName, iconName, function() {
-            event(d3.event, widget, iconNameBound);
+            eventFunction(d3.event, widget, iconBar.getIcon(iconNameBound));
           });
-        })(eventName, iconName, iconActions[iconName][eventName]);
+        })(eventName, iconName, eventFunc);
       }
     });
   },
@@ -6485,59 +6491,59 @@ glift.widgets.options.baseOptions = {
    */
   iconActions: {
     start: {
-      click:  function(event, widget) {
+      click:  function(event, widget, icon) {
         widget.applyBoardData(widget.controller.toBeginning());
       }
     },
 
     end: {
-      click:  function(event, widget) {
+      click:  function(event, widget, icon) {
         widget.applyBoardData(widget.controller.toEnd());
       }
     },
 
     arrowright: {
-      click: function(event, widget) {
+      click: function(event, widget, icon) {
         widget.applyBoardData(widget.controller.nextMove());
       }
     },
 
     arrowleft: {
-      click:  function(event, widget) {
+      click:  function(event, widget, icon) {
         widget.applyBoardData(widget.controller.prevMove());
       }
     },
 
     // Get next problem.
     'chevron-right': {
-      click: function(event, widget) {
+      click: function(event, widget, icon) {
         widget.manager.nextSgf();
       }
     },
 
     // Get the previous problem.
     'chevron-left': {
-      click: function(event, widget) {
+      click: function(event, widget, icon) {
         widget.manager.prevSgf();
       }
     },
 
     // Try again
     refresh: {
-      click: function(event, widget) {
+      click: function(event, widget, icon) {
         widget.reload();
       }
     },
 
     undo: {
-      click: function(event, widget) {
+      click: function(event, widget, icon) {
         widget.manager.returnToOriginalWidget();
       }
     },
 
     // Go to the explain-board.
     roadmap: {
-      click: function(event, widget) {
+      click: function(event, widget, iconObj) {
         var manager = widget.manager;
         var sgfObj = {
           widgetType: glift.enums.widgetTypes.GAME_VIEWER,

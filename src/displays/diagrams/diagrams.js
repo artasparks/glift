@@ -1,0 +1,1 @@
+glift.displays.diagrams = {};

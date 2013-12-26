@@ -1,12 +1,10 @@
-(function() {
-// TODO(kashomon): Make its own directory?
 glift.displays.cropbox = {
   LINE_EXTENSION: .5,
   DEFAULT_EXTENSION: 0, // Wut.
   OVERFLOW: 1.5, // The line spacing that goes around the edge.
 
   create: function(cbox, extBox, minIntersects, maxIntersects) {
-    return new CropBox(cbox, extBox, minIntersects, maxIntersects);
+    return new glift.displays._CropBox(cbox, extBox, minIntersects, maxIntersects);
   },
 
   getFromRegion: function(region, intersects) {
@@ -115,12 +113,12 @@ glift.displays.cropbox = {
  * A cropbox is similar to a bounding box, but instead of a box based on pixels,
  * it's a box based on points.
  */
-var CropBox = function(cbox, extBox, minIntersects, maxIntersects) {
+glift.displays._CropBox = function(cbox, extBox, minIntersects, maxIntersects) {
   this._cbox = cbox;
   this._extBox = extBox;
 };
 
-CropBox.prototype = {
+glift.displays._CropBox.prototype = {
   cbox: function() { return this._cbox; },
   extBox: function() { return this._extBox; },
   xPoints: function() { return this.cbox().width(); },
@@ -143,28 +141,3 @@ CropBox.prototype = {
         + this.extBox().botRight().y() + OVERFLOW;
   }
 };
-
-var getRegionFromTracker = function(tracker, numstones) {
-  var regions = [], br = glift.enums.boardRegions;
-  for (var quadkey in tracker) {
-    var quadlist = tracker[quadkey];
-    if (quadlist.length === numstones) {
-      return quadkey;
-    } else {
-      regions.push(quadkey);
-    }
-  }
-  if (regions.length !== 2) {
-    // Shouldn't be 1 element here...
-    return glift.boardRegions.ALL;
-  }
-  var newset = glift.util.intersection(
-    glift.util.regions.getComponents(regions[0]),
-    glift.util.regions.getComponents(regions[1]));
-  // there should only be one element at this point or nothing
-  for (var key in newset) {
-    return key;
-  }
-  return glift.boardRegions.ALL;
-};
-})();

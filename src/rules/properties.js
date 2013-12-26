@@ -1,7 +1,4 @@
 (function() {
-var util = glift.util;
-var enums = glift.enums;
-
 glift.rules.properties = function(map) {
   return new Properties(map);
 };
@@ -30,12 +27,12 @@ Properties.prototype = {
     // Return if the property is not string or a real property
     if (glift.sgf.allProperties[prop] === undefined) {
       throw "Can't add undefined properties";
-    } else if (util.typeOf(value) !== 'string' &&
-        util.typeOf(value) !== 'array') {
+    } else if (glift.util.typeOf(value) !== 'string' &&
+        glift.util.typeOf(value) !== 'array') {
       // The value has to be either a string or an array.
       value = value.toString();
     }
-    value = util.typeOf(value) === 'string' ? [value] : value;
+    value = glift.util.typeOf(value) === 'string' ? [value] : value;
 
     // If the type is a string, make into an array or concat.
     if (this.contains(prop)) {
@@ -51,11 +48,11 @@ Properties.prototype = {
    */
   getAllValues: function(strProp) {
     if (glift.sgf.allProperties[strProp] === undefined) {
-      return util.none; // Not a valid Property
+      return glift.util.none; // Not a valid Property
     } else if (this.propMap[strProp] !== undefined) {
       return this.propMap[strProp];
     } else {
-      return util.none;
+      return glift.util.none;
     }
   },
 
@@ -71,10 +68,10 @@ Properties.prototype = {
     var index = (index !== undefined
         && typeof index === 'number' && index >= 0) ? index : 0;
     var arr = this.getAllValues(strProp);
-    if (arr !== util.none && arr.length >= 1) {
+    if (arr !== glift.util.none && arr.length >= 1) {
       return arr[index];
     } else {
-      return util.none;
+      return glift.util.none;
     }
   },
 
@@ -85,7 +82,7 @@ Properties.prototype = {
    */
   getAsPoint: function(strProp, index) {
     var out = this.getOneValue(strProp, index);
-    if (out === util.none) {
+    if (out === glift.util.none) {
       return out;
     } else {
       return glift.util.pointFromSgfCoord(out);
@@ -97,7 +94,7 @@ Properties.prototype = {
    * false otherwise.
    */
   contains: function(prop) {
-    return this.getAllValues(prop) !== util.none;
+    return this.getAllValues(prop) !== glift.util.none;
   },
 
   /** Delete the prop and return the value. */
@@ -107,7 +104,7 @@ Properties.prototype = {
       delete this.propMap[prop];
       return allValues;
     } else {
-      return util.none;
+      return glift.util.none;
     }
   },
 
@@ -132,9 +129,9 @@ Properties.prototype = {
   // Get all the placements for a color (BLACK or WHITE).  Return as an array.
   getPlacementsAsPoints: function(color) {
     var prop = "";
-    if (color === enums.states.BLACK) {
+    if (color === glift.enums.states.BLACK) {
       prop = glift.sgf.allProperties.AB;
-    } else if (color === enums.states.WHITE) {
+    } else if (color === glift.enums.states.WHITE) {
       prop = glift.sgf.allProperties.AW;
     }
     if (prop === "" || !this.contains(prop)) {
@@ -147,7 +144,7 @@ Properties.prototype = {
     if (this.contains('C')) {
       return this.getOneValue('C');
     } else {
-      return util.none;
+      return glift.util.none;
     }
   },
 
@@ -237,7 +234,7 @@ Properties.prototype = {
     out[BLACK] = this.getPlacementsAsPoints(states.BLACK);
     out[WHITE] = this.getPlacementsAsPoints(states.WHITE);
     var move = this.getMove();
-    if (move != util.none && move.point !== undefined) {
+    if (move != glift.util.none && move.point !== undefined) {
       out[move.color].push(move.point);
     }
     return out;

@@ -8,7 +8,6 @@
  *    bboxes: [...]
  *  }
  */
-// TODO(kashomon): Support column centering.
 glift.displays.gui.rowCenter = function(
     outerBox, inBboxes, vertMargin, horzMargin, minSpacing, maxSpacing) {
   var outerWidth = outerBox.width(),
@@ -78,7 +77,7 @@ glift.displays.gui.rowCenter = function(
     left += newBbox.width() + elementSpacing;
   }
 
-  return { transforms: transforms, bboxes: finishedBoxes };
+  return { transforms: transforms, bboxes: finishedBoxes, unfit: unfitTransforms };
 };
 
 glift.displays.gui.centerWithin = function(

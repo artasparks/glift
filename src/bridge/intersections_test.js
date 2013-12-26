@@ -1,4 +1,4 @@
-glift.rules.intersectionsTest = function() {
+glift.bridge.intersectionsTest = function() {
   module("Intersections Test");
   var sgfs = testdata.sgfs,
       mtm = glift.rules.movetree,
@@ -9,7 +9,7 @@ glift.rules.intersectionsTest = function() {
   test("Add current marks to the intersection data", function() {
     var movetree = glift.rules.movetree.getFromSgf(sgfs.marky),
         goban = glift.rules.goban.getFromMoveTree(movetree, []).goban,
-        foundMarks = glift.rules.intersections.getCurrentMarks(movetree, {}),
+        foundMarks = glift.bridge.intersections.getCurrentMarks(movetree, {}),
 
         cirpts = glift.sgf.allSgfCoordsToPoints(['rb', 'rc', 're']),
         labels = glift.sgf.convertFromLabelArray([
@@ -39,7 +39,7 @@ glift.rules.intersectionsTest = function() {
     var initPosition = glift.rules.treepath.parseInitPosition(2),
         movetree = mtm.getFromSgf(sgfs.marky, initPosition),
         goban = glift.rules.goban.getFromMoveTree(movetree, initPosition).goban,
-        data = glift.rules.intersections.getFullBoardData(movetree, goban),
+        data = glift.bridge.intersections.getFullBoardData(movetree, goban),
         conv = glift.util.pointFromSgfCoord,
         mk = glift.enums.marks,
         col = glift.enums.states,
@@ -67,7 +67,7 @@ glift.rules.intersectionsTest = function() {
     var mt =  glift.rules.movetree.getFromSgf(sgf);
     var conv = glift.util.pointFromSgfCoord;
     var goban = glift.rules.goban.getFromMoveTree(mt, []).goban;
-    var data = glift.rules.intersections.getFullBoardData(mt, goban)
+    var data = glift.bridge.intersections.getFullBoardData(mt, goban)
 
     deepEqual(mt.properties().getOneValue('C'), 'MDTest');
     deepEqual(data.comment, 'MDTest');
@@ -77,19 +77,19 @@ glift.rules.intersectionsTest = function() {
 
     mt.moveDown();
     var captures = goban.loadStonesFromMovetree(mt);
-    var data = glift.rules.intersections.nextBoardData(mt, captures);
+    var data = glift.bridge.intersections.nextBoardData(mt, captures);
     deepEqual(data.stones.BLACK, [conv('ab')]);
 
     mt.moveDown();
     var captures = goban.loadStonesFromMovetree(mt);
-    var data = glift.rules.intersections.nextBoardData(mt, captures);
+    var data = glift.bridge.intersections.nextBoardData(mt, captures);
     deepEqual(data.stones.BLACK, []);
     deepEqual(data.stones.WHITE, []);
     deepEqual(data.stones.EMPTY, []);
 
     mt.moveDown();
     var captures = goban.loadStonesFromMovetree(mt);
-    var data = glift.rules.intersections.nextBoardData(mt, captures);
+    var data = glift.bridge.intersections.nextBoardData(mt, captures);
     deepEqual(data.stones.BLACK, [conv('bb')]);
   });
 };

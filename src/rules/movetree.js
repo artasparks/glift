@@ -1,19 +1,17 @@
-(function() {
-var util = glift.util;
-var enums = glift.enums;
-
 /**
  * When an SGF is parsed by the parser, it is transformed into the following:
  *
  *MoveTree {
- *  _history: [MoveNode, MoveNode, ... ]
+ * _currentNode
+ * _rootNode
  *}
  *
  * And where a MoveNode looks like the following:
  * MoveNode: {
- *    nodeId: { ... }
- *    properties: Properties
- *    children: [MoveNode, MoveNode, MoveNode]
+ *    nodeId: { ... },
+ *    properties: Properties,
+ *    children: [MoveNode, MoveNode, MoveNode],
+ *    parent: MoveNode
  *  }
  *}
  *
@@ -33,20 +31,16 @@ var enums = glift.enums;
  * latter of which is a list to capture the idea of multiple variations.
  */
 glift.rules.movetree = {
-  /**
-   * Create an empty MoveTree
-   */
+  /** Create an empty MoveTree */
   getInstance: function(intersections) {
-    var mt = new MoveTree(glift.rules.movenode());
+    var mt = new glift.rules._MoveTree(glift.rules.movenode());
     if (intersections !== undefined) {
       mt.setIntersections(intersections);
     }
     return mt;
   },
 
-  /**
-   * Create a MoveTree from an SGF.
-   */
+  /** Create a MoveTree from an SGF. */
   getFromSgf: function(sgfString, initPosition) {
     initPosition = initPosition || []; // treepath.
     if (sgfString === undefined || sgfString === "") {
@@ -65,12 +59,10 @@ glift.rules.movetree = {
    * from any position in the tree.  This can be useful for recursion.
    */
   getFromNode: function(node) {
-    return new MoveTree(node);
+    return new glift.rules._MoveTree(node);
   },
 
-  /**
-   * Seach nodes with a Depth First Search.
-   */
+  /** Seach nodes with a Depth First Search. */
   searchMoveTreeDFS: function(moveTree, func) {
     func(moveTree);
     for (var i = 0; i < moveTree.node().numChildren(); i++) {
@@ -81,41 +73,38 @@ glift.rules.movetree = {
 };
 
 /**
- * A MoveTree is a history (a tree) of the past nodes played.  The movetree is
- * (usually) a processed parsed SGF, but could be created organically.
+ * A MoveTree is a tree of movenodes played.  The movetree is (usually) a
+ * processed parsed SGF, but could be created organically.
  *
- * The tree itself is tree structure made out of MoveNodes.
- *
- * Semantically, a MoveTree can be thought of as a game.  Thus, this is the
- * place where such moves as currentPlayer or lastMove.
+ * Semantically, a MoveTree can be thought of as a game, but could also be a
+ * problem, demonstration, or example.  Thus, this is the place where such moves
+ * as currentPlayer or lastMove.
  */
-var MoveTree = function(rootNode) {
-  // The moveHistory serves two purposes -- it allows travel backwards (i.e.,
-  // up the tree), and it gives the current move, which is the last move in the
-  // array.
-  //
-  // Really, this exists so that we don't have to make the nodes have to know
-  // about their parent node.  It would be nice to know linkkkkk
-  // Unfortunately, there's not good way to do this at parsing time, as far as I
-  // know.
-  this._nodeHistory = [];
-  this._nodeHistory.push(rootNode);
+glift.rules._MoveTree = function(rootNode, currentNode) {
+  this._rootNode = rootNode;
+  this._currentNode = currentNode || rootNode;
 };
 
-MoveTree.prototype = {
-  /**
-   * Get a new move tree instance from the node history.  Note, that this still
-   * refers to the same movetree -- the current position is just changed.
-   */
+glift.rules._MoveTree.prototype = {
+  /** Get a new move tree instance from the root node. */
   getTreeFromRoot: function() {
-    return glift.rules.movetree.getFromNode(this._nodeHistory[0]);
+    return glift.rules.movetree.getFromNode(this._rootNode);
+  },
+
+  /**
+   * Get a new tree reference.  The underlying tree remains the same, but this
+   * is a lightway to create new references so the current node position can be
+   * changed.
+   */
+  newTreeRef: function() {
+    return new glift.rules._MoveTree(this._rootNode, this._currentNode);
   },
 
   /**
    * Get the current node -- that is, the node at the current position.
    */
   node: function() {
-    return this._nodeHistory[this._nodeHistory.length - 1];
+    return this._currentNode;
   },
 
   /**
@@ -149,7 +138,7 @@ MoveTree.prototype = {
     if (ptSet[point.hash()] !== undefined) {
       return ptSet[point.hash()];
     } else {
-      return util.none;
+      return glift.util.none;
     }
   },
 
@@ -206,7 +195,8 @@ MoveTree.prototype = {
    */
   getCurrentPlayer: function() {
     var move = this.properties().getMove();
-    if (move === util.none) {
+    var enums = glift.enums;
+    if (move === glift.util.none) {
       return enums.states.BLACK;
     } else if (move.color === enums.states.BLACK) {
       return enums.states.WHITE;
@@ -227,8 +217,7 @@ MoveTree.prototype = {
   moveDown: function(variationNum) {
     var num = variationNum === undefined ? 0 : variationNum;
     if (this.node().getChild(num) !== undefined) {
-      var next = this.node().getChild(num);
-      this._nodeHistory.push(next);
+      this._currentNode = this.node().getChild(num);
     }
     return this;
   },
@@ -237,15 +226,16 @@ MoveTree.prototype = {
    * Move up a move, but only if you are not in the intial (0th) move.
    */
   moveUp: function() {
-    if (this._nodeHistory.length > 1) {
-      this._nodeHistory.pop();
+    var parent = this._currentNode.getParent();
+    if (parent !== undefined && parent !== glift.util.none) {
+      this._currentNode = parent;
     }
     return this;
   },
 
   // Move to the root node
   moveToRoot: function() {
-    this._nodeHistory = this._nodeHistory.slice(0,1);
+    this._currentNode = this._rootNode;
     return this;
   },
 
@@ -321,4 +311,3 @@ MoveTree.prototype = {
     }
   }
 };
-})();

@@ -5,6 +5,8 @@
 # following:
 #
 # export a CLOSURE var pointing to the closure jar
+#
+# That should be basically it!
 
 import glob
 import os
@@ -28,13 +30,6 @@ FILES_TO_AUTOGEN = {
     'htmltests/ThemeTester.html': False,
     }
 
-COMBINED_LOC = 'compiled/glift_combined.js'
-COMPILED_LOC = 'compiled/glift.js'
-GZIPPED_LOC = 'compiled/glift.js.gz'
-
-HEADER = '<!-- AUTO-GEN-DEPS -->'
-FOOTER = '<!-- END-AUTO-GEN-DEPS -->'
-
 DIR_ORDER = [
     '.',
     'util',
@@ -43,15 +38,25 @@ DIR_ORDER = [
     'displays/board',
     'displays/gui',
     'displays/icons',
-    # Rules and display are not linked (woo!)
+    'displays/diagrams',
+
+    # Rules and display are not linked, except via bridge.
     'rules',
+
+    # Tertiary packages
     'sgf',
     'controllers',
-    # Extra: These parts connect display and rules pieces.
     'bridge',
     'widgets',
     'widgets/options',
     ]
+
+COMBINED_LOC = 'compiled/glift_combined.js'
+COMPILED_LOC = 'compiled/glift.js'
+GZIPPED_LOC = 'compiled/glift.js.gz'
+
+HEADER = '<!-- AUTO-GEN-DEPS -->'
+FOOTER = '<!-- END-AUTO-GEN-DEPS -->'
 
 # Need a closure alias, e.g.,: export CLOSURE="java -jar ~/closure.jar"
 # --compilation_level ADVANCED_OPTIMIZATIONS"
@@ -160,6 +165,7 @@ def CombineSourceFiles(srcs):
   return outString
 
 def main(argv=None):
+  print ' '.join(sys.argv)
   curdir = sys.argv[0]
   flags = set(sys.argv[1:])
   flist = GetFileList(sys.argv[0])

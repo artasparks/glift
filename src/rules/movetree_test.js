@@ -45,14 +45,14 @@ glift.rules.movetreeTest = function() {
 
   test("that moving up / down works correctly", function() {
     var mt = movetree.getFromSgf(sgfs.easy);
-    deepEqual(mt.node().getNodeNum(), 0, 'move num');
-    deepEqual(mt.node().getVarNum(), 0, 'var num');
-    deepEqual(mt.node().numChildren(), 3, 'next nodes');
+    deepEqual(mt.node().getNodeNum(), 0, 'move num beg');
+    deepEqual(mt.node().getVarNum(), 0, 'var num beg');
+    deepEqual(mt.node().numChildren(), 3, 'next nodes beg');
 
     mt.moveDown();
-    deepEqual(mt.node().getNodeNum(), 1, 'move num');
-    deepEqual(mt.node().getVarNum(), 0, 'var num');
-    deepEqual(mt.node().numChildren(), 1, 'next nodes');
+    deepEqual(mt.node().getNodeNum(), 1, 'move num md_1');
+    deepEqual(mt.node().getVarNum(), 0, 'var num md_1');
+    deepEqual(mt.node().numChildren(), 1, 'next nodes md_1');
     deepEqual(mt.properties().getOneValue("B"), "sa", "stoneMove");
 
     mt.moveUp();

@@ -14,6 +14,9 @@
  * 2.3-4.1   - Start at the 1st variation of the 4th move, arrived at by traveling
  *             through the 3rd varition of the 2nd move
  *
+ * Note: '+' is a special symbol which means "go to the end via the first
+ * variation."
+ *
  * The init position returned is an array of variation numbers traversed through.
  * The move number is precisely the length of the array.
  *
@@ -36,9 +39,13 @@ glift.rules.treepath = {
     } else if (glift.util.typeOf(initPos) === 'array') {
       return initPos;
     } else if (glift.util.typeOf(initPos) === 'string') {
-
+      // Fallthrough and parse the path.  This is the expected behavior.
     } else {
       return [];
+    }
+
+    if (initPos === '+') {
+      return this.toEnd();
     }
 
     var out = [];
@@ -58,8 +65,24 @@ glift.rules.treepath = {
     return out;
   },
 
+  /**
+   * Return an array of 1000 0-th variations.  This is sort of a hack, but
+   * changing this would involve rethinking what a treepath is.
+   */
+  toEnd: function() {
+    if (this._storedToEnd !== undefined) {
+      return this._storedToEnd;
+    }
+    var storedToEnd = []
+    for (var i = 0; i < 1000; i++) {
+      storedToEnd.push(0);
+    }
+    this._storedToEnd = storedToEnd;
+    return this._storedToEnd;
+  },
+
   // Flatten the move tree variations into a list of lists, where the sublists
-  // are each a treepath
+  // are each a treepath.
   //
   // TODO(kashomon): Why does this exist?
   flattenMoveTree: function(movetree) {

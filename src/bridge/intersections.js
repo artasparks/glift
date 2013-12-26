@@ -1,4 +1,3 @@
-(function() {
 /*
  * Intersection Data is the precise set of information necessary to display the
  * Go Board, which is to say, it is the set of stones and display information.
@@ -14,13 +13,12 @@
  *     ],
  *     comment: "This is a good move",
  *   }
- *
+rules *
  * In the points array, each must object contain a point, and each should contain a
  * mark or a stone.  There can only be a maximum of one stone and one mark
  * (glift.enums.marks).
  */
-
-glift.rules.intersections = {
+glift.bridge.intersections = {
   propertiesToMarks: {
     CR: glift.enums.marks.CIRCLE,
     LB: glift.enums.marks.LABEL,
@@ -72,7 +70,7 @@ glift.rules.intersections = {
     };
     out.comment = movetree.properties().getComment();
     out.lastMove = movetree.getLastMove();
-    out.marks = glift.rules.intersections.getCurrentMarks(movetree);
+    out.marks = glift.bridge.intersections.getCurrentMarks(movetree);
     out.nextMoves = movetree.nextMoves();
     out.correctNextMoves = problemConditions !== undefined
         ? glift.rules.problems.correctNextMoves(movetree, problemConditions)
@@ -84,7 +82,7 @@ glift.rules.intersections = {
    * Extends the basePropertyData with stone data.
    */
   getFullBoardData: function(movetree, goban, problemConditions) {
-    var baseData = glift.rules.intersections.basePropertyData(
+    var baseData = glift.bridge.intersections.basePropertyData(
         movetree, problemConditions);
     baseData.displayDataType = glift.enums.displayDataTypes.FULL;
     var gobanStones = goban.getAllPlacedStones();
@@ -104,7 +102,7 @@ glift.rules.intersections = {
    * }
    */
   nextBoardData: function(movetree, currentCaptures, problemConditions) {
-    var baseData = glift.rules.intersections.basePropertyData(
+    var baseData = glift.bridge.intersections.basePropertyData(
         movetree, problemConditions);
     baseData.stones = movetree.properties().getAllStones();
     baseData.stones.EMPTY = [];
@@ -123,7 +121,7 @@ glift.rules.intersections = {
   // TODO(kashomon): Reduce duplication with nextBoardData.
   previousBoardData: function(movetree, stones, captures,
       problemConditions) {
-    var baseData = glift.rules.intersections.basePropertyData(
+    var baseData = glift.bridge.intersections.basePropertyData(
         movetree, problemConditions);
     baseData.stones = captures;
     baseData.stones.EMPTY = [];
@@ -138,16 +136,17 @@ glift.rules.intersections = {
   /**
    * Create an object with the current marks at the current position in the
    * movetree.
+   *
+   * returns: map from
    */
   getCurrentMarks: function(movetree) {
     var outMarks = {};
-    for (var prop in glift.rules.intersections.propertiesToMarks) {
-      var mark = glift.rules.intersections.propertiesToMarks[prop];
+    for (var prop in glift.bridge.intersections.propertiesToMarks) {
+      var mark = glift.bridge.intersections.propertiesToMarks[prop];
       if (movetree.properties().contains(prop)) {
         var marksToAdd = [];
         var data = movetree.properties().getAllValues(prop);
         for (var i = 0; i < data.length; i++) {
-          var pt = {}, value = true;
           if (prop === glift.sgf.allProperties.LB) {
             // Labels have the form { point: pt, value: 'A' }
             marksToAdd.push(glift.sgf.convertFromLabelData(data[i]));
@@ -162,5 +161,3 @@ glift.rules.intersections = {
     return outMarks;
   }
 };
-
-})();

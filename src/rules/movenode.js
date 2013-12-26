@@ -1,16 +1,16 @@
-(function() {
-glift.rules.movenode = function(properties, children) {
-  return new MoveNode(properties, children);
+glift.rules.movenode = function(properties, children, nodeId, parentNode) {
+  return new glift.rules._MoveNode(properties, children, nodeId, parentNode);
 };
 
-var MoveNode = function(properties, children) {
+glift.rules._MoveNode = function(properties, children, nodeId, parentNode) {
   this._properties = properties || glift.rules.properties();
   this.children = children || [];
-  // TODO(kashomon): NodeId should be assignable on creation.
-  this._nodeId = { nodeNum: 0, varNum: 0 };
+  // nodeId has the form { nodeNum: 0, varNum: 0 };
+  this._nodeId = nodeId || { nodeNum: 0, varNum: 0 };
+  this._parentNode = parentNode;
 };
 
-MoveNode.prototype = {
+glift.rules._MoveNode.prototype = {
   properties:  function() {
     return this._properties;
   },
@@ -56,8 +56,11 @@ MoveNode.prototype = {
    * Add a new child node.
    */
   addChild: function() {
-    this.children.push(glift.rules.movenode()._setNodeId(
-        this.getNodeNum() + 1, this.numChildren()));
+    this.children.push(glift.rules.movenode(
+      glift.rules.properties(),
+      [], // children
+      { nodeNum: this.getNodeNum() + 1, varNum: this.numChildren() },
+      this));
     return this;
   },
 
@@ -70,6 +73,17 @@ MoveNode.prototype = {
       return this.children[0];
     } else {
       return this.children[variationNum];
+    }
+  },
+
+  /**
+   * Return the parent node. Returns util.none if no parent node exists.
+   */
+  getParent: function() {
+    if (this._parentNode ) {
+      return this._parentNode;
+    } else {
+      return glift.util.none;
     }
   },
 
@@ -91,5 +105,3 @@ var numberMoves = function(move, nodeNum, varNum) {
   }
   return move;
 };
-
-})();

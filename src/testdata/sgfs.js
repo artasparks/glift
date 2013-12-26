@@ -106,6 +106,7 @@ testdata.sgfs = {
   marktest:
     "(;GM[1]FF[4]CA[UTF-8]AP[CGoban:3]ST[2]" +
     "RU[Japanese]SZ[19]KM[0.00]" +
+    "C[Mark Test]" +
     "PW[White]PB[Black]" +
     "AW[na][oa][pa][qa][ra][sa][ka][la][ma][ja]" +
     "AB[nb][ob][pb][qb][rb][sb][kb][lb][mb][jb]" +
