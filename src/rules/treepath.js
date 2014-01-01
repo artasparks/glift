@@ -28,6 +28,9 @@
  * 2.3     becomes [0,0,3]
  * 0.0.0.0 becomes [0,0,0]
  * 2.3-4.1 becomes [0,0,3,0,1]
+ * 1+      becomes [0,0,...(500 times)]
+ * 0.1+    becomes [1,0,...(500 times)]
+ * 0.2.6+  becomes [2,6,0,...(500 times)]
  */
 glift.rules.treepath = {
   parseInitPosition: function(initPos) {
@@ -50,15 +53,30 @@ glift.rules.treepath = {
 
     var out = [];
     var lastNum = 0;
+    // "2.3-4.1+"
     var sect = initPos.split('-');
+    // [2.3, 4.1+]
     for (var i = 0; i < sect.length; i++) {
+      // 4.1 => [4,1+]
       var v = sect[i].split('\.');
+      // Handle the first number (e.g., 4);
       for (var j = 0; j < v[0] - lastNum; j++) {
         out.push(0);
       }
       var lastNum = v[0];
+      // Handle the rest of the numbers (e.g., 1+)
       for (var j = 1; j < v.length; j++) {
-        out.push(parseInt(v[j]));
+        // Handle the last number. 1+
+        var testNum = v[j];
+        if (testNum.charAt(testNum.length - 1) === '+') {
+          testNum = testNum.slice(0, testNum.length - 1);
+          out.push(parseInt(testNum));
+          // + must be the last character.
+          out = out.concat(glift.rules.treepath.toEnd());
+          return out;
+        } else {
+          out.push(parseInt(testNum));
+        }
         lastNum++;
       }
     }
@@ -66,19 +84,19 @@ glift.rules.treepath = {
   },
 
   /**
-   * Return an array of 1000 0-th variations.  This is sort of a hack, but
+   * Return an array of 500 0-th variations.  This is sort of a hack, but
    * changing this would involve rethinking what a treepath is.
    */
   toEnd: function() {
-    if (this._storedToEnd !== undefined) {
-      return this._storedToEnd;
+    if (glift.rules.treepath._storedToEnd !== undefined) {
+      return glift.rules.treepath._storedToEnd;
     }
     var storedToEnd = []
-    for (var i = 0; i < 1000; i++) {
+    for (var i = 0; i < 500; i++) {
       storedToEnd.push(0);
     }
-    this._storedToEnd = storedToEnd;
-    return this._storedToEnd;
+    glift.rules.treepath._storedToEnd = storedToEnd;
+    return glift.rules.treepath._storedToEnd;
   },
 
   // Flatten the move tree variations into a list of lists, where the sublists

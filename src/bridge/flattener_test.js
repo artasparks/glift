@@ -1,4 +1,4 @@
-glift.bridge.flattenerTest= function() {
+glift.bridge.flattenerTest = function() {
   module("Flattener");
   var symb = glift.bridge.flattener.symbols;
   var flatten = glift.bridge.flattener.flatten;
@@ -29,7 +29,7 @@ glift.bridge.flattenerTest= function() {
           + ", Expected: " + fer.symbolFromEnum(expMarks[keyPt])
           + ", Found: " + fer.symbolFromEnum(s));
       if (s === symb.TEXTLABEL || s === symb.NEXTVARIATION) {
-        var lbl = flattened.getLabel(toPt(keyPt))
+        var lbl = flattened.getLabelIntPt(toPt(keyPt))
         ok(lbl !== undefined)
         deepEqual(lbl, expectedLabels[keyPt]);
       }
@@ -73,9 +73,11 @@ glift.bridge.flattenerTest= function() {
       aa: symb.TL_CORNER,
       as: symb.BL_CORNER,
       ss: symb.BR_CORNER,
+
       // TR has a stone in it
-      ab: symb.TOP_EDGE,
-      ba: symb.LEFT_EDGE,
+      ba: symb.TOP_EDGE,
+      ab: symb.LEFT_EDGE,
+
       sj: symb.RIGHT_EDGE,
       es: symb.BOT_EDGE,
       bb: symb.CENTER,

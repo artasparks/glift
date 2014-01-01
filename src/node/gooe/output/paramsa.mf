@@ -1,0 +1,48 @@
+% The files paramsa.mf and paramsb.mf contain most of the configurable
+% parameters of the GOOE fonts. The parameters in paramsa.mf are special
+% to GOOE. The parameters in paramsb.mf are general parameters of the
+% Computer Modern Roman Typefaces. They control the appearance of the
+% numerals on the stones.
+
+mode_setup;
+ em#=6pt#; gow#:=12pt#; goh#=12pt#;
+ smallpen#=.2pt#; widepen#=.4pt#; whitepen#:=.3pt#;
+ penwidth#=.5pt#;
+ hoshi#=1.5pt#;
+ thin#:=1/3pt#; medium#:=2/3pt#; thick#:=5/6pt#;
+
+%
+% Parameters determining the location of the numerals on the stones.
+% These must be adjusted in coordination with u and fig_height in
+% paramsb.mf.
+%
+
+ oneheight#:=.24goh#;
+ oneleft#:=.26gow#;
+ twoheight#:=.25goh#;
+ twoleft#:=.21gow#;
+ tworight#:=.49gow#;
+ threeheight#=.27goh#;
+ threeleft#:=.12gow#;
+ threemiddle#:=.37gow#;
+ threeright#:=.62gow#;
+
+define_blacker_pixels(thin,medium,thick);
+define_pixels(em,gow,goh,smallpen,widepen,whitepen,penwidth,hoshi,oneheight,twoheight,threeheight,oneleft,twoleft,tworight,threeleft,threemiddle,threeright);
+
+%
+% To put a small amount of space between stones, change
+% setback to a small number such as 0.10 or 0.05, and
+% uncomment the modified macros in gooemacs.tex as indicated 
+% there.
+%
+
+setback=0;
+
+% If smudge is set >0, numerals on B stones are expanded smudge pixels
+% vertically. This can improve readability at low resolutions such as
+% 300dpi. The default setting of smudge=1 is chosen so that the GOOE 
+% fonts, normally 12 points can be scaled down to 10 points and still 
+% be readable on a 300dpi laser printer.
+
+smudge:=1;

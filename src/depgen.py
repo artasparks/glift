@@ -1,4 +1,4 @@
-#! /usr/local/bin/python
+#! /usr/bin/python
 
 # I (kashomon) hacked together this script to concatenate and compile the
 # relevant parts of Glift. To get it working for yourself, you'll need the

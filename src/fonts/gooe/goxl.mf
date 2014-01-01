@@ -1,0 +1,31 @@
+% Adjust the offsets to move the letters left or right on the stones.
+
+paste(1,letta,-0.03);
+paste(2,lettb,0);
+paste(3,lettc,0);
+paste(4,lettd,-.05);
+paste(5,lette,0);
+paste(6,lettf,.06);
+paste(7,lettg,.03);
+paste(8,letth,0);
+paste(9,letti,.05);
+paste(10,lettj, .10);
+paste(11,lettk,0);
+paste(12,lettl,.08);
+paste(13,lettm,-.16);
+paste(14,lettn,0);
+paste(15,letto,0);
+paste(16,lettp,0.02);
+paste(17,lettq,0);
+paste(18,lettr,.05);
+paste(19,letts,0);
+paste(20,lettt,.05);
+paste(21,lettu,-.03);
+paste(22,lettv,0);
+paste(23,lettw,-.10);
+paste(24,lettx,0);
+paste(25,letty,0);
+paste(26,lettz,.03);
+
+
+

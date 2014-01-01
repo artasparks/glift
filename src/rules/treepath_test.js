@@ -38,6 +38,11 @@ glift.rules.treepathTest = function() {
     deepEqual(parse("1.1-3.2-6.7"), [0,1,0,2,0,0,7], "Should parse correctly");
   });
 
+  test("Test to end paths", function() {
+    deepEqual(parse("0.1+"), [1].concat(glift.rules.treepath.toEnd()));
+    deepEqual(parse("0.2.3+"), [2,3].concat(glift.rules.treepath.toEnd()));
+  });
+
   test("Flatten Movetree", function() {
     var mt = glift.rules.movetree.getInstance();
     mt.addNode() .addNode() .addNode() .addNode()

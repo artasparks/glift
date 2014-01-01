@@ -87,6 +87,9 @@ glift.bridge.flattener = {
     var mt = movetreeInitial.newTreeRef();
     var showVars = showNextVariationsType || glift.enums.showVariations.NEVER;
     var nmtp = nextMovesTreepath || [];
+    if (glift.util.typeOf(nmtp) !== 'array') {
+      nmtp = glift.rules.treepath.parseInitPosition(nmtp);
+    }
     var mvNum = startingMoveNum || 1;
     var boardRegion = boardRegion || glift.enums.boardRegions.ALL;
     if (boardRegion === glift.enums.boardRegions.AUTO) {
@@ -117,8 +120,14 @@ glift.bridge.flattener = {
     var marks = {};
 
     // Apply the treepath to the movetree.
+    // Move this to another function.
+    // The extra labels bit is quite a hack.
+    var extraLabels = 'abcdefghijklmnopqrstuvwxyz';
+    var extraIdx = 0
     for (var i = 0; i < nmtp.length && mt.node().numChildren() > 0; i++) {
       mt.moveDown(nmtp[i]);
+      // move is of the form {point: <pt>, color: <color>}.  Point is absent if
+      // move is a pass.
       var move = mt.properties().getMove();
       if (move !== glift.util.none && move.point && move.color) {
         var ptString = move.point.toString();
@@ -126,12 +135,19 @@ glift.bridge.flattener = {
           // The only reason why we should see collisions would because we
           // placed a stone somwhere in this loop.
           var label = labels[ptString];
-          var cmove = stone[ptString]
+          var cmove = stoneMap[ptString]
           if (label === undefined) {
-            throw "Couldn't find a label for the collision"
+            // This can happen after multi-stone captures.  In this case, we
+            // create a new label, for convenience.
+            move.collision = cmove;
+            labels[ptString] = extraLabels.charAt(extraIdx);
+            marks[ptString] = s.TEXTLABEL;
+            extraIdx++;
+          } else {
+            move.collision = cmove;
+            move.label = "" + mvNum;
           }
-          move.collision = cmove;
-          move.label = "" + mvNum;
+          move.moveNum = mvNum;
           collisions.push(move);
         } else {
           stoneMap[ptString] = move;
@@ -319,9 +335,9 @@ glift.bridge.flattener = {
       base = s.TR_CORNER;
     } else if (pt.x() === ints && pt.y() === ints) {
       base = s.BR_CORNER;
-    } else if (pt.x() === 0) {
-      base = s.TOP_EDGE;
     } else if (pt.y() === 0) {
+      base = s.TOP_EDGE;
+    } else if (pt.x() === 0) {
       base = s.LEFT_EDGE;
     } else if (pt.x() === ints) {
       base = s.RIGHT_EDGE;
@@ -402,27 +418,46 @@ glift.bridge._Flattened = function(
 };
 
 glift.bridge._Flattened.prototype = {
-  // Provide a SGF Point (intersection-point) and retrieve the relevant symbol.
-  // Note, this uses the SGF indexing as opposed to the indexing in the array,
-  // so if the cropping is provided
+  /**
+   * Provide a SGF Point (intersection-point) and retrieve the relevant symbol.
+   * Note, this uses the SGF indexing as opposed to the indexing in the array,
+   * so if the cropping is provided
+   */
   getSymbolPairIntPt: function(pt) {
     var row = this.symbolPairs[pt.y() - this.cropping.cbox().top()];
     if (row === undefined) { return row; }
     return row[pt.x() - this.cropping.cbox().left()];
   },
-  // Get a symbol from a
+
+  /**
+   * Get a symbol from a the symbol pair table.
+   */
   getSymbolPair: function(pt) {
     var row = this.symbolPairs[pt.y()];
     if (row === undefined) { return row; }
     return row[pt.x()];
   },
-  // Get a Int pt Label Point
+
+  /**
+   * Get a Int pt Label Point, using an integer point.
+   */
   getLabelIntPt: function(pt) {
     return this.labelData[pt.toString()];
   },
-  // Get a Int pt Label Point
+
+  /*
+   * Get a Int pt Label Point
+   */
   getLabel: function(pt) {
-    var newPt = ""; // TODO(kashomon): Finish
-    return this.labelData[pt.toString()];
+    return this.getLabelIntPt(this.ptToIntpt(pt));
+  },
+
+  /**
+   * Turn a 0 indexed pt to an intersection point.
+   */
+  ptToIntpt: function(pt) {
+    return glift.util.point( 
+        pt.x() + this.cropping.cbox().left(),
+        pt.y() + this.cropping.cbox().top());
   }
 };

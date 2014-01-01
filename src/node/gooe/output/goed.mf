@@ -1,0 +1,9 @@
+input paramsa;
+input gobas;
+font_identifier:="goed"; font_size 10pt#;
+if unknown cmbase: input cmbase fi
+input paramsb;
+input wodd;
+picture smmfirst; smmfirst:=smmthree;
+input goxb;
+end;
