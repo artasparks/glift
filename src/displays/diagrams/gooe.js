@@ -1,5 +1,5 @@
 /**
- * Return a gooe diagram.
+ * Create a gooe-font diagram.
  */
 glift.displays.diagrams.gooe = {
   charMapping: {

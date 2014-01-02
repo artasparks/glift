@@ -31,7 +31,7 @@ glift.displays.gui.rowCenter = function(
       var vscale = innerHeight / bbox.height();
     }
     var partialTransform = { scale: vscale }
-    // we have scale the bbox to account for the transform.
+    // we have to scale the bbox to account for the transform.
     var newBbox = bbox.scale(vscale);
     transforms.push(partialTransform);
     newBboxes.push(newBbox);
