@@ -12,18 +12,21 @@ glift.displays.icons.bar = function(options) {
       icons = options.icons || [],
       vertMargin = options.vertMargin || 0,
       horzMargin = options.horzMargin || 0,
-      themeName = options.theme || 'DEFAULT';
+      themeName = options.theme || 'DEFAULT',
+      pbox = options.parentBbox;
   if (divId === undefined) {
     throw "Must define an options 'divId' as an option";
   }
   return new glift.displays.icons._IconBar(
-      divId, themeName, icons, vertMargin, horzMargin).draw();
+      divId, themeName, icons, vertMargin, horzMargin, pbox).draw();
 };
 
 glift.displays.icons._IconBar = function(
-    divId, themeName, iconsRaw, vertMargin, horzMargin) {
+    divId, themeName, iconsRaw, vertMargin, horzMargin, parentBbox) {
   this.divId = divId;
   this.themeName = themeName;
+  // The parentBbox is useful for create a multiIconSelector.
+  this.parentBbox = parentBbox;
   this.theme = glift.themes.get(themeName);
   // Array of wrapped icons. See wrapped_icon.js.
   this.icons = glift.displays.icons.wrapIcons(iconsRaw);
@@ -31,6 +34,7 @@ glift.displays.icons._IconBar = function(
   this.vertMargin = vertMargin;
   this.horzMargin = horzMargin;
   this.svg = undefined; // initialized by draw
+  this.divBbox = undefined; // initialized by draw
 
   this.ICON_CONTAINER = "IconBarIconContainer";
   this.BUTTON_CONTAINER = "IconBarButtonContainer";
@@ -57,20 +61,18 @@ glift.displays.icons._IconBar.prototype = {
     });
   },
 
-  /** Draw the IconBar! */
   draw: function() {
-    this.destroy(); // TODO(kashomon): Superfluous? Remove?
+    this.destroy();
     var divBbox = glift.displays.bboxFromDiv(this.divId),
         svg = d3.select('#' + this.divId).append("svg:svg")
           .attr("width", '100%')
           .attr("height", '100%'),
         svgData = glift.displays.icons.svg,
         point = glift.util.point;
+    this.bbox = divBbox;
     this.svg = svg;
-
-    glift.displays.icons.centerWrapped(
+    glift.displays.icons.rowCenterWrapped(
         divBbox, this.icons, this.vertMargin, this.horzMargin)
-
     this._createIcons();
     this._createIconButtons();
     return this;
@@ -166,22 +168,26 @@ glift.displays.icons._IconBar.prototype = {
     this.svg.select('#' + this.tempTextId(iconName)).remove();
   },
 
+  createIconSelector: function(baseIcon, icons) {
+
+  },
+
+  clearIconSelector: function() {
+
+  },
+
   destroyTempIcons: function() {
     this.svg.selectAll('.' + this.TEMP_ICON_CLASS).remove();
     return this;
   },
 
-  /**
-   * Get the Element ID of the Icon.
-   */
+  /** Get the Element ID of the Icon. */
   iconId: function(iconName) {
     return this.divId + '_' + glift.enums.svgElements.ICON + '_' + iconName
       + '_' + glift.util.idGenerator.next();
   },
 
-  /**
-   * Get the Element ID of the button.
-   */
+  /** Get the Element ID of the button. */
   buttonId: function(iconName) {
     return glift.displays.gui.elementId(
         this.divId, glift.enums.svgElements.BUTTON, iconName);
@@ -205,6 +211,20 @@ glift.displays.icons._IconBar.prototype = {
     var that = this; // not sure if this is necessary
     d3.select('#' + this.buttonId(iconName)).on(event, function() {
       func(that.getIcon(iconName));
+    });
+    return this;
+  },
+
+  /** Similar to setEvent, but grab the icon based on the index. */
+  setEventIndexedIcon: function(event, index, func) {
+    var ic = this.icons[index]
+    if (ic === undefined) {
+      return this;
+    }
+    // Note that this means that the icon resolution happens at at the time of
+    // event creation.
+    d3.select('#' + this.buttonId(ic.iconName)).on(event, function() {
+      func(ic);
     });
     return this;
   },
@@ -257,6 +277,7 @@ glift.displays.icons._IconBar.prototype = {
   destroy: function() {
     this.divId && d3.select('#' + this.divId).selectAll("svg").remove();
     this.svg = undefined;
+    this.bbox = undefined;
     return this;
   }
 };

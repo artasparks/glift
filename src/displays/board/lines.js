@@ -34,7 +34,7 @@ glift.displays.board.intersectionLine = function(
       maxIntersects = numIntersections - 1,
       coordinate = boardPt.coordPt,
       intersection = boardPt.intPt,
-      svgutil = glift.displays.board.svgutil;
+      svgpath = glift.displays.svg.pathutils;
   var top = intersection.y() === minIntersects ?
       coordinate.y() : coordinate.y() - radius;
   var bottom = intersection.y() === maxIntersects ?
@@ -45,10 +45,10 @@ glift.displays.board.intersectionLine = function(
       coordinate.x() : coordinate.x() + radius;
   var line =
       // Vertical Line
-      svgutil.svgMove(coordinate.x(), top) + ' '
-      + svgutil.svgLineAbs(coordinate.x(), bottom) + ' '
+      svgpath.move(coordinate.x(), top) + ' '
+      + svgpath.lineAbs(coordinate.x(), bottom) + ' '
       // Horizontal Line
-      + svgutil.svgMove(left, coordinate.y()) + ' '
-      + svgutil.svgLineAbs(right, coordinate.y());
+      + svgpath.move(left, coordinate.y()) + ' '
+      + svgpath.lineAbs(right, coordinate.y());
   return line;
 };

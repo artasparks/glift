@@ -6,63 +6,95 @@
  *  {
  *    transforms: [...]
  *    bboxes: [...]
+ *    unfitTransforms: [...]
  *  }
+ *
+ * Note: The returned items are guaranteed to be in the order they appeared as
+ * inputs.
  */
-glift.displays.gui.rowCenter = function(
-    outerBox, inBboxes, vertMargin, horzMargin, minSpacing, maxSpacing) {
+glift.displays.gui.rowCenterSimple = function(
+    outerBox, inBboxes, vertMargin, horzMargin) {
+  return glift.displays.gui._linearCentering(
+      outerBox, inBboxes, vertMargin, horzMargin, 0, 0, 'h');
+};
+
+glift.displays.gui.columnCenterSimple = function(
+    outerBox, inBboxes, vertMargin, horzMargin) {
+  return glift.displays.gui._linearCentering(
+      outerBox, inBboxes, vertMargin, horzMargin, 0, 0, 'v');
+};
+
+/**
+ * Perform linearCentering either vertically or horizontally.
+ */
+glift.displays.gui._linearCentering = function(
+    outerBox, inBboxes, vertMargin, horzMargin, minSpacing, maxSpacing, dir) {
   var outerWidth = outerBox.width(),
       innerWidth = outerWidth - 2 * horzMargin,
       outerHeight = outerBox.height(),
       innerHeight = outerHeight - 2 * vertMargin,
       transforms = [],
-      newBboxes = [],
-      elemWidth = 0;
-  if (maxSpacing <= 0) {
-    // Use some arbitrarily large number as an upper bound default
-    maxSpacing = 10000000;
-  }
+      newBboxes = [];
+  var dir = (dir === 'v' || dir === 'h') ? dir : 'h';
+  var getLongSide = function(bbox, dir) {
+    return dir === 'h' ? bbox.width() : bbox.height();
+  };
 
-  // Adjust all the bboxes so that they are the right height.
+  var outsideLongSide = getLongSide(outerBox, dir);
+  // Use some arbitrarily large number as an upper bound default
+  maxSpacing = maxSpacing <= 0 ? 10000000 : maxSpacing;
+  minSpacing = minSpacing <= 0 ? 0 : minSpacing;
+
+  // Adjust all the bboxes so that they are the right scale.
+  var totalElemLength = 0;
   for (var i = 0; i < inBboxes.length; i++) {
-    var bbox = inBboxes[i];
     if (innerHeight > innerWidth) {
-      var vscale = innerWidth / bbox.width();
+      var scale = innerWidth / inBboxes[i].width();
     } else {
-      var vscale = innerHeight / bbox.height();
+      var scale = innerHeight / inBboxes[i].height();
     }
-    var partialTransform = { scale: vscale }
-    // we have to scale the bbox to account for the transform.
-    var newBbox = bbox.scale(vscale);
+    var partialTransform = { scale: scale };
+    var newBbox = inBboxes[i].scale(scale);
     transforms.push(partialTransform);
     newBboxes.push(newBbox);
-    elemWidth += newBbox.width() + minSpacing;
+    totalElemLength += getLongSide(newBbox, dir);
+    if (i < inBboxes.length - 1) {
+      totalElemLength += minSpacing;
+    }
   }
 
-  // We don't need the final minSpacing, so subtract off.
-  elemWidth -= minSpacing
-
-  // Remove elements that don't fit.
-  var unfitTransforms = [];
-  while (innerWidth < elemWidth) {
-    var rightMostBox = newBboxes.pop();
-    var transform = transforms.pop();
-    elemWidth -= rightMostBox.width() + minSpacing;
-    unfitTransforms.push(transform);
+  // Pop off elements that don't fit.
+  var unfitBoxes = [];
+  while (outsideLongSide < totalElemLength) {
+    var outOfBoundsBox = newBboxes.pop();
+    transforms.pop();
+    totalElemLength -= getLongSide(outOfBoundsBox, dir);
+    totalElemLength -= minSpacing;
+    unfitBoxes.push(outOfBoundsBox);
   }
 
   // Find how much space to use for which parts
-  var extraSpace = innerWidth - elemWidth;
+  if (dir === 'h') {
+    var extraSpace = innerWidth - totalElemLength;
+  } else {
+    var extraSpace = innerHeight - totalElemLength;
+  }
   var extraSpacing = extraSpace / (transforms.length + 1);
-  var elementSpacing = extraSpacing;
+  var elemSpacing = extraSpacing;
   var extraMargin = extraSpacing;
   if (extraSpacing > maxSpacing) {
-    elementSpacing = maxSpacing;
-    var totalExtraMargin = extraSpace -
-        elementSpacing * (transforms.length - 1);
+    elemSpacing = maxSpacing;
+    var totalExtraMargin = extraSpace - elemSpacing * (transforms.length - 1);
     extraMargin = totalExtraMargin / 2;
   }
-  var left = outerBox.left() + horzMargin + extraMargin;
+
+  var left = outerBox.left() + horzMargin;
   var top = outerBox.top() + vertMargin;
+  if (dir === 'h') {
+    left += extraMargin;
+  } else {
+    top += extraMargin;
+  }
 
   // Find the x and y translates.
   var finishedBoxes = []
@@ -74,10 +106,14 @@ glift.displays.gui.rowCenter = function(
     partialTransform.xMove = xTranslate;
     partialTransform.yMove = yTranslate;
     finishedBoxes.push(newBbox.translate(xTranslate, yTranslate));
-    left += newBbox.width() + elementSpacing;
+    if (dir === 'h') {
+      left += newBbox.width() + elemSpacing;
+    } else {
+      top += newBbox.height() + elemSpacing;
+    }
   }
 
-  return { transforms: transforms, bboxes: finishedBoxes, unfit: unfitTransforms };
+  return { transforms: transforms, bboxes: finishedBoxes, unfit: unfitBoxes };
 };
 
 glift.displays.gui.centerWithin = function(

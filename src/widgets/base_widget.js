@@ -39,8 +39,9 @@ glift.widgets.BaseWidget.prototype = {
     if (this.sgfOptions.icons.length > 0) {
       requiredComponents.push(comps.ICONBAR);
     }
+    var parentDivBbox = glift.displays.bboxFromDiv(this.wrapperDiv);
     var positioning = glift.displays.positionWidget(
-      glift.displays.bboxFromDiv(this.wrapperDiv),
+      parentDivBbox,
       this.displayOptions.boardRegion,
       this.displayOptions.intersections,
       requiredComponents);
@@ -53,7 +54,7 @@ glift.widgets.BaseWidget.prototype = {
     divIds.commentBoxId && this._createCommentBox(divIds.commentBoxId);
     if (divIds.iconBarBoxId) {
       this.iconBar = this._createIconBar(
-          divIds.iconBarBoxId, this.sgfOptions.icons);
+          divIds.iconBarBoxId, this.sgfOptions.icons, parentDivBbox);
     }
 
     divIds.iconBarBoxId && this._initIconActions(this.iconBar);
@@ -126,13 +127,14 @@ glift.widgets.BaseWidget.prototype = {
         commentBoxId, this.displayOptions.theme);
   },
 
-  _createIconBar: function(iconId, icons) {
+  _createIconBar: function(iconId, icons, parentBbox) {
     return glift.displays.icons.bar({
       themeName: this.displayOptions.theme,
       divId: iconId,
-      vertMargin:  5, // For good measure
+      vertMargin: 5, // For good measure
       horzMargin: 5,
-      icons: icons
+      icons: icons,
+      parentBbox: parentBbox
     });
   },
 

@@ -1,4 +1,5 @@
 (function() {
+// TODO(kashomon): Move to its own directory.
 glift.displays.gui.commentBox = function(divId, themeName) {
   return new CommentBox(divId, themeName).draw();
 };
@@ -62,5 +63,4 @@ CommentBox.prototype = {
     this.commentBoxObj.empty();
   }
 };
-
 })();

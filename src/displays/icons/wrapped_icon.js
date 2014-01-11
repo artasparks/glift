@@ -192,9 +192,16 @@ glift.displays.icons._WrappedIcon.prototype = {
     if (this.transformObj != undefined) {
       return 'translate(' + this.transformObj.xMove + ','
           + this.transformObj.yMove + ') '
-        + 'scale(' + this.transformObj.scale + ')';
+          + 'scale(' + this.transformObj.scale + ')';
     } else {
       return "";
     }
+  },
+
+  /**
+  * Create a new wrapper icon.  This 'forgets' all
+  */
+  rewrapIcon: function() {
+    return glift.displays.icons.wrappedIcon(this.iconName);
   }
 };

@@ -34,7 +34,6 @@ glift.displays.board.shadows = function(
     return {};
   }
   var STONE_SHADOW = glift.enums.svgElements.STONE_SHADOW;
-  var svgutil = glift.displays.board.svgutil;
   var shadowMap = {};
   svg.selectAll(STONE_SHADOW).data(boardPoints.data())
     .enter().append("circle")

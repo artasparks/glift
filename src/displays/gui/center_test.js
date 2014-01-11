@@ -1,13 +1,15 @@
 glift.displays.gui.centerTest = function() {
   module("Center Tests");
   var point = glift.util.point,
-      rowCenter = glift.displays.gui.rowCenter,
+      rowCenter = glift.displays.gui.rowCenterSimple,
+      columnCenter = glift.displays.gui.columnCenterSimple,
       bboxFromPts = glift.displays.bboxFromPts,
-      baseBox = bboxFromPts(point(0,0), point(250, 50));
+      baseBox = bboxFromPts(point(0,0), point(250, 50)),
+      baseVBox = bboxFromPts(point(0,0), point(50, 250));
 
   test("Simple object row-center", function() {
     var oneBox = bboxFromPts(point(0, 0), point(10, 10));
-    var centerInfo = rowCenter(baseBox, [oneBox], 0, 0, 0, 0)
+    var centerInfo = rowCenter(baseBox, [oneBox], 0, 0);
     var transforms = centerInfo.transforms;
     var trans = transforms[0];
     deepEqual(trans.scale, 5, 'xscale');
@@ -24,7 +26,7 @@ glift.displays.gui.centerTest = function() {
   test("RowCenter two objects (simple)", function() {
     var oneBox = bboxFromPts(point(0, 0), point(10, 10));
     var twoBox = bboxFromPts(point(0, 0), point(25, 25));
-    var transforms = rowCenter(baseBox, [oneBox, twoBox], 0, 0, 0, 0).transforms;
+    var transforms = rowCenter(baseBox, [oneBox, twoBox], 0, 0).transforms;
     var transOne = transforms[0];
     deepEqual(transOne.scale, 5, 'xscale');
     deepEqual(transOne.xMove, 50, 'xMove');
@@ -39,7 +41,7 @@ glift.displays.gui.centerTest = function() {
     var oneBox = bboxFromPts(point(0, 0), point(10, 10));
     var twoBox = bboxFromPts(point(0, 0), point(25, 25));
     var threeBox = bboxFromPts(point(0, 0), point(20, 20));
-    var transforms = rowCenter(baseBox, [oneBox, twoBox, threeBox], 0, 0, 0, 0)
+    var transforms = rowCenter(baseBox, [oneBox, twoBox, threeBox], 0, 0)
         .transforms;
     var transOne = transforms[0];
     // 250 - 150 = 100; 100 / 4 = 25.
@@ -59,7 +61,7 @@ glift.displays.gui.centerTest = function() {
   test("RowCenter: Vert margin -- two objects", function() {
     var oneBox = bboxFromPts(point(0, 0), point(10, 10));
     var twoBox = bboxFromPts(point(0, 0), point(25, 25));
-    var transforms = rowCenter(baseBox, [oneBox, twoBox], 5, 0, 0, 0)
+    var transforms = rowCenter(baseBox, [oneBox, twoBox], 5, 0)
         .transforms;
     var transOne = transforms[0];
     deepEqual(transOne.scale, 4, 'xscale');
@@ -71,9 +73,8 @@ glift.displays.gui.centerTest = function() {
 
   test("RowCenter: Horz margin -- two objects", function() {
     var oneBox = bboxFromPts(point(0, 0), point(10, 10));
-    var twoBox = bboxFromPts(point(0, 0), point(25, 25));
-    var transforms = rowCenter(baseBox, [oneBox, twoBox], 0, 75, 0, 0)
-        .transforms;
+    var twoBox = bboxFromPts(point(0, 0), point(25, 25))
+    var transforms = rowCenter(baseBox, [oneBox, twoBox], 0, 75).transforms;
     var transOne = transforms[0];
     ok(transOne !== undefined, 'transOne');
     deepEqual(transOne.scale, 5, 'scale');
@@ -84,5 +85,19 @@ glift.displays.gui.centerTest = function() {
     deepEqual(transTwo.scale, 2, 'scale t2');
     deepEqual(transTwo.xMove, 125, 'yMove t2');
     deepEqual(transOne.yMove, 0, 'xMove t2');
+  });
+
+  test("Column Center two objects (simple)", function() {
+    var oneBox = bboxFromPts(point(0, 0), point(10, 10));
+    var twoBox = bboxFromPts(point(0, 0), point(25, 25));
+    var transforms = columnCenter(baseVBox, [oneBox, twoBox], 0, 0).transforms;
+    var transOne = transforms[0];
+    deepEqual(transOne.scale, 5, 'xscale');
+    deepEqual(transOne.xMove, 0, 'xMove');
+    deepEqual(transOne.yMove, 50, 'yMove');
+    var transTwo = transforms[1];
+    deepEqual(transTwo.scale, 2, 'xscale');
+    deepEqual(transTwo.xMove, 0, 'xMove');
+    deepEqual(transTwo.yMove, 150, 'yMove');
   });
 };

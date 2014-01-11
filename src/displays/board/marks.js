@@ -6,7 +6,6 @@
  */
 glift.displays.board.markContainer = function(divId, svg, boardPoints, theme) {
   var markMapping = {};
-  var svgutil = glift.displays.board.svgutil;
   var MARK_CONTAINER = glift.enums.svgElements.MARK_CONTAINER;
   svg.selectAll(MARK_CONTAINER).data([1]) // dummy data;
     .enter().append("g").attr('class', MARK_CONTAINER);
@@ -19,7 +18,7 @@ glift.displays.board.markContainer = function(divId, svg, boardPoints, theme) {
 // intersections.js with board.js or we week this a separate static method.
 glift.displays.board.addMark = function(
     divId, svg, boardPoints, theme, pt, mark, label) {
-  var svgutil = glift.displays.board.svgutil;
+  var svgpath = glift.displays.svg.pathutils;
   var elems = glift.enums.svgElements;
   var MARK = elems.MARK;
   var STONE = elems.STONE;
@@ -94,14 +93,14 @@ glift.displays.board.addMark = function(
     var botRight = coordPt.translate(halfDelta, halfDelta);
     svg.select('.' + MARK_CONTAINER).append('path')
         .attr('d',
-            svgutil.svgMovePt(coordPt) + ' ' +
-            svgutil.svgLineAbsPt(topLeft) + ' ' +
-            svgutil.svgMovePt(coordPt) + ' ' +
-            svgutil.svgLineAbsPt(topRight) + ' ' +
-            svgutil.svgMovePt(coordPt) + ' ' +
-            svgutil.svgLineAbsPt(botLeft) + ' ' +
-            svgutil.svgMovePt(coordPt) + ' ' +
-            svgutil.svgLineAbsPt(botRight))
+            svgpath.movePt(coordPt) + ' ' +
+            svgpath.lineAbsPt(topLeft) + ' ' +
+            svgpath.movePt(coordPt) + ' ' +
+            svgpath.lineAbsPt(topRight) + ' ' +
+            svgpath.movePt(coordPt) + ' ' +
+            svgpath.lineAbsPt(botLeft) + ' ' +
+            svgpath.movePt(coordPt) + ' ' +
+            svgpath.lineAbsPt(botRight))
         .attr('stroke-width', 2)
         .attr('class', MARK)
         .attr('stroke', marksTheme.stroke);
@@ -131,10 +130,10 @@ glift.displays.board.addMark = function(
     svg.select('.' + MARK_CONTAINER).append('path')
         .attr('fill', 'none')
         .attr('d',
-            svgutil.svgMovePt(topNode) + ' ' +
-            svgutil.svgLineAbsPt(leftNode) + ' ' +
-            svgutil.svgLineAbsPt(rightNode) + ' ' +
-            svgutil.svgLineAbsPt(topNode))
+            svgpath.movePt(topNode) + ' ' +
+            svgpath.lineAbsPt(leftNode) + ' ' +
+            svgpath.lineAbsPt(rightNode) + ' ' +
+            svgpath.lineAbsPt(topNode))
         .attr('stroke-width', 2)
         .attr('class', MARK)
         .attr('stroke', marksTheme.stroke);
