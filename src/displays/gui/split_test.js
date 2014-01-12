@@ -15,9 +15,7 @@ glift.displays.gui.splitTest = function() {
       });
   };
 
-  var teardown = function() {
-    d3.select('#' + divId).remove();
-  };
+  var teardown = function() { $('#' + divId).remove(); };
 
   test("Test Simple Horizontal Split", function() {
     startup();
@@ -58,5 +56,6 @@ glift.displays.gui.splitTest = function() {
     deepEqual(out[1].start, baseWidth / 2);
     deepEqual($('#' + out[0].id).width(), out[0].length);
     deepEqual($('#' + out[1].id).width(), out[1].length);
+    teardown();
   });
 };

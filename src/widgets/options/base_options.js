@@ -248,7 +248,8 @@ glift.widgets.options.baseOptions = {
       var currentPlayer = widget.controller.getCurrentPlayer();
       if (widget.controller.canAddStone(pt, currentPlayer)) {
         widget.display.intersections()
-            .setStoneColor(pt, hoverColors[currentPlayer]);
+            .setStoneColor(pt, hoverColors[currentPlayer])
+            .flushStone(pt);
       }
     },
 
@@ -258,8 +259,9 @@ glift.widgets.options.baseOptions = {
     mouseout: function(event, widget, pt) {
       var currentPlayer = widget.controller.getCurrentPlayer();
       if (widget.controller.canAddStone(pt, currentPlayer)) {
-        widget.display &&
-            widget.display.intersections().setStoneColor(pt, 'EMPTY');
+        widget.display && widget.display.intersections()
+            .setStoneColor(pt, 'EMPTY')
+            .flushStone(pt);
       }
     },
 
@@ -276,59 +278,59 @@ glift.widgets.options.baseOptions = {
    */
   iconActions: {
     start: {
-      click:  function(event, widget, icon) {
+      click:  function(event, widget, icon, iconBar) {
         widget.applyBoardData(widget.controller.toBeginning());
       }
     },
 
     end: {
-      click:  function(event, widget, icon) {
+      click:  function(event, widget, icon, iconBar) {
         widget.applyBoardData(widget.controller.toEnd());
       }
     },
 
     arrowright: {
-      click: function(event, widget, icon) {
+      click: function(event, widget, icon, iconBar) {
         widget.applyBoardData(widget.controller.nextMove());
       }
     },
 
     arrowleft: {
-      click:  function(event, widget, icon) {
+      click:  function(event, widget, icon, iconBar) {
         widget.applyBoardData(widget.controller.prevMove());
       }
     },
 
     // Get next problem.
     'chevron-right': {
-      click: function(event, widget, icon) {
+      click: function(event, widget, icon, iconBar) {
         widget.manager.nextSgf();
       }
     },
 
     // Get the previous problem.
     'chevron-left': {
-      click: function(event, widget, icon) {
+      click: function(event, widget, icon, iconBar) {
         widget.manager.prevSgf();
       }
     },
 
     // Try again
     refresh: {
-      click: function(event, widget, icon) {
+      click: function(event, widget, icon, iconBar) {
         widget.reload();
       }
     },
 
     undo: {
-      click: function(event, widget, icon) {
+      click: function(event, widget, icon, iconBar) {
         widget.manager.returnToOriginalWidget();
       }
     },
 
     // Go to the explain-board.
     roadmap: {
-      click: function(event, widget, iconObj) {
+      click: function(event, widget, iconObj, iconBar) {
         var manager = widget.manager;
         var sgfObj = {
           widgetType: glift.enums.widgetTypes.GAME_VIEWER,

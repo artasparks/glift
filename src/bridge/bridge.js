@@ -64,6 +64,7 @@ glift.bridge = {
       var lm = boardData.lastMove;
       display.intersections().addMarkPt(lm.point, marks.STONE_MARKER);
     }
+    display.flush();
   },
 
   /**

@@ -1,23 +1,19 @@
-glift.displays.board._Intersections = function(
-    divId, svg, intersectionData, boardPoints, theme) {
+glift.displays.board._Intersections = function(divId, svg, boardPoints, theme) {
   this.divId = divId;
   this.svg = svg;
   this.theme = theme;
   this.boardPoints = boardPoints;
+  this.idGen = glift.displays.ids.generator(this.divId);
 
-  // elements by id.  Maps from point-string to element ID ('#...')
-  this.lineIds = intersectionData.lineIds;
-  this.starPointIds = intersectionData.starPointIds;
-  this.stoneShadowIds = intersectionData.stoneShadowIds;
-  this.stoneIds = intersectionData.stoneIds;
-  this.markIds = intersectionData.markIds;
-  this.buttons = intersectionData.buttons;
-
-  // TODO(kashomon): What's going on here?
-  this.buttonsData = [];
-  for (var key in this.buttons) {
-    this.buttonsData.push(glift.util.pointFromString(key));
-  }
+  // Object of objects of the form
+  //  {
+  //    <buttonId>#<eventName>: {
+  //      pt: <pt>,
+  //      func: func
+  //    }
+  //  }
+  // Note that the funcs take two parameters: event and icon.
+  this.events = {};
 };
 
 glift.displays.board._Intersections.prototype = {
@@ -30,75 +26,137 @@ glift.displays.board._Intersections.prototype = {
       throw 'Unknown color key [' + colorKey + ']'
     }
 
-    if (this.stoneIds[key] !== undefined) {
+    var stoneGroup = this.svg.child(this.idGen.stoneGroup());
+    var stone = stoneGroup.child(this.idGen.stone(pt));
+    if (stone !== undefined) {
       var stoneColor = this.theme.stones[colorKey];
-      this.svg.select('#' + this.stoneIds[key])
-          .attr('fill', stoneColor.fill)
-          .attr('stroke', stoneColor.stroke)
-          .attr('stone_color', colorKey)
-          .attr('opacity', stoneColor.opacity);
-      if (this.stoneShadowIds[key] !== undefined) {
+      stone.attr('fill', stoneColor.fill)
+        .attr('stroke', stoneColor.stroke || 1)
+        .attr('stone_color', colorKey)
+        .attr('opacity', stoneColor.opacity);
+      var stoneShadowGroup = this.svg.child(this.idGen.stoneShadowGroup());
+      if (stoneShadowGroup  !== undefined) {
+        var stoneShadow = stoneShadowGroup.child(this.idGen.stoneShadow(pt));
         if (stoneColor.opacity === 1) {
-          this.svg.select('#' + this.stoneShadowIds[key]).attr('opacity', 1);
+          stoneShadow.attr('opacity', 1);
         } else {
-          this.svg.select('#' + this.stoneShadowIds[key]).attr('opacity', 0);
+          stoneShadow.attr('opacity', 0);
         }
       }
     }
     return this;
   },
 
-  addMarkPt: function(pt, mark, label) {
-    glift.displays.board.addMark(
-        this.divId, this.svg, this.boardPoints, this.theme, pt, mark, label);
+  flushStone: function(pt) {
+    var stone = this.svg.child(this.idGen.stoneGroup())
+        .child(this.idGen.stone(pt));
+    $('#' + stone.attr('id')).attr(stone.attrObj());
+    var stoneShadowGroup = this.svg.child(this.idGen.stoneShadowGroup());
+    if (stoneShadowGroup !== undefined) {
+      var stoneShadow = stoneShadowGroup.child(this.idGen.stoneShadow(pt));
+      $('#' + stoneShadow.attr('id')).attr(stoneShadow.attrObj());
+    }
     return this;
   },
 
-  addGuideLines: function(pt) {
-    var elems = glift.enums.svgElements;
-    this.svg.select('#' + elems.GUIDE_LINE).remove();
-    var bpt = this.boardPoints.getCoord(pt);
-    var boardPoints = this.boardPoints;
-    this.svg.select('.' + elems.MARK_CONTAINER).append('path')
-      .attr('d', glift.displays.board.intersectionLine(
-          bpt, boardPoints.radius * 8, boardPoints.numIntersections))
-      .attr('stroke-width', 3)
-      .attr('stroke', 'blue')
-      .attr('id', elems.GUIDE_LINE);
-  },
-
-  clearGuideLines: function() {
-    var elems = glift.enums.svgElements;
-    this.svg.select('#' + elems.GUIDE_LINE).remove();
+  addMarkPt: function(pt, mark, label) {
+    glift.displays.board.addMark(
+        this.svg, this.idGen, this.boardPoints, this.theme, pt, mark, label);
+    return this;
   },
 
   clearMarks: function() {
     var elems = glift.enums.svgElements;
-    // Some STARPOINTs/BOARD_LINEs may have been 'turned-off' when adding marks.
-    // It's easier just to manipulate them as a whole.
-    // TODO(kashomon): Is there much of a performance hit for doing this?
-    this.svg.selectAll('.' + elems.STARPOINT).attr('opacity', 1);
-    this.svg.selectAll('.' + elems.BOARD_LINE).attr('opacity', 1);
-    this.svg.selectAll('.' + elems.MARK).remove();
-    this.svg.selectAll('.' + elems.GUIDE_LINE).remove();
+    // Some STARPOINTs/BOARD_LINEs may have been 'turned-off' when adding marks,
+    // so we need to reenable them.
+    this.setGroupAttr(this.idGen.starpointGroup(), {'opacity': 1})
+        .setGroupAttr(this.idGen.lineGroup(), {'opacity': 1});
+
+    this.svg.child(this.idGen.markGroup()).emptyChildren();
+    var markGroupId = this.idGen.markGroup();
+    $('#' + markGroupId).empty();
+    return this;
+  },
+
+  /**
+   * Currently unused. Add guideLines for mobile devices.
+   */
+  addGuideLines: function(pt) {
+    var elems = glift.enums.svgElements;
+    var svglib = glift.displays.svg;
+    var container = this.svg.child(this.idGen.markGroup());
+    container.rmChild(this.idGen.guideLine());
+
+    var bpt = this.boardPoints.getCoord(pt);
+    var boardPoints = this.boardPoints;
+    container.append(svglib.path()
+      .attr('d', glift.displays.board.intersectionLine(
+          bpt, boardPoints.radius * 8, boardPoints.numIntersections))
+      .attr('stroke-width', 3)
+      .attr('stroke', 'blue')
+      .attr('id', this.idGen.guideLine()))
+  },
+
+  clearGuideLines: function() {
+    var elems = glift.enums.svgElements;
+    var container = this.svg.child(this.idGen.markGroup())
+      .rmChild(this.idGen.guideLine());
+    return this;
+  },
+
+  setGroupAttr: function(groupId, attrObj) {
+    var g = this.svg.child(groupId);
+    if (g !== undefined) {
+      var children = g.children();
+      for (var i = 0, ii = children.length; i < ii; i++) {
+        for (var key in attrObj) {
+          children[i].attr(key, attrObj[key]);
+        }
+      }
+    }
     return this;
   },
 
   clearStones: function() {
-    var elems = glift.enums.svgElements;
-    this.svg.selectAll('.' + elems.STONE).attr('opacity', 0)
-        .attr('stone_color', 'EMPTY');
-    this.svg.selectAll('.' + elems.STONE_SHADOW).attr('opacity', 0);
+    this.setGroupAttr(this.idGen.stoneGroup(), {opacity: 0})
+        .setGroupAttr(this.idGen.stoneShadowGroup(), {opacity: 0});
+    return this;
   },
 
   clearAll: function() {
-    this.clearMarks();
-    this.clearStones();
+    this.clearMarks().clearStones();
+    return this;
   },
 
-  setEvent: function(event, func) {
-    var BUTTON = glift.enums.svgElements.BUTTON;
-    this.svg.selectAll('rect' + '.' + BUTTON).data(this.buttonsData)
-      .on(event, function(pt) { func(pt); });
+  /**
+   * Set events for the buttons.
+   */
+  setEvent: function(eventName, func) {
+    var buttonGroup = this.svg.child(this.idGen.buttonGroup());
+    var children = this.svg.child(this.idGen.buttonGroup()).children();
+    for (var i = 0, ii = children.length; i < ii; i++) {
+      var button = children[i];
+      var id = button.attr('id');
+      var pt = button.data();
+      var eventsId = id + '#' + eventName;
+      this.events[eventsId] = { pt: pt, func: func };
+    }
+    return this;
+  },
+
+  flushEvents: function() {
+    for (var buttonId_event in this.events) {
+      var splat = buttonId_event.split('#');
+      var buttonId = splat[0];
+      var eventName = splat[1];
+      var eventObj = this.events[buttonId_event];
+      this._flushOneEvent(buttonId, eventName, eventObj);
+    }
+  },
+
+  _flushOneEvent: function(buttonId, eventName, eventObj) {
+    $('#' + buttonId).on(eventName, function(event) {
+      eventObj.func(event, eventObj.pt);
+    });
   }
 };

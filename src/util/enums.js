@@ -74,18 +74,28 @@ glift.enums = {
    * be compatible with being class / id names.
    */
   svgElements: {
-    BOARD_BASE: 'board_base',
+    BOARD: 'board',
     BOARD_LINE: 'board_line',
+    BOARD_LINE_CONTAINER: 'board_line_container',
     BUTTON: 'button',
+    BUTTON_CONTAINER: 'button_container',
     MARK: 'mark',
     MARK_CONTAINER: 'mark_container',
     GLIFT_ELEMENT: 'glift_element',
     STARPOINT: 'starpoint',
+    STARPOINT_CONTAINER: 'starpoint_container',
     STONE: 'stone',
+    STONE_CONTAINER: 'stone_container',
     STONE_SHADOW: 'stone_shadow',
+    STONE_SHADOW_CONTAINER: 'stone_shadow_container',
+    GUIDE_LINE: 'guide_line',
+
+    // Icon-bar specific enums
     ICON: 'icon',
-    // GuideLines are used only for mobile.
-    GUIDE_LINE: 'guide_line'
+    ICON_CONTAINER: 'icon_container',
+    TEMP_ICON: 'temp_icon',
+    TEMP_TEXT: 'temp_text',
+    TEMP_ICON_CONTAINER: 'temp_icon_container'
   },
 
   showVariations: {

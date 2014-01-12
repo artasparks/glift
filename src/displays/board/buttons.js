@@ -1,25 +1,24 @@
 /**
  * Create transparent buttons that overlay each intersection.
  */
-glift.displays.board.buttons = function(divId, svg, boardPoints) {
-  var buttonMapping = {};
-  var elems = glift.enums.svgElements;
-  var BUTTON = elems.BUTTON;
-  svg.selectAll(BUTTON).data(boardPoints.data())
-    .enter().append("svg:rect")
-      .attr("x", function(pt) { return pt.coordPt.x() - boardPoints.radius; })
-      .attr("y", function(pt) { return pt.coordPt.y() - boardPoints.radius; })
+glift.displays.board.buttons = function(svg, idGen, boardPoints) {
+  var svglib = glift.displays.svg;
+  var container = svglib.group().attr('id', idGen.buttonGroup());
+  svg.append(container);
+
+  var data = boardPoints.data();
+  for (var i = 0, ii = data.length; i < ii; i++) {
+    var pt = data[i];
+    container.append(svglib.rect()
+      .data(pt.intPt)
+      .attr("x", pt.coordPt.x() - boardPoints.radius)
+      .attr("y", pt.coordPt.y() - boardPoints.radius)
       .attr("width", boardPoints.spacing)
       .attr("height", boardPoints.spacing)
-      .attr("class", BUTTON)
       .attr('opacity', 0)
       .attr('fill', 'red')
       .attr('stroke', 'red')
       .attr('stone_color', 'EMPTY')
-      .attr('id', function(pt) {
-        var id = glift.displays.gui.elementId(divId, BUTTON, pt.intPt);
-        buttonMapping[pt.intPt.hash()] = id;
-        return id;
-      });
-  return buttonMapping;
+      .attr('id', idGen.button(pt.intPt)));
+  }
 };

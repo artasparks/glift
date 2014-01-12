@@ -35,10 +35,19 @@ glift.displays.icons._IconBar = function(
   this.horzMargin = horzMargin;
   this.svg = undefined; // initialized by draw
   this.divBbox = undefined; // initialized by draw
+  this.idGen = glift.displays.ids.generator(this.divId);
 
-  this.ICON_CONTAINER = "IconBarIconContainer";
-  this.BUTTON_CONTAINER = "IconBarButtonContainer";
-  this.TEMP_ICON_CLASS = "IconBarTempIcon";
+
+  // Object of objects of the form
+  //  {
+  //    <buttonId>#<eventName>: {
+  //      icon: <wrappedIcon>,
+  //      func: func
+  //    }
+  //  }
+  //
+  // Note that the funcs take two parameters: event and icon.
+  this.events = {};
 
   // Post constructor initializiation
   this._initIconIds(); // Set the ids for the icons above.
@@ -56,54 +65,84 @@ glift.displays.icons._IconBar.prototype = {
   _initIconIds: function() {
     var that = this;
     this.forEachIcon(function(icon) {
-      var elementId = that.iconId(icon.iconName);
-      icon.setElementId(elementId);
+      icon.setElementId(that.idGen.icon(icon.iconName));
     });
   },
 
   draw: function() {
     this.destroy();
+    var svglib = glift.displays.svg;
     var divBbox = glift.displays.bboxFromDiv(this.divId),
-        svg = d3.select('#' + this.divId).append("svg:svg")
-          .attr("width", '100%')
-          .attr("height", '100%'),
         svgData = glift.displays.icons.svg,
         point = glift.util.point;
     this.bbox = divBbox;
-    this.svg = svg;
+    this.svg = svglib.svg()
+      .attr("width", '100%')
+      .attr("height", '100%');
     glift.displays.icons.rowCenterWrapped(
         divBbox, this.icons, this.vertMargin, this.horzMargin)
     this._createIcons();
     this._createIconButtons();
+    this.flush();
     return this;
   },
 
-  _createIcons: function() {
+  flush: function() {
+    $('#' + this.divId).html(this.svg.render());
+    this.flushEvents();
+  },
+
+  flushEvents: function() {
+    var container = this.svg.child(this.idGen.buttonGroup());
     var that = this;
-    var group = this.svg.append("svg:g")
-    group.attr('id', this.ICON_CONTAINER);
-    group.selectAll('icons_toadd').data(this.icons).enter()
-      .append('path')
-        .attr('d', function(icon) { return icon.iconStr; })
-        .attr('fill', that.theme.icons['DEFAULT'].fill)
-        .attr('id', function(icon) { return icon.elementId; })
-        .attr('transform', function(icon) { return icon.transformString(); });
+    for (var buttonId_event in this.events) {
+      var splat = buttonId_event.split('#');
+      var buttonId = splat[0];
+      var eventName = splat[1];
+      if (container.child(buttonId) !== undefined) {
+        var eventObj = this.events[buttonId_event];
+        this._flushOneEvent(buttonId, eventName, eventObj);
+      }
+    }
+  },
+
+  _flushOneEvent: function(buttonId, eventName, eventObj) {
+    $('#' + buttonId).on(eventName, function(event) {
+        eventObj.func(event, eventObj.icon);
+    });
+  },
+
+  _createIcons: function() {
+    var svglib = glift.displays.svg;
+    var container = svglib.group().attr('id', this.idGen.iconGroup());
+    this.svg.append(container);
+    this.svg.append(svglib.group().attr('id', this.idGen.tempIconGroup()));
+    for (var i = 0, ii = this.icons.length; i < ii; i++) {
+      var icon = this.icons[i];
+      container.append(svglib.path()
+        .attr('d', icon.iconStr)
+        .attr('fill', this.theme.icons['DEFAULT'].fill)
+        .attr('id', icon.elementId)
+        .attr('transform', icon.transformString()));
+    }
   },
 
   _createIconButtons: function() {
-    var that = this;
-    // this.svg.selectAll(this.BUTTON_CONTAINER).data([1]) // dummy data;
-      // .enter().append("g").attr('class', this.BUTTON_CONTAINER);
-    this.svg.selectAll('buttons').data(this.icons)
-      .enter().append('rect')
-        .attr('x', function(icon) { return icon.bbox.topLeft().x(); })
-        .attr('y', function(icon) { return icon.bbox.topLeft().y(); })
-        .attr('width', function(icon) { return icon.bbox.width(); })
-        .attr('height', function(icon) { return icon.bbox.height(); })
+    var svglib = glift.displays.svg;
+    var container = svglib.group().attr('id', this.idGen.buttonGroup());
+    this.svg.append(container);
+    for (var i = 0, ii = this.icons.length; i < ii; i++) {
+      var icon = this.icons[i];
+      container.append(svglib.rect()
+        .data(icon.iconName)
+        .attr('x', icon.bbox.topLeft().x())
+        .attr('y', icon.bbox.topLeft().y())
+        .attr('width', icon.bbox.width())
+        .attr('height', icon.bbox.height())
         .attr('fill', 'blue') // Color doesn't matter, but we need a fill.
         .attr('opacity', 0)
-        .attr('_icon', function(icon) { return icon.iconName; })
-        .attr('id', function(icon) { return that.buttonId(icon.iconName); });
+        .attr('id', this.idGen.button(icon.iconName)));
+    }
   },
 
   /**
@@ -116,6 +155,7 @@ glift.displays.icons._IconBar.prototype = {
   addCenteredTempIcon: function(
       parentIconName, tempIcon, color, vMargin, hMargin) {
     // Move these defaults into the Theme.
+    var svglib = glift.displays.svg;
     var hm = hMargin || 2,
         vm = vMargin || 2;
     var parentIcon = this.nameMapping[parentIconName];
@@ -128,13 +168,12 @@ glift.displays.icons._IconBar.prototype = {
     } else {
       tempIcon = parentIcon.centerWithinIcon(tempIcon, vm, hm);
     }
-    tempIcon.setElementId(this.iconId(tempIcon.iconName));
-    this.svg.select('#' + this.ICON_CONTAINER).append('path')
+
+    this.svg.child(this.idGen.tempIconGroup()).append(svglib.path()
       .attr('d', tempIcon.iconStr)
       .attr('fill', color) // that.theme.icons['DEFAULT'].fill)
-      .attr('id', tempIcon.elementId)
-      .attr('class', this.TEMP_ICON_CLASS)
-      .attr('transform', tempIcon.transformString());
+      .attr('id', this.idGen.tempIcon(tempIcon.iconName))
+      .attr('transform', tempIcon.transformString()));
     return this;
   },
 
@@ -142,13 +181,12 @@ glift.displays.icons._IconBar.prototype = {
    * Add some temporary text on top of an icon.
    */
   addTempText: function(iconName, text, color) {
-    // TODO(kashomon): Remove this hack.
     var bbox = this.getIcon(iconName).bbox;
     var fontSize = bbox.width() * .54;
-    var id = this.tempTextId(iconName);
+    var id = this.idGen.tempIconText(iconName);
     var boxStrokeWidth = 7
-    this.clearTempText(iconName);
-    this.svg.append('text')
+    this.svg.rmChild(this.idGen().tempIconText(iconName));
+    this.svg.child(this.idGen.tempIconGroup()).append(svglib.text()
       .text(text)
       .attr('fill', color)
       .attr('stroke', color)
@@ -159,42 +197,28 @@ glift.displays.icons._IconBar.prototype = {
       .attr('y', bbox.center().y()) //+ fontSize)
       .attr('dy', '.33em') // Move down, for centering purposes
       .attr('style', 'text-anchor: middle; vertical-align: middle;')
-      .attr('id', id)
-      .attr('lengthAdjust', 'spacing'); // also an opt: spacingAndGlyphs
+      .attr('id', this.idGen.tempIconText(iconName))
+      .attr('lengthAdjust', 'spacing')); // also an opt: spacingAndGlyphs
     return this;
-  },
-
-  clearTempText: function(iconName) {
-    this.svg.select('#' + this.tempTextId(iconName)).remove();
   },
 
   createIconSelector: function(baseIcon, icons) {
-
+    // TODO(kashomon): Implement
   },
 
   clearIconSelector: function() {
-
+    // TODO(kashomon): Implement
   },
 
   destroyTempIcons: function() {
-    this.svg.selectAll('.' + this.TEMP_ICON_CLASS).remove();
+    this.svg.child(this.idGen.tempIconGroup()).emptyChildren();
     return this;
-  },
-
-  /** Get the Element ID of the Icon. */
-  iconId: function(iconName) {
-    return this.divId + '_' + glift.enums.svgElements.ICON + '_' + iconName
-      + '_' + glift.util.idGenerator.next();
   },
 
   /** Get the Element ID of the button. */
   buttonId: function(iconName) {
     return glift.displays.gui.elementId(
         this.divId, glift.enums.svgElements.BUTTON, iconName);
-  },
-
-  tempTextId: function(iconName) {
-    return this.divId +  '_' + iconName + '_temptext'
   },
 
   /**
@@ -207,25 +231,28 @@ glift.displays.icons._IconBar.prototype = {
    *  iconId: the element id of the icon (for convenience).
    * }
    */
-  setEvent: function(event, iconName, func) {
-    var that = this; // not sure if this is necessary
-    d3.select('#' + this.buttonId(iconName)).on(event, function() {
-      func(that.getIcon(iconName));
-    });
+  setEvent: function(iconName, event, func) {
+    var button = this.svg.child(this.idGen.buttonGroup()).child(
+        this.idGen.button(iconName));
+    var id = button.attr('id');
+    var name = button.data();
+    var icon = this.nameMapping[name];
+    this._setEvent(id, icon, event, func);
     return this;
   },
 
   /** Similar to setEvent, but grab the icon based on the index. */
-  setEventIndexedIcon: function(event, index, func) {
-    var ic = this.icons[index]
-    if (ic === undefined) {
-      return this;
-    }
-    // Note that this means that the icon resolution happens at at the time of
-    // event creation.
-    d3.select('#' + this.buttonId(ic.iconName)).on(event, function() {
-      func(ic);
-    });
+  setEventIndexedIcon: function(index, event, func) {
+    var icon = this.icons[index]
+    if (icon === undefined) { return this; }
+    var buttonId = this.idGen.button(icon.iconName);
+    this._setEvent(buttonId, icon, event, func);
+    return this;
+  },
+
+  _setEvent: function(buttonId, icon, event, func) {
+    var id = buttonId + '#' + event;
+    this.events[id] = { icon: icon, func: func };
     return this;
   },
 
@@ -234,8 +261,8 @@ glift.displays.icons._IconBar.prototype = {
    * and mouseout.
    */
   setHover: function(name, hoverin, hoverout) {
-    this.setEvent('mouseover', name, hoverin);
-    this.setEvent('mouseout', name, hoverout);
+    this.setEvent(name, 'mouseover', hoverin);
+    this.setEvent(name, 'mouseout', hoverout);
   },
 
   /**
@@ -264,7 +291,7 @@ glift.displays.icons._IconBar.prototype = {
    * adding events.
    */
   forEachIcon: function(func) {
-    for (var i = 0; i < this.icons.length; i++) {
+    for (var i = 0, ii = this.icons.length; i < ii; i++) {
       func(this.icons[i]);
     }
   },
@@ -275,8 +302,7 @@ glift.displays.icons._IconBar.prototype = {
   },
 
   destroy: function() {
-    this.divId && d3.select('#' + this.divId).selectAll("svg").remove();
-    this.svg = undefined;
+    this.divId && $('#' + this.divId).empty();
     this.bbox = undefined;
     return this;
   }

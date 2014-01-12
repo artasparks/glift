@@ -70,6 +70,7 @@ var BoardPoints = function(points, spacing, numIntersections) {
   this.spacing = spacing;
   this.radius = spacing / 2;
   this.numIntersections = numIntersections; // 1 indexed (1->19)
+  this.dataCache = undefined;
 };
 
 BoardPoints.prototype = {
@@ -109,13 +110,17 @@ BoardPoints.prototype = {
   },
 
   /**
-   * Return the points as an array.  This is useful for D3, in particular.
+   * Return the points as an array.
    */
   data: function() {
+    if (this.dataCache !== undefined) {
+      return this.dataCache;
+    }
     var data = [];
     this.forEach(function(point) {
       data.push(point);
     });
+    this.dataCache = data;
     return data;
   },
 

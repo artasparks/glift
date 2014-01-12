@@ -14,8 +14,10 @@ glift.displays.board.Display = function(inEnvironment, themeName, theme) {
   this._environment = inEnvironment;
   this._themeName = themeName;
   this._theme = theme;
+  this._svgBase = glift.displays.svg.svg({height: '100%', width: '100%'})
   this._svg = undefined; // defined in draw
   this._intersections = undefined // defined in draw;
+  this._buffer = []; // All objects are stuffed into the buffer and are only added
 };
 
 glift.displays.board.Display.prototype = {
@@ -36,10 +38,7 @@ glift.displays.board.Display.prototype = {
   init: function() {
     if (this._svg === undefined) {
       this.destroy(); // make sure everything is cleared out of the div.
-      this._svg = d3.select('#' + this.divId())
-        .append("svg")
-          .attr("width", '100%')
-          .attr("height", '100%');
+      this._svg = this._svgBase.copyNoChildren();
     }
     this._environment.init();
     return this;
@@ -55,27 +54,27 @@ glift.displays.board.Display.prototype = {
         boardPoints = env.boardPoints,
         theme = this._theme,
         svg = this._svg,
-        divId = this.divId();
-
-    board.initBlurFilter(divId, svg);
-    var boardId = board.boardBase(divId, svg, env.goBoardBox, theme);
-    var lineIds = board.lines(divId, svg, boardPoints, theme);
-    var starPointIds = board.starPoints(divId, svg, boardPoints, theme);
-    var stoneShadowIds = board.shadows(divId, svg, boardPoints, theme);
-    var stoneIds = board.stones(divId, svg, boardPoints, theme);
-    var markIds = board.markContainer(divId, svg, boardPoints, theme);
-    var buttons = board.buttons(divId, svg, boardPoints);
-    var intersectionData = {
-        lineIds: lineIds,
-        starPointIds: starPointIds,
-        stoneShadowIds: stoneShadowIds,
-        stoneIds: stoneIds,
-        markIds: markIds,
-        buttons: buttons
-    };
+        divId = this.divId(),
+        idGen = glift.displays.ids.generator(divId);
+    board.initBlurFilter(divId, svg); // in boardBase
+    board.boardBase(svg, idGen, env.goBoardBox, theme);
+    board.lines(svg, idGen, boardPoints, theme);
+    board.starpoints(svg, idGen, boardPoints, theme);
+    board.shadows(svg, idGen, boardPoints, theme);
+    board.stones(svg, idGen, boardPoints, theme);
+    board.markContainer(svg, idGen, boardPoints, theme);
+    board.buttons(svg, idGen, boardPoints);
     this._intersections = new glift.displays.board._Intersections(
-        divId, svg, intersectionData, boardPoints, theme);
+        divId, svg, boardPoints, theme);
+    this.flush();
     return this; // required
+  },
+
+  flush: function() {
+    var svg = this._svg;
+    $('#' + this.divId()).html(svg.render());
+    this.intersections().flushEvents();
+    return this;
   },
 
   /**
@@ -83,7 +82,7 @@ glift.displays.board.Display.prototype = {
    * This makes redrawing the GoBoard much quicker.
    */
   destroy: function() {
-    this.divId() && d3.select('#' + this.divId()).selectAll("svg").remove();
+    $('#' + this.divId()).empty();
     this._svg = undefined;
     this._intersections = undefined;
     return this;

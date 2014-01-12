@@ -3,26 +3,25 @@
  * rather than as a whole so that we can clear theme out when we to draw marks
  * on the raw board (rather than on stones).
  */
-glift.displays.board.lines = function(divId, svg, boardPoints, theme) {
+glift.displays.board.lines = function(svg, idGen, boardPoints, theme) {
   // Mapping from int point (e.g., 3,3) hash to id;
-  var lineMapping = {};
-  var BOARD_LINE = glift.enums.svgElements.BOARD_LINE;
-  svg.selectAll(BOARD_LINE).data(boardPoints.data())
-    .enter().append("path")
-      .attr('d', function(pt) {
-        return glift.displays.board.intersectionLine(
-            pt, boardPoints.radius, boardPoints.numIntersections);
-      })
+  var elementId = glift.displays.gui.elementId;
+  var svglib = glift.displays.svg;
+
+  var container = svglib.group().attr('id', idGen.lineGroup());
+  svg.append(container);
+
+  var data = boardPoints.data();
+  for (var i = 0, ii = data.length; i < ii; i++) {
+    var pt = data[i];
+    container.append(svglib.path()
+      .attr('d', glift.displays.board.intersectionLine(
+          pt, boardPoints.radius, boardPoints.numIntersections))
       .attr('stroke', theme.lines.stroke)
       .attr('stroke-width', theme.lines['stroke-width'])
-      .attr('class', BOARD_LINE)
       .attr('stroke-linecap', 'round')
-      .attr('id', function(pt) {
-        var id = glift.displays.gui.elementId(divId, BOARD_LINE, pt.intPt);
-        lineMapping[pt.intPt.hash()] = id;
-        return id;
-      });
-  return lineMapping;
+      .attr('id', idGen.line(pt.intPt)));
+  }
 };
 
 glift.displays.board.intersectionLine = function(

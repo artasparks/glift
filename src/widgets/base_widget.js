@@ -140,7 +140,7 @@ glift.widgets.BaseWidget.prototype = {
 
   _initIconActions: function(iconBar) {
     var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
-    var widget = this;
+    var that = this;
     var iconActions = this.displayOptions.iconActions;
     iconBar.forEachIcon(function(icon) {
       var iconName = icon.iconName;
@@ -153,29 +153,38 @@ glift.widgets.BaseWidget.prototype = {
 
       actionsForIcon.click = iconActions[iconName].click;
       actionsForIcon.mouseover = iconActions[iconName].mouseover ||
-          function(d3Event, widgetRef, iconObj) {
-            d3.select('#' + iconObj.elementId).attr('fill', 'red');
-          };
+        function(event, widgetRef, icon) {
+          $('#' + icon.elementId).attr('fill', 'red');
+        };
       actionsForIcon.mouseout = iconActions[iconName].mouseout ||
-          function(d3Event, widgetRef, iconObj) {
-            d3.select('#' + iconObj.elementId)
-              .attr('fill', widget.iconBar.theme.icons.DEFAULT.fill);
-          };
-      actionsForIcon.touchstart = iconActions[iconName].touchstart ||
-          function(d3Event,  widgetRef, iconObj) {
-            d3Event.preventDefault && d3Event.preventDefault();
-            d3Event.stopPropagation && d3Event.stopPropagation();
-            widgetRef.displayOptions.iconActions[
-                iconObj.iconName].click(d3Event, widgetRef, iconObj);
-          };
+        function(event, widgetRef, icon) {
+          $('#' + icon.elementId)
+            .attr('fill', widgetRef.iconBar.theme.icons.DEFAULT.fill);
+        };
+      // TODO(kashomon): Add touch events conditionally based on the detected
+      // browser.
+      //
+      // actionsForIcon.touchstart = iconActions[iconName].touchstart ||
+          // function(d3Event,  widgetRef, iconObj) {
+            // d3Event.preventDefault && d3Event.preventDefault();
+            // d3Event.stopPropagation && d3Event.stopPropagation();
+            // widgetRef.displayOptions.iconActions[
+                // iconObj.iconName].click(d3Event, widgetRef, iconObj);
+          // };
       for (var eventName in actionsForIcon) {
         var eventFunc = actionsForIcon[eventName];
-        (function(eventName, iconNameBound, eventFunction) { // lazy binding pattern.
-          widget.iconBar.setEvent(eventName, iconName, function() {
-            eventFunction(d3.event, widget, iconBar.getIcon(iconNameBound));
-          });
-        })(eventName, iconName, eventFunc);
+        // We init each action separately so that we avoid the lazy binding of
+        // eventFunc.
+        that._initOneIconAction(iconBar, iconName, eventName, eventFunc);
       }
+    });
+    iconBar.flushEvents();
+  },
+
+  _initOneIconAction: function(iconBar, iconName, eventName, eventFunc) {
+    var widget = this;
+    iconBar.setEvent(iconName, eventName, function(event, icon) {
+      eventFunc(event, widget, icon, iconBar);
     });
   },
 
@@ -183,16 +192,19 @@ glift.widgets.BaseWidget.prototype = {
    * Initialize the stone actions.
    */
   _initStoneActions: function() {
-    var stoneActions = this.displayOptions.stoneActions
+    var stoneActions = this.displayOptions.stoneActions;
     stoneActions.click = this.sgfOptions.stoneClick;
     var that = this;
-    for (var action in stoneActions) {
-      (function(act, fn) { // bind the event -- required due to lazy binding.
-        that.display.intersections().setEvent(act, function(pt) {
-          fn(d3.event, that, pt);
-      });
-      })(action, stoneActions[action]);
+    for (var eventName in stoneActions) {
+      this._initOneStoneAction(eventName, stoneActions[eventName]);
     }
+  },
+
+  _initOneStoneAction: function(eventName, func) {
+    var that = this;
+    this.display.intersections().setEvent(eventName, function(event, pt) {
+      func(event, that, pt);
+    });
   },
 
   /**

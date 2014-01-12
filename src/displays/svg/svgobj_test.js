@@ -32,7 +32,7 @@ glift.displays.svg.svgObjTest = function() {
   });
 
   test("Test group creation, with children", function() {
-    var group = svg.group().addNewChild('circle', {'r': 30});
+    var group = svg.group().appendNew('circle', {'r': 30});
     deepEqual(group.render(), '<g>\n<circle r="30"></circle>\n</g>');
   });
 };

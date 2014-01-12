@@ -13,12 +13,13 @@ glift.testUtil = {
   },
 
   assertFullDiv: function(divId) {
-    ok(d3.selectAll('#' + divId + ' svg')[0].length !== 0,
-        "Div should contain contents");
+    // really this is just non-empty...
+    ok($('#' + divId).text().length > 0, "Div should contain contents");
   },
 
   assertEmptyDiv: function(divId) {
-    deepEqual(d3.selectAll('#' + divId + ' svg')[0].length, 0 ,
-        "Div should not contain contents");
+    var contents = $('#' + divId).text();
+    ok(contents.length === 0,
+        'Div should not contain contents. Instead was [' + contents + ']');
   }
 };
