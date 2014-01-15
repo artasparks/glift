@@ -5,6 +5,7 @@ glift.displays.idsTest = function() {
   var name = 'start';
 
   test("Testing to ensure all groups are defined", function() {
+    deepEqual(idGen.svg(), 'foo_svg', 'svg');
     deepEqual(idGen.board(), 'foo_board', 'board');
     deepEqual(idGen.stoneGroup(), 'foo_stone_container', 'stonegroup');
     deepEqual(idGen.stone(pt), 'foo_stone_0_1', 'stone');

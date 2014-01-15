@@ -74,6 +74,7 @@ glift.enums = {
    * be compatible with being class / id names.
    */
   svgElements: {
+    SVG: 'svg',
     BOARD: 'board',
     BOARD_LINE: 'board_line',
     BOARD_LINE_CONTAINER: 'board_line_container',

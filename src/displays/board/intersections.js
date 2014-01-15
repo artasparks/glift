@@ -14,6 +14,9 @@ glift.displays.board._Intersections = function(divId, svg, boardPoints, theme) {
   //  }
   // Note that the funcs take two parameters: event and icon.
   this.events = {};
+
+  // Tracking for which intersections have been modified.
+  this.markPts = [];
 };
 
 glift.displays.board._Intersections.prototype = {
@@ -44,6 +47,7 @@ glift.displays.board._Intersections.prototype = {
         }
       }
     }
+    this.flushStone(pt);
     return this;
   },
 
@@ -62,19 +66,42 @@ glift.displays.board._Intersections.prototype = {
   addMarkPt: function(pt, mark, label) {
     glift.displays.board.addMark(
         this.svg, this.idGen, this.boardPoints, this.theme, pt, mark, label);
+    this.flushMark(pt, mark);
+    return this;
+  },
+
+  flushMark: function(pt, mark) {
+    var svg = this.svg;
+    var idGen = this.idGen;
+    if (glift.displays.board.reqClearForMark(svg, idGen, pt, mark)) {
+      var starp  = svg.child(idGen.starpointGroup()).child(idGen.starpoint(pt))
+      if (starp) {
+        $('#' + starp.attr('id')).attr('opacity', starp.attr('opacity'));
+      }
+      var linept = svg.child(idGen.lineGroup()).child(idGen.line(pt))
+      $('#' + linept.attr('id')).attr('opacity', linept.attr('opacity'));
+    }
+    var markGroup = svg.child(idGen.markGroup());
+    markGroup.child(idGen.mark(pt)).attachToParent(markGroup.attr('id'));
+    this.markPts.push(pt);
     return this;
   },
 
   clearMarks: function() {
-    var elems = glift.enums.svgElements;
-    // Some STARPOINTs/BOARD_LINEs may have been 'turned-off' when adding marks,
-    // so we need to reenable them.
-    this.setGroupAttr(this.idGen.starpointGroup(), {'opacity': 1})
-        .setGroupAttr(this.idGen.lineGroup(), {'opacity': 1});
-
+    var idGen = this.idGen;
+    for (var i = 0, len = this.markPts.length; i < len; i++) {
+      var pt = this.markPts[i];
+      var starpoint =
+          this.svg.child(idGen.starpointGroup()).child(idGen.starpoint(pt))
+      if (starpoint !== undefined) {
+        $('#' + starpoint.attr('id')).attr('opacity', 1);
+      }
+      var line = this.svg.child(idGen.lineGroup()).child(idGen.line(pt))
+      $('#' + line.attr('id')).attr('opacity', 1);
+    }
     this.svg.child(this.idGen.markGroup()).emptyChildren();
     var markGroupId = this.idGen.markGroup();
-    $('#' + markGroupId).empty();
+    $('#' + this.idGen.markGroup()).empty();
     return this;
   },
 

@@ -8,6 +8,32 @@ glift.displays.board.markContainer = function(svg, idGen, boardPoints, theme) {
   svg.append(glift.displays.svg.group().attr('id', idGen.markGroup()));
 };
 
+/**
+ * Check whether the starpoints and lines need to be cleared.
+ */
+glift.displays.board.reqClearForMark = function(svg, idGen, pt, mark) {
+  var marks = glift.enums.marks;
+  var stoneColor = svg.child(idGen.stoneGroup())
+      .child(idGen.stone(pt))
+      .attr('stone_color');
+  return stoneColor === 'EMPTY' && (mark === marks.LABEL
+      || mark === marks.VARIATION_MARKER
+      || mark === marks.CORRECT_VARIATION);
+};
+
+/**
+ * Clear the starpoints and lines.
+ */
+glift.displays.board.clearForMark = function(svg, idGen, pt) {
+  var starpoint = svg.child(idGen.starpointGroup()).child(idGen.starpoint(pt))
+  if (starpoint) {
+    starpoint.attr('opacity', 0);
+  }
+  svg.child(idGen.lineGroup())
+      .child(idGen.line(pt))
+      .attr('opacity', 0)
+};
+
 // This is a static method instead of a method on intersections because, due to
 // the way glift is compiled together, there'no s guarantee what order the files
 // come in (beyond the base package file).  So, either we need to combine
@@ -27,21 +53,12 @@ glift.displays.board.addMark = function(
 
   var marksTheme = theme.stones[stoneColor].marks;
   var container = svg.child(idGen.markGroup());
+  var markId = idGen.mark(pt);
 
   // If necessary, clear out intersection lines and starpoints.  This only applies
   // when a stone hasn't yet been set (stoneColor === 'EMPTY').
-  if (stoneColor === 'EMPTY' &&
-      (mark === marks.LABEL
-          || mark === marks.VARIATION_MARKER
-          || mark === marks.CORRECT_VARIATION)) {
-    var starpointGroup = svg.child(idGen.starpointGroup());
-    var starpoint = svg.child(idGen.starpointGroup()).child(idGen.starpoint(pt))
-    if (starpoint !== undefined) {
-      starpoint.attr('opacity', 0);
-    }
-    svg.child(idGen.lineGroup())
-        .child(idGen.line(pt))
-        .attr('opacity', 0)
+  if (glift.displays.board.reqClearForMark(svg, idGen, pt, mark)) {
+    glift.displays.board.clearForMark(svg, idGen, pt);
   }
 
   var fudge = boardPoints.radius / 8;
@@ -65,7 +82,8 @@ glift.displays.board.addMark = function(
         .attr('x', coordPt.x()) // x and y are the anchor points.
         .attr('y', coordPt.y())
         .attr('font-family', theme.stones.marks['font-family'])
-        .attr('font-size', boardPoints.spacing * 0.7));
+        .attr('font-size', boardPoints.spacing * 0.7)
+        .attr('id', markId));
 
   } else if (mark === marks.SQUARE) {
     var baseDelta = boardPoints.radius / rootTwo;
@@ -79,7 +97,8 @@ glift.displays.board.addMark = function(
         .attr('height', 2 * halfWidth)
         .attr('fill', 'none')
         .attr('stroke-width', 2)
-        .attr('stroke', marksTheme.stroke));
+        .attr('stroke', marksTheme.stroke)
+        .attr('id', markId));
 
   } else if (mark === marks.XMARK) {
     var baseDelta = boardPoints.radius / rootTwo;
@@ -99,7 +118,8 @@ glift.displays.board.addMark = function(
             svgpath.movePt(coordPt) + ' ' +
             svgpath.lineAbsPt(botRight))
         .attr('stroke-width', 2)
-        .attr('stroke', marksTheme.stroke));
+        .attr('stroke', marksTheme.stroke)
+        .attr('id', markId));
   } else if (mark === marks.CIRCLE) {
     container.append(svglib.circle()
         .attr('cx', coordPt.x())
@@ -107,7 +127,8 @@ glift.displays.board.addMark = function(
         .attr('r', boardPoints.radius / 2)
         .attr('fill', 'none')
         .attr('stroke-width', 2)
-        .attr('stroke', marksTheme.stroke));
+        .attr('stroke', marksTheme.stroke)
+        .attr('id', markId));
   } else if (mark === marks.STONE_MARKER) {
     var stoneMarkerTheme = theme.stones.marks['STONE_MARKER'];
     container.append(svglib.circle()
@@ -115,7 +136,8 @@ glift.displays.board.addMark = function(
         .attr('cy', coordPt.y())
         .attr('r', boardPoints.radius / 3)
         .attr('opacity', marksTheme.STONE_MARKER.opacity)
-        .attr('fill', marksTheme.STONE_MARKER.fill));
+        .attr('fill', marksTheme.STONE_MARKER.fill)
+        .attr('id', markId));
   } else if (mark === marks.TRIANGLE) {
     var r = boardPoints.radius - boardPoints.radius / 5;
     var rightNode = coordPt.translate(r * (rootThree / 2), r * (1 / 2));
@@ -129,7 +151,8 @@ glift.displays.board.addMark = function(
             svgpath.lineAbsPt(rightNode) + ' ' +
             svgpath.lineAbsPt(topNode))
         .attr('stroke-width', 2)
-        .attr('stroke', marksTheme.stroke));
+        .attr('stroke', marksTheme.stroke)
+        .attr('id', markId));
   } else {
     // do nothing.  I suppose we could throw an exception here.
   }

@@ -3,7 +3,8 @@ glift.displays.svg.svgObjTest = function() {
   var svg = glift.displays.svg;
 
   test("Test svg creation", function() {
-    deepEqual(svg.svg().render(), "<svg></svg>");
+    deepEqual(svg.svg().render(),
+        '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"></svg>');
   });
 
   test("Test circle creation", function() {

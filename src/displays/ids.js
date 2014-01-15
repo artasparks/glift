@@ -31,19 +31,29 @@ glift.displays.ids = {
     this.divId = divId;
     this._eid = glift.displays.ids.element;
     this._enum = glift.enums.svgElements;
+
+    this._svg = this._eid(this.divId, this._enum.SVG);
+    this._board = this._eid(this.divId, this._enum.BOARD);
+    this._stoneGroup = this._eid(this.divId, this._enum.STONE_CONTAINER);
+    this._stoneShadowGroup =
+        this._eid(this.divId, this._enum.STONE_SHADOW_CONTAINER);
+    this._starpointGroup = this._eid(this.divId, this._enum.STARPOINT_CONTAINER);
+    this._buttonGroup = this._eid(this.divId, this._enum.BUTTON_CONTAINER);
+    this._lineGroup = this._eid(this.divId, this._enum.BOARD_LINE_CONTAINER);
+    this._markGroup = this._eid(this.divId, this._enum.MARK_CONTAINER);
+    this._iconGroup = this._eid(this.divId, this._enum.ICON_CONTAINER);
   }
 };
 
 glift.displays.ids._Generator.prototype = {
+  /** ID for the svg container. */
+  svg: function() { return this._svg; },
+
   /** ID for the board. */
-  board: function() {
-    return this._eid(this.divId, this._enum.BOARD);
-  },
+  board: function() { return this._board; },
 
   /** Group id for the stones. */
-  stoneGroup: function() {
-    return this._eid(this.divId, this._enum.STONE_CONTAINER);
-  },
+  stoneGroup: function() { return this._stoneGroup; },
 
   /** Id for a stone. */
   stone: function(pt) {
@@ -51,10 +61,7 @@ glift.displays.ids._Generator.prototype = {
   },
 
   /** Group id for the stone shadows. */
-  stoneShadowGroup: function() {
-    return this._eid(this.divId, this._enum.STONE_SHADOW_CONTAINER);
-  },
-
+  stoneShadowGroup: function() { return this._stoneShadowGroup; },
 
   /** ID for a stone shadow. */
   stoneShadow: function(pt) {
@@ -62,9 +69,7 @@ glift.displays.ids._Generator.prototype = {
   },
 
   /** Group id for the star points. */
-  starpointGroup: function() {
-    return this._eid(this.divId, this._enum.STARPOINT_CONTAINER);
-  },
+  starpointGroup: function() { return this._starpointGroup; },
 
   /** ID for a star point. */
   starpoint: function(pt) {
@@ -72,9 +77,7 @@ glift.displays.ids._Generator.prototype = {
   },
 
   /** Group id for the buttons. */
-  buttonGroup: function() {
-    return this._eid(this.divId, this._enum.BUTTON_CONTAINER);
-  },
+  buttonGroup: function() { return this._buttonGroup; },
 
   /** ID for a button. */
   button: function(pt) {
@@ -82,9 +85,7 @@ glift.displays.ids._Generator.prototype = {
   },
 
   /** Group id for the lines. */
-  lineGroup: function() {
-    return this._eid(this.divId, this._enum.BOARD_LINE_CONTAINER);
-  },
+  lineGroup: function() { return this._lineGroup; },
 
   /** ID for a line. */
   line: function(pt) {
@@ -92,9 +93,7 @@ glift.displays.ids._Generator.prototype = {
   },
 
   /** Group id a Mark Container. */
-  markGroup: function() {
-    return this._eid(this.divId, this._enum.MARK_CONTAINER);
-  },
+  markGroup: function() { return this._markGroup; },
 
   /** ID for a mark. */
   mark: function(pt) {
@@ -106,10 +105,8 @@ glift.displays.ids._Generator.prototype = {
     return this._eid(this.divId, this._enum.GUIDE_LINE);
   },
 
-  /**  */
-  iconGroup: function() {
-    return this._eid(this.divId, this._enum.ICON_CONTAINER);
-  },
+  /** Group ID for the icons.  */
+  iconGroup: function() { return this._iconGroup; },
 
   /** ID for an icon . */
   icon: function(name) {

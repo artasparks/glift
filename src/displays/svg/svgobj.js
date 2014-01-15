@@ -1,9 +1,11 @@
 glift.displays.svg.createObj = function(type, attrObj) {
-  return new glift.displays.svg.SvgObj(type, attrObj);
-}
+   return new glift.displays.svg.SvgObj(type, attrObj);
+};
 
 glift.displays.svg.svg = function(attrObj) {
-  return new glift.displays.svg.SvgObj('svg', attrObj);
+  return new glift.displays.svg.SvgObj('svg', attrObj)
+      .attr('version', '1.1')
+      .attr('xmlns', 'http://www.w3.org/2000/svg');
 };
 
 glift.displays.svg.circle = function(attrObj) {
@@ -41,11 +43,31 @@ glift.displays.svg.SvgObj = function(type, attrObj) {
 
 glift.displays.svg.SvgObj.prototype = {
   /**
-   * Append content onto a buffer.  This assumes the buffer has a push method,
-   * and so at the very least, must be list-like.
+   * Append content to a div.
    */
-  flush: function(buffer) {
-    buffer.push(this.render());
+  attachToParent: function(divId) {
+    // TODO(kashomon): Make recursive. maybe.
+    var svgContainer = document.getElementById(divId);
+    if (svgContainer) {
+      var elem = document.createElementNS(
+          "http://www.w3.org/2000/svg", this._type);
+      for (var attr in this._attrMap) {
+        elem.setAttribute(attr, this._attrMap[attr]);
+      }
+      if (this._type === 'text') {
+        var textNode = document.createTextNode(this._text);
+        elem.appendChild(textNode);
+      }
+      svgContainer.appendChild(elem);
+    }
+  },
+
+  /**
+   * Append content to a div.  This requires that the element have a ID and
+   * already be attached to the DOM.
+   */
+  flush: function() {
+    // TODO(kashomon): Write...?
   },
 
   /**
