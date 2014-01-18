@@ -6,7 +6,7 @@ glift.bridge = {
   /**
    * Set/create the various components in the UI.
    *
-   * For a more detailed discussion, see intersections in glift.rules.
+   * For a more detailed discussion, see intersections in glift.bridge.
    */
   // TODO(kashomon): move showVariations to intersections.
   setDisplayState: function(boardData, display, showVariations) {

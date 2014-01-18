@@ -145,8 +145,12 @@ glift.displays.board._Intersections.prototype = {
   },
 
   clearStones: function() {
-    this.setGroupAttr(this.idGen.stoneGroup(), {opacity: 0})
-        .setGroupAttr(this.idGen.stoneShadowGroup(), {opacity: 0});
+    var stoneAttrs = {opacity: 0, stone_color: "EMPTY"};
+    var shadowAttrs = {opacity: 0};
+    this.setGroupAttr(this.idGen.stoneGroup(), stoneAttrs)
+        .setGroupAttr(this.idGen.stoneShadowGroup(), shadowAttrs);
+    $('.' + glift.enums.svgElements.STONE_SHADOW).attr(shadowAttrs);
+    $('.' + glift.enums.svgElements.STONE).attr(stoneAttrs);
     return this;
   },
 

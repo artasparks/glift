@@ -16,6 +16,7 @@ glift.displays.board.stones = function(svg, idGen, boardPoints, theme) {
       .attr("opacity", 0)
       .attr("stone_color", "EMPTY")
       .attr("fill", 'blue') // dummy color
+      .attr('class', glift.enums.svgElements.STONE)
       .attr("id", idGen.stone(pt.intPt)));
   }
 };
@@ -41,6 +42,7 @@ glift.displays.board.shadows = function(svg, idGen, boardPoints, theme) {
       .attr("fill", theme.stones.shadows.fill)
       // .attr("stroke", theme.stones.shadows.stroke)
       // .attr("filter", 'url(#' + divId + "_svg_blur)")
+      .attr('class', glift.enums.svgElements.STONE_SHADOW)
       .attr("id", idGen.stoneShadow(pt.intPt)));
   }
 };
