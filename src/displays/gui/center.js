@@ -15,13 +15,13 @@
 glift.displays.gui.rowCenterSimple = function(
     outerBox, inBboxes, vertMargin, horzMargin) {
   return glift.displays.gui._linearCentering(
-      outerBox, inBboxes, vertMargin, horzMargin, 0, 0, 'h');
+      outerBox, inBboxes, vertMargin, horzMargin, 5, 0, 'h');
 };
 
 glift.displays.gui.columnCenterSimple = function(
     outerBox, inBboxes, vertMargin, horzMargin) {
   return glift.displays.gui._linearCentering(
-      outerBox, inBboxes, vertMargin, horzMargin, 0, 0, 'v');
+      outerBox, inBboxes, vertMargin, horzMargin, 5, 0, 'v');
 };
 
 /**

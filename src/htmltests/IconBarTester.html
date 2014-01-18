@@ -151,10 +151,10 @@
         });
 
         iconBar.forEachIcon(function(icon) {
-          iconBar.setEvent('mouseover', icon.iconName, function() {
-            d3.select('#' + icon.elementId).attr('fill', 'red');
-          }).setEvent('mouseout', icon.iconName, function() {
-            d3.select('#' + icon.elementId).attr('fill',
+          iconBar.setEvent(icon.iconName, 'mouseover', function() {
+            $('#' + icon.elementId).attr('fill', 'red');
+          }).setEvent(icon.iconName, 'mouseout', function() {
+            $('#' + icon.elementId).attr('fill',
               iconBar.theme.icons.DEFAULT.fill);
           });
         });
@@ -162,9 +162,10 @@
 
         var multi = iconBar.getIconFromIndex(6);
         iconBar.addCenteredTempIcon('multiopen', multi.getActive(), 'black');
-        iconBar.setEventIndexedIcon('click', 6, function(icon) {
+        iconBar.setEventIndexedIcon(6, 'click', function(event, icon) {
           var ic = glift.displays.icons.iconSelector('glift_display_base', iconBar, icon);
         });
+        iconBar.flushEvents();
       </script>
     </div>
   </body>

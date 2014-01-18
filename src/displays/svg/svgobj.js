@@ -43,23 +43,32 @@ glift.displays.svg.SvgObj = function(type, attrObj) {
 
 glift.displays.svg.SvgObj.prototype = {
   /**
-   * Append content to a div.
+   * Attach content to a div.
    */
   attachToParent: function(divId) {
-    // TODO(kashomon): Make recursive. maybe.
     var svgContainer = document.getElementById(divId);
     if (svgContainer) {
-      var elem = document.createElementNS(
-          "http://www.w3.org/2000/svg", this._type);
-      for (var attr in this._attrMap) {
-        elem.setAttribute(attr, this._attrMap[attr]);
-      }
-      if (this._type === 'text') {
-        var textNode = document.createTextNode(this._text);
-        elem.appendChild(textNode);
-      }
-      svgContainer.appendChild(elem);
+      svgContainer.appendChild(this.asElement());
     }
+  },
+
+  /**
+   * Turn this node (and all children nodes) into SVG elements.
+   */
+  asElement: function() {
+    var elem = document.createElementNS(
+        "http://www.w3.org/2000/svg", this._type);
+    for (var attr in this._attrMap) {
+      elem.setAttribute(attr, this._attrMap[attr]);
+    }
+    if (this._type === 'text') {
+      var textNode = document.createTextNode(this._text);
+      elem.appendChild(textNode);
+    }
+    for (var i = 0, len = this._children.length; i < len; i++) {
+      elem.appendChild(this._children[i].asElement());
+    }
+    return elem;
   },
 
   /**

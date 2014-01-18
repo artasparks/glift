@@ -9,25 +9,28 @@ glift.displays.icons._IconSelector = function(parentDivId, iconBar, icon) {
   this.baseId = 'iconSelector_' + parentDivId;
   this.iconBar = iconBar;
   this.parentDivId = parentDivId;
-  this.icon = icon;
+  this.icon = icon; // base icon.
+
   this.displayedIcons = undefined; // defined on draw.
+
+  this.columnIdList = [];
+  this.svgColumnList = []; // defined on draw.
 };
 
 glift.displays.icons._IconSelector.prototype = {
   draw: function() {
-    // TODO(kashomon): This method is a huge pile of prototyping crapola and
-    // needs to be significantly refactored.
-    var that = this;
     this.destroy();
+    var that = this;
+    var svglib = glift.displays.svg;
     var parentBbox = glift.displays.bboxFromDiv(this.parentDivId);
     var iconBarBbox = this.iconBar.bbox;
     var iconBbox = this.icon.bbox;
 
-    // Width of the column = width of the base icon.
     var columnWidth = iconBbox.width();
     // This assumes that the iconbar is always on the bottom.
     var columnHeight = parentBbox.height() - iconBarBbox.height();
-    var padding = 5; // px
+
+    var paddingPx = 5;
     var rewrapped = [];
 
     for (var i = 0; i < this.icon.associatedIcons.length; i++) {
@@ -35,41 +38,44 @@ glift.displays.icons._IconSelector.prototype = {
     }
     var $parentDiv = $('#' + this.parentDivId);
 
-    var columnId = this.baseId + '_column_1';
+    var columnIndex = 0;
+    while (rewrapped.length > 0) {
+      var columnId = this.baseId + '_column_' + columnIndex;
+      this.columnIdList.push(columnId);
 
-    $parentDiv.append('<div id="' + columnId + '"></div>')
-    var $columnDiv = $('#' + columnId);
+      $parentDiv.append('<div id="' + columnId + '"></div>')
+      $('#' + columnId).css({
+        bottom: iconBarBbox.height(),
+        height: columnHeight,
+        left: (parentBbox.width() - iconBarBbox.width()) +
+            columnIndex * iconBbox.width(),
+        width: iconBbox.width(),
+        position: 'absolute',
+        background: '#CCCCCC'
+      });
 
-    $columnDiv.css({
-      bottom: iconBarBbox.height(),
-      height: columnHeight,
-      left: parentBbox.width() - iconBarBbox.width(),
-      width: iconBbox.width(),
-      position: 'absolute',
-      background: '#CCCCCC'
-    });
+      var columnBox = glift.displays.bboxFromDiv(columnId);
+      var transforms = glift.displays.icons.columnCenterWrapped(
+          columnBox, rewrapped, paddingPx, paddingPx);
 
-    var columnBox = glift.displays.bboxFromDiv(columnId);
+      var svgId = columnId + '_svg';
+      var svg = svglib.svg()
+          .attr('id', columnId + '_svg')
+          .attr('height', '100%')
+          .attr('width', '100%');
+      for (var i = 0, len = transforms.length; i < len; i++) {
+        var icon = rewrapped.shift();
+        svg.append(svglib.path()
+            .attr('d', icon.iconStr)
+            .attr('fill', 'red')
+            .attr('transform', icon.transformString())
+            .attr('id', svgId + '_' + icon.iconName))
+      }
 
-    var transforms = glift.displays.icons.columnCenterWrapped(
-        columnBox, rewrapped, 5, 5);
-
-    var svgId = columnId + '_svg'
-    $columnDiv.append('<svg width="100%" height="100%" id="'
-        + svgId + '"></svg>');
-    var $svg = $('#' + svgId);
-    var buffer = "";
-    for (var i = 0; i < transforms.length; i++) {
-      var icon = rewrapped[i];
-      buffer += '<path '
-        + 'd="' + icon.iconStr + '" '
-        + 'fill="red"'
-        + 'transform="' + icon.transformString() + '" '
-        + '></path>\n';
+      svg.attachToParent(columnId);
+      this.svgColumnList.push(svg);
+      columnIndex++;
     }
-
-    $svg.append(buffer);
-    $('#' + columnId).html($('#' + columnId).html());
   },
 
   destroy: function() {

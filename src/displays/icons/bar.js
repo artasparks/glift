@@ -239,8 +239,8 @@ glift.displays.icons._IconBar.prototype = {
    * }
    */
   setEvent: function(iconName, event, func) {
-    var button = this.svg.child(this.idGen.buttonGroup()).child(
-        this.idGen.button(iconName));
+    var button = this.svg.child(this.idGen.buttonGroup())
+        .child(this.idGen.button(iconName));
     var id = button.attr('id');
     var name = button.data();
     var icon = this.nameMapping[name];
