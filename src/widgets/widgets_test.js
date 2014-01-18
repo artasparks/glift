@@ -34,8 +34,15 @@ glift.widgets.widgetsTest = function() {
         }, {
           sgfString: sgfs.marktest,
           widgetType: wtypes.EXAMPLE
+        }, {
+          sgfString: sgfs.twoOptions,
+          widgetType: wtypes.CORRECT_VARIATIONS_PROBLEM
         }]
     });
     ok(manager !== undefined);
+
+    // It's rather nice to keep one copy of the widget manager around, to play
+    // with.
+    // manager.destroy();
   });
 };

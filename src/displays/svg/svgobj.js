@@ -192,6 +192,16 @@ glift.displays.svg.SvgObj.prototype = {
     return this.append(obj);
   },
 
+  /**
+   * Append an SVG element and attach to the DOM.
+   */
+  appendAndAttach: function(obj) {
+    this.append(obj);
+    if (this.attr('id')) {
+      obj.attachToParent(this.attr('id'))
+    }
+  },
+
   copyNoChildren: function() {
     var newAttr = {};
     for (var key in this._attrMap) {

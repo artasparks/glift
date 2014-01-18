@@ -169,11 +169,12 @@ glift.displays.icons._IconBar.prototype = {
       tempIcon = parentIcon.centerWithinIcon(tempIcon, vm, hm);
     }
 
-    this.svg.child(this.idGen.tempIconGroup()).append(svglib.path()
+    this.svg.child(this.idGen.tempIconGroup()).appendAndAttach(svglib.path()
       .attr('d', tempIcon.iconStr)
       .attr('fill', color) // that.theme.icons['DEFAULT'].fill)
       .attr('id', this.idGen.tempIcon(tempIcon.iconName))
       .attr('transform', tempIcon.transformString()));
+
     return this;
   },
 
@@ -181,12 +182,13 @@ glift.displays.icons._IconBar.prototype = {
    * Add some temporary text on top of an icon.
    */
   addTempText: function(iconName, text, color) {
+    var svglib = glift.displays.svg;
     var bbox = this.getIcon(iconName).bbox;
     var fontSize = bbox.width() * .54;
     var id = this.idGen.tempIconText(iconName);
     var boxStrokeWidth = 7
-    this.svg.rmChild(this.idGen().tempIconText(iconName));
-    this.svg.child(this.idGen.tempIconGroup()).append(svglib.text()
+    this.clearTempText(iconName);
+    this.svg.child(this.idGen.tempIconGroup()).appendAndAttach(svglib.text()
       .text(text)
       .attr('fill', color)
       .attr('stroke', color)
@@ -202,11 +204,16 @@ glift.displays.icons._IconBar.prototype = {
     return this;
   },
 
+  clearTempText: function(iconName) {
+    this.svg.rmChild(this.idGen.tempIconText(iconName));
+    $('#' + this.idGen.tempIconText(iconName)).remove();
+  },
+
   createIconSelector: function(baseIcon, icons) {
     // TODO(kashomon): Implement
   },
 
-  clearIconSelector: function() {
+  destroyIconSelector: function() {
     // TODO(kashomon): Implement
   },
 

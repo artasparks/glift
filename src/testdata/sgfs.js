@@ -131,5 +131,15 @@ testdata.sgfs = {
     "SQ[ra][rb][rc]" +
     ")",
 
+    twoOptions: "(;GM[1]FF[4]CA[UTF-8]AP[CGoban:3]ST[2]" +
+      "RU[Japanese]SZ[19]KM[0.00]" +
+      "PW[White]PB[Black]EV[ALL_CORRECT]AW[oc][pe]AB[mc][qd]C[What are the normal ways black follows up this position?]" +
+      "(;B[pd]C[Correct]" +
+      ";W[od]" +
+      ";B[oe])" +
+      "(;B[qe]C[Correct]" +
+      ";W[pf]" +
+      ";B[qg]))",
+
     gogameguruHard: "(;GM[2]FF[4]CA[UTF-8]AP[CGoban:3]ST[2]RU[Japanese]SZ[19]KM[0.00]C[A Problem from GoGameGuru]AW[po][qo][ro][so][np][op][pq][nr][pr][qr][rs]AB[qm][on][pn][oo][pp][qp][rp][sp][qq][rr][qs](;B[sr](;W[rq];B[sq];W[ps];B[rn]C[Correct])(;W[ps](;B[rn];W[rq];B[sq];W[qs](;B[sn]C[Correct])(;B[qn]C[Correct]))(;B[qn];W[rq];B[sq];W[qs];B[rn]C[Correct])(;B[sn];W[rq];B[sq];W[qs];B[rn]C[Correct])))(;B[sq];W[ps](;B[rn];W[sr];B[ss]C[It's a ko, but black can do better.])(;B[sr];W[qs];B[rn];W[ss])(;B[qn];W[sr];B[ss]C[It's a ko, but black can do better.])(;B[sn];W[sr];B[ss]C[It's a ko, but black can do better.]))(;B[ss];W[sq];B[rq];W[ps](;B[rn];W[rs]C[It's a ko, but black can do better.])(;B[qn];W[rs]C[It's a ko, but black can do better.])(;B[sn];W[rs]C[It's a ko, but black can do better.]))(;B[rq];W[ps](;B[sr];W[qs](;B[rn];W[ss])(;B[qn];W[ss]))(;B[rn];W[sr])(;B[qn];W[sr]))(;B[rn];W[sq])(;B[qn];W[sq])(;B[sn];W[sq]))"
 };

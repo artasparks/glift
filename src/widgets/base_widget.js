@@ -163,7 +163,6 @@ glift.widgets.BaseWidget.prototype = {
         };
       // TODO(kashomon): Add touch events conditionally based on the detected
       // browser.
-      //
       // actionsForIcon.touchstart = iconActions[iconName].touchstart ||
           // function(d3Event,  widgetRef, iconObj) {
             // d3Event.preventDefault && d3Event.preventDefault();
@@ -198,6 +197,7 @@ glift.widgets.BaseWidget.prototype = {
     for (var eventName in stoneActions) {
       this._initOneStoneAction(eventName, stoneActions[eventName]);
     }
+    this.display.intersections().flushEvents();
   },
 
   _initOneStoneAction: function(eventName, func) {
