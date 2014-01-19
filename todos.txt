@@ -49,6 +49,8 @@ Done - Make orientation of GoBoard (widget?) configurable (flush left, center-h,
 Done - On skinny windows, move the icon bar so it's flush with the window (a sort of flush-top)
 Done - Make the base configuration changes orientations based on screen
 dimensions.  See the KGS/cgoban window for a great example of this.
+Done - Remove dependency on D3!
+Done - Write my own SVG library
 
 Nope:
   Info Window / panel.
@@ -77,7 +79,6 @@ Smaller Changes.
 - Add Pass Button to GameViewer (base) widget.
 - Change MoveNodes / Movetree to have parent information instead of movehistory.
 - Make a global registry of 'active board' so that key events can be assigned.
-- Remove dependencies on external libraries.  Quite a big job.
 - Get the theme data out of the display.
 - Finish key-stroke mappings -- add more keys, support two go boards on same
   screen.
@@ -89,3 +90,4 @@ Smaller Changes.
   - Add moveTree support for deleting properties
   - Add moveTree support for deleting variations
   - Add icons for game editor
+  - Add icon selector

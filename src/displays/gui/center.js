@@ -13,15 +13,15 @@
  * inputs.
  */
 glift.displays.gui.rowCenterSimple = function(
-    outerBox, inBboxes, vertMargin, horzMargin) {
+    outerBox, inBboxes, vertMargin, horzMargin, minSpacing) {
   return glift.displays.gui._linearCentering(
-      outerBox, inBboxes, vertMargin, horzMargin, 5, 0, 'h');
+      outerBox, inBboxes, vertMargin, horzMargin, minSpacing, 0, 'h');
 };
 
 glift.displays.gui.columnCenterSimple = function(
-    outerBox, inBboxes, vertMargin, horzMargin) {
+    outerBox, inBboxes, vertMargin, horzMargin, minSpacing) {
   return glift.displays.gui._linearCentering(
-      outerBox, inBboxes, vertMargin, horzMargin, 5, 0, 'v');
+      outerBox, inBboxes, vertMargin, horzMargin, minSpacing, 0, 'v');
 };
 
 /**
@@ -32,6 +32,8 @@ glift.displays.gui._linearCentering = function(
   var outerWidth = outerBox.width(),
       innerWidth = outerWidth - 2 * horzMargin,
       outerHeight = outerBox.height(),
+      minSpacing = minSpacing || 0,
+      maxSpacing = maxSpacing || 0,
       innerHeight = outerHeight - 2 * vertMargin,
       transforms = [],
       newBboxes = [];

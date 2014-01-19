@@ -34,7 +34,7 @@ glift.displays.diagrams.gooe = {
     XMARK: '\\0??4',
     BSTONE_TEXTLABEL: '\\goBsLbl{%s}',
     WSTONE_TEXTLABEL: '\\goWsLbl{%s}',
-    TEXTLABEL: '\\eLbl{%s}',
+    TEXTLABEL: '\\eLbl{%s}'
 
     // BigBoard TextLabels
     // BSTONE_LABEL_BIG: '\goBsLblBig{%s}',
@@ -108,14 +108,14 @@ glift.displays.diagrams.gooe = {
   },
 
   defs: {
-    basicHeader: [  
+    basicHeader: [
       '\\documentclass[a5paper]{book}',
       '\\usepackage{gooemacs}',
       '\\usepackage{xcolor}',
       '\\usepackage{wrapfig}',
       '\\usepackage{unicode}',
       '\\usepackage[margin=1in]{geometry}',
-      '\\begin{document}',
+      '\\begin{document}'
     ],
     basicFooter: ['\\end{document}'],
 
@@ -142,7 +142,7 @@ glift.displays.diagrams.gooe = {
       '\\def\\eLbl#1{\\leavevmode\\hbox to \\goIntWd{\\hss\\raise\\smallRaise\\hbox{\\rm \\tenpoint{#1}}\\hss}}',
       '\\def\\goWsLbl#1{\\leavevmode\\setbox0=\\hbox{\\0??!}\\rlap{\\0??!}\\raise\\smallRaise\\hbox to \\wd0{\\hss\\eightpointnine{#1}\\hss}}',
       '\\def\\goBsLbl#1{\\leavevmode\\setbox0=\\hbox{\\0??@}\\rlap{\\0??@}\\raise\\smallRaise\\hbox to \\wd0{\\hss\\color{white}\\eightpointnine{#1}\\color{white}\\hss}}'
-    ],
+    ]
   },
 
   documentHeader: function(baseFont) {

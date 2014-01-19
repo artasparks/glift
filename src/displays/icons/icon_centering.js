@@ -2,25 +2,25 @@
  * Row-Center an array of wrapped icons.
  */
 glift.displays.icons.rowCenterWrapped = function(
-    divBbox, wrappedIcons, vMargin, hMargin) {
+    divBbox, wrappedIcons, vMargin, hMargin, minSpacing) {
   return glift.displays.icons._centerWrapped(
-      divBbox, wrappedIcons, vMargin, hMargin, 'h');
+      divBbox, wrappedIcons, vMargin, hMargin, minSpacing, 'h');
 }
 
 /**
  * Column-Center an array of wrapped icons.
  */
 glift.displays.icons.columnCenterWrapped = function(
-    divBbox, wrappedIcons, vMargin, hMargin) {
+    divBbox, wrappedIcons, vMargin, hMargin, minSpacing) {
   return glift.displays.icons._centerWrapped(
-      divBbox, wrappedIcons, vMargin, hMargin, 'v');
+      divBbox, wrappedIcons, vMargin, hMargin, minSpacing, 'v');
 }
 
 /**
  * Center an array of wrapped icons.
  */
 glift.displays.icons._centerWrapped = function(
-    divBbox, wrappedIcons, vMargin, hMargin, direction) {
+    divBbox, wrappedIcons, vMargin, hMargin, minSpacing, direction) {
   var bboxes = [];
   if (direction !== 'h' && direction !== 'v') {
     direction = 'h'
@@ -28,14 +28,15 @@ glift.displays.icons._centerWrapped = function(
   for (var i = 0; i < wrappedIcons.length; i++) {
     bboxes.push(wrappedIcons[i].bbox);
   }
+  var minSpacing = minSpacing || 5;
 
   // Row center returns: { transforms: [...], bboxes: [...] }
   if (direction === 'h') {
     var centeringData = glift.displays.gui.rowCenterSimple(
-        divBbox, bboxes, vMargin, hMargin);
+        divBbox, bboxes, vMargin, hMargin, minSpacing);
   } else {
     var centeringData = glift.displays.gui.columnCenterSimple(
-        divBbox, bboxes, vMargin, hMargin)
+        divBbox, bboxes, vMargin, hMargin, minSpacing)
   }
   var transforms = centeringData.transforms;
 

@@ -126,5 +126,5 @@ glift.displays.ids._Generator.prototype = {
   /** ID for a temporary text. */
   tempIconText: function(name) {
     return this._eid(this.divId, this._enum.TEMP_TEXT, name);
-  },
-}
+  }
+};

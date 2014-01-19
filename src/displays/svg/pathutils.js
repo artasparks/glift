@@ -34,4 +34,4 @@ glift.displays.svg.pathutils = {
   lineAbsPt: function(pt) {
     return glift.displays.svg.pathutils.lineAbs(pt.x(), pt.y());
   }
-}
+};
