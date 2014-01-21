@@ -115,7 +115,7 @@
         width: 100%;
         height: 100%;
       }
-      #glift_display {
+      #glift_display_bar {
         position:absolute;
         background-color: cyan;
         bottom: 0;
@@ -137,17 +137,18 @@
   <body>
     <div id="wrap" style="position:relative;">
       <div id="gheader"></div>
-      <div id="glift_display_base"></div>
-      <div id="glift_display"></div>
+      <div id="glift_display_base">
+        <div id="glift_display_bar"></div>
+      </div>
       <div id="extra_info"></div>
       <script type="text/javascript">
         var point = glift.util.point;
         var iconBar = glift.displays.icons.bar({
-            divId: 'glift_display',
+            divId: 'glift_display_bar',
             vertMargin:  5,
             icons:  ['chevron-left', 'refresh', 'chevron-right',
                 'roadmap', 'small-gear', 'multiopen-boxonly',
-                ['question-bubble', 'undo', 'twostones', 'arrowup', 'arrowright']]
+                ['question-bubble', 'undo', 'twostones', 'refresh', 'arrowup']]
         });
 
         iconBar.forEachIcon(function(icon) {
@@ -158,12 +159,16 @@
               iconBar.theme.icons.DEFAULT.fill);
           });
         });
-        iconBar.addCenteredTempIcon('multiopen-boxonly', 'check', 'blue');
+        iconBar.setCenteredTempIcon('multiopen-boxonly', 'check', 'blue');
 
-        var multi = iconBar.getIconFromIndex(6);
-        iconBar.addCenteredTempIcon('multiopen', multi.getActive(), 'black');
-        iconBar.setEventIndexedIcon(6, 'click', function(event, icon) {
-          var ic = glift.displays.icons.iconSelector('glift_display_base', iconBar, icon);
+        var multi = iconBar.getIcon(6);
+        iconBar.setCenteredTempIcon('multiopen', multi.getActive(), 'black');
+        iconBar.setEvent(6, 'click', function(event, icon) {
+          var ic = glift.displays.icons.iconSelector('glift_display_base', 'glift_display_bar', icon);
+          ic.setIconEvents('click', function(event, wrappedIcon) {
+            iconBar.getIcon(6).setActive(wrappedIcon.iconName);
+            iconBar.setCenteredTempIcon(6, multi.getActive(), 'blue');
+          });
         });
         iconBar.flushEvents();
       </script>

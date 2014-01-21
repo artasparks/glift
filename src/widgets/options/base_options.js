@@ -330,7 +330,7 @@ glift.widgets.options.baseOptions = {
 
     // Go to the explain-board.
     roadmap: {
-      click: function(event, widget, iconObj, iconBar) {
+      click: function(event, widget, icon, iconBar) {
         var manager = widget.manager;
         var sgfObj = {
           widgetType: glift.enums.widgetTypes.GAME_VIEWER,
@@ -342,6 +342,20 @@ glift.widgets.options.baseOptions = {
           icons: ['start', 'end', 'arrowleft', 'arrowright', 'undo']
         }
         manager.createTemporaryWidget(sgfObj);
+      }
+    },
+
+    multiopen: {
+      click: function(event, widget, icon, iconBar) {
+        var ic = glift.displays.icons.iconSelector(
+            widget.wrapperDiv,
+            iconBar.divId,
+            icon);
+        ic.setIconEvents('click', function(event, wrappedIcon) {
+          var multi = iconBar.getIcon('multiopen')
+          multi.setActive(wrappedIcon.iconName);
+          iconBar.setCenteredTempIcon('multiopen', multi.getActive(), 'black');
+        });
       }
     }
   }

@@ -48,7 +48,7 @@ glift.displays.icons._WrappedIcon = function(iconName) {
   this.originalBbox = glift.displays.bboxFromPts(
       glift.util.point(iconData.bbox.x, iconData.bbox.y),
       glift.util.point(iconData.bbox.x2, iconData.bbox.y2));
-  this.associatedIcons = [];
+  this.associatedIcons = []; // Added with addAssociatedIcon
   this.activeAssociated = 0; // Index into the above array
   this.bbox = this.originalBbox; // can change on "translate"
   this.transformObj = undefined; // Set if the icon is transformed
@@ -109,10 +109,25 @@ glift.displays.icons._WrappedIcon.prototype = {
   },
 
   /**
+   * Set the 'active' icon. Note: this doesn't refresh the icons on screen.
+   * That task is left to the bar or selector.
+   */
+  setActive: function(iconName) {
+    for (var i = 0, len = this.associatedIcons.length; i < len; i++) {
+      var icon = this.associatedIcons[i];
+      if (icon.iconName === iconName) {
+        this.activeAssociated = i;
+      }
+    }
+    return this;
+  },
+
+  /**
    * Set the div element id.
    */
   setElementId: function(id) {
     this.elementId = id;
+    return this;
   },
 
   /**

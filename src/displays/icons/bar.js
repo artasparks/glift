@@ -37,7 +37,6 @@ glift.displays.icons._IconBar = function(
   this.divBbox = undefined; // initialized by draw
   this.idGen = glift.displays.ids.generator(this.divId);
 
-
   // Object of objects of the form
   //  {
   //    <buttonId>#<eventName>: {
@@ -87,31 +86,6 @@ glift.displays.icons._IconBar.prototype = {
     return this;
   },
 
-  flush: function() {
-    $('#' + this.divId).html(this.svg.render());
-    this.flushEvents();
-  },
-
-  flushEvents: function() {
-    var container = this.svg.child(this.idGen.buttonGroup());
-    var that = this;
-    for (var buttonId_event in this.events) {
-      var splat = buttonId_event.split('#');
-      var buttonId = splat[0];
-      var eventName = splat[1];
-      if (container.child(buttonId) !== undefined) {
-        var eventObj = this.events[buttonId_event];
-        this._flushOneEvent(buttonId, eventName, eventObj);
-      }
-    }
-  },
-
-  _flushOneEvent: function(buttonId, eventName, eventObj) {
-    $('#' + buttonId).on(eventName, function(event) {
-        eventObj.func(event, eventObj.icon);
-    });
-  },
-
   _createIcons: function() {
     var svglib = glift.displays.svg;
     var container = svglib.group().attr('id', this.idGen.iconGroup());
@@ -145,6 +119,35 @@ glift.displays.icons._IconBar.prototype = {
     }
   },
 
+  flush: function() {
+    this.svg.attachToParent(this.divId);
+    var multi = this.getIcon('multiopen');
+    if (multi !== undefined) {
+      this.setCenteredTempIcon('multiopen', multi.getActive(), 'black');
+    }
+    this.flushEvents();
+  },
+
+  flushEvents: function() {
+    var container = this.svg.child(this.idGen.buttonGroup());
+    var that = this;
+    for (var buttonId_event in this.events) {
+      var splat = buttonId_event.split('#');
+      var buttonId = splat[0];
+      var eventName = splat[1];
+      if (container.child(buttonId) !== undefined) {
+        var eventObj = this.events[buttonId_event];
+        this._flushOneEvent(buttonId, eventName, eventObj);
+      }
+    }
+  },
+
+  _flushOneEvent: function(buttonId, eventName, eventObj) {
+    $('#' + buttonId).on(eventName, function(event) {
+        eventObj.func(event, eventObj.icon);
+    });
+  },
+
   /**
    * Add a temporary associated icon and center it.  If the parentIcon has a
    * subbox specified, then use that.  Otherwise, just center within the
@@ -152,16 +155,22 @@ glift.displays.icons._IconBar.prototype = {
    *
    * If the tempIcon is specified as a string, it is wrapped first.
    */
-  addCenteredTempIcon: function(
-      parentIconName, tempIcon, color, vMargin, hMargin) {
+  setCenteredTempIcon: function(
+      parentIconNameOrIndex, tempIcon, color, vMargin, hMargin) {
     // Move these defaults into the Theme.
     var svglib = glift.displays.svg;
     var hm = hMargin || 2,
         vm = vMargin || 2;
-    var parentIcon = this.nameMapping[parentIconName];
+    var parentIcon = this.getIcon(parentIconNameOrIndex);
     if (glift.util.typeOf(tempIcon) === 'string') {
       tempIcon = glift.displays.icons.wrappedIcon(tempIcon);
+    } else {
+      tempIcon = tempIcon.rewrapIcon();
     }
+    var tempIconId = this.idGen.tempIcon(parentIcon.iconName);
+
+    // Remove if it exists.
+    $('#' + tempIconId).remove();
 
     if (parentIcon.subboxIcon !== undefined) {
       tempIcon = parentIcon.centerWithinSubbox(tempIcon, vm, hm);
@@ -172,9 +181,8 @@ glift.displays.icons._IconBar.prototype = {
     this.svg.child(this.idGen.tempIconGroup()).appendAndAttach(svglib.path()
       .attr('d', tempIcon.iconStr)
       .attr('fill', color) // that.theme.icons['DEFAULT'].fill)
-      .attr('id', this.idGen.tempIcon(tempIcon.iconName))
+      .attr('id', tempIconId)
       .attr('transform', tempIcon.transformString()));
-
     return this;
   },
 
@@ -229,30 +237,22 @@ glift.displays.icons._IconBar.prototype = {
   },
 
   /**
-   * Assign an event handler to the icon named with 'iconName'.  Note, that the
-   * function 'func' will always be sent the object resulting from getIcon,
-   * namely,
+   * Assign an event handler to the icon named with 'iconName' or, optionally,
+   * an index.
+   *
+   * Note, that the function 'func' will always be sent the object resulting
+   * from getIcon, namely,
    *
    * {
    *  name: name of the icon
    *  iconId: the element id of the icon (for convenience).
    * }
    */
-  setEvent: function(iconName, event, func) {
+  setEvent: function(iconNameOrIndex, event, func) {
+    var icon = this.getIcon(iconNameOrIndex);
     var button = this.svg.child(this.idGen.buttonGroup())
-        .child(this.idGen.button(iconName));
-    var id = button.attr('id');
-    var name = button.data();
-    var icon = this.nameMapping[name];
-    this._setEvent(id, icon, event, func);
-    return this;
-  },
-
-  /** Similar to setEvent, but grab the icon based on the index. */
-  setEventIndexedIcon: function(index, event, func) {
-    var icon = this.icons[index]
-    if (icon === undefined) { return this; }
-    var buttonId = this.idGen.button(icon.iconName);
+        .child(this.idGen.button(icon.iconName));
+    var buttonId = button.attr('id');
     this._setEvent(buttonId, icon, event, func);
     return this;
   },
@@ -282,15 +282,15 @@ glift.displays.icons._IconBar.prototype = {
   /**
    * Return a wrapped icon.
    */
-  getIcon: function(name) {
-    return this.nameMapping[name];
-  },
-
-  /**
-   * Return a index
-   */
-  getIconFromIndex: function(index) {
-    return this.icons[index || 0];
+  getIcon: function(nameOrIndex) {
+    var itype = glift.util.typeOf(nameOrIndex);
+    if (itype === 'string') {
+      return this.nameMapping[nameOrIndex];
+    } else if (itype === 'number') {
+      return this.icons[nameOrIndex];
+    } else {
+      return undefined;
+    }
   },
 
   /**

@@ -115,8 +115,8 @@
 (function() {
   console.log("foom!");
   var paper = Raphael('glift_display1', 1000, 1000);
-  for (var key in glift.displays.gui.icons) {
-    var pathobj = paper.path(glift.displays.gui.icons[key].string);
+  for (var key in glift.displays.icons.svg) {
+    var pathobj = paper.path(glift.displays.icons.svg[key].string);
     var bbox = pathobj.getBBox();
     glift.util.logz(key)
     glift.util.logz(bbox);
