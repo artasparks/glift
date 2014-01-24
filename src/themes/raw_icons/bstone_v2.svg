@@ -48,6 +48,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -56,9 +57,14 @@
      inkscape:groupmode="layer"
      id="layer1">
     <path
+       sodipodi:type="arc"
        style="fill:none;stroke:#000000;stroke-opacity:1"
-       d="M 107.5 37.375 C 81.266474 37.375 60 58.641474 60 84.875 C 60 111.10853 81.266474 132.375 107.5 132.375 C 133.73353 132.375 155 111.10853 155 84.875 C 155 58.641474 133.73353 37.375 107.5 37.375 z M 109.78125 52.4375 L 114.46875 52.4375 L 114.46875 112.21875 L 107.1875 112.21875 L 107.1875 65.625 C 105.42793 67.303381 103.08814 68.977957 100.21875 70.65625 C 97.376393 72.334626 94.836363 73.598371 92.5625 74.4375 L 92.5625 67.375 C 96.650046 65.453082 100.22233 63.140362 103.28125 60.40625 C 106.34013 57.672241 108.50894 55.009201 109.78125 52.4375 z "
-       id="path3769" />
+       id="path3769"
+       sodipodi:cx="107.5"
+       sodipodi:cy="84.862183"
+       sodipodi:rx="47.5"
+       sodipodi:ry="47.5"
+       d="m 155,84.862183 a 47.5,47.5 0 1 1 -95,0 47.5,47.5 0 1 1 95,0 z" />
     <text
        xml:space="preserve"
        style="font-size:40px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Helvetica"

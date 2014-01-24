@@ -191,11 +191,20 @@ glift.widgets.BaseWidget.prototype = {
    * Initialize the stone actions.
    */
   _initStoneActions: function() {
-    var stoneActions = this.displayOptions.stoneActions;
-    stoneActions.click = this.sgfOptions.stoneClick;
+    var baseActions = this.displayOptions.stoneActions;
+    var actions = {};
+    actions.mouseover = baseActions.mouseover;
+    actions.mouseout = baseActions.mouseout;
+    actions.click = this.sgfOptions.stoneClick;
+    if (this.sgfOptions.stoneMouseover) {
+      actions.mouseover = this.sgfOptions.stoneMouseover;
+    }
+    if (this.sgfOptions.stoneMouseout) {
+      actions.mouseout = this.sgfOptions.stoneMouseout;
+    }
     var that = this;
-    for (var eventName in stoneActions) {
-      this._initOneStoneAction(eventName, stoneActions[eventName]);
+    for (var eventName in actions) {
+      this._initOneStoneAction(eventName, actions[eventName]);
     }
     this.display.intersections().flushEvents();
   },
@@ -259,7 +268,10 @@ glift.widgets.BaseWidget.prototype = {
     if (boardData && boardData !== glift.util.none) {
       this.setCommentBox(boardData.comment);
       glift.bridge.setDisplayState(
-          boardData, this.display, this.sgfOptions.showVariations);
+          boardData,
+          this.display,
+          this.sgfOptions.showVariations,
+          this.sgfOptions);
     }
   },
 

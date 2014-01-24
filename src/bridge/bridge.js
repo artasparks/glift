@@ -9,7 +9,7 @@ glift.bridge = {
    * For a more detailed discussion, see intersections in glift.bridge.
    */
   // TODO(kashomon): move showVariations to intersections.
-  setDisplayState: function(boardData, display, showVariations) {
+  setDisplayState: function(boardData, display, showVariations, markLastMove) {
     display.intersections().clearMarks();
     if (boardData.displayDataType === glift.enums.displayDataTypes.FULL) {
       display.intersections().clearAll();
@@ -60,7 +60,8 @@ glift.bridge = {
 
     if (boardData.lastMove &&
         boardData.lastMove !== glift.util.none &&
-        boardData.lastMove.point !== undefined) {
+        boardData.lastMove.point !== undefined &&
+        markLastMove) {
       var lm = boardData.lastMove;
       display.intersections().addMarkPt(lm.point, marks.STONE_MARKER);
     }

@@ -50,6 +50,7 @@ DIR_ORDER = [
     'bridge',
     'widgets',
     'widgets/options',
+    'widgets/options/board_editor',
     ]
 
 COMBINED_LOC = 'compiled/glift_combined.js'

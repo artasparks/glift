@@ -85,6 +85,11 @@ Smaller Changes.
 - Add move slider
 - Add title bar
 
+
+- Add a way to specify next-moves, so that auto-numbering can be used for
+  EXAMPLE diagrams.
+- Add a way to disable current move
+
 - Create game editor widget. (many dependencies)
   - Add movetree->SGF transformation
   - Add moveTree support for deleting properties

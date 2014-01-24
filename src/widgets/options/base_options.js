@@ -123,6 +123,12 @@ glift.widgets.options.baseOptions = {
     showVariations: undefined,
 
     /**
+     * Whether or not to mark the last move played.  Either true or false, but
+     * defaults to true.
+     */
+    markLastMove: true,
+
+    /**
      * The function that creates the controller at widget-creation time.
      * See glift.controllers for more detail
      */
@@ -137,7 +143,15 @@ glift.widgets.options.baseOptions = {
     /**
      * The action that is performed when a sure clicks on an intersection.
      */
-    stoneClick: undefined
+    stoneClick: undefined,
+
+
+    /**
+     * Mouseover/mouseout override for stones. Probably this will only need to
+     * be changed for the board editor.
+     */
+    stoneMouseover: undefined,
+    stoneMouseout: undefined
   },
 
   //----------------------------------------------------------------------
