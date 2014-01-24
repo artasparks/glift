@@ -51,6 +51,7 @@ Done - Make the base configuration changes orientations based on screen
 dimensions.  See the KGS/cgoban window for a great example of this.
 Done - Remove dependency on D3!
 Done - Write my own SVG library
+Done - Add a way to disable current move marking
 
 Nope:
   Info Window / panel.
@@ -88,7 +89,6 @@ Smaller Changes.
 
 - Add a way to specify next-moves, so that auto-numbering can be used for
   EXAMPLE diagrams.
-- Add a way to disable current move
 
 - Create game editor widget. (many dependencies)
   - Add movetree->SGF transformation
