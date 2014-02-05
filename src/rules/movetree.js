@@ -269,7 +269,8 @@ glift.rules._MoveTree.prototype = {
 
   // TODO(kashomon): Add this.
   toSgf: function() {
-    var out = "";
+    var builder = [];
+    var curNode = this.node();
     for (var propKey in this.getAllProps()) {
       //TODO
     }

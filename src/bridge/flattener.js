@@ -456,7 +456,7 @@ glift.bridge._Flattened.prototype = {
    * Turn a 0 indexed pt to an intersection point.
    */
   ptToIntpt: function(pt) {
-    return glift.util.point( 
+    return glift.util.point(
         pt.x() + this.cropping.cbox().left(),
         pt.y() + this.cropping.cbox().top());
   }

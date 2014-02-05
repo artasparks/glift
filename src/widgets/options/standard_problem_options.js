@@ -16,12 +16,12 @@ glift.widgets.options.STANDARD_PROBLEM = {
     var callback = widget.sgfOptions.problemCallback;
     if (widget.correctness === undefined) {
       if (data.result === problemResults.CORRECT) {
-          widget.iconBar.addCenteredTempIcon('multiopen-boxonly', 'check', '#0CC');
+          widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'check', '#0CC');
           widget.correctness = problemResults.CORRECT;
           callback(problemResults.CORRECT);
       } else if (data.result == problemResults.INCORRECT) {
         widget.iconBar.destroyTempIcons();
-        widget.iconBar.addCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
+        widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
         widget.correctness = problemResults.INCORRECT;
         callback(problemResults.INCORRECT);
       }

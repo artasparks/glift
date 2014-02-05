@@ -52,6 +52,8 @@ dimensions.  See the KGS/cgoban window for a great example of this.
 Done - Remove dependency on D3!
 Done - Write my own SVG library
 Done - Add a way to disable current move marking
+Done - Add icon selector
+Done - Support vertically centered icons. Note: this is part of the selector.
 
 Nope:
   Info Window / panel.
@@ -62,37 +64,44 @@ Nope:
     parsing logic to be more maintainable and easier to understand.
   Create a problem explorer widget / controller.
     Rationale: Too similar to the game viewer -- turned out not to be necessary.
-  Support vertically centered icons (editor).
-    Rationale: It's a lot of work and I don't see the benefit here.
 
-Smaller Changes.
+Open Questions:
+- IconBars --> Do they need a background?
+- Ko support (less important?)
+- Make a 'settings' overlay.
+
+Todos:
 - Add support for numbering on the edges, beyond the lines.
 - Add tests for marks.
 - Add shadow (perhaps even border) to comment box.
 - Make it possible to change the width of the go board border.
-- IconBars --> Do they need a background?
-- Ko support (less important?)
 - Add the ability to create static images (i.e., canvas support)
 - Change Goban addStone capture to return consistent capture object with
   loadStonesFromMovetree.
 - Change Marks to optionally take a color-theme-cateory.  Not sure what this should be called
-- Make a 'settings' overlay.
 - Add Pass Button to GameViewer (base) widget.
 - Change MoveNodes / Movetree to have parent information instead of movehistory.
 - Make a global registry of 'active board' so that key events can be assigned.
 - Get the theme data out of the display.
 - Finish key-stroke mappings -- add more keys, support two go boards on same
-  screen.
+  screen (probably via a key-registry)
 - Add move slider
 - Add title bar
-
-
+- Support AE (clear intersection)
+- Support PL (changes who plays first)
+- Support export for different types
 - Add a way to specify next-moves, so that auto-numbering can be used for
   EXAMPLE diagrams.
+- Make a distinction between integer points and float points.  We can cache
+  integer points, but we shouldn't cache float points.
+- Combine the selector and bar by putting everything in bar in an abstract
+  class.
+- Escaping character '\' in the context of \] is leaking into the comments and
+  needs to be removed.
+- Default in sgfDefaults kfor showVariations doesn't work.
 
 - Create game editor widget. (many dependencies)
   - Add movetree->SGF transformation
   - Add moveTree support for deleting properties
   - Add moveTree support for deleting variations
   - Add icons for game editor
-  - Add icon selector

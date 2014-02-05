@@ -14,8 +14,8 @@ glift.displays.board.Display = function(inEnvironment, themeName, theme) {
   this._environment = inEnvironment;
   this._themeName = themeName;
   this._theme = theme;
-  this._svgBase = glift.displays.svg.svg({height: '100%', width: '100%'})
-  this._svg = undefined; // defined in draw
+  this._svgBase = undefined; // defined in draw.
+  this._svg = undefined; // defined in draw.
   this._intersections = undefined // defined in draw;
   this._buffer = []; // All objects are stuffed into the buffer and are only added
 };
@@ -38,7 +38,13 @@ glift.displays.board.Display.prototype = {
   init: function() {
     if (this._svg === undefined) {
       this.destroy(); // make sure everything is cleared out of the div.
-      this._svg = this._svgBase.copyNoChildren();
+      this._svg = glift.displays.svg.svg({
+        height: '100%',
+        width: '100%',
+        position: 'float',
+        top: 0,
+        id: this.divId() + '_svgboard'
+      });
     }
     this._environment.init();
     return this;
@@ -55,24 +61,29 @@ glift.displays.board.Display.prototype = {
         theme = this._theme,
         svg = this._svg,
         divId = this.divId(),
+        svglib = glift.displays.svg,
         idGen = glift.displays.ids.generator(divId);
-    board.initBlurFilter(divId, svg); // in boardBase
+
     board.boardBase(svg, idGen, env.goBoardBox, theme);
-    board.lines(svg, idGen, boardPoints, theme);
-    board.starpoints(svg, idGen, boardPoints, theme);
-    board.shadows(svg, idGen, boardPoints, theme);
-    board.stones(svg, idGen, boardPoints, theme);
-    board.markContainer(svg, idGen, boardPoints, theme);
-    board.buttons(svg, idGen, boardPoints);
+    board.initBlurFilter(divId, svg); // in boardBase.  Should be moved.
+
+    var intGrp = svglib.group().attr('id', idGen.intersections());
+    svg.append(intGrp);
+
+    board.lines(intGrp, idGen, boardPoints, theme);
+    board.starpoints(intGrp, idGen, boardPoints, theme);
+    board.shadows(intGrp, idGen, boardPoints, theme);
+    board.stones(intGrp, idGen, boardPoints, theme);
+    board.markContainer(intGrp, idGen, boardPoints, theme);
+    board.buttons(intGrp, idGen, boardPoints);
     this._intersections = new glift.displays.board._Intersections(
-        divId, svg, boardPoints, theme);
+        divId, intGrp, boardPoints, theme);
     this.flush();
     return this; // required
   },
 
   flush: function() {
-    var svg = this._svg;
-    $('#' + this.divId()).html(svg.render());
+    this._svg.attachToParent(this.divId());
     this.intersections().flushEvents();
     return this;
   },
@@ -84,24 +95,8 @@ glift.displays.board.Display.prototype = {
   destroy: function() {
     $('#' + this.divId()).empty();
     this._svg = undefined;
+    this._svgBase = undefined;
     this._intersections = undefined;
-    return this;
-  },
-
-  /**
-   * Recreate the GoBoard. This means we create a completely new environment,
-   * but we reuse the old Display object.
-   *
-   * TODO(kashomon): Why is this here?  Why not just give back a completely new
-   * display?
-   */
-  recreate: function(options) {
-    this.destroy();
-    var processed = glift.displays.processOptions(options),
-        environment = glift.displays.environment.get(processed);
-    this._environment = environment;
-    this._themeName = processed.theme
-    this._theme = glift.themes.get(processed.theme);
     return this;
   }
 };

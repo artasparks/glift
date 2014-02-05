@@ -46,6 +46,7 @@ DIR_ORDER = [
 
     # Tertiary packages
     'sgf',
+    'gib',
     'controllers',
     'bridge',
     'widgets',

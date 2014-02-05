@@ -18,10 +18,10 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.8.6',
+  version: '0.8.7',
   debugMode: false,
-  // Options for performanceDebugLevel: none, fine, info
-  performanceDebugLevel: 'none',
+  // Options for performanceDebugLevel: NONE, INFO
+  performanceDebugLevel: 'NONE',
   // Map of performance timestamps.
   perf: {},
   // The active registry.  Used to determine who has 'ownership' of key-presses.
@@ -305,6 +305,7 @@ glift.enums = {
   svgElements: {
     SVG: 'svg',
     BOARD: 'board',
+    INTERSECTIONS_CONTAINER: 'intersections',
     BOARD_LINE: 'board_line',
     BOARD_LINE_CONTAINER: 'board_line_container',
     BUTTON: 'button',
@@ -351,6 +352,11 @@ glift.enums = {
     COMMENT_BOX: 'COMMENT_BOX',
     EXTRA_ICONBAR: 'EXTRA_ICONBAR',
     ICONBAR: 'ICONBAR'
+  },
+
+  dubug: {
+    NONE: 'NONE',
+    INFO: 'INFO'
   }
 };
 (function() {
@@ -445,14 +451,14 @@ glift.math = {
 };
 glift.util.perfLog = function(msg) {
   if (glift.global.performanceDebugLevel === undefined ||
-      glift.global.performanceDebugLevel === 'none') {
+      glift.global.performanceDebugLevel === 'NONE') {
     return;
   }
   var time = glift.util.perfTime();
   var lastMajor = glift.global.perf.lastMajor;
   var last = glift.global.perf.last;
   console.log("Since Major Record: " + (time - lastMajor + "ms. " + msg));
-  if (glift.global.performanceDebugLevel === 'fine') {
+  if (glift.global.performanceDebugLevel === 'FINE') {
     console.log("  Since Last Record: " + (time - last + "ms. " + msg));
   }
   glift.global.perf.last = time;
@@ -460,7 +466,7 @@ glift.util.perfLog = function(msg) {
 
 glift.util.majorPerfLog = function(msg) {
   if (glift.global.performanceDebugLevel === undefined ||
-      glift.global.performanceDebugLevel === 'none') {
+      glift.global.performanceDebugLevel === 'NONE') {
     return;
   }
   var time = glift.util.perfTime();
@@ -470,7 +476,7 @@ glift.util.majorPerfLog = function(msg) {
 
 glift.util.perfDone = function() {
   if (glift.global.performanceDebugLevel === undefined ||
-      glift.global.performanceDebugLevel === 'none') {
+      glift.global.performanceDebugLevel === 'NONE') {
     return;
   }
   var time = glift.util.perfTime();
@@ -482,7 +488,7 @@ glift.util.perfDone = function() {
 
 glift.util.perfInit = function() {
   if (glift.global.performanceDebugLevel === undefined ||
-      glift.global.performanceDebugLevel === 'none') {
+      glift.global.performanceDebugLevel === 'NONE') {
     return;
   }
   var t = glift.util.perfTime();
@@ -639,7 +645,8 @@ glift.testUtil = {
 
   assertFullDiv: function(divId) {
     // really this is just non-empty...
-    ok($('#' + divId).text().length > 0, "Div should contain contents");
+    ok($('#' + divId).html().length > 0, "Div should contain contents."
+       + "  Was: " + $('#' + divId).html());
   },
 
   assertEmptyDiv: function(divId) {
@@ -1561,6 +1568,8 @@ glift.displays.ids = {
     this._lineGroup = this._eid(this.divId, this._enum.BOARD_LINE_CONTAINER);
     this._markGroup = this._eid(this.divId, this._enum.MARK_CONTAINER);
     this._iconGroup = this._eid(this.divId, this._enum.ICON_CONTAINER);
+    this._intersectionsGroup =
+        this._eid(this.divId, this._enum.INTERSECTIONS_CONTAINER);
   }
 };
 
@@ -1570,6 +1579,9 @@ glift.displays.ids._Generator.prototype = {
 
   /** ID for the board. */
   board: function() { return this._board; },
+
+  /** ID for the intersections group. */
+  intersections: function() { return this._intersectionsGroup; },
 
   /** Group id for the stones. */
   stoneGroup: function() { return this._stoneGroup; },
@@ -1979,8 +1991,8 @@ glift.displays.board.Display = function(inEnvironment, themeName, theme) {
   this._environment = inEnvironment;
   this._themeName = themeName;
   this._theme = theme;
-  this._svgBase = glift.displays.svg.svg({height: '100%', width: '100%'})
-  this._svg = undefined; // defined in draw
+  this._svgBase = undefined; // defined in draw.
+  this._svg = undefined; // defined in draw.
   this._intersections = undefined // defined in draw;
   this._buffer = []; // All objects are stuffed into the buffer and are only added
 };
@@ -2003,7 +2015,13 @@ glift.displays.board.Display.prototype = {
   init: function() {
     if (this._svg === undefined) {
       this.destroy(); // make sure everything is cleared out of the div.
-      this._svg = this._svgBase.copyNoChildren();
+      this._svg = glift.displays.svg.svg({
+        height: '100%',
+        width: '100%',
+        position: 'float',
+        top: 0,
+        id: this.divId() + '_svgboard'
+      });
     }
     this._environment.init();
     return this;
@@ -2020,24 +2038,29 @@ glift.displays.board.Display.prototype = {
         theme = this._theme,
         svg = this._svg,
         divId = this.divId(),
+        svglib = glift.displays.svg,
         idGen = glift.displays.ids.generator(divId);
-    board.initBlurFilter(divId, svg); // in boardBase
+
     board.boardBase(svg, idGen, env.goBoardBox, theme);
-    board.lines(svg, idGen, boardPoints, theme);
-    board.starpoints(svg, idGen, boardPoints, theme);
-    board.shadows(svg, idGen, boardPoints, theme);
-    board.stones(svg, idGen, boardPoints, theme);
-    board.markContainer(svg, idGen, boardPoints, theme);
-    board.buttons(svg, idGen, boardPoints);
+    board.initBlurFilter(divId, svg); // in boardBase.  Should be moved.
+
+    var intGrp = svglib.group().attr('id', idGen.intersections());
+    svg.append(intGrp);
+
+    board.lines(intGrp, idGen, boardPoints, theme);
+    board.starpoints(intGrp, idGen, boardPoints, theme);
+    board.shadows(intGrp, idGen, boardPoints, theme);
+    board.stones(intGrp, idGen, boardPoints, theme);
+    board.markContainer(intGrp, idGen, boardPoints, theme);
+    board.buttons(intGrp, idGen, boardPoints);
     this._intersections = new glift.displays.board._Intersections(
-        divId, svg, boardPoints, theme);
+        divId, intGrp, boardPoints, theme);
     this.flush();
     return this; // required
   },
 
   flush: function() {
-    var svg = this._svg;
-    $('#' + this.divId()).html(svg.render());
+    this._svg.attachToParent(this.divId());
     this.intersections().flushEvents();
     return this;
   },
@@ -2049,24 +2072,8 @@ glift.displays.board.Display.prototype = {
   destroy: function() {
     $('#' + this.divId()).empty();
     this._svg = undefined;
+    this._svgBase = undefined;
     this._intersections = undefined;
-    return this;
-  },
-
-  /**
-   * Recreate the GoBoard. This means we create a completely new environment,
-   * but we reuse the old Display object.
-   *
-   * TODO(kashomon): Why is this here?  Why not just give back a completely new
-   * display?
-   */
-  recreate: function(options) {
-    this.destroy();
-    var processed = glift.displays.processOptions(options),
-        environment = glift.displays.environment.get(processed);
-    this._environment = environment;
-    this._themeName = processed.theme
-    this._theme = glift.themes.get(processed.theme);
     return this;
   }
 };
@@ -2952,7 +2959,6 @@ glift.displays.icons._IconBar = function(
   this.divBbox = undefined; // initialized by draw
   this.idGen = glift.displays.ids.generator(this.divId);
 
-
   // Object of objects of the form
   //  {
   //    <buttonId>#<eventName>: {
@@ -3002,31 +3008,6 @@ glift.displays.icons._IconBar.prototype = {
     return this;
   },
 
-  flush: function() {
-    $('#' + this.divId).html(this.svg.render());
-    this.flushEvents();
-  },
-
-  flushEvents: function() {
-    var container = this.svg.child(this.idGen.buttonGroup());
-    var that = this;
-    for (var buttonId_event in this.events) {
-      var splat = buttonId_event.split('#');
-      var buttonId = splat[0];
-      var eventName = splat[1];
-      if (container.child(buttonId) !== undefined) {
-        var eventObj = this.events[buttonId_event];
-        this._flushOneEvent(buttonId, eventName, eventObj);
-      }
-    }
-  },
-
-  _flushOneEvent: function(buttonId, eventName, eventObj) {
-    $('#' + buttonId).on(eventName, function(event) {
-        eventObj.func(event, eventObj.icon);
-    });
-  },
-
   _createIcons: function() {
     var svglib = glift.displays.svg;
     var container = svglib.group().attr('id', this.idGen.iconGroup());
@@ -3060,6 +3041,35 @@ glift.displays.icons._IconBar.prototype = {
     }
   },
 
+  flush: function() {
+    this.svg.attachToParent(this.divId);
+    var multi = this.getIcon('multiopen');
+    if (multi !== undefined) {
+      this.setCenteredTempIcon('multiopen', multi.getActive(), 'black');
+    }
+    this.flushEvents();
+  },
+
+  flushEvents: function() {
+    var container = this.svg.child(this.idGen.buttonGroup());
+    var that = this;
+    for (var buttonId_event in this.events) {
+      var splat = buttonId_event.split('#');
+      var buttonId = splat[0];
+      var eventName = splat[1];
+      if (container.child(buttonId) !== undefined) {
+        var eventObj = this.events[buttonId_event];
+        this._flushOneEvent(buttonId, eventName, eventObj);
+      }
+    }
+  },
+
+  _flushOneEvent: function(buttonId, eventName, eventObj) {
+    $('#' + buttonId).on(eventName, function(event) {
+        eventObj.func(event, eventObj.icon);
+    });
+  },
+
   /**
    * Add a temporary associated icon and center it.  If the parentIcon has a
    * subbox specified, then use that.  Otherwise, just center within the
@@ -3067,16 +3077,22 @@ glift.displays.icons._IconBar.prototype = {
    *
    * If the tempIcon is specified as a string, it is wrapped first.
    */
-  addCenteredTempIcon: function(
-      parentIconName, tempIcon, color, vMargin, hMargin) {
+  setCenteredTempIcon: function(
+      parentIconNameOrIndex, tempIcon, color, vMargin, hMargin) {
     // Move these defaults into the Theme.
     var svglib = glift.displays.svg;
     var hm = hMargin || 2,
         vm = vMargin || 2;
-    var parentIcon = this.nameMapping[parentIconName];
+    var parentIcon = this.getIcon(parentIconNameOrIndex);
     if (glift.util.typeOf(tempIcon) === 'string') {
       tempIcon = glift.displays.icons.wrappedIcon(tempIcon);
+    } else {
+      tempIcon = tempIcon.rewrapIcon();
     }
+    var tempIconId = this.idGen.tempIcon(parentIcon.iconName);
+
+    // Remove if it exists.
+    $('#' + tempIconId).remove();
 
     if (parentIcon.subboxIcon !== undefined) {
       tempIcon = parentIcon.centerWithinSubbox(tempIcon, vm, hm);
@@ -3087,9 +3103,8 @@ glift.displays.icons._IconBar.prototype = {
     this.svg.child(this.idGen.tempIconGroup()).appendAndAttach(svglib.path()
       .attr('d', tempIcon.iconStr)
       .attr('fill', color) // that.theme.icons['DEFAULT'].fill)
-      .attr('id', this.idGen.tempIcon(tempIcon.iconName))
+      .attr('id', tempIconId)
       .attr('transform', tempIcon.transformString()));
-
     return this;
   },
 
@@ -3144,30 +3159,22 @@ glift.displays.icons._IconBar.prototype = {
   },
 
   /**
-   * Assign an event handler to the icon named with 'iconName'.  Note, that the
-   * function 'func' will always be sent the object resulting from getIcon,
-   * namely,
+   * Assign an event handler to the icon named with 'iconName' or, optionally,
+   * an index.
+   *
+   * Note, that the function 'func' will always be sent the object resulting
+   * from getIcon, namely,
    *
    * {
    *  name: name of the icon
    *  iconId: the element id of the icon (for convenience).
    * }
    */
-  setEvent: function(iconName, event, func) {
+  setEvent: function(iconNameOrIndex, event, func) {
+    var icon = this.getIcon(iconNameOrIndex);
     var button = this.svg.child(this.idGen.buttonGroup())
-        .child(this.idGen.button(iconName));
-    var id = button.attr('id');
-    var name = button.data();
-    var icon = this.nameMapping[name];
-    this._setEvent(id, icon, event, func);
-    return this;
-  },
-
-  /** Similar to setEvent, but grab the icon based on the index. */
-  setEventIndexedIcon: function(index, event, func) {
-    var icon = this.icons[index]
-    if (icon === undefined) { return this; }
-    var buttonId = this.idGen.button(icon.iconName);
+        .child(this.idGen.button(icon.iconName));
+    var buttonId = button.attr('id');
     this._setEvent(buttonId, icon, event, func);
     return this;
   },
@@ -3197,15 +3204,15 @@ glift.displays.icons._IconBar.prototype = {
   /**
    * Return a wrapped icon.
    */
-  getIcon: function(name) {
-    return this.nameMapping[name];
-  },
-
-  /**
-   * Return a index
-   */
-  getIconFromIndex: function(index) {
-    return this.icons[index || 0];
+  getIcon: function(nameOrIndex) {
+    var itype = glift.util.typeOf(nameOrIndex);
+    if (itype === 'string') {
+      return this.nameMapping[nameOrIndex];
+    } else if (itype === 'number') {
+      return this.icons[nameOrIndex];
+    } else {
+      return undefined;
+    }
   },
 
   /**
@@ -3278,60 +3285,76 @@ glift.displays.icons._centerWrapped = function(
   }
   return transforms;
 };
-glift.displays.icons.iconSelector = function(parentDivId, iconBar, icon) {
-  return new glift.displays.icons._IconSelector(parentDivId, iconBar, icon)
+glift.displays.icons.iconSelector = function(parentDivId, iconBarDivId, icon) {
+  return new glift.displays.icons._IconSelector(parentDivId, iconBarDivId, icon)
       .draw();
 };
 
-glift.displays.icons._IconSelector = function(parentDivId, iconBar, icon) {
+glift.displays.icons._IconSelector = function(parentDivId, iconBarId, icon) {
   // The assumption is currently that there can only be one IconSelector.  This
   // may be incorrect, but it can easily be reevaluated later.
-  this.baseId = 'iconSelector_' + parentDivId;
-  this.iconBar = iconBar;
+  this.iconBarId = iconBarId;
   this.parentDivId = parentDivId;
   this.icon = icon; // base icon.
 
+  this.baseId = 'iconSelector_' + parentDivId;
+  this.wrapperDivId = this.baseId + '_wrapper';
+
   this.displayedIcons = undefined; // defined on draw.
 
+  // Div ids for the columns.
   this.columnIdList = [];
-  this.svgColumnList = []; // defined on draw.
+  // SVG data structures for each column.
+  this.svgColumnList = []; // defined on draw. Single array.
+  // list of columns rewraped icons.  Thus, a double array.
+  this.iconList = [];
 };
 
 glift.displays.icons._IconSelector.prototype = {
   draw: function() {
+    // TODO(kashomon): This needs to be cleaned up. It's currently quite the
+    // mess.
     this.destroy();
     var that = this;
     var svglib = glift.displays.svg;
     var parentBbox = glift.displays.bboxFromDiv(this.parentDivId);
-    var iconBarBbox = this.iconBar.bbox;
+    var barPosition = $('#' + this.iconBarId).position();
+    var iconBarBbox = glift.displays.bboxFromDiv(this.iconBarId);
     var iconBbox = this.icon.bbox;
-
-    var columnWidth = iconBbox.width();
+    var columnWidth = iconBbox.height();
     // This assumes that the iconbar is always on the bottom.
     var columnHeight = parentBbox.height() - iconBarBbox.height();
-
-    var paddingPx = 5;
+    var paddingPx = 5; // TODO(kashomon): Get from theme.
     var rewrapped = [];
 
     for (var i = 0; i < this.icon.associatedIcons.length; i++) {
       rewrapped.push(this.icon.associatedIcons[i].rewrapIcon());
     }
-    var $parentDiv = $('#' + this.parentDivId);
+
+    $('#' + this.parentDivId)
+        .append('<div id="' + this.wrapperDivId + '"></div>');
+
+    var $wrapperDiv = $('#' + this.wrapperDivId);
+    $wrapperDiv.css({
+      position: 'absolute',
+      height: parentBbox.height(),
+      width: parentBbox.width()
+    });
 
     var columnIndex = 0;
     while (rewrapped.length > 0) {
+      this.iconList.push([]);
       var columnId = this.baseId + '_column_' + columnIndex;
       this.columnIdList.push(columnId);
 
-      $parentDiv.append('<div id="' + columnId + '"></div>')
+      $wrapperDiv.append('<div id="' + columnId + '"></div>')
       $('#' + columnId).css({
         bottom: iconBarBbox.height(),
         height: columnHeight,
-        left: (parentBbox.width() - iconBarBbox.width()) +
+        left: barPosition.left +
             columnIndex * iconBbox.width(),
         width: iconBbox.width(),
-        position: 'absolute',
-        background: '#CCCCCC'
+        position: 'absolute'
       });
 
       var columnBox = glift.displays.bboxFromDiv(columnId);
@@ -3343,23 +3366,84 @@ glift.displays.icons._IconSelector.prototype = {
           .attr('id', columnId + '_svg')
           .attr('height', '100%')
           .attr('width', '100%');
+      var idGen = glift.displays.ids.generator(columnId);
+      var container = svglib.group().attr('id', idGen.iconGroup());
+      svg.append(container);
       for (var i = 0, len = transforms.length; i < len; i++) {
         var icon = rewrapped.shift();
-        svg.append(svglib.path()
+        var id = svgId + '_' + icon.iconName;
+        icon.setElementId(id);
+        this.iconList[columnIndex].push(icon);
+        container.append(svglib.path()
             .attr('d', icon.iconStr)
-            .attr('fill', 'red')
-            .attr('transform', icon.transformString())
-            .attr('id', svgId + '_' + icon.iconName))
+            .attr('fill', 'black') // replace with theme
+            .attr('id', icon.elementId)
+            .attr('transform', icon.transformString()));
       }
-
-      svg.attachToParent(columnId);
       this.svgColumnList.push(svg);
       columnIndex++;
     }
+
+    this._createIconButtons();
+    this._setBackgroundEvent();
+    for (var i = 0; i < this.svgColumnList.length; i++) {
+      this.svgColumnList[i].attachToParent(this.columnIdList[i]);
+    }
+    return this;
+  },
+
+  _createIconButtons: function() {
+    var svglib = glift.displays.svg;
+    for (var i = 0; i < this.iconList.length; i++) {
+      var svg = this.svgColumnList[i];
+      var idGen = glift.displays.ids.generator(this.columnIdList[i]);
+      var iconColumn = this.iconList[i];
+      var container = svglib.group().attr('id', idGen.buttonGroup());
+      svg.append(container);
+      for (var j = 0; j < iconColumn.length; j++) {
+        var icon = iconColumn[j]
+        container.append(svglib.rect()
+          .data(icon.iconName)
+          .attr('x', icon.bbox.topLeft().x())
+          .attr('y', icon.bbox.topLeft().y())
+          .attr('width', icon.bbox.width())
+          .attr('height', icon.bbox.height())
+          .attr('fill', 'blue') // color doesn't matter, but need a fill
+          .attr('opacity', 0)
+          .attr('id', idGen.button(icon.iconName)));
+      }
+    }
+  },
+
+  _setBackgroundEvent: function() {
+    var that = this;
+    // TODO(kashomon): Wrap this in a generic method.
+    $('#' + this.wrapperDivId).on('click', function(event) {
+      this.remove();
+    });
+    return this;
+  },
+
+  setIconEvents: function(eventName, func) {
+    for (var i = 0; i < this.iconList.length; i++) {
+      var idGen = glift.displays.ids.generator(this.columnIdList[i]);
+      for (var j = 0; j < this.iconList[i].length; j++) {
+        var icon = this.iconList[i][j];
+        var buttonId = idGen.button(icon.iconName);
+        this._setOneEvent(eventName, buttonId, icon, func);
+      }
+    }
+    return this;
+  },
+
+  _setOneEvent: function(eventName, buttonId, icon, func) {
+    $('#' + buttonId).on(eventName, function(event) {func(event, icon); });
+    return this;
   },
 
   destroy: function() {
-    $('#' + this.id).remove();
+    $('#' + this.wrapperDivId).remove();
+    return this;
   }
 };
 /**
@@ -3533,12 +3617,6 @@ glift.displays.icons.svg = {
   // Icons used for GameEditor //
   ///////////////////////////////
 
-  // My own creation
-  twostones: {
-    string: "m 42.894737,29.335869 c 0,6.540213 -5.301891,11.842106 -11.842105,11.842106 -6.540214,0 -11.842105,-5.301893 -11.842105,-11.842106 0,-6.540214 5.301891,-11.842105 11.842105,-11.842105 6.540214,0 11.842105,5.301891 11.842105,11.842105 z M 31.052632,16.309553 c -7.194236,0 -13.026316,5.83208 -13.026316,13.026316 0,7.194233 5.83208,13.026314 13.026316,13.026314 3.733917,0 7.098575,-1.575815 9.473684,-4.092928 2.375029,2.516206 5.740532,4.092928 9.473684,4.092928 7.194235,0 13.026316,-5.832081 13.026316,-13.026314 0,-7.194236 -5.832081,-13.026316 -13.026316,-13.026316 -3.733152,0 -7.098655,1.56932 -9.473684,4.085526 -2.374906,-2.51483 -5.741698,-4.085526 -9.473684,-4.085526 z",
-    bbox: {"x":18.026316,"y":16.309553,"x2":63.026316,"y2":42.362183,"width":45,"height":26.05263}
-  },
-
   // My own creation.  For layered icons (multi-icons).
   multiopen: {
     string: "m 130,73.862183 6.5,-13 6.5,13 z M 70.709141,37.871643 c -5.658849,0 -10.21875,4.412745 -10.21875,9.90625 l 0,43.3125 c 0,5.493505 4.559901,9.906247 10.21875,9.906247 l 44.624999,0 c 5.65885,0 10.21875,-4.412742 10.21875,-9.906247 l 0,-43.3125 c 0,-5.493505 -4.5599,-9.90625 -10.21875,-9.90625 l -44.624999,0 z m 2.0625,3.125 40.468749,0 c 5.12994,0 9.25,3.959703 9.25,8.90625 l 0,39 c 0,4.946547 -4.12006,8.9375 -9.25,8.9375 l -40.468749,0 c -5.129943,0 -9.25,-3.990953 -9.25,-8.9375 l 0,-39 c 0,-4.946547 4.120057,-8.90625 9.25,-8.90625 z",
@@ -3558,6 +3636,61 @@ glift.displays.icons.svg = {
   "multiopen-boxonly-inside": {
     string: "m 73.259825,41.362183 40.445075,0 c 5.12994,0 9.25982,3.982238 9.25982,8.928785 l 0,38.999149 c 0,4.946547 -4.12988,8.928786 -9.25982,8.928786 l -40.445075,0 C 68.129882,98.218903 64,94.236664 64,89.290117 l 0,-38.999149 c 0,-4.946547 4.129882,-8.928785 9.259825,-8.928785 z",
     bbox: {"x":64,"y":41.362183,"x2":122.96472,"y2":98.218903,"width":58.96472,"height":56.85672}
+  },
+
+  ///////////////////////////////////////
+  // Individual Icons the Board Editor //
+  ///////////////////////////////////////
+
+  // My own creation
+  twostones: {
+    string: "m 42.894737,29.335869 c 0,6.540213 -5.301891,11.842106 -11.842105,11.842106 -6.540214,0 -11.842105,-5.301893 -11.842105,-11.842106 0,-6.540214 5.301891,-11.842105 11.842105,-11.842105 6.540214,0 11.842105,5.301891 11.842105,11.842105 z M 31.052632,16.309553 c -7.194236,0 -13.026316,5.83208 -13.026316,13.026316 0,7.194233 5.83208,13.026314 13.026316,13.026314 3.733917,0 7.098575,-1.575815 9.473684,-4.092928 2.375029,2.516206 5.740532,4.092928 9.473684,4.092928 7.194235,0 13.026316,-5.832081 13.026316,-13.026314 0,-7.194236 -5.832081,-13.026316 -13.026316,-13.026316 -3.733152,0 -7.098655,1.56932 -9.473684,4.085526 -2.374906,-2.51483 -5.741698,-4.085526 -9.473684,-4.085526 z",
+    bbox: {"x":18.026316,"y":16.309553,"x2":63.026316,"y2":42.362183,"width":45,"height":26.05263}
+  },
+
+  bstone: {
+    string: "m 105.05587,69.988831 a 23.738585,23.738585 0 1 1 -47.477171,0 23.738585,23.738585 0 1 1 47.477171,0 z",
+    bbox: {"x":57.578699,"y":46.2148296,"x2":105.05587,"y2":93.7628323,"width":47.477171,"height":47.548002735}
+  },
+
+  wstone: {
+    string: "M 107.5 37.375 C 81.266474 37.375 60 58.641474 60 84.875 C 60 111.10853 81.266474 132.375 107.5 132.375 C 133.73353 132.375 155 111.10853 155 84.875 C 155 58.641474 133.73353 37.375 107.5 37.375 z M 107.5 42.375 C 130.9721 42.375 150 61.402898 150 84.875 C 150 108.3471 130.9721 127.375 107.5 127.375 C 84.027898 127.375 65 108.3471 65 84.875 C 65 61.402898 84.027898 42.375 107.5 42.375 z",
+    bbox: {"x":60,"y":37.375,"x2":155,"y2":132.375,"width":95,"height":95}
+  },
+
+  bstone_a: {
+    string: "M 107.5 37.375 C 81.266474 37.375 60 58.641474 60 84.875 C 60 111.10853 81.266474 132.375 107.5 132.375 C 133.73353 132.375 155 111.10853 155 84.875 C 155 58.641474 133.73353 37.375 107.5 37.375 z M 102.78125 52.53125 L 111.96875 52.53125 L 134.75 112.375 L 126.34375 112.375 L 120.90625 97 L 93.90625 97 L 88.46875 112.375 L 79.9375 112.375 L 102.78125 52.53125 z M 107.34375 60.5 L 96.375 90.28125 L 118.375 90.28125 L 107.34375 60.5 z",
+    bbox: {"x":60,"y":37.375,"x2":155,"y2":132.375,"width":95,"height":95}
+  },
+
+  // bstone_1: {
+    // string: "M 107.5 37.375 C 81.266474 37.375 60 58.641474 60 84.875 C 60 111.10853 81.266474 132.375 107.5 132.375 C 133.73353 132.375 155 111.10853 155 84.875 C 155 58.641474 133.73353 37.375 107.5 37.375 z M 103.46875 52.125 L 111.625 52.125 L 111.625 105.5 L 124.9375 105.5 L 124.9375 112.375 L 90.25 112.375 L 90.25 105.5 L 103.5625 105.5 L 103.5625 59.5625 L 89.0625 62.46875 L 89.0625 55.03125 L 103.46875 52.125 z",
+    // bbox: {"x":60,"y":37.375,"x2":155,"y2":132.375,"width":95,"height":95}
+  // },
+
+  bstone_1: {
+    string: "M 107.5 37.375 C 81.266474 37.375 60 58.641474 60 84.875 C 60 111.10853 81.266474 132.375 107.5 132.375 C 133.73353 132.375 155 111.10853 155 84.875 C 155 58.641474 133.73353 37.375 107.5 37.375 z M 106.96875 52.4375 L 116.21875 52.4375 L 116.21875 112.21875 L 104.8125 112.21875 L 104.8125 69.21875 C 100.64371 73.116859 95.751353 75.975961 90.09375 77.84375 L 90.09375 67.5 C 93.071433 66.525528 96.289216 64.675791 99.78125 61.96875 C 103.27325 59.23474 105.66937 56.064927 106.96875 52.4375 z",
+    bbox: {"x":60,"y":37.375,"x2":155,"y2":132.375,"width":95,"height":95}
+  },
+
+  bstone_triangle: {
+    string: "M 107.5 37.375 C 81.266474 37.375 60 58.641474 60 84.875 C 60 111.10853 81.266474 132.375 107.5 132.375 C 133.73353 132.375 155 111.10853 155 84.875 C 155 58.641474 133.73353 37.375 107.5 37.375 z M 107.8125 45.875 L 143.28125 107.3125 L 72.375 107.3125 L 107.8125 45.875 z M 107.78125 54.53125 L 80.3125 102.15625 L 135.28125 102.15625 L 107.78125 54.53125 z",
+    bbox: {"x":60,"y":37.375,"x2":155,"y2":132.375,"width":95,"height":95}
+  },
+
+  bstone_square: {
+    string: "M 107.5 37.375 C 81.266474 37.375 60 58.641474 60 84.875 C 60 111.10853 81.266474 132.375 107.5 132.375 C 133.73353 132.375 155 111.10853 155 84.875 C 155 58.641474 133.73353 37.375 107.5 37.375 z M 76.0625 53.40625 L 139.21875 53.40625 L 139.21875 116.5625 L 76.0625 116.5625 L 76.0625 53.40625 z M 80.15625 57.59375 L 80.15625 112.34375 L 134.875 112.34375 L 134.875 57.59375 L 80.15625 57.59375 z",
+    bbox: {"x":60,"y":37.375,"x2":155,"y2":132.375,"width":95,"height":95}
+  },
+
+  eraser: {
+    string: "M 115 32.375 L 70.21875 87.40625 L 95.15625 112.375 L 140 57.375 L 115 32.375 z M 115 38.25 L 135 57.375 L 95 107.375 L 75 87.375 L 115 38.25 z",
+    bbox: {"x":70.21875,"y":37.375,"x2":140,"y2":112.375,"width":69.78125,"height":80}
+  },
+
+  'nostone-xmark': {
+    string: "M462,256c0,113.771-92.229,206-206,206S50,369.771,50,256S142.229,50,256,50S462,142.229,462,256z M422,256c0-91.755-74.258-166-166-166c-91.755,0-166,74.259-166,166c0,91.755,74.258,166,166,166C347.755,422,422,347.741,422,256z M325.329,362.49l-67.327-67.324l-67.329,67.332l-36.164-36.186l67.314-67.322l-67.321-67.317l36.185-36.164l67.31,67.301 l67.3-67.309l36.193,36.17l-67.312,67.315l67.32,67.31L325.329,362.49z",
+    bbox: {"x":50,"y":50,"x2":462,"y2":462,"width":412,"height":412}
   }
 };
 /**
@@ -3610,7 +3743,7 @@ glift.displays.icons._WrappedIcon = function(iconName) {
   this.originalBbox = glift.displays.bboxFromPts(
       glift.util.point(iconData.bbox.x, iconData.bbox.y),
       glift.util.point(iconData.bbox.x2, iconData.bbox.y2));
-  this.associatedIcons = [];
+  this.associatedIcons = []; // Added with addAssociatedIcon
   this.activeAssociated = 0; // Index into the above array
   this.bbox = this.originalBbox; // can change on "translate"
   this.transformObj = undefined; // Set if the icon is transformed
@@ -3671,10 +3804,25 @@ glift.displays.icons._WrappedIcon.prototype = {
   },
 
   /**
+   * Set the 'active' icon. Note: this doesn't refresh the icons on screen.
+   * That task is left to the bar or selector.
+   */
+  setActive: function(iconName) {
+    for (var i = 0, len = this.associatedIcons.length; i < len; i++) {
+      var icon = this.associatedIcons[i];
+      if (icon.iconName === iconName) {
+        this.activeAssociated = i;
+      }
+    }
+    return this;
+  },
+
+  /**
    * Set the div element id.
    */
   setElementId: function(id) {
     this.elementId = id;
+    return this;
   },
 
   /**
@@ -4055,7 +4203,12 @@ glift.displays.svg.SvgObj.prototype = {
     var elem = document.createElementNS(
         "http://www.w3.org/2000/svg", this._type);
     for (var attr in this._attrMap) {
-      elem.setAttribute(attr, this._attrMap[attr]);
+      if (attr === 'xlink:href') {
+        elem.setAttributeNS(
+            'http://www.w3.org/1999/xlink', 'href', this._attrMap[attr]);
+      } else {
+        elem.setAttribute(attr, this._attrMap[attr]);
+      }
     }
     if (this._type === 'text') {
       var textNode = document.createTextNode(this._text);
@@ -4958,7 +5111,8 @@ glift.rules._MoveTree.prototype = {
 
   // TODO(kashomon): Add this.
   toSgf: function() {
-    var out = "";
+    var builder = [];
+    var curNode = this.node();
     for (var propKey in this.getAllProps()) {
       //TODO
     }
@@ -5689,6 +5843,70 @@ L: "L", LB: "LB", LN: "LN", LT: "LT", M: "M", MA: "MA", MN: "MN", N: "N", OB:
 "SU", SZ: "SZ", TB: "TB", TC: "TC", TE: "TE", TM: "TM", TR: "TR", TW: "TW", UC:
 "UC", US: "US", V: "V", VW: "VW", W: "W", WL: "WL", WR: "WR", WS: "WS", WT: "WT"
 };
+/**
+ * Parsing and utilities related to Tygem .gib files.
+ */
+glift.gib = {};
+/**
+ * The GIB format (i.e., Tygem's file format) is not public, so it's rather
+ * difficult to know if this is truly an accurate parser. Oh well.
+ *
+ * Also, it's a horrible format.
+ */
+glift.gib.parse = function(gibString) {
+  var states = {
+    HEADER: 1,
+    BODY: 2
+  };
+  var colorToToken = { 1: 'B', 2: 'W' };
+
+  var WHITE_NAME = 'GAMEWHITENAME'
+  var BLACK_NAME = 'GAMEBLACKNAME'
+  var KOMI = 'GAMECONDITION'
+
+  var movetree = glift.rules.movetree.getInstance();
+  var lines = gibString.split('\n');
+
+  var grabHeaderProp = function(name, line, prop, mt) {
+    mt.properties().add(prop, line.substring(
+        line.indexOf(name) + name.length + 1, line.length - 2));
+  };
+
+  var curstate = states.HEADER;
+  for (var i = 0, len = lines.length; i < len; i++) {
+    var str = lines[i];
+    var firstTwo = str.substring(0,2);
+    if (firstTwo === '\\[') {
+      // We're in the header.
+      var eqIdx = str.indexOf('=');
+      var type = str.substring(2, eqIdx);
+      if (type === WHITE_NAME) {
+        grabHeaderProp(WHITE_NAME, str, 'PW', movetree);
+      } else if (type === BLACK_NAME) {
+        grabHeaderProp(BLACK_NAME, str, 'PB', movetree);
+      }
+    } else if (firstTwo === 'ST') {
+      if (curstate !== states.BODY) {
+        // We're in stone-placing land and out of the header.
+        curstate = states.BODY
+      }
+
+      // Stone lines look like:
+      //     ? MoveNumber Color (1=B,2=W) x y
+      // STO 0 2          2               15 15
+      //
+      // Note that the board is indexed from the bottom left rather than from
+      // the upper right, as with SGFs. Also, the intersections are 0-indexed.
+      var splat = str.split(" ");
+      var colorToken = colorToToken[splat[3]];
+      var x = parseInt(splat[4]);
+      var y = 18 - parseInt(splat[5]);
+      movetree.addNode().properties().add(colorToken,
+          glift.util.point(x, y).toSgfCoord());
+    }
+  }
+  return movetree.getTreeFromRoot();
+};
 /*
  * The controllers logical parts (the Brains!) of a Go board widget.  You can
  * use the movetree and rules directly, but it's usually easier to use the
@@ -5957,10 +6175,18 @@ BaseController.prototype = {
 glift.controllers.boardEditor = function(sgfOptions) {
   var controllers = glift.controllers;
   var baseController = glift.util.beget(controllers.base());
-  // var newController = glift.util.setMethods(baseController,
-          // glift.controllers.StaticProblemMethods);
+  var newController = glift.util.setMethods(baseController,
+          glift.controllers.boardEditorMethods);
   baseController.initOptions(sgfOptions);
   return baseController;
+};
+
+glift.controllers.BoardEditorMethods = {
+  addStone: function(point, color, mark) {
+    console.log(point);
+    console.log(color);
+    console.log(mark);
+  }
 };
 (function() {
 /**
@@ -6174,7 +6400,8 @@ glift.bridge = {
    * For a more detailed discussion, see intersections in glift.bridge.
    */
   // TODO(kashomon): move showVariations to intersections.
-  setDisplayState: function(boardData, display, showVariations) {
+  setDisplayState: function(boardData, display, showVariations, markLastMove) {
+    glift.util.majorPerfLog('Set display state');
     display.intersections().clearMarks();
     if (boardData.displayDataType === glift.enums.displayDataTypes.FULL) {
       display.intersections().clearAll();
@@ -6186,20 +6413,32 @@ glift.bridge = {
       }
     }
 
+    // Map from point-string to point.
     var variationMap = {};
     if (glift.bridge.shouldShowNextMoves(boardData, showVariations)) {
       variationMap = glift.bridge.variationMapping(boardData.nextMoves);
     }
 
+    // Map from point-string to true/false. This allows us to know whether or
+    // not there's a mark at the particular location, which is in turn useful
+    // for drawing the stone marker.
+    var marksMap = {};
+
     var marks = glift.enums.marks;
     for (var markType in boardData.marks) {
       for (var i = 0; i < boardData.marks[markType].length; i++) {
         var markData = boardData.marks[markType][i];
+        if (markData.point) {
+          var markPtString = markData.point.toString();
+        } else {
+          var markPtString = markData.toString();
+        }
+        marksMap[markPtString] = true;
         if (markType === marks.LABEL) {
-          if (variationMap[markData.point.toString()] !== undefined) {
+          if (variationMap[markPtString] !== undefined) {
             display.intersections().addMarkPt(
                 markData.point, marks.VARIATION_MARKER, markData.value);
-            delete variationMap[markData.point.toString()];
+            delete variationMap[markPtString];
           } else {
             display.intersections().addMarkPt(
                 markData.point, marks.LABEL, markData.value);
@@ -6225,10 +6464,13 @@ glift.bridge = {
 
     if (boardData.lastMove &&
         boardData.lastMove !== glift.util.none &&
-        boardData.lastMove.point !== undefined) {
+        boardData.lastMove.point !== undefined &&
+        markLastMove &&
+        !marksMap[boardData.lastMove.point.toString()]) {
       var lm = boardData.lastMove;
       display.intersections().addMarkPt(lm.point, marks.STONE_MARKER);
     }
+    glift.util.majorPerfLog('Finish display state');
     // display.flush();
   },
 
@@ -6798,7 +7040,7 @@ glift.bridge._Flattened.prototype = {
    * Turn a 0 indexed pt to an intersection point.
    */
   ptToIntpt: function(pt) {
-    return glift.util.point( 
+    return glift.util.point(
         pt.x() + this.cropping.cbox().left(),
         pt.y() + this.cropping.cbox().top());
   }
@@ -6975,16 +7217,20 @@ glift.widgets = {
    * Returns a widgetManager.
    */
   create: function(options) {
+    glift.util.perfInit();
     options = glift.widgets.options.setBaseOptionDefaults(options);
     if (options.sgf && options.sgfList.length === 0) {
       options.sgfList = [options.sgf];
     }
-    return new glift.widgets.WidgetManager(
+    var manager = new glift.widgets.WidgetManager(
       options.sgfList,
       options.initialListIndex,
       options.allowWrapAround,
       options.sgfDefaults,
       glift.widgets.options.getDisplayOptions(options)).draw();
+    glift.util.majorPerfLog('Finish creating manager');
+    glift.util.perfDone();
+    return manager;
   }
 };
 /**
@@ -7015,6 +7261,7 @@ glift.widgets.BaseWidget.prototype = {
    */
   draw: function() {
     this.controller = this.sgfOptions.controllerFunc(this.sgfOptions);
+    glift.util.majorPerfLog('Created controller');
     this.displayOptions.intersections = this.controller.getIntersections();
     var comps = glift.enums.boardComponents;
     var requiredComponents = [comps.BOARD];
@@ -7022,6 +7269,7 @@ glift.widgets.BaseWidget.prototype = {
         this.sgfOptions.boardRegion === glift.enums.boardRegions.AUTO
         ? glift.bridge.getCropFromMovetree(this.controller.movetree)
         : this.sgfOptions.boardRegion;
+    glift.util.majorPerfLog('Calculated board regions');
     if (this.displayOptions.useCommentBar) {
       requiredComponents.push(comps.COMMENT_BOX);
     }
@@ -7035,20 +7283,30 @@ glift.widgets.BaseWidget.prototype = {
       this.displayOptions.intersections,
       requiredComponents);
     var divIds = this._createDivsForPositioning(positioning, this.wrapperDiv);
+    glift.util.majorPerfLog('Created divs');
 
     // TODO(kashomon): Remove these hacks. We shouldn't be modifying
     // displayOptions.
     this.displayOptions.divId = divIds.boardBoxId;
+
     this.display = glift.displays.create(this.displayOptions);
+    glift.util.majorPerfLog('Finish creating display');
+
     divIds.commentBoxId && this._createCommentBox(divIds.commentBoxId);
+    glift.util.majorPerfLog('CommentBox');
+
+
     if (divIds.iconBarBoxId) {
       this.iconBar = this._createIconBar(
           divIds.iconBarBoxId, this.sgfOptions.icons, parentDivBbox);
+      glift.util.majorPerfLog('IconBar');
     }
 
     divIds.iconBarBoxId && this._initIconActions(this.iconBar);
+    glift.util.majorPerfLog('Before event creation');
     this._initStoneActions();
     this._initKeyHandlers();
+    glift.util.majorPerfLog('After event creation');
     this._initProblemData();
     this.applyBoardData(this.controller.getEntireBoardState());
     return this;
@@ -7180,11 +7438,20 @@ glift.widgets.BaseWidget.prototype = {
    * Initialize the stone actions.
    */
   _initStoneActions: function() {
-    var stoneActions = this.displayOptions.stoneActions;
-    stoneActions.click = this.sgfOptions.stoneClick;
+    var baseActions = this.displayOptions.stoneActions;
+    var actions = {};
+    actions.mouseover = baseActions.mouseover;
+    actions.mouseout = baseActions.mouseout;
+    actions.click = this.sgfOptions.stoneClick;
+    if (this.sgfOptions.stoneMouseover) {
+      actions.mouseover = this.sgfOptions.stoneMouseover;
+    }
+    if (this.sgfOptions.stoneMouseout) {
+      actions.mouseout = this.sgfOptions.stoneMouseout;
+    }
     var that = this;
-    for (var eventName in stoneActions) {
-      this._initOneStoneAction(eventName, stoneActions[eventName]);
+    for (var eventName in actions) {
+      this._initOneStoneAction(eventName, actions[eventName]);
     }
     this.display.intersections().flushEvents();
   },
@@ -7248,7 +7515,10 @@ glift.widgets.BaseWidget.prototype = {
     if (boardData && boardData !== glift.util.none) {
       this.setCommentBox(boardData.comment);
       glift.bridge.setDisplayState(
-          boardData, this.display, this.sgfOptions.showVariations);
+          boardData,
+          this.display,
+          this.sgfOptions.showVariations,
+          this.sgfOptions.markLastMove);
     }
   },
 
@@ -7657,6 +7927,12 @@ glift.widgets.options.baseOptions = {
     showVariations: undefined,
 
     /**
+     * Whether or not to mark the last move played.  Either true or false, but
+     * defaults to true.
+     */
+    markLastMove: true,
+
+    /**
      * The function that creates the controller at widget-creation time.
      * See glift.controllers for more detail
      */
@@ -7671,7 +7947,15 @@ glift.widgets.options.baseOptions = {
     /**
      * The action that is performed when a sure clicks on an intersection.
      */
-    stoneClick: undefined
+    stoneClick: undefined,
+
+
+    /**
+     * Mouseover/mouseout override for stones. Probably this will only need to
+     * be changed for the board editor.
+     */
+    stoneMouseover: undefined,
+    stoneMouseout: undefined
   },
 
   //----------------------------------------------------------------------
@@ -7864,7 +8148,7 @@ glift.widgets.options.baseOptions = {
 
     // Go to the explain-board.
     roadmap: {
-      click: function(event, widget, iconObj, iconBar) {
+      click: function(event, widget, icon, iconBar) {
         var manager = widget.manager;
         var sgfObj = {
           widgetType: glift.enums.widgetTypes.GAME_VIEWER,
@@ -7877,22 +8161,22 @@ glift.widgets.options.baseOptions = {
         }
         manager.createTemporaryWidget(sgfObj);
       }
+    },
+
+    multiopen: {
+      click: function(event, widget, icon, iconBar) {
+        var ic = glift.displays.icons.iconSelector(
+            widget.wrapperDiv,
+            iconBar.divId,
+            icon);
+        ic.setIconEvents('click', function(event, wrappedIcon) {
+          var multi = iconBar.getIcon('multiopen')
+          multi.setActive(wrappedIcon.iconName);
+          iconBar.setCenteredTempIcon('multiopen', multi.getActive(), 'black');
+        });
+      }
     }
   }
-};
-/**
- * Board Editor options.
- */
-glift.widgets.options.BOARD_EDITOR = {
-  stoneClick: function(event, widget, pt) {},
-
-  icons: ['start', 'end', 'arrowleft', 'arrowright'],
-
-  problemConditions: {},
-
-  showVariations: glift.enums.showVariations.ALWAYS,
-
-  controllerFunc: glift.controllers.boardEditor
 };
 /**
  * Additional Options for the GameViewers
@@ -7936,7 +8220,7 @@ glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
         }
       } else if (data.result == problemResults.INCORRECT) {
         widget.iconBar.destroyTempIcons();
-        widget.iconBar.addCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
+        widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
         widget.iconBar.clearTempText('multiopen-boxonly');
         widget.correctness = problemResults.INCORRECT;
         callback(problemResults.INCORRECT);
@@ -8025,12 +8309,12 @@ glift.widgets.options.STANDARD_PROBLEM = {
     var callback = widget.sgfOptions.problemCallback;
     if (widget.correctness === undefined) {
       if (data.result === problemResults.CORRECT) {
-          widget.iconBar.addCenteredTempIcon('multiopen-boxonly', 'check', '#0CC');
+          widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'check', '#0CC');
           widget.correctness = problemResults.CORRECT;
           callback(problemResults.CORRECT);
       } else if (data.result == problemResults.INCORRECT) {
         widget.iconBar.destroyTempIcons();
-        widget.iconBar.addCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
+        widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
         widget.correctness = problemResults.INCORRECT;
         callback(problemResults.INCORRECT);
       }
@@ -8043,4 +8327,78 @@ glift.widgets.options.STANDARD_PROBLEM = {
   icons: ['refresh', 'roadmap', 'multiopen-boxonly'],
 
   controllerFunc: glift.controllers.staticProblem
+};
+/**
+ * Board Editor options.
+ *
+ * The Board editor is so complex it needs its own directory!
+ */
+glift.widgets.options.BOARD_EDITOR = {
+  stoneClick: function(event, widget, pt) {
+    var states = glift.enums.states;
+    var marks = glift.enums.marks;
+    var curColor = states.EMPTY;
+    var mark = undefined;
+    var iconName = widget.iconBar.getIcon('multiopen').getActive().iconName;
+    if (iconName === 'twostones') {
+      var curColor =  widget.controller.getCurrentPlayer();
+    } else if (iconName === 'bstone') {
+      var curColor = 'BLACK';
+    }
+  },
+
+  stoneMouseover: function(event, widget, pt) {
+    var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
+    var currentPlayer = widget.controller.getCurrentPlayer();
+    var iconName = widget.iconBar.getIcon('multiopen').getActive().iconName;
+    if (iconName === 'twostones' ||
+        iconName === 'bstone' ||
+        iconName === 'wstone') {
+      var colorKey = currentPlayer;
+      if (iconName === 'bstone') {
+        colorKey = 'BLACK';
+      } else if (iconName === 'wstone') {
+        colorKey = 'WHITE';
+      }
+      if (widget.controller.canAddStone(pt, currentPlayer)) {
+        widget.display.intersections()
+            .setStoneColor(pt, hoverColors[colorKey])
+            .flushStone(pt);
+      }
+    }
+  },
+
+  stoneMouseout: function(event, widget, pt) {
+    var currentPlayer = widget.controller.getCurrentPlayer();
+    var iconName = widget.iconBar.getIcon('multiopen').getActive().iconName;
+    if (iconName === 'twostones' ||
+        iconName === 'bstone' ||
+        iconName === 'wstone') {
+      var currentPlayer = widget.controller.getCurrentPlayer();
+      if (widget.controller.canAddStone(pt, currentPlayer)) {
+        widget.display && widget.display.intersections()
+            .setStoneColor(pt, 'EMPTY')
+            .flushStone(pt);
+      }
+    }
+  },
+
+  icons: ['start', 'end', 'arrowleft', 'arrowright',
+      [ // Icons for changing click behavior
+        'twostones', // normal move
+        'bstone', // black placement
+        'wstone', // white placement
+        'bstone_a', // Label with A-Z
+        'bstone_1', // Label with 1+
+        'bstone_triangle', // Label with Triangle
+        'bstone_square', // Label with square
+        'nostone-xmark' // erase
+        // TODO(kashomon): Erase, circle
+      ]],
+
+  problemConditions: {},
+
+  showVariations: glift.enums.showVariations.ALWAYS,
+
+  controllerFunc: glift.controllers.boardEditor
 };

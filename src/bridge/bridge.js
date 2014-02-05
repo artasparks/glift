@@ -10,6 +10,7 @@ glift.bridge = {
    */
   // TODO(kashomon): move showVariations to intersections.
   setDisplayState: function(boardData, display, showVariations, markLastMove) {
+    glift.util.majorPerfLog('Set display state');
     display.intersections().clearMarks();
     if (boardData.displayDataType === glift.enums.displayDataTypes.FULL) {
       display.intersections().clearAll();
@@ -21,20 +22,32 @@ glift.bridge = {
       }
     }
 
+    // Map from point-string to point.
     var variationMap = {};
     if (glift.bridge.shouldShowNextMoves(boardData, showVariations)) {
       variationMap = glift.bridge.variationMapping(boardData.nextMoves);
     }
 
+    // Map from point-string to true/false. This allows us to know whether or
+    // not there's a mark at the particular location, which is in turn useful
+    // for drawing the stone marker.
+    var marksMap = {};
+
     var marks = glift.enums.marks;
     for (var markType in boardData.marks) {
       for (var i = 0; i < boardData.marks[markType].length; i++) {
         var markData = boardData.marks[markType][i];
+        if (markData.point) {
+          var markPtString = markData.point.toString();
+        } else {
+          var markPtString = markData.toString();
+        }
+        marksMap[markPtString] = true;
         if (markType === marks.LABEL) {
-          if (variationMap[markData.point.toString()] !== undefined) {
+          if (variationMap[markPtString] !== undefined) {
             display.intersections().addMarkPt(
                 markData.point, marks.VARIATION_MARKER, markData.value);
-            delete variationMap[markData.point.toString()];
+            delete variationMap[markPtString];
           } else {
             display.intersections().addMarkPt(
                 markData.point, marks.LABEL, markData.value);
@@ -61,10 +74,12 @@ glift.bridge = {
     if (boardData.lastMove &&
         boardData.lastMove !== glift.util.none &&
         boardData.lastMove.point !== undefined &&
-        markLastMove) {
+        markLastMove &&
+        !marksMap[boardData.lastMove.point.toString()]) {
       var lm = boardData.lastMove;
       display.intersections().addMarkPt(lm.point, marks.STONE_MARKER);
     }
+    glift.util.majorPerfLog('Finish display state');
     // display.flush();
   },
 

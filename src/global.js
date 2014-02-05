@@ -6,8 +6,8 @@ glift.global = {
    */
   version: '0.8.7',
   debugMode: false,
-  // Options for performanceDebugLevel: none, fine, info
-  performanceDebugLevel: 'none',
+  // Options for performanceDebugLevel: NONE, INFO
+  performanceDebugLevel: 'NONE',
   // Map of performance timestamps.
   perf: {},
   // The active registry.  Used to determine who has 'ownership' of key-presses.

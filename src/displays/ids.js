@@ -42,6 +42,8 @@ glift.displays.ids = {
     this._lineGroup = this._eid(this.divId, this._enum.BOARD_LINE_CONTAINER);
     this._markGroup = this._eid(this.divId, this._enum.MARK_CONTAINER);
     this._iconGroup = this._eid(this.divId, this._enum.ICON_CONTAINER);
+    this._intersectionsGroup =
+        this._eid(this.divId, this._enum.INTERSECTIONS_CONTAINER);
   }
 };
 
@@ -51,6 +53,9 @@ glift.displays.ids._Generator.prototype = {
 
   /** ID for the board. */
   board: function() { return this._board; },
+
+  /** ID for the intersections group. */
+  intersections: function() { return this._intersectionsGroup; },
 
   /** Group id for the stones. */
   stoneGroup: function() { return this._stoneGroup; },

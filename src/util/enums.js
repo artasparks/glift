@@ -76,6 +76,7 @@ glift.enums = {
   svgElements: {
     SVG: 'svg',
     BOARD: 'board',
+    INTERSECTIONS_CONTAINER: 'intersections',
     BOARD_LINE: 'board_line',
     BOARD_LINE_CONTAINER: 'board_line_container',
     BUTTON: 'button',
@@ -122,5 +123,10 @@ glift.enums = {
     COMMENT_BOX: 'COMMENT_BOX',
     EXTRA_ICONBAR: 'EXTRA_ICONBAR',
     ICONBAR: 'ICONBAR'
+  },
+
+  dubug: {
+    NONE: 'NONE',
+    INFO: 'INFO'
   }
 };

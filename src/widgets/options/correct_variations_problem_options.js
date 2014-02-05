@@ -40,7 +40,7 @@ glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
         }
       } else if (data.result == problemResults.INCORRECT) {
         widget.iconBar.destroyTempIcons();
-        widget.iconBar.addCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
+        widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
         widget.iconBar.clearTempText('multiopen-boxonly');
         widget.correctness = problemResults.INCORRECT;
         callback(problemResults.INCORRECT);

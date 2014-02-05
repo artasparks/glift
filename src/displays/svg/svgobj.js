@@ -59,7 +59,12 @@ glift.displays.svg.SvgObj.prototype = {
     var elem = document.createElementNS(
         "http://www.w3.org/2000/svg", this._type);
     for (var attr in this._attrMap) {
-      elem.setAttribute(attr, this._attrMap[attr]);
+      if (attr === 'xlink:href') {
+        elem.setAttributeNS(
+            'http://www.w3.org/1999/xlink', 'href', this._attrMap[attr]);
+      } else {
+        elem.setAttribute(attr, this._attrMap[attr]);
+      }
     }
     if (this._type === 'text') {
       var textNode = document.createTextNode(this._text);

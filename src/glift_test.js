@@ -15,10 +15,10 @@ module("Glift API Test Suite");
     ok(display.divId() !== undefined);
     ok(display.theme() !== undefined);
     ok(display.intersectionPoints() !== undefined);
-    deepEqual(display.divId(), 'glift_display', "div id");
-    deepEqual(display.theme(), 'DEFAULT', "theme name");
-    deepEqual(display.intersectionPoints(), 9, "intersections");
-    deepEqual(display.boardRegion(), boardRegions.ALL, "board region");
+    deepEqual(display.divId(), 'glift_display', 'div id');
+    deepEqual(display.theme(), 'DEFAULT', 'theme name');
+    deepEqual(display.intersectionPoints(), 9, 'intersections');
+    deepEqual(display.boardRegion(), boardRegions.ALL, 'board region');
     testUtil.assertFullDiv('glift_display')
     display.destroy();
     testUtil.assertEmptyDiv('glift_display')

@@ -1,13 +1,13 @@
 glift.util.perfLog = function(msg) {
   if (glift.global.performanceDebugLevel === undefined ||
-      glift.global.performanceDebugLevel === 'none') {
+      glift.global.performanceDebugLevel === 'NONE') {
     return;
   }
   var time = glift.util.perfTime();
   var lastMajor = glift.global.perf.lastMajor;
   var last = glift.global.perf.last;
   console.log("Since Major Record: " + (time - lastMajor + "ms. " + msg));
-  if (glift.global.performanceDebugLevel === 'fine') {
+  if (glift.global.performanceDebugLevel === 'FINE') {
     console.log("  Since Last Record: " + (time - last + "ms. " + msg));
   }
   glift.global.perf.last = time;
@@ -15,7 +15,7 @@ glift.util.perfLog = function(msg) {
 
 glift.util.majorPerfLog = function(msg) {
   if (glift.global.performanceDebugLevel === undefined ||
-      glift.global.performanceDebugLevel === 'none') {
+      glift.global.performanceDebugLevel === 'NONE') {
     return;
   }
   var time = glift.util.perfTime();
@@ -25,7 +25,7 @@ glift.util.majorPerfLog = function(msg) {
 
 glift.util.perfDone = function() {
   if (glift.global.performanceDebugLevel === undefined ||
-      glift.global.performanceDebugLevel === 'none') {
+      glift.global.performanceDebugLevel === 'NONE') {
     return;
   }
   var time = glift.util.perfTime();
@@ -37,7 +37,7 @@ glift.util.perfDone = function() {
 
 glift.util.perfInit = function() {
   if (glift.global.performanceDebugLevel === undefined ||
-      glift.global.performanceDebugLevel === 'none') {
+      glift.global.performanceDebugLevel === 'NONE') {
     return;
   }
   var t = glift.util.perfTime();

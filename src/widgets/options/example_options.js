@@ -10,7 +10,5 @@ glift.widgets.options.EXAMPLE = {
 
   showVariations: glift.enums.showVariations.MORE_THAN_ONE,
 
-  controllerFunc: glift.controllers.gameViewer,
-
-  markLastMove: false
+  controllerFunc: glift.controllers.gameViewer
 };

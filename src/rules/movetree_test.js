@@ -192,4 +192,7 @@ glift.rules.movetreeTest = function() {
     ];
     deepEqual(next, expected, 'Next Moves');
   });
+
+  test("Convert to SGF!", function() {
+  });
 };

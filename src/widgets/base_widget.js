@@ -26,6 +26,7 @@ glift.widgets.BaseWidget.prototype = {
    */
   draw: function() {
     this.controller = this.sgfOptions.controllerFunc(this.sgfOptions);
+    glift.util.majorPerfLog('Created controller');
     this.displayOptions.intersections = this.controller.getIntersections();
     var comps = glift.enums.boardComponents;
     var requiredComponents = [comps.BOARD];
@@ -33,6 +34,7 @@ glift.widgets.BaseWidget.prototype = {
         this.sgfOptions.boardRegion === glift.enums.boardRegions.AUTO
         ? glift.bridge.getCropFromMovetree(this.controller.movetree)
         : this.sgfOptions.boardRegion;
+    glift.util.majorPerfLog('Calculated board regions');
     if (this.displayOptions.useCommentBar) {
       requiredComponents.push(comps.COMMENT_BOX);
     }
@@ -46,20 +48,30 @@ glift.widgets.BaseWidget.prototype = {
       this.displayOptions.intersections,
       requiredComponents);
     var divIds = this._createDivsForPositioning(positioning, this.wrapperDiv);
+    glift.util.majorPerfLog('Created divs');
 
     // TODO(kashomon): Remove these hacks. We shouldn't be modifying
     // displayOptions.
     this.displayOptions.divId = divIds.boardBoxId;
+
     this.display = glift.displays.create(this.displayOptions);
+    glift.util.majorPerfLog('Finish creating display');
+
     divIds.commentBoxId && this._createCommentBox(divIds.commentBoxId);
+    glift.util.majorPerfLog('CommentBox');
+
+
     if (divIds.iconBarBoxId) {
       this.iconBar = this._createIconBar(
           divIds.iconBarBoxId, this.sgfOptions.icons, parentDivBbox);
+      glift.util.majorPerfLog('IconBar');
     }
 
     divIds.iconBarBoxId && this._initIconActions(this.iconBar);
+    glift.util.majorPerfLog('Before event creation');
     this._initStoneActions();
     this._initKeyHandlers();
+    glift.util.majorPerfLog('After event creation');
     this._initProblemData();
     this.applyBoardData(this.controller.getEntireBoardState());
     return this;
@@ -271,7 +283,7 @@ glift.widgets.BaseWidget.prototype = {
           boardData,
           this.display,
           this.sgfOptions.showVariations,
-          this.sgfOptions);
+          this.sgfOptions.markLastMove);
     }
   },
 

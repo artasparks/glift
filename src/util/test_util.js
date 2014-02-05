@@ -14,7 +14,8 @@ glift.testUtil = {
 
   assertFullDiv: function(divId) {
     // really this is just non-empty...
-    ok($('#' + divId).text().length > 0, "Div should contain contents");
+    ok($('#' + divId).html().length > 0, "Div should contain contents."
+       + "  Was: " + $('#' + divId).html());
   },
 
   assertEmptyDiv: function(divId) {
