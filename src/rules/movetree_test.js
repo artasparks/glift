@@ -193,6 +193,31 @@ glift.rules.movetreeTest = function() {
     deepEqual(next, expected, 'Next Moves');
   });
 
-  test("Convert to SGF!", function() {
+  test("Convert to SGF! (No exceptions)", function() {
+    var sgf = glift.rules.movetree.getFromSgf(sgfs.complexproblem).toSgf();
+    ok(sgf !== undefined);
+  });
+
+  test("Convert to SGF - comment", function() {
+    var mt = glift.rules.movetree.getInstance();
+    mt.properties().add('C','Comment');
+    deepEqual(mt.toSgf(), '(;C[Comment])');
+  });
+
+  test("Convert to SGF - multi prop", function() {
+    var mt = glift.rules.movetree.getInstance();
+    mt.properties().add('AW', ['ab','bb']);
+    deepEqual(mt.toSgf(), '(;AW[ab][bb])');
+  });
+
+  test("Convert to SGF - variation", function() {
+    var mt = glift.rules.movetree.getInstance();
+    mt.properties().add('C', 'Foo');
+    mt.node().addChild();
+    mt.moveDown(0).properties().add('B', 'ab');
+    mt.moveUp();
+    mt.node().addChild();
+    mt.moveDown(1).properties().add('B', 'bb');
+    deepEqual(mt.toSgf(), '(;C[Foo]\n(;B[ab])\n(;B[bb]))');
   });
 };

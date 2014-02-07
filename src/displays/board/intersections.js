@@ -1,3 +1,6 @@
+/**
+ * The backing data for the display.
+ */
 glift.displays.board._Intersections = function(divId, svg, boardPoints, theme) {
   this.divId = divId;
   this.svg = svg;
@@ -51,6 +54,9 @@ glift.displays.board._Intersections.prototype = {
     return this;
   },
 
+  /**
+   * Flush any stone changes to the board.
+   */
   flushStone: function(pt) {
     var stone = this.svg.child(this.idGen.stoneGroup())
         .child(this.idGen.stone(pt));
@@ -63,6 +69,9 @@ glift.displays.board._Intersections.prototype = {
     return this;
   },
 
+  /**
+   * Add a mark to the display.
+   */
   addMarkPt: function(pt, mark, label) {
     glift.displays.board.addMark(
         this.svg, this.idGen, this.boardPoints, this.theme, pt, mark, label);

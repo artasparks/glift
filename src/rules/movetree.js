@@ -267,13 +267,44 @@ glift.rules._MoveTree.prototype = {
     glift.rules.movetree.searchMoveTreeDFS(this.getTreeFromRoot(), func);
   },
 
-  // TODO(kashomon): Add this.
   toSgf: function() {
-    var builder = [];
-    var curNode = this.node();
-    for (var propKey in this.getAllProps()) {
-      //TODO
+    return this._toSgfBuffer(this.getTreeFromRoot().node(), []).join("");
+  },
+
+  _toSgfBuffer: function(node, builder) {
+    if (node.getParent() !== glift.util.none) {
+      // Don't add a \n if we're at the root node
+      builder.push("\n");
     }
+
+    if (node.getParent() === glift.util.none ||
+        node.getParent().numChildren() > 1) {
+      builder.push("(");
+    }
+
+    builder.push(";");
+    for (var prop in node.properties().propMap) {
+      var values = node.properties().getAllValues(prop);
+      var out = prop;
+      if (values.length > 0) {
+        for (var i = 0; i < values.length; i++) {
+          out += '[' + values[i] + ']'
+        }
+      } else {
+        out += '[]';
+      }
+      builder.push(out);
+    }
+
+    for (var i = 0, len = node.numChildren(); i < len; i++) {
+      this._toSgfBuffer(node.getChild(i), builder);
+    }
+
+    if (node.getParent() === glift.util.none ||
+        node.getParent().numChildren() > 1) {
+      builder.push(")");
+    }
+    return builder
   },
 
   debugLog: function(spaces) {

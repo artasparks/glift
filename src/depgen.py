@@ -22,7 +22,6 @@ FILES_TO_AUTOGEN = {
     'htmltests/BboxFinder.html': False,
     'htmltests/GameViewerTester.html': False,
     'htmltests/IconBarTester.html': False,
-    'htmltests/IconBoardTester.html': False,
     'htmltests/KogosTester.html': False,
     'htmltests/MarksTester.html': False,
     'htmltests/ProblemTester.html': False,

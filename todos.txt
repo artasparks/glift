@@ -54,6 +54,9 @@ Done - Write my own SVG library
 Done - Add a way to disable current move marking
 Done - Add icon selector
 Done - Support vertically centered icons. Note: this is part of the selector.
+Done - Add movetree->SGF transformation
+Done - Add glift.create method.
+Done - Add icons for game editor
 
 Nope:
   Info Window / panel.
@@ -72,7 +75,7 @@ Open Questions:
 
 Todos:
 - Add support for numbering on the edges, beyond the lines.
-- Add tests for marks.
+- Add tests frr marks.
 - Add shadow (perhaps even border) to comment box.
 - Make it possible to change the width of the go board border.
 - Add the ability to create static images (i.e., canvas support)
@@ -101,7 +104,5 @@ Todos:
 - Default in sgfDefaults kfor showVariations doesn't work.
 
 - Create game editor widget. (many dependencies)
-  - Add movetree->SGF transformation
   - Add moveTree support for deleting properties
   - Add moveTree support for deleting variations
-  - Add icons for game editor

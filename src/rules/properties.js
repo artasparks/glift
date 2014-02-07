@@ -4,12 +4,8 @@ glift.rules.properties = function(map) {
 };
 
 var Properties = function(map) {
-  if (map === undefined) {
-    this.propMap = {};
-  } else {
-    this.propMap = map;
-  }
-}
+  this.propMap = map || {};
+};
 
 Properties.prototype = {
   /**
