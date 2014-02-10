@@ -53,6 +53,17 @@ glift.displays.svg.SvgObj.prototype = {
   },
 
   /**
+   * Remove from the element from the DOM.
+   */
+  removeFromDom: function() {
+    if (this.attr('id')) {
+      var elem = document.getElementById(this.attr('id'));
+      if (elem) { elem.parentNode.removeChild(elem); }
+    }
+    return this;
+  },
+
+  /**
    * Turn this node (and all children nodes) into SVG elements.
    */
   asElement: function() {
@@ -74,14 +85,6 @@ glift.displays.svg.SvgObj.prototype = {
       elem.appendChild(this._children[i].asElement());
     }
     return elem;
-  },
-
-  /**
-   * Append content to a div.  This requires that the element have a ID and
-   * already be attached to the DOM.
-   */
-  flush: function() {
-    // TODO(kashomon): Write...?
   },
 
   /**
@@ -131,6 +134,17 @@ glift.displays.svg.SvgObj.prototype = {
   },
 
   /**
+   * Update a particular attribute in the DOM.
+   */
+  updateAttrInDom: function(attr) {
+    var elem = document.getElementById(this.attr('id'))
+    if (elem && attr && this.attr(attr)) {
+      elem.setAttribute(attr, this.attr(attr));
+    }
+    return this;
+  },
+
+  /**
    * Set some internal data. Note: this data is not attached when the element is
    * generated.
    */
@@ -163,7 +177,7 @@ glift.displays.svg.SvgObj.prototype = {
   },
 
   /**
-   * Get child from an Id.
+   * Remove child, based on id.
    */
   rmChild: function(id) {
     delete this._idMap[id];

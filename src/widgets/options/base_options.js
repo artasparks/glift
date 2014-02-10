@@ -262,8 +262,7 @@ glift.widgets.options.baseOptions = {
       var currentPlayer = widget.controller.getCurrentPlayer();
       if (widget.controller.canAddStone(pt, currentPlayer)) {
         widget.display.intersections()
-            .setStoneColor(pt, hoverColors[currentPlayer])
-            .flushStone(pt);
+            .setStoneColor(pt, hoverColors[currentPlayer]);
       }
     },
 
@@ -274,8 +273,7 @@ glift.widgets.options.baseOptions = {
       var currentPlayer = widget.controller.getCurrentPlayer();
       if (widget.controller.canAddStone(pt, currentPlayer)) {
         widget.display && widget.display.intersections()
-            .setStoneColor(pt, 'EMPTY')
-            .flushStone(pt);
+            .setStoneColor(pt, 'EMPTY');
       }
     },
 

@@ -44,6 +44,7 @@ glift.displays.ids = {
     this._iconGroup = this._eid(this.divId, this._enum.ICON_CONTAINER);
     this._intersectionsGroup =
         this._eid(this.divId, this._enum.INTERSECTIONS_CONTAINER);
+    this._tempMarkGroup = this._eid(this.divId, this._enum.TEMP_MARK_CONTAINER);
   }
 };
 
@@ -103,6 +104,11 @@ glift.displays.ids._Generator.prototype = {
   /** ID for a mark. */
   mark: function(pt) {
     return this._eid(this.divId, this._enum.MARK, pt);
+  },
+
+  /** Group id for temporary marks. */
+  tempMarkGroup: function() {
+    return this._tempMarkGroup;
   },
 
   /** ID for a guideline. */

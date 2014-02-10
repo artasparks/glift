@@ -4,62 +4,28 @@
  * the Marks are created / destroyed on demand, which is why we need a g
  * container.
  */
-glift.displays.board.markContainer = function(svg, idGen, boardPoints, theme) {
+glift.displays.board.markContainer = function(svg, idGen) {
   svg.append(glift.displays.svg.group().attr('id', idGen.markGroup()));
+  svg.append(glift.displays.svg.group().attr('id', idGen.tempMarkGroup()));
 };
 
 /**
- * Check whether the starpoints and lines need to be cleared.
+ * Add a mark of a particular type to the GoBoard
  */
-glift.displays.board.reqClearForMark = function(svg, idGen, pt, mark) {
-  var marks = glift.enums.marks;
-  var stoneColor = svg.child(idGen.stoneGroup())
-      .child(idGen.stone(pt))
-      .attr('stone_color');
-  return stoneColor === 'EMPTY' && (mark === marks.LABEL
-      || mark === marks.VARIATION_MARKER
-      || mark === marks.CORRECT_VARIATION);
-};
-
-/**
- * Clear the starpoints and lines.
- */
-glift.displays.board.clearForMark = function(svg, idGen, pt) {
-  var starpoint = svg.child(idGen.starpointGroup()).child(idGen.starpoint(pt))
-  if (starpoint) {
-    starpoint.attr('opacity', 0);
-  }
-  svg.child(idGen.lineGroup())
-      .child(idGen.line(pt))
-      .attr('opacity', 0)
-};
-
-// This is a static method instead of a method on intersections because, due to
-// the way glift is compiled together, there'no s guarantee what order the files
-// come in (beyond the base package file).  So, either we need to combine
-// intersections.js with board.js or we week this a separate static method.
 glift.displays.board.addMark = function(
-    svg, idGen, boardPoints, theme, pt, mark, label) {
+    container, idGen, boardPoints, marksTheme, stonesTheme, pt, mark, label) {
+  // Note: This is a static method instead of a method on intersections because,
+  // due to the way glift is compiled together, there'no s guarantee what order
+  // the files come in (beyond the base package file).  So, either we need to
+  // combine intersections.js with board.js or keep this a separate static
+  // method.
   var svgpath = glift.displays.svg.pathutils;
   var svglib = glift.displays.svg;
   var rootTwo = 1.41421356237;
   var rootThree = 1.73205080757;
   var marks = glift.enums.marks;
   var coordPt = boardPoints.getCoord(pt).coordPt;
-
-  var stoneColor = svg.child(idGen.stoneGroup())
-      .child(idGen.stone(pt))
-      .attr('stone_color');
-
-  var marksTheme = theme.stones[stoneColor].marks;
-  var container = svg.child(idGen.markGroup());
   var markId = idGen.mark(pt);
-
-  // If necessary, clear out intersection lines and starpoints.  This only applies
-  // when a stone hasn't yet been set (stoneColor === 'EMPTY').
-  if (glift.displays.board.reqClearForMark(svg, idGen, pt, mark)) {
-    glift.displays.board.clearForMark(svg, idGen, pt);
-  }
 
   var fudge = boardPoints.radius / 8;
   // TODO(kashomon): Move the labels code to a separate function.  It's pretty
@@ -75,13 +41,14 @@ glift.displays.board.addMark = function(
     }
     container.append(svglib.text()
         .text(label)
+        .data(pt)
         .attr('fill', marksTheme.fill)
         .attr('stroke', marksTheme.stroke)
         .attr('text-anchor', 'middle')
         .attr('dy', '.33em') // for vertical centering
         .attr('x', coordPt.x()) // x and y are the anchor points.
         .attr('y', coordPt.y())
-        .attr('font-family', theme.stones.marks['font-family'])
+        .attr('font-family', stonesTheme.marks['font-family'])
         .attr('font-size', boardPoints.spacing * 0.7)
         .attr('id', markId));
 
@@ -91,6 +58,7 @@ glift.displays.board.addMark = function(
     // as if it's offset by a little bit.
     var halfWidth = baseDelta - fudge;
     container.append(svglib.rect()
+        .data(pt)
         .attr('x', coordPt.x() - halfWidth)
         .attr('y', coordPt.y() - halfWidth)
         .attr('width', 2 * halfWidth)
@@ -108,6 +76,7 @@ glift.displays.board.addMark = function(
     var botLeft = coordPt.translate(-1 * halfDelta, halfDelta);
     var botRight = coordPt.translate(halfDelta, halfDelta);
     container.append(svglib.path()
+        .data(pt)
         .attr('d',
             svgpath.movePt(coordPt) + ' ' +
             svgpath.lineAbsPt(topLeft) + ' ' +
@@ -122,6 +91,7 @@ glift.displays.board.addMark = function(
         .attr('id', markId));
   } else if (mark === marks.CIRCLE) {
     container.append(svglib.circle()
+        .data(pt)
         .attr('cx', coordPt.x())
         .attr('cy', coordPt.y())
         .attr('r', boardPoints.radius / 2)
@@ -130,8 +100,9 @@ glift.displays.board.addMark = function(
         .attr('stroke', marksTheme.stroke)
         .attr('id', markId));
   } else if (mark === marks.STONE_MARKER) {
-    var stoneMarkerTheme = theme.stones.marks['STONE_MARKER'];
+    var stoneMarkerTheme = stonesTheme.marks['STONE_MARKER'];
     container.append(svglib.circle()
+        .data(pt)
         .attr('cx', coordPt.x())
         .attr('cy', coordPt.y())
         .attr('r', boardPoints.radius / 3)
@@ -144,6 +115,7 @@ glift.displays.board.addMark = function(
     var leftNode  = coordPt.translate(r * (-1 * rootThree / 2), r * (1 / 2));
     var topNode = coordPt.translate(0, -1 * r);
     container.append(svglib.path()
+        .data(pt)
         .attr('fill', 'none')
         .attr('d',
             svgpath.movePt(topNode) + ' ' +

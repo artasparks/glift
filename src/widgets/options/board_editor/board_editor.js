@@ -18,8 +18,16 @@ glift.widgets.options.BOARD_EDITOR = {
   },
 
   stoneMouseover: function(event, widget, pt) {
+    var marks = glift.enums.marks;
+    var iconToMark = {
+      'bstone_a': marks.LABEL,
+      'bstone_1': marks.LABEL,
+      'bstone_square': marks.SQUARE,
+      'bstone_triangle':  marks.TRIANGLE
+    };
     var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
     var currentPlayer = widget.controller.getCurrentPlayer();
+    var intersections = widget.display.intersections();
     var iconName = widget.iconBar.getIcon('multiopen').getActive().iconName;
     if (iconName === 'twostones' ||
         iconName === 'bstone' ||
@@ -31,26 +39,28 @@ glift.widgets.options.BOARD_EDITOR = {
         colorKey = 'WHITE';
       }
       if (widget.controller.canAddStone(pt, currentPlayer)) {
-        widget.display.intersections()
-            .setStoneColor(pt, hoverColors[colorKey])
-            .flushStone(pt);
+        intersections.setStoneColor(pt, hoverColors[colorKey]);
       }
+    }
+
+    if (iconToMark[iconName] && !intersections.hasMark(pt)) {
+      intersections.addTempMark(pt, iconToMark[iconName], 'a');
     }
   },
 
   stoneMouseout: function(event, widget, pt) {
     var currentPlayer = widget.controller.getCurrentPlayer();
     var iconName = widget.iconBar.getIcon('multiopen').getActive().iconName;
+    var intersections = widget.display.intersections();
     if (iconName === 'twostones' ||
         iconName === 'bstone' ||
         iconName === 'wstone') {
       var currentPlayer = widget.controller.getCurrentPlayer();
       if (widget.controller.canAddStone(pt, currentPlayer)) {
-        widget.display && widget.display.intersections()
-            .setStoneColor(pt, 'EMPTY')
-            .flushStone(pt);
+        intersections.setStoneColor(pt, 'EMPTY');
       }
     }
+    intersections.clearTempMarks();
   },
 
   icons: ['start', 'end', 'arrowleft', 'arrowright',

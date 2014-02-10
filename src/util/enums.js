@@ -82,6 +82,7 @@ glift.enums = {
     BUTTON: 'button',
     BUTTON_CONTAINER: 'button_container',
     MARK: 'mark',
+    TEMP_MARK_GROUP: 'temp_mark_group',
     MARK_CONTAINER: 'mark_container',
     GLIFT_ELEMENT: 'glift_element',
     STARPOINT: 'starpoint',

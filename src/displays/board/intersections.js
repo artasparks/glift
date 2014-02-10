@@ -24,21 +24,21 @@ glift.displays.board._Intersections = function(divId, svg, boardPoints, theme) {
 
 glift.displays.board._Intersections.prototype = {
   /**
-   * Set the color of a stone. Returns 'this' for the possibility of chaining.
+   * Sets the color of a stone.
    */
-  setStoneColor: function(pt, colorKey) {
+  setStoneColor: function(pt, color) {
     var key = pt.hash();
-    if (this.theme.stones[colorKey] === undefined) {
-      throw 'Unknown color key [' + colorKey + ']'
+    if (this.theme.stones[color] === undefined) {
+      throw 'Unknown color key [' + color+ ']'
     }
 
     var stoneGroup = this.svg.child(this.idGen.stoneGroup());
     var stone = stoneGroup.child(this.idGen.stone(pt));
     if (stone !== undefined) {
-      var stoneColor = this.theme.stones[colorKey];
+      var stoneColor = this.theme.stones[color];
       stone.attr('fill', stoneColor.fill)
         .attr('stroke', stoneColor.stroke || 1)
-        .attr('stone_color', colorKey)
+        .attr('stone_color', color)
         .attr('opacity', stoneColor.opacity);
       var stoneShadowGroup = this.svg.child(this.idGen.stoneShadowGroup());
       if (stoneShadowGroup  !== undefined) {
@@ -50,14 +50,14 @@ glift.displays.board._Intersections.prototype = {
         }
       }
     }
-    this.flushStone(pt);
+    this._flushStone(pt);
     return this;
   },
 
   /**
    * Flush any stone changes to the board.
    */
-  flushStone: function(pt) {
+  _flushStone: function(pt) {
     var stone = this.svg.child(this.idGen.stoneGroup())
         .child(this.idGen.stone(pt));
     $('#' + stone.attr('id')).attr(stone.attrObj());
@@ -73,16 +73,89 @@ glift.displays.board._Intersections.prototype = {
    * Add a mark to the display.
    */
   addMarkPt: function(pt, mark, label) {
-    glift.displays.board.addMark(
-        this.svg, this.idGen, this.boardPoints, this.theme, pt, mark, label);
-    this.flushMark(pt, mark);
+    var container = this.svg.child(this.idGen.markGroup());
+    return this._addMarkInternal(container, pt, mark, label);
+  },
+
+  /**
+   * Test whether the board has a mark at the point.
+   */
+  hasMark: function(pt) {
+    if (this.svg.child(this.idGen.markGroup()).child(this.idGen.mark(pt))) {
+      return true;
+    } else {
+      return false;
+    }
+  },
+
+  /**
+   * Add a temporary mark.  This is meant for display situations (like mousover)
+   * where the user is displayed the state before it is recorded in a movetree
+   * or goban.
+   */
+  addTempMark: function(pt, mark, label) {
+    var container = this.svg.child(this.idGen.tempMarkGroup());
+    return this._addMarkInternal(container, pt, mark, label);
+  },
+
+  /**
+   * Like the name says, remove the temporary marks from the backing svg (empty
+   * the group container) and remove them from the display.
+   */
+  clearTempMarks: function() {
+    this.clearMarks(this.svg.child(this.idGen.tempMarkGroup()));
     return this;
   },
 
-  flushMark: function(pt, mark) {
+  _addMarkInternal: function(container, pt, mark, label) {
+    // If necessary, clear out intersection lines and starpoints.  This only
+    // applies when a stone hasn't yet been set (stoneColor === 'EMPTY').
+    this.reqClearForMark(pt, mark) && this.clearForMark(pt);
+    var stoneColor = this.svg.child(this.idGen.stoneGroup())
+        .child(this.idGen.stone(pt))
+        .attr('stone_color');
+    var stonesTheme = this.theme.stones;
+    var marksTheme = stonesTheme[stoneColor].marks;
+    glift.displays.board.addMark(container, this.idGen, this.boardPoints,
+        marksTheme, stonesTheme, pt, mark, label);
+    this._flushMark(pt, mark, container);
+    return this;
+  },
+
+  /**
+   * Determine whether an intersection (pt) needs be cleared of lines /
+   * starpoints.
+   */
+  reqClearForMark: function(pt, mark) {
+    var marks = glift.enums.marks;
+    var stoneColor = this.svg.child(this.idGen.stoneGroup())
+        .child(this.idGen.stone(pt))
+        .attr('stone_color');
+    return stoneColor === 'EMPTY' && (mark === marks.LABEL
+        || mark === marks.VARIATION_MARKER
+        || mark === marks.CORRECT_VARIATION);
+  },
+
+  /**
+   * Clear a pt of lines / starpoints so that we can place a mark (typically a
+   * text-mark) without obstruction.
+   */
+  clearForMark: function(pt) {
+    var starpoint = this.svg.child(this.idGen.starpointGroup())
+        .child(this.idGen.starpoint(pt))
+    if (starpoint) {
+      starpoint.attr('opacity', 0);
+    }
+    this.svg.child(this.idGen.lineGroup())
+        .child(this.idGen.line(pt))
+        .attr('opacity', 0);
+    return this;
+  },
+
+  _flushMark: function(pt, mark, markGroup) {
     var svg = this.svg;
     var idGen = this.idGen;
-    if (glift.displays.board.reqClearForMark(svg, idGen, pt, mark)) {
+    if (this.reqClearForMark(pt, mark)) {
       var starp  = svg.child(idGen.starpointGroup()).child(idGen.starpoint(pt))
       if (starp) {
         $('#' + starp.attr('id')).attr('opacity', starp.attr('opacity'));
@@ -90,27 +163,30 @@ glift.displays.board._Intersections.prototype = {
       var linept = svg.child(idGen.lineGroup()).child(idGen.line(pt))
       $('#' + linept.attr('id')).attr('opacity', linept.attr('opacity'));
     }
-    var markGroup = svg.child(idGen.markGroup());
     markGroup.child(idGen.mark(pt)).attachToParent(markGroup.attr('id'));
     this.markPts.push(pt);
     return this;
   },
 
-  clearMarks: function() {
+  clearMarks: function(markGroup) {
+    markGroup = markGroup || this.svg.child(this.idGen.markGroup());
     var idGen = this.idGen;
-    for (var i = 0, len = this.markPts.length; i < len; i++) {
-      var pt = this.markPts[i];
+    var children = markGroup.children();
+    for (var i = 0, len = children.length; i < len; i++) {
+      var child = children[i]
+      var pt = child.data();
       var starpoint =
           this.svg.child(idGen.starpointGroup()).child(idGen.starpoint(pt))
-      if (starpoint !== undefined) {
-        $('#' + starpoint.attr('id')).attr('opacity', 1);
+      if (starpoint) {
+        starpoint.attr('opacity', 1).updateAttrInDom('opacity');
       }
       var line = this.svg.child(idGen.lineGroup()).child(idGen.line(pt))
-      $('#' + line.attr('id')).attr('opacity', 1);
+      if (line) {
+        line.attr('opacity', 1).updateAttrInDom('opacity');
+      }
     }
-    this.svg.child(this.idGen.markGroup()).emptyChildren();
-    var markGroupId = this.idGen.markGroup();
-    $('#' + this.idGen.markGroup()).empty();
+    markGroup.emptyChildren();
+    $('#' + markGroup.attr('id')).empty();
     return this;
   },
 
@@ -153,11 +229,15 @@ glift.displays.board._Intersections.prototype = {
     return this;
   },
 
+  /**
+   * Clear all the stones and stone shadows.
+   */
   clearStones: function() {
     var stoneAttrs = {opacity: 0, stone_color: "EMPTY"};
     var shadowAttrs = {opacity: 0};
     this.setGroupAttr(this.idGen.stoneGroup(), stoneAttrs)
         .setGroupAttr(this.idGen.stoneShadowGroup(), shadowAttrs);
+    // TODO(kashomon): Find a more efficient way to do this.
     $('.' + glift.enums.svgElements.STONE_SHADOW).attr(shadowAttrs);
     $('.' + glift.enums.svgElements.STONE).attr(stoneAttrs);
     return this;
