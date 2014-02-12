@@ -2205,11 +2205,14 @@ glift.displays.board._Intersections.prototype = {
   _flushStone: function(pt) {
     var stone = this.svg.child(this.idGen.stoneGroup())
         .child(this.idGen.stone(pt));
-    $('#' + stone.attr('id')).attr(stone.attrObj());
-    var stoneShadowGroup = this.svg.child(this.idGen.stoneShadowGroup());
-    if (stoneShadowGroup !== undefined) {
-      var stoneShadow = stoneShadowGroup.child(this.idGen.stoneShadow(pt));
-      $('#' + stoneShadow.attr('id')).attr(stoneShadow.attrObj());
+    if (stone) {
+      // A stone might not exist if the board is cropped.
+      $('#' + stone.attr('id')).attr(stone.attrObj());
+      var stoneShadowGroup = this.svg.child(this.idGen.stoneShadowGroup());
+      if (stoneShadowGroup !== undefined) {
+        var stoneShadow = stoneShadowGroup.child(this.idGen.stoneShadow(pt));
+        $('#' + stoneShadow.attr('id')).attr(stoneShadow.attrObj());
+      }
     }
     return this;
   },
@@ -2256,14 +2259,16 @@ glift.displays.board._Intersections.prototype = {
     // If necessary, clear out intersection lines and starpoints.  This only
     // applies when a stone hasn't yet been set (stoneColor === 'EMPTY').
     this.reqClearForMark(pt, mark) && this.clearForMark(pt);
-    var stoneColor = this.svg.child(this.idGen.stoneGroup())
-        .child(this.idGen.stone(pt))
-        .attr('stone_color');
-    var stonesTheme = this.theme.stones;
-    var marksTheme = stonesTheme[stoneColor].marks;
-    glift.displays.board.addMark(container, this.idGen, this.boardPoints,
-        marksTheme, stonesTheme, pt, mark, label);
-    this._flushMark(pt, mark, container);
+    var stone = this.svg.child(this.idGen.stoneGroup())
+        .child(this.idGen.stone(pt));
+    if (stone) {
+      var stoneColor = stone.attr('stone_color');
+      var stonesTheme = this.theme.stones;
+      var marksTheme = stonesTheme[stoneColor].marks;
+      glift.displays.board.addMark(container, this.idGen, this.boardPoints,
+          marksTheme, stonesTheme, pt, mark, label);
+      this._flushMark(pt, mark, container);
+    }
     return this;
   },
 
@@ -2273,12 +2278,17 @@ glift.displays.board._Intersections.prototype = {
    */
   reqClearForMark: function(pt, mark) {
     var marks = glift.enums.marks;
-    var stoneColor = this.svg.child(this.idGen.stoneGroup())
-        .child(this.idGen.stone(pt))
-        .attr('stone_color');
-    return stoneColor === 'EMPTY' && (mark === marks.LABEL
-        || mark === marks.VARIATION_MARKER
-        || mark === marks.CORRECT_VARIATION);
+    var stone = this.svg.child(this.idGen.stoneGroup())
+        .child(this.idGen.stone(pt));
+    if (stone) {
+      // A stone might not exist at a point if the board is cropped.
+      var stoneColor = stone.attr('stone_color');
+      return stoneColor === 'EMPTY' && (mark === marks.LABEL
+          || mark === marks.VARIATION_MARKER
+          || mark === marks.CORRECT_VARIATION);
+    } else {
+      return false;
+    }
   },
 
   /**
@@ -7842,18 +7852,19 @@ glift.widgets.WidgetManager.prototype = {
     if (url && this.sgfCache[url]) {
       sgfObj.sgfString = this.sgfCache[url];
       callback(sgfObj);
+    } else {
+      var that = this;
+      $.ajax({
+        url: url,
+        dataType: 'text',
+        cache: false,
+        success: function(data) {
+          that.sgfCache[url] = data;
+          sgfObj.sgfString = data;
+          callback(sgfObj);
+        }
+      });
     }
-    var that = this;
-    $.ajax({
-      url: url,
-      dataType: 'text',
-      cache: false,
-      success: function(data) {
-        that.sgfCache[url] = data;
-        sgfObj.sgfString = data;
-        callback(sgfObj);
-      }
-    });
   }
 };
 glift.widgets.options = {

@@ -163,17 +163,18 @@ glift.widgets.WidgetManager.prototype = {
     if (url && this.sgfCache[url]) {
       sgfObj.sgfString = this.sgfCache[url];
       callback(sgfObj);
+    } else {
+      var that = this;
+      $.ajax({
+        url: url,
+        dataType: 'text',
+        cache: false,
+        success: function(data) {
+          that.sgfCache[url] = data;
+          sgfObj.sgfString = data;
+          callback(sgfObj);
+        }
+      });
     }
-    var that = this;
-    $.ajax({
-      url: url,
-      dataType: 'text',
-      cache: false,
-      success: function(data) {
-        that.sgfCache[url] = data;
-        sgfObj.sgfString = data;
-        callback(sgfObj);
-      }
-    });
   }
 };
