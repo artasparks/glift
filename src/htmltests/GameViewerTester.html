@@ -131,7 +131,9 @@
         (function() {
           glift.global.performanceDebugLevel = 'INFO';
           gameViewer = glift.create({
-            sgf: testdata.gogameguru_commentary,
+            sgf: {
+              sgfString: testdata.gogameguru_commentary
+            },
             theme: 'DEPTH',
             goBoardBackground: '../themes/assets/bambootile_warm.jpg',
             divId: 'glift_display1'
