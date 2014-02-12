@@ -7830,7 +7830,7 @@ glift.widgets.WidgetManager.prototype = {
   /**
    * Clear out the SGF Cache.
    */
-  ClearSgfCache: function() {
+  clearSgfCache: function() {
     this.sgfCache = {};
   },
 
@@ -7839,16 +7839,17 @@ glift.widgets.WidgetManager.prototype = {
    * assume that the caller is trying to set some objects in the widget.
    */
   loadSgfWithAjax: function(url, sgfObj, callback) {
-    if (this.sgfCache[url] !== undefined) {
+    if (url && this.sgfCache[url]) {
       sgfObj.sgfString = this.sgfCache[url];
       callback(sgfObj);
     }
+    var that = this;
     $.ajax({
       url: url,
       dataType: 'text',
       cache: false,
       success: function(data) {
-        this.sgfCache[url] = data;
+        that.sgfCache[url] = data;
         sgfObj.sgfString = data;
         callback(sgfObj);
       }
