@@ -12,6 +12,10 @@ glift.widgets.WidgetManager = function(
 
   // Defined on draw
   this.currentWidget = undefined;
+
+  // Cache of SGFs.  Useful for reducing the number AJAX calls.
+  // Map from SGF name to String contents.
+  this.sgfCache = {};
 };
 
 glift.widgets.WidgetManager.prototype = {
@@ -145,15 +149,27 @@ glift.widgets.WidgetManager.prototype = {
   },
 
   /**
+   * Clear out the SGF Cache.
+   */
+  ClearSgfCache: function() {
+    this.sgfCache = {};
+  },
+
+  /**
    * Load a urlOrObject with AJAX.  If the urlOrObject is an object, then we
    * assume that the caller is trying to set some objects in the widget.
    */
   loadSgfWithAjax: function(url, sgfObj, callback) {
+    if (this.sgfCache[url] !== undefined) {
+      sgfObj.sgfString = this.sgfCache[url];
+      callback(sgfObj);
+    }
     $.ajax({
       url: url,
       dataType: 'text',
       cache: false,
       success: function(data) {
+        this.sgfCache[url] = data;
         sgfObj.sgfString = data;
         callback(sgfObj);
       }
