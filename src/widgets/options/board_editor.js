@@ -34,9 +34,8 @@ glift.widgets.options.BOARD_EDITOR = {
       var partialData = widget.controller.addStone(
           pt, glift.enums.states.EMPTY, iconToMark[iconName]);
       // widget.applyBoardData(partialData);
-    } else if (iconName === 'nostone-xmark') {
-      // clear the stones
     }
+    // TODO(kashomon): handle 'nostone-xmark'
   },
 
   stoneMouseover: function(event, widget, pt) {

@@ -129,14 +129,25 @@
       <script type="text/javascript">
         //glift.global.performanceDebugLevel = 'info'
         var basicProblem = glift.create({
+          allowWrapAround: true,
           sgfList: [
             testdata.sgfs.complexproblem,
             {
+              sgfString: testdata.sgfs.passingExample,
+              initialPosition: 2
+            },
+            {
               widgetType: 'EXAMPLE',
-              sgfString: testdata.sgfs.trivialproblem
+              sgfString: testdata.sgfs.trivialproblem,
+              rotation: 'CLOCKWISE_270',
+              boardRegion: 'TOP_LEFT'
             },
             testdata.sgfs.realproblem,
-            testdata.sgfs.gogameguruHard
+            {
+              sgfString: testdata.sgfs.gogameguruHard,
+              rotation: 'CLOCKWISE_180',
+              boardRegion: 'TOP_LEFT'
+            }
           ],
           divId: "glift_display1",
           sgfDefaults: {

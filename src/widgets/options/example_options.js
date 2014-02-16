@@ -8,7 +8,7 @@ glift.widgets.options.EXAMPLE = {
 
   problemConditions: {},
 
-  showVariations: glift.enums.showVariations.MORE_THAN_ONE,
+  showVariations: glift.enums.showVariations.NEVER,
 
   controllerFunc: glift.controllers.gameViewer
 };

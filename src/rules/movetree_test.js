@@ -220,4 +220,18 @@ glift.rules.movetreeTest = function() {
     mt.moveDown(1).properties().add('B', 'bb');
     deepEqual(mt.toSgf(), '(;C[Foo]\n(;B[ab])\n(;B[bb]))');
   });
+
+  test("getCurrentPlayer Complex", function() {
+    var states = glift.enums.states
+    var movetree = glift.rules.movetree.getFromSgf(
+        testdata.sgfs.passingExample,  [0,0]);
+    deepEqual(movetree.getCurrentPlayer(), states.WHITE);
+    deepEqual(movetree.node().getNodeNum(), 2);
+    movetree.moveUp();
+    deepEqual(movetree.getCurrentPlayer(), states.WHITE);
+    deepEqual(movetree.node().getNodeNum(), 1);
+    movetree.moveUp();
+    deepEqual(movetree.getCurrentPlayer(), states.BLACK);
+    deepEqual(movetree.node().getNodeNum(), 0);
+  });
 };

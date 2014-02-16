@@ -81,7 +81,7 @@ glift.widgets.options.baseOptions = {
      */
     problemConditions: {
       GB: [],
-      C: ['Correct', 'is correct']
+      C: ['Correct', 'is correct', 'is the correct']
     },
 
     /**
@@ -352,7 +352,9 @@ glift.widgets.options.baseOptions = {
           showVariations: glift.enums.showVariations.ALWAYS,
           problemConditions: glift.util.simpleClone(
               widget.sgfOptions.problemConditions),
-          icons: ['start', 'end', 'arrowleft', 'arrowright', 'undo']
+          icons: ['start', 'end', 'arrowleft', 'arrowright', 'undo'],
+          rotation: widget.sgfOptions.rotation,
+          boardRegion: widget.sgfOptions.boardRegion
         }
         manager.createTemporaryWidget(sgfObj);
       }

@@ -18,7 +18,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.9.1',
+  version: '0.9.2',
   debugMode: false,
   // Options for performanceDebugLevel: NONE, INFO
   performanceDebugLevel: 'NONE',
@@ -278,11 +278,24 @@ glift.enums = {
     SQUARE: 'SQUARE',
     TRIANGLE: 'TRIANGLE',
     XMARK: 'XMARK',
+    // STONE_MARKER marks the last played stone
     STONE_MARKER: 'STONE_MARKER',
-    // These last three all have to do with Labels.
-    // TODO(kashomon): Consolidate these somehow.
     LABEL: 'LABEL',
+
+    // These last few 'marks' are variations on the LABEL mark type.
+    // TODO(kashomon): Consolidate these somehow.
+    //
+    // Neither LABEL_ALPHA nor LABEL_NUMERIC are used for rendering, but they
+    // are extremly convenient to have this distinction when passing information
+    // from the display to the controller
+    LABEL_ALPHA: 'LABEL_ALPHA',
+    LABEL_NUMERIC: 'LABEL_NUMERIC',
+
+    // There last two are variations on the LABEL mark. VARIATION_MARKER is used
+    // so we can color labels differently for variations.
     VARIATION_MARKER: 'VARIATION_MARKER',
+
+    // We color 'correct' variations differently in problems,
     CORRECT_VARIATION: 'CORRECT_VARIATION'
   },
 
@@ -358,6 +371,14 @@ glift.enums = {
   dubug: {
     NONE: 'NONE',
     INFO: 'INFO'
+  },
+
+  // Intended to be for points
+  rotations: {
+    NO_ROTATION: 'NO_ROTATION',
+    CLOCKWISE_90: 'CLOCKWISE_90',
+    CLOCKWISE_180: 'CLOCKWISE_180',
+    CLOCKWISE_270: 'CLOCKWISE_270'
   }
 };
 (function() {
@@ -508,7 +529,7 @@ glift.util.point = function(x, y) {
 };
 
 glift.util.coordToString = function(x, y) {
-  return x + ',' + y
+  return x + ',' + y;
 };
 
 glift.util.pointFromString = function(str) {
@@ -577,7 +598,7 @@ GliftPoint.prototype = {
   },
 
   /**
-   * Create the form used in objects.
+   * Create the form used as a key in objects.
    * TODO(kashomon): Replace with string form.  The term hash() is confusing and
    * it makes it seem like I'm converting it to an int (which I was, long ago).
    */
@@ -594,6 +615,58 @@ GliftPoint.prototype = {
    */
   translate: function(x, y) {
     return glift.util.point(this.x() + x, this.y() + y);
+  },
+
+  /**
+   * Rotate an (integer) point based on the board size.
+   * boardsize: Typically 19, but 9 and 13 are possible.  Note that points are
+   * typically 0-indexed.
+   *
+   * Note: This is an immutable on points.
+   */
+  rotate: function(maxIntersections, rotation) {
+    var rotations = glift.enums.rotations;
+    if (maxIntersections < 0 ||
+        rotation === undefined ||
+        rotation === rotations.NO_ROTATION) {
+      return this;
+    }
+    var point = glift.util.point;
+    var mid = (maxIntersections - 1) / 2;
+    var normalized = point(this.x() - mid, mid - this.y());
+
+    if (glift.util.outBounds(this.x(), maxIntersections) ||
+        glift.util.outBounds(this.x(), maxIntersections)) {
+      throw new Error("rotating a point outside the bounds: " +
+          this.toString());
+    }
+
+    var rotated = normalized;
+    if (rotation === rotations.CLOCKWISE_90) {
+      rotated = point(normalized.y(), -normalized.x());
+
+    } else if (rotation === rotations.CLOCKWISE_180) {
+      rotated = point(-normalized.x(), -normalized.y());
+
+    } else if (rotation === rotations.CLOCKWISE_270) {
+      rotated = point(-normalized.y(), normalized.x());
+    }
+
+    // renormalize
+    return point(mid + rotated.x(), -rotated.y() + mid);
+  },
+
+  antirotate: function(maxIntersections, rotation) {
+    var rotations = glift.enums.rotations
+    if (rotation === rotations.CLOCKWISE_90) {
+      return this.rotate(maxIntersections, rotations.CLOCKWISE_270)
+    } else if (rotation === rotations.CLOCKWISE_180) {
+      return this.rotate(maxIntersections, rotations.CLOCKWISE_180)
+    } else if (rotation === rotations.CLOCKWISE_270) {
+      return this.rotate(maxIntersections, rotations.CLOCKWISE_90)
+    } else {
+      return this.rotate(maxIntersections, rotation);
+    }
   },
 
   log: function() {
@@ -916,7 +989,8 @@ glift.displays = {
     if (options.goBoardBackground && options.goBoardBackground !== '') {
       glift.themes.setGoBoardBackground(theme, options.goBoardBackground);
     }
-    return glift.displays.board.create(environment, themeKey, theme);
+    return glift.displays.board.create(
+        environment, themeKey, theme, options.rotation);
   }
 };
 glift.displays.bboxFromPts = function(topLeftPt, botRightPt) {
@@ -1510,17 +1584,6 @@ GuiEnvironment.prototype = {
     this.divHeight = bbox.height();
     this.divWidth = bbox.width();
     return this;
-  },
-
-  _debugDrawAll: function() {
-    var paper = Raphael(this.divId, "100%", "100%")
-    this.divBox.draw(paper, 'yellow');
-    this.resizedBox.draw(paper, 'red');
-    this.goBoardBox.draw(paper, 'orange');
-    this.goBoardLineBox.bbox.draw(paper, 'red');
-    this.goBoardLineBox._debugDrawLines(paper, 'blue');
-    this.boardPoints._debugDraw(paper, 'green');
-    this.lineSegments._debugDraw(paper, 'black');
   }
 };
 
@@ -1983,21 +2046,27 @@ glift.displays.getCropDimensions = function(width, height, cropbox) {
   };
 };
 glift.displays.board = {
-  create: function(env, themeName, theme) {
-    return new glift.displays.board.Display(env, themeName, theme).draw();
+  create: function(env, themeName, theme, rotation) {
+    return new glift.displays.board.Display(
+        env, themeName, theme, rotation).draw();
   }
 };
 
 /**
  * The core Display object returned to the user.
  */
-glift.displays.board.Display = function(inEnvironment, themeName, theme) {
+glift.displays.board.Display = function(
+    inEnvironment, themeName, theme, rotation) {
   // Due layering issues, we need to keep track of the order in which we
   // created the objects.
   this._objectHistory = [];
   this._environment = inEnvironment;
   this._themeName = themeName;
   this._theme = theme;
+
+  // Rotation indicates whether we should rotate by stones/marks in the display
+  // by 90, 180, or 270 degrees,
+  this._rotation = rotation || glift.enums.rotations.NO_ROTATION;
   this._svgBase = undefined; // defined in draw.
   this._svg = undefined; // defined in draw.
   this._intersections = undefined // defined in draw;
@@ -2005,12 +2074,13 @@ glift.displays.board.Display = function(inEnvironment, themeName, theme) {
 };
 
 glift.displays.board.Display.prototype = {
-  intersections: function() { return this._intersections; },
-  intersectionPoints: function() { return this._environment.intersections; },
   boardPoints: function() { return this._environment.boardPoints; },
-  divId: function() { return this._environment.divId },
-  theme: function() { return this._themeName; },
   boardRegion: function() { return this._environment.boardRegion; },
+  divId: function() { return this._environment.divId },
+  intersectionPoints: function() { return this._environment.intersections; },
+  intersections: function() { return this._intersections; },
+  rotation: function() { return this._rotation; },
+  theme: function() { return this._themeName; },
   width: function() { return this._environment.goBoardBox.width() },
   height: function() { return this._environment.goBoardBox.height() },
 
@@ -2059,9 +2129,9 @@ glift.displays.board.Display.prototype = {
     board.shadows(intGrp, idGen, boardPoints, theme);
     board.stones(intGrp, idGen, boardPoints, theme);
     board.markContainer(intGrp, idGen, boardPoints, theme);
-    board.buttons(intGrp, idGen, boardPoints);
+    board.buttons(intGrp, idGen, boardPoints, this.rotation());
     this._intersections = new glift.displays.board._Intersections(
-        divId, intGrp, boardPoints, theme);
+        divId, intGrp, boardPoints, theme, this.rotation());
     this.flush();
     return this; // required
   },
@@ -2122,7 +2192,7 @@ glift.displays.board.initBlurFilter = function(divId, svg) {
 /**
  * Create transparent buttons that overlay each intersection.
  */
-glift.displays.board.buttons = function(svg, idGen, boardPoints) {
+glift.displays.board.buttons = function(svg, idGen, boardPoints, rotation) {
   var svglib = glift.displays.svg;
   var container = svglib.group().attr('id', idGen.buttonGroup());
   svg.append(container);
@@ -2130,8 +2200,9 @@ glift.displays.board.buttons = function(svg, idGen, boardPoints) {
   var data = boardPoints.data();
   for (var i = 0, ii = data.length; i < ii; i++) {
     var pt = data[i];
+    var dataPt = pt.intPt.antirotate(boardPoints.numIntersections, rotation);
     container.append(svglib.rect()
-      .data(pt.intPt)
+      .data(dataPt)
       .attr("x", pt.coordPt.x() - boardPoints.radius)
       .attr("y", pt.coordPt.y() - boardPoints.radius)
       .attr("width", boardPoints.spacing)
@@ -2140,16 +2211,18 @@ glift.displays.board.buttons = function(svg, idGen, boardPoints) {
       .attr('fill', 'red')
       .attr('stroke', 'red')
       .attr('stone_color', 'EMPTY')
-      .attr('id', idGen.button(pt.intPt)));
+      .attr('id', idGen.button(dataPt)));
   }
 };
 /**
  * The backing data for the display.
  */
-glift.displays.board._Intersections = function(divId, svg, boardPoints, theme) {
+glift.displays.board._Intersections = function(
+    divId, svg, boardPoints, theme, rotation) {
   this.divId = divId;
   this.svg = svg;
   this.theme = theme;
+  this.rotation = rotation;
   this.boardPoints = boardPoints;
   this.idGen = glift.displays.ids.generator(this.divId);
 
@@ -2172,9 +2245,10 @@ glift.displays.board._Intersections.prototype = {
    * Sets the color of a stone.
    */
   setStoneColor: function(pt, color) {
+    pt = pt.rotate(this.boardPoints.numIntersections, this.rotation);
     var key = pt.hash();
     if (this.theme.stones[color] === undefined) {
-      throw 'Unknown color key [' + color+ ']'
+      throw 'Unknown color key [' + color + ']';
     }
 
     var stoneGroup = this.svg.child(this.idGen.stoneGroup());
@@ -2221,6 +2295,7 @@ glift.displays.board._Intersections.prototype = {
    * Add a mark to the display.
    */
   addMarkPt: function(pt, mark, label) {
+    pt = pt.rotate(this.boardPoints.numIntersections, this.rotation);
     var container = this.svg.child(this.idGen.markGroup());
     return this._addMarkInternal(container, pt, mark, label);
   },
@@ -2229,6 +2304,7 @@ glift.displays.board._Intersections.prototype = {
    * Test whether the board has a mark at the point.
    */
   hasMark: function(pt) {
+    pt = pt.rotate(this.boardPoints.numIntersections, this.rotation);
     if (this.svg.child(this.idGen.markGroup()).child(this.idGen.mark(pt))) {
       return true;
     } else {
@@ -2242,6 +2318,7 @@ glift.displays.board._Intersections.prototype = {
    * or goban.
    */
   addTempMark: function(pt, mark, label) {
+    pt = pt.rotate(this.boardPoints.numIntersections, this.rotation);
     var container = this.svg.child(this.idGen.tempMarkGroup());
     return this._addMarkInternal(container, pt, mark, label);
   },
@@ -2258,7 +2335,7 @@ glift.displays.board._Intersections.prototype = {
   _addMarkInternal: function(container, pt, mark, label) {
     // If necessary, clear out intersection lines and starpoints.  This only
     // applies when a stone hasn't yet been set (stoneColor === 'EMPTY').
-    this.reqClearForMark(pt, mark) && this.clearForMark(pt);
+    this._reqClearForMark(pt, mark) && this._clearForMark(pt);
     var stone = this.svg.child(this.idGen.stoneGroup())
         .child(this.idGen.stone(pt));
     if (stone) {
@@ -2276,7 +2353,7 @@ glift.displays.board._Intersections.prototype = {
    * Determine whether an intersection (pt) needs be cleared of lines /
    * starpoints.
    */
-  reqClearForMark: function(pt, mark) {
+  _reqClearForMark: function(pt, mark) {
     var marks = glift.enums.marks;
     var stone = this.svg.child(this.idGen.stoneGroup())
         .child(this.idGen.stone(pt));
@@ -2295,7 +2372,7 @@ glift.displays.board._Intersections.prototype = {
    * Clear a pt of lines / starpoints so that we can place a mark (typically a
    * text-mark) without obstruction.
    */
-  clearForMark: function(pt) {
+  _clearForMark: function(pt) {
     var starpoint = this.svg.child(this.idGen.starpointGroup())
         .child(this.idGen.starpoint(pt))
     if (starpoint) {
@@ -2310,7 +2387,7 @@ glift.displays.board._Intersections.prototype = {
   _flushMark: function(pt, mark, markGroup) {
     var svg = this.svg;
     var idGen = this.idGen;
-    if (this.reqClearForMark(pt, mark)) {
+    if (this._reqClearForMark(pt, mark)) {
       var starp  = svg.child(idGen.starpointGroup()).child(idGen.starpoint(pt))
       if (starp) {
         $('#' + starp.attr('id')).attr('opacity', starp.attr('opacity'));
@@ -2392,6 +2469,7 @@ glift.displays.board._Intersections.prototype = {
     var shadowAttrs = {opacity: 0};
     this.setGroupAttr(this.idGen.stoneGroup(), stoneAttrs)
         .setGroupAttr(this.idGen.stoneShadowGroup(), shadowAttrs);
+
     // TODO(kashomon): Find a more efficient way to do this.
     $('.' + glift.enums.svgElements.STONE_SHADOW).attr(shadowAttrs);
     $('.' + glift.enums.svgElements.STONE).attr(stoneAttrs);
@@ -2412,7 +2490,7 @@ glift.displays.board._Intersections.prototype = {
     for (var i = 0, ii = children.length; i < ii; i++) {
       var button = children[i];
       var id = button.attr('id');
-      var pt = button.data();
+      var pt = button.data()
       var eventsId = id + '#' + eventName;
       this.events[eventsId] = { pt: pt, func: func };
     }
@@ -4907,7 +4985,7 @@ glift.rules._MoveNode.prototype = {
    * Return the parent node. Returns util.none if no parent node exists.
    */
   getParent: function() {
-    if (this._parentNode ) {
+    if (this._parentNode) {
       return this._parentNode;
     } else {
       return glift.util.none;
@@ -5125,22 +5203,24 @@ glift.rules._MoveTree.prototype = {
 
   /**
    * Get the current player.  This is exactly the opposite of the last move that
-   * was played -- i.e., the move on the current node.
+   * was played.  If we traverse all the way back to the beginning, the default
+   * player is Black.
    */
   getCurrentPlayer: function() {
-    var move = this.properties().getMove();
-    var enums = glift.enums;
-    if (move === glift.util.none) {
-      return enums.states.BLACK;
-    } else if (move.color === enums.states.BLACK) {
-      return enums.states.WHITE;
-    } else if (move.color === enums.states.WHITE) {
-      return enums.states.BLACK;
+    var states = glift.enums.states;
+    var curNode = this._currentNode;
+    var move = curNode.properties().getMove();
+    while(move === glift.util.none) {
+      curNode = curNode .getParent();
+      if (curNode === glift.util.none) { return states.BLACK; }
+      move = curNode.properties().getMove();
+    }
+    if (move.color === states.BLACK) {
+      return states.WHITE;
+    } else if (move.color === states.WHITE) {
+      return states.BLACK;
     } else {
-      // TODO(kashomon): This is not the right way to do this.  Really, we need
-      // to traverse up the tree until we see a color, and return the opposite.
-      // If we reach the root, _then_ we can return BLACK.
-      return enums.states.BLACK;
+      return states.BLACK;
     }
   },
 
@@ -6292,34 +6372,56 @@ BaseController.prototype = {
 };
 })();
 glift.controllers.boardEditor = function(sgfOptions) {
-  var controllers = glift.controllers;
-  var baseController = glift.util.beget(controllers.base());
-  var newController = glift.util.setMethods(baseController,
-          glift.controllers.boardEditorMethods);
+  var ctrl = glift.controllers;
+  var baseController = glift.util.beget(ctrl.base());
+  glift.util.setMethods(baseController, ctrl.BoardEditorMethods);
+  glift.util.setMethods(baseController, ctrl.BoardEditorMethods);
   baseController.initOptions(sgfOptions);
   return baseController;
 };
 
 glift.controllers.BoardEditorMethods = {
-  addStone: function(point, color, mark) {
+  extraOptions: function(sgfOptions) {
+    // TODO(kashomon): Record the used marks.
+  },
+
+  /**
+   * Add a stone.
+   */
+  addStone: function(point, color) {
     console.log(point);
     console.log(color);
     console.log(mark);
-  }
+  },
+
+  addMark: function(point, mark) {
+
+  },
+
+  /**
+   * Add a stone placement.  These are properties indicated by AW and AB.  They
+   * do not indicate a change in move number.
+   */
+  addPlacement: function(point, color) {
+  },
+
+  pass: function() { throw new Error("Not implemented"); },
+  clearMark: function() { throw new Error("Not implemented"); },
+  clearStone: function() { throw new Error("Not implemented"); }
 };
-(function() {
 /**
  * A GameViewer encapsulates the idea of traversing a read-only SGF.
  */
 glift.controllers.gameViewer = function(sgfOptions) {
-  var controllers = glift.controllers,
-      baseController = glift.util.beget(controllers.base()),
-      newController = glift.util.setMethods(baseController, methods),
+  var ctrl = glift.controllers,
+      baseController = glift.util.beget(ctrl.base()),
+      newController = glift.util.setMethods(baseController,
+          ctrl.GameViewerMethods),
       _ = newController.initOptions(sgfOptions);
   return newController;
 };
 
-var methods = {
+glift.controllers.GameViewerMethods = {
   /**
    * Called during initOptions, in the BaseController.
    *
@@ -6395,7 +6497,6 @@ var methods = {
     return possibleMap;
   }
 };
-})();
 /**
  * The static problem controller encapsulates the idea of trying to solve a
  * problem.  Thus, when a player adds a stone, the controller checks to make
@@ -6516,12 +6617,15 @@ glift.bridge = {
   /**
    * Set/create the various components in the UI.
    *
-   * For a more detailed discussion, see intersections in glift.bridge.
+   * For a more detailed discussion of the objects, see intersections.js in
+   * glift.bridge.
    */
   // TODO(kashomon): move showVariations to intersections.
-  setDisplayState: function(boardData, display, showVariations, markLastMove) {
+  setDisplayState: function(
+      boardData, display, showVariations, markLastMove) {
     glift.util.majorPerfLog('Set display state');
     display.intersections().clearMarks();
+
     if (boardData.displayDataType === glift.enums.displayDataTypes.FULL) {
       display.intersections().clearAll();
     }
@@ -6547,11 +6651,8 @@ glift.bridge = {
     for (var markType in boardData.marks) {
       for (var i = 0; i < boardData.marks[markType].length; i++) {
         var markData = boardData.marks[markType][i];
-        if (markData.point) {
-          var markPtString = markData.point.toString();
-        } else {
-          var markPtString = markData.toString();
-        }
+        var markPt = markData.point ? markData.point : markData;
+        markPtString = markPt.toString();
         marksMap[markPtString] = true;
         if (markType === marks.LABEL) {
           if (variationMap[markPtString] !== undefined) {
@@ -7393,6 +7494,7 @@ glift.widgets.BaseWidget.prototype = {
         this.sgfOptions.boardRegion === glift.enums.boardRegions.AUTO
         ? glift.bridge.getCropFromMovetree(this.controller.movetree)
         : this.sgfOptions.boardRegion;
+    this.displayOptions.rotation = this.sgfOptions.rotation;
     glift.util.majorPerfLog('Calculated board regions');
     if (this.displayOptions.useCommentBar) {
       requiredComponents.push(comps.COMMENT_BOX);
@@ -7899,7 +8001,7 @@ glift.widgets.options = {
    * 1. Get the default WidgetType from the sgfDefaults.
    * 2. Retrieve the WidgetType overrides.
    * Then:
-   *  3. Prefer first options set explicitly in the sgfObj
+   *  3. Prefer first options set explicitly in the (user provided) sgfObj
    *  4. Then, prefer options set in the WidgetType Overrides
    *  5. Finally, prefer options set in baseOptions.sgfDefaults
    */
@@ -8006,6 +8108,12 @@ glift.widgets.options.baseOptions = {
     boardRegion: glift.enums.boardRegions.AUTO,
 
     /**
+     * What rotation to apply to -just- the display of the stones. Any of:
+     * NO_ROTATION, CLOCKWISE_90, CLOCKWISE_180, CLOCKWISE_270, or undefined;
+     */
+    rotation: glift.enums.rotations.NO_ROTATION,
+
+    /**
      * Callback to perform once a problem is considered correct / incorrect.
      */
     problemCallback: function() {},
@@ -8021,7 +8129,7 @@ glift.widgets.options.baseOptions = {
      */
     problemConditions: {
       GB: [],
-      C: ['Correct', 'is correct']
+      C: ['Correct', 'is correct', 'is the correct']
     },
 
     /**
@@ -8047,11 +8155,6 @@ glift.widgets.options.baseOptions = {
      * that a user must get correct.
      */
     totalCorrectVariationsOverride: undefined,
-
-    /**
-     * The extra icons.  This will
-     */
-    extraIcons: undefined,
 
     //-------------------------------------------------------------------------
     // These options must always be overriden by the widget type overrides.
@@ -8297,7 +8400,9 @@ glift.widgets.options.baseOptions = {
           showVariations: glift.enums.showVariations.ALWAYS,
           problemConditions: glift.util.simpleClone(
               widget.sgfOptions.problemConditions),
-          icons: ['start', 'end', 'arrowleft', 'arrowright', 'undo']
+          icons: ['start', 'end', 'arrowleft', 'arrowright', 'undo'],
+          rotation: widget.sgfOptions.rotation,
+          boardRegion: widget.sgfOptions.boardRegion
         }
         manager.createTemporaryWidget(sgfObj);
       }
@@ -8317,6 +8422,101 @@ glift.widgets.options.baseOptions = {
       }
     }
   }
+};
+/**
+ * Board Editor options.
+ *
+ * The Board editor is so complex it needs its own directory!
+ */
+glift.widgets.options.BOARD_EDITOR = {
+  _markMap: {
+    bstone_a: glift.enums.marks.LABEL_ALPHA,
+    bstone_1: glift.enums.marks.LABEL_NUMERIC,
+    bstone_square: glift.enums.marks.SQUARE,
+    bstone_triangle: glift.enums.marks.TRIANGLE
+  },
+
+  _stoneColorMap: {
+    twostones: function(widget) {
+      return widget.controller.getCurrentPlayer();
+    },
+    bstone: function() { return glift.enums.states.BLACK },
+    wstone: function() { return glift.enums.states.BLACK }
+  },
+
+  stoneClick: function(event, widget, pt) {
+    var stoneColorMap = glift.widgets.options.BOARD_EDITOR._stoneColorMap;
+    var iconToMark = glift.widgets.options.BOARD_EDITOR._markMap;
+    var iconName = widget.iconBar.getIcon('multiopen').getActive().iconName;
+    var currentPlayer = widget.controller.getCurrentPlayer();
+
+    if (stoneColorMap[iconName] !== undefined) {
+      var color = stoneColorMap[iconName](widget);
+      var partialData = widget.controller.addStone(pt, currentPlayer);
+      // widget.applyBoardData(partialData);
+    } else if (iconToMark[iconName] !== undefined) {
+      var color = stoneColorMap[iconName](widget);
+      var partialData = widget.controller.addStone(
+          pt, glift.enums.states.EMPTY, iconToMark[iconName]);
+      // widget.applyBoardData(partialData);
+    }
+    // TODO(kashomon): handle 'nostone-xmark'
+  },
+
+  stoneMouseover: function(event, widget, pt) {
+    var marks = glift.enums.marks;
+    var iconToMark = glift.widgets.options.BOARD_EDITOR._markMap;
+    var stoneColorMap = glift.widgets.options.BOARD_EDITOR._stoneColorMap;
+    var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
+    var currentPlayer = widget.controller.getCurrentPlayer();
+    var intersections = widget.display.intersections();
+    var iconName = widget.iconBar.getIcon('multiopen').getActive().iconName;
+
+    if (stoneColorMap[iconName] !== undefined) {
+      var colorKey = stoneColorMap[iconName](widget);
+      if (widget.controller.canAddStone(pt, currentPlayer)) {
+        intersections.setStoneColor(pt, hoverColors[colorKey]);
+      }
+    }
+
+    if (iconToMark[iconName] && !intersections.hasMark(pt)) {
+      intersections.addTempMark(pt, iconToMark[iconName], 'a');
+    }
+  },
+
+  stoneMouseout: function(event, widget, pt) {
+    var currentPlayer = widget.controller.getCurrentPlayer();
+    var iconName = widget.iconBar.getIcon('multiopen').getActive().iconName;
+    var intersections = widget.display.intersections();
+    if (iconName === 'twostones' ||
+        iconName === 'bstone' ||
+        iconName === 'wstone') {
+      var currentPlayer = widget.controller.getCurrentPlayer();
+      if (widget.controller.canAddStone(pt, currentPlayer)) {
+        intersections.setStoneColor(pt, 'EMPTY');
+      }
+    }
+    intersections.clearTempMarks();
+  },
+
+  icons: ['start', 'end', 'arrowleft', 'arrowright',
+      [ // Icons for changing click behavior
+        'twostones', // normal move
+        'bstone', // black placement
+        'wstone', // white placement
+        'bstone_a', // Label with A-Z
+        'bstone_1', // Label with 1+
+        'bstone_triangle', // Label with Triangle
+        'bstone_square', // Label with square
+        'nostone-xmark' // erase
+        // TODO(kashomon): Erase, circle
+      ]],
+
+  problemConditions: {},
+
+  showVariations: glift.enums.showVariations.ALWAYS,
+
+  controllerFunc: glift.controllers.boardEditor
 };
 /**
  * Additional Options for the GameViewers
@@ -8386,7 +8586,7 @@ glift.widgets.options.EXAMPLE = {
 
   problemConditions: {},
 
-  showVariations: glift.enums.showVariations.MORE_THAN_ONE,
+  showVariations: glift.enums.showVariations.NEVER,
 
   controllerFunc: glift.controllers.gameViewer
 };
@@ -8467,88 +8667,4 @@ glift.widgets.options.STANDARD_PROBLEM = {
   icons: ['refresh', 'roadmap', 'multiopen-boxonly'],
 
   controllerFunc: glift.controllers.staticProblem
-};
-/**
- * Board Editor options.
- *
- * The Board editor is so complex it needs its own directory!
- */
-glift.widgets.options.BOARD_EDITOR = {
-  stoneClick: function(event, widget, pt) {
-    var states = glift.enums.states;
-    var marks = glift.enums.marks;
-    var curColor = states.EMPTY;
-    var mark = undefined;
-    var iconName = widget.iconBar.getIcon('multiopen').getActive().iconName;
-    if (iconName === 'twostones') {
-      var curColor =  widget.controller.getCurrentPlayer();
-    } else if (iconName === 'bstone') {
-      var curColor = 'BLACK';
-    }
-  },
-
-  stoneMouseover: function(event, widget, pt) {
-    var marks = glift.enums.marks;
-    var iconToMark = {
-      'bstone_a': marks.LABEL,
-      'bstone_1': marks.LABEL,
-      'bstone_square': marks.SQUARE,
-      'bstone_triangle':  marks.TRIANGLE
-    };
-    var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
-    var currentPlayer = widget.controller.getCurrentPlayer();
-    var intersections = widget.display.intersections();
-    var iconName = widget.iconBar.getIcon('multiopen').getActive().iconName;
-    if (iconName === 'twostones' ||
-        iconName === 'bstone' ||
-        iconName === 'wstone') {
-      var colorKey = currentPlayer;
-      if (iconName === 'bstone') {
-        colorKey = 'BLACK';
-      } else if (iconName === 'wstone') {
-        colorKey = 'WHITE';
-      }
-      if (widget.controller.canAddStone(pt, currentPlayer)) {
-        intersections.setStoneColor(pt, hoverColors[colorKey]);
-      }
-    }
-
-    if (iconToMark[iconName] && !intersections.hasMark(pt)) {
-      intersections.addTempMark(pt, iconToMark[iconName], 'a');
-    }
-  },
-
-  stoneMouseout: function(event, widget, pt) {
-    var currentPlayer = widget.controller.getCurrentPlayer();
-    var iconName = widget.iconBar.getIcon('multiopen').getActive().iconName;
-    var intersections = widget.display.intersections();
-    if (iconName === 'twostones' ||
-        iconName === 'bstone' ||
-        iconName === 'wstone') {
-      var currentPlayer = widget.controller.getCurrentPlayer();
-      if (widget.controller.canAddStone(pt, currentPlayer)) {
-        intersections.setStoneColor(pt, 'EMPTY');
-      }
-    }
-    intersections.clearTempMarks();
-  },
-
-  icons: ['start', 'end', 'arrowleft', 'arrowright',
-      [ // Icons for changing click behavior
-        'twostones', // normal move
-        'bstone', // black placement
-        'wstone', // white placement
-        'bstone_a', // Label with A-Z
-        'bstone_1', // Label with 1+
-        'bstone_triangle', // Label with Triangle
-        'bstone_square', // Label with square
-        'nostone-xmark' // erase
-        // TODO(kashomon): Erase, circle
-      ]],
-
-  problemConditions: {},
-
-  showVariations: glift.enums.showVariations.ALWAYS,
-
-  controllerFunc: glift.controllers.boardEditor
 };

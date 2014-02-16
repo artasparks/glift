@@ -191,22 +191,24 @@ glift.rules._MoveTree.prototype = {
 
   /**
    * Get the current player.  This is exactly the opposite of the last move that
-   * was played -- i.e., the move on the current node.
+   * was played.  If we traverse all the way back to the beginning, the default
+   * player is Black.
    */
   getCurrentPlayer: function() {
-    var move = this.properties().getMove();
-    var enums = glift.enums;
-    if (move === glift.util.none) {
-      return enums.states.BLACK;
-    } else if (move.color === enums.states.BLACK) {
-      return enums.states.WHITE;
-    } else if (move.color === enums.states.WHITE) {
-      return enums.states.BLACK;
+    var states = glift.enums.states;
+    var curNode = this._currentNode;
+    var move = curNode.properties().getMove();
+    while(move === glift.util.none) {
+      curNode = curNode .getParent();
+      if (curNode === glift.util.none) { return states.BLACK; }
+      move = curNode.properties().getMove();
+    }
+    if (move.color === states.BLACK) {
+      return states.WHITE;
+    } else if (move.color === states.WHITE) {
+      return states.BLACK;
     } else {
-      // TODO(kashomon): This is not the right way to do this.  Really, we need
-      // to traverse up the tree until we see a color, and return the opposite.
-      // If we reach the root, _then_ we can return BLACK.
-      return enums.states.BLACK;
+      return states.BLACK;
     }
   },
 
