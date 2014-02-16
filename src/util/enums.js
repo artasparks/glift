@@ -49,11 +49,24 @@ glift.enums = {
     SQUARE: 'SQUARE',
     TRIANGLE: 'TRIANGLE',
     XMARK: 'XMARK',
+    // STONE_MARKER marks the last played stone
     STONE_MARKER: 'STONE_MARKER',
-    // These last three all have to do with Labels.
-    // TODO(kashomon): Consolidate these somehow.
     LABEL: 'LABEL',
+
+    // These last few 'marks' are variations on the LABEL mark type.
+    // TODO(kashomon): Consolidate these somehow.
+    //
+    // Neither LABEL_ALPHA nor LABEL_NUMERIC are used for rendering, but they
+    // are extremly convenient to have this distinction when passing information
+    // from the display to the controller
+    LABEL_ALPHA: 'LABEL_ALPHA',
+    LABEL_NUMERIC: 'LABEL_NUMERIC',
+
+    // There last two are variations on the LABEL mark. VARIATION_MARKER is used
+    // so we can color labels differently for variations.
     VARIATION_MARKER: 'VARIATION_MARKER',
+
+    // We color 'correct' variations differently in problems,
     CORRECT_VARIATION: 'CORRECT_VARIATION'
   },
 
@@ -129,5 +142,13 @@ glift.enums = {
   dubug: {
     NONE: 'NONE',
     INFO: 'INFO'
+  },
+
+  // Intended to be for points
+  rotations: {
+    NO_ROTATION: 'NO_ROTATION',
+    CLOCKWISE_90: 'CLOCKWISE_90',
+    CLOCKWISE_180: 'CLOCKWISE_180',
+    CLOCKWISE_270: 'CLOCKWISE_270'
   }
 };

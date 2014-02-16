@@ -60,6 +60,12 @@ glift.widgets.options.baseOptions = {
     boardRegion: glift.enums.boardRegions.AUTO,
 
     /**
+     * What rotation to apply to -just- the display of the stones. Any of:
+     * NO_ROTATION, CLOCKWISE_90, CLOCKWISE_180, CLOCKWISE_270, or undefined;
+     */
+    rotation: glift.enums.rotations.NO_ROTATION,
+
+    /**
      * Callback to perform once a problem is considered correct / incorrect.
      */
     problemCallback: function() {},
@@ -101,11 +107,6 @@ glift.widgets.options.baseOptions = {
      * that a user must get correct.
      */
     totalCorrectVariationsOverride: undefined,
-
-    /**
-     * The extra icons.  This will
-     */
-    extraIcons: undefined,
 
     //-------------------------------------------------------------------------
     // These options must always be overriden by the widget type overrides.

@@ -6,12 +6,15 @@ glift.bridge = {
   /**
    * Set/create the various components in the UI.
    *
-   * For a more detailed discussion, see intersections in glift.bridge.
+   * For a more detailed discussion of the objects, see intersections.js in
+   * glift.bridge.
    */
   // TODO(kashomon): move showVariations to intersections.
-  setDisplayState: function(boardData, display, showVariations, markLastMove) {
+  setDisplayState: function(
+      boardData, display, showVariations, markLastMove) {
     glift.util.majorPerfLog('Set display state');
     display.intersections().clearMarks();
+
     if (boardData.displayDataType === glift.enums.displayDataTypes.FULL) {
       display.intersections().clearAll();
     }
@@ -37,11 +40,8 @@ glift.bridge = {
     for (var markType in boardData.marks) {
       for (var i = 0; i < boardData.marks[markType].length; i++) {
         var markData = boardData.marks[markType][i];
-        if (markData.point) {
-          var markPtString = markData.point.toString();
-        } else {
-          var markPtString = markData.toString();
-        }
+        var markPt = markData.point ? markData.point : markData;
+        markPtString = markPt.toString();
         marksMap[markPtString] = true;
         if (markType === marks.LABEL) {
           if (variationMap[markPtString] !== undefined) {

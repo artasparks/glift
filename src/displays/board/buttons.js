@@ -1,7 +1,7 @@
 /**
  * Create transparent buttons that overlay each intersection.
  */
-glift.displays.board.buttons = function(svg, idGen, boardPoints) {
+glift.displays.board.buttons = function(svg, idGen, boardPoints, rotation) {
   var svglib = glift.displays.svg;
   var container = svglib.group().attr('id', idGen.buttonGroup());
   svg.append(container);
@@ -9,8 +9,9 @@ glift.displays.board.buttons = function(svg, idGen, boardPoints) {
   var data = boardPoints.data();
   for (var i = 0, ii = data.length; i < ii; i++) {
     var pt = data[i];
+    var dataPt = pt.intPt.antirotate(boardPoints.numIntersections, rotation);
     container.append(svglib.rect()
-      .data(pt.intPt)
+      .data(dataPt)
       .attr("x", pt.coordPt.x() - boardPoints.radius)
       .attr("y", pt.coordPt.y() - boardPoints.radius)
       .attr("width", boardPoints.spacing)
@@ -19,6 +20,6 @@ glift.displays.board.buttons = function(svg, idGen, boardPoints) {
       .attr('fill', 'red')
       .attr('stroke', 'red')
       .attr('stone_color', 'EMPTY')
-      .attr('id', idGen.button(pt.intPt)));
+      .attr('id', idGen.button(dataPt)));
   }
 };

@@ -40,7 +40,8 @@ DIR_ORDER = [
     'displays/diagrams',
     'displays/svg',
 
-    # Rules and display are not linked, except via bridge.
+    # Rules and display are intentionally not linked, except via
+    # bridge and the controllers.
     'rules',
 
     # Tertiary packages
@@ -50,7 +51,6 @@ DIR_ORDER = [
     'bridge',
     'widgets',
     'widgets/options',
-    'widgets/options/board_editor',
     ]
 
 COMBINED_LOC = 'compiled/glift_combined.js'

@@ -34,6 +34,7 @@ glift.widgets.BaseWidget.prototype = {
         this.sgfOptions.boardRegion === glift.enums.boardRegions.AUTO
         ? glift.bridge.getCropFromMovetree(this.controller.movetree)
         : this.sgfOptions.boardRegion;
+    this.displayOptions.rotation = this.sgfOptions.rotation;
     glift.util.majorPerfLog('Calculated board regions');
     if (this.displayOptions.useCommentBar) {
       requiredComponents.push(comps.COMMENT_BOX);

@@ -30,7 +30,7 @@ glift.widgets.options = {
    * 1. Get the default WidgetType from the sgfDefaults.
    * 2. Retrieve the WidgetType overrides.
    * Then:
-   *  3. Prefer first options set explicitly in the sgfObj
+   *  3. Prefer first options set explicitly in the (user provided) sgfObj
    *  4. Then, prefer options set in the WidgetType Overrides
    *  5. Finally, prefer options set in baseOptions.sgfDefaults
    */

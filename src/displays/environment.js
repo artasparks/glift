@@ -83,17 +83,6 @@ GuiEnvironment.prototype = {
     this.divHeight = bbox.height();
     this.divWidth = bbox.width();
     return this;
-  },
-
-  _debugDrawAll: function() {
-    var paper = Raphael(this.divId, "100%", "100%")
-    this.divBox.draw(paper, 'yellow');
-    this.resizedBox.draw(paper, 'red');
-    this.goBoardBox.draw(paper, 'orange');
-    this.goBoardLineBox.bbox.draw(paper, 'red');
-    this.goBoardLineBox._debugDrawLines(paper, 'blue');
-    this.boardPoints._debugDraw(paper, 'green');
-    this.lineSegments._debugDraw(paper, 'black');
   }
 };
 

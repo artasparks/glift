@@ -1,16 +1,16 @@
-(function() {
 /**
  * A GameViewer encapsulates the idea of traversing a read-only SGF.
  */
 glift.controllers.gameViewer = function(sgfOptions) {
-  var controllers = glift.controllers,
-      baseController = glift.util.beget(controllers.base()),
-      newController = glift.util.setMethods(baseController, methods),
+  var ctrl = glift.controllers,
+      baseController = glift.util.beget(ctrl.base()),
+      newController = glift.util.setMethods(baseController,
+          ctrl.GameViewerMethods),
       _ = newController.initOptions(sgfOptions);
   return newController;
 };
 
-var methods = {
+glift.controllers.GameViewerMethods = {
   /**
    * Called during initOptions, in the BaseController.
    *
@@ -86,4 +86,3 @@ var methods = {
     return possibleMap;
   }
 };
-})();

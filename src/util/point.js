@@ -7,7 +7,7 @@ glift.util.point = function(x, y) {
 };
 
 glift.util.coordToString = function(x, y) {
-  return x + ',' + y
+  return x + ',' + y;
 };
 
 glift.util.pointFromString = function(str) {
@@ -76,7 +76,7 @@ GliftPoint.prototype = {
   },
 
   /**
-   * Create the form used in objects.
+   * Create the form used as a key in objects.
    * TODO(kashomon): Replace with string form.  The term hash() is confusing and
    * it makes it seem like I'm converting it to an int (which I was, long ago).
    */
@@ -93,6 +93,58 @@ GliftPoint.prototype = {
    */
   translate: function(x, y) {
     return glift.util.point(this.x() + x, this.y() + y);
+  },
+
+  /**
+   * Rotate an (integer) point based on the board size.
+   * boardsize: Typically 19, but 9 and 13 are possible.  Note that points are
+   * typically 0-indexed.
+   *
+   * Note: This is an immutable on points.
+   */
+  rotate: function(maxIntersections, rotation) {
+    var rotations = glift.enums.rotations;
+    if (maxIntersections < 0 ||
+        rotation === undefined ||
+        rotation === rotations.NO_ROTATION) {
+      return this;
+    }
+    var point = glift.util.point;
+    var mid = (maxIntersections - 1) / 2;
+    var normalized = point(this.x() - mid, mid - this.y());
+
+    if (glift.util.outBounds(this.x(), maxIntersections) ||
+        glift.util.outBounds(this.x(), maxIntersections)) {
+      throw new Error("rotating a point outside the bounds: " +
+          this.toString());
+    }
+
+    var rotated = normalized;
+    if (rotation === rotations.CLOCKWISE_90) {
+      rotated = point(normalized.y(), -normalized.x());
+
+    } else if (rotation === rotations.CLOCKWISE_180) {
+      rotated = point(-normalized.x(), -normalized.y());
+
+    } else if (rotation === rotations.CLOCKWISE_270) {
+      rotated = point(-normalized.y(), normalized.x());
+    }
+
+    // renormalize
+    return point(mid + rotated.x(), -rotated.y() + mid);
+  },
+
+  antirotate: function(maxIntersections, rotation) {
+    var rotations = glift.enums.rotations
+    if (rotation === rotations.CLOCKWISE_90) {
+      return this.rotate(maxIntersections, rotations.CLOCKWISE_270)
+    } else if (rotation === rotations.CLOCKWISE_180) {
+      return this.rotate(maxIntersections, rotations.CLOCKWISE_180)
+    } else if (rotation === rotations.CLOCKWISE_270) {
+      return this.rotate(maxIntersections, rotations.CLOCKWISE_90)
+    } else {
+      return this.rotate(maxIntersections, rotation);
+    }
   },
 
   log: function() {

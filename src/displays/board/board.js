@@ -1,19 +1,25 @@
 glift.displays.board = {
-  create: function(env, themeName, theme) {
-    return new glift.displays.board.Display(env, themeName, theme).draw();
+  create: function(env, themeName, theme, rotation) {
+    return new glift.displays.board.Display(
+        env, themeName, theme, rotation).draw();
   }
 };
 
 /**
  * The core Display object returned to the user.
  */
-glift.displays.board.Display = function(inEnvironment, themeName, theme) {
+glift.displays.board.Display = function(
+    inEnvironment, themeName, theme, rotation) {
   // Due layering issues, we need to keep track of the order in which we
   // created the objects.
   this._objectHistory = [];
   this._environment = inEnvironment;
   this._themeName = themeName;
   this._theme = theme;
+
+  // Rotation indicates whether we should rotate by stones/marks in the display
+  // by 90, 180, or 270 degrees,
+  this._rotation = rotation || glift.enums.rotations.NO_ROTATION;
   this._svgBase = undefined; // defined in draw.
   this._svg = undefined; // defined in draw.
   this._intersections = undefined // defined in draw;
@@ -21,12 +27,13 @@ glift.displays.board.Display = function(inEnvironment, themeName, theme) {
 };
 
 glift.displays.board.Display.prototype = {
-  intersections: function() { return this._intersections; },
-  intersectionPoints: function() { return this._environment.intersections; },
   boardPoints: function() { return this._environment.boardPoints; },
-  divId: function() { return this._environment.divId },
-  theme: function() { return this._themeName; },
   boardRegion: function() { return this._environment.boardRegion; },
+  divId: function() { return this._environment.divId },
+  intersectionPoints: function() { return this._environment.intersections; },
+  intersections: function() { return this._intersections; },
+  rotation: function() { return this._rotation; },
+  theme: function() { return this._themeName; },
   width: function() { return this._environment.goBoardBox.width() },
   height: function() { return this._environment.goBoardBox.height() },
 
@@ -75,9 +82,9 @@ glift.displays.board.Display.prototype = {
     board.shadows(intGrp, idGen, boardPoints, theme);
     board.stones(intGrp, idGen, boardPoints, theme);
     board.markContainer(intGrp, idGen, boardPoints, theme);
-    board.buttons(intGrp, idGen, boardPoints);
+    board.buttons(intGrp, idGen, boardPoints, this.rotation());
     this._intersections = new glift.displays.board._Intersections(
-        divId, intGrp, boardPoints, theme);
+        divId, intGrp, boardPoints, theme, this.rotation());
     this.flush();
     return this; // required
   },

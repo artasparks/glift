@@ -57,6 +57,7 @@ Done - Support vertically centered icons. Note: this is part of the selector.
 Done - Add movetree->SGF transformation
 Done - Add glift.create method.
 Done - Add icons for game editor
+Done - Added rotation flag.
 
 Nope:
   Info Window / panel.
@@ -90,7 +91,7 @@ Todos:
   screen (probably via a key-registry)
 - Add move slider
 - Add title bar
-- Support AE (clear intersection)
+- Support AE (clear intersection).
 - Support PL (changes who plays first)
 - Support export for different types
 - Add a way to specify next-moves, so that auto-numbering can be used for
@@ -101,7 +102,7 @@ Todos:
   class.
 - Escaping character '\' in the context of \] is leaking into the comments and
   needs to be removed.
-- Default in sgfDefaults kfor showVariations doesn't work.
+- showVariations default in sgfDefaults doesn't work.
 
 - Create game editor widget. (many dependencies)
   - Add moveTree support for deleting properties

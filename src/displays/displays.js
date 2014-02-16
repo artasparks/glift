@@ -12,6 +12,7 @@ glift.displays = {
     if (options.goBoardBackground && options.goBoardBackground !== '') {
       glift.themes.setGoBoardBackground(theme, options.goBoardBackground);
     }
-    return glift.displays.board.create(environment, themeKey, theme);
+    return glift.displays.board.create(
+        environment, themeKey, theme, options.rotation);
   }
 };

@@ -19,6 +19,8 @@ module("Glift API Test Suite");
     deepEqual(display.theme(), 'DEFAULT', 'theme name');
     deepEqual(display.intersectionPoints(), 9, 'intersections');
     deepEqual(display.boardRegion(), boardRegions.ALL, 'board region');
+    deepEqual(display.rotation(),
+        glift.enums.rotations.NO_ROTATION, 'rotation');
     testUtil.assertFullDiv('glift_display')
     display.destroy();
     testUtil.assertEmptyDiv('glift_display')

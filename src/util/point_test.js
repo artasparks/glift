@@ -21,6 +21,21 @@ glift.util.pointTest = function() {
     ok(newPt.equals(pt), "pts must be equal")
   });
 
+  test("rotation", function() {
+    var point = glift.util.point;
+    var rotations = glift.enums.rotations;
+
+    var pt = point(2, 3);
+    deepEqual(pt.rotate(19, rotations.CLOCKWISE_90), point(15, 2));
+    deepEqual(pt.rotate(19, rotations.CLOCKWISE_180), point(16, 15));
+    deepEqual(pt.rotate(19, rotations.CLOCKWISE_270), point(3, 16));
+    deepEqual(pt.rotate(19, 'foo'), point(2, 3),
+        'bad value for rotation should give back same pt');
+
+    var pt = point(9, 1);
+    deepEqual(pt.rotate(19, rotations.CLOCKWISE_90), point(17, 9));
+  });
+
   // TODO(kashomon): Add back in now that we no longer cache points.
   // test("Test immutability", function() {
     // var pt = util.uncachedPoint(1, 3);

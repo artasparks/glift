@@ -4,40 +4,52 @@
  * The Board editor is so complex it needs its own directory!
  */
 glift.widgets.options.BOARD_EDITOR = {
+  _markMap: {
+    bstone_a: glift.enums.marks.LABEL_ALPHA,
+    bstone_1: glift.enums.marks.LABEL_NUMERIC,
+    bstone_square: glift.enums.marks.SQUARE,
+    bstone_triangle: glift.enums.marks.TRIANGLE
+  },
+
+  _stoneColorMap: {
+    twostones: function(widget) {
+      return widget.controller.getCurrentPlayer();
+    },
+    bstone: function() { return glift.enums.states.BLACK },
+    wstone: function() { return glift.enums.states.BLACK }
+  },
+
   stoneClick: function(event, widget, pt) {
-    var states = glift.enums.states;
-    var marks = glift.enums.marks;
-    var curColor = states.EMPTY;
-    var mark = undefined;
+    var stoneColorMap = glift.widgets.options.BOARD_EDITOR._stoneColorMap;
+    var iconToMark = glift.widgets.options.BOARD_EDITOR._markMap;
     var iconName = widget.iconBar.getIcon('multiopen').getActive().iconName;
-    if (iconName === 'twostones') {
-      var curColor =  widget.controller.getCurrentPlayer();
-    } else if (iconName === 'bstone') {
-      var curColor = 'BLACK';
+    var currentPlayer = widget.controller.getCurrentPlayer();
+
+    if (stoneColorMap[iconName] !== undefined) {
+      var color = stoneColorMap[iconName](widget);
+      var partialData = widget.controller.addStone(pt, currentPlayer);
+      // widget.applyBoardData(partialData);
+    } else if (iconToMark[iconName] !== undefined) {
+      var color = stoneColorMap[iconName](widget);
+      var partialData = widget.controller.addStone(
+          pt, glift.enums.states.EMPTY, iconToMark[iconName]);
+      // widget.applyBoardData(partialData);
+    } else if (iconName === 'nostone-xmark') {
+      // clear the stones
     }
   },
 
   stoneMouseover: function(event, widget, pt) {
     var marks = glift.enums.marks;
-    var iconToMark = {
-      'bstone_a': marks.LABEL,
-      'bstone_1': marks.LABEL,
-      'bstone_square': marks.SQUARE,
-      'bstone_triangle':  marks.TRIANGLE
-    };
+    var iconToMark = glift.widgets.options.BOARD_EDITOR._markMap;
+    var stoneColorMap = glift.widgets.options.BOARD_EDITOR._stoneColorMap;
     var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
     var currentPlayer = widget.controller.getCurrentPlayer();
     var intersections = widget.display.intersections();
     var iconName = widget.iconBar.getIcon('multiopen').getActive().iconName;
-    if (iconName === 'twostones' ||
-        iconName === 'bstone' ||
-        iconName === 'wstone') {
-      var colorKey = currentPlayer;
-      if (iconName === 'bstone') {
-        colorKey = 'BLACK';
-      } else if (iconName === 'wstone') {
-        colorKey = 'WHITE';
-      }
+
+    if (stoneColorMap[iconName] !== undefined) {
+      var colorKey = stoneColorMap[iconName](widget);
       if (widget.controller.canAddStone(pt, currentPlayer)) {
         intersections.setStoneColor(pt, hoverColors[colorKey]);
       }
