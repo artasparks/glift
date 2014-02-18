@@ -55,7 +55,16 @@ glift.widgets.options.BOARD_EDITOR = {
     }
 
     if (iconToMark[iconName] && !intersections.hasMark(pt)) {
-      intersections.addTempMark(pt, iconToMark[iconName], 'a');
+      var markType = iconToMark[iconName];
+      if (markType === marks.LABEL_NUMERIC) {
+        intersections.addTempMark(
+            pt, markType, widget.controller.currentNumericMark());
+      } else if (markType === marks.LABEL_ALPHA) {
+        intersections.addTempMark(
+            pt, markType, widget.controller.currentAlphaMark());
+      } else {
+        intersections.addTempMark(pt, markType);
+      }
     }
   },
 

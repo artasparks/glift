@@ -32,8 +32,10 @@ glift.displays.board.addMark = function(
   // hacky right now.  It doesn't seem right that there should be a whole
   // separate coditional based on what are essentially color requirements.
   if (mark === marks.LABEL
-      || mark == marks.VARIATION_MARKER
-      || mark == marks.CORRECT_VARIATION) {
+      || mark === marks.VARIATION_MARKER
+      || mark === marks.CORRECT_VARIATION
+      || mark === marks.LABEL_ALPHA
+      || mark === marks.LABEL_NUMERIC) {
     if (mark === marks.VARIATION_MARKER) {
       marksTheme = marksTheme.VARIATION_MARKER;
     } else if (mark === marks.CORRECT_VARIATION) {

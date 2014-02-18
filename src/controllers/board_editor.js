@@ -9,44 +9,64 @@ glift.controllers.boardEditor = function(sgfOptions) {
 
 glift.controllers.BoardEditorMethods = {
   /**
-   * Called during initialization.
+   * Called during initialization, after the goban/movetree have been
+   * initializied.
    */
   extraOptions: function(sgfOptions) {
-    this.initLabelTrackers();
+    this._initLabelTrackers();
   },
 
-  initLabelTrackers: function() {
+  /**
+   * Initialize the label trackers.  Thus should be called after every move up
+   * or down, so that the labels are synced with the current position.
+   */
+  _initLabelTrackers: function() {
     var LB = glift.sgf.allProperties.LB;
-    this.numericLabelMap = {};
-    this.alphaLabelMap = {};;
+    var numericLabelMap = {};
+    var alphaLabelMap = {};
     for (var i = 0; i < 100; i++) {
-      this.numericLabelMap['' + (i + 1)] = true;
+      numericLabelMap['' + (i + 1)] = true;
     }
     for (var i = 0; i < 26; i++) {
       var label = '' + String.fromCharCode('A'.charCodeAt(0) + i);
-      this.alphaLabelMap[label] = true;
+      alphaLabelMap[label] = true;
     }
 
     var mtLabels = this.movetree.properties().getAllValues(LB);
     if (mtLabels) {
       for (var i = 0; i < mtLabels.length; i++) {
-        var lbl = mtLabels[i].split[':'][1];
-        if (this.numericLabelMap[lbl]) { delete this.numericLabelMap[lbl]; }
-        if (this.alphaLabelMap[lbl]) { delete this.alphaLabelMap[lbl]; }
+        var lbl = mtLabels[i].split(':')[1];
+        if (numericLabelMap[lbl]) { delete numericLabelMap[lbl]; }
+        if (alphaLabelMap[lbl]) { delete alphaLabelMap[lbl]; }
       }
     }
-    this.alphaLabels = this._convertLabelMap(this.alphaLabelMap);
-    this.numericLabels = this._convertLabelMap(this.numericLabelMap);
+    this.alphaLabels = this._convertLabelMap(alphaLabelMap);
+    this.numericLabels = this._convertLabelMap(numericLabelMap);
   },
 
   _convertLabelMap: function(map) {
     var base = [];
+    var digitRegex = /^\d+$/;
     for (var key in map) {
-      base.push(key);
+      if (digitRegex.test(key)) {
+        base.push(parseInt(key));;
+      } else {
+        base.push(key);
+      }
     }
-    base.sort();
+    if (base.length > 0 && glift.util.typeOf(base[0]) === 'number') {
+      base.sort(function(a, b) { return a - b });
+    } else {
+      base.sort();
+    }
     return base;
   },
+
+  /** Retrieve the current alpha mark. */
+  currentAlphaMark: function() { return this.alphaLabels[0]; },
+
+  /** Retrieve the current numeric mark. */
+  currentNumericMark: function() { return this.numericLabels[0]; },
 
   /**
    * Add a stone.

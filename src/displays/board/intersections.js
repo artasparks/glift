@@ -146,7 +146,9 @@ glift.displays.board._Intersections.prototype = {
       var stoneColor = stone.attr('stone_color');
       return stoneColor === 'EMPTY' && (mark === marks.LABEL
           || mark === marks.VARIATION_MARKER
-          || mark === marks.CORRECT_VARIATION);
+          || mark === marks.CORRECT_VARIATION
+          || mark === marks.LABEL_NUMERIC
+          || mark === marks.LABEL_ALPHA);
     } else {
       return false;
     }

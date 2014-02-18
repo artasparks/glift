@@ -39,7 +39,6 @@ glift.widgets.widgetsTest = function() {
           widgetType: wtypes.CORRECT_VARIATIONS_PROBLEM
         }]
     });
-    console.log(manager);
     ok(manager !== undefined);
 
     // It's rather nice to keep one copy of the widget manager around, to play
