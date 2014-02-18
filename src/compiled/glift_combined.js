@@ -38,7 +38,7 @@ glift.util = {
       modmsg = JSON.stringify(msg);
     }
     console.log("" + modmsg);
-    return glift.util.none; // default value to return.
+    return null; // default value to return.
   },
 
   /**
@@ -199,21 +199,6 @@ glift.util.log = function(msg) {
     console.log(msg);
   }
 };
-
-(function () {
-// Private None Class
-var None = function() {
-  this.type = "none";
-};
-None.prototype = {
-  toString: function() {
-    return "None";
-  }
-};
-
-// We only need to create one instance of None.
-glift.util.none = new None();
-})();
 glift.util.colors = {
   isLegalColor: function(color) {
     return color === glift.enums.states.BLACK ||
@@ -741,16 +726,16 @@ glift.themes = {
    * Get a Theme based on ID
    *
    * Accepts a (case sensitive) ID and returns a COPY of the theme.
+   *
+   * Returns null if no such theme exists.
    */
   get: function(id) {
     var registered = glift.themes.registered;
-    // TODO(kashomon): The else case should be undefined. glift.util.none was
-    // probably a mistake.
-    var rawTheme = !(id in registered) ? glift.util.none : registered[id];
-    if (rawTheme === glift.util.none) {
-      return rawTheme
-    } else {
+    var rawTheme = !(id in registered) ? null : registered[id];
+    if (rawTheme) {
       return glift.themes.deepCopy({}, rawTheme, registered.DEFAULT);
+    } else {
+      return rawTheme; // null;
     }
   },
 
@@ -2959,7 +2944,7 @@ CommentBox.prototype = {
     // fontSize = fontSize > 16 ? 16 : fontSize;
     this.commentBoxObj.css({
       // TODO(kashomon): Get the theme info from the theme
-      background: '#CCCCFF',
+      background: '#CCF',
       border: borderWidth + 'px solid',
       margin: 'auto',
       'font-family': 'Baskerville',
@@ -4793,7 +4778,7 @@ Goban.prototype = {
 
   _loadStone: function(mv, captures) {
     // note: if mv is defined, but mv.point is undefined, this is a PASS.
-    if (mv !== glift.util.none && mv.point !== undefined) {
+    if (mv  && mv.point !== undefined) {
       var result = this.addStone(mv.point, mv.color);
       if (result.successful) {
         var oppositeColor = glift.util.colors.oppositeColor(mv.color);
@@ -4982,13 +4967,13 @@ glift.rules._MoveNode.prototype = {
   },
 
   /**
-   * Return the parent node. Returns util.none if no parent node exists.
+   * Return the parent node. Returns null if no parent node exists.
    */
   getParent: function() {
     if (this._parentNode) {
       return this._parentNode;
     } else {
-      return glift.util.none;
+      return null;
     }
   },
 
@@ -5130,7 +5115,7 @@ glift.rules._MoveTree.prototype = {
    * Given a point and a color, find the variation number corresponding to the
    * branch that has the sepceified move.
    *
-   * return either the number or glift.util.none;
+   * return either the number or null if no such number exists.
    */
   findNextMove: function(point, color) {
     var nextNodes = this.node().children,
@@ -5150,7 +5135,7 @@ glift.rules._MoveTree.prototype = {
     if (ptSet[point.hash()] !== undefined) {
       return ptSet[point.hash()];
     } else {
-      return glift.util.none;
+      return null;
     }
   },
 
@@ -5164,7 +5149,7 @@ glift.rules._MoveTree.prototype = {
    *    point:
    *  }
    *
-   * returns glift.util.none if property doesn't exist.  There are two cases
+   * returns null if property doesn't exist.  There are two cases
    * where this can occur:
    *  - The root node.
    *  - When, in the middle of the game, stone-placements are added for
@@ -5194,7 +5179,7 @@ glift.rules._MoveTree.prototype = {
     for (var i = 0; i < curNode.numChildren(); i++) {
       var nextNode = curNode.getChild(i);
       var move = nextNode.properties().getMove();
-      if (move !== glift.util.none) {
+      if (move) {
         nextMoves.push(move);
       }
     }
@@ -5210,9 +5195,9 @@ glift.rules._MoveTree.prototype = {
     var states = glift.enums.states;
     var curNode = this._currentNode;
     var move = curNode.properties().getMove();
-    while(move === glift.util.none) {
+    while (move) {
       curNode = curNode .getParent();
-      if (curNode === glift.util.none) { return states.BLACK; }
+      if (curNode) { return states.BLACK; }
       move = curNode.properties().getMove();
     }
     if (move.color === states.BLACK) {
@@ -5241,7 +5226,7 @@ glift.rules._MoveTree.prototype = {
    */
   moveUp: function() {
     var parent = this._currentNode.getParent();
-    if (parent !== undefined && parent !== glift.util.none) {
+    if (parent) {
       this._currentNode = parent;
     }
     return this;
@@ -5286,13 +5271,12 @@ glift.rules._MoveTree.prototype = {
   },
 
   _toSgfBuffer: function(node, builder) {
-    if (node.getParent() !== glift.util.none) {
+    if (node.getParent()) {
       // Don't add a \n if we're at the root node
       builder.push("\n");
     }
 
-    if (node.getParent() === glift.util.none ||
-        node.getParent().numChildren() > 1) {
+    if (!node.getParent() || node.getParent().numChildren() > 1) {
       builder.push("(");
     }
 
@@ -5314,8 +5298,7 @@ glift.rules._MoveTree.prototype = {
       this._toSgfBuffer(node.getChild(i), builder);
     }
 
-    if (node.getParent() === glift.util.none ||
-        node.getParent().numChildren() > 1) {
+    if (!node.getParent() || node.getParent().numChildren() > 1) {
       builder.push(")");
     }
     return builder
@@ -5480,14 +5463,16 @@ Properties.prototype = {
 
   /**
    * Return an array of data associated with a property key
+   *
+   * If the property doesn't exist, returns null.
    */
   getAllValues: function(strProp) {
     if (glift.sgf.allProperties[strProp] === undefined) {
-      return glift.util.none; // Not a valid Property
+      return null; // Not a valid Property
     } else if (this.propMap[strProp] !== undefined) {
       return this.propMap[strProp];
     } else {
-      return glift.util.none;
+      return null;
     }
   },
 
@@ -5497,16 +5482,16 @@ Properties.prototype = {
    *
    * Since the getOneValue() always returns an array, it's sometimes useful to
    * return the first property in the list.  Like getOneValue(), if a property
-   * or value can't be found, util.none is returned.
+   * or value can't be found, null is returned.
    */
   getOneValue: function(strProp, index) {
     var index = (index !== undefined
         && typeof index === 'number' && index >= 0) ? index : 0;
     var arr = this.getAllValues(strProp);
-    if (arr !== glift.util.none && arr.length >= 1) {
+    if (arr && arr.length >= 1) {
       return arr[index];
     } else {
-      return glift.util.none;
+      return null;
     }
   },
 
@@ -5514,13 +5499,15 @@ Properties.prototype = {
    * Get a value from a property and return the point representation.
    * Optionally, the user can provide an index, since each property points to an
    * array of values.
+   *
+   * Returns null if the property doesn't exist.
    */
   getAsPoint: function(strProp, index) {
     var out = this.getOneValue(strProp, index);
-    if (out === glift.util.none) {
-      return out;
-    } else {
+    if (out) {
       return glift.util.pointFromSgfCoord(out);
+    } else {
+      return out;
     }
   },
 
@@ -5529,7 +5516,7 @@ Properties.prototype = {
    * false otherwise.
    */
   contains: function(prop) {
-    return this.getAllValues(prop) !== glift.util.none;
+    return this.getAllValues(prop) === null;
   },
 
   /** Delete the prop and return the value. */
@@ -5539,7 +5526,7 @@ Properties.prototype = {
       delete this.propMap[prop];
       return allValues;
     } else {
-      return glift.util.none;
+      return null;
     }
   },
 
@@ -5579,12 +5566,12 @@ Properties.prototype = {
     if (this.contains('C')) {
       return this.getOneValue('C');
     } else {
-      return glift.util.none;
+      return null;
     }
   },
 
   /**
-   * Get the current Move.  Returns util.none if no move exists.
+   * Get the current Move.  Returns null if no move exists.
    *
    * Specifically, returns a dict:
    *  {
@@ -5612,7 +5599,7 @@ Properties.prototype = {
         return { color: WHITE, point: this.getAsPoint('W') };
       }
     } else {
-      return glift.util.none;
+      return null;
     }
   },
 
@@ -5669,7 +5656,7 @@ Properties.prototype = {
     out[BLACK] = this.getPlacementsAsPoints(states.BLACK);
     out[WHITE] = this.getPlacementsAsPoints(states.WHITE);
     var move = this.getMove();
-    if (move != glift.util.none && move.point !== undefined) {
+    if (move) {
       out[move.color].push(move.point);
     }
     return out;
@@ -5828,6 +5815,18 @@ glift.sgf = {
     } else {
       throw "Unknown color-to-token conversion for: " + color;
     }
+  },
+
+  markToProperty: function()  {
+    var allProps = glift.sgf.allProperties;
+    var marks = glift.enums.marks;
+    var markToProperty = {
+      LABEL_ALPHA: allProps.LB,
+      LABEL_NUMERIC: allProps.LB,
+      LABEL: allProps.LB,
+      XMARK: allProps.MA,
+      SQUARE: allProps.SQ
+    };
   },
 
   allSgfCoordsToPoints: function(arr) {
@@ -6308,7 +6307,7 @@ BaseController.prototype = {
         this.movetree.moveDown(varNum);
       } else {
         // TODO(kashomon): Add case for non-readonly goboard.
-        return glift.util.none; // No moves available
+        return null; // No moves available
       }
     }
     var captures = this.goban.loadStonesFromMovetree(this.movetree)
@@ -6318,10 +6317,12 @@ BaseController.prototype = {
 
   /**
    * Go back a move.
+   *
+   * Returns null in the case that there is no previous move.
    */
   prevMove: function() {
     if (this.currentMoveNumber === 0) {
-      return glift.util.none;
+      return null;
     }
     var captures = this.getCaptures();
     var allCurrentStones = this.movetree.properties().getAllStones();
@@ -6364,7 +6365,7 @@ BaseController.prototype = {
    * Go to the end.
    */
   toEnd: function() {
-    while (this.nextMove() !== glift.util.none) {
+    while (this.nextMove()) {
       // All the action happens in nextMoveNoState.
     }
     return this.getEntireBoardState();
@@ -6381,8 +6382,44 @@ glift.controllers.boardEditor = function(sgfOptions) {
 };
 
 glift.controllers.BoardEditorMethods = {
+  /**
+   * Called during initialization.
+   */
   extraOptions: function(sgfOptions) {
-    // TODO(kashomon): Record the used marks.
+    this.initLabelTrackers();
+  },
+
+  initLabelTrackers: function() {
+    var LB = glift.allProperties.LB;
+    this.numericLabelMap = {};
+    this.alphaLabelMap = {};;
+    for (var i = 0; i < 100; i++) {
+      this.numericLabelMap['' + (i + 1)] = true;
+    }
+    for (var i = 0; i < 26; i++) {
+      var label = '' + String.fromCharCode('A'.charCodeAt(0) + i);
+      this.alphaLabelMap[label] = true;
+    }
+
+    var mtLabels = movetree.properties().getAllValues(LB);
+    if (mtLabels) {
+      for (var i = 0; i < mtLabels.length; i++) {
+        var lbl = mtLabels[i].split[':'][1];
+        if (this.numericLabelMap[lbl]) { delete this.numericLabelMap[lbl]; }
+        if (this.alphaLabelMap[lbl]) { delete this.alphaLabelMap[lbl]; }
+      }
+    }
+    this.alphaLabels = this._convertLabelMap(this.alphaLabelMap);
+    this.numericLabels = this._convertLabelMap(this.numericLabelMap);
+  },
+
+  _convertLabelMap: function(map) {
+    var base = [];
+    for (var key in map) {
+      base.push(key);
+    }
+    base.sort();
+    return base;
   },
 
   /**
@@ -6395,7 +6432,7 @@ glift.controllers.BoardEditorMethods = {
   },
 
   addMark: function(point, mark) {
-
+    this.movetree.node()
   },
 
   /**
@@ -6433,12 +6470,14 @@ glift.controllers.GameViewerMethods = {
 
   /**
    * Find the variation associated with the played move.
+   *
+   * Returns null if the addStone operation isn't possible.
    */
   addStone: function(point, color) {
     var possibleMap = this._possibleNextMoves();
     var key = point.toString() + '-' + color;
     if (possibleMap[key] === undefined) {
-      return glift.util.none;
+      return null;
     }
     var nextVariationNum = possibleMap[key];
     return this.nextMove(nextVariationNum);
@@ -6562,11 +6601,11 @@ glift.controllers.StaticProblemMethods = {
     // the movetree, presumably from an SGF.
     var nextVarNum = this.movetree.findNextMove(point, color);
 
-    // There are no variations corresponding to the move made, so we assume that
-    // the move is INCORRECT. However, we still add the move down the movetree,
-    // adding a node if necessary.  This allows us to maintain a consistent
-    // state.
-    if (nextVarNum === glift.util.none) {
+    if (!nextVarNum) {
+      // There are no variations corresponding to the move made (i.e.,
+      // nextVarNum is null), so we assume that the move is INCORRECT. However,
+      // we still add the move down the movetree, adding a node if necessary.
+      // This allows us to maintain a consistent state.
       this.movetree.addNode();
       this.movetree.properties().add(
           glift.sgf.colorToToken(color),
@@ -6682,10 +6721,7 @@ glift.bridge = {
       i += 1;
     }
 
-    if (boardData.lastMove &&
-        boardData.lastMove !== glift.util.none &&
-        boardData.lastMove.point !== undefined &&
-        markLastMove &&
+    if (boardData.lastMove && markLastMove &&
         !marksMap[boardData.lastMove.point.toString()]) {
       var lm = boardData.lastMove;
       display.intersections().addMarkPt(lm.point, marks.STONE_MARKER);
@@ -7328,8 +7364,8 @@ glift.bridge.intersections = {
         EMPTY: []
       },
       marks: {},
-      comment: glift.util.none,
-      lastMove: glift.util.none,
+      comment: null,
+      lastMove: null,
       nextMoves: [],
       correctNextMoves: [],
       captures: [],

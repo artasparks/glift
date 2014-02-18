@@ -278,7 +278,7 @@ glift.widgets.BaseWidget.prototype = {
    * glift.bridge to communicate with the display.
    */
   applyBoardData: function(boardData) {
-    if (boardData && boardData !== glift.util.none) {
+    if (boardData) {
       this.setCommentBox(boardData.comment);
       glift.bridge.setDisplayState(
           boardData,
@@ -294,7 +294,7 @@ glift.widgets.BaseWidget.prototype = {
   setCommentBox: function(text) {
     if (this.commentBox === undefined) {
       // Do nothing -- there is no comment box to set.
-    } else if (text && text !== glift.util.none) {
+    } else if (text) {
       this.commentBox.setText(text);
     } else {
       this.commentBox.clearText();

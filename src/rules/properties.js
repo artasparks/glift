@@ -41,14 +41,16 @@ Properties.prototype = {
 
   /**
    * Return an array of data associated with a property key
+   *
+   * If the property doesn't exist, returns null.
    */
   getAllValues: function(strProp) {
     if (glift.sgf.allProperties[strProp] === undefined) {
-      return glift.util.none; // Not a valid Property
+      return null; // Not a valid Property
     } else if (this.propMap[strProp] !== undefined) {
       return this.propMap[strProp];
     } else {
-      return glift.util.none;
+      return null;
     }
   },
 
@@ -58,16 +60,16 @@ Properties.prototype = {
    *
    * Since the getOneValue() always returns an array, it's sometimes useful to
    * return the first property in the list.  Like getOneValue(), if a property
-   * or value can't be found, util.none is returned.
+   * or value can't be found, null is returned.
    */
   getOneValue: function(strProp, index) {
     var index = (index !== undefined
         && typeof index === 'number' && index >= 0) ? index : 0;
     var arr = this.getAllValues(strProp);
-    if (arr !== glift.util.none && arr.length >= 1) {
+    if (arr && arr.length >= 1) {
       return arr[index];
     } else {
-      return glift.util.none;
+      return null;
     }
   },
 
@@ -75,13 +77,15 @@ Properties.prototype = {
    * Get a value from a property and return the point representation.
    * Optionally, the user can provide an index, since each property points to an
    * array of values.
+   *
+   * Returns null if the property doesn't exist.
    */
   getAsPoint: function(strProp, index) {
     var out = this.getOneValue(strProp, index);
-    if (out === glift.util.none) {
-      return out;
-    } else {
+    if (out) {
       return glift.util.pointFromSgfCoord(out);
+    } else {
+      return out;
     }
   },
 
@@ -90,7 +94,7 @@ Properties.prototype = {
    * false otherwise.
    */
   contains: function(prop) {
-    return this.getAllValues(prop) !== glift.util.none;
+    return prop in this.propMap;
   },
 
   /** Delete the prop and return the value. */
@@ -100,7 +104,7 @@ Properties.prototype = {
       delete this.propMap[prop];
       return allValues;
     } else {
-      return glift.util.none;
+      return null;
     }
   },
 
@@ -140,12 +144,12 @@ Properties.prototype = {
     if (this.contains('C')) {
       return this.getOneValue('C');
     } else {
-      return glift.util.none;
+      return null;
     }
   },
 
   /**
-   * Get the current Move.  Returns util.none if no move exists.
+   * Get the current Move.  Returns null if no move exists.
    *
    * Specifically, returns a dict:
    *  {
@@ -173,7 +177,7 @@ Properties.prototype = {
         return { color: WHITE, point: this.getAsPoint('W') };
       }
     } else {
-      return glift.util.none;
+      return null;
     }
   },
 
@@ -199,8 +203,8 @@ Properties.prototype = {
           return true;
         }
         var allValues = this.getAllValues(key);
-        for (var i = 0; i < allValues.length; i++) {
-          for (var j = 0; j < substrings.length; j++) {
+        for (var i = 0, len = allValues.length ; i < len; i++) {
+          for (var j = 0, slen = substrings.length; j < slen; j++) {
             var value = allValues[i];
             var substr = substrings[j];
             if (value.indexOf(substr) !== -1) {
@@ -230,7 +234,7 @@ Properties.prototype = {
     out[BLACK] = this.getPlacementsAsPoints(states.BLACK);
     out[WHITE] = this.getPlacementsAsPoints(states.WHITE);
     var move = this.getMove();
-    if (move != glift.util.none && move.point !== undefined) {
+    if (move && move.point) {
       out[move.color].push(move.point);
     }
     return out;

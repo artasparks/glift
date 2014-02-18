@@ -55,10 +55,26 @@ glift.rules.problemsTest = function() {
     var movt = glift.rules.movetree.getFromSgf(testdata.sgfs.gogameguruHard);
     deepEqual(glift.rules.problems.isCorrectPosition(movt,
           {GB: [], C: ['Correct', 'is correct']}),
-        problemResults.INDETERMINATE, "Should be Indeterminate at beginning");
+        problemResults.INDETERMINATE,
+        'Should be Indeterminate at beginning');
     movt.moveDown(0);
     deepEqual(glift.rules.problems.isCorrectPosition(movt,
           {GB: [], C: ['Correct', 'is correct']}),
-        problemResults.CORRECT, "Should be correct");
+        problemResults.CORRECT,
+        'Should be correct');
+  });
+
+  test("Multi-solution-problem", function() {
+    var problemResults = glift.enums.problemResults;
+    var movt = glift.rules.movetree.getFromSgf(testdata.sgfs.twoOptions);
+
+    movt.moveDown(0);
+    deepEqual(glift.rules.problems.isCorrectPosition(movt, {C: ['Correct']}),
+        problemResults.CORRECT,
+        'Should be correct');
+    movt.moveUp().moveDown(1);
+    deepEqual(glift.rules.problems.isCorrectPosition(movt, {C: ['Correct']}),
+        problemResults.CORRECT,
+        'Should be also correct');
   });
 };

@@ -39,8 +39,8 @@ BaseController.prototype = {
     this.sgfString = sgfOptions.sgfString || "";
     this.initialPosition = sgfOptions.initialPosition || [];
     this.problemConditions = sgfOptions.problemConditions || undefined;
-    this.extraOptions(sgfOptions); // Overridden by implementers
     this.initialize();
+    this.extraOptions(sgfOptions); // Overridden by implementers
     return this;
   },
 
@@ -193,7 +193,7 @@ BaseController.prototype = {
         this.movetree.moveDown(varNum);
       } else {
         // TODO(kashomon): Add case for non-readonly goboard.
-        return glift.util.none; // No moves available
+        return null; // No moves available
       }
     }
     var captures = this.goban.loadStonesFromMovetree(this.movetree)
@@ -203,10 +203,12 @@ BaseController.prototype = {
 
   /**
    * Go back a move.
+   *
+   * Returns null in the case that there is no previous move.
    */
   prevMove: function() {
     if (this.currentMoveNumber === 0) {
-      return glift.util.none;
+      return null;
     }
     var captures = this.getCaptures();
     var allCurrentStones = this.movetree.properties().getAllStones();
@@ -249,7 +251,7 @@ BaseController.prototype = {
    * Go to the end.
    */
   toEnd: function() {
-    while (this.nextMove() !== glift.util.none) {
+    while (this.nextMove()) {
       // All the action happens in nextMoveNoState.
     }
     return this.getEntireBoardState();

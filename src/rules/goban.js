@@ -239,7 +239,7 @@ Goban.prototype = {
     for (var i = 0; i < colors.length; i++) {
       var color = colors[i]
       var placements = movetree.properties().getPlacementsAsPoints(color);
-      for (var j = 0; j < placements.length; j++) {
+      for (var j = 0, len = placements.length; j < len; j++) {
         this._loadStone({point: placements[j], color: color}, captures);
       }
     }
@@ -249,11 +249,11 @@ Goban.prototype = {
 
   _loadStone: function(mv, captures) {
     // note: if mv is defined, but mv.point is undefined, this is a PASS.
-    if (mv !== glift.util.none && mv.point !== undefined) {
+    if (mv  && mv.point !== undefined) {
       var result = this.addStone(mv.point, mv.color);
       if (result.successful) {
         var oppositeColor = glift.util.colors.oppositeColor(mv.color);
-        for (var k = 0; k < result.captures.length; k++) {
+        for (var k = 0, len = result.captures.length; k < len; k++) {
           captures[oppositeColor].push(result.captures[k]);
         }
       }

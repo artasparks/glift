@@ -97,4 +97,19 @@ glift.controllers.staticProblemTest = function() {
     var result = c.addStone(pt, states.BLACK);
     deepEqual(result.result, problemResults.CORRECT, "Must be correct");
   });
+
+  test("Test Add Stone: Multiple correct variations", function() {
+    var opts = { sgfString: sgfs.twoOptions, problemConditions: {C: ['Correct']}};
+    var c = cont.staticProblem(opts),
+        pt1 = conv("pd"),
+        pt2 = conv("qe");
+
+    c.initialize(); // reset and try again
+    var result = c.addStone(pt2, states.BLACK);
+    deepEqual(result.result, problemResults.CORRECT, "Must be correct");
+
+    c.initialize();
+    var result = c.addStone(pt1, states.BLACK);
+    deepEqual(result.result, problemResults.CORRECT, "Must be correct");
+  });
 };

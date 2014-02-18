@@ -61,8 +61,8 @@ glift.bridge.intersections = {
         EMPTY: []
       },
       marks: {},
-      comment: glift.util.none,
-      lastMove: glift.util.none,
+      comment: null,
+      lastMove: null,
       nextMoves: [],
       correctNextMoves: [],
       captures: [],

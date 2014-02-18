@@ -77,13 +77,13 @@ glift.rules._MoveNode.prototype = {
   },
 
   /**
-   * Return the parent node. Returns util.none if no parent node exists.
+   * Return the parent node. Returns null if no parent node exists.
    */
   getParent: function() {
     if (this._parentNode) {
       return this._parentNode;
     } else {
-      return glift.util.none;
+      return null;
     }
   },
 

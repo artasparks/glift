@@ -71,10 +71,7 @@ glift.bridge = {
       i += 1;
     }
 
-    if (boardData.lastMove &&
-        boardData.lastMove !== glift.util.none &&
-        boardData.lastMove.point !== undefined &&
-        markLastMove &&
+    if (boardData.lastMove && markLastMove &&
         !marksMap[boardData.lastMove.point.toString()]) {
       var lm = boardData.lastMove;
       display.intersections().addMarkPt(lm.point, marks.STONE_MARKER);

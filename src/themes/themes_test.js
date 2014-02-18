@@ -9,7 +9,7 @@ glift.themes.themesTest = function() {
 
   test("Get", function() {
     deepEqual(themes.get('DEFAULT'), themes.registered.DEFAULT, 'get');
-    deepEqual(themes.get('FOO'), glift.util.none, "non-get");
+    deepEqual(themes.get('FOO'), null, "non-get");
   });
 
   test('DeepCopy', function() {

@@ -6,7 +6,7 @@ glift.util = {
       modmsg = JSON.stringify(msg);
     }
     console.log("" + modmsg);
-    return glift.util.none; // default value to return.
+    return null; // default value to return.
   },
 
   /**
@@ -167,18 +167,3 @@ glift.util.log = function(msg) {
     console.log(msg);
   }
 };
-
-(function () {
-// Private None Class
-var None = function() {
-  this.type = "none";
-};
-None.prototype = {
-  toString: function() {
-    return "None";
-  }
-};
-
-// We only need to create one instance of None.
-glift.util.none = new None();
-})();

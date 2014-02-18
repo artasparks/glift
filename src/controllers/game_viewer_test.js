@@ -21,7 +21,7 @@ glift.controllers.gameViewerTest = function() {
     // NextMove Assertions
     deepEqual(gameViewer.currentMoveNumber, 1);
     deepEqual(gameViewer.treepath, [0]);
-    ok(move !== glift.util.none, "Must exist");
+    ok(move, "Must exist");
     deepEqual(move.color, states.BLACK); // m = 12, c = 2;
     deepEqual(move.point.toString(), "12,2");
     var blackPts = ptlistToMap(displayData.stones.BLACK);
@@ -33,7 +33,7 @@ glift.controllers.gameViewerTest = function() {
     deepEqual(gameViewer.currentMoveNumber, 2);
     deepEqual(gameViewer.treepath, [0, 0]);
     var move = gameViewer.movetree.getLastMove();
-    ok(move !== glift.util.none, "Must exist");
+    ok(move, "Must exist");
     deepEqual(move.color, states.WHITE);
     deepEqual(move.point.toString(), "13,2"); // n = 13, c = 2;
     var whitePts = ptlistToMap(displayData.stones.WHITE);
@@ -66,7 +66,7 @@ glift.controllers.gameViewerTest = function() {
   test("AddStone", function() {
     var gameViewer = glift.controllers.gameViewer({ sgfString: problem });
     var data = gameViewer.addStone(glift.util.point(18,0), states.BLACK);
-    deepEqual(data, glift.util.none);
+    deepEqual(data, null);
     var data = gameViewer.addStone(glift.util.point(12,0), states.BLACK);
     var move = gameViewer.movetree.getLastMove();
     var bstones = ptlistToMap(data.stones.BLACK);

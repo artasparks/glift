@@ -8,8 +8,44 @@ glift.controllers.boardEditor = function(sgfOptions) {
 };
 
 glift.controllers.BoardEditorMethods = {
+  /**
+   * Called during initialization.
+   */
   extraOptions: function(sgfOptions) {
-    // TODO(kashomon): Record the used marks.
+    this.initLabelTrackers();
+  },
+
+  initLabelTrackers: function() {
+    var LB = glift.sgf.allProperties.LB;
+    this.numericLabelMap = {};
+    this.alphaLabelMap = {};;
+    for (var i = 0; i < 100; i++) {
+      this.numericLabelMap['' + (i + 1)] = true;
+    }
+    for (var i = 0; i < 26; i++) {
+      var label = '' + String.fromCharCode('A'.charCodeAt(0) + i);
+      this.alphaLabelMap[label] = true;
+    }
+
+    var mtLabels = this.movetree.properties().getAllValues(LB);
+    if (mtLabels) {
+      for (var i = 0; i < mtLabels.length; i++) {
+        var lbl = mtLabels[i].split[':'][1];
+        if (this.numericLabelMap[lbl]) { delete this.numericLabelMap[lbl]; }
+        if (this.alphaLabelMap[lbl]) { delete this.alphaLabelMap[lbl]; }
+      }
+    }
+    this.alphaLabels = this._convertLabelMap(this.alphaLabelMap);
+    this.numericLabels = this._convertLabelMap(this.numericLabelMap);
+  },
+
+  _convertLabelMap: function(map) {
+    var base = [];
+    for (var key in map) {
+      base.push(key);
+    }
+    base.sort();
+    return base;
   },
 
   /**
@@ -22,7 +58,7 @@ glift.controllers.BoardEditorMethods = {
   },
 
   addMark: function(point, mark) {
-
+    this.movetree.node()
   },
 
   /**

@@ -27,7 +27,7 @@ CommentBox.prototype = {
     // fontSize = fontSize > 16 ? 16 : fontSize;
     this.commentBoxObj.css({
       // TODO(kashomon): Get the theme info from the theme
-      background: '#CCCCFF',
+      background: '#CCF',
       border: borderWidth + 'px solid',
       margin: 'auto',
       'font-family': 'Baskerville',

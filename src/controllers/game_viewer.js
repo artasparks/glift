@@ -22,12 +22,14 @@ glift.controllers.GameViewerMethods = {
 
   /**
    * Find the variation associated with the played move.
+   *
+   * Returns null if the addStone operation isn't possible.
    */
   addStone: function(point, color) {
     var possibleMap = this._possibleNextMoves();
     var key = point.toString() + '-' + color;
     if (possibleMap[key] === undefined) {
-      return glift.util.none;
+      return null;
     }
     var nextVariationNum = possibleMap[key];
     return this.nextMove(nextVariationNum);

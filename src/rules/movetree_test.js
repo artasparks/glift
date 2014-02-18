@@ -18,12 +18,12 @@ glift.rules.movetreeTest = function() {
 
     ok(!mt.properties().contains("ZZ"),
         "should return false for non-real prop");
-    deepEqual(mt.properties().getAllValues("ZZ"), util.none,
+    deepEqual(mt.properties().getAllValues("ZZ"), null,
         "should return nothing for a non-real prop");
 
     ok(!mt.properties().contains("B"),
         "should return false for non-existent prop");
-    deepEqual(mt.properties().getAllValues("B"), util.none,
+    deepEqual(mt.properties().getAllValues("B"), null,
         "should return nothing for a non-existent prop");
   });
 

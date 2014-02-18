@@ -10,16 +10,16 @@ glift.themes = {
    * Get a Theme based on ID
    *
    * Accepts a (case sensitive) ID and returns a COPY of the theme.
+   *
+   * Returns null if no such theme exists.
    */
   get: function(id) {
     var registered = glift.themes.registered;
-    // TODO(kashomon): The else case should be undefined. glift.util.none was
-    // probably a mistake.
-    var rawTheme = !(id in registered) ? glift.util.none : registered[id];
-    if (rawTheme === glift.util.none) {
-      return rawTheme
-    } else {
+    var rawTheme = !(id in registered) ? null : registered[id];
+    if (rawTheme) {
       return glift.themes.deepCopy({}, rawTheme, registered.DEFAULT);
+    } else {
+      return rawTheme; // null;
     }
   },
 

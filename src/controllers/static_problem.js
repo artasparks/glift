@@ -63,11 +63,11 @@ glift.controllers.StaticProblemMethods = {
     // the movetree, presumably from an SGF.
     var nextVarNum = this.movetree.findNextMove(point, color);
 
-    // There are no variations corresponding to the move made, so we assume that
-    // the move is INCORRECT. However, we still add the move down the movetree,
-    // adding a node if necessary.  This allows us to maintain a consistent
-    // state.
-    if (nextVarNum === glift.util.none) {
+    if (nextVarNum === null) {
+      // There are no variations corresponding to the move made (i.e.,
+      // nextVarNum is null), so we assume that the move is INCORRECT. However,
+      // we still add the move down the movetree, adding a node if necessary.
+      // This allows us to maintain a consistent state.
       this.movetree.addNode();
       this.movetree.properties().add(
           glift.sgf.colorToToken(color),

@@ -18,6 +18,18 @@ glift.sgf = {
     }
   },
 
+  markToProperty: function()  {
+    var allProps = glift.sgf.allProperties;
+    var marks = glift.enums.marks;
+    var markToProperty = {
+      LABEL_ALPHA: allProps.LB,
+      LABEL_NUMERIC: allProps.LB,
+      LABEL: allProps.LB,
+      XMARK: allProps.MA,
+      SQUARE: allProps.SQ
+    };
+  },
+
   allSgfCoordsToPoints: function(arr) {
     var out = [];
     for (var i = 0; i < arr.length; i++) {

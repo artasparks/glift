@@ -118,7 +118,7 @@ glift.rules._MoveTree.prototype = {
    * Given a point and a color, find the variation number corresponding to the
    * branch that has the sepceified move.
    *
-   * return either the number or glift.util.none;
+   * return either the number or null if no such number exists.
    */
   findNextMove: function(point, color) {
     var nextNodes = this.node().children,
@@ -138,7 +138,7 @@ glift.rules._MoveTree.prototype = {
     if (ptSet[point.hash()] !== undefined) {
       return ptSet[point.hash()];
     } else {
-      return glift.util.none;
+      return null;
     }
   },
 
@@ -152,7 +152,7 @@ glift.rules._MoveTree.prototype = {
    *    point:
    *  }
    *
-   * returns glift.util.none if property doesn't exist.  There are two cases
+   * returns null if property doesn't exist.  There are two cases
    * where this can occur:
    *  - The root node.
    *  - When, in the middle of the game, stone-placements are added for
@@ -182,7 +182,7 @@ glift.rules._MoveTree.prototype = {
     for (var i = 0; i < curNode.numChildren(); i++) {
       var nextNode = curNode.getChild(i);
       var move = nextNode.properties().getMove();
-      if (move !== glift.util.none) {
+      if (move) {
         nextMoves.push(move);
       }
     }
@@ -198,12 +198,14 @@ glift.rules._MoveTree.prototype = {
     var states = glift.enums.states;
     var curNode = this._currentNode;
     var move = curNode.properties().getMove();
-    while(move === glift.util.none) {
-      curNode = curNode .getParent();
-      if (curNode === glift.util.none) { return states.BLACK; }
+    while (!move) {
+      curNode = curNode.getParent();
+      if (!curNode) { return states.BLACK; }
       move = curNode.properties().getMove();
     }
-    if (move.color === states.BLACK) {
+    if (!move) {
+      return states.BLACK;
+    } else if (move.color === states.BLACK) {
       return states.WHITE;
     } else if (move.color === states.WHITE) {
       return states.BLACK;
@@ -229,7 +231,7 @@ glift.rules._MoveTree.prototype = {
    */
   moveUp: function() {
     var parent = this._currentNode.getParent();
-    if (parent !== undefined && parent !== glift.util.none) {
+    if (parent) {
       this._currentNode = parent;
     }
     return this;
@@ -274,13 +276,12 @@ glift.rules._MoveTree.prototype = {
   },
 
   _toSgfBuffer: function(node, builder) {
-    if (node.getParent() !== glift.util.none) {
+    if (node.getParent()) {
       // Don't add a \n if we're at the root node
       builder.push("\n");
     }
 
-    if (node.getParent() === glift.util.none ||
-        node.getParent().numChildren() > 1) {
+    if (!node.getParent() || node.getParent().numChildren() > 1) {
       builder.push("(");
     }
 
@@ -302,8 +303,7 @@ glift.rules._MoveTree.prototype = {
       this._toSgfBuffer(node.getChild(i), builder);
     }
 
-    if (node.getParent() === glift.util.none ||
-        node.getParent().numChildren() > 1) {
+    if (!node.getParent() || node.getParent().numChildren() > 1) {
       builder.push(")");
     }
     return builder
