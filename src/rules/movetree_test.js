@@ -40,7 +40,7 @@ glift.rules.movetreeTest = function() {
     var pt = glift.util.pointFromSgfCoord("ac");
     deepEqual(pt.x(), 0, "pt.x");
     deepEqual(pt.y(), 2, "pt.y");
-    deepEqual(glift.sgf.pointToSgfCoord(pt), "ac", "pt to sgf coord");
+    deepEqual(pt.toSgfCoord(), "ac", "pt to sgf coord");
   });
 
   test("that moving up / down works correctly", function() {

@@ -25,17 +25,17 @@ glift.widgets.options.BOARD_EDITOR = {
     var iconName = widget.iconBar.getIcon('multiopen').getActive().iconName;
     var currentPlayer = widget.controller.getCurrentPlayer();
 
-    if (stoneColorMap[iconName] !== undefined) {
+    if (stoneColorMap[iconName]) {
       var color = stoneColorMap[iconName](widget);
       var partialData = widget.controller.addStone(pt, currentPlayer);
       // widget.applyBoardData(partialData);
-    } else if (iconToMark[iconName] !== undefined) {
-      var color = stoneColorMap[iconName](widget);
-      var partialData = widget.controller.addStone(
-          pt, glift.enums.states.EMPTY, iconToMark[iconName]);
-      // widget.applyBoardData(partialData);
+    } else if (iconToMark[iconName]) {
+      var partialData = widget.controller.addMark(pt, iconToMark[iconName]);
+      if (partialData) {
+        widget.applyBoardData(partialData);
+      }
     }
-    // TODO(kashomon): handle 'nostone-xmark'
+    // TODO(kashomon): handle 'nostone-xmark' -- i.e., clearing an intersection.
   },
 
   stoneMouseover: function(event, widget, pt) {

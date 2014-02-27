@@ -1,11 +1,7 @@
 /**
  * The SGF library contains functions for dealing with SGFs.
  *
- * sgf_grammar.js: sgf parser generated, generated from the pegjs grammar.
- *  -> This is called with glift.rules.parser.parse(...);
- *
- * sgf_grammar.pegjs. To regenerate the parser from the peg grammar, use
- * depgen.py.
+ * This includes a parser and various utilities related to SGFs.
  */
 glift.sgf = {
   colorToToken: function(color) {
@@ -18,26 +14,64 @@ glift.sgf = {
     }
   },
 
-  markToProperty: function()  {
+  /**
+   * Given a Glift mark type (enum), returns the revelant SGF property string.
+   * If no such mapping is found, returns null.
+   *
+   * Example: XMARK => MA
+   *          FOO => null
+   */
+  markToProperty: function(mark)  {
     var allProps = glift.sgf.allProperties;
-    var marks = glift.enums.marks;
-    var markToProperty = {
+    var markToPropertyMap = {
       LABEL_ALPHA: allProps.LB,
       LABEL_NUMERIC: allProps.LB,
       LABEL: allProps.LB,
       XMARK: allProps.MA,
-      SQUARE: allProps.SQ
+      SQUARE: allProps.SQ,
+      CIRCLE: allProps.CR,
+      TRIANGLE: allProps.TR
     };
+    return markToPropertyMap[mark] || null;
   },
 
+  /**
+   * Given a SGF property, returns the relevant SGF property. If no such mapping
+   * is found, returns null.
+   *
+   * Example: MA => XMARK
+   *          FOO => null.
+   */
+  propertyToMark: function(prop) {
+    var marks = glift.enums.marks;
+    var propertyToMarkMap = {
+      LB: marks.LABEL,
+      MA: marks.XMARK,
+      SQ: marks.SQUARE,
+      CR: marks.CIRCLE,
+      TR: marks.TRIANGLE
+    };
+    return propertyToMarkMap[prop] || null;
+  },
+
+  /**
+   * Converts an array of SGF points ('ab', 'bb') to Glift points ((0,1),
+   * (1,1)).
+   */
   allSgfCoordsToPoints: function(arr) {
     var out = [];
+    if (!arr) {
+      return out;
+    }
     for (var i = 0; i < arr.length; i++) {
       out.push(glift.util.pointFromSgfCoord(arr[i]));
     }
     return out;
   },
 
+  /**
+   * Convert label data to a simple object.
+   */
   convertFromLabelData: function(data) {
     var parts = data.split(":"),
         pt = glift.util.pointFromSgfCoord(parts[0]),
@@ -51,10 +85,5 @@ glift.sgf = {
       out.push(glift.sgf.convertFromLabelData(arr[i]));
     }
     return out;
-  },
-
-  pointToSgfCoord: function(pt) {
-    var a = 'a'.charCodeAt(0);
-    return String.fromCharCode(pt.x() +  a) + String.fromCharCode(pt.y() + a);
   }
 };

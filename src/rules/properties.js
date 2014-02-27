@@ -9,8 +9,12 @@ var Properties = function(map) {
 
 Properties.prototype = {
   /**
-   * Add an SGF Property to the current move. Return the 'this', for
-   * convenience, so that you can chain addProp calls.
+   * Add an SGF Property to the current move.
+   *
+   * Prop: An SGF Property
+   * Value: Either of:
+   *  A string.
+   *  An array of strings.
    *
    * Eventually, each sgf property should be matched to a datatype.  For now,
    * the user is allowed to put arbitrary data into a property.
@@ -21,12 +25,19 @@ Properties.prototype = {
    */
   add: function(prop, value) {
     // Return if the property is not string or a real property
-    if (glift.sgf.allProperties[prop] === undefined) {
+    if (!glift.sgf.allProperties[prop]) {
       throw "Can't add undefined properties";
     } else if (glift.util.typeOf(value) !== 'string' &&
         glift.util.typeOf(value) !== 'array') {
       // The value has to be either a string or an array.
       value = value.toString();
+    } else if (glift.util.typeOf(value) === 'array') {
+      // Force all array values to be of type string.
+      for (var i = 0, len = value.length; i < len; i++) {
+        if (glift.util.typeOf(value[i]) !== 'string') {
+          value[i] = value[i].toString();
+        }
+      }
     }
     value = glift.util.typeOf(value) === 'string' ? [value] : value;
 

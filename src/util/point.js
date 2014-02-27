@@ -71,8 +71,9 @@ GliftPoint.prototype = {
    * Returns an SGF coord, e.g., 'ab' for (0,1)
    */
   toSgfCoord: function() {
-    return String.fromCharCode(this.x() + 97) +
-        String.fromCharCode(this.y() + 97);
+    var a = 'a'.charCodeAt(0);
+    return String.fromCharCode(this.x() + a) +
+        String.fromCharCode(this.y() + a);
   },
 
   /**

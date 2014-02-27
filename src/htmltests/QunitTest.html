@@ -164,6 +164,7 @@
 <script type="text/javascript" src="../rules/treepath_test.js"></script>
 <!-- Sgf Tests -->
 <script type="text/javascript" src="../sgf/parser_test.js"></script>
+<script type="text/javascript" src="../sgf/sgf_test.js"></script>
 <!-- Gib Tests -->
 <script type="text/javascript" src="../gib/parser_test.js"></script>
 <!-- Controllers Tests -->
@@ -205,6 +206,7 @@ $(document).ready(function() {
   // TODO(kashomon): recreate the board tests.
 
   glift.sgf.newParserTest();
+  glift.sgf.sgfTest();
   glift.gib.gibParserTest();
 
   glift.rules.movetreeTest();

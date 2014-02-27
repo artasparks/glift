@@ -119,6 +119,7 @@ BaseController.prototype = {
   /**
    * Return only the necessary information to update the board
    */
+  // TODO(kashomon): Rename to getCurrentBoardState
   getNextBoardState: function() {
     return glift.bridge.intersections.nextBoardData(
         this.movetree, this.getCaptures(), this.problemConditions);
