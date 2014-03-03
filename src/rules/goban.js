@@ -54,8 +54,10 @@ glift.rules.goban = {
  * As a historical note, this is the oldest part of Glift.
  */
 var Goban = function(ints) {
-  if (ints <= 0) throw "Intersections must be greater than 0";
-  this.ints = ints;
+  if (!ints || ints <= 0) {
+    throw "Invalid Intersections. Was: " + ints
+  }
+  this.ints = ints || 19;
   this.stones = initStones(ints);
 };
 

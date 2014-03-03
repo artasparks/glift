@@ -341,7 +341,7 @@ glift.rules._MoveTree.prototype = {
       var ints = parseInt(mt.properties().getAllValues(allProperties.SZ));
       return ints;
     } else {
-      return undefined;
+      return 19;
     }
   }
 };

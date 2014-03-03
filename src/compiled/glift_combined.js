@@ -18,7 +18,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.9.2',
+  version: '0.9.3',
   debugMode: false,
   // Options for performanceDebugLevel: NONE, INFO
   performanceDebugLevel: 'NONE',
@@ -578,8 +578,9 @@ GliftPoint.prototype = {
    * Returns an SGF coord, e.g., 'ab' for (0,1)
    */
   toSgfCoord: function() {
-    return String.fromCharCode(this.x() + 97) +
-        String.fromCharCode(this.y() + 97);
+    var a = 'a'.charCodeAt(0);
+    return String.fromCharCode(this.x() + a) +
+        String.fromCharCode(this.y() + a);
   },
 
   /**
@@ -2347,7 +2348,9 @@ glift.displays.board._Intersections.prototype = {
       var stoneColor = stone.attr('stone_color');
       return stoneColor === 'EMPTY' && (mark === marks.LABEL
           || mark === marks.VARIATION_MARKER
-          || mark === marks.CORRECT_VARIATION);
+          || mark === marks.CORRECT_VARIATION
+          || mark === marks.LABEL_NUMERIC
+          || mark === marks.LABEL_ALPHA);
     } else {
       return false;
     }
@@ -2585,8 +2588,10 @@ glift.displays.board.addMark = function(
   // hacky right now.  It doesn't seem right that there should be a whole
   // separate coditional based on what are essentially color requirements.
   if (mark === marks.LABEL
-      || mark == marks.VARIATION_MARKER
-      || mark == marks.CORRECT_VARIATION) {
+      || mark === marks.VARIATION_MARKER
+      || mark === marks.CORRECT_VARIATION
+      || mark === marks.LABEL_ALPHA
+      || mark === marks.LABEL_NUMERIC) {
     if (mark === marks.VARIATION_MARKER) {
       marksTheme = marksTheme.VARIATION_MARKER;
     } else if (mark === marks.CORRECT_VARIATION) {
@@ -4583,8 +4588,10 @@ glift.rules.goban = {
  * As a historical note, this is the oldest part of Glift.
  */
 var Goban = function(ints) {
-  if (ints <= 0) throw "Intersections must be greater than 0";
-  this.ints = ints;
+  if (!ints || ints <= 0) {
+    throw "Invalid Intersections. Was: " + ints
+  }
+  this.ints = ints || 19;
   this.stones = initStones(ints);
 };
 
@@ -4768,7 +4775,7 @@ Goban.prototype = {
     for (var i = 0; i < colors.length; i++) {
       var color = colors[i]
       var placements = movetree.properties().getPlacementsAsPoints(color);
-      for (var j = 0; j < placements.length; j++) {
+      for (var j = 0, len = placements.length; j < len; j++) {
         this._loadStone({point: placements[j], color: color}, captures);
       }
     }
@@ -4782,7 +4789,7 @@ Goban.prototype = {
       var result = this.addStone(mv.point, mv.color);
       if (result.successful) {
         var oppositeColor = glift.util.colors.oppositeColor(mv.color);
-        for (var k = 0; k < result.captures.length; k++) {
+        for (var k = 0, len = result.captures.length; k < len; k++) {
           captures[oppositeColor].push(result.captures[k]);
         }
       }
@@ -5195,12 +5202,14 @@ glift.rules._MoveTree.prototype = {
     var states = glift.enums.states;
     var curNode = this._currentNode;
     var move = curNode.properties().getMove();
-    while (move) {
-      curNode = curNode .getParent();
-      if (curNode) { return states.BLACK; }
+    while (!move) {
+      curNode = curNode.getParent();
+      if (!curNode) { return states.BLACK; }
       move = curNode.properties().getMove();
     }
-    if (move.color === states.BLACK) {
+    if (!move) {
+      return states.BLACK;
+    } else if (move.color === states.BLACK) {
       return states.WHITE;
     } else if (move.color === states.WHITE) {
       return states.BLACK;
@@ -5336,7 +5345,7 @@ glift.rules._MoveTree.prototype = {
       var ints = parseInt(mt.properties().getAllValues(allProperties.SZ));
       return ints;
     } else {
-      return undefined;
+      return 19;
     }
   }
 };
@@ -5431,8 +5440,12 @@ var Properties = function(map) {
 
 Properties.prototype = {
   /**
-   * Add an SGF Property to the current move. Return the 'this', for
-   * convenience, so that you can chain addProp calls.
+   * Add an SGF Property to the current move.
+   *
+   * Prop: An SGF Property
+   * Value: Either of:
+   *  A string.
+   *  An array of strings.
    *
    * Eventually, each sgf property should be matched to a datatype.  For now,
    * the user is allowed to put arbitrary data into a property.
@@ -5443,12 +5456,19 @@ Properties.prototype = {
    */
   add: function(prop, value) {
     // Return if the property is not string or a real property
-    if (glift.sgf.allProperties[prop] === undefined) {
+    if (!glift.sgf.allProperties[prop]) {
       throw "Can't add undefined properties";
     } else if (glift.util.typeOf(value) !== 'string' &&
         glift.util.typeOf(value) !== 'array') {
       // The value has to be either a string or an array.
       value = value.toString();
+    } else if (glift.util.typeOf(value) === 'array') {
+      // Force all array values to be of type string.
+      for (var i = 0, len = value.length; i < len; i++) {
+        if (glift.util.typeOf(value[i]) !== 'string') {
+          value[i] = value[i].toString();
+        }
+      }
     }
     value = glift.util.typeOf(value) === 'string' ? [value] : value;
 
@@ -5462,15 +5482,16 @@ Properties.prototype = {
   },
 
   /**
-   * Return an array of data associated with a property key
+   * Return an array of data associated with a property key.  Note: this returns
+   * a shallow copy of the properties.
    *
    * If the property doesn't exist, returns null.
    */
   getAllValues: function(strProp) {
     if (glift.sgf.allProperties[strProp] === undefined) {
       return null; // Not a valid Property
-    } else if (this.propMap[strProp] !== undefined) {
-      return this.propMap[strProp];
+    } else if (this.propMap[strProp]) {
+      return this.propMap[strProp].slice(); // Return a shallow copy.
     } else {
       return null;
     }
@@ -5516,7 +5537,7 @@ Properties.prototype = {
    * false otherwise.
    */
   contains: function(prop) {
-    return this.getAllValues(prop) === null;
+    return prop in this.propMap;
   },
 
   /** Delete the prop and return the value. */
@@ -5525,6 +5546,30 @@ Properties.prototype = {
       var allValues = this.getAllValues(prop);
       delete this.propMap[prop];
       return allValues;
+    } else {
+      return null;
+    }
+  },
+
+  /**
+   * Remove one value from the property list. Returns the value if it was
+   * successfully removed.  Removes only the first value -- any subsequent value
+   * remains in the property list.
+   */
+  removeOneValue: function(prop, value) {
+    if (this.contains(prop)) {
+      var allValues = this.getAllValues(prop);
+      var index = -1;
+      for (var i = 0, len = allValues.length; i < len; i++) {
+        if (allValues[i] === value) {
+          index = i;
+          break;
+        }
+      }
+      if (index !== -1) {
+        allValues.splice(index, 1);
+        this.set(prop, allValues);
+      }
     } else {
       return null;
     }
@@ -5625,8 +5670,8 @@ Properties.prototype = {
           return true;
         }
         var allValues = this.getAllValues(key);
-        for (var i = 0; i < allValues.length; i++) {
-          for (var j = 0; j < substrings.length; j++) {
+        for (var i = 0, len = allValues.length ; i < len; i++) {
+          for (var j = 0, slen = substrings.length; j < slen; j++) {
             var value = allValues[i];
             var substr = substrings[j];
             if (value.indexOf(substr) !== -1) {
@@ -5636,7 +5681,7 @@ Properties.prototype = {
         }
       }
     }
-    return false
+    return false;
   },
 
   /**
@@ -5656,7 +5701,7 @@ Properties.prototype = {
     out[BLACK] = this.getPlacementsAsPoints(states.BLACK);
     out[WHITE] = this.getPlacementsAsPoints(states.WHITE);
     var move = this.getMove();
-    if (move) {
+    if (move && move.point) {
       out[move.color].push(move.point);
     }
     return out;
@@ -5800,13 +5845,10 @@ glift.rules.treepath = {
 /**
  * The SGF library contains functions for dealing with SGFs.
  *
- * sgf_grammar.js: sgf parser generated, generated from the pegjs grammar.
- *  -> This is called with glift.rules.parser.parse(...);
- *
- * sgf_grammar.pegjs. To regenerate the parser from the peg grammar, use
- * depgen.py.
+ * This includes a parser and various utilities related to SGFs.
  */
 glift.sgf = {
+  /** Return a move property from a property. */
   colorToToken: function(color) {
     if (color === glift.enums.states.WHITE) {
       return 'W';
@@ -5817,26 +5859,75 @@ glift.sgf = {
     }
   },
 
-  markToProperty: function()  {
+  /** Return placement property from a color. */
+  colorToPlacement: function(color) {
+    if (color === glift.enums.states.WHITE) {
+      return 'AW';
+    } else if (color === glift.enums.states.BLACK) {
+      return 'AB';
+    } else {
+      throw "Unknown color-to-token conversion for: " + color;
+    }
+  },
+
+  /**
+   * Given a Glift mark type (enum), returns the revelant SGF property string.
+   * If no such mapping is found, returns null.
+   *
+   * Example: XMARK => MA
+   *          FOO => null
+   */
+  markToProperty: function(mark)  {
     var allProps = glift.sgf.allProperties;
-    var marks = glift.enums.marks;
-    var markToProperty = {
+    var markToPropertyMap = {
       LABEL_ALPHA: allProps.LB,
       LABEL_NUMERIC: allProps.LB,
       LABEL: allProps.LB,
       XMARK: allProps.MA,
-      SQUARE: allProps.SQ
+      SQUARE: allProps.SQ,
+      CIRCLE: allProps.CR,
+      TRIANGLE: allProps.TR
     };
+    return markToPropertyMap[mark] || null;
   },
 
+  /**
+   * Given a SGF property, returns the relevant SGF property. If no such mapping
+   * is found, returns null.
+   *
+   * Example: MA => XMARK
+   *          FOO => null.
+   */
+  propertyToMark: function(prop) {
+    var marks = glift.enums.marks;
+    var propertyToMarkMap = {
+      LB: marks.LABEL,
+      MA: marks.XMARK,
+      SQ: marks.SQUARE,
+      CR: marks.CIRCLE,
+      TR: marks.TRIANGLE
+    };
+    return propertyToMarkMap[prop] || null;
+  },
+
+  /**
+   * Converts an array of SGF points ('ab', 'bb') to Glift points ((0,1),
+   * (1,1)).
+   */
   allSgfCoordsToPoints: function(arr) {
     var out = [];
+    if (!arr) {
+      return out;
+    }
     for (var i = 0; i < arr.length; i++) {
       out.push(glift.util.pointFromSgfCoord(arr[i]));
     }
     return out;
   },
 
+  /**
+   * Convert label data to a simple object.
+   */
   convertFromLabelData: function(data) {
     var parts = data.split(":"),
         pt = glift.util.pointFromSgfCoord(parts[0]),
@@ -5850,11 +5941,6 @@ glift.sgf = {
       out.push(glift.sgf.convertFromLabelData(arr[i]));
     }
     return out;
-  },
-
-  pointToSgfCoord: function(pt) {
-    var a = 'a'.charCodeAt(0);
-    return String.fromCharCode(pt.x() +  a) + String.fromCharCode(pt.y() + a);
   }
 };
 /**
@@ -6153,8 +6239,8 @@ BaseController.prototype = {
     this.sgfString = sgfOptions.sgfString || "";
     this.initialPosition = sgfOptions.initialPosition || [];
     this.problemConditions = sgfOptions.problemConditions || undefined;
-    this.extraOptions(sgfOptions); // Overridden by implementers
     this.initialize();
+    this.extraOptions(sgfOptions); // Overridden by implementers
     return this;
   },
 
@@ -6233,6 +6319,7 @@ BaseController.prototype = {
   /**
    * Return only the necessary information to update the board
    */
+  // TODO(kashomon): Rename to getCurrentBoardState
   getNextBoardState: function() {
     return glift.bridge.intersections.nextBoardData(
         this.movetree, this.getCaptures(), this.problemConditions);
@@ -6383,43 +6470,227 @@ glift.controllers.boardEditor = function(sgfOptions) {
 
 glift.controllers.BoardEditorMethods = {
   /**
-   * Called during initialization.
+   * Called during initialization, after the goban/movetree have been
+   * initializied.
    */
   extraOptions: function(sgfOptions) {
-    this.initLabelTrackers();
+    // _initLabelTrackers creates:
+    //
+    // this._alphaLabels: An array of available alphabetic labels.
+    // this._numericLabels: An array of available numeric labels.
+    // this._ptTolabelMap: A map from pt (string) to label.  This is so we can ensure
+    // that there is only ever one label per point.
+    this._initLabelTrackers();
+
+    // Note: it's unnecessary to initialize the stones, since they are
+    // initialized into the built-in initialize method.
   },
 
-  initLabelTrackers: function() {
-    var LB = glift.allProperties.LB;
-    this.numericLabelMap = {};
-    this.alphaLabelMap = {};;
+  /**
+   * Initialize the label trackers.  Thus should be called after every move up
+   * or down, so that the labels are synced with the current position.
+   *
+   * Specifically, initializes:
+   * this._alphaLabels: An array of available alphabetic labels.
+   * this._numericLabels: An array of available numeric labels (as numbers).
+   * this._ptTolabelMap: A map from pt (string) to {label + optional data}.
+   */
+  _initLabelTrackers: function() {
+    var allProps = glift.sgf.allProperties;
+    var marks = glift.enums.marks;
+    var numericLabelMap = {}; // number-string to 'true'
+    var alphaLabelMap = {}; // alphabetic label to 'true'
+    this._ptTolabelMap = {}; // pt string to {label + optional data}
     for (var i = 0; i < 100; i++) {
-      this.numericLabelMap['' + (i + 1)] = true;
+      numericLabelMap[(i + 1)] = true;
     }
     for (var i = 0; i < 26; i++) {
       var label = '' + String.fromCharCode('A'.charCodeAt(0) + i);
-      this.alphaLabelMap[label] = true;
+      alphaLabelMap[label] = true;
     }
 
-    var mtLabels = movetree.properties().getAllValues(LB);
-    if (mtLabels) {
-      for (var i = 0; i < mtLabels.length; i++) {
-        var lbl = mtLabels[i].split[':'][1];
-        if (this.numericLabelMap[lbl]) { delete this.numericLabelMap[lbl]; }
-        if (this.alphaLabelMap[lbl]) { delete this.alphaLabelMap[lbl]; }
+    var marksToExamine = [
+      marks.CIRCLE,
+      marks.LABEL,
+      marks.SQUARE,
+      marks.TRIANGLE,
+      marks.XMARK
+    ];
+    var alphaRegex = /^[A-Z]$/;
+    var digitRegex = /^\d*$/;
+
+    for (var i = 0; i < marksToExamine.length; i++) {
+      var curMark = marksToExamine[i];
+      var sgfProp = glift.sgf.markToProperty(curMark);
+      var mtLabels = this.movetree.properties().getAllValues(sgfProp);
+      if (mtLabels) {
+        for (var j = 0; j < mtLabels.length; j++) {
+          var splat = mtLabels[j].split(':');
+          var markData = { mark: curMark };
+          var lbl = null;
+          if (splat.length > 1) {
+            var lbl = splat[1];
+            markData.data = lbl;
+            if (alphaRegex.test(lbl)) {
+              markData.mark = marks.LABEL_ALPHA;
+            } else if (digitRegex.test(lbl)) {
+              lbl = parseInt(lbl);
+              markData.mark = marks.LABEL_NUMERIC;
+            }
+          }
+          var pt = glift.util.pointFromSgfCoord(splat[0]);
+          this._ptTolabelMap[pt.toString()] = markData;
+          if (numericLabelMap[lbl]) { delete numericLabelMap[lbl]; }
+          if (alphaLabelMap[lbl]) { delete alphaLabelMap[lbl]; }
+        }
       }
     }
-    this.alphaLabels = this._convertLabelMap(this.alphaLabelMap);
-    this.numericLabels = this._convertLabelMap(this.numericLabelMap);
+    //
+    this._alphaLabels = this._convertLabelMap(alphaLabelMap);
+    this._numericLabels = this._convertLabelMap(numericLabelMap);
   },
 
+  /**
+   * Convert either the numericLabelMap or alphaLabelMap.  Recall that these are
+   * maps from either number => true or alpha char => true, where the keys
+   * represent unused labels.
+   */
   _convertLabelMap: function(map) {
     var base = [];
+    var digitRegex = /^\d+$/;
     for (var key in map) {
-      base.push(key);
+      if (digitRegex.test(key)) {
+        base.push(parseInt(key));;
+      } else {
+        base.push(key);
+      }
     }
-    base.sort();
+    if (base.length > 0 && glift.util.typeOf(base[0]) === 'number') {
+      base.sort(function(a, b) { return a - b });
+      base.reverse();
+    } else {
+      base.sort().reverse();
+    }
     return base;
+  },
+
+  /**
+   * Retrieve the current alphabetic mark. Returns null if there are no more
+   * labels available.
+   */
+  currentAlphaMark: function() {
+    return this._alphaLabels.length > 0 ?
+        this._alphaLabels[this._alphaLabels.length - 1] : null;
+  },
+
+  /** Retrieve the current numeric mark as a string. */
+  currentNumericMark: function() {
+    return this._numericLabels.length > 0 ?
+        this._numericLabels[this._numericLabels.length - 1] + '': null;
+  },
+
+  /**
+   * Get a mark if a mark exists at a point on the board. Returns
+   *
+   *  For a label:
+   *    { mark:<markstring>, data:<label> }
+   *  For a triangle, circle, square, or xmark:
+   *    { mark:<markstring> }
+   *  If there's no mark at the point:
+   *    null
+   */
+  getMark: function(pt) {
+    return this._ptTolabelMap[pt.toString()] || null;
+  },
+
+  /**
+   * Use the current alpha mark (as a string). This removes the mark frome the
+   * available alphabetic labels. Returns null if no mark is available.
+   */
+  _useCurrentAlphaMark: function() {
+    var label = this._alphaLabels.pop();
+    if (!label) { return null; }
+    return label;
+  },
+
+  /**
+   * Use the current numeric mark (as a string). This removes the mark frome the
+   * available numeric labels. Returns null if no mark is available.
+   */
+  _useCurrentNumericMark: function() {
+    var label = this._numericLabels.pop() + ''; // Ensure a string.
+    if (!label) { return null; }
+    return label;
+  },
+
+  /**
+   * Determine whether a mark is supported for adding. As you would expect,
+   * returns true or false in the obvious way.
+   */
+  isSupportedMark: function(mark) {
+    var supportedMap = {
+      LABEL_ALPHA: true,
+      LABEL_NUMERIC: true,
+      SQUARE: true,
+      TRIANGLE: true
+    };
+    return supportedMap[mark] || false;
+  },
+
+  /**
+   * Add a mark to the Go board.
+   */
+  addMark: function(point, mark) {
+    var marks = glift.enums.marks;
+    var curProps = this.movetree.node().properties();
+    if (!this.isSupportedMark(mark)) { return null; }
+
+    // Remove the mark instead, since the point already has a mark.
+    if (this.getMark(point)) { return this.removeMark(point); }
+
+    var markData = { mark: mark };
+    var data = null;
+    if (mark === marks.LABEL_NUMERIC) {
+      data = this._useCurrentNumericMark();
+      markData.data = data;
+    } else if (mark === marks.LABEL_ALPHA) {
+      data = this._useCurrentAlphaMark();
+      markData.data = data;
+    }
+
+    var prop = glift.sgf.markToProperty(mark);
+    if (data && mark) {
+      curProps.add(prop, point.toSgfCoord() + ':' + data);
+    } else if (mark) {
+      curProps.add(prop, point.toSgfCoord());
+    }
+    this._ptTolabelMap[point.toString()] = markData;
+    return this.getNextBoardState();
+  },
+
+  /** Remove a mark from the board. */
+  removeMark: function(point) {
+    var marks = glift.enums.marks;
+    var markData = this.getMark(point);
+    if (!markData) { return null; }
+
+    delete this._ptTolabelMap[point.toString()];
+    var sgfProp = glift.sgf.markToProperty(markData.mark);
+    if (markData.mark === marks.LABEL_NUMERIC) {
+      this._numericLabels.push(parseInt(markData.data));
+      this._numericLabels.sort(function(a, b) { return a - b }).reverse();
+      this.movetree.properties()
+          .removeOneValue(sgfProp, point.toSgfCoord() + ':' + markData.data);
+    } else if (markData.mark === marks.LABEL_ALPHA) {
+      this._alphaLabels.push(markData.data);
+      this.movetree.properties()
+          .removeOneValue(sgfProp, point.toSgfCoord() + ':' + markData.data);
+      this._alphaLabels.sort().reverse();
+    } else {
+      this.movetree.properties()
+          .removeOneValue(sgfProp, point.toSgfCoord());
+    }
+    return this.getNextBoardState();
   },
 
   /**
@@ -6428,11 +6699,6 @@ glift.controllers.BoardEditorMethods = {
   addStone: function(point, color) {
     console.log(point);
     console.log(color);
-    console.log(mark);
-  },
-
-  addMark: function(point, mark) {
-    this.movetree.node()
   },
 
   /**
@@ -6440,11 +6706,26 @@ glift.controllers.BoardEditorMethods = {
    * do not indicate a change in move number.
    */
   addPlacement: function(point, color) {
+    var prop = glift.sgf.colorToPlacement(color);
+    var oppColor = glift.util.colors.oppositeColor(color);
+    var oppProp = glift.sgf.colorToPlacement(oppColor);
+    var result = this.goban.addStone(point, color);
+    if (result.successful) {
+      this.movetree.properties().add(prop, point.toSgfCoord());
+      for (var i = 0; i < result.captures.length; i++) {
+        this.movetree.properties().removeOneValue(
+            oppProp, result.captures[i].toSgfCoord());
+      }
+      var captures = {};
+      captures[oppColor] = result.captures;
+      return glift.bridge.intersections.nextBoardData(this.movetree, captures);
+    }
+    return null;
   },
 
-  pass: function() { throw new Error("Not implemented"); },
-  clearMark: function() { throw new Error("Not implemented"); },
-  clearStone: function() { throw new Error("Not implemented"); }
+  pass: function() { throw new Error('Not implemented'); },
+  clearMark: function() { throw new Error('Not implemented'); },
+  clearStone: function() { throw new Error('Not implemented'); }
 };
 /**
  * A GameViewer encapsulates the idea of traversing a read-only SGF.
@@ -6601,7 +6882,7 @@ glift.controllers.StaticProblemMethods = {
     // the movetree, presumably from an SGF.
     var nextVarNum = this.movetree.findNextMove(point, color);
 
-    if (!nextVarNum) {
+    if (nextVarNum === null) {
       // There are no variations corresponding to the move made (i.e.,
       // nextVarNum is null), so we assume that the move is INCORRECT. However,
       // we still add the move down the movetree, adding a node if necessary.
@@ -7774,7 +8055,7 @@ glift.widgets.BaseWidget.prototype = {
    * glift.bridge to communicate with the display.
    */
   applyBoardData: function(boardData) {
-    if (boardData && boardData !== glift.util.none) {
+    if (boardData) {
       this.setCommentBox(boardData.comment);
       glift.bridge.setDisplayState(
           boardData,
@@ -7790,7 +8071,7 @@ glift.widgets.BaseWidget.prototype = {
   setCommentBox: function(text) {
     if (this.commentBox === undefined) {
       // Do nothing -- there is no comment box to set.
-    } else if (text && text !== glift.util.none) {
+    } else if (text) {
       this.commentBox.setText(text);
     } else {
       this.commentBox.clearText();
@@ -8472,51 +8753,61 @@ glift.widgets.options.BOARD_EDITOR = {
     bstone_triangle: glift.enums.marks.TRIANGLE
   },
 
-  _stoneColorMap: {
-    twostones: function(widget) {
-      return widget.controller.getCurrentPlayer();
-    },
-    bstone: function() { return glift.enums.states.BLACK },
-    wstone: function() { return glift.enums.states.BLACK }
+  _placementMap: {
+    bstone: glift.enums.states.BLACK,
+    wstone: glift.enums.states.WHITE
   },
 
   stoneClick: function(event, widget, pt) {
-    var stoneColorMap = glift.widgets.options.BOARD_EDITOR._stoneColorMap;
+    widget.display.intersections().clearTempMarks();
+    var placementMap = glift.widgets.options.BOARD_EDITOR._placementMap;
     var iconToMark = glift.widgets.options.BOARD_EDITOR._markMap;
     var iconName = widget.iconBar.getIcon('multiopen').getActive().iconName;
     var currentPlayer = widget.controller.getCurrentPlayer();
 
-    if (stoneColorMap[iconName] !== undefined) {
-      var color = stoneColorMap[iconName](widget);
-      var partialData = widget.controller.addStone(pt, currentPlayer);
-      // widget.applyBoardData(partialData);
-    } else if (iconToMark[iconName] !== undefined) {
-      var color = stoneColorMap[iconName](widget);
-      var partialData = widget.controller.addStone(
-          pt, glift.enums.states.EMPTY, iconToMark[iconName]);
-      // widget.applyBoardData(partialData);
+    if (placementMap[iconName]) {
+      var color = placementMap[iconName];
+      var partialData = widget.controller.addPlacement(pt, color);
+      widget.applyBoardData(partialData);
+    } else if (iconToMark[iconName]) {
+      var partialData = widget.controller.addMark(pt, iconToMark[iconName]);
+      if (partialData) {
+        widget.applyBoardData(partialData);
+      }
     }
-    // TODO(kashomon): handle 'nostone-xmark'
+    // TODO(kashomon): handle 'nostone-xmark' -- i.e., clearing an intersection.
   },
 
   stoneMouseover: function(event, widget, pt) {
     var marks = glift.enums.marks;
     var iconToMark = glift.widgets.options.BOARD_EDITOR._markMap;
-    var stoneColorMap = glift.widgets.options.BOARD_EDITOR._stoneColorMap;
-    var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
+    var placementMap = glift.widgets.options.BOARD_EDITOR._placementMap;
+    var hoverColors = { 'BLACK': 'BLACK_HOVER', 'WHITE': 'WHITE_HOVER' };
     var currentPlayer = widget.controller.getCurrentPlayer();
     var intersections = widget.display.intersections();
     var iconName = widget.iconBar.getIcon('multiopen').getActive().iconName;
 
-    if (stoneColorMap[iconName] !== undefined) {
-      var colorKey = stoneColorMap[iconName](widget);
+    if (placementMap[iconName] !== undefined) {
+      var colorKey = placementMap[iconName];
       if (widget.controller.canAddStone(pt, currentPlayer)) {
         intersections.setStoneColor(pt, hoverColors[colorKey]);
       }
-    }
-
-    if (iconToMark[iconName] && !intersections.hasMark(pt)) {
-      intersections.addTempMark(pt, iconToMark[iconName], 'a');
+    } else if (iconName === 'twostones') {
+      var colorKey = widget.controller.getCurrentPlayer();
+      if (widget.controller.canAddStone(pt, currentPlayer)) {
+        intersections.setStoneColor(pt, hoverColors[colorKey]);
+      }
+    } else if (iconToMark[iconName] && !intersections.hasMark(pt)) {
+      var markType = iconToMark[iconName];
+      if (markType === marks.LABEL_NUMERIC) {
+        intersections.addTempMark(
+            pt, markType, widget.controller.currentNumericMark());
+      } else if (markType === marks.LABEL_ALPHA) {
+        intersections.addTempMark(
+            pt, markType, widget.controller.currentAlphaMark());
+      } else {
+        intersections.addTempMark(pt, markType);
+      }
     }
   },
 

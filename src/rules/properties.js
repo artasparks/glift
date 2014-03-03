@@ -51,15 +51,16 @@ Properties.prototype = {
   },
 
   /**
-   * Return an array of data associated with a property key
+   * Return an array of data associated with a property key.  Note: this returns
+   * a shallow copy of the properties.
    *
    * If the property doesn't exist, returns null.
    */
   getAllValues: function(strProp) {
     if (glift.sgf.allProperties[strProp] === undefined) {
       return null; // Not a valid Property
-    } else if (this.propMap[strProp] !== undefined) {
-      return this.propMap[strProp];
+    } else if (this.propMap[strProp]) {
+      return this.propMap[strProp].slice(); // Return a shallow copy.
     } else {
       return null;
     }
@@ -114,6 +115,30 @@ Properties.prototype = {
       var allValues = this.getAllValues(prop);
       delete this.propMap[prop];
       return allValues;
+    } else {
+      return null;
+    }
+  },
+
+  /**
+   * Remove one value from the property list. Returns the value if it was
+   * successfully removed.  Removes only the first value -- any subsequent value
+   * remains in the property list.
+   */
+  removeOneValue: function(prop, value) {
+    if (this.contains(prop)) {
+      var allValues = this.getAllValues(prop);
+      var index = -1;
+      for (var i = 0, len = allValues.length; i < len; i++) {
+        if (allValues[i] === value) {
+          index = i;
+          break;
+        }
+      }
+      if (index !== -1) {
+        allValues.splice(index, 1);
+        this.set(prop, allValues);
+      }
     } else {
       return null;
     }
@@ -225,7 +250,7 @@ Properties.prototype = {
         }
       }
     }
-    return false
+    return false;
   },
 
   /**

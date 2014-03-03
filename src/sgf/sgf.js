@@ -4,11 +4,23 @@
  * This includes a parser and various utilities related to SGFs.
  */
 glift.sgf = {
+  /** Return a move property from a property. */
   colorToToken: function(color) {
     if (color === glift.enums.states.WHITE) {
       return 'W';
     } else if (color === glift.enums.states.BLACK) {
       return 'B';
+    } else {
+      throw "Unknown color-to-token conversion for: " + color;
+    }
+  },
+
+  /** Return placement property from a color. */
+  colorToPlacement: function(color) {
+    if (color === glift.enums.states.WHITE) {
+      return 'AW';
+    } else if (color === glift.enums.states.BLACK) {
+      return 'AB';
     } else {
       throw "Unknown color-to-token conversion for: " + color;
     }

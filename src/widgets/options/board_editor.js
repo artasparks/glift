@@ -11,24 +11,22 @@ glift.widgets.options.BOARD_EDITOR = {
     bstone_triangle: glift.enums.marks.TRIANGLE
   },
 
-  _stoneColorMap: {
-    twostones: function(widget) {
-      return widget.controller.getCurrentPlayer();
-    },
-    bstone: function() { return glift.enums.states.BLACK },
-    wstone: function() { return glift.enums.states.BLACK }
+  _placementMap: {
+    bstone: glift.enums.states.BLACK,
+    wstone: glift.enums.states.WHITE
   },
 
   stoneClick: function(event, widget, pt) {
-    var stoneColorMap = glift.widgets.options.BOARD_EDITOR._stoneColorMap;
+    widget.display.intersections().clearTempMarks();
+    var placementMap = glift.widgets.options.BOARD_EDITOR._placementMap;
     var iconToMark = glift.widgets.options.BOARD_EDITOR._markMap;
     var iconName = widget.iconBar.getIcon('multiopen').getActive().iconName;
     var currentPlayer = widget.controller.getCurrentPlayer();
 
-    if (stoneColorMap[iconName]) {
-      var color = stoneColorMap[iconName](widget);
-      var partialData = widget.controller.addStone(pt, currentPlayer);
-      // widget.applyBoardData(partialData);
+    if (placementMap[iconName]) {
+      var color = placementMap[iconName];
+      var partialData = widget.controller.addPlacement(pt, color);
+      widget.applyBoardData(partialData);
     } else if (iconToMark[iconName]) {
       var partialData = widget.controller.addMark(pt, iconToMark[iconName]);
       if (partialData) {
@@ -41,20 +39,23 @@ glift.widgets.options.BOARD_EDITOR = {
   stoneMouseover: function(event, widget, pt) {
     var marks = glift.enums.marks;
     var iconToMark = glift.widgets.options.BOARD_EDITOR._markMap;
-    var stoneColorMap = glift.widgets.options.BOARD_EDITOR._stoneColorMap;
-    var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
+    var placementMap = glift.widgets.options.BOARD_EDITOR._placementMap;
+    var hoverColors = { 'BLACK': 'BLACK_HOVER', 'WHITE': 'WHITE_HOVER' };
     var currentPlayer = widget.controller.getCurrentPlayer();
     var intersections = widget.display.intersections();
     var iconName = widget.iconBar.getIcon('multiopen').getActive().iconName;
 
-    if (stoneColorMap[iconName] !== undefined) {
-      var colorKey = stoneColorMap[iconName](widget);
+    if (placementMap[iconName] !== undefined) {
+      var colorKey = placementMap[iconName];
       if (widget.controller.canAddStone(pt, currentPlayer)) {
         intersections.setStoneColor(pt, hoverColors[colorKey]);
       }
-    }
-
-    if (iconToMark[iconName] && !intersections.hasMark(pt)) {
+    } else if (iconName === 'twostones') {
+      var colorKey = widget.controller.getCurrentPlayer();
+      if (widget.controller.canAddStone(pt, currentPlayer)) {
+        intersections.setStoneColor(pt, hoverColors[colorKey]);
+      }
+    } else if (iconToMark[iconName] && !intersections.hasMark(pt)) {
       var markType = iconToMark[iconName];
       if (markType === marks.LABEL_NUMERIC) {
         intersections.addTempMark(

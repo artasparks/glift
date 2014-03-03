@@ -15,11 +15,14 @@ glift.controllers.BoardEditorMethods = {
   extraOptions: function(sgfOptions) {
     // _initLabelTrackers creates:
     //
-    // this.alphaLabels: An array of available alphabetic labels.
-    // this.numericLabels: An array of available numeric labels.
-    // this.labelMap: A map from pt (string) to label.  This is so we can ensure
+    // this._alphaLabels: An array of available alphabetic labels.
+    // this._numericLabels: An array of available numeric labels.
+    // this._ptTolabelMap: A map from pt (string) to label.  This is so we can ensure
     // that there is only ever one label per point.
     this._initLabelTrackers();
+
+    // Note: it's unnecessary to initialize the stones, since they are
+    // initialized into the built-in initialize method.
   },
 
   /**
@@ -27,40 +30,70 @@ glift.controllers.BoardEditorMethods = {
    * or down, so that the labels are synced with the current position.
    *
    * Specifically, initializes:
-   * this.alphaLabels: An array of available alphabetic labels.
-   * this.numericLabels: An array of available numeric labels.
-   * this.labelMap: A map from pt (string) to label.
+   * this._alphaLabels: An array of available alphabetic labels.
+   * this._numericLabels: An array of available numeric labels (as numbers).
+   * this._ptTolabelMap: A map from pt (string) to {label + optional data}.
    */
   _initLabelTrackers: function() {
-    var LB = glift.sgf.allProperties.LB;
-    var numericLabelMap = {}; // number to 'true'
+    var allProps = glift.sgf.allProperties;
+    var marks = glift.enums.marks;
+    var numericLabelMap = {}; // number-string to 'true'
     var alphaLabelMap = {}; // alphabetic label to 'true'
-    this.labelMap  = {}; // pt string to label
+    this._ptTolabelMap = {}; // pt string to {label + optional data}
     for (var i = 0; i < 100; i++) {
-      numericLabelMap['' + (i + 1)] = true;
+      numericLabelMap[(i + 1)] = true;
     }
     for (var i = 0; i < 26; i++) {
       var label = '' + String.fromCharCode('A'.charCodeAt(0) + i);
       alphaLabelMap[label] = true;
     }
 
-    var mtLabels = this.movetree.properties().getAllValues(LB);
-    if (mtLabels) {
-      for (var i = 0; i < mtLabels.length; i++) {
-        var splat = mtLabels[i].split(':');
-        var lbl = splat[1];
-        var markType = glift.sgf.markToProperty
-        var pt = glift.util.pointFromSgfCoord(splat[0]);
-        this.labelMap[pt.toString()];
-        if (numericLabelMap[lbl]) { delete numericLabelMap[lbl]; }
-        if (alphaLabelMap[lbl]) { delete alphaLabelMap[lbl]; }
+    var marksToExamine = [
+      marks.CIRCLE,
+      marks.LABEL,
+      marks.SQUARE,
+      marks.TRIANGLE,
+      marks.XMARK
+    ];
+    var alphaRegex = /^[A-Z]$/;
+    var digitRegex = /^\d*$/;
+
+    for (var i = 0; i < marksToExamine.length; i++) {
+      var curMark = marksToExamine[i];
+      var sgfProp = glift.sgf.markToProperty(curMark);
+      var mtLabels = this.movetree.properties().getAllValues(sgfProp);
+      if (mtLabels) {
+        for (var j = 0; j < mtLabels.length; j++) {
+          var splat = mtLabels[j].split(':');
+          var markData = { mark: curMark };
+          var lbl = null;
+          if (splat.length > 1) {
+            var lbl = splat[1];
+            markData.data = lbl;
+            if (alphaRegex.test(lbl)) {
+              markData.mark = marks.LABEL_ALPHA;
+            } else if (digitRegex.test(lbl)) {
+              lbl = parseInt(lbl);
+              markData.mark = marks.LABEL_NUMERIC;
+            }
+          }
+          var pt = glift.util.pointFromSgfCoord(splat[0]);
+          this._ptTolabelMap[pt.toString()] = markData;
+          if (numericLabelMap[lbl]) { delete numericLabelMap[lbl]; }
+          if (alphaLabelMap[lbl]) { delete alphaLabelMap[lbl]; }
+        }
       }
     }
     //
-    this.alphaLabels = this._convertLabelMap(alphaLabelMap);
-    this.numericLabels = this._convertLabelMap(numericLabelMap);
+    this._alphaLabels = this._convertLabelMap(alphaLabelMap);
+    this._numericLabels = this._convertLabelMap(numericLabelMap);
   },
 
+  /**
+   * Convert either the numericLabelMap or alphaLabelMap.  Recall that these are
+   * maps from either number => true or alpha char => true, where the keys
+   * represent unused labels.
+   */
   _convertLabelMap: function(map) {
     var base = [];
     var digitRegex = /^\d+$/;
@@ -73,8 +106,9 @@ glift.controllers.BoardEditorMethods = {
     }
     if (base.length > 0 && glift.util.typeOf(base[0]) === 'number') {
       base.sort(function(a, b) { return a - b });
+      base.reverse();
     } else {
-      base.sort();
+      base.sort().reverse();
     }
     return base;
   },
@@ -84,44 +118,48 @@ glift.controllers.BoardEditorMethods = {
    * labels available.
    */
   currentAlphaMark: function() {
-    return this.alphaLabels.length > 0 ? this.alphaLabels[0] : null;
+    return this._alphaLabels.length > 0 ?
+        this._alphaLabels[this._alphaLabels.length - 1] : null;
   },
 
-  /** Retrieve the current numeric mark. */
+  /** Retrieve the current numeric mark as a string. */
   currentNumericMark: function() {
-    return this.numericLabels.length > 0 ? this.numericLabels[0] : null;
+    return this._numericLabels.length > 0 ?
+        this._numericLabels[this._numericLabels.length - 1] + '': null;
   },
 
   /**
-   * Use the current alpha mark. This removes the mark frome the available
-   * alphabetic labels. Returns null if no mark is available.
+   * Get a mark if a mark exists at a point on the board. Returns
+   *
+   *  For a label:
+   *    { mark:<markstring>, data:<label> }
+   *  For a triangle, circle, square, or xmark:
+   *    { mark:<markstring> }
+   *  If there's no mark at the point:
+   *    null
+   */
+  getMark: function(pt) {
+    return this._ptTolabelMap[pt.toString()] || null;
+  },
+
+  /**
+   * Use the current alpha mark (as a string). This removes the mark frome the
+   * available alphabetic labels. Returns null if no mark is available.
    */
   _useCurrentAlphaMark: function() {
-    var mark = this.currentAlphaMark();
-    if (mark) {
-      this.alphaLabels = this.alphaLabels.slice(1);
-    }
-    return mark;
+    var label = this._alphaLabels.pop();
+    if (!label) { return null; }
+    return label;
   },
 
   /**
-   * Use the current numeric mark. This removes the mark frome the available
-   * numeric labels. Returns null if no mark is available.
+   * Use the current numeric mark (as a string). This removes the mark frome the
+   * available numeric labels. Returns null if no mark is available.
    */
   _useCurrentNumericMark: function() {
-    var mark = this.currentNumericMark();
-    if (mark) {
-      this.numericLabels = this.numericLabels.slice(1);
-    }
-    return mark;
-  },
-
-  /**
-   * Add a stone.
-   */
-  addStone: function(point, color) {
-    console.log(point);
-    console.log(color);
+    var label = this._numericLabels.pop() + ''; // Ensure a string.
+    if (!label) { return null; }
+    return label;
   },
 
   /**
@@ -146,11 +184,17 @@ glift.controllers.BoardEditorMethods = {
     var curProps = this.movetree.node().properties();
     if (!this.isSupportedMark(mark)) { return null; }
 
+    // Remove the mark instead, since the point already has a mark.
+    if (this.getMark(point)) { return this.removeMark(point); }
+
+    var markData = { mark: mark };
     var data = null;
     if (mark === marks.LABEL_NUMERIC) {
-      data = this._useCurrentAlphaMark();
-    } else if (mark === marks.LABEL_ALPHA) {
       data = this._useCurrentNumericMark();
+      markData.data = data;
+    } else if (mark === marks.LABEL_ALPHA) {
+      data = this._useCurrentAlphaMark();
+      markData.data = data;
     }
 
     var prop = glift.sgf.markToProperty(mark);
@@ -159,7 +203,41 @@ glift.controllers.BoardEditorMethods = {
     } else if (mark) {
       curProps.add(prop, point.toSgfCoord());
     }
+    this._ptTolabelMap[point.toString()] = markData;
     return this.getNextBoardState();
+  },
+
+  /** Remove a mark from the board. */
+  removeMark: function(point) {
+    var marks = glift.enums.marks;
+    var markData = this.getMark(point);
+    if (!markData) { return null; }
+
+    delete this._ptTolabelMap[point.toString()];
+    var sgfProp = glift.sgf.markToProperty(markData.mark);
+    if (markData.mark === marks.LABEL_NUMERIC) {
+      this._numericLabels.push(parseInt(markData.data));
+      this._numericLabels.sort(function(a, b) { return a - b }).reverse();
+      this.movetree.properties()
+          .removeOneValue(sgfProp, point.toSgfCoord() + ':' + markData.data);
+    } else if (markData.mark === marks.LABEL_ALPHA) {
+      this._alphaLabels.push(markData.data);
+      this.movetree.properties()
+          .removeOneValue(sgfProp, point.toSgfCoord() + ':' + markData.data);
+      this._alphaLabels.sort().reverse();
+    } else {
+      this.movetree.properties()
+          .removeOneValue(sgfProp, point.toSgfCoord());
+    }
+    return this.getNextBoardState();
+  },
+
+  /**
+   * Add a stone.
+   */
+  addStone: function(point, color) {
+    console.log(point);
+    console.log(color);
   },
 
   /**
@@ -167,9 +245,24 @@ glift.controllers.BoardEditorMethods = {
    * do not indicate a change in move number.
    */
   addPlacement: function(point, color) {
+    var prop = glift.sgf.colorToPlacement(color);
+    var oppColor = glift.util.colors.oppositeColor(color);
+    var oppProp = glift.sgf.colorToPlacement(oppColor);
+    var result = this.goban.addStone(point, color);
+    if (result.successful) {
+      this.movetree.properties().add(prop, point.toSgfCoord());
+      for (var i = 0; i < result.captures.length; i++) {
+        this.movetree.properties().removeOneValue(
+            oppProp, result.captures[i].toSgfCoord());
+      }
+      var captures = {};
+      captures[oppColor] = result.captures;
+      return glift.bridge.intersections.nextBoardData(this.movetree, captures);
+    }
+    return null;
   },
 
-  pass: function() { throw new Error("Not implemented"); },
-  clearMark: function() { throw new Error("Not implemented"); },
-  clearStone: function() { throw new Error("Not implemented"); }
+  pass: function() { throw new Error('Not implemented'); },
+  clearMark: function() { throw new Error('Not implemented'); },
+  clearStone: function() { throw new Error('Not implemented'); }
 };

@@ -37,4 +37,20 @@ glift.rules.propertiesTest = function() {
     props.add('B', p1.toSgfCoord()).add('C', 'This is correct').add('GB', '1');
     ok(props.matches({GB: [], C: ['is zog']}), 'Complex matcher');
   });
+
+  test("Remove propeties and values", function() {
+    var props = properties();
+    props.add('SQ', 'ab').add('SQ', 'ac');
+    deepEqual(props.getAllValues('SQ'), ['ab', 'ac']);
+    props.remove('SQ');
+    deepEqual(props.getAllValues('SQ'), null);
+
+    props.add('TR', 'aa');
+    deepEqual(props.getOneValue('TR'), 'aa');
+    props.add('TR', 'bb').add('TR', 'cc');
+    deepEqual(props.getOneValue('TR', 1), 'bb');
+    deepEqual(props.getAllValues('TR'), ['aa', 'bb', 'cc']);
+    props.removeOneValue('TR', 'bb');
+    deepEqual(props.getAllValues('TR'), ['aa', 'cc']);
+  });
 };
