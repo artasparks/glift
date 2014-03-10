@@ -2,6 +2,9 @@
  * Create a gooe-font diagram.
  */
 glift.displays.diagrams.gooe = {
+  /**
+   * Mapping from flattened symbol to char
+   */
   charMapping: {
     // BASE
     TL_CORNER: '\\0??<',
@@ -47,6 +50,17 @@ glift.displays.diagrams.gooe = {
     // MISC_STONE_INLINE: '\goinChar{%s}',
   },
 
+  /**
+   * Takes a flattened set of symbols and produces a diagram. Cool. Returns an
+   * array of arrays, where each cell in the (essentially) in the table
+   * corresponds precisely to a symbol in the flattened 2D array, module header
+   * and footer information.  Generally, users will immediately want to call
+   *
+   *  diagramArrToString(...)
+   *
+   * on the output of this function. However, it's quite useful for testing /
+   * manipulation to return the table-form.
+   */
   diagramArray: function(flattened) {
     var symbolFromEnum = glift.bridge.flattener.symbolFromEnum;
     var symb = glift.bridge.flattener.symbols;
@@ -65,7 +79,7 @@ glift.displays.diagrams.gooe = {
         var pair = symbolRow[j];
         var pt = glift.util.point(j, i);
         var intPt = flattened.ptToIntpt(pt);
-        
+
         var base = pair.base;
         var baseName = symbolFromEnum(base);
         var mark = pair.mark;
@@ -81,7 +95,7 @@ glift.displays.diagrams.gooe = {
               outChar = repl(cmap.WSTONE_TEXTLABEL, lbl); break;
             case symb.BSTONE:
               outChar = repl(cmap.BSTONE_TEXTLABEL, lbl); break;
-            default: 
+            default:
               outChar = repl(cmap.TEXTLABEL, lbl);
           }
         } else if (cmap[combinedName] !== undefined) {
@@ -99,6 +113,9 @@ glift.displays.diagrams.gooe = {
     return lines;
   },
 
+  /**
+   * Convert a diagram array to a string. Really, just a wrapper
+   */
   diagramArrToString: function(diagramArray) {
     outArr = [];
     for (var i = 0; i < diagramArray.length; i++) {
@@ -107,6 +124,10 @@ glift.displays.diagrams.gooe = {
     return outArr.join("\n");
   },
 
+  /**
+   * Some built in defs that are useful for generating LaTeX books using Gooe
+   * fonts.
+   */
   defs: {
     basicHeader: [
       '\\documentclass[a5paper]{book}',
@@ -145,6 +166,9 @@ glift.displays.diagrams.gooe = {
     ]
   },
 
+  /**
+   * Generate the LaTeX document header as a string.
+   */
   documentHeader: function(baseFont) {
     var baseFont = baseFont || 'cmss';
     var fontDefsBase = [

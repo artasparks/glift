@@ -1,0 +1,433 @@
+input paramsa;
+
+font_identifier:="gooegb"; font_size 10pt#;
+beginchar("+",gow#,goh#,0); "Empty vertex, center of board";
+ x1=x2=x3=0pt;
+ x4=x5=x6=.5w;
+ x7=x8=x9=w;
+ y1=y4=y7=h;
+ y2=y5=y8=.5h;
+ y3=y6=y9=0;
+ pickup pensquare scaled smallpen;
+ draw z4..z6;
+ draw z2..z8;
+ endchar;
+beginchar("[",gow#,goh#,0); "Empty vertex, left edge of board";
+ x1=x2=x3=0pt;
+ x4=x5=x6=.5w;
+ x7=x8=x9=w;
+ y1=y4=y7=h;
+ y2=y5=y8=.5h;
+ y3=y6=y9=0;
+ pickup pensquare scaled smallpen;
+ draw z5..z8;
+ pickup pensquare scaled widepen;
+ draw z4..z6;
+ endchar;
+beginchar("]",gow#,goh#,0); "Empty vertex, right edge of board";
+ x1=x2=x3=0pt;
+ x4=x5=x6=.5w;
+ x7=x8=x9=w;
+ y1=y4=y7=h;
+ y2=y5=y8=.5h;
+ y3=y6=y9=0;
+ pickup pensquare scaled smallpen;
+ draw z2..z5;
+ pickup pensquare scaled widepen;
+ draw z4..z6;
+ endchar;
+beginchar("(",gow#,goh#,0); "Empty vertex, top edge of board";
+ x1=x2=x3=0pt;
+ x4=x5=x6=.5w;
+ x7=x8=x9=w;
+ y1=y4=y7=h;
+ y2=y5=y8=.5h;
+ y3=y6=y9=0;
+ pickup pensquare scaled smallpen;
+ draw z5..z6;
+ pickup pensquare scaled widepen;
+ draw z2..z8;
+ endchar;
+beginchar(")",gow#,goh#,0); "Empty vertex, bottom edge of board";
+ x1=x2=x3=0pt;
+ x4=x5=x6=.5w;
+ x7=x8=x9=w;
+ y1=y4=y7=h;
+ y2=y5=y8=.5h;
+ y3=y6=y9=0;
+ pickup pensquare scaled smallpen;
+ draw z4..z5;
+ pickup pensquare scaled widepen;
+ draw z2..z8;
+ endchar;
+beginchar("<",gow#,goh#,0); "Empty vertex, upper left corner";
+ x1=x2=x3=0pt;
+ x4=x5=x6=.5w;
+ x7=x8=x9=w;
+ y1=y4=y7=h;
+ y2=y5=y8=.5h;
+ y3=y6=y9=0;
+ pickup pensquare scaled widepen;
+ draw z5..z6;
+ draw z5..z8;
+ endchar;
+beginchar(">",gow#,goh#,0); "Empty vertex, upper right corner";
+ x1=x2=x3=0pt;
+ x4=x5=x6=.5w;
+ x7=x8=x9=w;
+ y1=y4=y7=h;
+ y2=y5=y8=.5h;
+ y3=y6=y9=0;
+ pickup pensquare scaled widepen;
+ draw z2..z5;
+ draw z6..z5;
+ endchar;
+beginchar(",",gow#,goh#,0); "Empty vertex, lower left corner";
+ x1=x2=x3=0pt;
+ x4=x5=x6=.5w;
+ x7=x8=x9=w;
+ y1=y4=y7=h;
+ y2=y5=y8=.5h;
+ y3=y6=y9=0;
+ pickup pensquare scaled widepen;
+ draw z4..z5;
+ draw z8..z5;
+ endchar;
+beginchar(".",gow#,goh#,0); "Empty vertex, lower right corner";
+ x1=x2=x3=0pt;
+ x4=x5=x6=.5w;
+ x7=x8=x9=w;
+ y1=y4=y7=h;
+ y2=y5=y8=.5h;
+ y3=y6=y9=0;
+ pickup pensquare scaled widepen;
+ draw z4..z5;
+ draw z2..z5;
+ endchar;
+beginchar("*",gow#,goh#,0); "Hoshi";
+ x1=x2=x3=0pt;
+ x4=x5=x6=.5w;
+ x7=x8=x9=w;
+ y1=y4=y7=h;
+ y2=y5=y8=.5h;
+ y3=y6=y9=0;
+ pickup pensquare scaled smallpen;
+ draw z4..z6;
+ draw z2..z8;
+ pickup pencircle scaled hoshi;
+ drawdot z5;
+ endchar;
+beginchar("@",gow#,goh#,0); "Black Stone";
+ x1=x2=x3=0pt;
+ x4=x5=x6=.5w;
+ x7=x8=x9=w;
+ y1=y4=y7=h;
+ y2=y5=y8=.5h;
+ y3=y6=y9=0;
+ z10=setback[z4,z5];
+ z11=setback[z2,z5];
+ z12=setback[z6,z5];
+ z13=setback[z8,z5];
+ pickup pencircle scaled whitepen;
+ fill z10..z11..z12..z13..cycle;
+ picture blackstone; blackstone:=currentpicture;
+ endchar;
+beginchar("!",gow#,goh#,0); "White Stone";
+ x1=x2=x3=0pt;
+ x4=x5=x6=.5w;
+ x7=x8=x9=w;
+ y1=y4=y7=h;
+ y2=y5=y8=.5h;
+ y3=y6=y9=0;
+ z10=setback[z4,z5];
+ z11=setback[z2,z5];
+ z12=setback[z6,z5];
+ z13=setback[z8,z5];
+ pickup pencircle scaled whitepen;
+ draw z10..z11..z12..z13..cycle;
+ picture whitestone; whitestone:=currentpicture;
+ endchar;
+beginchar("1",gow#,goh#,0); "Circle";
+ x1=x2=x3=.25w;
+ x4=x5=x6=.5w;
+ x7=x8=x9=.75w;
+ y1=y4=y7=.75h;
+ y2=y5=y8=.5h;
+ y3=y6=y9=.25w;
+ z10=setback[z4,z5];
+ z11=setback[z2,z5];
+ z12=setback[z6,z5];
+ z13=setback[z8,z5];
+ pickup pencircle scaled widepen;
+ draw z10..z11..z12..z13..cycle;
+ picture circle; circle:=currentpicture;
+ endchar;
+beginchar("C",gow#,goh#,0); "Black Stone, circled";
+ currentpicture:=blackstone;
+ x1=x2=x3=.25w;
+ x4=x5=x6=.5w;
+ x7=x8=x9=.75w;
+ y1=y4=y7=.75h;
+ y2=y5=y8=.5h;
+ y3=y6=y9=.25w;
+ z10=setback[z4,z5];
+ z11=setback[z2,z5];
+ z12=setback[z6,z5];
+ z13=setback[z8,z5];
+ pickup pencircle scaled 1.75widepen;
+ undraw z10..z11..z12..z13..cycle;
+ endchar;
+beginchar("c",gow#,goh#,0); "White Stone, circled";
+ currentpicture:=whitestone;
+ addto currentpicture also circle;
+ endchar;
+beginchar("2",gow#,goh#,0); "Square";
+ x5=.5w;
+ y5=.5h;
+ x10=x11=.25w; 
+ x12=x13=.75w;
+ y10=y12=.75h;
+ y11=y13=.25h;
+ z14=setback[z10,z5];
+ z15=setback[z11,z5];
+ z16=setback[z12,z5];
+ z17=setback[z13,z5];
+ pickup pensquare scaled widepen;
+ draw z14--z15--z17--z16--cycle;
+ picture square; square:=currentpicture;
+ endchar;
+beginchar("S",gow#,goh#,0); "Black Stone, squared";
+ currentpicture:=blackstone;
+ x5=.5w;
+ y5=.5h;
+ x10=x11=.25w; 
+ x12=x13=.75w;
+ y10=y12=.75h;
+ y11=y13=.25h;
+ z14=setback[z10,z5];
+ z15=setback[z11,z5];
+ z16=setback[z12,z5];
+ z17=setback[z13,z5];
+ pickup pensquare scaled 1.75widepen;
+ undraw z14--z15--z17--z16--cycle;
+ endchar;
+beginchar("s",gow#,goh#,0); "White Stone, squared";
+ currentpicture:=whitestone;
+ addto currentpicture also square;
+ endchar;
+beginchar("3",gow#,goh#,0); "Triangle";
+ x1=x2=x3=0pt;
+ x4=x5=x6=.5w;
+ x7=x8=x9=w;
+ y1=y4=y7=h;
+ y2=y5=y8=.5h;
+ y3=y6=y9=0;
+ x14=.066987w; 
+ x15=.933012w;
+ y14=y15=.25h;
+ z10=setback[z4,z5];
+ z16=setback[z14,z5];
+ z17=setback[z15,z5];
+ pickup pencircle scaled widepen;
+ draw z10--z16--z17--cycle;
+ endchar;
+beginchar(":",gow#,goh#,0); "Black Stone, triangled";
+ x1=x2=x3=0pt;
+ x4=x5=x6=.5w;
+ x7=x8=x9=w;
+ y1=y4=y7=h;
+ y2=y5=y8=.5h;
+ y3=y6=y9=0;
+ x14=.066987w; 
+ x15=.933012w;
+ y14=y15=.25h;
+ edgecorrection=.07;
+ z10=setback[z4,z5];
+ z11=setback[z2,z5];
+ z12=setback[z6,z5];
+ z13=setback[z8,z5];
+ z16=setback[z14,z5];
+ z17=setback[z15,z5];
+ z18=edgecorrection[z4,z5];
+ z19=edgecorrection[z16,z5];
+ z20=edgecorrection[z17,z5];
+ fill z10..z11..z12..z13..cycle;
+ pickup pencircle scaled 1.75whitepen;
+ undraw z18--z19--z20--cycle;
+ picture blackstonetriangled; blackstonetriangled:=currentpicture;
+ endchar;
+beginchar("T",gow#,goh#,0); "Black Stone, triangled";
+ currentpicture:=blackstonetriangled;
+ endchar;
+beginchar(";",gow#,goh#,0); "White Stone, triangled";
+ x1=x2=x3=0pt;
+ x4=x5=x6=.5w;
+ x7=x8=x9=w;
+ y1=y4=y7=h;
+ y2=y5=y8=.5h;
+ y3=y6=y9=0;
+ x14=.066987w; 
+ x15=.933012w;
+ y14=y15=.25h;
+ z10=setback[z4,z5];
+ z11=setback[z2,z5];
+ z12=setback[z6,z5];
+ z13=setback[z8,z5];
+ z16=setback[z14,z5];
+ z17=setback[z15,z5];
+ pickup pencircle scaled whitepen;
+ draw z10..z11..z12..z13..cycle;
+ draw z10--z16--z17--cycle;
+ picture whitestonetriangled; whitestonetriangled:=currentpicture;
+ endchar;
+beginchar("t",gow#,goh#,0); "White Stone, triangled";
+ currentpicture:=whitestonetriangled;
+ endchar;
+beginchar("4",gow#,goh#,0); "X";
+ x5=.5w;
+ y5=.5h;
+ x10=x11=.25w; 
+ x12=x13=.75w;
+ y10=y12=.75h;
+ y11=y13=.25h;
+ z14=setback[z10,z5];
+ z15=setback[z11,z5];
+ z16=setback[z12,z5];
+ z17=setback[z13,z5];
+ pickup pencircle scaled widepen;
+ draw z14--z17;
+ draw z15--z16;
+ picture xx; xx:=currentpicture;
+ endchar;
+beginchar("X",gow#,goh#,0); "Black Stone, Xed";
+ currentpicture:=blackstone;
+ x5=.5w;
+ y5=.5h;
+ x10=x11=.25w; 
+ x12=x13=.75w;
+ y10=y12=.75h;
+ y11=y13=.25h;
+ z14=setback[z10,z5];
+ z15=setback[z11,z5];
+ z16=setback[z12,z5];
+ z17=setback[z13,z5];
+ pickup pencircle scaled 1.75widepen;
+ undraw z14--z17;
+ undraw z15--z16;
+ endchar;
+beginchar("x",gow#,goh#,0); "White Stone, Xed";
+ currentpicture:=whitestone;
+ addto currentpicture also xx;
+ endchar;
+beginchar("-",gow#,goh#,0); "Blob: draw area under label (use white ink)";
+ x1=x2=x3=.25w;
+ x4=x5=x6=.5w;
+ x7=x8=x9=.75w;
+ y1=y4=y7=.75h;
+ y2=y5=y8=.5h;
+ y3=y6=y9=.25h;
+ z10=setback[z4,z5];
+ z11=setback[z2,z5];
+ z12=setback[z6,z5];
+ z13=setback[z8,z5];
+ pickup pencircle scaled whitepen;
+ fill z10..z11..z12..z13..cycle;
+ endchar;
+end;
+
+%   
+% 33    21    !     White stone
+% 34    22    "
+% 35    23    #
+% 36    24    $
+% 37    25    %
+% 38    26    &
+% 39    27    ’
+% 40    28    (     Empty vertex, top edge
+% 41    29    )     Empty vertex, bottom edge
+% 42    2A    *     Empty vertex, hoshi
+% 43    2B    +     Empty vertex center of board
+% 44    2C    ,     Empty vertex, lower left corner
+% 45    2D    -   blob (erase)
+% 46    2E    .     Empty vertex, lower right corner
+% 47    2F    /
+% 48    30    0
+% 49    31    1
+% 50    32    2
+% 51    33    3
+% 52    34    4
+% 53    35    5
+% 54    36    6
+% 55    37    7
+% 56    38    8
+% 57    39    9
+% 58    3A    :     Triangled black stone
+% 59    3B    ;     Triangled white stone
+% 60    3C    <     Empty vertex, upper left corner
+% 61    3D    =
+% 62    3E    >     Empty vertex, upper right corner
+% 63    3F    ?
+% 64    40    @     Black stone
+% 65    41    A
+% 66    42    B
+% 67    43    C     Black circle
+% 68    44    D
+% 69    45    E
+% 70    46    F
+% 71    47    G
+% 72    48    H
+% 73    49    I
+% 74    4A    J
+% 75    4B    K
+% 76    4C    L
+% 77    4D    M
+% 78    4E    N
+% 79    4F    O
+% 80    50    P
+% 81    51    Q
+% 82    52    R
+% 83    53    S     Black square
+% 84    54    T     Black triangle
+% 85    55    U
+% 86    56    V
+% 87    57    W
+% 88    58    X     Black X
+% 89    59    Y
+% 90    5A    Z
+% 91    5B    [     Empty vertex, left edge
+% 92    5C    \   ’\\’
+% 93    5D    ]     Empty vertex, right edge
+% 94    5E    ^
+% 95    5F    _
+% 96    60    `
+% 97    61    a
+% 98    62    b
+% 99    63    c     White circle
+% 100   64    d
+% 101   65    e
+% 102   66    f
+% 103   67    g
+% 104   68    h
+% 105   69    i
+% 106   6A    j
+% 107   6B    k
+% 108   6C    l
+% 109   6D    m
+% 110   6E    n
+% 111   6F    o
+% 112   70    p
+% 113   71    q
+% 114   72    r
+% 115   73    s     White square
+% 116   74    t     White triangle
+% 117   75    u
+% 118   76    v
+% 119   77    w
+% 120   78    x     White X
+% 121   79    y
+% 122   7A    z
+% 123   7B    {
+% 124   7C    |
+% 125   7D    }
+% 126   7E    ~
+% 127   7F    DEL

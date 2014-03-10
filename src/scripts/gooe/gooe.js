@@ -15,7 +15,7 @@ var GLIFT_BOOK_SPEC = 'glift_problem_book_spec.txt';
 var inputDir = process.argv[2];
 if (inputDir === undefined) {
   console.log("Input directory must be specified.");
-  process.exit(1); 
+  process.exit(1);
 }
 
 if (!fs.existsSync(inputDir)) {
@@ -44,11 +44,11 @@ document.push("");
 var createCollisionComment = function(flattened) {
   // Collisions have the form:
   //  [
-  //    {/*move*/ 
-  //      point: <point>, 
-  //      color: <color>, 
+  //    {/*move*/
+  //      point: <point>,
+  //      color: <color>,
   //      moveNum: <moveNum>,
-  //      collision: { 
+  //      collision: {
   //        point: <point>,
   //        color: <point>
   //      }
@@ -59,9 +59,9 @@ var createCollisionComment = function(flattened) {
   for (var i = 0; i < collisions.length; i++) {
     var c = collisions[i];
     var color = c.color;
-    outComment += 
-        color.charAt(0).toUpperCase() + color.slice(1).toLowerCase() 
-        + " " + c.moveNum 
+    outComment +=
+        color.charAt(0).toUpperCase() + color.slice(1).toLowerCase()
+        + " " + c.moveNum
         + " at " + flattened.getLabelIntPt(c.point.toString());
     if (i < collisions.length - 1) {
       outComment += ', ';

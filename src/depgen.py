@@ -176,7 +176,6 @@ def main(argv=None):
 
   if '--debug_full' in flags or '--full' in flags:
     combined = CombineSourceFiles(srcs)
-    #combined = CombineWithLibs(combined) TODO
     fd = open(COMBINED_LOC, 'w')
     fd.write(combined)
     fd.close()

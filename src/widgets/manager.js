@@ -21,7 +21,8 @@ glift.widgets.WidgetManager = function(
 glift.widgets.WidgetManager.prototype = {
   draw: function() {
     var that = this;
-    this.getSgfString(function(sgfObj) {
+    var curObj = this.getCurrentSgfObj();
+    this.getSgfString(curObj, function(sgfObj) {
       // Prevent flickering by destroying the widget _after_ loading the SGF.
       that.destroy();
       that.currentWidget = that.createWidget(sgfObj).draw();
@@ -37,20 +38,13 @@ glift.widgets.WidgetManager.prototype = {
    * Get the current SGF Object from the SGF List.
    */
   getCurrentSgfObj: function() {
-    var curSgfObj = this.sgfList[this.sgfListIndex];
-    if (glift.util.typeOf(curSgfObj) === 'string') {
-      var out = {};
-      if (/^\s*\(;/.test(curSgfObj)) {
-        // This is a standard SGF String.
-        out.sgfString = curSgfObj;
-      } else {
-        // assume a URL.
-        out.url = curSgfObj
-      }
-      curSgfObj = out;
-    }
-    var processedObj = glift.widgets.options.setSgfOptionDefaults(
-        curSgfObj, this.sgfDefaults);
+    return this.getSgfObj(this.sgfListIndex);
+  },
+
+  /**
+   * Modify the SgfOptions by resetting the icons settings.
+   */
+  _resetIcons: function(processedObj) {
     if (this.sgfList.length > 1) {
       if (this.allowWrapAround) {
         processedObj.icons.push(this.displayOptions.nextSgfIcon);
@@ -70,11 +64,35 @@ glift.widgets.WidgetManager.prototype = {
   },
 
   /**
+   * Get the SGF Object from the sgfList.
+   */
+  getSgfObj: function(index) {
+    if (index < 0 || index > this.sgfList.length) {
+      throw new Error("Index [" + index +  " ] out of bounds."
+          + " List size was " + this.sgfList.length);
+    }
+    var curSgfObj = this.sgfList[index];
+    if (glift.util.typeOf(curSgfObj) === 'string') {
+      var out = {};
+      if (/^\s*\(;/.test(curSgfObj)) {
+        // This is a standard SGF String.
+        out.sgfString = curSgfObj;
+      } else {
+        // assume a URL.
+        out.url = curSgfObj
+      }
+      curSgfObj = out;
+    }
+    var processedObj = glift.widgets.options.setSgfOptionDefaults(
+        curSgfObj, this.sgfDefaults);
+    return this._resetIcons(processedObj);
+  },
+
+  /**
    * Get the SGF string.  Since these can be loaded with ajax, the data needs to
    * be returned with a callback.
    */
-  getSgfString: function(callback) {
-    var sgfObj = this.getCurrentSgfObj();
+  getSgfString: function(sgfObj, callback) {
     if (sgfObj.url) {
       this.loadSgfWithAjax(sgfObj.url, sgfObj, callback);
     } else {
@@ -138,17 +156,6 @@ glift.widgets.WidgetManager.prototype = {
   prevSgf: function() { this._nextSgfInternal(-1); },
 
   /**
-   * Undraw the most recent widget and remove references to it.
-   */
-  destroy: function() {
-    this.currentWidget && this.currentWidget.destroy();
-    this.currentWidget = undefined;
-    this.temporaryWidget && this.temporaryWidget.destroy();
-    this.temporaryWidget = undefined;
-    return this;
-  },
-
-  /**
    * Clear out the SGF Cache.
    */
   clearSgfCache: function() {
@@ -176,5 +183,42 @@ glift.widgets.WidgetManager.prototype = {
         }
       });
     }
+  },
+
+  /**
+   * Prepopulate the SGF Cache.
+   */
+  prepopulateCache: function(callback) {
+    var done = 0;
+    for (var i = 0; i < this.sgfList.length; i++) {
+      var curObj = this.getSgfObj(i);
+      this.getSgfString(curObj, function() {
+        done += 1;
+      });
+    }
+
+    var that = this;
+    var checkDone = function(val) {
+      if (val > 0 && done < that.sgfList.length) {
+        window.setTimeout(function() {
+          checkDone(val - 1);
+        }, 500); // 500ms
+      } else {
+        callback();
+      }
+    };
+
+    checkDone(3); // Check that we're finished prepopulating (3 checks)
+  },
+
+  /**
+   * Undraw the most recent widget and remove references to it.
+   */
+  destroy: function() {
+    this.currentWidget && this.currentWidget.destroy();
+    this.currentWidget = undefined;
+    this.temporaryWidget && this.temporaryWidget.destroy();
+    this.temporaryWidget = undefined;
+    return this;
   }
 };

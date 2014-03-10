@@ -18,7 +18,7 @@ glift.widgets.widgetsTest = function() {
     var sgfObj = currentWidget.sgfOptions;
     ok(sgfObj !== undefined);
     deepEqual(sgfObj.sgfString, testdata.sgfs.complexproblem);
-    deepEqual(sgfObj.initialPosition, '');
+    deepEqual(sgfObj.initialPosition, '0');
     deepEqual(glift.util.typeOf(sgfObj.problemCallback), 'function');
     deepEqual(sgfObj.widgetType, glift.enums.widgetTypes.GAME_VIEWER);
     manager.destroy();

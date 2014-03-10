@@ -4066,6 +4066,9 @@ glift.displays.diagrams = {};
  * Create a gooe-font diagram.
  */
 glift.displays.diagrams.gooe = {
+  /**
+   * Mapping from flattened symbol to char
+   */
   charMapping: {
     // BASE
     TL_CORNER: '\\0??<',
@@ -4111,6 +4114,17 @@ glift.displays.diagrams.gooe = {
     // MISC_STONE_INLINE: '\goinChar{%s}',
   },
 
+  /**
+   * Takes a flattened set of symbols and produces a diagram. Cool. Returns an
+   * array of arrays, where each cell in the (essentially) in the table
+   * corresponds precisely to a symbol in the flattened 2D array, module header
+   * and footer information.  Generally, users will immediately want to call
+   *
+   *  diagramArrToString(...)
+   *
+   * on the output of this function. However, it's quite useful for testing /
+   * manipulation to return the table-form.
+   */
   diagramArray: function(flattened) {
     var symbolFromEnum = glift.bridge.flattener.symbolFromEnum;
     var symb = glift.bridge.flattener.symbols;
@@ -4129,7 +4143,7 @@ glift.displays.diagrams.gooe = {
         var pair = symbolRow[j];
         var pt = glift.util.point(j, i);
         var intPt = flattened.ptToIntpt(pt);
-        
+
         var base = pair.base;
         var baseName = symbolFromEnum(base);
         var mark = pair.mark;
@@ -4145,7 +4159,7 @@ glift.displays.diagrams.gooe = {
               outChar = repl(cmap.WSTONE_TEXTLABEL, lbl); break;
             case symb.BSTONE:
               outChar = repl(cmap.BSTONE_TEXTLABEL, lbl); break;
-            default: 
+            default:
               outChar = repl(cmap.TEXTLABEL, lbl);
           }
         } else if (cmap[combinedName] !== undefined) {
@@ -4163,6 +4177,9 @@ glift.displays.diagrams.gooe = {
     return lines;
   },
 
+  /**
+   * Convert a diagram array to a string. Really, just a wrapper
+   */
   diagramArrToString: function(diagramArray) {
     outArr = [];
     for (var i = 0; i < diagramArray.length; i++) {
@@ -4171,6 +4188,10 @@ glift.displays.diagrams.gooe = {
     return outArr.join("\n");
   },
 
+  /**
+   * Some built in defs that are useful for generating LaTeX books using Gooe
+   * fonts.
+   */
   defs: {
     basicHeader: [
       '\\documentclass[a5paper]{book}',
@@ -4209,6 +4230,9 @@ glift.displays.diagrams.gooe = {
     ]
   },
 
+  /**
+   * Generate the LaTeX document header as a string.
+   */
   documentHeader: function(baseFont) {
     var baseFont = baseFont || 'cmss';
     var fontDefsBase = [
@@ -6724,7 +6748,6 @@ glift.controllers.BoardEditorMethods = {
   },
 
   pass: function() { throw new Error('Not implemented'); },
-  clearMark: function() { throw new Error('Not implemented'); },
   clearStone: function() { throw new Error('Not implemented'); }
 };
 /**
@@ -7746,15 +7769,73 @@ glift.bridge.intersections = {
   }
 };
 /**
+ * Convert all the panels in a widget manager into some form.
+ */
+glift.bridge.managerConverter = {
+  /**
+   * Convert all the panels in a widget manager into a LaTeX book using gooe
+   * fonts. Returns the string form of the book
+   */
+  toBook: function(manager, callback) {
+    var document = [];
+    var showVars = glift.enums.showVariations.NEVER;
+    var gooe = glift.displays.diagrams.gooe;
+    document.push(gooe.documentHeader());
+    document.push('');
+
+    manager.prepopulateCache(function() {
+      for (var i = 0, len = manager.sgfList.length; i < len; i++) {
+        var curObj = manager.getSgfObj(i);
+        // console.log(curObj);
+        var boardRegion = curObj.boardRegion;
+        var initPos = curObj.initialPosition;
+        var treepath = glift.rules.treepath.parseInitPosition(initPos);
+        var nextMovesTreepath = [];
+        // console.log(treepath);
+
+        // This should be synchronous, since we've prepopulated the cache.
+        manager.getSgfString(curObj, function(sgfObj) {
+          var initPos = curObj.initialPosition;
+          var movetree = glift.rules.movetree.getFromSgf(sgfObj.sgfString, treepath);
+          var goban = glift.rules.goban.getFromMoveTree(movetree, treepath).goban;
+          var flattened = glift.bridge.flattener.flatten(
+              movetree, goban, boardRegion, showVars, nextMovesTreepath);
+          var gooeArray = glift.displays.diagrams.gooe.diagramArray(flattened);
+          var strOut = glift.displays.diagrams.gooe.diagramArrToString(gooeArray);
+
+          document.push('\\vfill');
+          document.push('\\newpage');
+          document.push(strOut);
+          document.push(flattened.comment)
+        });
+      }
+      document.push(gooe.defs.basicFooter);
+      callback(document.join("\n"));
+    });
+  }
+};
+/**
  * Widgets are toplevel objects, which combine display and
  * controller/rules bits together.
  */
 glift.widgets = {
   /**
-   * Returns a widgetManager.
+   * Returns a widgetManager and draw the widget
    */
   create: function(options) {
     glift.util.perfInit();
+    var manager = glift.widgets.createNoDraw(options);
+    glift.util.majorPerfLog('Finish creating manager');
+    manager.draw();
+    glift.util.majorPerfLog('Finish drawing manager');
+    glift.util.perfDone();
+    return manager;
+  },
+
+  /**
+   * Create a widgetManager without performing 'draw'.
+   */
+  createNoDraw: function(options) {
     options = glift.widgets.options.setBaseOptionDefaults(options);
     if (options.sgf && options.sgfList.length === 0) {
       options.sgfList = [options.sgf];
@@ -7764,10 +7845,8 @@ glift.widgets = {
       options.initialListIndex,
       options.allowWrapAround,
       options.sgfDefaults,
-      glift.widgets.options.getDisplayOptions(options)).draw();
-    glift.util.majorPerfLog('Finish creating manager');
-    glift.util.perfDone();
-    return manager;
+      glift.widgets.options.getDisplayOptions(options))
+    return manager
   }
 };
 
@@ -8129,7 +8208,8 @@ glift.widgets.WidgetManager = function(
 glift.widgets.WidgetManager.prototype = {
   draw: function() {
     var that = this;
-    this.getSgfString(function(sgfObj) {
+    var curObj = this.getCurrentSgfObj();
+    this.getSgfString(curObj, function(sgfObj) {
       // Prevent flickering by destroying the widget _after_ loading the SGF.
       that.destroy();
       that.currentWidget = that.createWidget(sgfObj).draw();
@@ -8145,20 +8225,13 @@ glift.widgets.WidgetManager.prototype = {
    * Get the current SGF Object from the SGF List.
    */
   getCurrentSgfObj: function() {
-    var curSgfObj = this.sgfList[this.sgfListIndex];
-    if (glift.util.typeOf(curSgfObj) === 'string') {
-      var out = {};
-      if (/^\s*\(;/.test(curSgfObj)) {
-        // This is a standard SGF String.
-        out.sgfString = curSgfObj;
-      } else {
-        // assume a URL.
-        out.url = curSgfObj
-      }
-      curSgfObj = out;
-    }
-    var processedObj = glift.widgets.options.setSgfOptionDefaults(
-        curSgfObj, this.sgfDefaults);
+    return this.getSgfObj(this.sgfListIndex);
+  },
+
+  /**
+   * Modify the SgfOptions by resetting the icons settings.
+   */
+  _resetIcons: function(processedObj) {
     if (this.sgfList.length > 1) {
       if (this.allowWrapAround) {
         processedObj.icons.push(this.displayOptions.nextSgfIcon);
@@ -8178,11 +8251,35 @@ glift.widgets.WidgetManager.prototype = {
   },
 
   /**
+   * Get the SGF Object from the sgfList.
+   */
+  getSgfObj: function(index) {
+    if (index < 0 || index > this.sgfList.length) {
+      throw new Error("Index [" + index +  " ] out of bounds."
+          + " List size was " + this.sgfList.length);
+    }
+    var curSgfObj = this.sgfList[index];
+    if (glift.util.typeOf(curSgfObj) === 'string') {
+      var out = {};
+      if (/^\s*\(;/.test(curSgfObj)) {
+        // This is a standard SGF String.
+        out.sgfString = curSgfObj;
+      } else {
+        // assume a URL.
+        out.url = curSgfObj
+      }
+      curSgfObj = out;
+    }
+    var processedObj = glift.widgets.options.setSgfOptionDefaults(
+        curSgfObj, this.sgfDefaults);
+    return this._resetIcons(processedObj);
+  },
+
+  /**
    * Get the SGF string.  Since these can be loaded with ajax, the data needs to
    * be returned with a callback.
    */
-  getSgfString: function(callback) {
-    var sgfObj = this.getCurrentSgfObj();
+  getSgfString: function(sgfObj, callback) {
     if (sgfObj.url) {
       this.loadSgfWithAjax(sgfObj.url, sgfObj, callback);
     } else {
@@ -8246,17 +8343,6 @@ glift.widgets.WidgetManager.prototype = {
   prevSgf: function() { this._nextSgfInternal(-1); },
 
   /**
-   * Undraw the most recent widget and remove references to it.
-   */
-  destroy: function() {
-    this.currentWidget && this.currentWidget.destroy();
-    this.currentWidget = undefined;
-    this.temporaryWidget && this.temporaryWidget.destroy();
-    this.temporaryWidget = undefined;
-    return this;
-  },
-
-  /**
    * Clear out the SGF Cache.
    */
   clearSgfCache: function() {
@@ -8284,6 +8370,43 @@ glift.widgets.WidgetManager.prototype = {
         }
       });
     }
+  },
+
+  /**
+   * Prepopulate the SGF Cache.
+   */
+  prepopulateCache: function(callback) {
+    var done = 0;
+    for (var i = 0; i < this.sgfList.length; i++) {
+      var curObj = this.getSgfObj(i);
+      this.getSgfString(curObj, function() {
+        done += 1;
+      });
+    }
+
+    var that = this;
+    var checkDone = function(val) {
+      if (val > 0 && done < that.sgfList.length) {
+        window.setTimeout(function() {
+          checkDone(val - 1);
+        }, 500); // 500ms
+      } else {
+        callback();
+      }
+    };
+
+    checkDone(3); // Check that we're finished prepopulating (3 checks)
+  },
+
+  /**
+   * Undraw the most recent widget and remove references to it.
+   */
+  destroy: function() {
+    this.currentWidget && this.currentWidget.destroy();
+    this.currentWidget = undefined;
+    this.temporaryWidget && this.temporaryWidget.destroy();
+    this.temporaryWidget = undefined;
+    return this;
   }
 };
 glift.widgets.options = {

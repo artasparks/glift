@@ -263,6 +263,5 @@ glift.controllers.BoardEditorMethods = {
   },
 
   pass: function() { throw new Error('Not implemented'); },
-  clearMark: function() { throw new Error('Not implemented'); },
   clearStone: function() { throw new Error('Not implemented'); }
 };
