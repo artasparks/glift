@@ -1,0 +1,50 @@
+% 2-column format for sgf2tex. See the TeXBook (Knuth: Addison Wesley, 1986)
+% p.256. Two column formats sometimes are used in Go books and magazines, 
+% such as INVINCIBLE: The Games of Shusaku by John Power. Knuth describes
+% a more elaborate 2-column format in Appendix E to the TeXBook.
+% 
+%
+\font\gooa=gooa at 8.33333 pt
+\font\goea=goea at 8.33333 pt
+\font\goob=goob at 8.33333 pt
+\font\goeb=goeb at 8.33333 pt
+\font\gooc=gooc at 8.33333 pt
+\font\goec=goec at 8.33333 pt
+\font\good=good at 8.33333 pt
+\font\goed=goed at 8.33333 pt
+\font\gooegb=gooegb at 8.33333 pt
+\font\gooemt=gooemt at 8.33333 pt
+\font\eighti=cmti8
+\def\goo{\offinterlineskip\parindent=0pt\parskip=0pt\obeylines
+  \def\0##1##2##3{\if##1?\gooegb ##3 \else \gooa\char##1##2 \fi}%
+  \def\1##1##2##3{\if##1?\gooegb ##3 \else \goob\char##1##2 \fi}%
+  \def\2##1##2##3{\if##1?\gooegb ##3 \else \gooc\char##1##2 \fi}%
+  \def\3##1##2##3{\if##1?\gooegb ##3 \else \good\char##1##2 \fi}%
+  \def\-##1##2{\gooegb ##1 }%
+  \def\!##1{\hbox to 10pt{\hfil\raise3pt\hbox{\eighti ##1}\hfil}}%
+}
+\def\goe{\offinterlineskip\parindent=0pt\parskip=0pt\obeylines
+  \def\0##1##2##3{\if##1?\gooegb ##3 \else \goea\char##1##2 \fi}%
+  \def\1##1##2##3{\if##1?\gooegb ##3 \else \goeb\char##1##2 \fi}%
+  \def\2##1##2##3{\if##1?\gooegb ##3 \else \goec\char##1##2 \fi}%
+  \def\3##1##2##3{\if##1?\gooegb ##3 \else \goed\char##1##2 \fi}%
+  \def\-##1##2{\gooegb ##1 }%
+  \def\!##1{\hbox to 10pt{\hfil\raise3pt\hbox{\eighti ##1}\hfil}}%
+}
+\def\textstone#1{\hbox to 10pt{\lower4pt\hbox{#1}\hfil}}
+\def\bigtextstone#1{\hbox to 12pt{\lower4pt\hbox{#1}\hfil}}
+\def\\{{\char'134}}
+\newdimen\fullhsize
+\fullhsize=400pt\hsize=190pt
+\def\fullline{\hbox to\fullhsize}
+\let\lr=L
+\newbox\leftcolumn
+\output={\if L\lr
+  \global\setbox\leftcolumn=\columnbox\global\let\lr=R
+  \else\doubleformat\global\let\lr=L\fi
+  \ifnum\outputpenalty>-20000\else\dosupereject\fi}
+\def\doubleformat{\shipout\vbox{\makeheadline
+  \fullline{\box\leftcolumn\hfil\columnbox}
+  {\baselineskip=24pt\fullline{\the\footline}}}
+  \advancepageno}
+\def\columnbox{\leftline{\pagebody}}
