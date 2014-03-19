@@ -1,0 +1,19 @@
+input paramsa;
+smudge:=0;
+input gobas;
+font_identifier:="gobl"; font_size 10pt#;
+if unknown cmbase: input cmbase fi
+
+input paramsc;
+
+def paste(expr code,first,correction)=
+beginchar(code,gow#,goh#,0); "One labelled black stone";
+  italcorr 0;
+  adjust_fit(0,0);
+  currentpicture:=blackstone -
+   (first shifted (oneleft,oneheight) shifted (correction*gow,.02goh));
+ endchar;
+enddef;
+
+input goxl;
+end;

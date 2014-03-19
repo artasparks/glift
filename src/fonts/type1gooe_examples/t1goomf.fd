@@ -1,0 +1,13 @@
+%Filename: t1goomf.fd
+%Created by: tex gooegb-drv
+%Created using fontinst v1.933
+
+%THIS FILE SHOULD BE PUT IN A TEX INPUTS DIRECTORY
+
+\ProvidesFile{t1goomf.fd}
+   [2014/03/17 Fontinst v1.933 font definitions for T1/goomf.]
+
+\DeclareFontFamily{T1}{goomf}{}
+
+
+\endinput

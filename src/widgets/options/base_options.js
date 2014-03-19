@@ -191,8 +191,9 @@ glift.widgets.options.baseOptions = {
   divId: 'glift_display',
 
   /**
-   * Specify a background image for the go board.  You can specify an
-   * absolute or a relative path.
+   * Specify a background image for the go board.  You can specify an absolute
+   * or a relative path.  As you may expect, you cannot do cross domain
+   * requests.
    *
    * Examples:
    * 'images/kaya.jpg'
@@ -201,10 +202,14 @@ glift.widgets.options.baseOptions = {
   goBoardBackground: '',
 
   /**
-   * Whether or not to use the comment bar. It's possible this should be made
-   * part of the SGF.
+   * Whether or not to use the comment bar.
    */
   useCommentBar: true,
+
+  /**
+   * Whether or not to use the title bar.
+   */
+  useTitleBar: true,
 
   /**
    * Div splits with the CommentBar.  Thus, there are three resulting divs - the

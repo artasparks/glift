@@ -39,6 +39,9 @@ glift.widgets.BaseWidget.prototype = {
     if (this.displayOptions.useCommentBar) {
       requiredComponents.push(comps.COMMENT_BOX);
     }
+    if (this.displayOptions.useTitleBar) {
+      requiredComponents.push(comps.TITLE_BAR);
+    }
     if (this.sgfOptions.icons.length > 0) {
       requiredComponents.push(comps.ICONBAR);
     }

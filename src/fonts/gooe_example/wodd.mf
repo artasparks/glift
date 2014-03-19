@@ -1,0 +1,68 @@
+if odd smudge: epsil:=1; else: epsil:=0; fi;
+
+def evenone(expr code,first)=
+beginchar(code,gow#,goh#,0); "One digit black stone";
+  italcorr 0;
+  adjust_fit(0,0);
+  currentpicture:=blackstone;
+  for n=-(smudge-epsil)/2 step 1 until (smudge+epsil)/2:
+   currentpicture:=currentpicture-
+   (first shifted (oneleft,oneheight) shifted (0,n));
+  endfor;
+ endchar;
+enddef;
+
+def oddone(expr code,first)=
+ beginchar(code,gow#,goh#,0); "One digit white stone";
+  italcorr 0;
+  adjust_fit(0,0);
+  currentpicture:=whitestone+(first shifted (oneleft,oneheight));
+ endchar;
+enddef;
+
+def eventwo(expr code,first,second)=
+ beginchar(code,gow#,goh#,0); "Two digit black stone";
+  italcorr 0;
+  adjust_fit(0,0);
+  currentpicture:=blackstone;
+  for n=-(smudge-epsil)/2 step 1 until (smudge+epsil)/2:
+   currentpicture:=blackstone-
+   (first shifted (twoleft,twoheight) shifted (0,n))-
+   (second shifted (tworight,twoheight) shifted (0,n));
+  endfor;
+ endchar;
+enddef;
+
+def oddtwo(expr code,first,second)=
+ beginchar(code,gow#,goh#,0); "Two digit white stone";
+  italcorr 0;
+  adjust_fit(0,0);
+  currentpicture:=whitestone+(first shifted (twoleft,twoheight))+
+  (second shifted (tworight,twoheight));
+ endchar;
+enddef;
+
+def eventhree(expr code,first,second,third)=
+ beginchar(code,gow#,goh#,0); "Three digit black stone";
+  italcorr 0;
+  adjust_fit(0,0);
+  currentpicture:=blackstone;
+  for n=-(smudge-epsil)/2 step 1 until (smudge+epsil)/2:
+  currentpicture:=blackstone-
+   (first shifted (threeleft,threeheight) shifted (0,n))-
+   (second shifted (threemiddle,threeheight) shifted (0,n))-
+   (third shifted (threeright,threeheight) shifted (0,n));
+  endfor;
+ endchar; 
+enddef;
+
+def oddthree(expr code,first,second,third)=
+ beginchar(code,gow#,goh#,0); "Three digit white stone";
+  italcorr 0;
+  adjust_fit(0,0);
+  currentpicture:=whitestone+
+   (first shifted (threeleft,threeheight))+
+   (second shifted (threemiddle,threeheight))+
+   (third shifted (threeright,threeheight));
+ endchar; 
+enddef;

@@ -136,7 +136,8 @@ glift.enums = {
     BOARD: 'BOARD',
     COMMENT_BOX: 'COMMENT_BOX',
     EXTRA_ICONBAR: 'EXTRA_ICONBAR',
-    ICONBAR: 'ICONBAR'
+    ICONBAR: 'ICONBAR',
+    TITLE_BAR: 'TITLE_BAR'
   },
 
   dubug: {

@@ -1,0 +1,8 @@
+input paramsa;
+input gobas;
+font_identifier:="gooa"; font_size 10pt#;
+if unknown cmbase: input cmbase fi
+input paramsb;
+input bodd;
+input goxa;
+end;

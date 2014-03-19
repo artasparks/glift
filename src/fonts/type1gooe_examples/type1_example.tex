@@ -1,0 +1,43 @@
+\documentclass{book}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{CJKutf8}
+% \usepackage{goofont}
+% \usepackage{goosimple}
+% \usepackage{gooegb}
+% \usepackage{gooemacs}
+\usepackage{xcolor}
+\usepackage{wrapfig}
+\usepackage{unicode}
+\usepackage[margin=1in]{geometry}
+
+\usefont{T1}{gooegb}{}{}
+
+\newenvironment{Korean}{\CJKfamily{mj}}{}
+
+\begin{document}
+
+\title{Book Testing}
+\author{Josh Hoak}
+\maketitle
+
+Japanese Character Test:
+\begin{CJK}{UTF8}{min}
+囲碁
+\end{CJK}
+
+Chinese Character Test:
+\begin{CJK}{UTF8}{min}
+圍棋
+\end{CJK}
+
+Korean Character Test:
+\begin{CJK}{UTF8}{}
+\begin{Korean}
+바둑
+\end{Korean}
+\end{CJK}
+
+% Display a White (!) and Black (@) stone.
+{\gooegb ! @}
+\end{document}
