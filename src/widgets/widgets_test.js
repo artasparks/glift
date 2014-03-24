@@ -42,7 +42,7 @@ glift.widgets.widgetsTest = function() {
     ok(manager !== undefined);
 
     // It's rather nice to keep one copy of the widget manager around, to play
-    // with.
+    // with after the tests run for manual verification.
     // manager.destroy();
   });
 };

@@ -108,6 +108,19 @@ glift.widgets.options.baseOptions = {
      */
     totalCorrectVariationsOverride: undefined,
 
+    /**
+     * Book Data. Data used for
+     *
+     * If defined, should have the following form:
+     *
+     * {
+     *  title: "Chapter Title"
+     *  size: "large" or "small"
+     *  ... future options
+     * }
+     */
+    bookData: {},
+
     //-------------------------------------------------------------------------
     // These options must always be overriden by the widget type overrides.
     //
@@ -202,6 +215,17 @@ glift.widgets.options.baseOptions = {
   goBoardBackground: '',
 
   /**
+   * Global book data contains settings for book-creation.
+   *
+   * If defined, should have the following format:
+   *  {
+   *    title: "My book"
+   *    template: "/url/to/book/template.tex" or "raw string"
+   *  }
+   */
+  globalBookData: {},
+
+  /**
    * Whether or not to use the comment bar.
    */
   useCommentBar: true,
@@ -209,8 +233,10 @@ glift.widgets.options.baseOptions = {
   /**
    * Whether or not to use the title bar.
    */
+  // TODO(kashomon): Implement this.
   useTitleBar: true,
 
+  // TODO(kashomon): Rework the components and splits.
   /**
    * Div splits with the CommentBar.  Thus, there are three resulting divs - the
    * remainder is used by the last div - the icon bar.

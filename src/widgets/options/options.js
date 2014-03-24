@@ -4,6 +4,7 @@ glift.widgets.options = {
    * an immutable operation on a set of options.
    */
   setBaseOptionDefaults: function(options) {
+    glift.widgets.options.validateOptions(options);
     var options = glift.util.simpleClone(options);
     var baseTemplate = glift.util.simpleClone(
         glift.widgets.options.baseOptions);
@@ -73,5 +74,15 @@ glift.widgets.options = {
       }
     }
     return outOptions;
+  },
+
+  /**
+   * Do some basic validity checking on the options.
+   */
+  validateOptions: function(options) {
+    if (options.sgf && options.sgfList) {
+      throw new Error('Illegal options configuration: you cannot define both ' +
+          'sgf and sgfList')
+    }
   }
 };

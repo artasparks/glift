@@ -15,7 +15,6 @@ var CommentBox = function(
 
 CommentBox.prototype = {
   draw: function() {
-    // TODO(kashomon): Remove JQuery References
     this.commentBoxObj = $('#' + this.divId);
     var commentBoxHeight = $('#' + this.divId).height();
     var padding = 10; // TODO(kashomon): Put in theme

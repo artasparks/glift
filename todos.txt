@@ -76,7 +76,7 @@ Open Questions:
 
 Todos:
 - Add support for numbering on the edges, beyond the lines.
-- Add tests frr marks.
+- Add tests for marks.
 - Add shadow (perhaps even border) to comment box.
 - Make it possible to change the width of the go board border.
 - Add the ability to create static images (i.e., canvas support)
@@ -93,16 +93,18 @@ Todos:
 - Add title bar
 - Support AE (clear intersection).
 - Support PL (changes who plays first)
-- Support export for different types
+- Support export for different types -- i.e., SVG, Bitmap, PDF, etc.
 - Add a way to specify next-moves, so that auto-numbering can be used for
   EXAMPLE diagrams.
 - Make a distinction between integer points and float points.  We can cache
   integer points, but we shouldn't cache float points.
-- Combine the selector and bar by putting everything in bar in an abstract
-  class.
+- Combine the icon selector and icon bar by putting everything in bar in an
+  abstract class.
 - Escaping character '\' in the context of \] is leaking into the comments and
   needs to be removed.
 - showVariations default in sgfDefaults doesn't work.
+- Speed up creation of comment bar and icon bar.
+-
 
 - Create game editor widget. (many dependencies)
   - Add moveTree support for deleting properties
