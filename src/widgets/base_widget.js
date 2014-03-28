@@ -248,7 +248,7 @@ glift.widgets.BaseWidget.prototype = {
         var actionName = that.sgfOptions.keyMappings[name];
         // actionNamespaces look like: icons.arrowleft.mouseup
         var actionNamespace = actionName.split('.');
-        var action = that.displayOptions[actionNamespace[0]];
+        var action = that.actions[actionNamespace[0]];
         for (var i = 1; i < actionNamespace.length; i++) {
           action = action[actionNamespace[i]];
         }

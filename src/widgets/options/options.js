@@ -98,7 +98,7 @@ glift.widgets.options = {
     var widgetOverrides = glift.widgets.options[widgetType];
     for (var key in widgetOverrides) {
       if (!sgf[key]) {
-        sgf[key] = widgetOverrides[key];
+        sgf[key] = glift.util.simpleClone(widgetOverrides[key]);
       }
     }
     for (var key in sgfDefaults) {

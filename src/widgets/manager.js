@@ -124,8 +124,7 @@ glift.widgets.WidgetManager.prototype = {
    */
   createTemporaryWidget: function(sgfObj) {
     this.currentWidget.destroy();
-    sgfObj = glift.widgets.options.setSgfOptionDefaults(
-        sgfObj, this.sgfDefaults);
+    sgfObj = glift.widgets.options.setSgfOptions(sgfObj, this.sgfDefaults);
     this.temporaryWidget = this.createWidget(sgfObj).draw();
   },
 
