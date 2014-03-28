@@ -182,6 +182,7 @@ glift.displays.diagrams.gooe = {
     var out = [].concat(defs.basicHeader)
       .concat(fontDefsBase)
       .concat(defs.sizeDefs)
+      .concat(defs.bigBoardDefs)
       .concat(defs.normalBoardDefs)
     return out.join("\n");
   }
