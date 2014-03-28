@@ -19,18 +19,19 @@ glift.widgets = {
   /**
    * Create a widgetManager without performing 'draw'.
    */
-  createNoDraw: function(options) {
-    options = glift.widgets.options.setBaseOptionDefaults(options);
-    if (options.sgf && options.sgfList.length === 0) {
-      options.sgfList = [options.sgf];
-    }
-    var manager = new glift.widgets.WidgetManager(
-      options.sgfList,
-      options.initialListIndex,
-      options.allowWrapAround,
-      options.sgfDefaults,
-      glift.widgets.options.getDisplayOptions(options))
-    return manager
+  createNoDraw: function(inOptions) {
+    var options = glift.widgets.options.setOptionDefaults(inOptions);
+    var actions = {};
+    actions.iconActions = options.iconActions;
+    actions.stoneActions = options.stoneActions;
+    return new glift.widgets.WidgetManager(
+        options.divId,
+        options.sgfList,
+        options.initialListIndex,
+        options.allowWrapAround,
+        options.sgfDefaults,
+        options.display,
+        actions);
   }
 };
 

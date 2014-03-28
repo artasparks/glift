@@ -104,7 +104,7 @@ Todos:
   needs to be removed.
 - showVariations default in sgfDefaults doesn't work.
 - Speed up creation of comment bar and icon bar.
--
+- Fix problems displaying two go boards
 
 - Create game editor widget. (many dependencies)
   - Add moveTree support for deleting properties

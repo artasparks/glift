@@ -27,7 +27,7 @@ glift.widgets.widgetsTest = function() {
   test("Succesfully create a complex problem series", function() {
     var wtypes = glift.enums.widgetTypes;
     var sgfs = testdata.sgfs;
-    var manager  = glift.widgets.create({
+    var manager = glift.widgets.create({
       sgfList: [{
           sgfString: sgfs.complexproblem,
           widgetType: wtypes.STANDARD_PROBLEM
@@ -40,6 +40,7 @@ glift.widgets.widgetsTest = function() {
         }]
     });
     ok(manager !== undefined);
+    ok($('#' + manager.divId).text(), 'must not be empty.');
 
     // It's rather nice to keep one copy of the widget manager around, to play
     // with after the tests run for manual verification.

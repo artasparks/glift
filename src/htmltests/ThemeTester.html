@@ -129,8 +129,8 @@
       }
       #glift_display2 {
         position:relative;
-        width: 500;
-        height: 500;
+        width: 600;
+        height: 600;
       }
       #glift_display3 {
         position:relative;
@@ -161,29 +161,39 @@
     <script type="text/javascript">
       var basicProblem = glift.create({
         sgf: testdata.sgfs.complexproblem,
-        divId: "glift_display1",
-        theme: "DEFAULT",
+        divId: 'glift_display1',
+        display: {
+          theme: 'DEFAULT',
+        }
       });
       var basicProblem2 = glift.create({
         sgf: testdata.sgfs.complexproblem,
-        divId: "glift_display2",
-        theme: "DEPTH",
-        goBoardBackground: '../themes/assets/bambootile_warm.jpg'
+        divId: 'glift_display2',
+        display: {
+          theme: 'DEPTH',
+          goBoardBackground: '../themes/assets/bambootile_warm.jpg'
+        }
       });
       var basicProblem3 = glift.create({
         sgf: testdata.sgfs.complexproblem,
-        divId: "glift_display3",
-        theme: "TEXTBOOK",
+        divId: 'glift_display3',
+        display: {
+          theme: 'TEXTBOOK',
+        }
       });
       var basicProblem4 = glift.create({
         sgf: testdata.sgfs.complexproblem,
-        divId: "glift_display4",
-        theme: "MOODY",
+        divId: 'glift_display4',
+        display: {
+          theme: 'MOODY',
+        }
       });
       var basicProblem5 = glift.create({
         sgf: testdata.sgfs.complexproblem,
-        divId: "glift_display5",
-        theme: "TRANSPARENT",
+        divId: 'glift_display5',
+        display: {
+          theme: 'TRANSPARENT',
+        }
       });
     </script>
   </body>

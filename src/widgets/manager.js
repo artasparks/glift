@@ -1,14 +1,25 @@
 /**
  * The Widget Manager manages state across widgets.  When widgets are created,
  * they are always created in the context of a Widget Manager.
+ *
+ * divId: the element id of the div without the selector hash (#)
+ * sgfList: array of sgf objects.
+ * sgfListIndex: numbered index into the sgfList.
+ * allowWrapAround: true or false.  Whether to allow wrap around in the SGF
+ *    manager.
+ * sgfDefaults: filled-in sgf default options.  See ./options/base_options.js
+ * displayOptions: filled-in display options. See ./options/base_options.js
+ * actions: combination of stone actions and icon actions.
  */
-glift.widgets.WidgetManager = function(
-    sgfList, sgfListIndex, allowWrapAround, sgfDefaults, displayOptions) {
+glift.widgets.WidgetManager = function(divId, sgfList, sgfListIndex,
+      allowWrapAround, sgfDefaults, displayOptions, actions) {
+  this.divId = divId;
   this.sgfList = sgfList;
   this.sgfListIndex = sgfListIndex;
   this.allowWrapAround = allowWrapAround
   this.sgfDefaults = sgfDefaults;
   this.displayOptions = displayOptions;
+  this.actions = actions;
 
   // Defined on draw
   this.currentWidget = undefined;
@@ -83,9 +94,8 @@ glift.widgets.WidgetManager.prototype = {
       }
       curSgfObj = out;
     }
-    var processedObj = glift.widgets.options.setSgfOptionDefaults(
-        curSgfObj, this.sgfDefaults);
-    return this._resetIcons(processedObj);
+    var proc = glift.widgets.options.setSgfOptions(curSgfObj, this.sgfDefaults);
+    return this._resetIcons(proc);
   },
 
   /**
@@ -104,7 +114,8 @@ glift.widgets.WidgetManager.prototype = {
    * Create a Sgf Widget.
    */
   createWidget: function(sgfObj) {
-    return new glift.widgets.BaseWidget(sgfObj, this.displayOptions, this);
+    return new glift.widgets.BaseWidget(
+        this.divId, sgfObj, this.displayOptions, this.actions, this);
   },
 
   /**
@@ -208,7 +219,7 @@ glift.widgets.WidgetManager.prototype = {
       }
     };
 
-    checkDone(3); // Check that we're finished prepopulating (3 checks)
+    checkDone(3); // Check that we've finished prepopulating (3 checks)
   },
 
   /**

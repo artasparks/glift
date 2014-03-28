@@ -1,19 +1,22 @@
 /**
  * The base web UI widget.  It can be extended, if necessary.
  */
-glift.widgets.BaseWidget = function(sgfOptions, displayOptions, manager) {
+glift.widgets.BaseWidget = function(
+    divId, sgfOptions, displayOptions, actions, manager) {
+  this.wrapperDiv = divId; // We split the wrapper div.
   this.type = sgfOptions.type;
   this.sgfOptions = glift.util.simpleClone(sgfOptions);
   this.displayOptions = glift.util.simpleClone(displayOptions);
+  this.actions = actions; // deeply nested -- not worth cloning.
   this.manager = manager;
 
-  // Used for problems, exclusively
+  // Used for problems, exclusively.
+  // TODO(kashomon): Factor these out into some sort of problemState.
   this.correctness = undefined;
   this.correctNextSet = undefined;
   this.numCorrectAnswers = undefined;
   this.totalCorrectAnswers = undefined;
 
-  this.wrapperDiv = displayOptions.divId; // We split the wrapper div.
   this.controller = undefined; // Initialized with draw.
   this.display = undefined; // Initialized by draw.
   this.iconBar = undefined; // Initialized by draw.
@@ -21,13 +24,13 @@ glift.widgets.BaseWidget = function(sgfOptions, displayOptions, manager) {
 };
 
 glift.widgets.BaseWidget.prototype = {
-  /**
-   * Draw the widget.
-   */
+  /** Draw the widget. */
   draw: function() {
     this.controller = this.sgfOptions.controllerFunc(this.sgfOptions);
     glift.util.majorPerfLog('Created controller');
+
     this.displayOptions.intersections = this.controller.getIntersections();
+
     var comps = glift.enums.boardComponents;
     var requiredComponents = [comps.BOARD];
     this.displayOptions.boardRegion =
@@ -36,6 +39,7 @@ glift.widgets.BaseWidget.prototype = {
         : this.sgfOptions.boardRegion;
     this.displayOptions.rotation = this.sgfOptions.rotation;
     glift.util.majorPerfLog('Calculated board regions');
+
     if (this.displayOptions.useCommentBar) {
       requiredComponents.push(comps.COMMENT_BOX);
     }
@@ -71,11 +75,14 @@ glift.widgets.BaseWidget.prototype = {
       glift.util.majorPerfLog('IconBar');
     }
 
-    divIds.iconBarBoxId && this._initIconActions(this.iconBar);
+    divIds.iconBarBoxId && this._initIconActions(
+        this.iconBar, this.actions.iconActions);
+
     glift.util.majorPerfLog('Before event creation');
-    this._initStoneActions();
+    this._initStoneActions(this.actions.stoneActions);
     this._initKeyHandlers();
     glift.util.majorPerfLog('After event creation');
+
     this._initProblemData();
     this.applyBoardData(this.controller.getEntireBoardState());
     return this;
@@ -87,7 +94,7 @@ glift.widgets.BaseWidget.prototype = {
     var out = {};
     var that = this;
     var createDiv = function(bbox) {
-      var newId = 'glift_internal_div_' + glift.util.idGenerator.next();
+      var newId = wrapperDiv + '_internal_div_' + glift.util.idGenerator.next();
       $('#' + wrapperDiv).append('<div id="' + newId + '"></div>');
       that._setNotSelectable(newId);
       var cssObj = {
@@ -154,10 +161,9 @@ glift.widgets.BaseWidget.prototype = {
     });
   },
 
-  _initIconActions: function(iconBar) {
+  _initIconActions: function(iconBar, iconActions) {
     var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
     var that = this;
-    var iconActions = this.displayOptions.iconActions;
     iconBar.forEachIcon(function(icon) {
       var iconName = icon.iconName;
       if (!iconActions.hasOwnProperty(icon.iconName)) {
@@ -206,8 +212,7 @@ glift.widgets.BaseWidget.prototype = {
   /**
    * Initialize the stone actions.
    */
-  _initStoneActions: function() {
-    var baseActions = this.displayOptions.stoneActions;
+  _initStoneActions: function(baseActions) {
     var actions = {};
     actions.mouseover = baseActions.mouseover;
     actions.mouseout = baseActions.mouseout;

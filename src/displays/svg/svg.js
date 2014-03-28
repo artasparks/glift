@@ -1,5 +1,5 @@
-/*
- * My own SVG utilities.  The only dependency is on JQuery.
+/**
+ * SVG utilities.  The only dependency is on JQuery.
  */
 glift.displays.svg = {
   /**

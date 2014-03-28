@@ -182,6 +182,8 @@
 <!-- Widgets Tests -->
 <script type="text/javascript" src="../widgets/options_processing_test.js"></script>
 <script type="text/javascript" src="../widgets/widgets_test.js"></script>
+<!-- Widgets options Tests -->
+<script type="text/javascript" src="../widgets/options/options_test.js"></script>
 
 <!-- END-AUTO-GEN-DEPS -->
 
@@ -238,6 +240,7 @@ $(document).ready(function() {
   glift.bridge.managerConverterTest();
 
   // And finally: an end to end test!
+  glift.widgets.options.optionsTest();
   glift.widgets.widgetsTest();
   glift.widgets.optionsProcessingTest();
 });

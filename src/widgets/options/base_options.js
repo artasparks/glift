@@ -19,7 +19,7 @@ glift.widgets.options.baseOptions = {
    * specified:
    *  - sgfString: a literal SGF String
    *  - initialPosition: where to start in the SGF
-   *  - url: a url to
+   *  - url: a url to an SGF. see sgfDefaults for va
    *
    * As you might expect, if the user sets sgf to a literal string form or to a
    * url, it is transformed into an SGF object internally.
@@ -30,6 +30,12 @@ glift.widgets.options.baseOptions = {
    * The defaults or SGF objects.
    */
   sgfDefaults: {
+    /**
+     * One of 'sgfString' or 'url' should be defined in each SGF in the sgfList.
+     */
+    //sgfString: '',
+    //url: '',
+
     /**
      * The default widget type. Specifies what type of widget to create.
      */
@@ -114,8 +120,8 @@ glift.widgets.options.baseOptions = {
      * If defined, should have the following form:
      *
      * {
-     *  title: "Chapter Title"
-     *  size: "large" or "small"
+     *  chapterTitle: "Chapter Title"
+     *  digramSize: "large" or "small"
      *  ... future options
      * }
      */
@@ -134,7 +140,7 @@ glift.widgets.options.baseOptions = {
      * Whether or not to show variations.  See glift.enums.showVariations
      * Values: NEVER, ALWAYS, MORE_THAN_ONE
      */
-    showVariations: undefined,
+    showVariations: 'MORE_THAN_ONE',
 
     /**
      * Whether or not to mark the last move played.  Either true or false, but
@@ -174,121 +180,116 @@ glift.widgets.options.baseOptions = {
   //----------------------------------------------------------------------
 
   /**
-   * The SGF list is a list of SGF objects (given above)
-   */
-  sgfList: [],
-
-  /**
-    * Index into the above list.  I can't imagine why anyone would want to change
-    * the initial index for the sgfList, but it's here anyway for
-    * configurability.
-    */
-  initialListIndex: 0,
-
-  /**
-   * If there are multiple SGFs in the SGF list, this flag indicates whether or
-   * not to allow the user to go back to the beginnig (or conversely, the end).
-   */
-  allowWrapAround: false,
-
-  //--------------------------------------------------------------------------
-  // The rest of the options are the set of display options for the widget
-  // It is assumed that these options are immutable for the life the widget
-  // manager instance.
-  //--------------------------------------------------------------------------
-
-  /**
    * The div id in which we create the go board.  The default is glift_display,
    * but this will almost certainly need to be set by the user.
    */
   divId: 'glift_display',
 
   /**
-   * Specify a background image for the go board.  You can specify an absolute
-   * or a relative path.  As you may expect, you cannot do cross domain
-   * requests.
-   *
-   * Examples:
-   * 'images/kaya.jpg'
-   * 'http://www.mywebbie.com/images/kaya.jpg'
+   * The SGF list is a list of SGF objects (given above)
    */
-  goBoardBackground: '',
+  sgfList: [],
+
+  /**
+   * Index into the above list.  I can't imagine why anyone would want to change
+   * the initial index for the sgfList, but it's here anyway for
+   * configurability.
+   */
+  initialListIndex: 0,
+
+  /**
+    * If there are multiple SGFs in the SGF list, this flag indicates whether or
+    * not to allow the user to go back to the beginnig (or conversely, the end).
+    */
+  allowWrapAround: false,
 
   /**
    * Global book data contains settings for book-creation.
    *
    * If defined, should have the following format:
    *  {
-   *    title: "My book"
-   *    template: "/url/to/book/template.tex" or "raw string"
+   *    title: 'My book',
+   *    author: 'Kashomon',
+   *    template: '/url/to/book/template.tex' or 'raw string'
    *  }
    */
   globalBookData: {},
 
   /**
-   * Whether or not to use the comment bar.
+   * Misc options for the web display.
    */
-  useCommentBar: true,
+  display: {
+    /**
+     * Specify a background image for the go board.  You can specify an absolute
+     * or a relative path.  As you may expect, you cannot do cross domain
+     * requests.
+     *
+     * Examples:
+     * 'images/kaya.jpg'
+     * 'http://www.mywebbie.com/images/kaya.jpg'
+     */
+    goBoardBackground: '',
+
+    /**
+     * Whether or not to use the comment bar.
+     */
+    useCommentBar: true,
+
+    /**
+     * Whether or not to use the title bar.
+     */
+    // TODO(kashomon): Implement this.
+    useTitleBar: true,
+
+    // TODO(kashomon): Rework the components and splits.
+    /**
+     * Div splits with the CommentBar.  Thus, there are three resulting divs - the
+     * remainder is used by the last div - the icon bar.
+     */
+    splitsWithComments: [.70, .20],
+
+    /**
+     * Div splits without the comment bar.  Thus, there are two resulting divs -
+     * the remainder is used by the last div -- the icon bar
+     */
+    splitsWithoutComments: [.90],
+
+    /**
+     * Div splits with only the comment bar.
+     */
+    splitsWithOnlyComments: [.80],
+
+    /**
+     * The name of the theme.
+     */
+    theme: 'DEFAULT',
+
+    /**
+     * Previous SGF icon
+     */
+    previousSgfIcon: 'chevron-left',
+
+    /**
+     * Next SGF Icon
+     */
+    nextSgfIcon: 'chevron-right',
+  },
 
   /**
-   * Whether or not to use the title bar.
-   */
-  // TODO(kashomon): Implement this.
-  useTitleBar: true,
-
-  // TODO(kashomon): Rework the components and splits.
-  /**
-   * Div splits with the CommentBar.  Thus, there are three resulting divs - the
-   * remainder is used by the last div - the icon bar.
-   */
-  splitsWithComments: [.70, .20],
-
-  /**
-   * Div splits without the comment bar.  Thus, there are two resulting divs -
-   * the remainder is used by the last div -- the icon bar
-   */
-  splitsWithoutComments: [.90],
-
-  /**
-   * Div splits with only the comment bar.
-   */
-  splitsWithOnlyComments: [.80],
-
-  /**
-   * The name of the theme.
-   */
-  theme: 'DEFAULT',
-
-  /**
-   * Enable FastClick (for mobile displays).
-   */
-  enableFastClick: false,
-
-  /**
-   * Previous SGF icon
-   */
-  previousSgfIcon: 'chevron-left',
-
-  /**
-   * Next SGF Icon
-   */
-  nextSgfIcon: 'chevron-right',
-
-  /**
-   * Actions for stones.  If the user specifies his own actions, then the
-   * actions specified by the user will take precedence.
-   */
+    * Actions for stones.  If the user specifies his own actions, then the
+    * actions specified by the user will take precedence.
+    */
   stoneActions: {
     /**
-     * click is specified in sgfOptions as stoneClick.  The actions that must
-     * happen on each click vary for each widget, so we can't make a general
-     * click function here.
-     */
+      * click is specified in sgfOptions as stoneClick.  The actions that must
+      * happen on each click vary for each widget, so we can't make a general
+      * click function here.
+      */
     click: undefined,
 
     /**
-     * Ghost-stone for hovering.
-     */
+      * Ghost-stone for hovering.
+      */
     mouseover: function(event, widget, pt) {
       var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
       var currentPlayer = widget.controller.getCurrentPlayer();
@@ -299,8 +300,8 @@ glift.widgets.options.baseOptions = {
     },
 
     /**
-     * Ghost-stone removal for hovering.
-     */
+      * Ghost-stone removal for hovering.
+      */
     mouseout: function(event, widget, pt) {
       var currentPlayer = widget.controller.getCurrentPlayer();
       if (widget.controller.canAddStone(pt, currentPlayer)) {
@@ -318,8 +319,8 @@ glift.widgets.options.baseOptions = {
   },
 
   /**
-   * The actions for the icons.  The keys in iconACtions
-   */
+    * The actions for the icons.  The keys in iconACtions
+    */
   iconActions: {
     start: {
       click:  function(event, widget, icon, iconBar) {

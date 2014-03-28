@@ -132,10 +132,12 @@
           window.gliftWidget = glift.create({
             sgf: testdata.sgfs.marktest,
             divId: "glift_display1",
-            theme: "DEPTH",
-            goBoardBackground: '../themes/assets/bambootile_warm.jpg',
             sgfDefaults : {
               widgetType: 'EXAMPLE'
+            },
+            display: {
+              theme: "DEPTH",
+              goBoardBackground: '../themes/assets/bambootile_warm.jpg'
             }
           });
           var pt = glift.util.point(8, 10);

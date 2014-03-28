@@ -132,13 +132,15 @@
         (function() {
           glift.global.performanceDebugLevel = 'INFO'
           gameViewer = glift.create({
+            divId: "glift_display1",
             sgf: testdata.kogos,
             sgfDefaults: {
               boardRegion: 'ALL'
             },
-            theme: 'DEPTH',
-            goBoardBackground: '../themes/assets/bambootile_warm.jpg',
-            divId: "glift_display1"
+            display: {
+              theme: 'DEPTH',
+              goBoardBackground: '../themes/assets/bambootile_warm.jpg'
+            }
           });
         })();
       </script>

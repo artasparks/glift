@@ -256,9 +256,18 @@ glift.displays.board._Intersections.prototype = {
     this.setGroupAttr(this.idGen.stoneGroup(), stoneAttrs)
         .setGroupAttr(this.idGen.stoneShadowGroup(), shadowAttrs);
 
-    // TODO(kashomon): Find a more efficient way to do this.
-    $('.' + glift.enums.svgElements.STONE_SHADOW).attr(shadowAttrs);
-    $('.' + glift.enums.svgElements.STONE).attr(stoneAttrs);
+    var stones = this.svg.child(this.idGen.stoneGroup()).children();
+    for (var i = 0, len = stones.length; i < len; i++) {
+      $('#' + stones[i].attr('id')).attr(stoneAttrs);
+    }
+
+    var shadowGroup = this.svg.child(this.idGen.stoneShadowGroup());
+    if (shadowGroup) {
+      var shadows = shadowGroup.children();
+      for (var i = 0, len = shadows.length; i < len; i++) {
+        $('#' + shadows[i].attr('id')).attr(shadowAttrs);
+      }
+    }
     return this;
   },
 
@@ -273,7 +282,7 @@ glift.displays.board._Intersections.prototype = {
   setEvent: function(eventName, func) {
     var buttonGroup = this.svg.child(this.idGen.buttonGroup());
     var children = this.svg.child(this.idGen.buttonGroup()).children();
-    for (var i = 0, ii = children.length; i < ii; i++) {
+    for (var i = 0, len = children.length; i < len; i++) {
       var button = children[i];
       var id = button.attr('id');
       var pt = button.data()

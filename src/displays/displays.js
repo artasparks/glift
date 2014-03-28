@@ -6,6 +6,7 @@ glift.displays = {
   create: function(options) {
     glift.util.majorPerfLog("Before environment creation");
     var environment = glift.displays.environment.get(options);
+
     glift.util.majorPerfLog("After environment creation");
     var themeKey = options.theme || 'DEFAULT';
     var theme = glift.themes.get(themeKey); // Get a theme copy.
