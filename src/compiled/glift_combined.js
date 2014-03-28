@@ -18,7 +18,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.9.3',
+  version: '0.10.3',
   debugMode: false,
   // Options for performanceDebugLevel: NONE, INFO
   performanceDebugLevel: 'NONE',
@@ -350,7 +350,8 @@ glift.enums = {
     BOARD: 'BOARD',
     COMMENT_BOX: 'COMMENT_BOX',
     EXTRA_ICONBAR: 'EXTRA_ICONBAR',
-    ICONBAR: 'ICONBAR'
+    ICONBAR: 'ICONBAR',
+    TITLE_BAR: 'TITLE_BAR'
   },
 
   dubug: {
@@ -969,6 +970,7 @@ glift.displays = {
   create: function(options) {
     glift.util.majorPerfLog("Before environment creation");
     var environment = glift.displays.environment.get(options);
+
     glift.util.majorPerfLog("After environment creation");
     var themeKey = options.theme || 'DEFAULT';
     var theme = glift.themes.get(themeKey); // Get a theme copy.
@@ -2458,9 +2460,18 @@ glift.displays.board._Intersections.prototype = {
     this.setGroupAttr(this.idGen.stoneGroup(), stoneAttrs)
         .setGroupAttr(this.idGen.stoneShadowGroup(), shadowAttrs);
 
-    // TODO(kashomon): Find a more efficient way to do this.
-    $('.' + glift.enums.svgElements.STONE_SHADOW).attr(shadowAttrs);
-    $('.' + glift.enums.svgElements.STONE).attr(stoneAttrs);
+    var stones = this.svg.child(this.idGen.stoneGroup()).children();
+    for (var i = 0, len = stones.length; i < len; i++) {
+      $('#' + stones[i].attr('id')).attr(stoneAttrs);
+    }
+
+    var shadowGroup = this.svg.child(this.idGen.stoneShadowGroup());
+    if (shadowGroup) {
+      var shadows = shadowGroup.children();
+      for (var i = 0, len = shadows.length; i < len; i++) {
+        $('#' + shadows[i].attr('id')).attr(shadowAttrs);
+      }
+    }
     return this;
   },
 
@@ -2475,7 +2486,7 @@ glift.displays.board._Intersections.prototype = {
   setEvent: function(eventName, func) {
     var buttonGroup = this.svg.child(this.idGen.buttonGroup());
     var children = this.svg.child(this.idGen.buttonGroup()).children();
-    for (var i = 0, ii = children.length; i < ii; i++) {
+    for (var i = 0, len = children.length; i < len; i++) {
       var button = children[i];
       var id = button.attr('id');
       var pt = button.data()
@@ -2937,7 +2948,6 @@ var CommentBox = function(
 
 CommentBox.prototype = {
   draw: function() {
-    // TODO(kashomon): Remove JQuery References
     this.commentBoxObj = $('#' + this.divId);
     var commentBoxHeight = $('#' + this.divId).height();
     var padding = 10; // TODO(kashomon): Put in theme
@@ -4246,6 +4256,7 @@ glift.displays.diagrams.gooe = {
     var out = [].concat(defs.basicHeader)
       .concat(fontDefsBase)
       .concat(defs.sizeDefs)
+      .concat(defs.bigBoardDefs)
       .concat(defs.normalBoardDefs)
     return out.join("\n");
   }
@@ -4257,8 +4268,8 @@ glift.displays.diagrams.gooe = {
 glift.displays.diagrams.pdf = {
   // TODO(kashomon): Support PDF generation.
 };
-/*
- * My own SVG utilities.  The only dependency is on JQuery.
+/**
+ * SVG utilities.  The only dependency is on JQuery.
  */
 glift.displays.svg = {
   /**
@@ -7835,18 +7846,19 @@ glift.widgets = {
   /**
    * Create a widgetManager without performing 'draw'.
    */
-  createNoDraw: function(options) {
-    options = glift.widgets.options.setBaseOptionDefaults(options);
-    if (options.sgf && options.sgfList.length === 0) {
-      options.sgfList = [options.sgf];
-    }
-    var manager = new glift.widgets.WidgetManager(
-      options.sgfList,
-      options.initialListIndex,
-      options.allowWrapAround,
-      options.sgfDefaults,
-      glift.widgets.options.getDisplayOptions(options))
-    return manager
+  createNoDraw: function(inOptions) {
+    var options = glift.widgets.options.setOptionDefaults(inOptions);
+    var actions = {};
+    actions.iconActions = options.iconActions;
+    actions.stoneActions = options.stoneActions;
+    return new glift.widgets.WidgetManager(
+        options.divId,
+        options.sgfList,
+        options.initialListIndex,
+        options.allowWrapAround,
+        options.sgfDefaults,
+        options.display,
+        actions);
   }
 };
 
@@ -7857,19 +7869,22 @@ glift.create = glift.widgets.create;
 /**
  * The base web UI widget.  It can be extended, if necessary.
  */
-glift.widgets.BaseWidget = function(sgfOptions, displayOptions, manager) {
+glift.widgets.BaseWidget = function(
+    divId, sgfOptions, displayOptions, actions, manager) {
+  this.wrapperDiv = divId; // We split the wrapper div.
   this.type = sgfOptions.type;
   this.sgfOptions = glift.util.simpleClone(sgfOptions);
   this.displayOptions = glift.util.simpleClone(displayOptions);
+  this.actions = actions; // deeply nested -- not worth cloning.
   this.manager = manager;
 
-  // Used for problems, exclusively
+  // Used for problems, exclusively.
+  // TODO(kashomon): Factor these out into some sort of problemState.
   this.correctness = undefined;
   this.correctNextSet = undefined;
   this.numCorrectAnswers = undefined;
   this.totalCorrectAnswers = undefined;
 
-  this.wrapperDiv = displayOptions.divId; // We split the wrapper div.
   this.controller = undefined; // Initialized with draw.
   this.display = undefined; // Initialized by draw.
   this.iconBar = undefined; // Initialized by draw.
@@ -7877,13 +7892,13 @@ glift.widgets.BaseWidget = function(sgfOptions, displayOptions, manager) {
 };
 
 glift.widgets.BaseWidget.prototype = {
-  /**
-   * Draw the widget.
-   */
+  /** Draw the widget. */
   draw: function() {
     this.controller = this.sgfOptions.controllerFunc(this.sgfOptions);
     glift.util.majorPerfLog('Created controller');
+
     this.displayOptions.intersections = this.controller.getIntersections();
+
     var comps = glift.enums.boardComponents;
     var requiredComponents = [comps.BOARD];
     this.displayOptions.boardRegion =
@@ -7892,8 +7907,12 @@ glift.widgets.BaseWidget.prototype = {
         : this.sgfOptions.boardRegion;
     this.displayOptions.rotation = this.sgfOptions.rotation;
     glift.util.majorPerfLog('Calculated board regions');
+
     if (this.displayOptions.useCommentBar) {
       requiredComponents.push(comps.COMMENT_BOX);
+    }
+    if (this.displayOptions.useTitleBar) {
+      requiredComponents.push(comps.TITLE_BAR);
     }
     if (this.sgfOptions.icons.length > 0) {
       requiredComponents.push(comps.ICONBAR);
@@ -7924,11 +7943,14 @@ glift.widgets.BaseWidget.prototype = {
       glift.util.majorPerfLog('IconBar');
     }
 
-    divIds.iconBarBoxId && this._initIconActions(this.iconBar);
+    divIds.iconBarBoxId && this._initIconActions(
+        this.iconBar, this.actions.iconActions);
+
     glift.util.majorPerfLog('Before event creation');
-    this._initStoneActions();
+    this._initStoneActions(this.actions.stoneActions);
     this._initKeyHandlers();
     glift.util.majorPerfLog('After event creation');
+
     this._initProblemData();
     this.applyBoardData(this.controller.getEntireBoardState());
     return this;
@@ -7940,7 +7962,7 @@ glift.widgets.BaseWidget.prototype = {
     var out = {};
     var that = this;
     var createDiv = function(bbox) {
-      var newId = 'glift_internal_div_' + glift.util.idGenerator.next();
+      var newId = wrapperDiv + '_internal_div_' + glift.util.idGenerator.next();
       $('#' + wrapperDiv).append('<div id="' + newId + '"></div>');
       that._setNotSelectable(newId);
       var cssObj = {
@@ -8007,10 +8029,9 @@ glift.widgets.BaseWidget.prototype = {
     });
   },
 
-  _initIconActions: function(iconBar) {
+  _initIconActions: function(iconBar, iconActions) {
     var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
     var that = this;
-    var iconActions = this.displayOptions.iconActions;
     iconBar.forEachIcon(function(icon) {
       var iconName = icon.iconName;
       if (!iconActions.hasOwnProperty(icon.iconName)) {
@@ -8059,8 +8080,7 @@ glift.widgets.BaseWidget.prototype = {
   /**
    * Initialize the stone actions.
    */
-  _initStoneActions: function() {
-    var baseActions = this.displayOptions.stoneActions;
+  _initStoneActions: function(baseActions) {
     var actions = {};
     actions.mouseover = baseActions.mouseover;
     actions.mouseout = baseActions.mouseout;
@@ -8096,7 +8116,7 @@ glift.widgets.BaseWidget.prototype = {
         var actionName = that.sgfOptions.keyMappings[name];
         // actionNamespaces look like: icons.arrowleft.mouseup
         var actionNamespace = actionName.split('.');
-        var action = that.displayOptions[actionNamespace[0]];
+        var action = that.actions[actionNamespace[0]];
         for (var i = 1; i < actionNamespace.length; i++) {
           action = action[actionNamespace[i]];
         }
@@ -8188,14 +8208,25 @@ glift.widgets.BaseWidget.prototype = {
 /**
  * The Widget Manager manages state across widgets.  When widgets are created,
  * they are always created in the context of a Widget Manager.
+ *
+ * divId: the element id of the div without the selector hash (#)
+ * sgfList: array of sgf objects.
+ * sgfListIndex: numbered index into the sgfList.
+ * allowWrapAround: true or false.  Whether to allow wrap around in the SGF
+ *    manager.
+ * sgfDefaults: filled-in sgf default options.  See ./options/base_options.js
+ * displayOptions: filled-in display options. See ./options/base_options.js
+ * actions: combination of stone actions and icon actions.
  */
-glift.widgets.WidgetManager = function(
-    sgfList, sgfListIndex, allowWrapAround, sgfDefaults, displayOptions) {
+glift.widgets.WidgetManager = function(divId, sgfList, sgfListIndex,
+      allowWrapAround, sgfDefaults, displayOptions, actions) {
+  this.divId = divId;
   this.sgfList = sgfList;
   this.sgfListIndex = sgfListIndex;
   this.allowWrapAround = allowWrapAround
   this.sgfDefaults = sgfDefaults;
   this.displayOptions = displayOptions;
+  this.actions = actions;
 
   // Defined on draw
   this.currentWidget = undefined;
@@ -8270,9 +8301,8 @@ glift.widgets.WidgetManager.prototype = {
       }
       curSgfObj = out;
     }
-    var processedObj = glift.widgets.options.setSgfOptionDefaults(
-        curSgfObj, this.sgfDefaults);
-    return this._resetIcons(processedObj);
+    var proc = glift.widgets.options.setSgfOptions(curSgfObj, this.sgfDefaults);
+    return this._resetIcons(proc);
   },
 
   /**
@@ -8291,7 +8321,8 @@ glift.widgets.WidgetManager.prototype = {
    * Create a Sgf Widget.
    */
   createWidget: function(sgfObj) {
-    return new glift.widgets.BaseWidget(sgfObj, this.displayOptions, this);
+    return new glift.widgets.BaseWidget(
+        this.divId, sgfObj, this.displayOptions, this.actions, this);
   },
 
   /**
@@ -8300,8 +8331,7 @@ glift.widgets.WidgetManager.prototype = {
    */
   createTemporaryWidget: function(sgfObj) {
     this.currentWidget.destroy();
-    sgfObj = glift.widgets.options.setSgfOptionDefaults(
-        sgfObj, this.sgfDefaults);
+    sgfObj = glift.widgets.options.setSgfOptions(sgfObj, this.sgfDefaults);
     this.temporaryWidget = this.createWidget(sgfObj).draw();
   },
 
@@ -8395,7 +8425,7 @@ glift.widgets.WidgetManager.prototype = {
       }
     };
 
-    checkDone(3); // Check that we're finished prepopulating (3 checks)
+    checkDone(3); // Check that we've finished prepopulating (3 checks)
   },
 
   /**
@@ -8413,77 +8443,111 @@ glift.widgets.options = {
   /**
    * Set the defaults on options.  Note: This makes a copy and so is (sort of)
    * an immutable operation on a set of options.
-   */
-  setBaseOptionDefaults: function(options) {
-    var options = glift.util.simpleClone(options);
-    var baseTemplate = glift.util.simpleClone(
-        glift.widgets.options.baseOptions);
-    for (var optionName in baseTemplate) {
-      if (optionName === 'sgfDefaults') {
-        options.sgfDefaults = options.sgfDefaults || {};
-        for (var key in baseTemplate.sgfDefaults) {
-          if (options.sgfDefaults[key] === undefined) {
-            options.sgfDefaults[key] = baseTemplate.sgfDefaults[key];
-          }
-        }
-      } else if (options[optionName] === undefined) {
-        options[optionName] = baseTemplate[optionName];
-      }
-    }
-    return options
-  },
-
-  /**
-   * Set the default SGF Options.  At this point, we assume that that
-   * baseOptions has alreday been copied and filled in.  The process of
-   * setting the sgf options goes as follows:
    *
-   * 1. Get the default WidgetType from the sgfDefaults.
-   * 2. Retrieve the WidgetType overrides.
-   * Then:
-   *  3. Prefer first options set explicitly in the (user provided) sgfObj
-   *  4. Then, prefer options set in the WidgetType Overrides
-   *  5. Finally, prefer options set in baseOptions.sgfDefaults
+   * options: user specified options object.
+   *
+   * returns: processed options.
    */
-  setSgfOptionDefaults: function(sgfObj, sgfDefaults) {
-    if (!sgfObj) throw "SGF Obj undefined";
-    if (!sgfDefaults) throw "SGF Defaults undefined";
+  setOptionDefaults: function(options) {
+    var optLib = glift.widgets.options;
+    optLib._validateOptions(options);
+    var options = glift.util.simpleClone(options);
+    var template = glift.util.simpleClone(optLib.baseOptions);
 
-    sgfObj = glift.util.simpleClone(sgfObj);
-    sgfDefaults = glift.util.simpleClone(sgfDefaults);
-    sgfObj.widgetType = sgfObj.widgetType || sgfDefaults.widgetType;
-    var widgetTypeOverrides = glift.util.simpleClone(
-        glift.widgets.options[sgfObj.widgetType]);
-    for (var key in sgfDefaults) {
-      if (key in sgfObj) {
-      } else if (key in widgetTypeOverrides) {
-        sgfObj[key] = widgetTypeOverrides[key];
-      } else {
-        sgfObj[key] = sgfDefaults[key];
+    var topLevelOptions = [
+        'divId',
+        'sgfList',
+        'initialListIndex',
+        'allowWrapAround'];
+    for (var i = 0; i < topLevelOptions.length; i++) {
+      if (!options.hasOwnProperty(topLevelOptions[i])) {
+        options[topLevelOptions[i]] = template[topLevelOptions[i]];
       }
     }
-    return sgfObj;
+
+    // One level deep objects;
+    var templateKeys = [
+        'sgfDefaults',
+        'globalBookData',
+        'display',
+        'iconActions',
+        'stoneActions'];
+    for (var i = 0; i < templateKeys.length; i++) {
+      optLib._setDefaults(options, template, templateKeys[i]);
+    }
+
+    if (options.sgf) {
+      options.sgfList.push(options.sgf);
+      delete options['sgf'];
+    }
+    if (!options.sgf && options.sgfList.length === 0) {
+      options.sgfList.push({});
+    }
+    return options;
   },
 
   /**
-   * Get only the widget specific options -- i.e. not manager options nor sgf
-   * options.
+   * Do some basic validity checking on the options.
+   *
+   * options: user specified options.
    */
-  getDisplayOptions: function(fullOptions) {
-    var outOptions = {};
-    var ignore = {
-      sgfList: true,
-      sgf: true,
-      initialListIndex: true,
-      allowWrapAround: true,
-      sgfDefaults: true
-    };
-    for (var key in fullOptions) {
-      if (!ignore[key]) {
-        outOptions[key] = fullOptions[key];
+  _validateOptions: function(options) {
+    if (options.sgf && options.sgfList) {
+      throw new Error('Illegal options configuration: you cannot define both ' +
+          'sgf and sgfList')
+    }
+  },
+
+  /**
+   * Do a very shallow copy of template keys to the options
+   *
+   * options: user specified options (now copied)
+   * template: base options template (does this need te be passed in?)
+   * dataKey: string key to retrieve a subset of the template
+   *
+   * return: options, with the values filled in from the template.
+   */
+  _setDefaults: function(options, template, dataKey) {
+    var workingObj  = options[dataKey] || {};
+    var dataTemplate = template[dataKey];
+    for (var optionKey in dataTemplate) {
+      if (!workingObj.hasOwnProperty(optionKey)) {
+        workingObj[optionKey] = dataTemplate[optionKey];
       }
     }
-    return outOptions;
+    options[dataKey] = workingObj;
+    return options;
+  },
+
+  /**
+   * Set some defaults in the sgf object.  This does two passes of 'option'
+   * settings.  First we apply the sgfOptions. Then, we apply the
+   * widgetOverrides to any options not already filled in.
+   *
+   * sgf: An object {...} with some settings specified by sgfDefaults.
+   * sgfDefaults: Processed SGF defaults.
+   *
+   * returns: processed (and cloned) sgf object.
+   */
+  setSgfOptions: function(sgf, sgfDefaults) {
+    if (glift.util.typeOf(sgf) !== 'object') {
+      throw new Error('SGF must be of type object, was: '
+          + glift.util.typeOf(sgf) + ', for ' + sgf);
+    }
+    var sgf = glift.util.simpleClone(sgf);
+    var widgetType = sgf.widgetType || sgfDefaults.widgetType;
+    var widgetOverrides = glift.widgets.options[widgetType];
+    for (var key in widgetOverrides) {
+      if (!sgf[key]) {
+        sgf[key] = glift.util.simpleClone(widgetOverrides[key]);
+      }
+    }
+    for (var key in sgfDefaults) {
+      if (!sgf.hasOwnProperty(key) && sgfDefaults[key] !== undefined) {
+        sgf[key] = sgfDefaults[key];
+      }
+    }
+    return sgf;
   }
 };
 /**
@@ -8507,7 +8571,7 @@ glift.widgets.options.baseOptions = {
    * specified:
    *  - sgfString: a literal SGF String
    *  - initialPosition: where to start in the SGF
-   *  - url: a url to
+   *  - url: a url to an SGF. see sgfDefaults for va
    *
    * As you might expect, if the user sets sgf to a literal string form or to a
    * url, it is transformed into an SGF object internally.
@@ -8518,6 +8582,12 @@ glift.widgets.options.baseOptions = {
    * The defaults or SGF objects.
    */
   sgfDefaults: {
+    /**
+     * One of 'sgfString' or 'url' should be defined in each SGF in the sgfList.
+     */
+    //sgfString: '',
+    //url: '',
+
     /**
      * The default widget type. Specifies what type of widget to create.
      */
@@ -8596,6 +8666,19 @@ glift.widgets.options.baseOptions = {
      */
     totalCorrectVariationsOverride: undefined,
 
+    /**
+     * Book Data. Data used for
+     *
+     * If defined, should have the following form:
+     *
+     * {
+     *  chapterTitle: "Chapter Title"
+     *  digramSize: "large" or "small"
+     *  ... future options
+     * }
+     */
+    bookData: {},
+
     //-------------------------------------------------------------------------
     // These options must always be overriden by the widget type overrides.
     //
@@ -8609,7 +8692,7 @@ glift.widgets.options.baseOptions = {
      * Whether or not to show variations.  See glift.enums.showVariations
      * Values: NEVER, ALWAYS, MORE_THAN_ONE
      */
-    showVariations: undefined,
+    showVariations: 'MORE_THAN_ONE',
 
     /**
      * Whether or not to mark the last move played.  Either true or false, but
@@ -8649,103 +8732,116 @@ glift.widgets.options.baseOptions = {
   //----------------------------------------------------------------------
 
   /**
-   * The SGF list is a list of SGF objects (given above)
-   */
-  sgfList: [],
-
-  /**
-    * Index into the above list.  I can't imagine why anyone would want to change
-    * the initial index for the sgfList, but it's here anyway for
-    * configurability.
-    */
-  initialListIndex: 0,
-
-  /**
-   * If there are multiple SGFs in the SGF list, this flag indicates whether or
-   * not to allow the user to go back to the beginnig (or conversely, the end).
-   */
-  allowWrapAround: false,
-
-  //--------------------------------------------------------------------------
-  // The rest of the options are the set of display options for the widget
-  // It is assumed that these options are immutable for the life the widget
-  // manager instance.
-  //--------------------------------------------------------------------------
-
-  /**
    * The div id in which we create the go board.  The default is glift_display,
    * but this will almost certainly need to be set by the user.
    */
   divId: 'glift_display',
 
   /**
-   * Specify a background image for the go board.  You can specify an
-   * absolute or a relative path.
+   * The SGF list is a list of SGF objects (given above)
+   */
+  sgfList: [],
+
+  /**
+   * Index into the above list.  I can't imagine why anyone would want to change
+   * the initial index for the sgfList, but it's here anyway for
+   * configurability.
+   */
+  initialListIndex: 0,
+
+  /**
+    * If there are multiple SGFs in the SGF list, this flag indicates whether or
+    * not to allow the user to go back to the beginnig (or conversely, the end).
+    */
+  allowWrapAround: false,
+
+  /**
+   * Global book data contains settings for book-creation.
    *
-   * Examples:
-   * 'images/kaya.jpg'
-   * 'http://www.mywebbie.com/images/kaya.jpg'
+   * If defined, should have the following format:
+   *  {
+   *    title: 'My book',
+   *    author: 'Kashomon',
+   *    template: '/url/to/book/template.tex' or 'raw string'
+   *  }
    */
-  goBoardBackground: '',
+  globalBookData: {},
 
   /**
-   * Whether or not to use the comment bar. It's possible this should be made
-   * part of the SGF.
+   * Misc options for the web display.
    */
-  useCommentBar: true,
+  display: {
+    /**
+     * Specify a background image for the go board.  You can specify an absolute
+     * or a relative path.  As you may expect, you cannot do cross domain
+     * requests.
+     *
+     * Examples:
+     * 'images/kaya.jpg'
+     * 'http://www.mywebbie.com/images/kaya.jpg'
+     */
+    goBoardBackground: '',
+
+    /**
+     * Whether or not to use the comment bar.
+     */
+    useCommentBar: true,
+
+    /**
+     * Whether or not to use the title bar.
+     */
+    // TODO(kashomon): Implement this.
+    useTitleBar: true,
+
+    // TODO(kashomon): Rework the components and splits.
+    /**
+     * Div splits with the CommentBar.  Thus, there are three resulting divs - the
+     * remainder is used by the last div - the icon bar.
+     */
+    splitsWithComments: [.70, .20],
+
+    /**
+     * Div splits without the comment bar.  Thus, there are two resulting divs -
+     * the remainder is used by the last div -- the icon bar
+     */
+    splitsWithoutComments: [.90],
+
+    /**
+     * Div splits with only the comment bar.
+     */
+    splitsWithOnlyComments: [.80],
+
+    /**
+     * The name of the theme.
+     */
+    theme: 'DEFAULT',
+
+    /**
+     * Previous SGF icon
+     */
+    previousSgfIcon: 'chevron-left',
+
+    /**
+     * Next SGF Icon
+     */
+    nextSgfIcon: 'chevron-right'
+  },
 
   /**
-   * Div splits with the CommentBar.  Thus, there are three resulting divs - the
-   * remainder is used by the last div - the icon bar.
-   */
-  splitsWithComments: [.70, .20],
-
-  /**
-   * Div splits without the comment bar.  Thus, there are two resulting divs -
-   * the remainder is used by the last div -- the icon bar
-   */
-  splitsWithoutComments: [.90],
-
-  /**
-   * Div splits with only the comment bar.
-   */
-  splitsWithOnlyComments: [.80],
-
-  /**
-   * The name of the theme.
-   */
-  theme: 'DEFAULT',
-
-  /**
-   * Enable FastClick (for mobile displays).
-   */
-  enableFastClick: false,
-
-  /**
-   * Previous SGF icon
-   */
-  previousSgfIcon: 'chevron-left',
-
-  /**
-   * Next SGF Icon
-   */
-  nextSgfIcon: 'chevron-right',
-
-  /**
-   * Actions for stones.  If the user specifies his own actions, then the
-   * actions specified by the user will take precedence.
-   */
+    * Actions for stones.  If the user specifies his own actions, then the
+    * actions specified by the user will take precedence.
+    */
   stoneActions: {
     /**
-     * click is specified in sgfOptions as stoneClick.  The actions that must
-     * happen on each click vary for each widget, so we can't make a general
-     * click function here.
-     */
+      * click is specified in sgfOptions as stoneClick.  The actions that must
+      * happen on each click vary for each widget, so we can't make a general
+      * click function here.
+      */
     click: undefined,
 
     /**
-     * Ghost-stone for hovering.
-     */
+      * Ghost-stone for hovering.
+      */
     mouseover: function(event, widget, pt) {
       var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
       var currentPlayer = widget.controller.getCurrentPlayer();
@@ -8756,8 +8852,8 @@ glift.widgets.options.baseOptions = {
     },
 
     /**
-     * Ghost-stone removal for hovering.
-     */
+      * Ghost-stone removal for hovering.
+      */
     mouseout: function(event, widget, pt) {
       var currentPlayer = widget.controller.getCurrentPlayer();
       if (widget.controller.canAddStone(pt, currentPlayer)) {
@@ -8775,8 +8871,8 @@ glift.widgets.options.baseOptions = {
   },
 
   /**
-   * The actions for the icons.  The keys in iconACtions
-   */
+    * The actions for the icons.  The keys in iconACtions
+    */
   iconActions: {
     start: {
       click:  function(event, widget, icon, iconBar) {

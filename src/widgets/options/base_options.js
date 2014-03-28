@@ -272,7 +272,7 @@ glift.widgets.options.baseOptions = {
     /**
      * Next SGF Icon
      */
-    nextSgfIcon: 'chevron-right',
+    nextSgfIcon: 'chevron-right'
   },
 
   /**
