@@ -132,81 +132,11 @@ glift.displays.diagrams.gooe = {
     return outArr.join("\n");
   },
 
-  gameReviewDiagram: function(diagramString, comment) {
-    return [
-      '',
-      '\\rule{\\textwidth}{0.5pt}',
-      '',
-      '\\begin{minipage}[t]{0.5\\textwidth}',
-      diagramString,
-      '\\end{minipage}',
-      '\\begin{minipage}[t]{0.5\\textwidth}',
-      '\\setlength{\\parskip}{0.5em}',
-      comment,
-      '\\end{minipage}',
-      '\\vfill'].join('\n');
-  },
-
-  gameReviewChapterDiagram: function(str, comment, title) {
-    return [
-        '\\chapter{' + title + '}',
-        '{\\centering',
-        str + '\n',
-        '}',
-        comment,
-        '\\vfill'].join('\n');
-  },
-
-  /**
-   * title: title of the book
-   * author: array of one or several authors
-   */
-  generateTitleDef: function(title, subtitle, authors, publisher) {
-    var strbuff = [
-        '\\definecolor{light-gray}{gray}{0.55}',
-        '\\newcommand*{\\mainBookTitle}{\\begingroup',
-        '  \\raggedleft'];
-    for (var i = 0; i < authors.length; i++) {
-      strbuff.push('  {\\Large ' + authors[i] + '} \\\\')
-      if (i === 0) {
-        strbuff.push('  \\vspace*{0.2 em} % This is a hack =(');
-      } else if (i < authors.length - 1) {
-        strbuff.push('  \\vspace*{0.5 em}');
-      }
-    }
-
-    return strbuff.concat(['  \\vspace*{5 em}',
-        '  {\\textcolor{light-gray}{\\Huge ' + title + '}}\\\\',
-        '  \\vspace*{\\baselineskip}',
-        '  {\\small \\bfseries ' + subtitle + '}\\par',
-        '  \\vfill',
-        '  {\\Large ' + publisher + '}\\par',
-        '  \\vspace*{2\\baselineskip}',
-        '\\endgroup}']).join('\n');
-  },
-
   /**
    * Some built in defs that are useful for generating LaTeX books using Gooe
    * fonts.
    */
   defs: {
-    basicHeader: [
-      '\\documentclass[letterpaper,12pt]{memoir}',
-      '\\usepackage{gooemacs}',
-      '\\usepackage{color}',
-      '\\usepackage{wrapfig}',
-      '\\usepackage{setspace}',
-      '\\usepackage{unicode}',
-      '\\usepackage[margin=1in]{geometry}',
-      '',
-      '\\setlength{\\parskip}{0.5em}',
-      '\\setlength{\\parindent}{0pt}'
-    ],
-    basicFooter: ['\\end{document}'],
-
-    problemHeader: ['\\begin{center}'],
-    problemFooter: ['\\end{center}'],
-
     sizeDefs: [
       '% Size definitions',
       '\\newdimen\\bigRaise',
@@ -233,7 +163,8 @@ glift.displays.diagrams.gooe = {
   /**
    * Generate the LaTeX document header as a string.
    */
-  documentHeader: function(baseFont) {
+  gooeDefs: function(baseFont) {
+    var gooe = glift.displays.diagrams.gooe;
     var baseFont = baseFont || 'cmss';
     var fontDefsBase = [
       '% Gooe font definitions',
@@ -242,30 +173,9 @@ glift.displays.diagrams.gooe = {
       '\\font\\eightpoint=' + baseFont + '8',
       '\\font\\eightpointnine=' + baseFont + '8 at 9pt'
     ]
-    var docz
-    var gooe = glift.displays.diagrams.gooe;
-    return [].concat(gooe.defs.basicHeader)
-      .concat(fontDefsBase)
+    return fontDefsBase
       .concat(gooe.defs.sizeDefs)
       .concat(gooe.defs.bigBoardDefs)
       .concat(gooe.defs.normalBoardDefs).join('\n');
-  },
-
-  startDocument: function() {
-    return [
-        '\\begin{document}',
-        '',
-        '\\pagestyle{empty}',
-        '\\mainBookTitle',
-        '\\newpage',
-        '\\tableofcontents',
-        '',
-        '\\chapterstyle{section}',
-        '\\pagestyle{companion}',
-        '\\makepagestyle{headings}',
-        '\\renewcommand{\\printchapternum}{\\space}',
-        '\\makeevenhead{headings}{\\thepage}{}{\\slshape\\leftmark}',
-        '\\makeoddhead{headings}{\\slshape\\rightmark}{}{\\thepage}'
-        ].join('\n');
   }
 };

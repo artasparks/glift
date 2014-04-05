@@ -261,10 +261,11 @@ glift.rules._MoveTree.prototype = {
   /** Returns true if the tree is currently on a mainline variation. */
   onMainline: function() {
     var mt = this.newTreeRef();
+    var debug = [];
     if (mt.node().getVarNum() !== 0) { return false; }
     while (mt.node().getParent()) {
       mt.moveUp();
-      if (mt.node().getVarNum() !== 0) { return false }
+      if (mt.node().getVarNum() !== 0) { return false; }
     }
     return true;
   },

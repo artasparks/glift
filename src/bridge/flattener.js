@@ -395,42 +395,50 @@ glift.bridge.flattener = {
  */
 glift.bridge._Flattened = function(
     symbolPairs, lblData, coll, comment, boardRegion, cropping) {
-  // Dense two level array designating what the base layer of the board looks like.
-  // Example:
-  //  [
-  //    [
-  //      {mark: EMPTY, base: TR_CORNER},
-  //      {mark: EMPTY, base: BSTONE},
-  //      {mark: TRIANGLE, base: WSTONE},
-  //      ...
-  //    ], [
-  //      ...
-  //    ]
-  //    ...
-  //  ]
+  /**
+   * Dense two level array designating what the base layer of the board looks like.
+   * Example:
+   *  [
+   *    [
+   *      {mark: EMPTY, base: TR_CORNER},
+   *      {mark: EMPTY, base: BSTONE},
+   *      {mark: TRIANGLE, base: WSTONE},
+   *      ...
+   *    ], [
+   *      ...
+   *    ]
+   *    ...
+   *  ]
+   */
   this.symbolPairs = symbolPairs;
 
-  // Map from ptstring to label data.
-  // Example:
-  //  {
-  //    "12,3": "A",
-  //    ...
-  //  }
+  /**
+   * Map from ptstring to label data.
+   * Example:
+   *  {
+   *    "12,3": "A",
+   *    ...
+   *  }
+   */
   this.labelData = lblData;
 
-  // Collisions.  In other words, we record stones that couldn't be placed on
-  // the board, if
+  /**
+   * Array of collisions objects.  In other words, we record stones that
+   * couldn't be placed on the board.
+   *
+   * Each object in the collisions array looks like:
+   * {color: <color>, mvnum: <number>, label: <label>}
+   */
   this.collisions = coll;
 
-  // Comment string.
-  // Example:
-  //  Black to move and make life.
+  /** Comment string. */
   this.comment = comment;
 
-  // The board region this flattened representation is meant to display.
+  /** The board region this flattened representation is meant to display. */
   this.boardRegion = boardRegion;
 
-  // The cropping object.
+  /** The cropping object. */
+  // TODO(kashomon): Describe this.
   this.cropping = cropping;
 };
 

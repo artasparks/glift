@@ -372,7 +372,7 @@ glift.enums = {
     LARGE: 'LARGE'
   },
 
-  bookTypes: {
+  diagramTypes: {
     GAME_REVIEW: 'GAME_REVIEW'
   }
 };
@@ -4215,81 +4215,11 @@ glift.displays.diagrams.gooe = {
     return outArr.join("\n");
   },
 
-  gameReviewDiagram: function(diagramString, comment) {
-    return [
-      '',
-      '\\rule{\\textwidth}{0.5pt}',
-      '',
-      '\\begin{minipage}[t]{0.5\\textwidth}',
-      diagramString,
-      '\\end{minipage}',
-      '\\begin{minipage}[t]{0.5\\textwidth}',
-      '\\setlength{\\parskip}{0.5em}',
-      comment,
-      '\\end{minipage}',
-      '\\vfill'].join('\n');
-  },
-
-  gameReviewChapterDiagram: function(str, comment, title) {
-    return [
-        '\\chapter{' + title + '}',
-        '{\\centering',
-        str + '\n',
-        '}',
-        comment,
-        '\\vfill'].join('\n');
-  },
-
-  /**
-   * title: title of the book
-   * author: array of one or several authors
-   */
-  generateTitleDef: function(title, subtitle, authors, publisher) {
-    var strbuff = [
-        '\\definecolor{light-gray}{gray}{0.55}',
-        '\\newcommand*{\\mainBookTitle}{\\begingroup',
-        '  \\raggedleft'];
-    for (var i = 0; i < authors.length; i++) {
-      strbuff.push('  {\\Large ' + authors[i] + '} \\\\')
-      if (i === 0) {
-        strbuff.push('  \\vspace*{0.2 em} % This is a hack =(');
-      } else if (i < authors.length - 1) {
-        strbuff.push('  \\vspace*{0.5 em}');
-      }
-    }
-
-    return strbuff.concat(['  \\vspace*{5 em}',
-        '  {\\textcolor{light-gray}{\\Huge ' + title + '}}\\\\',
-        '  \\vspace*{\\baselineskip}',
-        '  {\\small \\bfseries ' + subtitle + '}\\par',
-        '  \\vfill',
-        '  {\\Large ' + publisher + '}\\par',
-        '  \\vspace*{2\\baselineskip}',
-        '\\endgroup}']).join('\n');
-  },
-
   /**
    * Some built in defs that are useful for generating LaTeX books using Gooe
    * fonts.
    */
   defs: {
-    basicHeader: [
-      '\\documentclass[letterpaper,12pt]{memoir}',
-      '\\usepackage{gooemacs}',
-      '\\usepackage{color}',
-      '\\usepackage{wrapfig}',
-      '\\usepackage{setspace}',
-      '\\usepackage{unicode}',
-      '\\usepackage[margin=1in]{geometry}',
-      '',
-      '\\setlength{\\parskip}{0.5em}',
-      '\\setlength{\\parindent}{0pt}'
-    ],
-    basicFooter: ['\\end{document}'],
-
-    problemHeader: ['\\begin{center}'],
-    problemFooter: ['\\end{center}'],
-
     sizeDefs: [
       '% Size definitions',
       '\\newdimen\\bigRaise',
@@ -4316,7 +4246,8 @@ glift.displays.diagrams.gooe = {
   /**
    * Generate the LaTeX document header as a string.
    */
-  documentHeader: function(baseFont) {
+  gooeDefs: function(baseFont) {
+    var gooe = glift.displays.diagrams.gooe;
     var baseFont = baseFont || 'cmss';
     var fontDefsBase = [
       '% Gooe font definitions',
@@ -4325,15 +4256,69 @@ glift.displays.diagrams.gooe = {
       '\\font\\eightpoint=' + baseFont + '8',
       '\\font\\eightpointnine=' + baseFont + '8 at 9pt'
     ]
-    var docz
-    var gooe = glift.displays.diagrams.gooe;
-    return [].concat(gooe.defs.basicHeader)
-      .concat(fontDefsBase)
+    return fontDefsBase
       .concat(gooe.defs.sizeDefs)
       .concat(gooe.defs.bigBoardDefs)
       .concat(gooe.defs.normalBoardDefs).join('\n');
+  }
+};
+glift.displays.diagrams.latex = {
+  basicHeader_: [
+      '\\documentclass[letterpaper,12pt]{memoir}',
+      '\\usepackage{gooemacs}',
+      '\\usepackage{color}',
+      '\\usepackage{wrapfig}',
+      '\\usepackage{setspace}',
+      '\\usepackage{unicode}',
+      '\\usepackage[margin=1in]{geometry}',
+      '',
+      '\\setlength{\\parskip}{0.5em}',
+      '\\setlength{\\parindent}{0pt}'
+  ],
+
+  /** Basic latex header. Uses memoir class. */
+  basicHeader: function() {
+    return glift.displays.diagrams.latex.basicHeader_.join('\n');
   },
 
+  /** Basic latex footer */
+  basicFooter: '\\end{document}',
+
+  /**
+   * title: title of the book as string
+   * author: array of one or several authors as array af string
+   * subtitle: the subtitle as string
+   * publisher: the publisher as string
+   *
+   * returns: filled in string.
+   */
+  generateTitleDef: function(title, subtitle, authors, publisher) {
+    var strbuff = [
+        '\\definecolor{light-gray}{gray}{0.55}',
+        '\\newcommand*{\\mainBookTitle}{\\begingroup',
+        '  \\raggedleft'];
+    for (var i = 0; i < authors.length; i++) {
+      strbuff.push('  {\\Large ' + authors[i] + '} \\\\')
+      if (i === 0) {
+        strbuff.push('  \\vspace*{0.2 em} % This is a hack =(');
+      } else if (i < authors.length - 1) {
+        strbuff.push('  \\vspace*{0.5 em}');
+      }
+    }
+    return strbuff.concat(['  \\vspace*{5 em}',
+        '  {\\textcolor{light-gray}{\\Huge ' + title + '}}\\\\',
+        '  \\vspace*{\\baselineskip}',
+        '  {\\small \\bfseries ' + subtitle + '}\\par',
+        '  \\vfill',
+        '  {\\Large ' + publisher + '}\\par',
+        '  \\vspace*{2\\baselineskip}',
+        '\\endgroup}']).join('\n');
+  },
+
+  /**
+   * Start the latex document by doing \begin{document} and rendering some basic
+   * frontmatter.
+   */
   startDocument: function() {
     return [
         '\\begin{document}',
@@ -4350,6 +4335,44 @@ glift.displays.diagrams.gooe = {
         '\\makeevenhead{headings}{\\thepage}{}{\\slshape\\leftmark}',
         '\\makeoddhead{headings}{\\slshape\\rightmark}{}{\\thepage}'
         ].join('\n');
+  },
+
+  /**
+   * Generate a GameReview diagram.
+   *
+   * diagramString: Literal string for the diagram
+   * comment: Comment for diagram
+   * isMainline: boolean for whether we're on the main line.
+   *
+   * returns: filled-in latex string.
+   */
+  gameReviewDiagram: function(
+      diagramString, comment, isMainline) {
+    return [
+      '',
+      '\\rule{\\textwidth}{0.5pt}',
+      '',
+      '\\begin{minipage}[t]{0.5\\textwidth}',
+      diagramString,
+      '\\end{minipage}',
+      '\\begin{minipage}[t]{0.5\\textwidth}',
+      '\\setlength{\\parskip}{0.5em}',
+      comment,
+      '\\end{minipage}',
+      '\\vfill'].join('\n');
+  },
+
+  /**
+   * Generate a Game Review Chapter Diagram.
+   */
+  gameReviewChapterDiagram: function(str, comment, title, isMainline) {
+    return [
+        '\\chapter{' + title + '}',
+        '{\\centering',
+        str,
+        '}',
+        comment,
+        '\\vfill'].join('\n');
   }
 };
 /**
@@ -5394,10 +5417,11 @@ glift.rules._MoveTree.prototype = {
   /** Returns true if the tree is currently on a mainline variation. */
   onMainline: function() {
     var mt = this.newTreeRef();
+    var debug = [];
     if (mt.node().getVarNum() !== 0) { return false; }
     while (mt.node().getParent()) {
       mt.moveUp();
-      if (mt.node().getVarNum() !== 0) { return false }
+      if (mt.node().getVarNum() !== 0) { return false; }
     }
     return true;
   },
@@ -5977,22 +6001,25 @@ glift.rules.treepath = {
    *    treepath: a new treepath that says how to get to this position
    *    nextMoves: A nextMovesTreepath, used to apply for the purpose of
    *        crafting moveNumbers.
+   *    breakOnMainComment: Whether or not to break on comments on the main
+   *        variation.
    */
-  findNextMoves: function(movetree, initTreepath, minusMovesOverride) {
+  findNextMoves: function(
+      movetree, initTreepath, minusMovesOverride, breakOnMainComment) {
     var initTreepath = initTreepath || movetree.treepathToHere();
-    var movetree = movetree.getTreeFromRoot();
+    var movetree = movetree.getTreeFromRoot(initTreepath);
     var minusMoves = minusMovesOverride || 20;
-    for (var i = 0, len = initTreepath.length;
-         i < len && movetree.node().numChildren() > 0; i++) {
-      movetree.moveDown(initTreepath[i]);
-    }
-
     var nextMovesTreepath = [];
     var i = 0;
+    var onMainline = movetree.onMainline();
     while (movetree.node().getParent() && i < minusMoves) {
       var varnum = movetree.node().getVarNum();
       nextMovesTreepath.push(movetree.node().getVarNum());
       movetree.moveUp();
+      if (breakOnMainComment &&
+          onMainline && movetree.properties().getOneValue('C')) {
+        break;
+      }
       // Break if we've found ourselves at a variation. However, this only
       // applies if the user has _not_ specified minusMovesOverride;
       if (varnum !== 0 && !minusMovesOverride) { break; }
@@ -8020,21 +8047,28 @@ glift.bridge.managerConverter = {
     var document = [];
     var showVars = glift.enums.showVariations.NEVER;
     var gooe = glift.displays.diagrams.gooe;
+    var latex = glift.displays.diagrams.latex;
     var managerConverter = glift.bridge.managerConverter;
     var globalBookData = manager.bookData;
+    var diagramTypes = glift.enums.diagramTypes;
 
-    document.push(gooe.documentHeader());
-    document.push(gooe.generateTitleDef(
+    document.push(latex.basicHeader());
+    document.push(gooe.gooeDefs());
+    document.push(latex.generateTitleDef(
         globalBookData.title,
         globalBookData.subtitle,
         globalBookData.authors,
         globalBookData.publisher));
     document.push('');
-    document.push(gooe.startDocument());
+    document.push(latex.startDocument());
 
     manager.prepopulateCache(function() {
-      var curPageBuf = 1;
       var maxPageBuf = globalBookData.diagramsPerPage;
+      var counts = {
+        curPageBuf: 1,
+        varDiags: 1,
+        mainDiags: 1
+      };
 
       for (var i = 0, len = manager.sgfList.length; i < len; i++) {
         var curObj = manager.getSgfObj(i),
@@ -8047,15 +8081,22 @@ glift.bridge.managerConverter = {
         manager.getSgfString(curObj, function(sobj) {
           // Movetree at root.
           var movetree = glift.rules.movetree.getFromSgf(sobj.sgfString, treepath);
+          var isMainline = movetree.onMainline();
+          if (isMainline) { counts.mainDiags++; }
+          else { counts.varDiags++; }
+
           if (globalBookData.autoNumber) {
             var out = glift.rules.treepath.findNextMoves(
-                movetree, undefined, sobj.bookData.minusMovesOverride);
+                movetree,
+                undefined,
+                sobj.bookData.minusMovesOverride,
+                sobj.bookData.diagramType === diagramTypes.GAME_REVIEW);
             movetree = out.movetree;
             treepath = out.treepath;
             nextMovesPath = out.nextMoves;
           }
           var goban = glift.rules.goban.getFromMoveTree(movetree).goban;
-          var startNum = 1; // TODO(kashomon): change
+          var startNum = isMainline ? movetree.node().getNodeNum() + 1 : 1;
           var flattened = glift.bridge.flattener.flatten(
               movetree, goban, boardRegion, showVars, nextMovesPath, startNum);
 
@@ -8064,19 +8105,19 @@ glift.bridge.managerConverter = {
             diagramStr = managerConverter.createDiagram(flattened, sobj.bookData);
           }
           var tex = managerConverter.typesetDiagram(
-              diagramStr, flattened.comment, sobj.bookData);
+              diagramStr, flattened.comment, sobj.bookData, counts);
 
-          if (!sobj.bookData.chapterTitle && curPageBuf < maxPageBuf) {
+          if (!sobj.bookData.chapterTitle && counts.curPageBuf < maxPageBuf) {
             document.push('\\newpage');
-            curPageBuf++;
+            counts.curPageBuf++;
           } else {
-            curPageBuf = 1;
+            counts.curPageBuf = 1;
           }
 
           document.push(tex);
         });
       }
-      document.push(gooe.defs.basicFooter);
+      document.push(latex.basicFooter);
       callback(document.join("\n"));
     });
   },
@@ -8092,15 +8133,19 @@ glift.bridge.managerConverter = {
     return diagram;
   },
 
-  typesetDiagram: function(str, comment, bookData) {
-    var bookTypes = glift.enums.bookTypes;
-    var gooe = glift.displays.diagrams.gooe;
+  /**
+   * Typeset the diagram into LaTeX
+   */
+  typesetDiagram: function(str, comment, bookData, isMainline) {
+    var diagramTypes = glift.enums.diagramTypes;
+    var latex = glift.displays.diagrams.latex;
     // console.log(bookData);
-    if (bookData.diagramType === bookTypes.GAME_REVIEW) {
+    if (bookData.diagramType === diagramTypes.GAME_REVIEW) {
       if (bookData.chapterTitle) {
-        return gooe.gameReviewChapterDiagram(str, comment, bookData.chapterTitle);
+        return latex.gameReviewChapterDiagram(
+            str, comment, bookData.chapterTitle, isMainline);
       } else {
-        return gooe.gameReviewDiagram(str, comment);
+        return latex.gameReviewDiagram(str, comment, isMainline);
       }
     }
   }
@@ -8972,6 +9017,7 @@ glift.widgets.options.baseOptions = {
     bookData: {
       /**
        * The diagram type.
+       * See: glift.enums.diagramTypes
        */
       diagramType: 'GAME_REVIEW',
 

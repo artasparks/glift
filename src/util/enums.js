@@ -158,7 +158,7 @@ glift.enums = {
     LARGE: 'LARGE'
   },
 
-  bookTypes: {
+  diagramTypes: {
     GAME_REVIEW: 'GAME_REVIEW'
   }
 };

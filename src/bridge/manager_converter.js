@@ -10,21 +10,28 @@ glift.bridge.managerConverter = {
     var document = [];
     var showVars = glift.enums.showVariations.NEVER;
     var gooe = glift.displays.diagrams.gooe;
+    var latex = glift.displays.diagrams.latex;
     var managerConverter = glift.bridge.managerConverter;
     var globalBookData = manager.bookData;
+    var diagramTypes = glift.enums.diagramTypes;
 
-    document.push(gooe.documentHeader());
-    document.push(gooe.generateTitleDef(
+    document.push(latex.basicHeader());
+    document.push(gooe.gooeDefs());
+    document.push(latex.generateTitleDef(
         globalBookData.title,
         globalBookData.subtitle,
         globalBookData.authors,
         globalBookData.publisher));
     document.push('');
-    document.push(gooe.startDocument());
+    document.push(latex.startDocument());
 
     manager.prepopulateCache(function() {
-      var curPageBuf = 1;
       var maxPageBuf = globalBookData.diagramsPerPage;
+      var counts = {
+        curPageBuf: 1,
+        varDiags: 1,
+        mainDiags: 1
+      };
 
       for (var i = 0, len = manager.sgfList.length; i < len; i++) {
         var curObj = manager.getSgfObj(i),
@@ -37,15 +44,22 @@ glift.bridge.managerConverter = {
         manager.getSgfString(curObj, function(sobj) {
           // Movetree at root.
           var movetree = glift.rules.movetree.getFromSgf(sobj.sgfString, treepath);
+          var isMainline = movetree.onMainline();
+          if (isMainline) { counts.mainDiags++; }
+          else { counts.varDiags++; }
+
           if (globalBookData.autoNumber) {
             var out = glift.rules.treepath.findNextMoves(
-                movetree, undefined, sobj.bookData.minusMovesOverride);
+                movetree,
+                undefined,
+                sobj.bookData.minusMovesOverride,
+                sobj.bookData.diagramType === diagramTypes.GAME_REVIEW);
             movetree = out.movetree;
             treepath = out.treepath;
             nextMovesPath = out.nextMoves;
           }
           var goban = glift.rules.goban.getFromMoveTree(movetree).goban;
-          var startNum = 1; // TODO(kashomon): change
+          var startNum = isMainline ? movetree.node().getNodeNum() + 1 : 1;
           var flattened = glift.bridge.flattener.flatten(
               movetree, goban, boardRegion, showVars, nextMovesPath, startNum);
 
@@ -54,19 +68,19 @@ glift.bridge.managerConverter = {
             diagramStr = managerConverter.createDiagram(flattened, sobj.bookData);
           }
           var tex = managerConverter.typesetDiagram(
-              diagramStr, flattened.comment, sobj.bookData);
+              diagramStr, flattened.comment, sobj.bookData, counts);
 
-          if (!sobj.bookData.chapterTitle && curPageBuf < maxPageBuf) {
+          if (!sobj.bookData.chapterTitle && counts.curPageBuf < maxPageBuf) {
             document.push('\\newpage');
-            curPageBuf++;
+            counts.curPageBuf++;
           } else {
-            curPageBuf = 1;
+            counts.curPageBuf = 1;
           }
 
           document.push(tex);
         });
       }
-      document.push(gooe.defs.basicFooter);
+      document.push(latex.basicFooter);
       callback(document.join("\n"));
     });
   },
@@ -82,15 +96,19 @@ glift.bridge.managerConverter = {
     return diagram;
   },
 
-  typesetDiagram: function(str, comment, bookData) {
-    var bookTypes = glift.enums.bookTypes;
-    var gooe = glift.displays.diagrams.gooe;
+  /**
+   * Typeset the diagram into LaTeX
+   */
+  typesetDiagram: function(str, comment, bookData, isMainline) {
+    var diagramTypes = glift.enums.diagramTypes;
+    var latex = glift.displays.diagrams.latex;
     // console.log(bookData);
-    if (bookData.diagramType === bookTypes.GAME_REVIEW) {
+    if (bookData.diagramType === diagramTypes.GAME_REVIEW) {
       if (bookData.chapterTitle) {
-        return gooe.gameReviewChapterDiagram(str, comment, bookData.chapterTitle);
+        return latex.gameReviewChapterDiagram(
+            str, comment, bookData.chapterTitle, isMainline);
       } else {
-        return gooe.gameReviewDiagram(str, comment);
+        return latex.gameReviewDiagram(str, comment, isMainline);
       }
     }
   }

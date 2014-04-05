@@ -128,6 +128,7 @@ glift.widgets.options.baseOptions = {
     bookData: {
       /**
        * The diagram type.
+       * See: glift.enums.diagramTypes
        */
       diagramType: 'GAME_REVIEW',
 

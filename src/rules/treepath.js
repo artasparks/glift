@@ -115,22 +115,25 @@ glift.rules.treepath = {
    *    treepath: a new treepath that says how to get to this position
    *    nextMoves: A nextMovesTreepath, used to apply for the purpose of
    *        crafting moveNumbers.
+   *    breakOnMainComment: Whether or not to break on comments on the main
+   *        variation.
    */
-  findNextMoves: function(movetree, initTreepath, minusMovesOverride) {
+  findNextMoves: function(
+      movetree, initTreepath, minusMovesOverride, breakOnMainComment) {
     var initTreepath = initTreepath || movetree.treepathToHere();
-    var movetree = movetree.getTreeFromRoot();
+    var movetree = movetree.getTreeFromRoot(initTreepath);
     var minusMoves = minusMovesOverride || 20;
-    for (var i = 0, len = initTreepath.length;
-         i < len && movetree.node().numChildren() > 0; i++) {
-      movetree.moveDown(initTreepath[i]);
-    }
-
     var nextMovesTreepath = [];
     var i = 0;
+    var onMainline = movetree.onMainline();
     while (movetree.node().getParent() && i < minusMoves) {
       var varnum = movetree.node().getVarNum();
       nextMovesTreepath.push(movetree.node().getVarNum());
       movetree.moveUp();
+      if (breakOnMainComment &&
+          onMainline && movetree.properties().getOneValue('C')) {
+        break;
+      }
       // Break if we've found ourselves at a variation. However, this only
       // applies if the user has _not_ specified minusMovesOverride;
       if (varnum !== 0 && !minusMovesOverride) { break; }

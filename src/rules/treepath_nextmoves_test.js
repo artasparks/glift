@@ -62,6 +62,14 @@ glift.rules.treepathNextmovesTest = function() {
     deepEqual(out.nextMoves, [1,0]);
   });
 
+  test('Test nextmoves. Comments', function() {
+    var initPos = [0,0,0,0,0,0,1,0];
+    var mt = glift.rules.movetree.getFromSgf(gameVariation, initPos);
+    var out = findNextMoves(mt);
+    deepEqual(out.treepath, [0,0,0,0,0,0]);
+    deepEqual(out.nextMoves, [1,0]);
+  });
+
   test('Apply next moves -- no collisions', function() {
     var initPos = [0,0,0,0,0,0];
     var nextMoves = [1,0];
