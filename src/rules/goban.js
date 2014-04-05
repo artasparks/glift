@@ -11,7 +11,10 @@ glift.rules.goban = {
   /**
    * Create a goban, from a move tree and (optionally) a treePath, which defines
    * how to get from the start to a given location.  Usually, the treePath is
-   * the initialPosition, but not necessarily.
+   * the initialPosition, but not necessarily.  If the treepath is undefined, we
+   * craft a treepath to the current location in the movetree.
+   *
+   * NOTE: This leaves the movetree in a modified state.
    *
    * returns:
    *  {
@@ -21,8 +24,8 @@ glift.rules.goban = {
    */
   getFromMoveTree: function(mt, treepath) {
     var goban = new Goban(mt.getIntersections()),
+        treepath = treepath || mt.treepathToHere(),
         movetree = mt.getTreeFromRoot(),
-        treepath = treepath || [],
         captures = []; // array of captures.
     goban.loadStonesFromMovetree(movetree); // Load root placements.
     for (var i = 0; i < treepath.length; i++) {

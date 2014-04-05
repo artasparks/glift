@@ -31,6 +31,7 @@ glift.widgets = {
         options.allowWrapAround,
         options.sgfDefaults,
         options.display,
+        options.globalBookData,
         actions);
   }
 };

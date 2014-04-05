@@ -119,13 +119,43 @@ glift.widgets.options.baseOptions = {
      *
      * If defined, should have the following form:
      *
-     * {
-     *  chapterTitle: "Chapter Title"
-     *  digramSize: "large" or "small"
-     *  ... future options
-     * }
+     *  {
+     *    chapterTitle: "Chapter Title"
+     *    digramSize: "large" or "small"
+     *    ... future options
+     *  }
      */
-    bookData: {},
+    bookData: {
+      /**
+       * The diagram type.
+       */
+      diagramType: 'GAME_REVIEW',
+
+      /**
+       * Show the diagram.  Allows us to selectively keep
+       */
+      showDiagram: true
+
+      /**
+       * The number at which to start number.  By default, begins numbering at
+       * the number of moves + the nums from the most recent branch.  Can be
+       * overwridden though
+       */
+      // numberingStartNum:
+
+      /**
+       * How many moves ago to start performing numbering.
+       *
+       * By default, starts from:
+       *    min(most recent brach, 20 moves ago)
+       */
+      // minusMovesOverride:...:
+
+      /**
+       * Display the diagram in a chapterTitle format.
+       */
+      // chapterTitle:
+    },
 
     //-------------------------------------------------------------------------
     // These options must always be overriden by the widget type overrides.
@@ -213,7 +243,16 @@ glift.widgets.options.baseOptions = {
    *    template: '/url/to/book/template.tex' or 'raw string'
    *  }
    */
-  globalBookData: {},
+  globalBookData: {
+    title: 'My Go Book',
+    subtitle: 'Going the distance!',
+    authors: [],
+    publisher: 'Created with Glift',
+    diagramsPerPage: 2,
+    templateUrl: '', // not supported yet
+    /** Automatically number the diagrams. This prevents all number labels. */
+    autoNumber: true
+  },
 
   /**
    * Misc options for the web display.

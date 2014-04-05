@@ -101,9 +101,19 @@ glift.widgets.options = {
         sgf[key] = glift.util.simpleClone(widgetOverrides[key]);
       }
     }
+
+    var nestedData = {'bookData': true};
     for (var key in sgfDefaults) {
-      if (!sgf.hasOwnProperty(key) && sgfDefaults[key] !== undefined) {
+      if (!sgf[key] && sgfDefaults[key] !== undefined) {
         sgf[key] = sgfDefaults[key];
+      } else if (nestedData[key]) {
+        // The SGF must contain the key.
+        // TODO(kashomon): Remove this hack.
+        for (var subkey in sgfDefaults[key]) {
+          if (!sgf[key].hasOwnProperty(subkey)) {
+            sgf[key][subkey] = sgfDefaults[key][subkey];
+          }
+        }
       }
     }
     return sgf;

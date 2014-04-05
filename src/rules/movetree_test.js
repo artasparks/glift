@@ -106,7 +106,7 @@ glift.rules.movetreeTest = function() {
     movt.moveUp()
         .addNode()
         .properties().add("C", "1.1");
-    movt.moveToRoot();
+    movt = movt.getTreeFromRoot();
 
     deepEqual(movt.properties().getOneValue("C"), "0th",
         "Should get the correct comment");
@@ -156,8 +156,8 @@ glift.rules.movetreeTest = function() {
     movt.addNode().properties().add("B", "pb");
     movt.addNode().properties().add("W", "nc");
     movt.addNode().properties().add("B", "cc");
-    movt.moveToRoot()
-        .addNode().properties().add("B", "dd");
+    movt = movt.getTreeFromRoot();
+    movt.addNode().properties().add("B", "dd");
     movt.recurseFromRoot(function(mt) {
       var buff = '';
       if (mt.properties().contains('B')) {
@@ -191,6 +191,23 @@ glift.rules.movetreeTest = function() {
       {color: states.WHITE, point: glift.util.pointFromSgfCoord('nd') }
     ];
     deepEqual(next, expected, 'Next Moves');
+  });
+
+  test('onMainline', function() {
+    var main1 = [0,0,0,0];
+    var main2 = [0,0,0,0,0,0,0];
+    var main3 = [0,0,0,0,0,0,0,0];
+    var nonMain1 = [0,0,0,0,0,0,1];
+    var nonMain2 = [0,0,0,0,0,0,1,0];
+    var sgf = "(;GM[1];B[aa];W[ab];B[ac];W[ad];B[ae];W[af]" +
+        "(;B[ag];W[ah];B[ai];W[aj])" +
+        "(;B[ah];W[ai];B[aj];W[ak]))";
+    var mt = glift.rules.movetree.getFromSgf(sgf);
+    ok(mt.getTreeFromRoot(main1).onMainline(), 'main1');
+    ok(mt.getTreeFromRoot(main2).onMainline(), 'main2');
+    ok(mt.getTreeFromRoot(main3).onMainline(), 'main3');
+    ok(!mt.getTreeFromRoot(nonMain1).onMainline(), 'non-main1');
+    ok(!mt.getTreeFromRoot(nonMain2).onMainline(), 'non-main2');
   });
 
   test("Convert to SGF! (No exceptions)", function() {
@@ -233,5 +250,23 @@ glift.rules.movetreeTest = function() {
     movetree.moveUp();
     deepEqual(movetree.getCurrentPlayer(), states.BLACK);
     deepEqual(movetree.node().getNodeNum(), 0);
+  });
+
+
+  test('treepathToHere', function() {
+    var initPos = [0,0,0,0,0,0,1,0];
+    var sgf = "(;GM[1];B[aa];W[ab];B[ac];W[ad];B[ae];W[af]" +
+        "(;B[ag];W[ah];B[ai];W[aj])" +
+        "(;B[ah];W[ai];B[aj];W[ak]))";
+    var mt = glift.rules.movetree.getFromSgf(sgf, initPos);
+    deepEqual(mt.treepathToHere(), initPos);
+
+    initPos = [];
+    var mt = glift.rules.movetree.getFromSgf(sgf, initPos);
+    deepEqual(mt.treepathToHere(), initPos);
+
+    initPos = [0,0,0];
+    var mt = glift.rules.movetree.getFromSgf(sgf, initPos);
+    deepEqual(mt.treepathToHere(), initPos);
   });
 };

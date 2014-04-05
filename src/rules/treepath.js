@@ -99,10 +99,104 @@ glift.rules.treepath = {
     return glift.rules.treepath._storedToEnd;
   },
 
-  // Flatten the move tree variations into a list of lists, where the sublists
-  // are each a treepath.
-  //
-  // TODO(kashomon): Why does this exist?
+  /**
+   * Use some heuristics to find a nextMovesTreepath.  This is used for
+   * automatically adding move numbers.
+   *
+   * movetree: a movetree, of course.
+   * initTreepath [optional]: the initial treepath. If not specified or
+   *    undefined, use the current location in the movetree.
+   * minusMovesOverride: force findNextMoves to to return a nextMovesTreepath of
+   *    this length, starting from the init treepath.  The actually
+   *    nextMovesTreepath can be shorter
+   *
+   * returns: on object with two keys
+   *    movetree: an update movetree
+   *    treepath: a new treepath that says how to get to this position
+   *    nextMoves: A nextMovesTreepath, used to apply for the purpose of
+   *        crafting moveNumbers.
+   */
+  findNextMoves: function(movetree, initTreepath, minusMovesOverride) {
+    var initTreepath = initTreepath || movetree.treepathToHere();
+    var movetree = movetree.getTreeFromRoot();
+    var minusMoves = minusMovesOverride || 20;
+    for (var i = 0, len = initTreepath.length;
+         i < len && movetree.node().numChildren() > 0; i++) {
+      movetree.moveDown(initTreepath[i]);
+    }
+
+    var nextMovesTreepath = [];
+    var i = 0;
+    while (movetree.node().getParent() && i < minusMoves) {
+      var varnum = movetree.node().getVarNum();
+      nextMovesTreepath.push(movetree.node().getVarNum());
+      movetree.moveUp();
+      // Break if we've found ourselves at a variation. However, this only
+      // applies if the user has _not_ specified minusMovesOverride;
+      if (varnum !== 0 && !minusMovesOverride) { break; }
+      i++;
+    }
+    nextMovesTreepath.reverse();
+    return {
+      movetree: movetree,
+      treepath: movetree.treepathToHere(),
+      nextMoves: nextMovesTreepath
+    };
+  },
+
+  /**
+   * Apply the nextmoves and find the collisions.
+   *
+   * movetree: a rules.movetree.
+   * goban: a rules.goban array.
+   * nextMoves:  A next-moves treepath. See findNextMoves.
+   *
+   * returns: An object with three keys:
+   *    movetree: the updated movetree after applying the nextmoves
+   *    stones: arrayof 'augmented' stone objects
+   *
+   * augmented stone objects take the form:
+   *    {point: <point>, color: <color>}
+   * or
+   *    {point: <point>, color: <color>, collision:<idx>}
+   *
+   * where idx is an index into the stones object.  If idx is null, the stone
+   * conflicts with a stone added elsewhere (i.e., in the goban).  This should
+   * be a reasonably common case.
+   */
+  applyNextMoves: function(movetree, goban, nextMoves) {
+    var colors = glift.enums.states;
+    var mt = movetree.newTreeRef();
+    var stones = [];
+    var placedMap = {}; // map from ptstring to idx
+    for (var i = 0; i < nextMoves.length; i++) {
+      mt.moveDown(nextMoves[i]);
+      var move = mt.properties().getMove();
+      if (move && move.point && move.color) {
+        var ptString = move.point.toString();
+        var gcolor = goban.getStone(move.point);
+        if (gcolor !== colors.EMPTY) {
+          move.collision = null;
+        } else if (placedMap[ptString] !== undefined) {
+          move.collision = placedMap[ptString];
+        }
+        stones.push(move);
+        placedMap[ptString] = i;
+      }
+    }
+    return {
+      movetree: mt,
+      stones: stones
+    };
+  },
+
+  /**
+   * Flatten the move tree variations into a list of lists, where the sublists
+   * are each a treepath.
+   *
+   * TODO(kashomon): This is only used by the problem.js file.  Maybe move it in
+   * there.
+   */
   flattenMoveTree: function(movetree) {
     var out = [];
     for (var i = 0; i < movetree.node().numChildren(); i++) {

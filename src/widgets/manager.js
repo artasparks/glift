@@ -9,16 +9,18 @@
  *    manager.
  * sgfDefaults: filled-in sgf default options.  See ./options/base_options.js
  * displayOptions: filled-in display options. See ./options/base_options.js
+ * bookData: global book data.
  * actions: combination of stone actions and icon actions.
  */
 glift.widgets.WidgetManager = function(divId, sgfList, sgfListIndex,
-      allowWrapAround, sgfDefaults, displayOptions, actions) {
+      allowWrapAround, sgfDefaults, displayOptions, bookData, actions) {
   this.divId = divId;
   this.sgfList = sgfList;
   this.sgfListIndex = sgfListIndex;
   this.allowWrapAround = allowWrapAround
   this.sgfDefaults = sgfDefaults;
   this.displayOptions = displayOptions;
+  this.bookData = bookData;
   this.actions = actions;
 
   // Defined on draw
@@ -217,7 +219,6 @@ glift.widgets.WidgetManager.prototype = {
         callback();
       }
     };
-
     checkDone(3); // Check that we've finished prepopulating (3 checks)
   },
 

@@ -35,7 +35,7 @@ glift.rules.movetree = {
   getInstance: function(intersections) {
     var mt = new glift.rules._MoveTree(glift.rules.movenode());
     if (intersections !== undefined) {
-      mt.setIntersections(intersections);
+      mt._setIntersections(intersections);
     }
     return mt;
   },
@@ -86,9 +86,61 @@ glift.rules._MoveTree = function(rootNode, currentNode) {
 };
 
 glift.rules._MoveTree.prototype = {
-  /** Get a new move tree instance from the root node. */
-  getTreeFromRoot: function() {
-    return glift.rules.movetree.getFromNode(this._rootNode);
+  /////////////////////////
+  // Most common methods //
+  /////////////////////////
+
+  /** Get the current node -- that is, the node at the current position. */
+  node: function() {
+    return this._currentNode;
+  },
+
+  /** Get the properties object on the current node. */
+  properties: function() {
+    return this.node().properties();
+  },
+
+  /**
+   * Move down, but only if there is an available variation.  variationNum can
+   * be undefined for convenicence, in which case it defaults to 0.
+   */
+  moveDown: function(variationNum) {
+    var num = variationNum === undefined ? 0 : variationNum;
+    if (this.node().getChild(num) !== undefined) {
+      this._currentNode = this.node().getChild(num);
+    }
+    return this;
+  },
+
+  /**
+   * Move up a move, but only if you are not at root move.
+   * At the root node, movetree.moveUp().moveUp() == movetree.moveUp();
+   */
+  moveUp: function() {
+    var parent = this._currentNode.getParent();
+    if (parent) { this._currentNode = parent; }
+    return this;
+  },
+
+  /** Get the current playeras a color. */
+  getCurrentPlayer: function() {
+    var states = glift.enums.states;
+    var curNode = this._currentNode;
+    var move = curNode.properties().getMove();
+    while (!move) {
+      curNode = curNode.getParent();
+      if (!curNode) { return states.BLACK; }
+      move = curNode.properties().getMove();
+    }
+    if (!move) {
+      return states.BLACK;
+    } else if (move.color === states.BLACK) {
+      return states.WHITE;
+    } else if (move.color === states.WHITE) {
+      return states.BLACK;
+    } else {
+      return states.BLACK;
+    }
   },
 
   /**
@@ -101,18 +153,33 @@ glift.rules._MoveTree.prototype = {
   },
 
   /**
-   * Get the current node -- that is, the node at the current position.
+   * Get a new move tree instance from the root node.
+   * treepath: optionally also apply a treepath to the tree
    */
-  node: function() {
-    return this._currentNode;
+  getTreeFromRoot: function(treepath) {
+    var mt = glift.rules.movetree.getFromNode(this._rootNode);
+    if (treepath && glift.util.typeOf(treepath) === 'array') {
+      for (var i = 0, len = treepath.length;
+           i < len && mt.node().numChildren() > 0; i++) {
+        mt.moveDown(treepath[i]);
+      }
+    }
+    return mt;
   },
 
-  /**
-   * Get the properties object on the current node.
-   */
-  properties: function() {
-    return this.node().properties();
+  ///////////////////////////////////
+  // Other methods, in Alpha Order //
+  ///////////////////////////////////
+  /** Add a new Node to the cur position and move to that position. */
+  addNode: function() {
+    this.node().addChild();
+    this.moveDown(this.node().numChildren() - 1);
+    return this;
   },
+
+  /** Delete the current node and move up */
+  // TODO(kashomon): Finish this.
+  deleteNode: function() { throw "Unfinished"; },
 
   /**
    * Given a point and a color, find the variation number corresponding to the
@@ -142,21 +209,28 @@ glift.rules._MoveTree.prototype = {
     }
   },
 
+  /** Get the intersections number of the go board, by looking at the props. */
+  getIntersections: function() {
+    var mt = this.getTreeFromRoot(),
+        allProperties = glift.sgf.allProperties;
+    if (mt.properties().contains(allProperties.SZ)) {
+      var ints = parseInt(mt.properties().getAllValues(allProperties.SZ));
+      return ints;
+    } else {
+      return 19;
+    }
+  },
+
   /**
    * Get the last move ([B] or [W]). This is a convenience method, since it
    * delegates to properties().getMove();
    *
-   * Returns a simple object:
-   *  {
-   *    color:
-   *    point:
-   *  }
+   * Returns a move object: { color:<color point:<point } or null;
    *
-   * returns null if property doesn't exist.  There are two cases
-   * where this can occur:
-   *  - The root node.
+   * There are two cases where null can be returned:
+   *  - At the root node.
    *  - When, in the middle of the game, stone-placements are added for
-   *  illustration (AW,AB).
+   *    illustration (AW,AB).
    */
   getLastMove: function() {
     return this.properties().getMove();
@@ -165,16 +239,11 @@ glift.rules._MoveTree.prototype = {
   /**
    * Get the next moves (i.e., nodes with either B or W properties);
    *
-   * returns an array of dicts with the moves, e.g.,
+   * returns: an array of dicts with the moves, e.g.,
+   *    [{color: <Color>, point: point },...]
    *
-   *  [{
-   *    color: <BLACK or WHITE>
-   *    point: point
-   *  },
-   *  {...}]
-   *
-   *  The ordering of the moves is guranteed to be the ordering of the
-   *  variations at the time of creation.
+   * The ordering of the moves is guranteed to be the ordering of the
+   *    variations at the time of creation.
    */
   nextMoves: function() {
     var curNode = this.node();
@@ -189,92 +258,81 @@ glift.rules._MoveTree.prototype = {
     return nextMoves;
   },
 
-  /**
-   * Get the current player.  This is exactly the opposite of the last move that
-   * was played.  If we traverse all the way back to the beginning, the default
-   * player is Black.
-   */
-  getCurrentPlayer: function() {
-    var states = glift.enums.states;
-    var curNode = this._currentNode;
-    var move = curNode.properties().getMove();
-    while (!move) {
-      curNode = curNode.getParent();
-      if (!curNode) { return states.BLACK; }
-      move = curNode.properties().getMove();
+  /** Returns true if the tree is currently on a mainline variation. */
+  onMainline: function() {
+    var mt = this.newTreeRef();
+    if (mt.node().getVarNum() !== 0) { return false; }
+    while (mt.node().getParent()) {
+      mt.moveUp();
+      if (mt.node().getVarNum() !== 0) { return false }
     }
-    if (!move) {
-      return states.BLACK;
-    } else if (move.color === states.BLACK) {
-      return states.WHITE;
-    } else if (move.color === states.WHITE) {
-      return states.BLACK;
-    } else {
-      return states.BLACK;
-    }
+    return true;
   },
 
-  /**
-   * Move down, but only if there is an available variation.  variationNum can
-   * be undefined for convenicence, in which case it defaults to 0.
-   */
-  moveDown: function(variationNum) {
-    var num = variationNum === undefined ? 0 : variationNum;
-    if (this.node().getChild(num) !== undefined) {
-      this._currentNode = this.node().getChild(num);
-    }
-    return this;
-  },
-
-  /**
-   * Move up a move, but only if you are not in the intial (0th) move.
-   */
-  moveUp: function() {
-    var parent = this._currentNode.getParent();
-    if (parent) {
-      this._currentNode = parent;
-    }
-    return this;
-  },
-
-  // Move to the root node
-  moveToRoot: function() {
-    this._currentNode = this._rootNode;
-    return this;
-  },
-
-  /**
-   * Add a newNode and move to that position.  This is convenient becuase it
-   * means you can start adding properties.
-   */
-  addNode: function() {
-    this.node().addChild();
-    this.moveDown(this.node().numChildren() - 1);
-    return this;
-  },
-
-  // TODO(kashomon): Finish this.
-  deleteCurrentNode: function() {
-    // var nodeId = glift.rules.movetree.getNodeId();
-    // VarNum = this.getVarNum();
-    // this.moveUp();
-    // var theMoves = this.getAllNextNodes();
-    //delete theMoves(nodeId,VarNum); // This is currently a syntax error
-    throw "Unfinished";
-  },
-
-  recurse: function(func) {
-    glift.rules.movetree.searchMoveTreeDFS(this, func);
-  },
-
-  recurseFromRoot: function(func) {
-    glift.rules.movetree.searchMoveTreeDFS(this.getTreeFromRoot(), func);
-  },
-
+  /** Convert this movetree to an SGF. */
   toSgf: function() {
     return this._toSgfBuffer(this.getTreeFromRoot().node(), []).join("");
   },
 
+  /**
+   * Create a treepath to the current location. This does not change the current
+   * movetree.
+   *
+   * returns: A treepath (an array of variation numbers);
+   */
+  treepathToHere: function() {
+    var newTreepath = [];
+    var movetree = this.newTreeRef();
+    while (movetree.node().getParent()) {
+      newTreepath.push(movetree.node().getVarNum());
+      movetree.moveUp();
+    }
+    return newTreepath.reverse();
+  },
+
+  /** Recursive over the movetree. func is called on the movetree. */
+  recurse: function(func) {
+    glift.rules.movetree.searchMoveTreeDFS(this, func);
+  },
+
+  /** Recursive over the movetree from root. func is called on the movetree. */
+  recurseFromRoot: function(func) {
+    glift.rules.movetree.searchMoveTreeDFS(this.getTreeFromRoot(), func);
+  },
+
+  /////////////////////
+  // Private Methods //
+  /////////////////////
+  _debugLog: function(spaces) {
+    if (spaces === undefined) {
+      spaces = "  ";
+    }
+    glift.util.logz(spaces + this.node(i).getVarNum() + '-'
+        + this.node(i).getNodeNum());
+    for (var i = 0; i < this.node().numChildren(); i++) {
+      this.moveDown(i);
+      this.debugLog(spaces);
+      this.moveUp();
+    }
+  },
+
+  /**
+   * Set the intersections property.
+   * Note: This is quite dangerous. If the goban and other data structures are
+   * not also updated, chaos will ensue
+   */
+  _setIntersections: function(intersections) {
+    var mt = this.getTreeFromRoot(),
+        allProperties = glift.sgf.allProperties;
+    if (!mt.properties().contains(allProperties.SZ)) {
+      this.properties().add(allProperties.SZ, intersections + "");
+    }
+    return this;
+  },
+
+  /**
+   * Recursive method to build an SGF into an array of data.
+   */
   _toSgfBuffer: function(node, builder) {
     if (node.getParent()) {
       // Don't add a \n if we're at the root node
@@ -307,41 +365,5 @@ glift.rules._MoveTree.prototype = {
       builder.push(")");
     }
     return builder
-  },
-
-  debugLog: function(spaces) {
-    if (spaces === undefined) {
-      spaces = "  ";
-    }
-    glift.util.logz(spaces + this.node(i).getVarNum() + '-'
-        + this.node(i).getNodeNum());
-    for (var i = 0; i < this.node().numChildren(); i++) {
-      this.moveDown(i);
-      this.debugLog(spaces);
-      this.moveUp();
-    }
-  },
-
-  //---------------------//
-  // Convenience methods //
-  //---------------------//
-  setIntersections: function(intersections) {
-    var mt = this.getTreeFromRoot(),
-        allProperties = glift.sgf.allProperties;
-    if (!mt.properties().contains(allProperties.SZ)) {
-      this.properties().add(allProperties.SZ, intersections + "");
-    }
-    return this;
-  },
-
-  getIntersections: function() {
-    var mt = this.getTreeFromRoot(),
-        allProperties = glift.sgf.allProperties;
-    if (mt.properties().contains(allProperties.SZ)) {
-      var ints = parseInt(mt.properties().getAllValues(allProperties.SZ));
-      return ints;
-    } else {
-      return 19;
-    }
   }
 };

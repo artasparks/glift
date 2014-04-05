@@ -60,8 +60,11 @@ glift.displays.diagrams.gooe = {
    *
    * on the output of this function. However, it's quite useful for testing /
    * manipulation to return the table-form.
+   *
+   * flattened: A flattened object.
+   * size: a member of glift.enums.diagramSize;
    */
-  diagramArray: function(flattened) {
+ diagramArray: function(flattened, size) {
     var symbolFromEnum = glift.bridge.flattener.symbolFromEnum;
     var symb = glift.bridge.flattener.symbols;
     var cmap = glift.displays.diagrams.gooe.charMapping;
@@ -69,7 +72,10 @@ glift.displays.diagrams.gooe = {
     var repl = function(text, toInsert) {
       return text.replace("%s", toInsert);
     };
-    var header = "{\\goo";
+    var header = '{\\goo';
+    if (size === glift.enums.diagramSize.LARGE) {
+      header = '{\\bgoo';
+    }
     var footer = "}";
     var lines = [[header]];
     for (var i = 0; i < symbolPairs.length; i++) {
@@ -85,7 +91,6 @@ glift.displays.diagrams.gooe = {
         var mark = pair.mark;
         var markName = symbolFromEnum(mark);
         var combinedName = baseName + '_' + markName;
-        // glift.util.logz(combined)
 
         var outChar = cmap.EMPTY;
         if (mark === symb.TEXTLABEL) {
@@ -97,6 +102,9 @@ glift.displays.diagrams.gooe = {
               outChar = repl(cmap.BSTONE_TEXTLABEL, lbl); break;
             default:
               outChar = repl(cmap.TEXTLABEL, lbl);
+          }
+          if (size === glift.enums.diagramSize.LARGE) {
+            outChar = outChar.replace('Lbl', 'LblBig'); // Such a hack.
           }
         } else if (cmap[combinedName] !== undefined) {
           outChar = cmap[combinedName];
@@ -124,19 +132,75 @@ glift.displays.diagrams.gooe = {
     return outArr.join("\n");
   },
 
+  gameReviewDiagram: function(diagramString, comment) {
+    return [
+      '',
+      '\\rule{\\textwidth}{0.5pt}',
+      '',
+      '\\begin{minipage}[t]{0.5\\textwidth}',
+      diagramString,
+      '\\end{minipage}',
+      '\\begin{minipage}[t]{0.5\\textwidth}',
+      '\\setlength{\\parskip}{0.5em}',
+      comment,
+      '\\end{minipage}',
+      '\\vfill'].join('\n');
+  },
+
+  gameReviewChapterDiagram: function(str, comment, title) {
+    return [
+        '\\chapter{' + title + '}',
+        '{\\centering',
+        str + '\n',
+        '}',
+        comment,
+        '\\vfill'].join('\n');
+  },
+
+  /**
+   * title: title of the book
+   * author: array of one or several authors
+   */
+  generateTitleDef: function(title, subtitle, authors, publisher) {
+    var strbuff = [
+        '\\definecolor{light-gray}{gray}{0.55}',
+        '\\newcommand*{\\mainBookTitle}{\\begingroup',
+        '  \\raggedleft'];
+    for (var i = 0; i < authors.length; i++) {
+      strbuff.push('  {\\Large ' + authors[i] + '} \\\\')
+      if (i === 0) {
+        strbuff.push('  \\vspace*{0.2 em} % This is a hack =(');
+      } else if (i < authors.length - 1) {
+        strbuff.push('  \\vspace*{0.5 em}');
+      }
+    }
+
+    return strbuff.concat(['  \\vspace*{5 em}',
+        '  {\\textcolor{light-gray}{\\Huge ' + title + '}}\\\\',
+        '  \\vspace*{\\baselineskip}',
+        '  {\\small \\bfseries ' + subtitle + '}\\par',
+        '  \\vfill',
+        '  {\\Large ' + publisher + '}\\par',
+        '  \\vspace*{2\\baselineskip}',
+        '\\endgroup}']).join('\n');
+  },
+
   /**
    * Some built in defs that are useful for generating LaTeX books using Gooe
    * fonts.
    */
   defs: {
     basicHeader: [
-      '\\documentclass[a5paper]{book}',
+      '\\documentclass[letterpaper,12pt]{memoir}',
       '\\usepackage{gooemacs}',
-      '\\usepackage{xcolor}',
+      '\\usepackage{color}',
       '\\usepackage{wrapfig}',
+      '\\usepackage{setspace}',
       '\\usepackage{unicode}',
       '\\usepackage[margin=1in]{geometry}',
-      '\\begin{document}'
+      '',
+      '\\setlength{\\parskip}{0.5em}',
+      '\\setlength{\\parindent}{0pt}'
     ],
     basicFooter: ['\\end{document}'],
 
@@ -154,13 +218,13 @@ glift.displays.diagrams.gooe = {
     ],
     bigBoardDefs: [
       '% Big-sized board defs',
-      '\\def\\eLblBig#1{\\leavevmode\\hbox to \\goIntWd{\\hss\\raise\\bigRaise\\hbox{\\rm \\tenpointeleven{#1}}\\hss}}',
+      '\\def\\eLblBig#1{\\leavevmode\\hbox to \\goIntWd{\\hss\\raise\\bigRaise\\hbox{\\tenpointeleven{#1}}\\hss}}',
       '\\def\\goWsLblBig#1{\\setbox0=\\hbox{\\0??!}\\rlap{\\0??!}\\raise\\bigRaise\\hbox to \\wd0{\\hss\\tenpointeleven{#1}\\hss}}',
       '\\def\\goBsLblBig#1{\\setbox0=\\hbox{\\0??@}\\rlap{\\0??@}\\raise\\bigRaise\\hbox to \\wd0{\\hss\\color{white}\\tenpointeleven{#1}\\color{white}\\hss}}'
     ],
     normalBoardDefs: [
       '% Normal-sized board defs',
-      '\\def\\eLbl#1{\\leavevmode\\hbox to \\goIntWd{\\hss\\raise\\smallRaise\\hbox{\\rm \\tenpoint{#1}}\\hss}}',
+      '\\def\\eLbl#1{\\leavevmode\\hbox to \\goIntWd{\\hss\\raise\\smallRaise\\hbox{\\tenpoint{#1}}\\hss}}',
       '\\def\\goWsLbl#1{\\leavevmode\\setbox0=\\hbox{\\0??!}\\rlap{\\0??!}\\raise\\smallRaise\\hbox to \\wd0{\\hss\\eightpointnine{#1}\\hss}}',
       '\\def\\goBsLbl#1{\\leavevmode\\setbox0=\\hbox{\\0??@}\\rlap{\\0??@}\\raise\\smallRaise\\hbox to \\wd0{\\hss\\color{white}\\eightpointnine{#1}\\color{white}\\hss}}'
     ]
@@ -178,12 +242,30 @@ glift.displays.diagrams.gooe = {
       '\\font\\eightpoint=' + baseFont + '8',
       '\\font\\eightpointnine=' + baseFont + '8 at 9pt'
     ]
-    var defs = glift.displays.diagrams.gooe.defs;
-    var out = [].concat(defs.basicHeader)
+    var docz
+    var gooe = glift.displays.diagrams.gooe;
+    return [].concat(gooe.defs.basicHeader)
       .concat(fontDefsBase)
-      .concat(defs.sizeDefs)
-      .concat(defs.bigBoardDefs)
-      .concat(defs.normalBoardDefs)
-    return out.join("\n");
+      .concat(gooe.defs.sizeDefs)
+      .concat(gooe.defs.bigBoardDefs)
+      .concat(gooe.defs.normalBoardDefs).join('\n');
+  },
+
+  startDocument: function() {
+    return [
+        '\\begin{document}',
+        '',
+        '\\pagestyle{empty}',
+        '\\mainBookTitle',
+        '\\newpage',
+        '\\tableofcontents',
+        '',
+        '\\chapterstyle{section}',
+        '\\pagestyle{companion}',
+        '\\makepagestyle{headings}',
+        '\\renewcommand{\\printchapternum}{\\space}',
+        '\\makeevenhead{headings}{\\thepage}{}{\\slshape\\leftmark}',
+        '\\makeoddhead{headings}{\\slshape\\rightmark}{}{\\thepage}'
+        ].join('\n');
   }
 };

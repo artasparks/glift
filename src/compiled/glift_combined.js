@@ -18,7 +18,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.10.0',
+  version: '0.10.4',
   debugMode: false,
   // Options for performanceDebugLevel: NONE, INFO
   performanceDebugLevel: 'NONE',
@@ -365,6 +365,15 @@ glift.enums = {
     CLOCKWISE_90: 'CLOCKWISE_90',
     CLOCKWISE_180: 'CLOCKWISE_180',
     CLOCKWISE_270: 'CLOCKWISE_270'
+  },
+
+  diagramSize: {
+    NORMAL: 'NORMAL',
+    LARGE: 'LARGE'
+  },
+
+  bookTypes: {
+    GAME_REVIEW: 'GAME_REVIEW'
   }
 };
 (function() {
@@ -4134,8 +4143,11 @@ glift.displays.diagrams.gooe = {
    *
    * on the output of this function. However, it's quite useful for testing /
    * manipulation to return the table-form.
+   *
+   * flattened: A flattened object.
+   * size: a member of glift.enums.diagramSize;
    */
-  diagramArray: function(flattened) {
+ diagramArray: function(flattened, size) {
     var symbolFromEnum = glift.bridge.flattener.symbolFromEnum;
     var symb = glift.bridge.flattener.symbols;
     var cmap = glift.displays.diagrams.gooe.charMapping;
@@ -4143,7 +4155,10 @@ glift.displays.diagrams.gooe = {
     var repl = function(text, toInsert) {
       return text.replace("%s", toInsert);
     };
-    var header = "{\\goo";
+    var header = '{\\goo';
+    if (size === glift.enums.diagramSize.LARGE) {
+      header = '{\\bgoo';
+    }
     var footer = "}";
     var lines = [[header]];
     for (var i = 0; i < symbolPairs.length; i++) {
@@ -4159,7 +4174,6 @@ glift.displays.diagrams.gooe = {
         var mark = pair.mark;
         var markName = symbolFromEnum(mark);
         var combinedName = baseName + '_' + markName;
-        // glift.util.logz(combined)
 
         var outChar = cmap.EMPTY;
         if (mark === symb.TEXTLABEL) {
@@ -4171,6 +4185,9 @@ glift.displays.diagrams.gooe = {
               outChar = repl(cmap.BSTONE_TEXTLABEL, lbl); break;
             default:
               outChar = repl(cmap.TEXTLABEL, lbl);
+          }
+          if (size === glift.enums.diagramSize.LARGE) {
+            outChar = outChar.replace('Lbl', 'LblBig'); // Such a hack.
           }
         } else if (cmap[combinedName] !== undefined) {
           outChar = cmap[combinedName];
@@ -4198,19 +4215,75 @@ glift.displays.diagrams.gooe = {
     return outArr.join("\n");
   },
 
+  gameReviewDiagram: function(diagramString, comment) {
+    return [
+      '',
+      '\\rule{\\textwidth}{0.5pt}',
+      '',
+      '\\begin{minipage}[t]{0.5\\textwidth}',
+      diagramString,
+      '\\end{minipage}',
+      '\\begin{minipage}[t]{0.5\\textwidth}',
+      '\\setlength{\\parskip}{0.5em}',
+      comment,
+      '\\end{minipage}',
+      '\\vfill'].join('\n');
+  },
+
+  gameReviewChapterDiagram: function(str, comment, title) {
+    return [
+        '\\chapter{' + title + '}',
+        '{\\centering',
+        str + '\n',
+        '}',
+        comment,
+        '\\vfill'].join('\n');
+  },
+
+  /**
+   * title: title of the book
+   * author: array of one or several authors
+   */
+  generateTitleDef: function(title, subtitle, authors, publisher) {
+    var strbuff = [
+        '\\definecolor{light-gray}{gray}{0.55}',
+        '\\newcommand*{\\mainBookTitle}{\\begingroup',
+        '  \\raggedleft'];
+    for (var i = 0; i < authors.length; i++) {
+      strbuff.push('  {\\Large ' + authors[i] + '} \\\\')
+      if (i === 0) {
+        strbuff.push('  \\vspace*{0.2 em} % This is a hack =(');
+      } else if (i < authors.length - 1) {
+        strbuff.push('  \\vspace*{0.5 em}');
+      }
+    }
+
+    return strbuff.concat(['  \\vspace*{5 em}',
+        '  {\\textcolor{light-gray}{\\Huge ' + title + '}}\\\\',
+        '  \\vspace*{\\baselineskip}',
+        '  {\\small \\bfseries ' + subtitle + '}\\par',
+        '  \\vfill',
+        '  {\\Large ' + publisher + '}\\par',
+        '  \\vspace*{2\\baselineskip}',
+        '\\endgroup}']).join('\n');
+  },
+
   /**
    * Some built in defs that are useful for generating LaTeX books using Gooe
    * fonts.
    */
   defs: {
     basicHeader: [
-      '\\documentclass[a5paper]{book}',
+      '\\documentclass[letterpaper,12pt]{memoir}',
       '\\usepackage{gooemacs}',
-      '\\usepackage{xcolor}',
+      '\\usepackage{color}',
       '\\usepackage{wrapfig}',
+      '\\usepackage{setspace}',
       '\\usepackage{unicode}',
       '\\usepackage[margin=1in]{geometry}',
-      '\\begin{document}'
+      '',
+      '\\setlength{\\parskip}{0.5em}',
+      '\\setlength{\\parindent}{0pt}'
     ],
     basicFooter: ['\\end{document}'],
 
@@ -4228,13 +4301,13 @@ glift.displays.diagrams.gooe = {
     ],
     bigBoardDefs: [
       '% Big-sized board defs',
-      '\\def\\eLblBig#1{\\leavevmode\\hbox to \\goIntWd{\\hss\\raise\\bigRaise\\hbox{\\rm \\tenpointeleven{#1}}\\hss}}',
+      '\\def\\eLblBig#1{\\leavevmode\\hbox to \\goIntWd{\\hss\\raise\\bigRaise\\hbox{\\tenpointeleven{#1}}\\hss}}',
       '\\def\\goWsLblBig#1{\\setbox0=\\hbox{\\0??!}\\rlap{\\0??!}\\raise\\bigRaise\\hbox to \\wd0{\\hss\\tenpointeleven{#1}\\hss}}',
       '\\def\\goBsLblBig#1{\\setbox0=\\hbox{\\0??@}\\rlap{\\0??@}\\raise\\bigRaise\\hbox to \\wd0{\\hss\\color{white}\\tenpointeleven{#1}\\color{white}\\hss}}'
     ],
     normalBoardDefs: [
       '% Normal-sized board defs',
-      '\\def\\eLbl#1{\\leavevmode\\hbox to \\goIntWd{\\hss\\raise\\smallRaise\\hbox{\\rm \\tenpoint{#1}}\\hss}}',
+      '\\def\\eLbl#1{\\leavevmode\\hbox to \\goIntWd{\\hss\\raise\\smallRaise\\hbox{\\tenpoint{#1}}\\hss}}',
       '\\def\\goWsLbl#1{\\leavevmode\\setbox0=\\hbox{\\0??!}\\rlap{\\0??!}\\raise\\smallRaise\\hbox to \\wd0{\\hss\\eightpointnine{#1}\\hss}}',
       '\\def\\goBsLbl#1{\\leavevmode\\setbox0=\\hbox{\\0??@}\\rlap{\\0??@}\\raise\\smallRaise\\hbox to \\wd0{\\hss\\color{white}\\eightpointnine{#1}\\color{white}\\hss}}'
     ]
@@ -4252,13 +4325,31 @@ glift.displays.diagrams.gooe = {
       '\\font\\eightpoint=' + baseFont + '8',
       '\\font\\eightpointnine=' + baseFont + '8 at 9pt'
     ]
-    var defs = glift.displays.diagrams.gooe.defs;
-    var out = [].concat(defs.basicHeader)
+    var docz
+    var gooe = glift.displays.diagrams.gooe;
+    return [].concat(gooe.defs.basicHeader)
       .concat(fontDefsBase)
-      .concat(defs.sizeDefs)
-      .concat(defs.bigBoardDefs)
-      .concat(defs.normalBoardDefs)
-    return out.join("\n");
+      .concat(gooe.defs.sizeDefs)
+      .concat(gooe.defs.bigBoardDefs)
+      .concat(gooe.defs.normalBoardDefs).join('\n');
+  },
+
+  startDocument: function() {
+    return [
+        '\\begin{document}',
+        '',
+        '\\pagestyle{empty}',
+        '\\mainBookTitle',
+        '\\newpage',
+        '\\tableofcontents',
+        '',
+        '\\chapterstyle{section}',
+        '\\pagestyle{companion}',
+        '\\makepagestyle{headings}',
+        '\\renewcommand{\\printchapternum}{\\space}',
+        '\\makeevenhead{headings}{\\thepage}{}{\\slshape\\leftmark}',
+        '\\makeoddhead{headings}{\\slshape\\rightmark}{}{\\thepage}'
+        ].join('\n');
   }
 };
 /**
@@ -4580,7 +4671,10 @@ glift.rules.goban = {
   /**
    * Create a goban, from a move tree and (optionally) a treePath, which defines
    * how to get from the start to a given location.  Usually, the treePath is
-   * the initialPosition, but not necessarily.
+   * the initialPosition, but not necessarily.  If the treepath is undefined, we
+   * craft a treepath to the current location in the movetree.
+   *
+   * NOTE: This leaves the movetree in a modified state.
    *
    * returns:
    *  {
@@ -4590,8 +4684,8 @@ glift.rules.goban = {
    */
   getFromMoveTree: function(mt, treepath) {
     var goban = new Goban(mt.getIntersections()),
+        treepath = treepath || mt.treepathToHere(),
         movetree = mt.getTreeFromRoot(),
-        treepath = treepath || [],
         captures = []; // array of captures.
     goban.loadStonesFromMovetree(movetree); // Load root placements.
     for (var i = 0; i < treepath.length; i++) {
@@ -5074,7 +5168,7 @@ glift.rules.movetree = {
   getInstance: function(intersections) {
     var mt = new glift.rules._MoveTree(glift.rules.movenode());
     if (intersections !== undefined) {
-      mt.setIntersections(intersections);
+      mt._setIntersections(intersections);
     }
     return mt;
   },
@@ -5125,9 +5219,61 @@ glift.rules._MoveTree = function(rootNode, currentNode) {
 };
 
 glift.rules._MoveTree.prototype = {
-  /** Get a new move tree instance from the root node. */
-  getTreeFromRoot: function() {
-    return glift.rules.movetree.getFromNode(this._rootNode);
+  /////////////////////////
+  // Most common methods //
+  /////////////////////////
+
+  /** Get the current node -- that is, the node at the current position. */
+  node: function() {
+    return this._currentNode;
+  },
+
+  /** Get the properties object on the current node. */
+  properties: function() {
+    return this.node().properties();
+  },
+
+  /**
+   * Move down, but only if there is an available variation.  variationNum can
+   * be undefined for convenicence, in which case it defaults to 0.
+   */
+  moveDown: function(variationNum) {
+    var num = variationNum === undefined ? 0 : variationNum;
+    if (this.node().getChild(num) !== undefined) {
+      this._currentNode = this.node().getChild(num);
+    }
+    return this;
+  },
+
+  /**
+   * Move up a move, but only if you are not at root move.
+   * At the root node, movetree.moveUp().moveUp() == movetree.moveUp();
+   */
+  moveUp: function() {
+    var parent = this._currentNode.getParent();
+    if (parent) { this._currentNode = parent; }
+    return this;
+  },
+
+  /** Get the current playeras a color. */
+  getCurrentPlayer: function() {
+    var states = glift.enums.states;
+    var curNode = this._currentNode;
+    var move = curNode.properties().getMove();
+    while (!move) {
+      curNode = curNode.getParent();
+      if (!curNode) { return states.BLACK; }
+      move = curNode.properties().getMove();
+    }
+    if (!move) {
+      return states.BLACK;
+    } else if (move.color === states.BLACK) {
+      return states.WHITE;
+    } else if (move.color === states.WHITE) {
+      return states.BLACK;
+    } else {
+      return states.BLACK;
+    }
   },
 
   /**
@@ -5140,18 +5286,33 @@ glift.rules._MoveTree.prototype = {
   },
 
   /**
-   * Get the current node -- that is, the node at the current position.
+   * Get a new move tree instance from the root node.
+   * treepath: optionally also apply a treepath to the tree
    */
-  node: function() {
-    return this._currentNode;
+  getTreeFromRoot: function(treepath) {
+    var mt = glift.rules.movetree.getFromNode(this._rootNode);
+    if (treepath && glift.util.typeOf(treepath) === 'array') {
+      for (var i = 0, len = treepath.length;
+           i < len && mt.node().numChildren() > 0; i++) {
+        mt.moveDown(treepath[i]);
+      }
+    }
+    return mt;
   },
 
-  /**
-   * Get the properties object on the current node.
-   */
-  properties: function() {
-    return this.node().properties();
+  ///////////////////////////////////
+  // Other methods, in Alpha Order //
+  ///////////////////////////////////
+  /** Add a new Node to the cur position and move to that position. */
+  addNode: function() {
+    this.node().addChild();
+    this.moveDown(this.node().numChildren() - 1);
+    return this;
   },
+
+  /** Delete the current node and move up */
+  // TODO(kashomon): Finish this.
+  deleteNode: function() { throw "Unfinished"; },
 
   /**
    * Given a point and a color, find the variation number corresponding to the
@@ -5181,21 +5342,28 @@ glift.rules._MoveTree.prototype = {
     }
   },
 
+  /** Get the intersections number of the go board, by looking at the props. */
+  getIntersections: function() {
+    var mt = this.getTreeFromRoot(),
+        allProperties = glift.sgf.allProperties;
+    if (mt.properties().contains(allProperties.SZ)) {
+      var ints = parseInt(mt.properties().getAllValues(allProperties.SZ));
+      return ints;
+    } else {
+      return 19;
+    }
+  },
+
   /**
    * Get the last move ([B] or [W]). This is a convenience method, since it
    * delegates to properties().getMove();
    *
-   * Returns a simple object:
-   *  {
-   *    color:
-   *    point:
-   *  }
+   * Returns a move object: { color:<color point:<point } or null;
    *
-   * returns null if property doesn't exist.  There are two cases
-   * where this can occur:
-   *  - The root node.
+   * There are two cases where null can be returned:
+   *  - At the root node.
    *  - When, in the middle of the game, stone-placements are added for
-   *  illustration (AW,AB).
+   *    illustration (AW,AB).
    */
   getLastMove: function() {
     return this.properties().getMove();
@@ -5204,16 +5372,11 @@ glift.rules._MoveTree.prototype = {
   /**
    * Get the next moves (i.e., nodes with either B or W properties);
    *
-   * returns an array of dicts with the moves, e.g.,
+   * returns: an array of dicts with the moves, e.g.,
+   *    [{color: <Color>, point: point },...]
    *
-   *  [{
-   *    color: <BLACK or WHITE>
-   *    point: point
-   *  },
-   *  {...}]
-   *
-   *  The ordering of the moves is guranteed to be the ordering of the
-   *  variations at the time of creation.
+   * The ordering of the moves is guranteed to be the ordering of the
+   *    variations at the time of creation.
    */
   nextMoves: function() {
     var curNode = this.node();
@@ -5228,92 +5391,81 @@ glift.rules._MoveTree.prototype = {
     return nextMoves;
   },
 
-  /**
-   * Get the current player.  This is exactly the opposite of the last move that
-   * was played.  If we traverse all the way back to the beginning, the default
-   * player is Black.
-   */
-  getCurrentPlayer: function() {
-    var states = glift.enums.states;
-    var curNode = this._currentNode;
-    var move = curNode.properties().getMove();
-    while (!move) {
-      curNode = curNode.getParent();
-      if (!curNode) { return states.BLACK; }
-      move = curNode.properties().getMove();
+  /** Returns true if the tree is currently on a mainline variation. */
+  onMainline: function() {
+    var mt = this.newTreeRef();
+    if (mt.node().getVarNum() !== 0) { return false; }
+    while (mt.node().getParent()) {
+      mt.moveUp();
+      if (mt.node().getVarNum() !== 0) { return false }
     }
-    if (!move) {
-      return states.BLACK;
-    } else if (move.color === states.BLACK) {
-      return states.WHITE;
-    } else if (move.color === states.WHITE) {
-      return states.BLACK;
-    } else {
-      return states.BLACK;
-    }
+    return true;
   },
 
-  /**
-   * Move down, but only if there is an available variation.  variationNum can
-   * be undefined for convenicence, in which case it defaults to 0.
-   */
-  moveDown: function(variationNum) {
-    var num = variationNum === undefined ? 0 : variationNum;
-    if (this.node().getChild(num) !== undefined) {
-      this._currentNode = this.node().getChild(num);
-    }
-    return this;
-  },
-
-  /**
-   * Move up a move, but only if you are not in the intial (0th) move.
-   */
-  moveUp: function() {
-    var parent = this._currentNode.getParent();
-    if (parent) {
-      this._currentNode = parent;
-    }
-    return this;
-  },
-
-  // Move to the root node
-  moveToRoot: function() {
-    this._currentNode = this._rootNode;
-    return this;
-  },
-
-  /**
-   * Add a newNode and move to that position.  This is convenient becuase it
-   * means you can start adding properties.
-   */
-  addNode: function() {
-    this.node().addChild();
-    this.moveDown(this.node().numChildren() - 1);
-    return this;
-  },
-
-  // TODO(kashomon): Finish this.
-  deleteCurrentNode: function() {
-    // var nodeId = glift.rules.movetree.getNodeId();
-    // VarNum = this.getVarNum();
-    // this.moveUp();
-    // var theMoves = this.getAllNextNodes();
-    //delete theMoves(nodeId,VarNum); // This is currently a syntax error
-    throw "Unfinished";
-  },
-
-  recurse: function(func) {
-    glift.rules.movetree.searchMoveTreeDFS(this, func);
-  },
-
-  recurseFromRoot: function(func) {
-    glift.rules.movetree.searchMoveTreeDFS(this.getTreeFromRoot(), func);
-  },
-
+  /** Convert this movetree to an SGF. */
   toSgf: function() {
     return this._toSgfBuffer(this.getTreeFromRoot().node(), []).join("");
   },
 
+  /**
+   * Create a treepath to the current location. This does not change the current
+   * movetree.
+   *
+   * returns: A treepath (an array of variation numbers);
+   */
+  treepathToHere: function() {
+    var newTreepath = [];
+    var movetree = this.newTreeRef();
+    while (movetree.node().getParent()) {
+      newTreepath.push(movetree.node().getVarNum());
+      movetree.moveUp();
+    }
+    return newTreepath.reverse();
+  },
+
+  /** Recursive over the movetree. func is called on the movetree. */
+  recurse: function(func) {
+    glift.rules.movetree.searchMoveTreeDFS(this, func);
+  },
+
+  /** Recursive over the movetree from root. func is called on the movetree. */
+  recurseFromRoot: function(func) {
+    glift.rules.movetree.searchMoveTreeDFS(this.getTreeFromRoot(), func);
+  },
+
+  /////////////////////
+  // Private Methods //
+  /////////////////////
+  _debugLog: function(spaces) {
+    if (spaces === undefined) {
+      spaces = "  ";
+    }
+    glift.util.logz(spaces + this.node(i).getVarNum() + '-'
+        + this.node(i).getNodeNum());
+    for (var i = 0; i < this.node().numChildren(); i++) {
+      this.moveDown(i);
+      this.debugLog(spaces);
+      this.moveUp();
+    }
+  },
+
+  /**
+   * Set the intersections property.
+   * Note: This is quite dangerous. If the goban and other data structures are
+   * not also updated, chaos will ensue
+   */
+  _setIntersections: function(intersections) {
+    var mt = this.getTreeFromRoot(),
+        allProperties = glift.sgf.allProperties;
+    if (!mt.properties().contains(allProperties.SZ)) {
+      this.properties().add(allProperties.SZ, intersections + "");
+    }
+    return this;
+  },
+
+  /**
+   * Recursive method to build an SGF into an array of data.
+   */
   _toSgfBuffer: function(node, builder) {
     if (node.getParent()) {
       // Don't add a \n if we're at the root node
@@ -5346,42 +5498,6 @@ glift.rules._MoveTree.prototype = {
       builder.push(")");
     }
     return builder
-  },
-
-  debugLog: function(spaces) {
-    if (spaces === undefined) {
-      spaces = "  ";
-    }
-    glift.util.logz(spaces + this.node(i).getVarNum() + '-'
-        + this.node(i).getNodeNum());
-    for (var i = 0; i < this.node().numChildren(); i++) {
-      this.moveDown(i);
-      this.debugLog(spaces);
-      this.moveUp();
-    }
-  },
-
-  //---------------------//
-  // Convenience methods //
-  //---------------------//
-  setIntersections: function(intersections) {
-    var mt = this.getTreeFromRoot(),
-        allProperties = glift.sgf.allProperties;
-    if (!mt.properties().contains(allProperties.SZ)) {
-      this.properties().add(allProperties.SZ, intersections + "");
-    }
-    return this;
-  },
-
-  getIntersections: function() {
-    var mt = this.getTreeFromRoot(),
-        allProperties = glift.sgf.allProperties;
-    if (mt.properties().contains(allProperties.SZ)) {
-      var ints = parseInt(mt.properties().getAllValues(allProperties.SZ));
-      return ints;
-    } else {
-      return 19;
-    }
   }
 };
 glift.rules.problems = {
@@ -5845,10 +5961,104 @@ glift.rules.treepath = {
     return glift.rules.treepath._storedToEnd;
   },
 
-  // Flatten the move tree variations into a list of lists, where the sublists
-  // are each a treepath.
-  //
-  // TODO(kashomon): Why does this exist?
+  /**
+   * Use some heuristics to find a nextMovesTreepath.  This is used for
+   * automatically adding move numbers.
+   *
+   * movetree: a movetree, of course.
+   * initTreepath [optional]: the initial treepath. If not specified or
+   *    undefined, use the current location in the movetree.
+   * minusMovesOverride: force findNextMoves to to return a nextMovesTreepath of
+   *    this length, starting from the init treepath.  The actually
+   *    nextMovesTreepath can be shorter
+   *
+   * returns: on object with two keys
+   *    movetree: an update movetree
+   *    treepath: a new treepath that says how to get to this position
+   *    nextMoves: A nextMovesTreepath, used to apply for the purpose of
+   *        crafting moveNumbers.
+   */
+  findNextMoves: function(movetree, initTreepath, minusMovesOverride) {
+    var initTreepath = initTreepath || movetree.treepathToHere();
+    var movetree = movetree.getTreeFromRoot();
+    var minusMoves = minusMovesOverride || 20;
+    for (var i = 0, len = initTreepath.length;
+         i < len && movetree.node().numChildren() > 0; i++) {
+      movetree.moveDown(initTreepath[i]);
+    }
+
+    var nextMovesTreepath = [];
+    var i = 0;
+    while (movetree.node().getParent() && i < minusMoves) {
+      var varnum = movetree.node().getVarNum();
+      nextMovesTreepath.push(movetree.node().getVarNum());
+      movetree.moveUp();
+      // Break if we've found ourselves at a variation. However, this only
+      // applies if the user has _not_ specified minusMovesOverride;
+      if (varnum !== 0 && !minusMovesOverride) { break; }
+      i++;
+    }
+    nextMovesTreepath.reverse();
+    return {
+      movetree: movetree,
+      treepath: movetree.treepathToHere(),
+      nextMoves: nextMovesTreepath
+    };
+  },
+
+  /**
+   * Apply the nextmoves and find the collisions.
+   *
+   * movetree: a rules.movetree.
+   * goban: a rules.goban array.
+   * nextMoves:  A next-moves treepath. See findNextMoves.
+   *
+   * returns: An object with three keys:
+   *    movetree: the updated movetree after applying the nextmoves
+   *    stones: arrayof 'augmented' stone objects
+   *
+   * augmented stone objects take the form:
+   *    {point: <point>, color: <color>}
+   * or
+   *    {point: <point>, color: <color>, collision:<idx>}
+   *
+   * where idx is an index into the stones object.  If idx is null, the stone
+   * conflicts with a stone added elsewhere (i.e., in the goban).  This should
+   * be a reasonably common case.
+   */
+  applyNextMoves: function(movetree, goban, nextMoves) {
+    var colors = glift.enums.states;
+    var mt = movetree.newTreeRef();
+    var stones = [];
+    var placedMap = {}; // map from ptstring to idx
+    for (var i = 0; i < nextMoves.length; i++) {
+      mt.moveDown(nextMoves[i]);
+      var move = mt.properties().getMove();
+      if (move && move.point && move.color) {
+        var ptString = move.point.toString();
+        var gcolor = goban.getStone(move.point);
+        if (gcolor !== colors.EMPTY) {
+          move.collision = null;
+        } else if (placedMap[ptString] !== undefined) {
+          move.collision = placedMap[ptString];
+        }
+        stones.push(move);
+        placedMap[ptString] = i;
+      }
+    }
+    return {
+      movetree: mt,
+      stones: stones
+    };
+  },
+
+  /**
+   * Flatten the move tree variations into a list of lists, where the sublists
+   * are each a treepath.
+   *
+   * TODO(kashomon): This is only used by the problem.js file.  Maybe move it in
+   * there.
+   */
   flattenMoveTree: function(movetree) {
     var out = [];
     for (var i = 0; i < movetree.node().numChildren(); i++) {
@@ -6149,6 +6359,7 @@ glift.sgf.parseError =  function(lineNum, colNum, curchar, message) {
 };
 // The allProperties object is used to check to make sure that a given property is
 // actually a real property
+// MU (???)
 glift.sgf.allProperties = {
 AB: "AB", AE: "AE", AN: "AN", AP: "AP", AR: "AR", AS: "AS", AW: "AW", B: "B",
 BL: "BL", BM: "BM", BR: "BR", BS: "BS", BT: "BT", C: "C", CA: "CA", CH: "CH",
@@ -6160,7 +6371,8 @@ L: "L", LB: "LB", LN: "LN", LT: "LT", M: "M", MA: "MA", MN: "MN", N: "N", OB:
 "PB", PC: "PC", PL: "PL", PM: "PM", PW: "PW", RE: "RE", RG: "RG", RO: "RO", RU:
 "RU", SC: "SC", SE: "SE", SI: "SI", SL: "SL", SO: "SO", SQ: "SQ", ST: "ST", SU:
 "SU", SZ: "SZ", TB: "TB", TC: "TC", TE: "TE", TM: "TM", TR: "TR", TW: "TW", UC:
-"UC", US: "US", V: "V", VW: "VW", W: "W", WL: "WL", WR: "WR", WS: "WS", WT: "WT"
+"UC", US: "US", V: "V", VW: "VW", W: "W", WL: "WL", WR: "WR", WS: "WS", WT: "WT",
+MU: "MU"
 };
 /**
  * Parsing and utilities related to Tygem .gib files.
@@ -7242,10 +7454,7 @@ glift.bridge.flattener = {
     var mt = movetreeInitial.newTreeRef();
     var showVars = showNextVariationsType || glift.enums.showVariations.NEVER;
     var nmtp = nextMovesTreepath || [];
-    if (glift.util.typeOf(nmtp) !== 'array') {
-      nmtp = glift.rules.treepath.parseInitPosition(nmtp);
-    }
-    var mvNum = startingMoveNum || 1;
+    var startingMoveNum = startingMoveNum || 1;
     var boardRegion = boardRegion || glift.enums.boardRegions.ALL;
     if (boardRegion === glift.enums.boardRegions.AUTO) {
       boardRegion = glift.bridge.getCropFromMovetree(mt);
@@ -7253,73 +7462,26 @@ glift.bridge.flattener = {
     var cropping = glift.displays.cropbox.getFromRegion(
         boardRegion, mt.getIntersections());
 
-    // Map of ptString
+    // Map of ptString to move.
     var stoneMap = glift.bridge.flattener._stoneMap(goban);
-    // Map of ptString
-    var labels = {};
-    // Array of moves, augmented with labels where the collisions happened, so
-    // that users can say things. 5 at 3.
-    // i.e.,
-    // {
-    //  point: <point>,
-    //  color: <color>,
-    //  label: <label>,
-    //  collision: {
-    //    point: <point>,
-    //    color: <color>,
-    //    label: <label>
-    //  }
-    // }
-    var collisions = [];
-    // Only for reference.  Map of point to mark.
-    var marks = {};
+    var applied = glift.rules.treepath.applyNextMoves(mt, goban, nmtp);
+    mt = applied.movetree;
 
-    // Apply the treepath to the movetree.
-    // Move this to another function.
-    // The extra labels bit is quite a hack.
-    var extraLabels = 'abcdefghijklmnopqrstuvwxyz';
-    var extraIdx = 0
-    for (var i = 0; i < nmtp.length && mt.node().numChildren() > 0; i++) {
-      mt.moveDown(nmtp[i]);
-      // move is of the form {point: <pt>, color: <color>}.  Point is absent if
-      // move is a pass.
-      var move = mt.properties().getMove();
-      if (move !== glift.util.none && move.point && move.color) {
-        var ptString = move.point.toString();
-        if (stoneMap[ptString] !== undefined) {
-          // The only reason why we should see collisions would because we
-          // placed a stone somwhere in this loop.
-          var label = labels[ptString];
-          var cmove = stoneMap[ptString]
-          if (label === undefined) {
-            // This can happen after multi-stone captures.  In this case, we
-            // create a new label, for convenience.
-            move.collision = cmove;
-            labels[ptString] = extraLabels.charAt(extraIdx);
-            marks[ptString] = s.TEXTLABEL;
-            extraIdx++;
-          } else {
-            move.collision = cmove;
-            move.label = "" + mvNum;
-          }
-          move.moveNum = mvNum;
-          collisions.push(move);
-        } else {
-          stoneMap[ptString] = move;
-          labels[ptString] = "" + mvNum;
-          marks[ptString] = s.TEXTLABEL;
-        }
+    for (var i = 0; i < applied.stones.length; i++) {
+      var stone = applied.stones[i];
+      var mv = { point: stone.point, color: stone.color };
+      var ptstr = mv.point.toString();
+      if (!stoneMap[ptstr]) {
+        stoneMap[ptstr] = mv;
       }
-      mvNum += 1;
     }
 
     var mksOut = glift.bridge.flattener._markMap(mt);
-    for (var l in mksOut.labels) {
-      labels[l] = mksOut.labels[l];
-    }
-    for (var m in mksOut.marks) {
-      marks[m] = mksOut.marks[m];
-    }
+    var labels = mksOut.labels; // map of ptstr to label str
+    var marks = mksOut.marks; // map of ptstr to symbol int
+
+    var collisions = glift.bridge.flattener._labelForCollisions(
+        applied.stones, marks, labels, startingMoveNum);
 
     var sv = glift.enums.showVariations
     if (showVars === sv.ALWAYS ||
@@ -7341,8 +7503,7 @@ glift.bridge.flattener = {
     var symbolPairs = glift.bridge.flattener._generateSymbolArr(
         cropping, stoneMap, marks, mt.getIntersections());
 
-    var comment = mt.properties().getComment();
-    if (comment === glift.util.none || comment === undefined) { comment = ""; }
+    var comment = mt.properties().getComment() || '';
     return new glift.bridge._Flattened(
         symbolPairs, labels, collisions, comment, boardRegion, cropping);
   },
@@ -7369,12 +7530,12 @@ glift.bridge.flattener = {
    * If there are two marks on the same intersection specified, the behavior is
    * undefined.  Either mark might succeed in being placed.
    *
-   * Example
+   * Example return value:
    * {
    *  marks: {
    *    "12.5": 13
    *    "12.3": 23
-   *  }
+   *  },
    *  labels: {
    *    "12,3": "A"
    *    "12,4": "B"
@@ -7382,6 +7543,7 @@ glift.bridge.flattener = {
    * }
    */
   _markMap: function(movetree) {
+    var out = { marks: {}, labels: {} };
     var s = glift.bridge.flattener.symbols;
     var propertiesToSymbols = {
       CR: s.CIRCLE,
@@ -7390,7 +7552,6 @@ glift.bridge.flattener = {
       SQ: s.SQUARE,
       TR: s.TRIANGLE
     };
-    var out = { marks: {}, labels: {} };
     for (var prop in propertiesToSymbols) {
       var symbol = propertiesToSymbols[prop];
       if (movetree.properties().contains(prop)) {
@@ -7409,6 +7570,74 @@ glift.bridge.flattener = {
       }
     }
     return out;
+  },
+
+  /**
+   * Create or apply labels to identify collisions that occurred during apply
+   *
+   * stones: stones
+   * marks: map from ptstring to Mark symbol int.
+   *    see -- glift.bridg.flattener.symbols.
+   * labels: map from ptstring to label string.
+   * startingMoveNum: The number at which to start creating labels
+   *
+   * returns: an array of collision objects:
+   *
+   *  {
+   *    color: <color of the move to be played>,
+   *    mvnum: <move number>,
+   *    label: <label>
+   *  }
+   *
+   * This data is meant to be used like the following:
+   *    '<color> <mvnum> at <label>'
+   * as in this example:
+   *    'Black 13 at 2'
+   *
+   * Sadly, this has has the side effect of altering the marks / labels maps.
+   */
+  _labelForCollisions: function(stones, marks, labels, startingMoveNum) {
+    if (!stones || stones.length === 0) {
+      return []; // Don't perform relabeling if no stones are found.
+    }
+    // Collision labels, for when stone.collision = null.
+    var extraLabs = 'abcdefghijklmnopqrstuvwxyz';
+    var labsIdx = 0;
+    var symb = glift.bridge.flattener.symbols;
+    var collisions = []; // {color: <color>, num: <number>, label: <lbl>}
+
+    // Remove any number labels currently existing in the marks map
+    var digitRegex = /[0-9]/;
+    for (var ptstr in labels) {
+      if (digitRegex.test(labels[ptstr])) {
+        delete labels[ptstr];
+        delete marks[ptstr];
+      }
+    }
+
+    for (var i = 0; i < stones.length; i++) {
+      var stone = stones[i];
+      var ptStr = stone.point.toString();
+      if (stone.hasOwnProperty('collision')) {
+        var col = {color: stone.color, num: (i + startingMoveNum) + ''};
+        if (labels[ptStr]) { // First see if there are any available labels.
+          col.label = labels[ptStr];
+        } else if (glift.util.typeOf(stone.collision) === 'number') {
+          col.label = (stone.collision + startingMoveNum) + ''; // label is idx.
+        } else { // should be null
+          var lbl = extraLabs[labsIdx];
+          labsIdx++;
+          col.label = lbl;
+        }
+        collisions.push(col);
+      } else {
+        // Create new labels for our move number (should this be flag
+        // controlled?).
+        marks[ptStr] = symb.TEXTLABEL; // Override labels.
+        labels[ptStr] = (i + startingMoveNum) + ''
+      }
+    }
+    return collisions;
   },
 
   /**
@@ -7791,38 +8020,89 @@ glift.bridge.managerConverter = {
     var document = [];
     var showVars = glift.enums.showVariations.NEVER;
     var gooe = glift.displays.diagrams.gooe;
+    var managerConverter = glift.bridge.managerConverter;
+    var globalBookData = manager.bookData;
+
     document.push(gooe.documentHeader());
+    document.push(gooe.generateTitleDef(
+        globalBookData.title,
+        globalBookData.subtitle,
+        globalBookData.authors,
+        globalBookData.publisher));
     document.push('');
+    document.push(gooe.startDocument());
 
     manager.prepopulateCache(function() {
+      var curPageBuf = 1;
+      var maxPageBuf = globalBookData.diagramsPerPage;
+
       for (var i = 0, len = manager.sgfList.length; i < len; i++) {
-        var curObj = manager.getSgfObj(i);
-        // console.log(curObj);
-        var boardRegion = curObj.boardRegion;
-        var initPos = curObj.initialPosition;
-        var treepath = glift.rules.treepath.parseInitPosition(initPos);
-        var nextMovesTreepath = [];
-        // console.log(treepath);
+        var curObj = manager.getSgfObj(i),
+            boardRegion = curObj.boardRegion,
+            initPos = curObj.initialPosition,
+            treepath = glift.rules.treepath.parseInitPosition(initPos),
+            nextMovesPath = [];
 
-        // This should be synchronous, since we've prepopulated the cache.
-        manager.getSgfString(curObj, function(sgfObj) {
-          var initPos = curObj.initialPosition;
-          var movetree = glift.rules.movetree.getFromSgf(sgfObj.sgfString, treepath);
-          var goban = glift.rules.goban.getFromMoveTree(movetree, treepath).goban;
+        // This should be synchronous since we've prepopulated the cache.
+        manager.getSgfString(curObj, function(sobj) {
+          // Movetree at root.
+          var movetree = glift.rules.movetree.getFromSgf(sobj.sgfString, treepath);
+          if (globalBookData.autoNumber) {
+            var out = glift.rules.treepath.findNextMoves(
+                movetree, undefined, sobj.bookData.minusMovesOverride);
+            movetree = out.movetree;
+            treepath = out.treepath;
+            nextMovesPath = out.nextMoves;
+          }
+          var goban = glift.rules.goban.getFromMoveTree(movetree).goban;
+          var startNum = 1; // TODO(kashomon): change
           var flattened = glift.bridge.flattener.flatten(
-              movetree, goban, boardRegion, showVars, nextMovesTreepath);
-          var gooeArray = glift.displays.diagrams.gooe.diagramArray(flattened);
-          var strOut = glift.displays.diagrams.gooe.diagramArrToString(gooeArray);
+              movetree, goban, boardRegion, showVars, nextMovesPath, startNum);
 
-          document.push('\\vfill');
-          document.push('\\newpage');
-          document.push(strOut);
-          document.push(flattened.comment)
+          var diagramStr = '';
+          if (sobj.bookData.showDiagram) {
+            diagramStr = managerConverter.createDiagram(flattened, sobj.bookData);
+          }
+          var tex = managerConverter.typesetDiagram(
+              diagramStr, flattened.comment, sobj.bookData);
+
+          if (!sobj.bookData.chapterTitle && curPageBuf < maxPageBuf) {
+            document.push('\\newpage');
+            curPageBuf++;
+          } else {
+            curPageBuf = 1;
+          }
+
+          document.push(tex);
         });
       }
       document.push(gooe.defs.basicFooter);
       callback(document.join("\n"));
     });
+  },
+
+  createDiagram: function(flattened, bookData) {
+    var gooe = glift.displays.diagrams.gooe;
+    var size = glift.enums.diagramSize.NORMAL;
+    if (bookData.chapterTitle) {
+      size = glift.enums.diagramSize.LARGE;
+    }
+    var gooeArray = gooe.diagramArray(flattened, size);
+    var diagram = gooe.diagramArrToString(gooeArray);
+    return diagram;
+  },
+
+  typesetDiagram: function(str, comment, bookData) {
+    var bookTypes = glift.enums.bookTypes;
+    var gooe = glift.displays.diagrams.gooe;
+    // console.log(bookData);
+    if (bookData.diagramType === bookTypes.GAME_REVIEW) {
+      if (bookData.chapterTitle) {
+        return gooe.gameReviewChapterDiagram(str, comment, bookData.chapterTitle);
+      } else {
+        return gooe.gameReviewDiagram(str, comment);
+      }
+    }
   }
 };
 /**
@@ -7858,6 +8138,7 @@ glift.widgets = {
         options.allowWrapAround,
         options.sgfDefaults,
         options.display,
+        options.globalBookData,
         actions);
   }
 };
@@ -8216,16 +8497,18 @@ glift.widgets.BaseWidget.prototype = {
  *    manager.
  * sgfDefaults: filled-in sgf default options.  See ./options/base_options.js
  * displayOptions: filled-in display options. See ./options/base_options.js
+ * bookData: global book data.
  * actions: combination of stone actions and icon actions.
  */
 glift.widgets.WidgetManager = function(divId, sgfList, sgfListIndex,
-      allowWrapAround, sgfDefaults, displayOptions, actions) {
+      allowWrapAround, sgfDefaults, displayOptions, bookData, actions) {
   this.divId = divId;
   this.sgfList = sgfList;
   this.sgfListIndex = sgfListIndex;
   this.allowWrapAround = allowWrapAround
   this.sgfDefaults = sgfDefaults;
   this.displayOptions = displayOptions;
+  this.bookData = bookData;
   this.actions = actions;
 
   // Defined on draw
@@ -8424,7 +8707,6 @@ glift.widgets.WidgetManager.prototype = {
         callback();
       }
     };
-
     checkDone(3); // Check that we've finished prepopulating (3 checks)
   },
 
@@ -8542,9 +8824,19 @@ glift.widgets.options = {
         sgf[key] = glift.util.simpleClone(widgetOverrides[key]);
       }
     }
+
+    var nestedData = {'bookData': true};
     for (var key in sgfDefaults) {
-      if (!sgf.hasOwnProperty(key) && sgfDefaults[key] !== undefined) {
+      if (!sgf[key] && sgfDefaults[key] !== undefined) {
         sgf[key] = sgfDefaults[key];
+      } else if (nestedData[key]) {
+        // The SGF must contain the key.
+        // TODO(kashomon): Remove this hack.
+        for (var subkey in sgfDefaults[key]) {
+          if (!sgf[key].hasOwnProperty(subkey)) {
+            sgf[key][subkey] = sgfDefaults[key][subkey];
+          }
+        }
       }
     }
     return sgf;
@@ -8671,13 +8963,43 @@ glift.widgets.options.baseOptions = {
      *
      * If defined, should have the following form:
      *
-     * {
-     *  chapterTitle: "Chapter Title"
-     *  digramSize: "large" or "small"
-     *  ... future options
-     * }
+     *  {
+     *    chapterTitle: "Chapter Title"
+     *    digramSize: "large" or "small"
+     *    ... future options
+     *  }
      */
-    bookData: {},
+    bookData: {
+      /**
+       * The diagram type.
+       */
+      diagramType: 'GAME_REVIEW',
+
+      /**
+       * Show the diagram.  Allows us to selectively keep
+       */
+      showDiagram: true
+
+      /**
+       * The number at which to start number.  By default, begins numbering at
+       * the number of moves + the nums from the most recent branch.  Can be
+       * overwridden though
+       */
+      // numberingStartNum:
+
+      /**
+       * How many moves ago to start performing numbering.
+       *
+       * By default, starts from:
+       *    min(most recent brach, 20 moves ago)
+       */
+      // minusMovesOverride:...:
+
+      /**
+       * Display the diagram in a chapterTitle format.
+       */
+      // chapterTitle:
+    },
 
     //-------------------------------------------------------------------------
     // These options must always be overriden by the widget type overrides.
@@ -8765,7 +9087,16 @@ glift.widgets.options.baseOptions = {
    *    template: '/url/to/book/template.tex' or 'raw string'
    *  }
    */
-  globalBookData: {},
+  globalBookData: {
+    title: 'My Go Book',
+    subtitle: 'Going the distance!',
+    authors: [],
+    publisher: 'Created with Glift',
+    diagramsPerPage: 2,
+    templateUrl: '', // not supported yet
+    /** Automatically number the diagrams. This prevents all number labels. */
+    autoNumber: true
+  },
 
   /**
    * Misc options for the web display.

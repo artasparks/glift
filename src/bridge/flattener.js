@@ -87,10 +87,7 @@ glift.bridge.flattener = {
     var mt = movetreeInitial.newTreeRef();
     var showVars = showNextVariationsType || glift.enums.showVariations.NEVER;
     var nmtp = nextMovesTreepath || [];
-    if (glift.util.typeOf(nmtp) !== 'array') {
-      nmtp = glift.rules.treepath.parseInitPosition(nmtp);
-    }
-    var mvNum = startingMoveNum || 1;
+    var startingMoveNum = startingMoveNum || 1;
     var boardRegion = boardRegion || glift.enums.boardRegions.ALL;
     if (boardRegion === glift.enums.boardRegions.AUTO) {
       boardRegion = glift.bridge.getCropFromMovetree(mt);
@@ -98,73 +95,26 @@ glift.bridge.flattener = {
     var cropping = glift.displays.cropbox.getFromRegion(
         boardRegion, mt.getIntersections());
 
-    // Map of ptString
+    // Map of ptString to move.
     var stoneMap = glift.bridge.flattener._stoneMap(goban);
-    // Map of ptString
-    var labels = {};
-    // Array of moves, augmented with labels where the collisions happened, so
-    // that users can say things. 5 at 3.
-    // i.e.,
-    // {
-    //  point: <point>,
-    //  color: <color>,
-    //  label: <label>,
-    //  collision: {
-    //    point: <point>,
-    //    color: <color>,
-    //    label: <label>
-    //  }
-    // }
-    var collisions = [];
-    // Only for reference.  Map of point to mark.
-    var marks = {};
+    var applied = glift.rules.treepath.applyNextMoves(mt, goban, nmtp);
+    mt = applied.movetree;
 
-    // Apply the treepath to the movetree.
-    // Move this to another function.
-    // The extra labels bit is quite a hack.
-    var extraLabels = 'abcdefghijklmnopqrstuvwxyz';
-    var extraIdx = 0
-    for (var i = 0; i < nmtp.length && mt.node().numChildren() > 0; i++) {
-      mt.moveDown(nmtp[i]);
-      // move is of the form {point: <pt>, color: <color>}.  Point is absent if
-      // move is a pass.
-      var move = mt.properties().getMove();
-      if (move !== glift.util.none && move.point && move.color) {
-        var ptString = move.point.toString();
-        if (stoneMap[ptString] !== undefined) {
-          // The only reason why we should see collisions would because we
-          // placed a stone somwhere in this loop.
-          var label = labels[ptString];
-          var cmove = stoneMap[ptString]
-          if (label === undefined) {
-            // This can happen after multi-stone captures.  In this case, we
-            // create a new label, for convenience.
-            move.collision = cmove;
-            labels[ptString] = extraLabels.charAt(extraIdx);
-            marks[ptString] = s.TEXTLABEL;
-            extraIdx++;
-          } else {
-            move.collision = cmove;
-            move.label = "" + mvNum;
-          }
-          move.moveNum = mvNum;
-          collisions.push(move);
-        } else {
-          stoneMap[ptString] = move;
-          labels[ptString] = "" + mvNum;
-          marks[ptString] = s.TEXTLABEL;
-        }
+    for (var i = 0; i < applied.stones.length; i++) {
+      var stone = applied.stones[i];
+      var mv = { point: stone.point, color: stone.color };
+      var ptstr = mv.point.toString();
+      if (!stoneMap[ptstr]) {
+        stoneMap[ptstr] = mv;
       }
-      mvNum += 1;
     }
 
     var mksOut = glift.bridge.flattener._markMap(mt);
-    for (var l in mksOut.labels) {
-      labels[l] = mksOut.labels[l];
-    }
-    for (var m in mksOut.marks) {
-      marks[m] = mksOut.marks[m];
-    }
+    var labels = mksOut.labels; // map of ptstr to label str
+    var marks = mksOut.marks; // map of ptstr to symbol int
+
+    var collisions = glift.bridge.flattener._labelForCollisions(
+        applied.stones, marks, labels, startingMoveNum);
 
     var sv = glift.enums.showVariations
     if (showVars === sv.ALWAYS ||
@@ -186,8 +136,7 @@ glift.bridge.flattener = {
     var symbolPairs = glift.bridge.flattener._generateSymbolArr(
         cropping, stoneMap, marks, mt.getIntersections());
 
-    var comment = mt.properties().getComment();
-    if (comment === glift.util.none || comment === undefined) { comment = ""; }
+    var comment = mt.properties().getComment() || '';
     return new glift.bridge._Flattened(
         symbolPairs, labels, collisions, comment, boardRegion, cropping);
   },
@@ -214,12 +163,12 @@ glift.bridge.flattener = {
    * If there are two marks on the same intersection specified, the behavior is
    * undefined.  Either mark might succeed in being placed.
    *
-   * Example
+   * Example return value:
    * {
    *  marks: {
    *    "12.5": 13
    *    "12.3": 23
-   *  }
+   *  },
    *  labels: {
    *    "12,3": "A"
    *    "12,4": "B"
@@ -227,6 +176,7 @@ glift.bridge.flattener = {
    * }
    */
   _markMap: function(movetree) {
+    var out = { marks: {}, labels: {} };
     var s = glift.bridge.flattener.symbols;
     var propertiesToSymbols = {
       CR: s.CIRCLE,
@@ -235,7 +185,6 @@ glift.bridge.flattener = {
       SQ: s.SQUARE,
       TR: s.TRIANGLE
     };
-    var out = { marks: {}, labels: {} };
     for (var prop in propertiesToSymbols) {
       var symbol = propertiesToSymbols[prop];
       if (movetree.properties().contains(prop)) {
@@ -254,6 +203,74 @@ glift.bridge.flattener = {
       }
     }
     return out;
+  },
+
+  /**
+   * Create or apply labels to identify collisions that occurred during apply
+   *
+   * stones: stones
+   * marks: map from ptstring to Mark symbol int.
+   *    see -- glift.bridg.flattener.symbols.
+   * labels: map from ptstring to label string.
+   * startingMoveNum: The number at which to start creating labels
+   *
+   * returns: an array of collision objects:
+   *
+   *  {
+   *    color: <color of the move to be played>,
+   *    mvnum: <move number>,
+   *    label: <label>
+   *  }
+   *
+   * This data is meant to be used like the following:
+   *    '<color> <mvnum> at <label>'
+   * as in this example:
+   *    'Black 13 at 2'
+   *
+   * Sadly, this has has the side effect of altering the marks / labels maps.
+   */
+  _labelForCollisions: function(stones, marks, labels, startingMoveNum) {
+    if (!stones || stones.length === 0) {
+      return []; // Don't perform relabeling if no stones are found.
+    }
+    // Collision labels, for when stone.collision = null.
+    var extraLabs = 'abcdefghijklmnopqrstuvwxyz';
+    var labsIdx = 0;
+    var symb = glift.bridge.flattener.symbols;
+    var collisions = []; // {color: <color>, num: <number>, label: <lbl>}
+
+    // Remove any number labels currently existing in the marks map
+    var digitRegex = /[0-9]/;
+    for (var ptstr in labels) {
+      if (digitRegex.test(labels[ptstr])) {
+        delete labels[ptstr];
+        delete marks[ptstr];
+      }
+    }
+
+    for (var i = 0; i < stones.length; i++) {
+      var stone = stones[i];
+      var ptStr = stone.point.toString();
+      if (stone.hasOwnProperty('collision')) {
+        var col = {color: stone.color, num: (i + startingMoveNum) + ''};
+        if (labels[ptStr]) { // First see if there are any available labels.
+          col.label = labels[ptStr];
+        } else if (glift.util.typeOf(stone.collision) === 'number') {
+          col.label = (stone.collision + startingMoveNum) + ''; // label is idx.
+        } else { // should be null
+          var lbl = extraLabs[labsIdx];
+          labsIdx++;
+          col.label = lbl;
+        }
+        collisions.push(col);
+      } else {
+        // Create new labels for our move number (should this be flag
+        // controlled?).
+        marks[ptStr] = symb.TEXTLABEL; // Override labels.
+        labels[ptStr] = (i + startingMoveNum) + ''
+      }
+    }
+    return collisions;
   },
 
   /**

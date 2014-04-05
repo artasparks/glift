@@ -151,5 +151,14 @@ glift.enums = {
     CLOCKWISE_90: 'CLOCKWISE_90',
     CLOCKWISE_180: 'CLOCKWISE_180',
     CLOCKWISE_270: 'CLOCKWISE_270'
+  },
+
+  diagramSize: {
+    NORMAL: 'NORMAL',
+    LARGE: 'LARGE'
+  },
+
+  bookTypes: {
+    GAME_REVIEW: 'GAME_REVIEW'
   }
 };
