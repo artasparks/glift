@@ -252,15 +252,17 @@ glift.bridge.flattener = {
       var stone = stones[i];
       var ptStr = stone.point.toString();
       if (stone.hasOwnProperty('collision')) {
-        var col = {color: stone.color, num: (i + startingMoveNum) + ''};
+        var col = {color: stone.color, mvnum: (i + startingMoveNum) + ''};
         if (labels[ptStr]) { // First see if there are any available labels.
           col.label = labels[ptStr];
         } else if (glift.util.typeOf(stone.collision) === 'number') {
           col.label = (stone.collision + startingMoveNum) + ''; // label is idx.
         } else { // should be null
-          var lbl = extraLabs[labsIdx];
+          var lbl = extraLabs.charAt(labsIdx);
           labsIdx++;
           col.label = lbl;
+          marks[ptStr] = symb.TEXTLABEL;
+          labels[ptStr] = lbl;
         }
         collisions.push(col);
       } else {

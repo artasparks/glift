@@ -18,7 +18,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.10.4',
+  version: '0.10.6',
   debugMode: false,
   // Options for performanceDebugLevel: NONE, INFO
   performanceDebugLevel: 'NONE',
@@ -4281,6 +4281,25 @@ glift.displays.diagrams.latex = {
     return glift.displays.diagrams.latex.basicHeader_.join('\n');
   },
 
+  /** Diagram label macros. For making Figure.1, Dia.1, etc. */
+  diagramLabelMacros: function() {
+    return [
+        '% Mainline Diagrams. reset at parts',
+        '\\newcounter{GoFigure}[part]',
+        '\\newcommand{\\gofigure}{%',
+        ' \\stepcounter{GoFigure}',
+        ' \\centerline{\\textit{Figure.\\thinspace\\arabic{GoFigure}}}',
+        '}',
+        '% Variation Diagrams. reset at parts.',
+        '\\newcounter{GoDiagram}[part]',
+        '\\newcommand{\\godiagram}{%',
+        ' \\stepcounter{GoDiagram}',
+        ' \\centerline{\\textit{Diagram.\\thinspace\\arabic{GoDiagram}}}',
+        '}',
+        '\\newcommand{\\subtext}[1]{\\centerline{\\textit{#1}}}',
+        ''].join('\n');
+  },
+
   /** Basic latex footer */
   basicFooter: '\\end{document}',
 
@@ -4300,7 +4319,7 @@ glift.displays.diagrams.latex = {
     for (var i = 0; i < authors.length; i++) {
       strbuff.push('  {\\Large ' + authors[i] + '} \\\\')
       if (i === 0) {
-        strbuff.push('  \\vspace*{0.2 em} % This is a hack =(');
+        strbuff.push('  \\vspace*{0.5 em}');
       } else if (i < authors.length - 1) {
         strbuff.push('  \\vspace*{0.5 em}');
       }
@@ -4342,18 +4361,18 @@ glift.displays.diagrams.latex = {
    *
    * diagramString: Literal string for the diagram
    * comment: Comment for diagram
-   * isMainline: boolean for whether we're on the main line.
+   * label: Diagram label
    *
    * returns: filled-in latex string.
    */
-  gameReviewDiagram: function(
-      diagramString, comment, isMainline) {
+  gameReviewDiagram: function(diagramString, comment, label) {
     return [
       '',
       '\\rule{\\textwidth}{0.5pt}',
       '',
       '\\begin{minipage}[t]{0.5\\textwidth}',
       diagramString,
+      label,
       '\\end{minipage}',
       '\\begin{minipage}[t]{0.5\\textwidth}',
       '\\setlength{\\parskip}{0.5em}',
@@ -4365,14 +4384,37 @@ glift.displays.diagrams.latex = {
   /**
    * Generate a Game Review Chapter Diagram.
    */
-  gameReviewChapterDiagram: function(str, comment, title, isMainline) {
+  gameReviewChapterDiagram: function(diagStr, comment, title, label) {
     return [
         '\\chapter{' + title + '}',
         '{\\centering',
-        str,
+        diagStr,
         '}',
+        label,
+        '',
         comment,
         '\\vfill'].join('\n');
+  },
+
+  /**
+   * Collisions is an array of collisions objects, having the form:
+   *    {color: <color>, mvnum: <number>, label: <str label>}
+   *
+   * returns: stringified label format.
+   */
+  labelForCollisions: function(collisions) {
+    if (!collisions ||
+        glift.util.typeOf(collisions) !== 'array' ||
+        collisions.length === 0) {
+      return '';
+    }
+    var buffer = [];
+    for (var i = 0; i < collisions.length; i++) {
+      var c = collisions[i];
+      var col = c.color === glift.enums.states.BLACK ? 'Black' : 'White';
+      buffer.push(col + ' ' + c.mvnum + ' at ' + c.label);
+    }
+    return buffer.join(', ') + '.'
   }
 };
 /**
@@ -5054,15 +5096,19 @@ glift.rules.movenode = function(properties, children, nodeId, parentNode) {
 glift.rules._MoveNode = function(properties, children, nodeId, parentNode) {
   this._properties = properties || glift.rules.properties();
   this.children = children || [];
-  // nodeId has the form { nodeNum: 0, varNum: 0 };
-  this._nodeId = nodeId || { nodeNum: 0, varNum: 0 };
+  this._nodeId = nodeId || { nodeNum: 0, varNum: 0 }; // this is a bad default.
   this._parentNode = parentNode;
+  /**
+   * Marker for determining mainline.  Should ONLY be used by onMainline from
+   * the movetree.
+   */
+  // TODO(kashomon): Consider putting this in a data class.
+  this._mainline = false;
 };
 
 glift.rules._MoveNode.prototype = {
-  properties:  function() {
-    return this._properties;
-  },
+  /** Get the properties */
+  properties:  function() { return this._properties; },
 
   /**
    * Set the NodeId. Each node has an ID based on the depth and variation
@@ -5082,28 +5128,15 @@ glift.rules._MoveNode.prototype = {
    * consider passes to be moves, but this is a special enough case that it
    * shouldn't matter for most situations.
    */
-  getNodeNum: function() {
-    return this._nodeId.nodeNum
-  },
+  getNodeNum: function() { return this._nodeId.nodeNum; },
 
-  /**
-   * Get the variation number.
-   */
-  getVarNum: function() {
-    return this._nodeId.varNum
-  },
+  /** Get the variation number. */
+  getVarNum: function() { return this._nodeId.varNum; },
 
-  /**
-   * Get the number of children.  This the same semantically as the number of
-   * variations.
-   */
-  numChildren: function() {
-    return this.children.length;
-  },
+  /** Get the number of children. */
+  numChildren: function() { return this.children.length; },
 
-  /**
-   * Add a new child node.
-   */
+  /** Add a new child node. */
   addChild: function() {
     this.children.push(glift.rules.movenode(
       glift.rules.properties(),
@@ -5125,16 +5158,8 @@ glift.rules._MoveNode.prototype = {
     }
   },
 
-  /**
-   * Return the parent node. Returns null if no parent node exists.
-   */
-  getParent: function() {
-    if (this._parentNode) {
-      return this._parentNode;
-    } else {
-      return null;
-    }
-  },
+  /** Return the parent node. Returns null if no parent node exists. */
+  getParent: function() { return this._parentNode ? this._parentNode : null; },
 
   /**
    * Renumber the nodes.  Useful for when nodes are deleted during SGF editing.
@@ -5239,6 +5264,7 @@ glift.rules.movetree = {
 glift.rules._MoveTree = function(rootNode, currentNode) {
   this._rootNode = rootNode;
   this._currentNode = currentNode || rootNode;
+  this._markedMainline = false;
 };
 
 glift.rules._MoveTree.prototype = {
@@ -5416,14 +5442,26 @@ glift.rules._MoveTree.prototype = {
 
   /** Returns true if the tree is currently on a mainline variation. */
   onMainline: function() {
-    var mt = this.newTreeRef();
-    var debug = [];
-    if (mt.node().getVarNum() !== 0) { return false; }
-    while (mt.node().getParent()) {
-      mt.moveUp();
-      if (mt.node().getVarNum() !== 0) { return false; }
+    if (!this._markedMainline) {
+      var mt = this.getTreeFromRoot();
+      mt.node()._mainline = true;
+      while (mt.node().numChildren() > 0) {
+        mt.moveDown();
+        mt.node()._mainline = true;
+      }
+      this._markedMainline = true;
     }
-    return true;
+    return this.node()._mainline;
+  },
+
+  /** Recursive over the movetree. func is called on the movetree. */
+  recurse: function(func) {
+    glift.rules.movetree.searchMoveTreeDFS(this, func);
+  },
+
+  /** Recursive over the movetree from root. func is called on the movetree. */
+  recurseFromRoot: function(func) {
+    glift.rules.movetree.searchMoveTreeDFS(this.getTreeFromRoot(), func);
   },
 
   /** Convert this movetree to an SGF. */
@@ -5445,16 +5483,6 @@ glift.rules._MoveTree.prototype = {
       movetree.moveUp();
     }
     return newTreepath.reverse();
-  },
-
-  /** Recursive over the movetree. func is called on the movetree. */
-  recurse: function(func) {
-    glift.rules.movetree.searchMoveTreeDFS(this, func);
-  },
-
-  /** Recursive over the movetree from root. func is called on the movetree. */
-  recurseFromRoot: function(func) {
-    glift.rules.movetree.searchMoveTreeDFS(this.getTreeFromRoot(), func);
   },
 
   /////////////////////
@@ -6007,28 +6035,29 @@ glift.rules.treepath = {
   findNextMoves: function(
       movetree, initTreepath, minusMovesOverride, breakOnMainComment) {
     var initTreepath = initTreepath || movetree.treepathToHere();
-    var movetree = movetree.getTreeFromRoot(initTreepath);
-    var minusMoves = minusMovesOverride || 20;
+    var mt = movetree.getTreeFromRoot(initTreepath);
+    var minusMoves = minusMovesOverride || 40;
     var nextMovesTreepath = [];
-    var i = 0;
-    var onMainline = movetree.onMainline();
-    while (movetree.node().getParent() && i < minusMoves) {
-      var varnum = movetree.node().getVarNum();
-      nextMovesTreepath.push(movetree.node().getVarNum());
-      movetree.moveUp();
+    var startMainline = mt.onMainline();
+    for (var i = 0; mt.node().getParent() && i < minusMoves; i++) {
+      var varnum = mt.node().getVarNum();
+      nextMovesTreepath.push(varnum);
+      mt.moveUp();
       if (breakOnMainComment &&
-          onMainline && movetree.properties().getOneValue('C')) {
+          startMainline &&
+          mt.properties().getOneValue('C')) {
         break;
       }
-      // Break if we've found ourselves at a variation. However, this only
-      // applies if the user has _not_ specified minusMovesOverride;
-      if (varnum !== 0 && !minusMovesOverride) { break; }
-      i++;
+
+      // Break if we've moved to the mainline.
+      if (!startMainline && mt.onMainline() && !minusMovesOverride) {
+        break;
+      }
     }
     nextMovesTreepath.reverse();
     return {
-      movetree: movetree,
-      treepath: movetree.treepathToHere(),
+      movetree: mt,
+      treepath: mt.treepathToHere(),
       nextMoves: nextMovesTreepath
     };
   },
@@ -7646,15 +7675,17 @@ glift.bridge.flattener = {
       var stone = stones[i];
       var ptStr = stone.point.toString();
       if (stone.hasOwnProperty('collision')) {
-        var col = {color: stone.color, num: (i + startingMoveNum) + ''};
+        var col = {color: stone.color, mvnum: (i + startingMoveNum) + ''};
         if (labels[ptStr]) { // First see if there are any available labels.
           col.label = labels[ptStr];
         } else if (glift.util.typeOf(stone.collision) === 'number') {
           col.label = (stone.collision + startingMoveNum) + ''; // label is idx.
         } else { // should be null
-          var lbl = extraLabs[labsIdx];
+          var lbl = extraLabs.charAt(labsIdx);
           labsIdx++;
           col.label = lbl;
+          marks[ptStr] = symb.TEXTLABEL;
+          labels[ptStr] = lbl;
         }
         collisions.push(col);
       } else {
@@ -7789,42 +7820,50 @@ glift.bridge.flattener = {
  */
 glift.bridge._Flattened = function(
     symbolPairs, lblData, coll, comment, boardRegion, cropping) {
-  // Dense two level array designating what the base layer of the board looks like.
-  // Example:
-  //  [
-  //    [
-  //      {mark: EMPTY, base: TR_CORNER},
-  //      {mark: EMPTY, base: BSTONE},
-  //      {mark: TRIANGLE, base: WSTONE},
-  //      ...
-  //    ], [
-  //      ...
-  //    ]
-  //    ...
-  //  ]
+  /**
+   * Dense two level array designating what the base layer of the board looks like.
+   * Example:
+   *  [
+   *    [
+   *      {mark: EMPTY, base: TR_CORNER},
+   *      {mark: EMPTY, base: BSTONE},
+   *      {mark: TRIANGLE, base: WSTONE},
+   *      ...
+   *    ], [
+   *      ...
+   *    ]
+   *    ...
+   *  ]
+   */
   this.symbolPairs = symbolPairs;
 
-  // Map from ptstring to label data.
-  // Example:
-  //  {
-  //    "12,3": "A",
-  //    ...
-  //  }
+  /**
+   * Map from ptstring to label data.
+   * Example:
+   *  {
+   *    "12,3": "A",
+   *    ...
+   *  }
+   */
   this.labelData = lblData;
 
-  // Collisions.  In other words, we record stones that couldn't be placed on
-  // the board, if
+  /**
+   * Array of collisions objects.  In other words, we record stones that
+   * couldn't be placed on the board.
+   *
+   * Each object in the collisions array looks like:
+   * {color: <color>, mvnum: <number>, label: <label>}
+   */
   this.collisions = coll;
 
-  // Comment string.
-  // Example:
-  //  Black to move and make life.
+  /** Comment string. */
   this.comment = comment;
 
-  // The board region this flattened representation is meant to display.
+  /** The board region this flattened representation is meant to display. */
   this.boardRegion = boardRegion;
 
-  // The cropping object.
+  /** The cropping object. */
+  // TODO(kashomon): Describe this.
   this.cropping = cropping;
 };
 
@@ -8060,6 +8099,7 @@ glift.bridge.managerConverter = {
         globalBookData.authors,
         globalBookData.publisher));
     document.push('');
+    document.push(latex.diagramLabelMacros());
     document.push(latex.startDocument());
 
     manager.prepopulateCache(function() {
@@ -8105,7 +8145,8 @@ glift.bridge.managerConverter = {
             diagramStr = managerConverter.createDiagram(flattened, sobj.bookData);
           }
           var tex = managerConverter.typesetDiagram(
-              diagramStr, flattened.comment, sobj.bookData, counts);
+              diagramStr, flattened.comment, sobj.bookData,
+              flattened.collisions, isMainline);
 
           if (!sobj.bookData.chapterTitle && counts.curPageBuf < maxPageBuf) {
             document.push('\\newpage');
@@ -8136,16 +8177,23 @@ glift.bridge.managerConverter = {
   /**
    * Typeset the diagram into LaTeX
    */
-  typesetDiagram: function(str, comment, bookData, isMainline) {
+  typesetDiagram: function(str, comment, bookData, collisions, isMainline) {
     var diagramTypes = glift.enums.diagramTypes;
     var latex = glift.displays.diagrams.latex;
-    // console.log(bookData);
+    var label = '';
     if (bookData.diagramType === diagramTypes.GAME_REVIEW) {
+      if (bookData.showDiagram) {
+        var label = isMainline ? '\\gofigure' : '\\godiagram';
+        var collisionLabel = latex.labelForCollisions(collisions);
+        if (collisionLabel.length > 0) {
+          label += '\n\n' + ' \\subtext{' + collisionLabel + '}';
+        }
+      }
       if (bookData.chapterTitle) {
         return latex.gameReviewChapterDiagram(
-            str, comment, bookData.chapterTitle, isMainline);
+            str, comment, bookData.chapterTitle, label);
       } else {
-        return latex.gameReviewDiagram(str, comment, isMainline);
+        return latex.gameReviewDiagram(str, comment, label);
       }
     }
   }

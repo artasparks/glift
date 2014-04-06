@@ -121,28 +121,29 @@ glift.rules.treepath = {
   findNextMoves: function(
       movetree, initTreepath, minusMovesOverride, breakOnMainComment) {
     var initTreepath = initTreepath || movetree.treepathToHere();
-    var movetree = movetree.getTreeFromRoot(initTreepath);
-    var minusMoves = minusMovesOverride || 20;
+    var mt = movetree.getTreeFromRoot(initTreepath);
+    var minusMoves = minusMovesOverride || 40;
     var nextMovesTreepath = [];
-    var i = 0;
-    var onMainline = movetree.onMainline();
-    while (movetree.node().getParent() && i < minusMoves) {
-      var varnum = movetree.node().getVarNum();
-      nextMovesTreepath.push(movetree.node().getVarNum());
-      movetree.moveUp();
+    var startMainline = mt.onMainline();
+    for (var i = 0; mt.node().getParent() && i < minusMoves; i++) {
+      var varnum = mt.node().getVarNum();
+      nextMovesTreepath.push(varnum);
+      mt.moveUp();
       if (breakOnMainComment &&
-          onMainline && movetree.properties().getOneValue('C')) {
+          startMainline &&
+          mt.properties().getOneValue('C')) {
         break;
       }
-      // Break if we've found ourselves at a variation. However, this only
-      // applies if the user has _not_ specified minusMovesOverride;
-      if (varnum !== 0 && !minusMovesOverride) { break; }
-      i++;
+
+      // Break if we've moved to the mainline.
+      if (!startMainline && mt.onMainline() && !minusMovesOverride) {
+        break;
+      }
     }
     nextMovesTreepath.reverse();
     return {
-      movetree: movetree,
-      treepath: movetree.treepathToHere(),
+      movetree: mt,
+      treepath: mt.treepathToHere(),
       nextMoves: nextMovesTreepath
     };
   },

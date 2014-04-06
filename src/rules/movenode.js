@@ -5,15 +5,19 @@ glift.rules.movenode = function(properties, children, nodeId, parentNode) {
 glift.rules._MoveNode = function(properties, children, nodeId, parentNode) {
   this._properties = properties || glift.rules.properties();
   this.children = children || [];
-  // nodeId has the form { nodeNum: 0, varNum: 0 };
-  this._nodeId = nodeId || { nodeNum: 0, varNum: 0 };
+  this._nodeId = nodeId || { nodeNum: 0, varNum: 0 }; // this is a bad default.
   this._parentNode = parentNode;
+  /**
+   * Marker for determining mainline.  Should ONLY be used by onMainline from
+   * the movetree.
+   */
+  // TODO(kashomon): Consider putting this in a data class.
+  this._mainline = false;
 };
 
 glift.rules._MoveNode.prototype = {
-  properties:  function() {
-    return this._properties;
-  },
+  /** Get the properties */
+  properties:  function() { return this._properties; },
 
   /**
    * Set the NodeId. Each node has an ID based on the depth and variation
@@ -33,28 +37,15 @@ glift.rules._MoveNode.prototype = {
    * consider passes to be moves, but this is a special enough case that it
    * shouldn't matter for most situations.
    */
-  getNodeNum: function() {
-    return this._nodeId.nodeNum
-  },
+  getNodeNum: function() { return this._nodeId.nodeNum; },
 
-  /**
-   * Get the variation number.
-   */
-  getVarNum: function() {
-    return this._nodeId.varNum
-  },
+  /** Get the variation number. */
+  getVarNum: function() { return this._nodeId.varNum; },
 
-  /**
-   * Get the number of children.  This the same semantically as the number of
-   * variations.
-   */
-  numChildren: function() {
-    return this.children.length;
-  },
+  /** Get the number of children. */
+  numChildren: function() { return this.children.length; },
 
-  /**
-   * Add a new child node.
-   */
+  /** Add a new child node. */
   addChild: function() {
     this.children.push(glift.rules.movenode(
       glift.rules.properties(),
@@ -76,16 +67,8 @@ glift.rules._MoveNode.prototype = {
     }
   },
 
-  /**
-   * Return the parent node. Returns null if no parent node exists.
-   */
-  getParent: function() {
-    if (this._parentNode) {
-      return this._parentNode;
-    } else {
-      return null;
-    }
-  },
+  /** Return the parent node. Returns null if no parent node exists. */
+  getParent: function() { return this._parentNode ? this._parentNode : null; },
 
   /**
    * Renumber the nodes.  Useful for when nodes are deleted during SGF editing.

@@ -83,6 +83,7 @@ glift.rules.movetree = {
 glift.rules._MoveTree = function(rootNode, currentNode) {
   this._rootNode = rootNode;
   this._currentNode = currentNode || rootNode;
+  this._markedMainline = false;
 };
 
 glift.rules._MoveTree.prototype = {
@@ -260,14 +261,26 @@ glift.rules._MoveTree.prototype = {
 
   /** Returns true if the tree is currently on a mainline variation. */
   onMainline: function() {
-    var mt = this.newTreeRef();
-    var debug = [];
-    if (mt.node().getVarNum() !== 0) { return false; }
-    while (mt.node().getParent()) {
-      mt.moveUp();
-      if (mt.node().getVarNum() !== 0) { return false; }
+    if (!this._markedMainline) {
+      var mt = this.getTreeFromRoot();
+      mt.node()._mainline = true;
+      while (mt.node().numChildren() > 0) {
+        mt.moveDown();
+        mt.node()._mainline = true;
+      }
+      this._markedMainline = true;
     }
-    return true;
+    return this.node()._mainline;
+  },
+
+  /** Recursive over the movetree. func is called on the movetree. */
+  recurse: function(func) {
+    glift.rules.movetree.searchMoveTreeDFS(this, func);
+  },
+
+  /** Recursive over the movetree from root. func is called on the movetree. */
+  recurseFromRoot: function(func) {
+    glift.rules.movetree.searchMoveTreeDFS(this.getTreeFromRoot(), func);
   },
 
   /** Convert this movetree to an SGF. */
@@ -289,16 +302,6 @@ glift.rules._MoveTree.prototype = {
       movetree.moveUp();
     }
     return newTreepath.reverse();
-  },
-
-  /** Recursive over the movetree. func is called on the movetree. */
-  recurse: function(func) {
-    glift.rules.movetree.searchMoveTreeDFS(this, func);
-  },
-
-  /** Recursive over the movetree from root. func is called on the movetree. */
-  recurseFromRoot: function(func) {
-    glift.rules.movetree.searchMoveTreeDFS(this.getTreeFromRoot(), func);
   },
 
   /////////////////////

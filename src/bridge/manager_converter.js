@@ -23,6 +23,7 @@ glift.bridge.managerConverter = {
         globalBookData.authors,
         globalBookData.publisher));
     document.push('');
+    document.push(latex.diagramLabelMacros());
     document.push(latex.startDocument());
 
     manager.prepopulateCache(function() {
@@ -68,7 +69,8 @@ glift.bridge.managerConverter = {
             diagramStr = managerConverter.createDiagram(flattened, sobj.bookData);
           }
           var tex = managerConverter.typesetDiagram(
-              diagramStr, flattened.comment, sobj.bookData, counts);
+              diagramStr, flattened.comment, sobj.bookData,
+              flattened.collisions, isMainline);
 
           if (!sobj.bookData.chapterTitle && counts.curPageBuf < maxPageBuf) {
             document.push('\\newpage');
@@ -99,16 +101,23 @@ glift.bridge.managerConverter = {
   /**
    * Typeset the diagram into LaTeX
    */
-  typesetDiagram: function(str, comment, bookData, isMainline) {
+  typesetDiagram: function(str, comment, bookData, collisions, isMainline) {
     var diagramTypes = glift.enums.diagramTypes;
     var latex = glift.displays.diagrams.latex;
-    // console.log(bookData);
+    var label = '';
     if (bookData.diagramType === diagramTypes.GAME_REVIEW) {
+      if (bookData.showDiagram) {
+        var label = isMainline ? '\\gofigure' : '\\godiagram';
+        var collisionLabel = latex.labelForCollisions(collisions);
+        if (collisionLabel.length > 0) {
+          label += '\n\n' + ' \\subtext{' + collisionLabel + '}';
+        }
+      }
       if (bookData.chapterTitle) {
         return latex.gameReviewChapterDiagram(
-            str, comment, bookData.chapterTitle, isMainline);
+            str, comment, bookData.chapterTitle, label);
       } else {
-        return latex.gameReviewDiagram(str, comment, isMainline);
+        return latex.gameReviewDiagram(str, comment, label);
       }
     }
   }

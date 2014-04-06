@@ -17,6 +17,25 @@ glift.displays.diagrams.latex = {
     return glift.displays.diagrams.latex.basicHeader_.join('\n');
   },
 
+  /** Diagram label macros. For making Figure.1, Dia.1, etc. */
+  diagramLabelMacros: function() {
+    return [
+        '% Mainline Diagrams. reset at parts',
+        '\\newcounter{GoFigure}[part]',
+        '\\newcommand{\\gofigure}{%',
+        ' \\stepcounter{GoFigure}',
+        ' \\centerline{\\textit{Figure.\\thinspace\\arabic{GoFigure}}}',
+        '}',
+        '% Variation Diagrams. reset at parts.',
+        '\\newcounter{GoDiagram}[part]',
+        '\\newcommand{\\godiagram}{%',
+        ' \\stepcounter{GoDiagram}',
+        ' \\centerline{\\textit{Diagram.\\thinspace\\arabic{GoDiagram}}}',
+        '}',
+        '\\newcommand{\\subtext}[1]{\\centerline{\\textit{#1}}}',
+        ''].join('\n');
+  },
+
   /** Basic latex footer */
   basicFooter: '\\end{document}',
 
@@ -36,7 +55,7 @@ glift.displays.diagrams.latex = {
     for (var i = 0; i < authors.length; i++) {
       strbuff.push('  {\\Large ' + authors[i] + '} \\\\')
       if (i === 0) {
-        strbuff.push('  \\vspace*{0.2 em} % This is a hack =(');
+        strbuff.push('  \\vspace*{0.5 em}');
       } else if (i < authors.length - 1) {
         strbuff.push('  \\vspace*{0.5 em}');
       }
@@ -78,18 +97,18 @@ glift.displays.diagrams.latex = {
    *
    * diagramString: Literal string for the diagram
    * comment: Comment for diagram
-   * isMainline: boolean for whether we're on the main line.
+   * label: Diagram label
    *
    * returns: filled-in latex string.
    */
-  gameReviewDiagram: function(
-      diagramString, comment, isMainline) {
+  gameReviewDiagram: function(diagramString, comment, label) {
     return [
       '',
       '\\rule{\\textwidth}{0.5pt}',
       '',
       '\\begin{minipage}[t]{0.5\\textwidth}',
       diagramString,
+      label,
       '\\end{minipage}',
       '\\begin{minipage}[t]{0.5\\textwidth}',
       '\\setlength{\\parskip}{0.5em}',
@@ -101,13 +120,36 @@ glift.displays.diagrams.latex = {
   /**
    * Generate a Game Review Chapter Diagram.
    */
-  gameReviewChapterDiagram: function(str, comment, title, isMainline) {
+  gameReviewChapterDiagram: function(diagStr, comment, title, label) {
     return [
         '\\chapter{' + title + '}',
         '{\\centering',
-        str,
+        diagStr,
         '}',
+        label,
+        '',
         comment,
         '\\vfill'].join('\n');
+  },
+
+  /**
+   * Collisions is an array of collisions objects, having the form:
+   *    {color: <color>, mvnum: <number>, label: <str label>}
+   *
+   * returns: stringified label format.
+   */
+  labelForCollisions: function(collisions) {
+    if (!collisions ||
+        glift.util.typeOf(collisions) !== 'array' ||
+        collisions.length === 0) {
+      return '';
+    }
+    var buffer = [];
+    for (var i = 0; i < collisions.length; i++) {
+      var c = collisions[i];
+      var col = c.color === glift.enums.states.BLACK ? 'Black' : 'White';
+      buffer.push(col + ' ' + c.mvnum + ' at ' + c.label);
+    }
+    return buffer.join(', ') + '.'
   }
 };
