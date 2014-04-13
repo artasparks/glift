@@ -39,6 +39,7 @@ glift.displays.ids = {
         this._eid(this.divId, this._enum.STONE_SHADOW_CONTAINER);
     this._starpointGroup = this._eid(this.divId, this._enum.STARPOINT_CONTAINER);
     this._buttonGroup = this._eid(this.divId, this._enum.BUTTON_CONTAINER);
+    this._boardButton = this._eid(this.divId, this._enum.FULL_BOARD_BUTTON);
     this._lineGroup = this._eid(this.divId, this._enum.BOARD_LINE_CONTAINER);
     this._markGroup = this._eid(this.divId, this._enum.MARK_CONTAINER);
     this._iconGroup = this._eid(this.divId, this._enum.ICON_CONTAINER);
@@ -89,6 +90,9 @@ glift.displays.ids._Generator.prototype = {
   button: function(pt) {
     return this._eid(this.divId, this._enum.BUTTON, pt);
   },
+
+  /** ID for a full-board button. */
+  fullBoardButton: function() { return this._boardButton; },
 
   /** Group id for the lines. */
   lineGroup: function() { return this._lineGroup; },

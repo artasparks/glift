@@ -1,11 +1,12 @@
 /**
  * Options:
- *    - divId (if need to create paper)
- *    - paper (if div already created)
- *    - bounding box (if paper already created)
- *    - icons (an array of icon names)
- *    - vertMargin (in pixels)
- *    - theme (default: DEFAULT)
+ *    - divId: the divId for this object
+ *    - positioning: bounding box for the bar
+ *    - parentBox: bounding box for the parent widget
+ *    - icons: an array of icon names)
+ *    - vertMargin: in pixels
+ *    - horzMargin: in pixels
+ *    - theme: The theme. default is DEFAULT
  */
 glift.displays.icons.bar = function(options) {
   var divId = options.divId,
@@ -13,17 +14,22 @@ glift.displays.icons.bar = function(options) {
       vertMargin = options.vertMargin || 0,
       horzMargin = options.horzMargin || 0,
       themeName = options.theme || 'DEFAULT',
-      pbox = options.parentBbox;
+      pbox = options.parentBbox,
+      position = options.positioning;
   if (divId === undefined) {
     throw "Must define an options 'divId' as an option";
   }
   return new glift.displays.icons._IconBar(
-      divId, themeName, icons, vertMargin, horzMargin, pbox).draw();
+      divId, position, themeName, icons, vertMargin, horzMargin, pbox).draw();
 };
 
 glift.displays.icons._IconBar = function(
-    divId, themeName, iconsRaw, vertMargin, horzMargin, parentBbox) {
+    divId, position, themeName, iconsRaw, vertMargin, horzMargin, parentBbox) {
   this.divId = divId;
+  this.position = position;
+  this.divBbox = glift.displays.bboxFromPts(
+      glift.util.point(0,0),
+      glift.util.point(position.width(), position.height()));
   this.themeName = themeName;
   // The parentBbox is useful for create a multiIconSelector.
   this.parentBbox = parentBbox;
@@ -34,7 +40,6 @@ glift.displays.icons._IconBar = function(
   this.vertMargin = vertMargin;
   this.horzMargin = horzMargin;
   this.svg = undefined; // initialized by draw
-  this.divBbox = undefined; // initialized by draw
   this.idGen = glift.displays.ids.generator(this.divId);
 
   // Object of objects of the form
@@ -71,7 +76,7 @@ glift.displays.icons._IconBar.prototype = {
   draw: function() {
     this.destroy();
     var svglib = glift.displays.svg;
-    var divBbox = glift.displays.bboxFromDiv(this.divId),
+    var divBbox = this.divBbox,
         svgData = glift.displays.icons.svg,
         point = glift.util.point;
     this.bbox = divBbox;

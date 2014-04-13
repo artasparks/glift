@@ -2,11 +2,11 @@
  * A GameViewer encapsulates the idea of traversing a read-only SGF.
  */
 glift.controllers.gameViewer = function(sgfOptions) {
-  var ctrl = glift.controllers,
-      baseController = glift.util.beget(ctrl.base()),
-      newController = glift.util.setMethods(baseController,
-          ctrl.GameViewerMethods),
-      _ = newController.initOptions(sgfOptions);
+  var ctrl = glift.controllers;
+  var baseController = glift.util.beget(ctrl.base());
+  var newController = glift.util.setMethods(baseController,
+      ctrl.GameViewerMethods);
+  newController.initOptions(sgfOptions);
   return newController;
 };
 

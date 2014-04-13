@@ -10,6 +10,11 @@ glift.displays.board._Intersections = function(
   this.boardPoints = boardPoints;
   this.idGen = glift.displays.ids.generator(this.divId);
 
+  /**
+   * Defined during events, the lastHoverPoint allows us to
+   */
+  this.lastHoverPoint = null;
+
   // Object of objects of the form
   //  {
   //    <buttonId>#<eventName>: {
@@ -18,9 +23,12 @@ glift.displays.board._Intersections = function(
   //    }
   //  }
   // Note that the funcs take two parameters: event and icon.
+  // TODO(kashomon): delete
   this.events = {};
 
-  // Tracking for which intersections have been modified.
+  /**
+   * Tracking for which intersections have been modified with marks.
+   */
   this.markPts = [];
 };
 
@@ -276,35 +284,65 @@ glift.displays.board._Intersections.prototype = {
     return this;
   },
 
-  /**
-   * Set events for the buttons.
-   */
+  /** Set events for the button rectangle. */
   setEvent: function(eventName, func) {
-    var buttonGroup = this.svg.child(this.idGen.buttonGroup());
-    var children = this.svg.child(this.idGen.buttonGroup()).children();
-    for (var i = 0, len = children.length; i < len; i++) {
-      var button = children[i];
-      var id = button.attr('id');
-      var pt = button.data()
-      var eventsId = id + '#' + eventName;
-      this.events[eventsId] = { pt: pt, func: func };
-    }
+    var that = this;
+    var id = this.svg.child(this.idGen.buttonGroup())
+        .child(this.idGen.fullBoardButton())
+        .attr('id');
+    $('#' + id).on(eventName, function(e) {
+      var pt = that._buttonEventPt(e);
+      pt && func(e, pt);
+    });
     return this;
   },
 
-  flushEvents: function() {
-    for (var buttonId_event in this.events) {
-      var splat = buttonId_event.split('#');
-      var buttonId = splat[0];
-      var eventName = splat[1];
-      var eventObj = this.events[buttonId_event];
-      this._flushOneEvent(buttonId, eventName, eventObj);
-    }
+  /** Set events for the button rectangle. */
+  setHover: function(hoverInFunc, hoverOutFunc) {
+    var that = this;
+    var id = this.svg.child(this.idGen.buttonGroup())
+        .child(this.idGen.fullBoardButton())
+        .attr('id');
+    $('#' + id).on('mousemove', function(e) {
+      var lastpt = that.lastHoverPoint;
+      var curpt = that._buttonEventPt(e);
+      if (curpt && lastpt && !lastpt.equals(curpt)) {
+        hoverOutFunc(e, lastpt);
+        hoverInFunc(e, curpt);
+      }
+      that.lastHoverPoint = curpt;
+    });
+    $('#' + id).on('mouseout', function(e) {
+      var lastpt = that.lastHoverPoint;
+      that.lastHoverPoint = null;
+      if (lastpt) {
+        hoverOutFunc(e, lastpt);
+      }
+    })
   },
 
-  _flushOneEvent: function(buttonId, eventName, eventObj) {
-    $('#' + buttonId).on(eventName, function(event) {
-      eventObj.func(event, eventObj.pt);
-    });
+  /** Get the point from an event on the button rectangle. */
+  _buttonEventPt: function(e) {
+    var data = this.svg.child(this.idGen.buttonGroup())
+        .child(this.idGen.fullBoardButton())
+        .data();
+    var maxInts = this.boardPoints.numIntersections;
+    var left = data.tl.intPt.x();
+    var ptx = (e.offsetX) / data.spacing;
+    var intPtx = Math.round(ptx) - 1 + left;
+    if (intPtx < left || intPtx > maxInts - 1) {
+      return null; // This is unusual, but can happen due to rounding errors
+    }
+    var top = data.tl.intPt.y();
+    var pty = (e.offsetY) / data.spacing;
+    var intPty = Math.round(pty) - 1 + top;
+    if (intPtx < top || intPtx > maxInts - 1) {
+      return null; // This is unusual, but can happen due to rounding errors
+    }
+    var pt = glift.util.point(intPtx, intPty);
+    if (this.rotation != glift.enums.rotations.NO_ROTATION) {
+      pt = pt.antirotate(this.boardPoints.numIntersections, this.rotation);
+    }
+    return pt
   }
 };

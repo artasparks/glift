@@ -1,46 +1,36 @@
 (function() {
 // TODO(kashomon): Move to its own directory.
-glift.displays.gui.commentBox = function(divId, themeName) {
-  return new CommentBox(divId, themeName).draw();
+glift.displays.gui.commentBox = function(divId, themeName, bbox) {
+  return new CommentBox(divId, themeName, bbox).draw();
 };
 
 // TODO(kashomon): Pass in an options argument.
-var CommentBox = function(
-    divId, themeName) {
+var CommentBox = function(divId, themeName, bbox) {
   this.divId = divId;
   this.themeName = themeName;
+  this.bbox = bbox;
   this.theme = glift.themes.get(themeName);
-  this.commentBoxObj = undefined; // JQuery obj
+  this.el = undefined;
 };
 
 CommentBox.prototype = {
   draw: function() {
-    this.commentBoxObj = $('#' + this.divId);
-    var commentBoxHeight = $('#' + this.divId).height();
+    this.el = glift.displays.dom.elem(this.divId);
+    if (this.el === null) {
+      throw new Error("Could not find element with ID " + this.divId);
+    }
+    var commentBoxHeight = this.bbox.height;
     var padding = 10; // TODO(kashomon): Put in theme
     var borderWidth = 1;
     var boardBorder = this.theme.board['stroke-width'];
-    // var fontSize = width / 25 < 15 ? 15 : width / 25;
     var fontSize = 16;
-    // commentBoxHeight * .13 < 14 ? 14 : commentBoxHeight * .13;
-    // fontSize = fontSize > 16 ? 16 : fontSize;
-    this.commentBoxObj.css({
-      // TODO(kashomon): Get the theme info from the theme
+    this.el.css({
       background: '#CCF',
       border: borderWidth + 'px solid',
       margin: 'auto',
       'font-family': 'Baskerville',
       'overflow-y': 'auto',
       'font-size': fontSize,
-
-      // prevent Chrome/web kit from resizing the text (font boosting)
-      // ... which doesn't work for me, unfortunately.
-      // '-webkit-text-size-adjust': 'none',
-      // 'min-height': '1px',
-      // 'max-height': '5000em',
-      // 'max-height': '1000000px',
-
-      // Prevent padding from affecting width
       '-webkit-box-sizing': 'border-box', /* Safari/Chrome, other WebKit */
       '-moz-box-sizing': 'border-box',    /* Firefox, other Gecko */
       'box-sizing': 'border-box',         /* Opera/IE 8+ */
@@ -50,12 +40,11 @@ CommentBox.prototype = {
   },
 
   setText: function(text) {
-    this.commentBoxObj.html('<p>' +
-        text.replace(/\n/g, '<br>') + '</p>');
+    this.el.html('<p>' + text.replace(/\n/g, '<br>') + '</p>');
   },
 
   clearText: function() {
-    this.commentBoxObj.html('');
+    this.el.html('');
   },
 
   destroy: function() {

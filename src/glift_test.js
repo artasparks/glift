@@ -9,7 +9,8 @@ module("Glift API Test Suite");
 
   test("Test Create: No Options", function() {
     var display = glift.displays.create({
-      intersections: 9
+      intersections: 9,
+      divId:  'glift_display'
     });
     ok(display !== undefined);
     ok(display.divId() !== undefined);

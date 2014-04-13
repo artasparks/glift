@@ -47,7 +47,9 @@ glift.rules.movetree = {
       return glift.rules.movetree.getInstance(19);
     }
     // var mt = new MoveTree(glift.sgf.parser.parse($.trim(sgfString)));
+    glift.util.majorPerfLog('Before SGF parsing in movetree');
     var mt = glift.sgf.parse(sgfString);
+    glift.util.majorPerfLog('After SGF parsing in movetree');
     for (var i = 0; i < initPosition.length; i++) {
       mt.moveDown(initPosition[i]);
     }

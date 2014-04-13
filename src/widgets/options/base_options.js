@@ -101,6 +101,14 @@ glift.widgets.options.baseOptions = {
       ARROW_RIGHT: 'iconActions.chevron-right.click'
     },
 
+    /** Default UI Components */
+    components: [
+      'BOARD',
+      'COMMENT_BOX',
+      'TITLE_BAR',
+      'ICONBAR',
+    ],
+
     /**
      * For all correct, there are multiple correct answers that a user must get.
      * This allows us to specify (in ms) how long the user has until the problem
@@ -272,13 +280,14 @@ glift.widgets.options.baseOptions = {
 
     /**
      * Whether or not to use the comment bar.
+     * TODO(kashomon): Remove
      */
     useCommentBar: true,
 
     /**
      * Whether or not to use the title bar.
+     * TODO(kashomon): Remove
      */
-    // TODO(kashomon): Implement this.
     useTitleBar: true,
 
     // TODO(kashomon): Rework the components and splits.
@@ -327,9 +336,7 @@ glift.widgets.options.baseOptions = {
       */
     click: undefined,
 
-    /**
-      * Ghost-stone for hovering.
-      */
+    /** Add ghost-stone for cursor hovering. */
     mouseover: function(event, widget, pt) {
       var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
       var currentPlayer = widget.controller.getCurrentPlayer();
@@ -339,9 +346,7 @@ glift.widgets.options.baseOptions = {
       }
     },
 
-    /**
-      * Ghost-stone removal for hovering.
-      */
+    /** Ghost-stone removal for cursor hovering. */
     mouseout: function(event, widget, pt) {
       var currentPlayer = widget.controller.getCurrentPlayer();
       if (widget.controller.canAddStone(pt, currentPlayer)) {

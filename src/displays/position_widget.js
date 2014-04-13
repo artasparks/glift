@@ -129,11 +129,11 @@ glift.displays.positionWidgetVert = function(
  * returns:
  *
  *  {
- *    boardBox,
- *    commentBox,
- *    iconBarBox,
- *    rightSide,
- *    leftSide
+ *    boardBox: ...
+ *    commentBox: ...
+ *    iconBarBox: ...
+ *    rightSide: ...
+ *    leftSide: ....
  *  }
  */
 glift.displays.positionWidgetHorz = function(

@@ -30,7 +30,6 @@ glift.widgets.BaseWidget.prototype = {
     glift.util.majorPerfLog('Created controller');
 
     this.displayOptions.intersections = this.controller.getIntersections();
-
     var comps = glift.enums.boardComponents;
     var requiredComponents = [comps.BOARD];
     this.displayOptions.boardRegion =
@@ -49,7 +48,12 @@ glift.widgets.BaseWidget.prototype = {
     if (this.sgfOptions.icons.length > 0) {
       requiredComponents.push(comps.ICONBAR);
     }
+
+    // This should be the only time we get the base width and height, until the
+    // entire widget is re-drawn.
     var parentDivBbox = glift.displays.bboxFromDiv(this.wrapperDiv);
+    // Recall that positioning returns an object that looks like:
+    // {commentBox: ...
     var positioning = glift.displays.positionWidget(
       parentDivBbox,
       this.displayOptions.boardRegion,
@@ -62,26 +66,32 @@ glift.widgets.BaseWidget.prototype = {
     // displayOptions.
     this.displayOptions.divId = divIds.boardBoxId;
 
-    this.display = glift.displays.create(this.displayOptions);
+    this.display = glift.displays.create(
+        this.displayOptions,
+        positioning.boardBox);
     glift.util.majorPerfLog('Finish creating display');
 
-    divIds.commentBoxId && this._createCommentBox(divIds.commentBoxId);
+    divIds.commentBoxId && this._createCommentBox(
+        divIds.commentBoxId,
+        positioning.commentBox);
     glift.util.majorPerfLog('CommentBox');
-
 
     if (divIds.iconBarBoxId) {
       this.iconBar = this._createIconBar(
-          divIds.iconBarBoxId, this.sgfOptions.icons, parentDivBbox);
+          divIds.iconBarBoxId,
+          positioning.iconBarBox,
+          this.sgfOptions.icons,
+          parentDivBbox);
       glift.util.majorPerfLog('IconBar');
     }
 
     divIds.iconBarBoxId && this._initIconActions(
         this.iconBar, this.actions.iconActions);
 
-    glift.util.majorPerfLog('Before event creation');
+    glift.util.majorPerfLog('Before stone event creation');
     this._initStoneActions(this.actions.stoneActions);
     this._initKeyHandlers();
-    glift.util.majorPerfLog('After event creation');
+    glift.util.majorPerfLog('After stone event creation');
 
     this._initProblemData();
     this.applyBoardData(this.controller.getEntireBoardState());
@@ -145,18 +155,21 @@ glift.widgets.BaseWidget.prototype = {
     return this;
   },
 
-  _createCommentBox: function(commentBoxId) {
+  _createCommentBox: function(commentBoxId, positioning) {
     this.commentBox = glift.displays.gui.commentBox(
-        commentBoxId, this.displayOptions.theme);
+        commentBoxId,
+        this.displayOptions.theme,
+        positioning);
   },
 
-  _createIconBar: function(iconId, icons, parentBbox) {
+  _createIconBar: function(iconId, bbox, icons, parentBbox) {
     return glift.displays.icons.bar({
       themeName: this.displayOptions.theme,
       divId: iconId,
       vertMargin: 5, // For good measure
       horzMargin: 5,
       icons: icons,
+      positioning: bbox,
       parentBbox: parentBbox
     });
   },
@@ -223,18 +236,22 @@ glift.widgets.BaseWidget.prototype = {
     if (this.sgfOptions.stoneMouseout) {
       actions.mouseout = this.sgfOptions.stoneMouseout;
     }
-    var that = this;
-    for (var eventName in actions) {
-      this._initOneStoneAction(eventName, actions[eventName]);
-    }
-    this.display.intersections().flushEvents();
-  },
 
-  _initOneStoneAction: function(eventName, func) {
+
     var that = this;
-    this.display.intersections().setEvent(eventName, function(event, pt) {
-      func(event, that, pt);
-    });
+    var wrapAction = function(func) {
+      return function(event, pt) { func(event, that, pt); };
+    };
+    var that = this
+    if (actions.mouseover && actions.mouseout) {
+      this.display.intersections().setHover(
+          wrapAction(actions.mouseover),
+          wrapAction(actions.mouseout));
+    }
+    if (actions.click) {
+      this.display.intersections().setEvent(
+          'click', wrapAction(actions.click));
+    }
   },
 
   /**

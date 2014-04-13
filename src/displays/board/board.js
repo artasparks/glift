@@ -79,19 +79,23 @@ glift.displays.board.Display.prototype = {
 
     board.lines(intGrp, idGen, boardPoints, theme);
     board.starpoints(intGrp, idGen, boardPoints, theme);
+
     board.shadows(intGrp, idGen, boardPoints, theme);
     board.stones(intGrp, idGen, boardPoints, theme);
     board.markContainer(intGrp, idGen, boardPoints, theme);
-    board.buttons(intGrp, idGen, boardPoints, this.rotation());
+    board.buttons(intGrp, idGen, boardPoints);
+
     this._intersections = new glift.displays.board._Intersections(
         divId, intGrp, boardPoints, theme, this.rotation());
+    glift.util.majorPerfLog("After display object creation");
+
     this.flush();
+    glift.util.majorPerfLog("After flushing to display");
     return this; // required
   },
 
   flush: function() {
     this._svg.attachToParent(this.divId());
-    this.intersections().flushEvents();
     return this;
   },
 

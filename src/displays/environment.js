@@ -11,7 +11,19 @@ glift.displays.environment = {
   BOTTOMBAR_SIZE: 0.10,
 
   get: function(options) {
-    return new GuiEnvironment(options);
+    var point = glift.util.point;
+    var bbox;
+    if (options.heightOverride && options.widthOverride) {
+      bbox = glift.displays.bboxFromPts(
+          point(0,0), point(options.widthOverride, options.heightOverride));
+    } else if (options.boardBox) {
+      bbox = options.boardBox;
+    } else if (options.divId) {
+      bbox = glift.displays.bboxFromDiv(options.divId);
+    } else {
+      throw new Error("No Bounding Box defined for display environment!")
+    }
+    return new GuiEnvironment(options, bbox);
   },
 
   getInitialized: function(options) {
@@ -19,33 +31,20 @@ glift.displays.environment = {
   }
 };
 
-var GuiEnvironment = function(options) {
+var GuiEnvironment = function(options, bbox) {
+  this.bbox = options.bbox; // required
   this.divId = options.divId || 'glift_display';
+  this.divHeight = bbox.height();
+  this.divWidth = bbox.width();
   this.boardRegion = options.boardRegion || glift.enums.boardRegions.ALL;
   this.intersections = options.intersections || 19;
-  var displayConfig = options.displayConfig || {};
-  this.cropbox = displayConfig.cropbox !== undefined ?
-      displayConfig.cropbox :
-      glift.displays.cropbox.getFromRegion(this.boardRegion, this.intersections);
-  this.heightOverride = false;
-  this.widthOverride = false;
-  if (displayConfig.divHeight !== undefined) {
-    this.divHeight = displayConfig.divHeight;
-    this.heightOverride = true;
-  }
-  if (displayConfig.divWidth !== undefined) {
-    this.divWidth = displayConfig.divWidth;
-    this.widthOverride = true;
-  }
+  this.cropbox = glift.displays.cropbox.getFromRegion(
+      this.boardRegion, this.intersections);
 };
 
 GuiEnvironment.prototype = {
   // Initialize the internal variables that tell where to place the go broard.
   init: function() {
-    if (!this.heightOverride || !this.widthOverride) {
-      this._resetDimensions();
-    }
-
     var displays = glift.displays,
         env = displays.environment,
         divHeight = this.divHeight,
@@ -75,13 +74,6 @@ GuiEnvironment.prototype = {
     this.goBoardBox = goBoardBox;
     this.goBoardLineBox = goBoardLineBox;
     this.boardPoints = boardPoints;
-    return this;
-  },
-
-  _resetDimensions: function() {
-    var bbox = glift.displays.bboxFromDiv(this.divId);
-    this.divHeight = bbox.height();
-    this.divWidth = bbox.width();
     return this;
   }
 };
