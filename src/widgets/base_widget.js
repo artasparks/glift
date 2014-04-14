@@ -52,6 +52,11 @@ glift.widgets.BaseWidget.prototype = {
     // This should be the only time we get the base width and height, until the
     // entire widget is re-drawn.
     var parentDivBbox = glift.displays.bboxFromDiv(this.wrapperDiv);
+    if (parentDivBbox.width() === 0 || parentDivBbox.height() === 0) {
+      throw new Error("Div has has invalid dimensions. Bounding box had " +
+          "width: " + parentDivBbox.width() +
+          ", height: " + parentDivBbox.height());
+    }
     // Recall that positioning returns an object that looks like:
     // {commentBox: ...
     var positioning = glift.displays.positionWidget(
@@ -145,7 +150,6 @@ glift.widgets.BaseWidget.prototype = {
         '-webkit-touch-callout': 'none',
         '-webkit-user-select': 'none',
         '-khtml-user-select': 'none',
-        '-moz-user-select': 'moz-none',
         '-ms-user-select': 'none',
         'user-select': 'none',
         '-webkit-highlight': 'none',

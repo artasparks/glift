@@ -106,7 +106,7 @@ glift.widgets.options.baseOptions = {
       'BOARD',
       'COMMENT_BOX',
       'TITLE_BAR',
-      'ICONBAR',
+      'ICONBAR'
     ],
 
     /**

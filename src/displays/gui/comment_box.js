@@ -1,14 +1,16 @@
 (function() {
 // TODO(kashomon): Move to its own directory.
-glift.displays.gui.commentBox = function(divId, themeName, bbox) {
-  return new CommentBox(divId, themeName, bbox).draw();
+glift.displays.gui.commentBox = function(divId, themeName, posBbox) {
+  return new CommentBox(divId, themeName, posBbox).draw();
 };
 
 // TODO(kashomon): Pass in an options argument.
-var CommentBox = function(divId, themeName, bbox) {
+var CommentBox = function(divId, themeName, positioningBbox) {
   this.divId = divId;
   this.themeName = themeName;
-  this.bbox = bbox;
+  this.bbox = glift.displays.bboxFromPts(
+      glift.util.point(0,0),
+      glift.util.point(positioningBbox.width(), positioningBbox.height()));
   this.theme = glift.themes.get(themeName);
   this.el = undefined;
 };
@@ -19,7 +21,6 @@ CommentBox.prototype = {
     if (this.el === null) {
       throw new Error("Could not find element with ID " + this.divId);
     }
-    var commentBoxHeight = this.bbox.height;
     var padding = 10; // TODO(kashomon): Put in theme
     var borderWidth = 1;
     var boardBorder = this.theme.board['stroke-width'];
@@ -27,14 +28,13 @@ CommentBox.prototype = {
     this.el.css({
       background: '#CCF',
       border: borderWidth + 'px solid',
-      margin: 'auto',
       'font-family': 'Baskerville',
+      'font-size': fontSize + 'px',
       'overflow-y': 'auto',
-      'font-size': fontSize,
-      '-webkit-box-sizing': 'border-box', /* Safari/Chrome, other WebKit */
-      '-moz-box-sizing': 'border-box',    /* Firefox, other Gecko */
-      'box-sizing': 'border-box',         /* Opera/IE 8+ */
-      'padding': padding
+      'overflowY': 'auto',
+      'MozBoxSizing': 'border-box',
+      'box-sizing': 'border-box',
+      'padding': padding + 'px'
     });
     return this;
   },
