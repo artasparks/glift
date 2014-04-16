@@ -157,6 +157,7 @@ glift.rules._MoveTree.prototype = {
 
   /**
    * Get a new move tree instance from the root node.
+   *
    * treepath: optionally also apply a treepath to the tree
    */
   getTreeFromRoot: function(treepath) {
@@ -240,6 +241,20 @@ glift.rules._MoveTree.prototype = {
   },
 
   /**
+   * If not on the mainline, returns the appriate 'move number' for a variation,
+   * for the current location, which is the number of moves to mainline
+   *
+   * Returns 0 if on mainline.
+   */
+  movesToMainline: function() {
+    var mt = this.newTreeRef();
+    for (var n = 0; !mt.onMainline() && mt.node().getParent(); n++) {
+      mt.moveUp();
+    }
+    return n;
+  },
+
+  /**
    * Get the next moves (i.e., nodes with either B or W properties);
    *
    * returns: an array of dicts with the moves, e.g.,
@@ -317,7 +332,7 @@ glift.rules._MoveTree.prototype = {
         + this.node(i).getNodeNum());
     for (var i = 0; i < this.node().numChildren(); i++) {
       this.moveDown(i);
-      this.debugLog(spaces);
+      this._debugLog(spaces);
       this.moveUp();
     }
   },

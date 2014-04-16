@@ -278,6 +278,25 @@ glift.widgets.options.baseOptions = {
      */
     goBoardBackground: '',
 
+    oneColumnSplits: {
+      TITLE_BAR: 0.5,
+      BOARD: 0.70,
+      COMMENT_BOX: 0.15,
+      ICONBAR: 0.10
+    },
+
+    twoColumnSplits: {
+      one: {
+        BOARD: 1
+      },
+      two: {
+        // Second Column
+        TITLE_BAR: 0.10,
+        COMMENT_BOX: 0.80,
+        ICONBAR: 0.10
+      }
+    },
+
     /**
      * Whether or not to use the comment bar.
      * TODO(kashomon): Remove

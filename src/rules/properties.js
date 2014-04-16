@@ -109,6 +109,20 @@ Properties.prototype = {
     return prop in this.propMap;
   },
 
+  /** hasValue: Test wether a prop contains a value */
+  hasValue : function(prop, value) {
+    if (!this.contains(prop)) {
+      return false;
+    }
+    var vals = this.getAllValues(prop);
+    for (var i = 0; i < vals.length; i++) {
+      if (vals[i] === value) {
+        return true;
+      }
+    }
+    return false;
+  },
+
   /** Delete the prop and return the value. */
   remove: function(prop) {
     if (this.contains(prop)) {

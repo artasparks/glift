@@ -252,7 +252,6 @@ glift.rules.movetreeTest = function() {
     deepEqual(movetree.node().getNodeNum(), 0);
   });
 
-
   test('treepathToHere', function() {
     var initPos = [0,0,0,0,0,0,1,0];
     var sgf = "(;GM[1];B[aa];W[ab];B[ac];W[ad];B[ae];W[af]" +
@@ -268,5 +267,30 @@ glift.rules.movetreeTest = function() {
     initPos = [0,0,0];
     var mt = glift.rules.movetree.getFromSgf(sgf, initPos);
     deepEqual(mt.treepathToHere(), initPos);
+  });
+
+  test('movesToMainline', function() {
+    var initPos = [0,0,0,0,0,0,1,0,0];
+    var sgf = "(;GM[1];B[aa];W[ab];B[ac];W[ad];B[ae];W[af]" +
+        "(;B[ag];W[ah];B[ai];W[aj])" +
+        "(;B[ah];W[ai];B[aj];W[ak]))";
+    var mt = glift.rules.movetree.getFromSgf(sgf, initPos);
+    deepEqual(mt.movesToMainline(), 3);
+
+    initPos = [];
+    var mt = glift.rules.movetree.getFromSgf(sgf, initPos);
+    deepEqual(mt.movesToMainline(), 0);
+
+    initPos = [0,0,0];
+    var mt = glift.rules.movetree.getFromSgf(sgf, initPos);
+    deepEqual(mt.movesToMainline(), 0);
+
+    initPos =  [0,0,0,0,0,0,1];
+    var mt = glift.rules.movetree.getFromSgf(sgf, initPos);
+    deepEqual(mt.movesToMainline(), 1);
+
+    initPos =  [0,0,0,0,0,0,1,0,0];
+    var mt = glift.rules.movetree.getFromSgf(sgf, initPos);
+    deepEqual(mt.movesToMainline(), 3);
   });
 };

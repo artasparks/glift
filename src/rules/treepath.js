@@ -109,18 +109,19 @@ glift.rules.treepath = {
    * minusMovesOverride: force findNextMoves to to return a nextMovesTreepath of
    *    this length, starting from the init treepath.  The actually
    *    nextMovesTreepath can be shorter
+   *    breakOnComment: Whether or not to break on comments on the main
+   *        variation.  Defaults to true
    *
-   * returns: on object with two keys
+   * returns: on object with three keys
    *    movetree: an update movetree
    *    treepath: a new treepath that says how to get to this position
    *    nextMoves: A nextMovesTreepath, used to apply for the purpose of
    *        crafting moveNumbers.
-   *    breakOnMainComment: Whether or not to break on comments on the main
-   *        variation.
    */
-  findNextMoves: function(
-      movetree, initTreepath, minusMovesOverride, breakOnMainComment) {
+  findNextMovesPath: function(
+      movetree, initTreepath, minusMovesOverride, breakOnComment) {
     var initTreepath = initTreepath || movetree.treepathToHere();
+    var breakOnComment = breakOnComment === false ? false : true;
     var mt = movetree.getTreeFromRoot(initTreepath);
     var minusMoves = minusMovesOverride || 40;
     var nextMovesTreepath = [];
@@ -129,15 +130,14 @@ glift.rules.treepath = {
       var varnum = mt.node().getVarNum();
       nextMovesTreepath.push(varnum);
       mt.moveUp();
-      if (breakOnMainComment &&
-          startMainline &&
-          mt.properties().getOneValue('C')) {
+      if (breakOnComment &&
+          mt.properties().getOneValue('C') &&
+          !minusMovesOverride) {
         break;
       }
 
-      // Break if we've moved to the mainline.
       if (!startMainline && mt.onMainline() && !minusMovesOverride) {
-        break;
+        break; // Break if we've moved to the mainline from a variation
       }
     }
     nextMovesTreepath.reverse();
@@ -155,7 +155,7 @@ glift.rules.treepath = {
    * goban: a rules.goban array.
    * nextMoves:  A next-moves treepath. See findNextMoves.
    *
-   * returns: An object with three keys:
+   * returns: An object with two keys:
    *    movetree: the updated movetree after applying the nextmoves
    *    stones: arrayof 'augmented' stone objects
    *

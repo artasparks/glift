@@ -8,7 +8,7 @@
  *  }
  */
 glift.displays.positionWidget = function(
-    divBox, boardRegion, ints, boardComponentsList) {
+    divBox, boardRegion, ints, boardComponentsList, onecSplits, twocSplits) {
   var comps = glift.enums.boardComponents;
   var bcMap = {}
   for (var i = 0; i < boardComponentsList.length; i++) {

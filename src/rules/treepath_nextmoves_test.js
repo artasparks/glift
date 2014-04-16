@@ -1,5 +1,5 @@
 glift.rules.treepathNextmovesTest = function() {
-  var findNextMoves = glift.rules.treepath.findNextMoves;
+  var findNextMoves = glift.rules.treepath.findNextMovesPath;
   var applyNextMoves = glift.rules.treepath.applyNextMoves;
   var point = glift.util.point;
   var sgfpoint = glift.util.pointFromSgfCoord;
@@ -17,6 +17,19 @@ glift.rules.treepathNextmovesTest = function() {
     var out = findNextMoves(mt, []);
     deepEqual(out.treepath, []);
     deepEqual(out.nextMoves, []);
+  });
+
+  test('Test simplecase', function() {
+    var mt = glift.rules.movetree.getInstance();
+    mt.properties().add('AW', 'aa');
+    mt.node().addChild();
+    mt.moveDown();
+    mt.properties().add('B', 'ab');
+    mt.moveDown();
+
+    var out = findNextMoves(mt);
+    deepEqual(out.treepath, []);
+    deepEqual(out.nextMoves, [0]);
   });
 
   test('Test basic nextmoves', function() {
@@ -62,13 +75,22 @@ glift.rules.treepathNextmovesTest = function() {
     deepEqual(out.nextMoves, [1,0]);
   });
 
+  // 6 moves + 2-4 move variations.
+  var gameVariation2 = "(;GM[1];B[aa];W[ab];B[ac];W[ad];B[ae];W[af]" +
+    "(;B[ag];W[ah];B[ai];W[aj])" + // variation 1 (mainline
+    "(;B[ah]C[Biff];W[ai];B[aj]C[Baff];W[ak]))"; // variation 2
+
   test('Test nextmoves. Comments', function() {
-    var initPos = [0,0,0,0,0,0,1,0];
-    var mt = glift.rules.movetree.getFromSgf(gameVariation, initPos);
+    var initPos = [0,0,0,0,0,0,1,0,0];
+    var mt = glift.rules.movetree.getFromSgf(gameVariation2, initPos);
     var out = findNextMoves(mt);
-    deepEqual(out.treepath, [0,0,0,0,0,0]);
-    deepEqual(out.nextMoves, [1,0]);
+    deepEqual(out.treepath, [0,0,0,0,0,0,1]);
+    deepEqual(out.nextMoves, [0,0]);
   });
+
+  ////////////////////////////////
+  /////// Apply Next Moves ///////
+  ////////////////////////////////
 
   test('Apply next moves -- no collisions', function() {
     var initPos = [0,0,0,0,0,0];
@@ -79,6 +101,17 @@ glift.rules.treepathNextmovesTest = function() {
     deepEqual(out.stones, [
         { point: sgfpoint('ah'), color: 'BLACK'},
         { point: sgfpoint('ai'), color: 'WHITE'}]);
+  });
+
+  test('Apply next moves: Comments', function() {
+    var initPos = [0,0,0,0,0,0,1];
+    var nextMoves = [0,0];
+    var mt = glift.rules.movetree.getFromSgf(gameVariation2, initPos);
+    var goban = glift.rules.goban.getFromMoveTree(mt).goban
+    var out = applyNextMoves(mt, goban, nextMoves);
+    deepEqual(out.stones, [
+        { point: sgfpoint('ai'), color: 'WHITE'},
+        { point: sgfpoint('aj'), color: 'BLACK'}]);
   });
 
   // Capture variation

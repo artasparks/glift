@@ -50,11 +50,7 @@ glift.bridge.managerConverter = {
           else { counts.varDiags++; }
 
           if (globalBookData.autoNumber) {
-            var out = glift.rules.treepath.findNextMoves(
-                movetree,
-                undefined,
-                sobj.bookData.minusMovesOverride,
-                sobj.bookData.diagramType === diagramTypes.GAME_REVIEW);
+            var out = glift.rules.treepath.findNextMovesPath(movetree);
             movetree = out.movetree;
             treepath = out.treepath;
             nextMovesPath = out.nextMoves;

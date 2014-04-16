@@ -30,8 +30,7 @@ glift.widgets.BaseWidget.prototype = {
     glift.util.majorPerfLog('Created controller');
 
     this.displayOptions.intersections = this.controller.getIntersections();
-    var comps = glift.enums.boardComponents;
-    var requiredComponents = [comps.BOARD];
+
     this.displayOptions.boardRegion =
         this.sgfOptions.boardRegion === glift.enums.boardRegions.AUTO
         ? glift.bridge.getCropFromMovetree(this.controller.movetree)
@@ -39,6 +38,9 @@ glift.widgets.BaseWidget.prototype = {
     this.displayOptions.rotation = this.sgfOptions.rotation;
     glift.util.majorPerfLog('Calculated board regions');
 
+    var components = this.sgfOptions.components;
+    var comps = glift.enums.boardComponents;
+    var requiredComponents = [comps.BOARD];
     if (this.displayOptions.useCommentBar) {
       requiredComponents.push(comps.COMMENT_BOX);
     }
@@ -57,13 +59,17 @@ glift.widgets.BaseWidget.prototype = {
           "width: " + parentDivBbox.width() +
           ", height: " + parentDivBbox.height());
     }
+
     // Recall that positioning returns an object that looks like:
     // {commentBox: ...
     var positioning = glift.displays.positionWidget(
       parentDivBbox,
       this.displayOptions.boardRegion,
       this.displayOptions.intersections,
-      requiredComponents);
+      components,
+      this.displayOptions.oneColumnSplits,
+      this.displayOptions.twoColumnSplits);
+
     var divIds = this._createDivsForPositioning(positioning, this.wrapperDiv);
     glift.util.majorPerfLog('Created divs');
 
