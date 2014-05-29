@@ -5,10 +5,10 @@
  * @license MIT License (see LICENSE.txt)
  * --------------------------------------
  */
-(function() {
-var glift = glift || window.glift || {};
-if (window) {
+(function(w) {
+var glift = glift || w.glift || {};
+if (w) {
   // expose Glift as a global.
-  window.glift = glift;
+  w.glift = glift;
 }
 })(window);
