@@ -18,9 +18,34 @@
         padding: 0;
       }
       #glift_display1 {
-        height:500px;
-        width:100%;
         position:relative;
+        height:100%;
+        width:100%;
+        background:red;
+        box-sizing:'border-box';
+      }
+
+      #lfloater {
+        width:50%;
+        height:500px;
+        float:left;
+        background:#CCC;
+        box-sizing:border-box;
+      }
+      #rfloater {
+        display:table;
+        width:50%;
+        position:relative;
+        float:right;
+        padding:15px;
+        background:blue;
+        box-sizing:border-box;
+      }
+      #infloater {
+        height:500px;
+        background:green;
+        padding:10px;
+        box-sizing:border-box;
       }
     </style>
   </head>
@@ -28,11 +53,17 @@
   <body>
     <div id="wrap" style="position:relative;">
       <div id="gheader"></div>
-      <div id="glift_display1"></div>
+      <div id="lfloater"></div>
+      <div id="rfloater">
+        <div id="infloater">
+          <div id="glift_display1"></div>
+        </div>
+      </div>
       <div id="extra_info"></div>
       <script type="text/javascript">
         (function() {
-          glift.global.performanceDebugLevel = 'INFO';
+          //return;
+          //glift.global.performanceDebugLevel = 'INFO';
           gameViewer = glift.create({
             divId: 'glift_display1',
             sgf: {

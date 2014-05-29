@@ -18,7 +18,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.10.8',
+  version: '0.10.9',
   debugMode: false,
   // Options for performanceDebugLevel: NONE, INFO
   performanceDebugLevel: 'NONE',
@@ -1811,7 +1811,7 @@ var LineBox = function(boundingBox, xSpacing, ySpacing, cropbox) {
  *  }
  */
 glift.displays.positionWidget = function(
-    divBox, boardRegion, ints, boardComponentsList) {
+    divBox, boardRegion, ints, boardComponentsList, onecSplits, twocSplits) {
   var comps = glift.enums.boardComponents;
   var bcMap = {}
   for (var i = 0; i < boardComponentsList.length; i++) {
@@ -4800,6 +4800,126 @@ glift.displays.svg.SvgObj.prototype = {
  * Objects and methods that enforce the basic rules of Go.
  */
 glift.rules = {};
+/**
+ * Autonumber the shit out of the movetree.
+ *
+ * NOTE! This removes all numeric labels and replaces them with.
+ *
+ * Modifies the current movtree
+ */
+glift.rules.autonumber = function(movetree) {
+  var digitregex = /\d+/;
+  var singledigit = /0\d/;
+  movetree.recurseFromRoot(function(mt) {
+    if (!mt.properties().contains('C') ||
+        mt.properties().getOneValue('C') === '') {
+      return; // Nothing to do.  We only autonumber on comments.
+    }
+    // First, clear all numeric labels
+    var labels = mt.properties().getAllValues('LB');
+    var lblMap = {}; // map from SGF point to label
+    for (var i = 0; labels && i < labels.length; i++) {
+      var lblData = labels[i].split(':')
+      if (digitregex.test(lblData[1])) {
+        // Clear out digits
+      } else {
+        lblMap[lblData[0]] = lblData[1];
+      }
+    }
+
+    var pathOut = glift.rules.treepath.findNextMovesPath(mt);
+    var newMt = pathOut.movetree;
+    var goban = glift.rules.goban.getFromMoveTree(newMt).goban;
+
+    var mvnum = mt.onMainline() ?
+        newMt.node().getNodeNum() + 1:
+        newMt.movesToMainline() + 1;
+    var applied = glift.rules.treepath.applyNextMoves(
+        newMt, goban, pathOut.nextMoves);
+
+    var seen = 0;
+    for (var i = 0, st = applied.stones; i < st.length; i++) {
+      var stone = st[i];
+      if (!stone.collision) {
+        var sgfPoint = stone.point.toSgfCoord();
+        lblMap[sgfPoint] = mvnum + seen;
+        seen++;
+      }
+    }
+
+    var newlabels = [];
+    for (var sgfpt in lblMap) {
+      var l = lblMap[sgfpt] + '';
+      if (l.length > 2) {
+        var subl = l.substring(l.length - 2, l.length);
+        if (subl !== '00') {
+          l = subl;
+        }
+        if (l.length === 2 && singledigit.test(l)) {
+          l = l.charAt(l.length - 1);
+        }
+      }
+      newlabels.push(sgfpt + ':' + l);
+    }
+
+    if (newlabels.length === 0) {
+      mt.properties().remove('LB');
+    } else {
+      mt.properties().set('LB', newlabels);
+    }
+
+    glift.rules.removeCollidingLabels(mt, lblMap);
+  });
+};
+
+glift.rules.removeCollidingLabels = function(mt, lblMap) {
+  var toConsider = ['TR', 'SQ'];
+  for (var i = 0; i < toConsider.length; i++) {
+    var key = toConsider[i];
+    if (mt.properties().contains(key)) {
+      var lbls = mt.properties().getAllValues(key);
+      var newLbls = [];
+      for (var j = 0; j < lbls.length; j++) {
+        var sgfCoord = lbls[j];
+        if (lblMap[sgfCoord]) {
+          // do nothing.  This is a collision.
+        } else {
+          newLbls.push(sgfCoord);
+        }
+      }
+      if (newLbls.length === 0) {
+        mt.properties().remove(key);
+      } else {
+        mt.properties().set(key, newLbls);
+      }
+    }
+  }
+};
+
+glift.rules.clearnumbers = function(movetree) {
+  var digitregex = /\d+/;
+  movetree.recurseFromRoot(function(mt) {
+    // Clear all numeric labels
+    if (!mt.properties().contains('LB')) {
+      return; // no labels to clear;
+    }
+    var labels = mt.properties().getAllValues('LB');
+    var newLbls = []; // map from SGF point to label
+    for (var i = 0; labels && i < labels.length; i++) {
+      var lblData = labels[i].split(':')
+      if (digitregex.test(lblData[1])) {
+        // Clear out digits
+      } else {
+        newLbls.push(labels[i]);
+      }
+    }
+    if (newLbls.length === 0) {
+      mt.properties().remove('LB');
+    } else {
+      mt.properties().set('LB', newLbls);
+    }
+  });
+};
 (function(){
 glift.rules.goban = {
   /**
@@ -5415,6 +5535,7 @@ glift.rules._MoveTree.prototype = {
 
   /**
    * Get a new move tree instance from the root node.
+   *
    * treepath: optionally also apply a treepath to the tree
    */
   getTreeFromRoot: function(treepath) {
@@ -5498,6 +5619,20 @@ glift.rules._MoveTree.prototype = {
   },
 
   /**
+   * If not on the mainline, returns the appriate 'move number' for a variation,
+   * for the current location, which is the number of moves to mainline
+   *
+   * Returns 0 if on mainline.
+   */
+  movesToMainline: function() {
+    var mt = this.newTreeRef();
+    for (var n = 0; !mt.onMainline() && mt.node().getParent(); n++) {
+      mt.moveUp();
+    }
+    return n;
+  },
+
+  /**
    * Get the next moves (i.e., nodes with either B or W properties);
    *
    * returns: an array of dicts with the moves, e.g.,
@@ -5575,7 +5710,7 @@ glift.rules._MoveTree.prototype = {
         + this.node(i).getNodeNum());
     for (var i = 0; i < this.node().numChildren(); i++) {
       this.moveDown(i);
-      this.debugLog(spaces);
+      this._debugLog(spaces);
       this.moveUp();
     }
   },
@@ -5820,6 +5955,20 @@ Properties.prototype = {
    */
   contains: function(prop) {
     return prop in this.propMap;
+  },
+
+  /** hasValue: Test wether a prop contains a value */
+  hasValue : function(prop, value) {
+    if (!this.contains(prop)) {
+      return false;
+    }
+    var vals = this.getAllValues(prop);
+    for (var i = 0; i < vals.length; i++) {
+      if (vals[i] === value) {
+        return true;
+      }
+    }
+    return false;
   },
 
   /** Delete the prop and return the value. */
@@ -6102,18 +6251,19 @@ glift.rules.treepath = {
    * minusMovesOverride: force findNextMoves to to return a nextMovesTreepath of
    *    this length, starting from the init treepath.  The actually
    *    nextMovesTreepath can be shorter
+   *    breakOnComment: Whether or not to break on comments on the main
+   *        variation.  Defaults to true
    *
-   * returns: on object with two keys
+   * returns: on object with three keys
    *    movetree: an update movetree
    *    treepath: a new treepath that says how to get to this position
    *    nextMoves: A nextMovesTreepath, used to apply for the purpose of
    *        crafting moveNumbers.
-   *    breakOnMainComment: Whether or not to break on comments on the main
-   *        variation.
    */
-  findNextMoves: function(
-      movetree, initTreepath, minusMovesOverride, breakOnMainComment) {
+  findNextMovesPath: function(
+      movetree, initTreepath, minusMovesOverride, breakOnComment) {
     var initTreepath = initTreepath || movetree.treepathToHere();
+    var breakOnComment = breakOnComment === false ? false : true;
     var mt = movetree.getTreeFromRoot(initTreepath);
     var minusMoves = minusMovesOverride || 40;
     var nextMovesTreepath = [];
@@ -6122,15 +6272,14 @@ glift.rules.treepath = {
       var varnum = mt.node().getVarNum();
       nextMovesTreepath.push(varnum);
       mt.moveUp();
-      if (breakOnMainComment &&
-          startMainline &&
-          mt.properties().getOneValue('C')) {
+      if (breakOnComment &&
+          mt.properties().getOneValue('C') &&
+          !minusMovesOverride) {
         break;
       }
 
-      // Break if we've moved to the mainline.
       if (!startMainline && mt.onMainline() && !minusMovesOverride) {
-        break;
+        break; // Break if we've moved to the mainline from a variation
       }
     }
     nextMovesTreepath.reverse();
@@ -6148,7 +6297,7 @@ glift.rules.treepath = {
    * goban: a rules.goban array.
    * nextMoves:  A next-moves treepath. See findNextMoves.
    *
-   * returns: An object with three keys:
+   * returns: An object with two keys:
    *    movetree: the updated movetree after applying the nextmoves
    *    stones: arrayof 'augmented' stone objects
    *
@@ -8205,11 +8354,7 @@ glift.bridge.managerConverter = {
           else { counts.varDiags++; }
 
           if (globalBookData.autoNumber) {
-            var out = glift.rules.treepath.findNextMoves(
-                movetree,
-                undefined,
-                sobj.bookData.minusMovesOverride,
-                sobj.bookData.diagramType === diagramTypes.GAME_REVIEW);
+            var out = glift.rules.treepath.findNextMovesPath(movetree);
             movetree = out.movetree;
             treepath = out.treepath;
             nextMovesPath = out.nextMoves;
@@ -8351,8 +8496,7 @@ glift.widgets.BaseWidget.prototype = {
     glift.util.majorPerfLog('Created controller');
 
     this.displayOptions.intersections = this.controller.getIntersections();
-    var comps = glift.enums.boardComponents;
-    var requiredComponents = [comps.BOARD];
+
     this.displayOptions.boardRegion =
         this.sgfOptions.boardRegion === glift.enums.boardRegions.AUTO
         ? glift.bridge.getCropFromMovetree(this.controller.movetree)
@@ -8360,6 +8504,9 @@ glift.widgets.BaseWidget.prototype = {
     this.displayOptions.rotation = this.sgfOptions.rotation;
     glift.util.majorPerfLog('Calculated board regions');
 
+    var components = this.sgfOptions.components;
+    var comps = glift.enums.boardComponents;
+    var requiredComponents = [comps.BOARD];
     if (this.displayOptions.useCommentBar) {
       requiredComponents.push(comps.COMMENT_BOX);
     }
@@ -8378,13 +8525,17 @@ glift.widgets.BaseWidget.prototype = {
           "width: " + parentDivBbox.width() +
           ", height: " + parentDivBbox.height());
     }
+
     // Recall that positioning returns an object that looks like:
     // {commentBox: ...
     var positioning = glift.displays.positionWidget(
       parentDivBbox,
       this.displayOptions.boardRegion,
       this.displayOptions.intersections,
-      requiredComponents);
+      components,
+      this.displayOptions.oneColumnSplits,
+      this.displayOptions.twoColumnSplits);
+
     var divIds = this._createDivsForPositioning(positioning, this.wrapperDiv);
     glift.util.majorPerfLog('Created divs');
 
@@ -9314,6 +9465,25 @@ glift.widgets.options.baseOptions = {
      * 'http://www.mywebbie.com/images/kaya.jpg'
      */
     goBoardBackground: '',
+
+    oneColumnSplits: {
+      TITLE_BAR: 0.5,
+      BOARD: 0.70,
+      COMMENT_BOX: 0.15,
+      ICONBAR: 0.10
+    },
+
+    twoColumnSplits: {
+      one: {
+        BOARD: 1
+      },
+      two: {
+        // Second Column
+        TITLE_BAR: 0.10,
+        COMMENT_BOX: 0.80,
+        ICONBAR: 0.10
+      }
+    },
 
     /**
      * Whether or not to use the comment bar.

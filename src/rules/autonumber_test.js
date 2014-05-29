@@ -21,7 +21,7 @@ glift.rules.autonumberTest = function() {
   });
 
   test('Testing complex autonumber', function() {
-    var sgf = "(;GM[1];B[aa]C[Foo];W[ab];B[ac];W[ad];B[ae];W[af]C[BAR]" +
+    var sgf = "(;GM[1];B[aa]C[Foo]TR[aa];W[ab];B[ac];W[ad];B[ae];W[af]C[BAR]" +
         "(;B[ag]C[Biff];W[ah];B[ai];W[aj])" +
         "(;B[ah]C[Blarg];W[ai];B[aj]C[Flag];W[ak]))";
     var mt = glift.rules.movetree.getFromSgf(sgf, []);
@@ -32,6 +32,7 @@ glift.rules.autonumberTest = function() {
     ok(mt.properties().hasValue('B', 'aa'), 'stone');
     ok(mt.properties().hasValue('C', 'Foo'), 'comment');
     ok(mt.properties().hasValue('LB', 'aa:1'), 'must have a label');
+    ok(!mt.properties().contains('TR'), 'must have removed triangles label');
 
     initPos = [0,0,0,0,0,0];
     var mt = mt.getTreeFromRoot(initPos);
@@ -52,5 +53,20 @@ glift.rules.autonumberTest = function() {
     deepEqual(mt.properties().getAllValues('LB'),
         ['ai:2', 'aj:3'], 'variation comments');
     ok(true);
+  });
+
+  test('Testing clear numbers', function() {
+    var sgf = "(;GM[1];B[aa]LB[aa:1]C[Foo];LB[ab:A]" +
+        "W[ab];B[ac];W[ad];B[ae];W[af]C[BAR]" +
+        "(;B[ag]C[Biff];W[ah];B[ai];W[aj])" +
+        "(;B[ah]C[Blarg];W[ai];B[aj]C[Flag];W[ak]))";
+    var mt = glift.rules.movetree.getFromSgf(sgf, []);
+    ok(mt != undefined);
+    glift.rules.clearnumbers(mt);
+    mt.moveDown();
+    ok(!mt.properties().contains('LB'));
+    mt.moveDown();
+    deepEqual(mt.properties().getOneValue('W'), 'ab');
+    deepEqual(mt.properties().getOneValue('LB'), 'ab:A');
   });
 };

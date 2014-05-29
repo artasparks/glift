@@ -3,5 +3,6 @@
  *
  */
 glift.displays.diagrams.pdf = {
-  // TODO(kashomon): Support PDF generation.
+  create: function(sgfobj) {
+  },
 };
