@@ -1,1 +1,0 @@
-glift.displays.diagrams = {};

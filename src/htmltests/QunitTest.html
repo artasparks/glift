@@ -4,8 +4,8 @@
 <head>
 
 <script type="text/javascript" src="../libs/jquery-1.10.2.min.js"></script>
-<link rel="stylesheet" href="../qunit/qunit.css" type="text/css" media="screen" />
-<script type="text/javascript" src="../qunit/qunit.js"></script>
+<link rel="stylesheet" href="../libs/qunit.css" type="text/css" media="screen" />
+<script type="text/javascript" src="../libs/qunit.js"></script>
 <script type="text/javascript" src="../testdata/sgfs.js"></script>
 <script type="text/javascript" src="../testdata/tygem_example.js"></script>
 
@@ -208,8 +208,6 @@ $(document).ready(function() {
 
   glift.displays.icons.wrappedIconTest();
 
-  glift.displays.diagrams.gooeTest();
-
   glift.displays.svg.svgObjTest();
   glift.displays.svg.pathUtilsTest();
 
@@ -244,7 +242,6 @@ $(document).ready(function() {
   glift.bridge.croppingTest();
   glift.bridge.intersectionsTest();
   glift.bridge.flattenerTest();
-  glift.bridge.managerConverterTest();
 
   // And finally: an end to end test!
   glift.widgets.options.optionsTest();
