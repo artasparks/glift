@@ -38,7 +38,6 @@ DIR_ORDER = [
     'displays/board',
     'displays/gui',
     'displays/icons',
-    'displays/diagrams',
     'displays/svg',
 
     # Rules and display are intentionally not linked, except via
