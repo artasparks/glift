@@ -101,8 +101,8 @@ glift.widgets.options.baseOptions = {
       ARROW_RIGHT: 'iconActions.chevron-right.click'
     },
 
-    /** Default UI Components */
-    components: [
+    /** The UI Components to use for this display */
+    componentsToUse: [
       'BOARD',
       'COMMENT_BOX',
       'TITLE_BAR',
@@ -133,6 +133,7 @@ glift.widgets.options.baseOptions = {
      *    ... future options
      *  }
      */
+    // TODO(kashomon): Remove this in favor of a general 
     bookData: {
       /**
        * The diagram type.
@@ -278,23 +279,32 @@ glift.widgets.options.baseOptions = {
      */
     goBoardBackground: '',
 
+    /**
+     * Split percentages to use for a one-column widget format.
+     */
     oneColumnSplits: {
-      TITLE_BAR: 0.5,
-      BOARD: 0.70,
-      COMMENT_BOX: 0.15,
-      ICONBAR: 0.10
+      first: [
+        // TODO(kashomon): Add support for a title bar
+        // { component: 'TITLE_BAR',   ratio: 0.05 },
+        { component: 'BOARD',       ratio: 0.70 },
+        { component: 'COMMENT_BOX', ratio: 0.20 },
+        { component: 'ICONBAR',     ratio: 0.10 }
+      ]
     },
 
+    /**
+     * Split percentages to use for a two-column widget format.
+     */
     twoColumnSplits: {
-      one: {
-        BOARD: 1
-      },
-      two: {
-        // Second Column
-        TITLE_BAR: 0.10,
-        COMMENT_BOX: 0.80,
-        ICONBAR: 0.10
-      }
+      first: [
+        { component: 'BOARD', ratio: 1 }
+      ],
+      second: [
+        // TODO(kashomon): Add support for a title bar
+        // { component: 'TITLE_BAR',     ratio: 0.10 },
+        { component: 'COMMENT_BOX',   ratio: 0.85 },
+        { component: 'ICONBAR',       ratio: 0.15 }
+      ]
     },
 
     /**

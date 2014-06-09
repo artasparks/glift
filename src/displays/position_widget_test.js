@@ -24,9 +24,28 @@ glift.displays.positionWidgetTest = function() {
   };
   var baseCropbox = cropbox.getFromRegion(boardRegions.TOP_RIGHT, ints);
 
+  var oneColumnSplits = {
+    first: [
+      {component: 'TITLE_BAR', ratio: 0.08},
+      {component: 'BOARD', ratio: 0.7},
+      {component: 'COMMENT_BOX', ratio: 0.1},
+      {component: 'ICONBAR', ratio: 0.12}
+    ]
+  };
+  var twoColumnSplits = {
+    first: [
+      {component: 'BOARD', ratio: 1}
+    ],
+    second: [
+      {component: 'TITLE_BAR', ratio: 0.08},
+      {component: 'COMMENT_BOX', ratio: 0.8},
+      {component: 'ICONBAR', ratio: 0.12}
+    ]
+  };
+
   test("Check no exceptions: horz positioning", function() {
     var obj = glift.displays.positionWidgetHorz(
-        horzBbox, baseCropbox, boardRegions.TOP_RIGHT, defaultCompMap);
+        horzBbox, baseCropbox, defaultCompMap, twoColumnSplits);
     ok(obj !== undefined, 'obj');
     ok(obj.boardBox !== undefined, 'boardBox');
     ok(obj.commentBox !== undefined, 'commentBox');
@@ -37,7 +56,7 @@ glift.displays.positionWidgetTest = function() {
 
   test("Check no exceptions: horz positioning", function() {
     var obj = glift.displays.positionWidgetVert(
-        horzBbox, baseCropbox, boardRegions.TOP_RIGHT, defaultCompMap);
+        horzBbox, baseCropbox, defaultCompMap, oneColumnSplits);
     ok(obj !== undefined, 'obj');
     ok(obj.boardBox !== undefined, 'boardBox');
     ok(obj.commentBox !== undefined, 'commentBox');
@@ -47,7 +66,7 @@ glift.displays.positionWidgetTest = function() {
   test("Check for properties: horz positioning horzBox", function() {
     for (var key in possBoxes) {
       var positioning = glift.displays.positionWidgetHorz(
-          possBoxes[key], baseCropbox, boardRegions.TOP_RIGHT, defaultCompMap);
+          possBoxes[key], baseCropbox, defaultCompMap, twoColumnSplits);
       ok(positioning !== undefined, "must not be undefined, " + key);
       deepEqual(positioning.boardBox.right(), positioning.commentBox.left(),
           "commentBox Left, for: " + key);
@@ -75,7 +94,7 @@ glift.displays.positionWidgetTest = function() {
   test("Check for properties: vert positioning", function() {
     for (var key in possBoxes) {
       var positioning = glift.displays.positionWidgetVert(
-          possBoxes[key], baseCropbox, boardRegions.TOP_RIGHT, defaultCompMap);
+          possBoxes[key], baseCropbox, defaultCompMap, oneColumnSplits);
       ok(positioning !== undefined, "must not be undefined, " + key);
       deepEqual(positioning.boardBox.width(),
           positioning.commentBox.width(), "BoardBox -> CommentBox width");
@@ -91,8 +110,12 @@ glift.displays.positionWidgetTest = function() {
   test("Check for positioning after positionWidget", function() {
     for (var key in possBoxes) {
       var pos = glift.displays.positionWidget(
-          possBoxes[key], boardRegions.TOP_RIGHT, 19,
-          [comps.BOARD, comps.COMMENT_BOX, comps.ICONBAR]);
+          possBoxes[key],
+          boardRegions.TOP_RIGHT,
+          19,
+          [comps.BOARD, comps.COMMENT_BOX, comps.ICONBAR],
+          oneColumnSplits,
+          twoColumnSplits);
       ok(pos, "Must not be undefined, " + key);
       ok(pos.boardBox, "boardbox.width, " + key);
       ok(pos.boardBox && pos.boardBox.width(),

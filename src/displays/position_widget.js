@@ -6,88 +6,131 @@
  *    goBox: ...
  *    iconBox: ...
  *  }
+ *
+ * divBox: The cropbox for the div.
+ * boardRegion: The region of the go board that will be displayed.
+ * ints: The number of intersections.
+ * compsToUse: The board components requseted by the user
+ * oneColSplits: The split percentages for a one-column format
+ * twoColSplits: The split percentages for a two-column format
  */
 glift.displays.positionWidget = function(
-    divBox, boardRegion, ints, boardComponentsList, onecSplits, twocSplits) {
+    divBox, boardRegion, ints, compsToUse, oneColSplits, twoColSplits) {
   var comps = glift.enums.boardComponents;
-  var bcMap = {}
-  for (var i = 0; i < boardComponentsList.length; i++) {
-    bcMap[boardComponentsList[i]] = true;
+  var bcMap = {};
+  for (var i = 0; i < compsToUse.length; i++) {
+    bcMap[compsToUse[i]] = true;
   }
   var cropbox = glift.displays.cropbox.getFromRegion(boardRegion, ints);
 
   // These are simple heuristics.  They do not optimally place the board, but I
   // prefer the simplicity.
   var longBoxRegions = { TOP: true, BOTTOM: true };
-  if (!bcMap.hasOwnProperty(comps.COMMENT_BOX)) {
-    return glift.displays.positionWidgetVert(
-        divBox, cropbox, boardRegion, bcMap);
+  // Whether to position vertically (one column) or horizontally (two column).
+  // By default, we draw a vertical box.
+  var useVertical = true;
+
+  if (!bcMap.hasOwnProperty(comps.COMMENT_BOX) ||
+      !bcMap.hasOwnProperty(comps.BOARD)) {
+    useVertical = true;
   } else if (divBox.hwRatio() < 0.45 && longBoxRegions[boardRegion]) {
-    return glift.displays.positionWidgetHorz(
-        divBox, cropbox, boardRegion, bcMap);
+    useVertical = false;
   } else if (divBox.hwRatio() < 0.600 && !longBoxRegions[boardRegion]) {
     // In other words, the width == 1.5 * height;
     // Also: Requires a comment box
-    return glift.displays.positionWidgetHorz(
-        divBox, cropbox, boardRegion, bcMap);
+    useVertical = false;
+  } 
+
+  if (useVertical) {
+    var splits = glift.displays.recalcSplits(bcMap, oneColSplits);
+    return glift.displays.positionWidgetVert(divBox, cropbox, bcMap, splits);
   } else {
-    // Default: Vertically aligned.
-    return glift.displays.positionWidgetVert(
-        divBox, cropbox, boardRegion, bcMap);
+    var splits = glift.displays.recalcSplits(bcMap, twoColSplits);
+    return glift.displays.positionWidgetHorz(divBox, cropbox, bcMap, splits);
   }
 };
 
+glift.displays._extractRatios = function(column) {
+  var out = [];
+  for (var i = 0; i < column.length; i++) {
+    out.push(column[i].ratio);   
+  }
+  return out;
+};
+
+/**
+ * Recalculate the proper splits for a vertical orientation.
+ *
+ * compsToUseSet: Set of board components to use.
+ * columnSplits: The splits for a 1 or 2 column orientation.
+ */
+glift.displays.recalcSplits = function(compsToUseSet, columnSplits) {
+  var out = {};
+  for (var colKey in columnSplits) {
+    var col = columnSplits[colKey];
+    var colOut = [];
+    var extra = 0;
+    for (var i = 0; i < col.length; i++) {
+      var part = col[i];
+      if (compsToUseSet[part.component]) {
+        colOut.push({ // perform a copy
+          component: part.component,
+          ratio: part.ratio
+        });
+      } else {
+        extra += part.ratio;
+      }
+    }
+    if (colOut.length === 0) continue;
+
+    var toAdd = extra / colOut.length;
+    for (var i = 0; i < colOut.length; i++) {
+      var part = colOut[i];
+      part.ratio += toAdd;
+    }
+    out[colKey] = colOut;
+  }
+  return out;
+};
+
 glift.displays.positionWidgetVert = function(
-    divBox, cropbox, boardRegion, boardComponentsMap) {
+    divBox, cropbox, componentMap, oneColSplits) {
   var point = glift.util.point;
   var aligns = glift.enums.boardAlignments;
   var comps = glift.enums.boardComponents;
   var outBoxes = {};
-  var splitPercentages = [];
-  var boardBase = undefined;
-  var iconBarBase = undefined;
-  var commentBase = undefined;
-  var extraIconBarBase = undefined;
-  if (boardComponentsMap.hasOwnProperty(comps.COMMENT_BOX) &&
-      boardComponentsMap.hasOwnProperty(comps.ICONBAR) &&
-      boardComponentsMap.hasOwnProperty(comps.EXTRA_ICONBAR)) {
-    var splits = divBox.hSplit([0.6, 0.2, 0.1]);
-    boardBase = splits[0];
-    commentBase = splits[1];
-    iconBarBase = splits[2];
-    extraIconBarBase = splits[3];
-  } else if (boardComponentsMap.hasOwnProperty(comps.COMMENT_BOX) &&
-      boardComponentsMap.hasOwnProperty(comps.ICONBAR)) {
-    var splits = divBox.hSplit([0.7, 0.2]);
-    boardBase = splits[0];
-    commentBase = splits[1];
-    iconBarBase = splits[2];
-  } else if (boardComponentsMap.hasOwnProperty(comps.ICONBAR)) {
-    var splits = divBox.hSplit([0.9]);
-    boardBase = splits[0];
-    iconBarBase = splits[1];
-  } else if (boardComponentsMap.hasOwnProperty(comps.COMMENT_BOX)) {
-    var splits = divBox.hSplit([0.8]);
-    boardBase = splits[0];
-    commentBase = splits[1];
+  var ratios = glift.displays._extractRatios(oneColSplits.first);
+
+  if (ratios.length === 1) {
+    var splits = [].push(divBox);
   } else {
-    boardBase = divBox;
+    var splits = divBox.hSplit(ratios.slice(0, ratios.length - 1));
   }
 
-  var board = glift.displays.getResizedBox(boardBase, cropbox, aligns.TOP);
+  // Map from component name to split box.
+  var splitMap = {};
+  for (var i = 0; i < oneColSplits.first.length; i++) {
+    var comp = oneColSplits.first[i];
+    splitMap[comp.component] = splits[i];
+  }
+
+  var board = glift.displays.getResizedBox(
+      splitMap['BOARD'], cropbox, aligns.TOP);
   outBoxes.boardBox = board;
-  if (commentBase) {
+
+  // TODO(kashomon): Make this more algorithmic by looping over the splits.
+  if (splitMap['COMMENT_BOX']) {
     var bb = outBoxes.boardBase;
-    var commentHeight = commentBase.height();
+    var commentHeight = splitMap['COMMENT_BOX'].height();
     var boardWidth = board.width();
     var boardLeft = board.left();
     var boardBottom = board.bottom();
     outBoxes.commentBox = glift.displays.bbox(
         point(boardLeft, boardBottom), boardWidth, commentHeight);
   }
-  if (iconBarBase) {
+  if (splitMap['ICONBAR']) {
     var bb = outBoxes.boardBase;
-    var barHeight = iconBarBase.height();
+    var barHeight = splitMap['ICONBAR'].height();
     var boardLeft = board.left();
     var boardWidth = board.width();
     if (outBoxes.commentBox) {
@@ -96,19 +139,6 @@ glift.displays.positionWidgetVert = function(
       var bottom = outBoxes.boardBox.bottom();
     }
     outBoxes.iconBarBox = glift.displays.bbox(
-        point(boardLeft, bottom), boardWidth, barHeight);
-  }
-  if (extraIconBarBase) {
-    var bb = outBoxes.boardBase;
-    var barHeight = extraIconBarBase.height();
-    var boardLeft = board.left();
-    var boardWidth = board.width();
-    if (outBoxes.iconBarBox) {
-      var bottom = outBoxes.iconBarBox.bottom();
-    } else {
-      var bottom = outBoxes.boardBox.bottom();
-    }
-    outBoxes.extraIconBarBox = glift.displays.bbox(
         point(boardLeft, bottom), boardWidth, barHeight);
   }
   return outBoxes;
@@ -137,12 +167,12 @@ glift.displays.positionWidgetVert = function(
  *  }
  */
 glift.displays.positionWidgetHorz = function(
-    divBox, cropbox, boardRegion, boardComponentsMap) {
+    divBox, cropbox, componentMap, twoColSplits) {
   var point = glift.util.point;
   var aligns = glift.enums.boardAlignments;
   var comps = glift.enums.boardComponents;
   if (!comps.hasOwnProperty(comps.COMMENT_BOX)) {
-    throw "The component map must contain a comment box";
+    throw new Error('The component map must contain a comment box');
   }
   var boardBox = glift.displays.getResizedBox(divBox, cropbox, aligns.RIGHT);
   var outBoxes = {};
@@ -190,13 +220,13 @@ glift.displays.positionWidgetHorz = function(
         [0.75 * newResizedBox.width() / baseCommentBox.width()])[0];
   }
 
-  if (boardComponentsMap.hasOwnProperty(comps.ICONBAR) &&
-      boardComponentsMap.hasOwnProperty(comps.EXTRA_ICONBAR)) {
+  if (componentMap.hasOwnProperty(comps.ICONBAR) &&
+      componentMap.hasOwnProperty(comps.EXTRA_ICONBAR)) {
     var finishedBoxes = baseCommentBox.hSplit([0.8, 0.1]);
     outBoxes.commentBox = finishedBoxes[0];
     outBoxes.iconBarBox = finishedBoxes[1];
     outBoxes.extraIconBarBox = finishedBoxes[2];
-  } else if (boardComponentsMap.hasOwnProperty(comps.ICONBAR)) {
+  } else if (componentMap.hasOwnProperty(comps.ICONBAR)) {
     var finishedBoxes = baseCommentBox.hSplit([0.9]);
     outBoxes.commentBox = finishedBoxes[0];
     outBoxes.iconBarBox = finishedBoxes[1];
@@ -208,15 +238,21 @@ glift.displays.positionWidgetHorz = function(
 };
 
 glift.displays.setNotSelectable = function(divId) {
+  // Note to self: common vendor property patterns:
+  //
+  // -webkit-property => webkitProperty
+  // -moz-property => MozProperty
+  // -ms-property => msProperty
+  // -o-property => OProperty
+  // property => property
   $('#' + divId).css({
-      '-webkit-touch-callout': 'none',
-      '-webkit-user-select': 'none',
-      '-khtml-user-select': 'none',
-      '-moz-user-select': 'moz-none',
-      '-ms-user-select': 'none',
+      'webkitTouchCallout': 'none',
+      'webkitUserSelect': 'none',
+      'MozUserSelect': 'moz-none',
+      'msUserSelect': 'none',
       'user-select': 'none',
-      '-webkit-highlight': 'none',
-      '-webkit-tap-highlight-color': 'rgba(0,0,0,0)',
+      'webkitHighlight': 'none',
+      'webkitTapHighlightColor': 'rgba(0,0,0,0)',
       'cursor': 'default'
   });
 };

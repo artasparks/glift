@@ -26,8 +26,10 @@ glift.util = {
     return s;
   },
 
-  // Array utility functions
-  // is_array is Taken from JavaScript: The Good Parts
+  /**
+   * Array utility functions
+   * is_array is Taken from JavaScript: The Good Parts
+   */
   isArray: function (value) {
     return value && typeof value === 'object' && value.constructor === Array;
   },

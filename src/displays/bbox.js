@@ -40,9 +40,9 @@ glift.displays._BoundingBox.prototype = {
    */
   center: function() {
     return glift.util.point(
-      glift.math.abs((this.botRight().x() - this.topLeft().x()) / 2)
+      Math.abs((this.botRight().x() - this.topLeft().x()) / 2)
           + this.topLeft().x(),
-      glift.math.abs((this.botRight().y() - this.topLeft().y()) / 2)
+      Math.abs((this.botRight().y() - this.topLeft().y()) / 2)
           + this.topLeft().y());
   },
 

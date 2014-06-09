@@ -38,19 +38,6 @@ glift.widgets.BaseWidget.prototype = {
     this.displayOptions.rotation = this.sgfOptions.rotation;
     glift.util.majorPerfLog('Calculated board regions');
 
-    var components = this.sgfOptions.components;
-    var comps = glift.enums.boardComponents;
-    var requiredComponents = [comps.BOARD];
-    if (this.displayOptions.useCommentBar) {
-      requiredComponents.push(comps.COMMENT_BOX);
-    }
-    if (this.displayOptions.useTitleBar) {
-      requiredComponents.push(comps.TITLE_BAR);
-    }
-    if (this.sgfOptions.icons.length > 0) {
-      requiredComponents.push(comps.ICONBAR);
-    }
-
     // This should be the only time we get the base width and height, until the
     // entire widget is re-drawn.
     var parentDivBbox = glift.displays.bboxFromDiv(this.wrapperDiv);
@@ -61,12 +48,12 @@ glift.widgets.BaseWidget.prototype = {
     }
 
     // Recall that positioning returns an object that looks like:
-    // {commentBox: ...
+    // {commentBox: ..., boardbox: ..., iconBarBox: ...)
     var positioning = glift.displays.positionWidget(
       parentDivBbox,
       this.displayOptions.boardRegion,
       this.displayOptions.intersections,
-      components,
+      this.sgfOptions.componentsToUse,
       this.displayOptions.oneColumnSplits,
       this.displayOptions.twoColumnSplits);
 
@@ -110,14 +97,15 @@ glift.widgets.BaseWidget.prototype = {
   },
 
   _createDivsForPositioning: function(positioning, wrapperDiv) {
-    var expectedKeys = [
-        'boardBox', 'iconBarBox', 'commentBox', 'extraIconBarBox' ];
+    var expectedKeys = 
+        ['boardBox', 'iconBarBox', 'commentBox', 'extraIconBarBox'];
     var out = {};
     var that = this;
     var createDiv = function(bbox) {
       var newId = wrapperDiv + '_internal_div_' + glift.util.idGenerator.next();
       $('#' + wrapperDiv).append('<div id="' + newId + '"></div>');
-      that._setNotSelectable(newId);
+      glift.displays.setNotSelectable(newId);
+      // that._setNotSelectable(newId);
       var cssObj = {
         top: bbox.top(),
         left: bbox.left(),
@@ -149,20 +137,6 @@ glift.widgets.BaseWidget.prototype = {
       return probTypes.EXAMPLE;
     }
     return probTypes.STANDARD;
-  },
-
-  _setNotSelectable: function(divId) {
-    $('#' + divId).css({
-        '-webkit-touch-callout': 'none',
-        '-webkit-user-select': 'none',
-        '-khtml-user-select': 'none',
-        '-ms-user-select': 'none',
-        'user-select': 'none',
-        '-webkit-highlight': 'none',
-        '-webkit-tap-highlight-color': 'rgba(0,0,0,0)',
-        'cursor': 'default'
-    });
-    return this;
   },
 
   _createCommentBox: function(commentBoxId, positioning) {
