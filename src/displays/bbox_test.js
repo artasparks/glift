@@ -1,60 +1,60 @@
 glift.displays.bboxTest = function() {
-  module("Bounding Box Tests");
+  module('Bounding Box Tests');
   var point = glift.util.point,
       bboxFromPts = glift.displays.bboxFromPts,
       displays = glift.displays;
 
-  test("Test that the center is the shifted average", function() {
+  test('Test that the center is the shifted average', function() {
     var bbox = bboxFromPts(point(1, 1), point(19, 21));
-    deepEqual(bbox.center().x(), 10, "center.x() must be 9");
-    deepEqual(bbox.center().y(), 11, "center.y() must be 10");
+    deepEqual(bbox.center().x(), 10, 'center.x() must be 9');
+    deepEqual(bbox.center().y(), 11, 'center.y() must be 10');
   });
 
-  test("Width and height should be calculated correctly", function() {
+  test('Width and height should be calculated correctly', function() {
     var bbox = bboxFromPts(point(1, 9), point(18, 20));
-    deepEqual(bbox.width(), 17, "Width should be br.x() - tl.x()");
-    deepEqual(bbox.height(), 11, "Width should be br.y() - tl.y()");
+    deepEqual(bbox.width(), 17, 'Width should be br.x() - tl.x()');
+    deepEqual(bbox.height(), 11, 'Width should be br.y() - tl.y()');
 
     var bbox = bboxFromPts(point(18, 20), point(1, 9));
-    deepEqual(bbox.width(), -17, "Width should be br.x() - tl.x()");
-    deepEqual(bbox.height(), -11, "Width should be br.y() - tl.y()");
+    deepEqual(bbox.width(), -17, 'Width should be br.x() - tl.x()');
+    deepEqual(bbox.height(), -11, 'Width should be br.y() - tl.y()');
   });
 
-  test("Height-Width Ratio", function() {
+  test('Height-Width Ratio', function() {
     var bbox = bboxFromPts(point(0, 10), point(10, 15));
     deepEqual(bbox.hwRatio(), 0.5);
   });
 
-  test("Equality test", function() {
+  test('Equality test', function() {
     var bbox = bboxFromPts(point(1, 9), point(18, 20));
     var bbox_v2 = displays.bbox(point(1, 9), 17, 11);
     var bbox_v3 = displays.bbox(point(1, 10), 17, 11);
-    ok(bbox.equals(bbox_v2), "should be equal");
-    ok(!bbox.equals(bbox_v3), "shouldn't be equal");
-    ok(!bbox_v2.equals(bbox_v3), "shouldn't be equal");
+    ok(bbox.equals(bbox_v2), 'should be equal');
+    ok(!bbox.equals(bbox_v3), 'shouldn\'t be equal');
+    ok(!bbox_v2.equals(bbox_v3), 'shouldn\'t be equal');
   });
 
-  test("Contains test", function() {
+  test('Contains test', function() {
     var bbox = bboxFromPts(point(1,9), point(10, 13));
-    ok(bbox.contains(point(10, 9)), "Must contain edge pt");
-    ok(bbox.contains(point(1, 13)), "Must contain edge pt");
-    ok(bbox.contains(point(4, 11)), "Must contain middle pt");
-    ok(!bbox.contains(point(4, 14)), "Must not contain outside pt");
+    ok(bbox.contains(point(10, 9)), 'Must contain edge pt');
+    ok(bbox.contains(point(1, 13)), 'Must contain edge pt');
+    ok(bbox.contains(point(4, 11)), 'Must contain middle pt');
+    ok(!bbox.contains(point(4, 14)), 'Must not contain outside pt');
   });
 
-  test("scaletest", function() {
+  test('scaletest', function() {
     var bbox = bboxFromPts(point(1,10), point(11, 20));
-    deepEqual(bbox.width(), 10, "width");
-    deepEqual(bbox.height(), 10, "height");
+    deepEqual(bbox.width(), 10, 'width');
+    deepEqual(bbox.height(), 10, 'height');
 
     var smallBbox = bbox.scale(0.5);
-    deepEqual(smallBbox.width(), 5, "small width");
-    deepEqual(smallBbox.height(), 5, "small height");
+    deepEqual(smallBbox.width(), 5, 'small width');
+    deepEqual(smallBbox.height(), 5, 'small height');
     deepEqual(smallBbox.topLeft().x(), 0.5, 'tl.x');
     deepEqual(smallBbox.topLeft().y(), 5, 'tl.y');
   });
 
-  test("translate test", function() {
+  test('translate test', function() {
     var bbox = bboxFromPts(point(1,10), point(11, 20));
     var newBox = bbox.translate(13, 6);
     deepEqual(newBox.topLeft().x(), bbox.topLeft().x() + 13, 'tl.x');
@@ -65,7 +65,7 @@ glift.displays.bboxTest = function() {
     deepEqual(newBox.height(), bbox.height(), 'height');
   });
 
-  test("hSplit: basic 50/50 split", function() {
+  test('hSplit: basic 50/50 split', function() {
     var bbox = bboxFromPts(point(100, 200), point(300, 400));
     var bboxes = bbox.hSplit([0.5]);
     ok(bboxes !== undefined);
@@ -73,26 +73,26 @@ glift.displays.bboxTest = function() {
 
     var expected1 = bboxFromPts(point(100,200), point(300, 300));
     deepEqual(bboxes[0].topLeft().x(), expected1.topLeft().x(),
-      "First hSplit Bbox: tl.x");
+      'First hSplit Bbox: tl.x');
     deepEqual(bboxes[0].topLeft().y(), expected1.topLeft().y(),
-      "First hSplit Bbox: tl.y");
+      'First hSplit Bbox: tl.y');
     deepEqual(bboxes[0].botRight().x(), expected1.botRight().x(),
-      "First hSplit Bbox: br.x");
+      'First hSplit Bbox: br.x');
     deepEqual(bboxes[0].botRight().y(), expected1.botRight().y(),
-      "First hSplit Bbox: br.y");
+      'First hSplit Bbox: br.y');
 
     var expected2 = bboxFromPts(point(100, 300), point(300, 400));
     deepEqual(bboxes[1].topLeft().x(), expected2.topLeft().x(),
-      "Second hSplit Bbox: tl.x");
+      'Second hSplit Bbox: tl.x');
     deepEqual(bboxes[1].topLeft().y(), expected2.topLeft().y(),
-      "Second hSplit Bbox: tl.y");
+      'Second hSplit Bbox: tl.y');
     deepEqual(bboxes[1].botRight().x(), expected2.botRight().x(),
-      "Second hSplit Bbox: br.x");
+      'Second hSplit Bbox: br.x');
     deepEqual(bboxes[1].botRight().y(), expected2.botRight().y(),
-      "Second hSplit Bbox: br.y");
+      'Second hSplit Bbox: br.y');
   });
 
-  test("vSplit: basic 50/50 split", function() {
+  test('vSplit: basic 50/50 split', function() {
     var bbox = bboxFromPts(point(100, 200), point(300, 400));
     var bboxes = bbox.vSplit([0.5]);
     ok(bboxes !== undefined);
@@ -100,26 +100,26 @@ glift.displays.bboxTest = function() {
 
     var expected1 = bboxFromPts(point(100,200), point(200, 400));
     deepEqual(bboxes[0].topLeft().x(), expected1.topLeft().x(),
-      "First vSplit Bbox: tl.x");
+      'First vSplit Bbox: tl.x');
     deepEqual(bboxes[0].topLeft().y(), expected1.topLeft().y(),
-      "First vSplit Bbox: tl.y");
+      'First vSplit Bbox: tl.y');
     deepEqual(bboxes[0].botRight().x(), expected1.botRight().x(),
-      "First vSplit Bbox: br.x");
+      'First vSplit Bbox: br.x');
     deepEqual(bboxes[0].botRight().y(), expected1.botRight().y(),
-      "First vSplit Bbox: br.y");
+      'First vSplit Bbox: br.y');
 
     var expected2 = bboxFromPts(point(200, 200), point(300, 400));
     deepEqual(bboxes[1].topLeft().x(), expected2.topLeft().x(),
-      "Second vSplit Bbox: tl.x");
+      'Second vSplit Bbox: tl.x');
     deepEqual(bboxes[1].topLeft().y(), expected2.topLeft().y(),
-      "Second vSplit Bbox: tl.y");
+      'Second vSplit Bbox: tl.y');
     deepEqual(bboxes[1].botRight().x(), expected2.botRight().x(),
-      "Second vSplit Bbox: br.x");
+      'Second vSplit Bbox: br.x');
     deepEqual(bboxes[1].botRight().y(), expected2.botRight().y(),
-      "Second vSplit Bbox: br.y");
+      'Second vSplit Bbox: br.y');
   });
 
-  test("Splits: 70/20/10 (widget example)", function() {
+  test('Splits: 70/20/10 (widget example)', function() {
     var bbox = bboxFromPts(point(100, 200), point(200, 300));
     var bboxes = bbox.hSplit([0.7, 0.2]);
     var expected1 = bboxFromPts(point(100,200), point(200, 270));

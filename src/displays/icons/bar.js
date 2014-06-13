@@ -13,27 +13,29 @@ glift.displays.icons.bar = function(options) {
       icons = options.icons || [],
       vertMargin = options.vertMargin || 0,
       horzMargin = options.horzMargin || 0,
-      themeName = options.theme || 'DEFAULT',
+      theme = options.theme,
       pbox = options.parentBbox,
       position = options.positioning;
-  if (divId === undefined) {
-    throw "Must define an options 'divId' as an option";
+  if (!theme) {
+    throw new Error("Theme undefined in iconbar");
+  }
+  if (!divId) {
+    throw new Error("Must define an options 'divId' as an option");
   }
   return new glift.displays.icons._IconBar(
-      divId, position, themeName, icons, vertMargin, horzMargin, pbox).draw();
+      divId, position, icons, vertMargin, horzMargin, pbox, theme).draw();
 };
 
 glift.displays.icons._IconBar = function(
-    divId, position, themeName, iconsRaw, vertMargin, horzMargin, parentBbox) {
+    divId, position, iconsRaw, vertMargin, horzMargin, parentBbox, theme) {
   this.divId = divId;
   this.position = position;
   this.divBbox = glift.displays.bboxFromPts(
       glift.util.point(0,0),
       glift.util.point(position.width(), position.height()));
-  this.themeName = themeName;
+  this.theme = theme;
   // The parentBbox is useful for create a multiIconSelector.
   this.parentBbox = parentBbox;
-  this.theme = glift.themes.get(themeName);
   // Array of wrapped icons. See wrapped_icon.js.
   this.icons = glift.displays.icons.wrapIcons(iconsRaw);
   this.nameMapping = {};

@@ -85,9 +85,8 @@ glift.themes.registered.DEFAULT = {
     }
   },
 
-  // TODO(kashomon): Add support for gradients.  This is non-trivial.  It
-  // requires that we attach defs at the beginning of the SVG.  Not hard, but a
-  // little bit of work.
+  // TODO(kashomon): Add support for gradients.  This requires that we attach
+  // defs at the beginning of the SVG.  Not hard, but a little bit of work.
   icons: {
     DEFAULT : {
       fill: "#0000AA",
@@ -98,6 +97,16 @@ glift.themes.registered.DEFAULT = {
       fill: 'cyan',
       stroke: 'black'
       //fill: "90-#337-#55D"
+    }
+  },
+
+  commentBox:  {
+    css: {
+      background: '#CCF',
+      padding: '10px',
+      'font-family':  'Baskerville',
+      border: '1px solid',
+      'font-size': '16px'
     }
   },
 

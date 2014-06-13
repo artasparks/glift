@@ -1,5 +1,11 @@
 glift.themes.registered.TRANSPARENT = {
   board: {
-    fill: "none"
+    fill: 'none'
+  },
+  commentBox: {
+    css: {
+      background: 'none',
+      border: ''
+    }
   }
 };

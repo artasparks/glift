@@ -1,5 +1,11 @@
 glift.themes.registered.TEXTBOOK = {
   board: {
-    fill: "#FFFFFF"
-  }
+    fill: '#FFF'
+  },
+
+  commentBox: {
+    css: {
+      background: '#FFF'
+    }
+  },
 };

@@ -70,6 +70,8 @@ glift.displays.recalcSplits = function(compsToUseSet, columnSplits) {
     var col = columnSplits[colKey];
     var colOut = [];
     var extra = 0;
+
+    var total = 0;
     for (var i = 0; i < col.length; i++) {
       var part = col[i];
       if (compsToUseSet[part.component]) {
@@ -77,16 +79,13 @@ glift.displays.recalcSplits = function(compsToUseSet, columnSplits) {
           component: part.component,
           ratio: part.ratio
         });
-      } else {
-        extra += part.ratio;
+        total += part.ratio;
       }
     }
     if (colOut.length === 0) continue;
-
-    var toAdd = extra / colOut.length;
     for (var i = 0; i < colOut.length; i++) {
       var part = colOut[i];
-      part.ratio += toAdd;
+      part.ratio = part.ratio / total;
     }
     out[colKey] = colOut;
   }
@@ -102,7 +101,8 @@ glift.displays.positionWidgetVert = function(
   var ratios = glift.displays._extractRatios(oneColSplits.first);
 
   if (ratios.length === 1) {
-    var splits = [].push(divBox);
+    var splits = [];
+    splits.push(divBox);
   } else {
     var splits = divBox.hSplit(ratios.slice(0, ratios.length - 1));
   }

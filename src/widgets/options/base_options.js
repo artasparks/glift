@@ -105,7 +105,7 @@ glift.widgets.options.baseOptions = {
     componentsToUse: [
       'BOARD',
       'COMMENT_BOX',
-      'TITLE_BAR',
+      // 'TITLE_BAR', // Not currently supported
       'ICONBAR'
     ],
 
@@ -133,7 +133,7 @@ glift.widgets.options.baseOptions = {
      *    ... future options
      *  }
      */
-    // TODO(kashomon): Remove this in favor of a general 
+    // TODO(kashomon): Remove this in favor of a general data option.
     bookData: {
       /**
        * The diagram type.
@@ -306,36 +306,6 @@ glift.widgets.options.baseOptions = {
         { component: 'ICONBAR',       ratio: 0.15 }
       ]
     },
-
-    /**
-     * Whether or not to use the comment bar.
-     * TODO(kashomon): Remove
-     */
-    useCommentBar: true,
-
-    /**
-     * Whether or not to use the title bar.
-     * TODO(kashomon): Remove
-     */
-    useTitleBar: true,
-
-    // TODO(kashomon): Rework the components and splits.
-    /**
-     * Div splits with the CommentBar.  Thus, there are three resulting divs - the
-     * remainder is used by the last div - the icon bar.
-     */
-    splitsWithComments: [.70, .20],
-
-    /**
-     * Div splits without the comment bar.  Thus, there are two resulting divs -
-     * the remainder is used by the last div -- the icon bar
-     */
-    splitsWithoutComments: [.90],
-
-    /**
-     * Div splits with only the comment bar.
-     */
-    splitsWithOnlyComments: [.80],
 
     /**
      * The name of the theme.

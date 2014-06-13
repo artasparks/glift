@@ -14,7 +14,7 @@ glift.themes.themesTest = function() {
 
   test('DeepCopy', function() {
     var textbook = themes.get('TEXTBOOK');
-    deepEqual(textbook.board.fill, '#FFFFFF', 'background');
+    deepEqual(textbook.board.fill, '#FFF', 'background');
     deepEqual(textbook.board.stroke, '#000000', 'bg stroke');
     deepEqual(textbook.stones.BLACK.fill, 'black', 'stone fill');
 

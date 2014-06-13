@@ -37,6 +37,7 @@ glift.widgets = {
 };
 
 /**
- * A convenient alias.
+ * A convenient alias.  This is the public method that most users of Glift will
+ * call.
  */
 glift.create = glift.widgets.create;

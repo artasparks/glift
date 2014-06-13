@@ -73,10 +73,13 @@
 <script type="text/javascript" src="../displays/board/marks.js"></script>
 <script type="text/javascript" src="../displays/board/starpoints.js"></script>
 <script type="text/javascript" src="../displays/board/stones.js"></script>
+<!-- Displays commentbox -->
+<script type="text/javascript" src="../displays/commentbox/commentbox.js"></script>
+<script type="text/javascript" src="../displays/commentbox/create.js"></script>
+<script type="text/javascript" src="../displays/commentbox/sanitize.js"></script>
 <!-- Displays gui -->
 <script type="text/javascript" src="../displays/gui/gui.js"></script>
 <script type="text/javascript" src="../displays/gui/center.js"></script>
-<script type="text/javascript" src="../displays/gui/comment_box.js"></script>
 <script type="text/javascript" src="../displays/gui/split.js"></script>
 <!-- Displays icons -->
 <script type="text/javascript" src="../displays/icons/icons.js"></script>
@@ -144,6 +147,8 @@
 <script type="text/javascript" src="../displays/position_widget_test.js"></script>
 <script type="text/javascript" src="../displays/recalc_splits_test.js"></script>
 <script type="text/javascript" src="../displays/resized_box_test.js"></script>
+<!-- Displays commentbox Tests -->
+<script type="text/javascript" src="../displays/commentbox/sanitize_test.js"></script>
 <!-- Displays gui Tests -->
 <script type="text/javascript" src="../displays/gui/center_test.js"></script>
 <script type="text/javascript" src="../displays/gui/split_test.js"></script>
@@ -198,6 +203,8 @@ $(document).ready(function() {
   glift.displays.recalcSplitsTest();
   glift.displays.positionWidgetTest();
   glift.displays.idsTest();
+
+  glift.displays.commentbox.sanitizeTest();
 
   glift.displays.icons.wrappedIconTest();
 

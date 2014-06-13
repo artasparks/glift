@@ -28,13 +28,16 @@ glift.displays.recalcSplitsTest = function() {
     var compsToUseSet = { BOARD: true, ICONBAR: true };
     var out = recalcSplits(compsToUseSet, oneColumnSplits);
     deepEqual(out.first.length, 2, 'should have two entries');
-    var part = out.first[0];
-    deepEqual(part.component, 'BOARD', 'Board should be first');
-    ok(glift.math.mostlyEqual(part.ratio, 0.79, 0.00001), 'should be 0.79');;
+    var part1 = out.first[0];
+    deepEqual(part1.component, 'BOARD', 'Board should be first');
+    ok(glift.math.mostlyEqual(part1.ratio, 0.854, 0.001), 'should be 0.79');;
 
-    part = out.first[1];
-    deepEqual(part.component, 'ICONBAR', 'Board should be first');
-    ok(glift.math.mostlyEqual(part.ratio, 0.21, 0.00001), 'should be 0.21');;
+    var part2 = out.first[1];
+    deepEqual(part2.component, 'ICONBAR', 'Board should be first');
+    ok(glift.math.mostlyEqual(part2.ratio, 0.146, 0.001), 'should be 0.21');;
+
+    deepEqual(oneColumnSplits.first[1] / oneColumnSplits.first[3],
+        part1 / part2, 'should have same ratio');
   });
 
   var twoColumnSplits = {
@@ -69,10 +72,13 @@ glift.displays.recalcSplitsTest = function() {
 
     var part1 = out.second[0];
     deepEqual(part1.component, 'COMMENT_BOX');
-    ok(glift.math.mostlyEqual(part1.ratio, 0.84, 0.00001));
+    ok(glift.math.mostlyEqual(part1.ratio, 0.870, 0.001));
 
     var part2 = out.second[1];
     deepEqual(part2.component, 'ICONBAR');
-    ok(glift.math.mostlyEqual(part2.ratio, 0.16, 0.00001));
+    ok(glift.math.mostlyEqual(part2.ratio, 0.130, 0.001));
+
+    deepEqual(twoColumnSplits.second[1] / twoColumnSplits.second[2],
+        part1 / part2, 'should have same ratio');
   });
 };

@@ -64,6 +64,9 @@ glift.widgets.BaseWidget.prototype = {
     // displayOptions.
     this.displayOptions.divId = divIds.boardBoxId;
 
+    var theme = glift.themes.get(this.displayOptions.theme);
+
+    // TODO(kashomon): Pass in the theme rather than doing another copy here
     this.display = glift.displays.create(
         this.displayOptions,
         positioning.boardBox);
@@ -71,17 +74,17 @@ glift.widgets.BaseWidget.prototype = {
 
     divIds.commentBoxId && this._createCommentBox(
         divIds.commentBoxId,
-        positioning.commentBox);
+        positioning.commentBox,
+        theme);
     glift.util.majorPerfLog('CommentBox');
 
-    if (divIds.iconBarBoxId) {
-      this.iconBar = this._createIconBar(
-          divIds.iconBarBoxId,
-          positioning.iconBarBox,
-          this.sgfOptions.icons,
-          parentDivBbox);
-      glift.util.majorPerfLog('IconBar');
-    }
+    divIds.iconBarBoxId && this._createIconBar(
+        divIds.iconBarBoxId,
+        positioning.iconBarBox,
+        this.sgfOptions.icons,
+        parentDivBbox, 
+        theme);
+    glift.util.majorPerfLog('IconBar');
 
     divIds.iconBarBoxId && this._initIconActions(
         this.iconBar, this.actions.iconActions);
@@ -139,16 +142,14 @@ glift.widgets.BaseWidget.prototype = {
     return probTypes.STANDARD;
   },
 
-  _createCommentBox: function(commentBoxId, positioning) {
-    this.commentBox = glift.displays.gui.commentBox(
-        commentBoxId,
-        this.displayOptions.theme,
-        positioning);
+  _createCommentBox: function(commentBoxId, positioning, theme) {
+    this.commentBox = glift.displays.commentbox.create(
+        commentBoxId, positioning, theme);
   },
 
-  _createIconBar: function(iconId, bbox, icons, parentBbox) {
-    return glift.displays.icons.bar({
-      themeName: this.displayOptions.theme,
+  _createIconBar: function(iconId, bbox, icons, parentBbox, theme) {
+    this.iconBar = glift.displays.icons.bar({
+      theme: theme,
       divId: iconId,
       vertMargin: 5, // For good measure
       horzMargin: 5,

@@ -36,6 +36,7 @@ DIR_ORDER = [
     'themes',
     'displays',
     'displays/board',
+    'displays/commentbox',
     'displays/gui',
     'displays/icons',
     'displays/svg',
