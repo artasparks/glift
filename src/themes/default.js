@@ -88,12 +88,17 @@ glift.themes.registered.DEFAULT = {
   // TODO(kashomon): Add support for gradients.  This requires that we attach
   // defs at the beginning of the SVG.  Not hard, but a little bit of work.
   icons: {
-    DEFAULT: {
+    // Vertical margin in pixels.
+    vertMargin: 5,
+    // Minimum horizontal margin in pixels.
+    horzMargin: 5,
+
+    DEFAULT: { // TODO(kashomon): Change to default instead of DEFAULT.
       fill: "#00A",
       stroke: 'black'
       //fill: "90-#337-#55B"
     },
-    DEFAULT_HOVER: {
+    DEFAULT_HOVER: { // TODO(kashomon): Change to DEFAULT_HOVER
       fill: 'red',
       stroke: 'black'
       //fill: "90-#337-#55D"

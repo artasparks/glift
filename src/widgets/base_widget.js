@@ -86,8 +86,8 @@ glift.widgets.BaseWidget.prototype = {
         theme);
     glift.util.majorPerfLog('IconBar');
 
-    divIds.iconBarBoxId && this._initIconActions(
-        this.iconBar, this.actions.iconActions);
+    divIds.iconBarBoxId && this.iconBar.initIconActions(
+        this, this.actions.iconActions);
 
     glift.util.majorPerfLog('Before stone event creation');
     this._initStoneActions(this.actions.stoneActions);
@@ -151,53 +151,9 @@ glift.widgets.BaseWidget.prototype = {
     this.iconBar = glift.displays.icons.bar({
       theme: theme,
       divId: iconId,
-      vertMargin: 5, // For good measure
-      horzMargin: 5,
       icons: icons,
       positioning: bbox,
       parentBbox: parentBbox
-    });
-  },
-
-  _initIconActions: function(iconBar, iconActions) {
-    var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
-    var that = this;
-    iconBar.forEachIcon(function(icon) {
-      var iconName = icon.iconName;
-      if (!iconActions.hasOwnProperty(icon.iconName)) {
-        // Make sure that there exists an action specified in the
-        // displayOptions, before we add any options.
-        return
-      }
-      var actionsForIcon = {};
-
-      actionsForIcon.click = iconActions[iconName].click;
-      actionsForIcon.mouseover = iconActions[iconName].mouseover ||
-        function(event, widgetRef, icon) {
-          $('#' + icon.elementId)
-              .attr('fill', widgetRef.iconBar.theme.icons['DEFAULT_HOVER'].fill);
-        };
-      actionsForIcon.mouseout = iconActions[iconName].mouseout ||
-        function(event, widgetRef, icon) {
-          $('#' + icon.elementId)
-              .attr('fill', widgetRef.iconBar.theme.icons.DEFAULT.fill);
-        };
-      // TODO(kashomon): Add touch events conditionally based on the detected
-      // browser.
-      for (var eventName in actionsForIcon) {
-        var eventFunc = actionsForIcon[eventName];
-        // We init each action separately so that we avoid the lazy binding of
-        // eventFunc.
-        that._initOneIconAction(iconBar, iconName, eventName, eventFunc);
-      }
-    });
-    iconBar.flushEvents();
-  },
-
-  _initOneIconAction: function(iconBar, iconName, eventName, eventFunc) {
-    var widget = this;
-    iconBar.setEvent(iconName, eventName, function(event, icon) {
-      eventFunc(event, widget, icon, iconBar);
     });
   },
 

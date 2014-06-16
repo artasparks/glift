@@ -11,8 +11,6 @@
 glift.displays.icons.bar = function(options) {
   var divId = options.divId,
       icons = options.icons || [],
-      vertMargin = options.vertMargin || 0,
-      horzMargin = options.horzMargin || 0,
       theme = options.theme,
       pbox = options.parentBbox,
       position = options.positioning;
@@ -23,11 +21,11 @@ glift.displays.icons.bar = function(options) {
     throw new Error("Must define an options 'divId' as an option");
   }
   return new glift.displays.icons._IconBar(
-      divId, position, icons, vertMargin, horzMargin, pbox, theme).draw();
+      divId, position, icons, pbox, theme).draw();
 };
 
 glift.displays.icons._IconBar = function(
-    divId, position, iconsRaw, vertMargin, horzMargin, parentBbox, theme) {
+    divId, position, iconsRaw, parentBbox, theme) {
   this.divId = divId;
   this.position = position;
   this.divBbox = glift.displays.bboxFromPts(
@@ -39,8 +37,8 @@ glift.displays.icons._IconBar = function(
   // Array of wrapped icons. See wrapped_icon.js.
   this.icons = glift.displays.icons.wrapIcons(iconsRaw);
   this.nameMapping = {};
-  this.vertMargin = vertMargin;
-  this.horzMargin = horzMargin;
+  this.vertMargin = this.theme.icons.vertMargin;
+  this.horzMargin = this.theme.icons.horzMargin;
   this.svg = undefined; // initialized by draw
   this.idGen = glift.displays.ids.generator(this.divId);
 
@@ -269,6 +267,52 @@ glift.displays.icons._IconBar.prototype = {
     this.events[id] = { icon: icon, func: func };
     return this;
   },
+
+  /**
+   * Initialize the icon actions.  These actions are received at widget-creation
+   * time.
+   */
+  initIconActions: function(parentWidget, iconActions) {
+    var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
+    var that = this;
+    this.forEachIcon(function(icon) {
+      var iconName = icon.iconName;
+      if (!iconActions.hasOwnProperty(icon.iconName)) {
+        // Make sure that there exists an action specified in the
+        // displayOptions, before we add any options.
+        return
+      }
+      var actionsForIcon = {};
+
+      actionsForIcon.click = iconActions[iconName].click;
+      actionsForIcon.mouseover = iconActions[iconName].mouseover ||
+        function(event, widgetRef, icon) {
+          $('#' + icon.elementId)
+              .attr('fill', widgetRef.iconBar.theme.icons['DEFAULT_HOVER'].fill);
+        };
+      actionsForIcon.mouseout = iconActions[iconName].mouseout ||
+        function(event, widgetRef, icon) {
+          $('#' + icon.elementId)
+              .attr('fill', widgetRef.iconBar.theme.icons.DEFAULT.fill);
+        };
+      // TODO(kashomon): Add touch events conditionally based on the detected
+      // browser.
+      for (var eventName in actionsForIcon) {
+        var eventFunc = actionsForIcon[eventName];
+        // We init each action separately so that we avoid the lazy binding of
+        // eventFunc.
+        that._initOneIconAction(parentWidget, iconName, eventName, eventFunc);
+      }
+    });
+    this.flushEvents();
+  },
+
+  _initOneIconAction: function(parentWidget, iconName, eventName, eventFunc) {
+    this.setEvent(iconName, eventName, function(event, icon) {
+      eventFunc(event, parentWidget, icon, this);
+    }.bind(this));
+  },
+
 
   /**
    * Convenience mothod for adding hover events.  Equivalent to adding mouseover
