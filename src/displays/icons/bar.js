@@ -6,7 +6,7 @@
  *    - icons: an array of icon names)
  *    - vertMargin: in pixels
  *    - horzMargin: in pixels
- *    - theme: The theme. default is DEFAULT
+ *    - theme: The theme. default is the DEFAULT theme, of course
  */
 glift.displays.icons.bar = function(options) {
   var divId = options.divId,

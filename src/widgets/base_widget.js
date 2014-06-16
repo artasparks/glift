@@ -174,22 +174,16 @@ glift.widgets.BaseWidget.prototype = {
       actionsForIcon.click = iconActions[iconName].click;
       actionsForIcon.mouseover = iconActions[iconName].mouseover ||
         function(event, widgetRef, icon) {
-          $('#' + icon.elementId).attr('fill', 'red');
+          $('#' + icon.elementId)
+              .attr('fill', widgetRef.iconBar.theme.icons['DEFAULT_HOVER'].fill);
         };
       actionsForIcon.mouseout = iconActions[iconName].mouseout ||
         function(event, widgetRef, icon) {
           $('#' + icon.elementId)
-            .attr('fill', widgetRef.iconBar.theme.icons.DEFAULT.fill);
+              .attr('fill', widgetRef.iconBar.theme.icons.DEFAULT.fill);
         };
       // TODO(kashomon): Add touch events conditionally based on the detected
       // browser.
-      // actionsForIcon.touchstart = iconActions[iconName].touchstart ||
-          // function(d3Event,  widgetRef, iconObj) {
-            // d3Event.preventDefault && d3Event.preventDefault();
-            // d3Event.stopPropagation && d3Event.stopPropagation();
-            // widgetRef.displayOptions.iconActions[
-                // iconObj.iconName].click(d3Event, widgetRef, iconObj);
-          // };
       for (var eventName in actionsForIcon) {
         var eventFunc = actionsForIcon[eventName];
         // We init each action separately so that we avoid the lazy binding of
