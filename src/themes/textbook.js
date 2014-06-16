@@ -18,5 +18,5 @@ glift.themes.registered.TEXTBOOK = {
     css: {
       background: '#FFF'
     }
-  },
+  }
 };

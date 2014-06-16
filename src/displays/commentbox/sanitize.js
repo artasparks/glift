@@ -20,14 +20,14 @@ glift.displays.commentbox.sanitize = function(text) {
   var lt = '&lt;';
   var gt = '&gt;';
   for (var i = 0, len = text.length; i < len; i++) {
-    var char = text.charAt(i);
-    if (char === '<') {
+    var chr = text.charAt(i);
+    if (chr === '<') {
       curstate = states.TAG;
       numBrackets++;
       if (numBrackets > 1) {
         strbuff.push(lt); 
       }
-    } else if (char === '>') {
+    } else if (chr === '>') {
       numBrackets--;
       if (numBrackets < 0) {
         curstate = states.DEFAULT;
@@ -50,9 +50,9 @@ glift.displays.commentbox.sanitize = function(text) {
       }
     } else {
       if (curstate === states.TAG) {
-        strbuff.push(char);
+        strbuff.push(chr);
       } else {
-        outbuffer.push(char);
+        outbuffer.push(chr);
       }
     }
   }

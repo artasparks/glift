@@ -18,7 +18,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.11.0',
+  version: '0.12.2',
   debugMode: false,
   // Options for performanceDebugLevel: NONE, INFO
   performanceDebugLevel: 'NONE',
@@ -58,8 +58,10 @@ glift.util = {
     return s;
   },
 
-  // Array utility functions
-  // is_array is Taken from JavaScript: The Good Parts
+  /**
+   * Array utility functions
+   * is_array is Taken from JavaScript: The Good Parts
+   */
   isArray: function (value) {
     return value && typeof value === 'object' && value.constructor === Array;
   },
@@ -433,21 +435,6 @@ glift.keyMappings = {
   }
 };
 glift.math = {
-  abs: function(num) {
-    if (num >= 0) return num;
-    else return num * -1;
-  },
-
-  max: function(num1, num2) {
-    if (num1 > num2) return num1;
-    else return num2;
-  },
-
-  min: function(num1, num2) {
-    if (num1 > num2) return num2;
-    else return num1;
-  },
-
   isEven: function(num1) {
     if ((num1 % 2) == 0) return true;
     else return false;
@@ -456,6 +443,10 @@ glift.math = {
   // Returns a random integer between min and max
   getRandomInt: function(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
+  },
+
+  mostlyEqual: function(v1, v2, epsilon) {
+    return Math.abs(v1 - v2) < epsilon
   }
 };
 glift.util.perfLog = function(msg) {
@@ -900,19 +891,33 @@ glift.themes.registered.DEFAULT = {
     }
   },
 
-  // TODO(kashomon): Add support for gradients.  This is non-trivial.  It
-  // requires that we attach defs at the beginning of the SVG.  Not hard, but a
-  // little bit of work.
+  // TODO(kashomon): Add support for gradients.  This requires that we attach
+  // defs at the beginning of the SVG.  Not hard, but a little bit of work.
   icons: {
-    DEFAULT : {
-      fill: "#0000AA",
+    // Vertical margin in pixels.
+    vertMargin: 5,
+    // Minimum horizontal margin in pixels.
+    horzMargin: 5,
+
+    DEFAULT: { // TODO(kashomon): Change to default instead of DEFAULT.
+      fill: "#00A",
       stroke: 'black'
       //fill: "90-#337-#55B"
     },
-    DEFAULT_HOVER : {
-      fill: 'cyan',
+    DEFAULT_HOVER: { // TODO(kashomon): Change to DEFAULT_HOVER
+      fill: 'red',
       stroke: 'black'
       //fill: "90-#337-#55D"
+    }
+  },
+
+  commentBox:  {
+    css: {
+      background: '#CCF',
+      padding: '10px',
+      'font-family':  'Baskerville',
+      border: '1px solid',
+      'font-size': '16px'
     }
   },
 
@@ -939,28 +944,82 @@ glift.themes.registered.DEPTH = {
 };
 glift.themes.registered.MOODY = {
   board: {
-    fill: "#777777"
+    fill: '#777'
   },
+
   stones: {
-    "WHITE" : {
-      stroke: "white",
-      fill: "white"
+    'WHITE' : {
+      stroke: 'white',
+      fill: 'white'
     },
-    "WHITE_HOVER" : {
-      fill: "white",
-      stroke: "white",
+    'WHITE_HOVER' : {
+      fill: 'white',
+      stroke: 'white',
       opacity: 0.5
+    }
+  },
+
+  icons: {
+    DEFAULT : {
+      fill: "#000",
+      stroke: 'black'
+    },
+    DEFAULT_HOVER: {
+      fill: '#AAA',
+      stroke: 'black'
+    }
+  },
+
+  commentBox: {
+    css: {
+      background: 'none',
+      border: ''
     }
   }
 }
 glift.themes.registered.TEXTBOOK = {
   board: {
-    fill: "#FFFFFF"
+    fill: '#FFF'
+  },
+
+  icons: {
+    DEFAULT : {
+      fill: "#000",
+      stroke: 'black'
+    },
+    DEFAULT_HOVER: {
+      fill: '#AAA',
+      stroke: 'black'
+    }
+  },
+
+  commentBox: {
+    css: {
+      background: '#FFF'
+    }
   }
 };
 glift.themes.registered.TRANSPARENT = {
   board: {
-    fill: "none"
+    fill: 'none'
+  },
+
+  icons: {
+    DEFAULT : {
+      fill: "#000",
+      stroke: 'black'
+    },
+    DEFAULT_HOVER: {
+      fill: '#AAA',
+      stroke: 'black'
+    }
+  },
+
+  commentBox: {
+    css: {
+      background: 'none',
+      border: ''
+    }
   }
 };
 glift.displays = {
@@ -1025,9 +1084,9 @@ glift.displays._BoundingBox.prototype = {
    */
   center: function() {
     return glift.util.point(
-      glift.math.abs((this.botRight().x() - this.topLeft().x()) / 2)
+      Math.abs((this.botRight().x() - this.topLeft().x()) / 2)
           + this.topLeft().x(),
-      glift.math.abs((this.botRight().y() - this.topLeft().y()) / 2)
+      Math.abs((this.botRight().y() - this.topLeft().y()) / 2)
           + this.topLeft().y());
   },
 
@@ -1800,88 +1859,131 @@ var LineBox = function(boundingBox, xSpacing, ySpacing, cropbox) {
  *    goBox: ...
  *    iconBox: ...
  *  }
+ *
+ * divBox: The cropbox for the div.
+ * boardRegion: The region of the go board that will be displayed.
+ * ints: The number of intersections.
+ * compsToUse: The board components requseted by the user
+ * oneColSplits: The split percentages for a one-column format
+ * twoColSplits: The split percentages for a two-column format
  */
 glift.displays.positionWidget = function(
-    divBox, boardRegion, ints, boardComponentsList, onecSplits, twocSplits) {
+    divBox, boardRegion, ints, compsToUse, oneColSplits, twoColSplits) {
   var comps = glift.enums.boardComponents;
-  var bcMap = {}
-  for (var i = 0; i < boardComponentsList.length; i++) {
-    bcMap[boardComponentsList[i]] = true;
+  var bcMap = {};
+  for (var i = 0; i < compsToUse.length; i++) {
+    bcMap[compsToUse[i]] = true;
   }
   var cropbox = glift.displays.cropbox.getFromRegion(boardRegion, ints);
 
   // These are simple heuristics.  They do not optimally place the board, but I
   // prefer the simplicity.
   var longBoxRegions = { TOP: true, BOTTOM: true };
-  if (!bcMap.hasOwnProperty(comps.COMMENT_BOX)) {
-    return glift.displays.positionWidgetVert(
-        divBox, cropbox, boardRegion, bcMap);
+  // Whether to position vertically (one column) or horizontally (two column).
+  // By default, we draw a vertical box.
+  var useVertical = true;
+
+  if (!bcMap.hasOwnProperty(comps.COMMENT_BOX) ||
+      !bcMap.hasOwnProperty(comps.BOARD)) {
+    useVertical = true;
   } else if (divBox.hwRatio() < 0.45 && longBoxRegions[boardRegion]) {
-    return glift.displays.positionWidgetHorz(
-        divBox, cropbox, boardRegion, bcMap);
+    useVertical = false;
   } else if (divBox.hwRatio() < 0.600 && !longBoxRegions[boardRegion]) {
     // In other words, the width == 1.5 * height;
     // Also: Requires a comment box
-    return glift.displays.positionWidgetHorz(
-        divBox, cropbox, boardRegion, bcMap);
+    useVertical = false;
+  } 
+
+  if (useVertical) {
+    var splits = glift.displays.recalcSplits(bcMap, oneColSplits);
+    return glift.displays.positionWidgetVert(divBox, cropbox, bcMap, splits);
   } else {
-    // Default: Vertically aligned.
-    return glift.displays.positionWidgetVert(
-        divBox, cropbox, boardRegion, bcMap);
+    var splits = glift.displays.recalcSplits(bcMap, twoColSplits);
+    return glift.displays.positionWidgetHorz(divBox, cropbox, bcMap, splits);
   }
 };
 
+glift.displays._extractRatios = function(column) {
+  var out = [];
+  for (var i = 0; i < column.length; i++) {
+    out.push(column[i].ratio);   
+  }
+  return out;
+};
+
+/**
+ * Recalculate the proper splits for a vertical orientation.
+ *
+ * compsToUseSet: Set of board components to use.
+ * columnSplits: The splits for a 1 or 2 column orientation.
+ */
+glift.displays.recalcSplits = function(compsToUseSet, columnSplits) {
+  var out = {};
+  for (var colKey in columnSplits) {
+    var col = columnSplits[colKey];
+    var colOut = [];
+    var extra = 0;
+
+    var total = 0;
+    for (var i = 0; i < col.length; i++) {
+      var part = col[i];
+      if (compsToUseSet[part.component]) {
+        colOut.push({ // perform a copy
+          component: part.component,
+          ratio: part.ratio
+        });
+        total += part.ratio;
+      }
+    }
+    if (colOut.length === 0) continue;
+    for (var i = 0; i < colOut.length; i++) {
+      var part = colOut[i];
+      part.ratio = part.ratio / total;
+    }
+    out[colKey] = colOut;
+  }
+  return out;
+};
+
 glift.displays.positionWidgetVert = function(
-    divBox, cropbox, boardRegion, boardComponentsMap) {
+    divBox, cropbox, componentMap, oneColSplits) {
   var point = glift.util.point;
   var aligns = glift.enums.boardAlignments;
   var comps = glift.enums.boardComponents;
   var outBoxes = {};
-  var splitPercentages = [];
-  var boardBase = undefined;
-  var iconBarBase = undefined;
-  var commentBase = undefined;
-  var extraIconBarBase = undefined;
-  if (boardComponentsMap.hasOwnProperty(comps.COMMENT_BOX) &&
-      boardComponentsMap.hasOwnProperty(comps.ICONBAR) &&
-      boardComponentsMap.hasOwnProperty(comps.EXTRA_ICONBAR)) {
-    var splits = divBox.hSplit([0.6, 0.2, 0.1]);
-    boardBase = splits[0];
-    commentBase = splits[1];
-    iconBarBase = splits[2];
-    extraIconBarBase = splits[3];
-  } else if (boardComponentsMap.hasOwnProperty(comps.COMMENT_BOX) &&
-      boardComponentsMap.hasOwnProperty(comps.ICONBAR)) {
-    var splits = divBox.hSplit([0.7, 0.2]);
-    boardBase = splits[0];
-    commentBase = splits[1];
-    iconBarBase = splits[2];
-  } else if (boardComponentsMap.hasOwnProperty(comps.ICONBAR)) {
-    var splits = divBox.hSplit([0.9]);
-    boardBase = splits[0];
-    iconBarBase = splits[1];
-  } else if (boardComponentsMap.hasOwnProperty(comps.COMMENT_BOX)) {
-    var splits = divBox.hSplit([0.8]);
-    boardBase = splits[0];
-    commentBase = splits[1];
+  var ratios = glift.displays._extractRatios(oneColSplits.first);
+
+  if (ratios.length === 1) {
+    var splits = [];
+    splits.push(divBox);
   } else {
-    boardBase = divBox;
+    var splits = divBox.hSplit(ratios.slice(0, ratios.length - 1));
   }
 
-  var board = glift.displays.getResizedBox(boardBase, cropbox, aligns.TOP);
+  // Map from component name to split box.
+  var splitMap = {};
+  for (var i = 0; i < oneColSplits.first.length; i++) {
+    var comp = oneColSplits.first[i];
+    splitMap[comp.component] = splits[i];
+  }
+
+  var board = glift.displays.getResizedBox(
+      splitMap['BOARD'], cropbox, aligns.TOP);
   outBoxes.boardBox = board;
-  if (commentBase) {
+
+  // TODO(kashomon): Make this more algorithmic by looping over the splits.
+  if (splitMap['COMMENT_BOX']) {
     var bb = outBoxes.boardBase;
-    var commentHeight = commentBase.height();
+    var commentHeight = splitMap['COMMENT_BOX'].height();
     var boardWidth = board.width();
     var boardLeft = board.left();
     var boardBottom = board.bottom();
     outBoxes.commentBox = glift.displays.bbox(
         point(boardLeft, boardBottom), boardWidth, commentHeight);
   }
-  if (iconBarBase) {
+  if (splitMap['ICONBAR']) {
     var bb = outBoxes.boardBase;
-    var barHeight = iconBarBase.height();
+    var barHeight = splitMap['ICONBAR'].height();
     var boardLeft = board.left();
     var boardWidth = board.width();
     if (outBoxes.commentBox) {
@@ -1890,19 +1992,6 @@ glift.displays.positionWidgetVert = function(
       var bottom = outBoxes.boardBox.bottom();
     }
     outBoxes.iconBarBox = glift.displays.bbox(
-        point(boardLeft, bottom), boardWidth, barHeight);
-  }
-  if (extraIconBarBase) {
-    var bb = outBoxes.boardBase;
-    var barHeight = extraIconBarBase.height();
-    var boardLeft = board.left();
-    var boardWidth = board.width();
-    if (outBoxes.iconBarBox) {
-      var bottom = outBoxes.iconBarBox.bottom();
-    } else {
-      var bottom = outBoxes.boardBox.bottom();
-    }
-    outBoxes.extraIconBarBox = glift.displays.bbox(
         point(boardLeft, bottom), boardWidth, barHeight);
   }
   return outBoxes;
@@ -1931,12 +2020,12 @@ glift.displays.positionWidgetVert = function(
  *  }
  */
 glift.displays.positionWidgetHorz = function(
-    divBox, cropbox, boardRegion, boardComponentsMap) {
+    divBox, cropbox, componentMap, twoColSplits) {
   var point = glift.util.point;
   var aligns = glift.enums.boardAlignments;
   var comps = glift.enums.boardComponents;
   if (!comps.hasOwnProperty(comps.COMMENT_BOX)) {
-    throw "The component map must contain a comment box";
+    throw new Error('The component map must contain a comment box');
   }
   var boardBox = glift.displays.getResizedBox(divBox, cropbox, aligns.RIGHT);
   var outBoxes = {};
@@ -1984,13 +2073,13 @@ glift.displays.positionWidgetHorz = function(
         [0.75 * newResizedBox.width() / baseCommentBox.width()])[0];
   }
 
-  if (boardComponentsMap.hasOwnProperty(comps.ICONBAR) &&
-      boardComponentsMap.hasOwnProperty(comps.EXTRA_ICONBAR)) {
+  if (componentMap.hasOwnProperty(comps.ICONBAR) &&
+      componentMap.hasOwnProperty(comps.EXTRA_ICONBAR)) {
     var finishedBoxes = baseCommentBox.hSplit([0.8, 0.1]);
     outBoxes.commentBox = finishedBoxes[0];
     outBoxes.iconBarBox = finishedBoxes[1];
     outBoxes.extraIconBarBox = finishedBoxes[2];
-  } else if (boardComponentsMap.hasOwnProperty(comps.ICONBAR)) {
+  } else if (componentMap.hasOwnProperty(comps.ICONBAR)) {
     var finishedBoxes = baseCommentBox.hSplit([0.9]);
     outBoxes.commentBox = finishedBoxes[0];
     outBoxes.iconBarBox = finishedBoxes[1];
@@ -2002,15 +2091,21 @@ glift.displays.positionWidgetHorz = function(
 };
 
 glift.displays.setNotSelectable = function(divId) {
+  // Note to self: common vendor property patterns:
+  //
+  // -webkit-property => webkitProperty
+  // -moz-property => MozProperty
+  // -ms-property => msProperty
+  // -o-property => OProperty
+  // property => property
   $('#' + divId).css({
-      '-webkit-touch-callout': 'none',
-      '-webkit-user-select': 'none',
-      '-khtml-user-select': 'none',
-      '-moz-user-select': 'moz-none',
-      '-ms-user-select': 'none',
+      'webkitTouchCallout': 'none',
+      'webkitUserSelect': 'none',
+      'MozUserSelect': 'moz-none',
+      'msUserSelect': 'none',
       'user-select': 'none',
-      '-webkit-highlight': 'none',
-      '-webkit-tap-highlight-color': 'rgba(0,0,0,0)',
+      'webkitHighlight': 'none',
+      'webkitTapHighlightColor': 'rgba(0,0,0,0)',
       'cursor': 'default'
   });
 };
@@ -2854,6 +2949,125 @@ glift.displays.board.shadows = function(svg, idGen, boardPoints, theme) {
       .attr("id", idGen.stoneShadow(pt.intPt)));
   }
 };
+glift.displays.commentbox = {};
+/**
+ * Create a comment box with:
+ *
+ * divId: The div in which the comment box should live
+ * posBbox: The bounding box of the div (expensive to recompute)
+ * theme: The theme object.
+ */
+glift.displays.commentbox.create = function(divId, posBbox, theme) {
+  if (!theme) {
+    throw new Error('Theme must be defined. was: ' + theme);
+  }
+  return new glift.displays.commentbox._CommentBox(divId, posBbox, theme).draw();
+};
+
+glift.displays.commentbox._CommentBox = function(divId, positioningBbox, theme) {
+  this.divId = divId;
+  this.bbox = glift.displays.bboxFromPts(
+      glift.util.point(0,0),
+      glift.util.point(positioningBbox.width(), positioningBbox.height()));
+  this.theme = theme;
+  this.el = undefined;
+};
+
+glift.displays.commentbox._CommentBox.prototype = {
+  draw: function() {
+    this.el = glift.displays.dom.elem(this.divId);
+    if (this.el === null) {
+      throw new Error('Could not find element with ID ' + this.divId);
+    }
+    var cssObj = {
+      'overflow-y': 'auto',
+      'overflowY': 'auto',
+      'MozBoxSizing': 'border-box',
+      'box-sizing': 'border-box'
+    };
+    for (var key in this.theme.commentBox.css) {
+      cssObj[key] = this.theme.commentBox.css[key]
+    }
+    this.el.css(cssObj);
+    return this;
+  },
+
+  sanitize: function(text) {
+    return glift.displays.commentbox.sanitize(text);
+  },
+
+  setText: function(text) {
+    this.el.html('<p>' + text.replace(/\n/g, '<br>') + '</p>');
+  },
+
+  clearText: function() {
+    this.el.html('');
+  },
+
+  destroy: function() {
+    this.commentBoxObj.empty();
+  }
+};
+glift.displays.commentbox.sanitizeWhitelist_ = {
+  'br': true,
+  'b': true,
+  'strong': true,
+  'i': true,
+  'u': true,
+  'em': true
+};
+
+/**
+ * Sanitizes text to prevent XSS. A single pass parser.
+ */
+glift.displays.commentbox.sanitize = function(text) {
+  var outbuffer = [];
+  var strbuff = [];
+  var states = { DEFAULT: 1, TAG: 2 };
+  var whitelist = glift.displays.commentbox.sanitizeWhitelist_;
+  var curstate = states.DEFAULT;
+  var numBrackets = 0;
+  var lt = '&lt;';
+  var gt = '&gt;';
+  for (var i = 0, len = text.length; i < len; i++) {
+    var chr = text.charAt(i);
+    if (chr === '<') {
+      curstate = states.TAG;
+      numBrackets++;
+      if (numBrackets > 1) {
+        strbuff.push(lt); 
+      }
+    } else if (chr === '>') {
+      numBrackets--;
+      if (numBrackets < 0) {
+        curstate = states.DEFAULT;
+        numBrackets = 0;
+        outbuffer.push(gt);
+      } else if (numBrackets > 0) { 
+        strbuff.push(gt);
+      } else if (numBrackets === 0) {
+        curstate = states.DEFAULT;
+        var strform = strbuff.join('');
+        strbuff = [];
+        if (strform in whitelist) {
+          outbuffer.push('<' + strform + '>');
+        } else if (strform.charAt(0) === '/' &&
+            strform.substring(1, strform.length) in whitelist) {
+          outbuffer.push('<' + strform + '>');
+        } else {
+          outbuffer.push(lt + strform + gt);
+        }
+      }
+    } else {
+      if (curstate === states.TAG) {
+        strbuff.push(chr);
+      } else {
+        outbuffer.push(chr);
+      }
+    }
+  }
+  return outbuffer.join('');
+};
 /**
  * Extra GUI methods and data.  This also contains pieces used by widgets.
  */
@@ -2887,11 +3101,15 @@ glift.displays.gui.columnCenterSimple = function(
 /**
  * Perform linearCentering either vertically or horizontally.
  */
+// TODO(kashomon): Rework this method. It's very complicated and hard to reason
+// about.
 glift.displays.gui._linearCentering = function(
     outerBox, inBboxes, vertMargin, horzMargin, minSpacing, maxSpacing, dir) {
   var outerWidth = outerBox.width(),
       innerWidth = outerWidth - 2 * horzMargin,
       outerHeight = outerBox.height(),
+      // TODO(kashomon): Min spacing is totally broken and has no tests.
+      // Probably should just remove it.
       minSpacing = minSpacing || 0,
       maxSpacing = maxSpacing || 0,
       innerHeight = outerHeight - 2 * vertMargin,
@@ -2935,7 +3153,7 @@ glift.displays.gui._linearCentering = function(
     unfitBoxes.push(outOfBoundsBox);
   }
 
-  // Find how much space to use for which parts
+  // Find how much space to use for the parts
   if (dir === 'h') {
     var extraSpace = innerWidth - totalElemLength;
   } else {
@@ -3014,136 +3232,6 @@ glift.displays.gui.centerWithin = function(
   newBbox = newBbox.translate(transform.xMove, transform.yMove);
   return { transform: transform, bbox: newBbox};
 };
-(function() {
-// TODO(kashomon): Move to its own directory.
-glift.displays.gui.commentBox = function(divId, themeName, posBbox) {
-  return new CommentBox(divId, themeName, posBbox).draw();
-};
-
-// TODO(kashomon): Pass in an options argument.
-var CommentBox = function(divId, themeName, positioningBbox) {
-  this.divId = divId;
-  this.themeName = themeName;
-  this.bbox = glift.displays.bboxFromPts(
-      glift.util.point(0,0),
-      glift.util.point(positioningBbox.width(), positioningBbox.height()));
-  this.theme = glift.themes.get(themeName);
-  this.el = undefined;
-};
-
-CommentBox.prototype = {
-  draw: function() {
-    this.el = glift.displays.dom.elem(this.divId);
-    if (this.el === null) {
-      throw new Error("Could not find element with ID " + this.divId);
-    }
-    var padding = 10; // TODO(kashomon): Put in theme
-    var borderWidth = 1;
-    var boardBorder = this.theme.board['stroke-width'];
-    var fontSize = 16;
-    this.el.css({
-      background: '#CCF',
-      border: borderWidth + 'px solid',
-      'font-family': 'Baskerville',
-      'font-size': fontSize + 'px',
-      'overflow-y': 'auto',
-      'overflowY': 'auto',
-      'MozBoxSizing': 'border-box',
-      'box-sizing': 'border-box',
-      'padding': padding + 'px'
-    });
-    return this;
-  },
-
-  setText: function(text) {
-    this.el.html('<p>' + text.replace(/\n/g, '<br>') + '</p>');
-  },
-
-  clearText: function() {
-    this.el.html('');
-  },
-
-  destroy: function() {
-    this.commentBoxObj.empty();
-  }
-};
-})();
-/**
- * A simple object representing a DivSplit.
- */
-glift.displays.gui.DivSplit = function(id, start, length) {
-  this.id = id;
-  this.start = start;
-  this.length = length;
-};
-
-/**
-  * Take a div, create multiple sub divs, absolutely positioned.
-  *
-  * divId: divId to be split.
-  * percents: Precent tall that each section is.  Note that the length of this
-  * == the number of splits - 1;
-  *
-  * direction: defaults to 'horizontal'.  Also can split 'vertical'-ly.
-  *
-  * Note:
-  *  X => XX (vertical split)
-  *
-  *  X => X  (horizontal split)
-  *       X
-  *
-  * return: an array of useful div info:
-  *  [{
-  *    id: foo
-  *    start: 0 // top for horz, left for vert
-  *    length: 100 // height for horz, width for vert
-  *  }, {...}
-  *  ]
-  */
-glift.displays.gui.splitDiv = function(divId, percents, direction) {
-  var bbox = glift.displays.bboxFromDiv(divId),
-      totalPercent = 0;
-  if (!direction) {
-    direction = 'horizontal';
-  } else if (direction !== 'vertical' && direction !== 'horizontal') {
-    direction = 'horizontal'
-  }
-
-  for (var i = 0; i < percents.length; i++) {
-    totalPercent += percents[i];
-  }
-
-  if (totalPercent > 1 || totalPercent < 0) {
-    throw 'Percents must sum to a number be between 0 and 1.' +
-        'Was ' + totalPercent;
-  }
-  percents.push(1 - totalPercent); // Add in last value.
-
-  // Create Data for D3.
-  var boxData = [];
-  var currentStart = direction === 'horizontal' ? bbox.top() : bbox.left();
-  var maxAmount = direction === 'horizontal' ? bbox.height() : bbox.width();
-  for (var i = 0; i < percents.length; i++) {
-    boxData.push(new glift.displays.gui.DivSplit(
-      'glift_internal_div_' + glift.util.idGenerator.next(),
-      currentStart, // e.g., Top
-      maxAmount * percents[i] // e.g., Height
-    ));
-    currentStart = currentStart + maxAmount * percents[i];
-  }
-  for (var i = 0; i < boxData.length; i++) {
-    $('#' + divId).append('<div id="' + boxData[i].id + '"></div>');
-    var cssObj = {
-      width: direction === 'horizontal' ? '100%' : boxData[i].length,
-      height: direction === 'horizontal' ? boxData[i].length : '100%',
-      position: 'absolute'
-    };
-    var posKey =  (direction === 'horizontal' ? 'top' : 'left' )
-    cssObj[posKey] = boxData[i].start;
-    $('#' + boxData[i].id).css(cssObj);
-  }
-  return boxData;
-};
 /**
  * Objects and methods having to do with icons.
  */
@@ -3156,39 +3244,39 @@ glift.displays.icons = {};
  *    - icons: an array of icon names)
  *    - vertMargin: in pixels
  *    - horzMargin: in pixels
- *    - theme: The theme. default is DEFAULT
+ *    - theme: The theme. default is the DEFAULT theme, of course
  */
 glift.displays.icons.bar = function(options) {
   var divId = options.divId,
       icons = options.icons || [],
-      vertMargin = options.vertMargin || 0,
-      horzMargin = options.horzMargin || 0,
-      themeName = options.theme || 'DEFAULT',
+      theme = options.theme,
       pbox = options.parentBbox,
       position = options.positioning;
-  if (divId === undefined) {
-    throw "Must define an options 'divId' as an option";
+  if (!theme) {
+    throw new Error("Theme undefined in iconbar");
+  }
+  if (!divId) {
+    throw new Error("Must define an options 'divId' as an option");
   }
   return new glift.displays.icons._IconBar(
-      divId, position, themeName, icons, vertMargin, horzMargin, pbox).draw();
+      divId, position, icons, pbox, theme).draw();
 };
 
 glift.displays.icons._IconBar = function(
-    divId, position, themeName, iconsRaw, vertMargin, horzMargin, parentBbox) {
+    divId, position, iconsRaw, parentBbox, theme) {
   this.divId = divId;
   this.position = position;
   this.divBbox = glift.displays.bboxFromPts(
       glift.util.point(0,0),
       glift.util.point(position.width(), position.height()));
-  this.themeName = themeName;
+  this.theme = theme;
   // The parentBbox is useful for create a multiIconSelector.
   this.parentBbox = parentBbox;
-  this.theme = glift.themes.get(themeName);
   // Array of wrapped icons. See wrapped_icon.js.
   this.icons = glift.displays.icons.wrapIcons(iconsRaw);
   this.nameMapping = {};
-  this.vertMargin = vertMargin;
-  this.horzMargin = horzMargin;
+  this.vertMargin = this.theme.icons.vertMargin;
+  this.horzMargin = this.theme.icons.horzMargin;
   this.svg = undefined; // initialized by draw
   this.idGen = glift.displays.ids.generator(this.divId);
 
@@ -3250,7 +3338,7 @@ glift.displays.icons._IconBar.prototype = {
       var icon = this.icons[i];
       container.append(svglib.path()
         .attr('d', icon.iconStr)
-        .attr('fill', this.theme.icons['DEFAULT'].fill)
+        .attr('fill', this.theme.icons.DEFAULT.fill)
         .attr('id', icon.elementId)
         .attr('transform', icon.transformString()));
     }
@@ -3335,7 +3423,7 @@ glift.displays.icons._IconBar.prototype = {
 
     this.svg.child(this.idGen.tempIconGroup()).appendAndAttach(svglib.path()
       .attr('d', tempIcon.iconStr)
-      .attr('fill', color) // that.theme.icons['DEFAULT'].fill)
+      .attr('fill', color) // theme.icons.DEFAULT.fill
       .attr('id', tempIconId)
       .attr('transform', tempIcon.transformString()));
     return this;
@@ -3347,7 +3435,9 @@ glift.displays.icons._IconBar.prototype = {
   addTempText: function(iconName, text, color) {
     var svglib = glift.displays.svg;
     var bbox = this.getIcon(iconName).bbox;
-    var fontSize = bbox.width() * .54;
+    // TODO(kashomon): Why does this constant work?  Replace the 0.54 nonsense
+    // with something more sensible.
+    var fontSize = bbox.width() * 0.54; 
     var id = this.idGen.tempIconText(iconName);
     var boxStrokeWidth = 7
     this.clearTempText(iconName);
@@ -3417,6 +3507,52 @@ glift.displays.icons._IconBar.prototype = {
     this.events[id] = { icon: icon, func: func };
     return this;
   },
+
+  /**
+   * Initialize the icon actions.  These actions are received at widget-creation
+   * time.
+   */
+  initIconActions: function(parentWidget, iconActions) {
+    var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
+    var that = this;
+    this.forEachIcon(function(icon) {
+      var iconName = icon.iconName;
+      if (!iconActions.hasOwnProperty(icon.iconName)) {
+        // Make sure that there exists an action specified in the
+        // displayOptions, before we add any options.
+        return
+      }
+      var actionsForIcon = {};
+
+      actionsForIcon.click = iconActions[iconName].click;
+      actionsForIcon.mouseover = iconActions[iconName].mouseover ||
+        function(event, widgetRef, icon) {
+          $('#' + icon.elementId)
+              .attr('fill', widgetRef.iconBar.theme.icons.DEFAULT_HOVER.fill);
+        };
+      actionsForIcon.mouseout = iconActions[iconName].mouseout ||
+        function(event, widgetRef, icon) {
+          $('#' + icon.elementId)
+              .attr('fill', widgetRef.iconBar.theme.icons.DEFAULT.fill);
+        };
+      // TODO(kashomon): Add touch events conditionally based on the detected
+      // browser.
+      for (var eventName in actionsForIcon) {
+        var eventFunc = actionsForIcon[eventName];
+        // We init each action separately so that we avoid the lazy binding of
+        // eventFunc.
+        that._initOneIconAction(parentWidget, iconName, eventName, eventFunc);
+      }
+    });
+    this.flushEvents();
+  },
+
+  _initOneIconAction: function(parentWidget, iconName, eventName, eventFunc) {
+    this.setEvent(iconName, eventName, function(event, icon) {
+      eventFunc(event, parentWidget, icon, this);
+    }.bind(this));
+  },
+
 
   /**
    * Convenience mothod for adding hover events.  Equivalent to adding mouseover
@@ -3499,7 +3635,8 @@ glift.displays.icons._centerWrapped = function(
   for (var i = 0; i < wrappedIcons.length; i++) {
     bboxes.push(wrappedIcons[i].bbox);
   }
-  var minSpacing = minSpacing || 5;
+
+  var minSpacing = minSpacing || 0;
 
   // Row center returns: { transforms: [...], bboxes: [...] }
   if (direction === 'h') {
@@ -7988,7 +8125,8 @@ glift.widgets = {
 };
 
 /**
- * A convenient alias.
+ * A convenient alias.  This is the public method that most users of Glift will
+ * call.
  */
 glift.create = glift.widgets.create;
 /**
@@ -8031,19 +8169,6 @@ glift.widgets.BaseWidget.prototype = {
     this.displayOptions.rotation = this.sgfOptions.rotation;
     glift.util.majorPerfLog('Calculated board regions');
 
-    var components = this.sgfOptions.components;
-    var comps = glift.enums.boardComponents;
-    var requiredComponents = [comps.BOARD];
-    if (this.displayOptions.useCommentBar) {
-      requiredComponents.push(comps.COMMENT_BOX);
-    }
-    if (this.displayOptions.useTitleBar) {
-      requiredComponents.push(comps.TITLE_BAR);
-    }
-    if (this.sgfOptions.icons.length > 0) {
-      requiredComponents.push(comps.ICONBAR);
-    }
-
     // This should be the only time we get the base width and height, until the
     // entire widget is re-drawn.
     var parentDivBbox = glift.displays.bboxFromDiv(this.wrapperDiv);
@@ -8054,12 +8179,12 @@ glift.widgets.BaseWidget.prototype = {
     }
 
     // Recall that positioning returns an object that looks like:
-    // {commentBox: ...
+    // {commentBox: ..., boardbox: ..., iconBarBox: ...)
     var positioning = glift.displays.positionWidget(
       parentDivBbox,
       this.displayOptions.boardRegion,
       this.displayOptions.intersections,
-      components,
+      this.sgfOptions.componentsToUse,
       this.displayOptions.oneColumnSplits,
       this.displayOptions.twoColumnSplits);
 
@@ -8070,6 +8195,9 @@ glift.widgets.BaseWidget.prototype = {
     // displayOptions.
     this.displayOptions.divId = divIds.boardBoxId;
 
+    var theme = glift.themes.get(this.displayOptions.theme);
+
+    // TODO(kashomon): Pass in the theme rather than doing another copy here
     this.display = glift.displays.create(
         this.displayOptions,
         positioning.boardBox);
@@ -8077,20 +8205,20 @@ glift.widgets.BaseWidget.prototype = {
 
     divIds.commentBoxId && this._createCommentBox(
         divIds.commentBoxId,
-        positioning.commentBox);
+        positioning.commentBox,
+        theme);
     glift.util.majorPerfLog('CommentBox');
 
-    if (divIds.iconBarBoxId) {
-      this.iconBar = this._createIconBar(
-          divIds.iconBarBoxId,
-          positioning.iconBarBox,
-          this.sgfOptions.icons,
-          parentDivBbox);
-      glift.util.majorPerfLog('IconBar');
-    }
+    divIds.iconBarBoxId && this._createIconBar(
+        divIds.iconBarBoxId,
+        positioning.iconBarBox,
+        this.sgfOptions.icons,
+        parentDivBbox, 
+        theme);
+    glift.util.majorPerfLog('IconBar');
 
-    divIds.iconBarBoxId && this._initIconActions(
-        this.iconBar, this.actions.iconActions);
+    divIds.iconBarBoxId && this.iconBar.initIconActions(
+        this, this.actions.iconActions);
 
     glift.util.majorPerfLog('Before stone event creation');
     this._initStoneActions(this.actions.stoneActions);
@@ -8103,14 +8231,15 @@ glift.widgets.BaseWidget.prototype = {
   },
 
   _createDivsForPositioning: function(positioning, wrapperDiv) {
-    var expectedKeys = [
-        'boardBox', 'iconBarBox', 'commentBox', 'extraIconBarBox' ];
+    var expectedKeys = 
+        ['boardBox', 'iconBarBox', 'commentBox', 'extraIconBarBox'];
     var out = {};
     var that = this;
     var createDiv = function(bbox) {
       var newId = wrapperDiv + '_internal_div_' + glift.util.idGenerator.next();
       $('#' + wrapperDiv).append('<div id="' + newId + '"></div>');
-      that._setNotSelectable(newId);
+      glift.displays.setNotSelectable(newId);
+      // that._setNotSelectable(newId);
       var cssObj = {
         top: bbox.top(),
         left: bbox.left(),
@@ -8144,84 +8273,18 @@ glift.widgets.BaseWidget.prototype = {
     return probTypes.STANDARD;
   },
 
-  _setNotSelectable: function(divId) {
-    $('#' + divId).css({
-        '-webkit-touch-callout': 'none',
-        '-webkit-user-select': 'none',
-        '-khtml-user-select': 'none',
-        '-ms-user-select': 'none',
-        'user-select': 'none',
-        '-webkit-highlight': 'none',
-        '-webkit-tap-highlight-color': 'rgba(0,0,0,0)',
-        'cursor': 'default'
-    });
-    return this;
+  _createCommentBox: function(commentBoxId, positioning, theme) {
+    this.commentBox = glift.displays.commentbox.create(
+        commentBoxId, positioning, theme);
   },
 
-  _createCommentBox: function(commentBoxId, positioning) {
-    this.commentBox = glift.displays.gui.commentBox(
-        commentBoxId,
-        this.displayOptions.theme,
-        positioning);
-  },
-
-  _createIconBar: function(iconId, bbox, icons, parentBbox) {
-    return glift.displays.icons.bar({
-      themeName: this.displayOptions.theme,
+  _createIconBar: function(iconId, bbox, icons, parentBbox, theme) {
+    this.iconBar = glift.displays.icons.bar({
+      theme: theme,
       divId: iconId,
-      vertMargin: 5, // For good measure
-      horzMargin: 5,
       icons: icons,
       positioning: bbox,
       parentBbox: parentBbox
-    });
-  },
-
-  _initIconActions: function(iconBar, iconActions) {
-    var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
-    var that = this;
-    iconBar.forEachIcon(function(icon) {
-      var iconName = icon.iconName;
-      if (!iconActions.hasOwnProperty(icon.iconName)) {
-        // Make sure that there exists an action specified in the
-        // displayOptions, before we add any options.
-        return
-      }
-      var actionsForIcon = {};
-
-      actionsForIcon.click = iconActions[iconName].click;
-      actionsForIcon.mouseover = iconActions[iconName].mouseover ||
-        function(event, widgetRef, icon) {
-          $('#' + icon.elementId).attr('fill', 'red');
-        };
-      actionsForIcon.mouseout = iconActions[iconName].mouseout ||
-        function(event, widgetRef, icon) {
-          $('#' + icon.elementId)
-            .attr('fill', widgetRef.iconBar.theme.icons.DEFAULT.fill);
-        };
-      // TODO(kashomon): Add touch events conditionally based on the detected
-      // browser.
-      // actionsForIcon.touchstart = iconActions[iconName].touchstart ||
-          // function(d3Event,  widgetRef, iconObj) {
-            // d3Event.preventDefault && d3Event.preventDefault();
-            // d3Event.stopPropagation && d3Event.stopPropagation();
-            // widgetRef.displayOptions.iconActions[
-                // iconObj.iconName].click(d3Event, widgetRef, iconObj);
-          // };
-      for (var eventName in actionsForIcon) {
-        var eventFunc = actionsForIcon[eventName];
-        // We init each action separately so that we avoid the lazy binding of
-        // eventFunc.
-        that._initOneIconAction(iconBar, iconName, eventName, eventFunc);
-      }
-    });
-    iconBar.flushEvents();
-  },
-
-  _initOneIconAction: function(iconBar, iconName, eventName, eventFunc) {
-    var widget = this;
-    iconBar.setEvent(iconName, eventName, function(event, icon) {
-      eventFunc(event, widget, icon, iconBar);
     });
   },
 
@@ -8816,11 +8879,11 @@ glift.widgets.options.baseOptions = {
       ARROW_RIGHT: 'iconActions.chevron-right.click'
     },
 
-    /** Default UI Components */
-    components: [
+    /** The UI Components to use for this display */
+    componentsToUse: [
       'BOARD',
       'COMMENT_BOX',
-      'TITLE_BAR',
+      // 'TITLE_BAR', // Not currently supported
       'ICONBAR'
     ],
 
@@ -8848,6 +8911,7 @@ glift.widgets.options.baseOptions = {
      *    ... future options
      *  }
      */
+    // TODO(kashomon): Remove this in favor of a general data option.
     bookData: {
       /**
        * The diagram type.
@@ -8993,54 +9057,33 @@ glift.widgets.options.baseOptions = {
      */
     goBoardBackground: '',
 
+    /**
+     * Split percentages to use for a one-column widget format.
+     */
     oneColumnSplits: {
-      TITLE_BAR: 0.5,
-      BOARD: 0.70,
-      COMMENT_BOX: 0.15,
-      ICONBAR: 0.10
+      first: [
+        // TODO(kashomon): Add support for a title bar
+        // { component: 'TITLE_BAR',   ratio: 0.05 },
+        { component: 'BOARD',       ratio: 0.70 },
+        { component: 'COMMENT_BOX', ratio: 0.20 },
+        { component: 'ICONBAR',     ratio: 0.10 }
+      ]
     },
 
+    /**
+     * Split percentages to use for a two-column widget format.
+     */
     twoColumnSplits: {
-      one: {
-        BOARD: 1
-      },
-      two: {
-        // Second Column
-        TITLE_BAR: 0.10,
-        COMMENT_BOX: 0.80,
-        ICONBAR: 0.10
-      }
+      first: [
+        { component: 'BOARD', ratio: 1 }
+      ],
+      second: [
+        // TODO(kashomon): Add support for a title bar
+        // { component: 'TITLE_BAR',     ratio: 0.10 },
+        { component: 'COMMENT_BOX',   ratio: 0.85 },
+        { component: 'ICONBAR',       ratio: 0.15 }
+      ]
     },
-
-    /**
-     * Whether or not to use the comment bar.
-     * TODO(kashomon): Remove
-     */
-    useCommentBar: true,
-
-    /**
-     * Whether or not to use the title bar.
-     * TODO(kashomon): Remove
-     */
-    useTitleBar: true,
-
-    // TODO(kashomon): Rework the components and splits.
-    /**
-     * Div splits with the CommentBar.  Thus, there are three resulting divs - the
-     * remainder is used by the last div - the icon bar.
-     */
-    splitsWithComments: [.70, .20],
-
-    /**
-     * Div splits without the comment bar.  Thus, there are two resulting divs -
-     * the remainder is used by the last div -- the icon bar
-     */
-    splitsWithoutComments: [.90],
-
-    /**
-     * Div splits with only the comment bar.
-     */
-    splitsWithOnlyComments: [.80],
 
     /**
      * The name of the theme.
