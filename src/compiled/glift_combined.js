@@ -1967,23 +1967,24 @@ glift.displays.positionWidgetVert = function(
     splitMap[comp.component] = splits[i];
   }
 
-  var board = glift.displays.getResizedBox(
-      splitMap['BOARD'], cropbox, aligns.TOP);
+  var board = glift.displays.getResizedBox(splitMap.BOARD, cropbox, aligns.TOP);
   outBoxes.boardBox = board;
 
   // TODO(kashomon): Make this more algorithmic by looping over the splits.
-  if (splitMap['COMMENT_BOX']) {
+  // This doesn't even do the right thing right now -- it forces the order to be
+  // board->comment_box->iconbar
+  if (splitMap.COMMENT_BOX) {
     var bb = outBoxes.boardBase;
-    var commentHeight = splitMap['COMMENT_BOX'].height();
+    var commentHeight = splitMap.COMMENT_BOX.height();
     var boardWidth = board.width();
     var boardLeft = board.left();
     var boardBottom = board.bottom();
     outBoxes.commentBox = glift.displays.bbox(
         point(boardLeft, boardBottom), boardWidth, commentHeight);
   }
-  if (splitMap['ICONBAR']) {
+  if (splitMap.ICONBAR) {
     var bb = outBoxes.boardBase;
-    var barHeight = splitMap['ICONBAR'].height();
+    var barHeight = splitMap.ICONBAR.height();
     var boardLeft = board.left();
     var boardWidth = board.width();
     if (outBoxes.commentBox) {
@@ -2060,9 +2061,7 @@ glift.displays.positionWidgetHorz = function(
   outBoxes.leftSide = splits[0];
 
   // Find out what the resized box look like now.
-  var newResizedBox = glift.displays.getResizedBox(
-      splits[0], cropbox, aligns.RIGHT);
-
+  var newResizedBox = glift.displays.getResizedBox(splits[0], cropbox, aligns.RIGHT);
   var rightSide = splits[1];
   outBoxes.rightSide = rightSide;
   var baseCommentBox = glift.displays.bboxFromPts(
@@ -2073,13 +2072,8 @@ glift.displays.positionWidgetHorz = function(
         [0.75 * newResizedBox.width() / baseCommentBox.width()])[0];
   }
 
-  if (componentMap.hasOwnProperty(comps.ICONBAR) &&
-      componentMap.hasOwnProperty(comps.EXTRA_ICONBAR)) {
-    var finishedBoxes = baseCommentBox.hSplit([0.8, 0.1]);
-    outBoxes.commentBox = finishedBoxes[0];
-    outBoxes.iconBarBox = finishedBoxes[1];
-    outBoxes.extraIconBarBox = finishedBoxes[2];
-  } else if (componentMap.hasOwnProperty(comps.ICONBAR)) {
+  // TODO(kashomon): Actually use the two-column splits.
+  if (componentMap.hasOwnProperty(comps.ICONBAR)) {
     var finishedBoxes = baseCommentBox.hSplit([0.9]);
     outBoxes.commentBox = finishedBoxes[0];
     outBoxes.iconBarBox = finishedBoxes[1];
