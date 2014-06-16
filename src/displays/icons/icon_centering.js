@@ -28,7 +28,8 @@ glift.displays.icons._centerWrapped = function(
   for (var i = 0; i < wrappedIcons.length; i++) {
     bboxes.push(wrappedIcons[i].bbox);
   }
-  var minSpacing = minSpacing || 5;
+
+  var minSpacing = minSpacing || 0;
 
   // Row center returns: { transforms: [...], bboxes: [...] }
   if (direction === 'h') {

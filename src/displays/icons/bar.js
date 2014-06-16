@@ -100,7 +100,7 @@ glift.displays.icons._IconBar.prototype = {
       var icon = this.icons[i];
       container.append(svglib.path()
         .attr('d', icon.iconStr)
-        .attr('fill', this.theme.icons['DEFAULT'].fill)
+        .attr('fill', this.theme.icons.DEFAULT.fill)
         .attr('id', icon.elementId)
         .attr('transform', icon.transformString()));
     }
@@ -185,7 +185,7 @@ glift.displays.icons._IconBar.prototype = {
 
     this.svg.child(this.idGen.tempIconGroup()).appendAndAttach(svglib.path()
       .attr('d', tempIcon.iconStr)
-      .attr('fill', color) // that.theme.icons['DEFAULT'].fill)
+      .attr('fill', color) // theme.icons.DEFAULT.fill
       .attr('id', tempIconId)
       .attr('transform', tempIcon.transformString()));
     return this;
@@ -197,7 +197,9 @@ glift.displays.icons._IconBar.prototype = {
   addTempText: function(iconName, text, color) {
     var svglib = glift.displays.svg;
     var bbox = this.getIcon(iconName).bbox;
-    var fontSize = bbox.width() * .54;
+    // TODO(kashomon): Why does this constant work?  Replace the 0.54 nonsense
+    // with something more sensible.
+    var fontSize = bbox.width() * 0.54; 
     var id = this.idGen.tempIconText(iconName);
     var boxStrokeWidth = 7
     this.clearTempText(iconName);
@@ -288,7 +290,7 @@ glift.displays.icons._IconBar.prototype = {
       actionsForIcon.mouseover = iconActions[iconName].mouseover ||
         function(event, widgetRef, icon) {
           $('#' + icon.elementId)
-              .attr('fill', widgetRef.iconBar.theme.icons['DEFAULT_HOVER'].fill);
+              .attr('fill', widgetRef.iconBar.theme.icons.DEFAULT_HOVER.fill);
         };
       actionsForIcon.mouseout = iconActions[iconName].mouseout ||
         function(event, widgetRef, icon) {

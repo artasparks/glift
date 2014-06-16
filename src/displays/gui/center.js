@@ -27,11 +27,15 @@ glift.displays.gui.columnCenterSimple = function(
 /**
  * Perform linearCentering either vertically or horizontally.
  */
+// TODO(kashomon): Rework this method. It's very complicated and hard to reason
+// about.
 glift.displays.gui._linearCentering = function(
     outerBox, inBboxes, vertMargin, horzMargin, minSpacing, maxSpacing, dir) {
   var outerWidth = outerBox.width(),
       innerWidth = outerWidth - 2 * horzMargin,
       outerHeight = outerBox.height(),
+      // TODO(kashomon): Min spacing is totally broken and has no tests.
+      // Probably should just remove it.
       minSpacing = minSpacing || 0,
       maxSpacing = maxSpacing || 0,
       innerHeight = outerHeight - 2 * vertMargin,
@@ -75,7 +79,7 @@ glift.displays.gui._linearCentering = function(
     unfitBoxes.push(outOfBoundsBox);
   }
 
-  // Find how much space to use for which parts
+  // Find how much space to use for the parts
   if (dir === 'h') {
     var extraSpace = innerWidth - totalElemLength;
   } else {
