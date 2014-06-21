@@ -309,6 +309,9 @@ glift.displays.board._Intersections.prototype = {
       if (curpt && lastpt && !lastpt.equals(curpt)) {
         hoverOutFunc(e, lastpt);
         hoverInFunc(e, curpt);
+      } else if (lastpt) {
+        // This happens only rarely -- but as well might be cautious.
+        hoverOutFunc(e, lastpt);
       }
       that.lastHoverPoint = curpt;
     });
