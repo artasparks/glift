@@ -309,6 +309,8 @@ glift.displays.board._Intersections.prototype = {
       if (curpt && lastpt && !lastpt.equals(curpt)) {
         hoverOutFunc(e, lastpt);
         hoverInFunc(e, curpt);
+      } else if (!lastpt && curpt) {
+        hoverInFunc(e, curpt);
       }
       that.lastHoverPoint = curpt;
     });
@@ -338,8 +340,10 @@ glift.displays.board._Intersections.prototype = {
     var top = data.tl.intPt.y();
     var pty = (e.offsetY) / data.spacing;
     var intPty = Math.round(pty) - 1 + top;
-    if (intPtx < top || intPtx > maxInts - 1) {
-      return null; // This is unusual, but can happen due to rounding errors
+    if (intPty < top) {
+      intPty = top;
+    } else if (intPty > maxInts - 1) {
+      intPty = maxInts - 1;
     }
     var pt = glift.util.point(intPtx, intPty);
     if (this.rotation != glift.enums.rotations.NO_ROTATION) {
