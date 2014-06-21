@@ -2647,9 +2647,6 @@ glift.displays.board._Intersections.prototype = {
       if (curpt && lastpt && !lastpt.equals(curpt)) {
         hoverOutFunc(e, lastpt);
         hoverInFunc(e, curpt);
-      } else if (lastpt) {
-        // This happens only rarely -- but as well might be cautious.
-        hoverOutFunc(e, lastpt);
       }
       that.lastHoverPoint = curpt;
     });
@@ -2671,8 +2668,10 @@ glift.displays.board._Intersections.prototype = {
     var left = data.tl.intPt.x();
     var ptx = (e.offsetX) / data.spacing;
     var intPtx = Math.round(ptx) - 1 + left;
-    if (intPtx < left || intPtx > maxInts - 1) {
-      return null; // This is unusual, but can happen due to rounding errors
+    if (intPtx < left) {
+      intPtx = left
+    } else if (intPtx > maxInts - 1) {
+      intPtx = maxInts - 1
     }
     var top = data.tl.intPt.y();
     var pty = (e.offsetY) / data.spacing;
