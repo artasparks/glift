@@ -3,8 +3,11 @@
  * they are always created in the context of a Widget Manager.
  *
  * divId: the element id of the div without the selector hash (#)
- * sgfList: array of sgf objects.
- * sgfListIndex: numbered index into the sgfList.
+ * sgfCollection: array of sgf objects or a string URL. At creation time of the
+ *    manager, The param sgfCollection may either be an array or a string
+ *    representing a URL.  If the sgfCollection is a string, then the JSON is
+ *    requsted at draw-time and passed to this.sgfCollection.
+ * sgfColIndex: numbered index into the sgfCollection.
  * allowWrapAround: true or false.  Whether to allow wrap around in the SGF
  *    manager.
  * sgfDefaults: filled-in sgf default options.  See ./options/base_options.js
@@ -12,11 +15,25 @@
  * bookData: global book data.
  * actions: combination of stone actions and icon actions.
  */
-glift.widgets.WidgetManager = function(divId, sgfList, sgfListIndex,
+glift.widgets.WidgetManager = function(divId, sgfCollection, sgfColIndex,
       allowWrapAround, sgfDefaults, displayOptions, bookData, actions) {
   this.divId = divId;
-  this.sgfList = sgfList;
-  this.sgfListIndex = sgfListIndex;
+
+  // Note: At creation time of the manager, The param sgfCollection may either
+  // be an array or a string representing a URL.  If the sgfCollection is a
+  // string, then the JSON is requsted at draw-time and passed to
+  // this.sgfCollection
+  this.sgfCollection = [];
+  this.sgfCollectionUrl = null;
+
+  // Suppert either explicit arrays or URLs for fetching JSON.
+  if (glift.util.typeOf(sgfCollection) === 'string') { 
+    this.sgfCollectionUrl = sgfCollection;
+  } else {
+    this.sgfCollection = sgfCollection;
+  }
+
+  this.sgfColIndex = sgfColIndex;
   this.allowWrapAround = allowWrapAround
   this.sgfDefaults = sgfDefaults;
   this.displayOptions = displayOptions;
@@ -33,39 +50,48 @@ glift.widgets.WidgetManager = function(divId, sgfList, sgfListIndex,
 
 glift.widgets.WidgetManager.prototype = {
   draw: function() {
-    var that = this;
-    var curObj = this.getCurrentSgfObj();
-    this.getSgfString(curObj, function(sgfObj) {
-      // Prevent flickering by destroying the widget _after_ loading the SGF.
-      that.destroy();
-      that.currentWidget = that.createWidget(sgfObj).draw();
-    });
+    var afterCollectionLoad = function() {
+      var curObj = this.getCurrentSgfObj();
+      this.getSgfString(curObj, function(sgfObj) {
+        // Prevent flickering by destroying the widget after loading the SGF.
+        this.destroy();
+        this.currentWidget = this.createWidget(sgfObj).draw();
+      }.bind(this));
+    }.bind(this);
+
+    if (this.sgfCollection.length === 0 && this.sgfCollectionUrl) {
+      $.ajax({
+        url: this.sgfCollectionUrl, dataType: 'text', cache: true,
+        success: function(data) {
+          this.sgfCollection = JSON.parse(data);
+          afterCollectionLoad();
+        }.bind(this)
+      });
+    } else {
+      afterCollectionLoad();
+    }
     return this;
   },
 
-  getCurrentWidget: function() {
-    return this.currentWidget;
-  },
+  /** Redraws current widget. */
+  redraw: function() { this.currentWidget && this.currentWidget.redraw(); },
 
-  /**
-   * Get the current SGF Object from the SGF List.
-   */
-  getCurrentSgfObj: function() {
-    return this.getSgfObj(this.sgfListIndex);
-  },
+  /** Gets the current widget object. */
+  getCurrentWidget: function() { return this.currentWidget; },
 
-  /**
-   * Modify the SgfOptions by resetting the icons settings.
-   */
+  /** Gets the current SGF Object from the SGF collection. */
+  getCurrentSgfObj: function() { return this.getSgfObj(this.sgfColIndex); },
+
+  /** Modifies the SgfOptions by resetting the icons settings. */
   _resetIcons: function(processedObj) {
-    if (this.sgfList.length > 1) {
+    if (this.sgfCollection.length > 1) {
       if (this.allowWrapAround) {
         processedObj.icons.push(this.displayOptions.nextSgfIcon);
         processedObj.icons.splice(0, 0, this.displayOptions.previousSgfIcon);
       } else {
-        if (this.sgfListIndex === 0) {
+        if (this.sgfColIndex === 0) {
           processedObj.icons.push(this.displayOptions.nextSgfIcon);
-        } else if (this.sgfListIndex === this.sgfList.length - 1) {
+        } else if (this.sgfColIndex === this.sgfCollection.length - 1) {
           processedObj.icons.splice(0, 0, this.displayOptions.previousSgfIcon);
         } else {
           processedObj.icons.push(this.displayOptions.nextSgfIcon);
@@ -76,15 +102,13 @@ glift.widgets.WidgetManager.prototype = {
     return processedObj;
   },
 
-  /**
-   * Get the SGF Object from the sgfList.
-   */
+  /** Get the current SGF Object from the sgfCollection. */
   getSgfObj: function(index) {
-    if (index < 0 || index > this.sgfList.length) {
+    if (index < 0 || index > this.sgfCollection.length) {
       throw new Error("Index [" + index +  " ] out of bounds."
-          + " List size was " + this.sgfList.length);
+          + " List size was " + this.sgfCollection.length);
     }
-    var curSgfObj = this.sgfList[index];
+    var curSgfObj = this.sgfCollection[index];
     if (glift.util.typeOf(curSgfObj) === 'string') {
       var out = {};
       if (/^\s*\(;/.test(curSgfObj)) {
@@ -112,9 +136,7 @@ glift.widgets.WidgetManager.prototype = {
     }
   },
 
-  /**
-   * Create a Sgf Widget.
-   */
+  /** Create a Sgf Widget. */
   createWidget: function(sgfObj) {
     return new glift.widgets.BaseWidget(
         this.divId, sgfObj, this.displayOptions, this.actions, this);
@@ -136,43 +158,33 @@ glift.widgets.WidgetManager.prototype = {
     this.currentWidget.draw();
   },
 
-  /**
-   * Internal implementation of nextSgf/previous sgf..
-   */
+  /** Internal implementation of nextSgf/previous sgf. */
   _nextSgfInternal: function(indexChange) {
-    if (!this.sgfList.length > 1) {
+    if (!this.sgfCollection.length > 1) {
       return; // Nothing to do
     }
     if (this.allowWrapAround) {
-      this.sgfListIndex = (this.sgfListIndex + indexChange + this.sgfList.length)
-          % this.sgfList.length;
+      this.sgfColIndex = (this.sgfColIndex + indexChange + this.sgfCollection.length)
+          % this.sgfCollection.length;
     } else {
-      this.sgfListIndex = this.sgfListIndex + indexChange;
-      if (this.sgfListIndex < 0) {
-        this.sgfListIndex = 0;
-      } else if (this.sgfListIndex >= this.sgfList.length) {
-        this.sgfListIndex = this.sgfList.length - 1;
+      this.sgfColIndex = this.sgfColIndex + indexChange;
+      if (this.sgfColIndex < 0) {
+        this.sgfColIndex = 0;
+      } else if (this.sgfColIndex >= this.sgfCollection.length) {
+        this.sgfColIndex = this.sgfCollection.length - 1;
       }
     }
     this.draw();
   },
 
-  /**
-   * Get the next SGF.  Requires that the list be non-empty.
-   */
+  /** Get the next SGF.  Requires that the list be non-empty. */
   nextSgf: function() { this._nextSgfInternal(1); },
 
-  /**
-   * Get the next SGF.  Requires that the list be non-empty.
-   */
+  /** Get the next SGF.  Requires that the list be non-empty. */
   prevSgf: function() { this._nextSgfInternal(-1); },
 
-  /**
-   * Clear out the SGF Cache.
-   */
-  clearSgfCache: function() {
-    this.sgfCache = {};
-  },
+  /** Clear out the SGF Cache. */
+  clearSgfCache: function() { this.sgfCache = {}; },
 
   /**
    * Load a urlOrObject with AJAX.  If the urlOrObject is an object, then we
@@ -183,48 +195,40 @@ glift.widgets.WidgetManager.prototype = {
       sgfObj.sgfString = this.sgfCache[url];
       callback(sgfObj);
     } else {
-      var that = this;
       $.ajax({
-        url: url,
-        dataType: 'text',
-        cache: false,
+        url: url, dataType: 'text', cache: true,
         success: function(data) {
-          that.sgfCache[url] = data;
+          this.sgfCache[url] = data;
           sgfObj.sgfString = data;
           callback(sgfObj);
-        }
+        }.bind(this)
       });
     }
   },
 
-  /**
-   * Prepopulate the SGF Cache.
-   */
+  /** Prepopulate the SGF Cache. */
   prepopulateCache: function(callback) {
     var done = 0;
-    for (var i = 0; i < this.sgfList.length; i++) {
+    for (var i = 0; i < this.sgfCollection.length; i++) {
       var curObj = this.getSgfObj(i);
       this.getSgfString(curObj, function() {
         done += 1;
       });
     }
 
-    var that = this;
     var checkDone = function(val) {
-      if (val > 0 && done < that.sgfList.length) {
+      if (val > 0 && done < this.sgfCollection.length) {
         window.setTimeout(function() {
           checkDone(val - 1);
-        }, 500); // 500ms
+        }, 500); // 500ms to try again to see if complete.
       } else {
         callback();
       }
-    };
-    checkDone(3); // Check that we've finished prepopulating (3 checks)
+    }.bind(this);
+    checkDone(3); // Check that we've finished: (3 checks, 1.5s max time)
   },
 
-  /**
-   * Undraw the most recent widget and remove references to it.
-   */
+  /** Undraw the most recent widget and remove references to it. */
   destroy: function() {
     this.currentWidget && this.currentWidget.destroy();
     this.currentWidget = undefined;

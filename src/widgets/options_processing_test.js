@@ -5,7 +5,7 @@ glift.widgets.optionsProcessingTest = function() {
   test('Test sgf and sgfList: Should throw an error', function() {
     throws(function() {
       var mgr = createNoDraw({
-        sgfList:  ['foo','bar'],
+        sgfCollection:  ['foo','bar'],
         sgf:  'Zam'
       }, Error)
     });
@@ -13,7 +13,7 @@ glift.widgets.optionsProcessingTest = function() {
 
   test('Test processing book data', function() {
     var mgr = createNoDraw({
-      sgfList: [{
+      sgfCollection: [{
         sgf: 'foo',
         bookData: {
           chapterTitle: 'Foo chapter',
@@ -31,7 +31,7 @@ glift.widgets.optionsProcessingTest = function() {
         author: 'Kashomon'
       }
     });
-    deepEqual(mgr.sgfList.length, 2);
+    deepEqual(mgr.sgfCollection.length, 2);
   });
 
   test('Test processing editor options', function() {

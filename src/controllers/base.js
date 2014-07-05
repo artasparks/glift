@@ -141,10 +141,9 @@ BaseController.prototype = {
    *
    * Note, this method isn't always totally accurate. This method must be very
    * fast since it's expected that this will be used for hover events.
-   *
    */
   canAddStone: function(point, color) {
-    return this.goban.placeable(point,color);
+    return this.goban.placeable(point, color);
   },
 
   /**

@@ -7,10 +7,11 @@ glift.widgets.widgetsTest = function() {
       sgf: testdata.sgfs.complexproblem,
     });
     ok(manager !== undefined);
-    ok(manager.sgfList !== undefined);
-    deepEqual(manager.sgfList.length, 1);
-    deepEqual(manager.sgfList[0], testdata.sgfs.complexproblem);
-    deepEqual(manager.sgfListIndex, 0);
+    ok(manager.sgfCollection !== undefined);
+    deepEqual(manager.sgfCollection.length, 1);
+    deepEqual(manager.sgfCollection[0], testdata.sgfs.complexproblem);
+    deepEqual(manager.sgfColIndex, 0);
+    deepEqual(manager.sgfCollectionUrl, null);
     ok(manager.currentWidget !== undefined);
     ok(manager.displayOptions !== undefined);
 
@@ -28,7 +29,7 @@ glift.widgets.widgetsTest = function() {
     var wtypes = glift.enums.widgetTypes;
     var sgfs = testdata.sgfs;
     var manager = glift.widgets.create({
-      sgfList: [{
+      sgfCollection: [{
           sgfString: sgfs.complexproblem,
           widgetType: wtypes.STANDARD_PROBLEM
         }, {

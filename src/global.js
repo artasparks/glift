@@ -4,12 +4,16 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.12.4',
+  version: '0.14.0',
   debugMode: false,
+
   // Options for performanceDebugLevel: NONE, INFO
   performanceDebugLevel: 'NONE',
+
   // Map of performance timestamps.
+  // TODO(kashomon): Indicate that this is private and what it's used for.
   perf: {},
+
   // The active registry.  Used to determine who has 'ownership' of key-presses.
   // The problem is that key presses have to be captured in a global scope (or
   // at least at the <body> level.  Unfortunate.

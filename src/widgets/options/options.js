@@ -15,7 +15,7 @@ glift.widgets.options = {
 
     var topLevelOptions = [
         'divId',
-        'sgfList',
+        'sgfCollection',
         'initialListIndex',
         'allowWrapAround'];
     for (var i = 0; i < topLevelOptions.length; i++) {
@@ -36,11 +36,12 @@ glift.widgets.options = {
     }
 
     if (options.sgf) {
-      options.sgfList.push(options.sgf);
-      delete options['sgf'];
+      options.sgfCollection = [];
+      options.sgfCollection.push(options.sgf);
+      options.sgf = undefined;
     }
-    if (!options.sgf && options.sgfList.length === 0) {
-      options.sgfList.push({});
+    if (!options.sgf && !options.sgfCollection) {
+      options.sgfCollection = [{}];
     }
     return options;
   },
@@ -51,9 +52,9 @@ glift.widgets.options = {
    * options: user specified options.
    */
   _validateOptions: function(options) {
-    if (options.sgf && options.sgfList) {
+    if (options.sgf && options.sgfCollection) {
       throw new Error('Illegal options configuration: you cannot define both ' +
-          'sgf and sgfList')
+          'sgf and sgfCollection')
     }
   },
 

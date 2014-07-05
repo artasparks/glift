@@ -30,9 +30,10 @@ glift.widgets.options.baseOptions = {
    * The defaults or SGF objects.
    */
   sgfDefaults: {
-    /**
-     * One of 'sgfString' or 'url' should be defined in each SGF in the sgfList.
-     */
+    //
+    // One of 'sgfString' or 'url' should be defined in each SGF in the
+    // sgfCollection.
+    // 
     //sgfString: '',
     //url: '',
 
@@ -215,7 +216,7 @@ glift.widgets.options.baseOptions = {
   },
 
   //----------------------------------------------------------------------
-  // These are really widget Manager Options.  Any update to here must be
+  // These are really Widget Manager options.  Any update to here must be
   // accompanied with an update to options.getDisplayOptions.
   //----------------------------------------------------------------------
 
@@ -226,21 +227,25 @@ glift.widgets.options.baseOptions = {
   divId: 'glift_display',
 
   /**
-   * The SGF list is a list of SGF objects (given above)
+   * The SGF collection represents a set of SGFs. Like the Sgf parameter, this
+   * can take one of three values:
+   * - undefined (if the SGF parameter is defined)
+   * - An array of SGF objects.
+   * - A URL (to load the collection asynchronously).  The received data must be
+   *   a JSON array, containing a list of serialized SGF objects.
    */
-  sgfList: [],
+  sgfCollection: undefined,
 
   /**
-   * Index into the above list.  I can't imagine why anyone would want to change
-   * the initial index for the sgfList, but it's here anyway for
-   * configurability.
+   * Index into the above list.  This is mostly useful for remembering someone's
+   * position in the sgf collection.
    */
   initialListIndex: 0,
 
   /**
-    * If there are multiple SGFs in the SGF list, this flag indicates whether or
-    * not to allow the user to go back to the beginnig (or conversely, the end).
-    */
+   * If there are multiple SGFs in the SGF list, this flag indicates whether or
+   * not to allow the user to go back to the beginnig (or conversely, the end).
+   */
   allowWrapAround: false,
 
   /**

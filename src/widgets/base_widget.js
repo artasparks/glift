@@ -275,6 +275,7 @@ glift.widgets.BaseWidget.prototype = {
    * Redraw the widget.  This also resets the widget state in perhaps confusing
    * ways.
    */
+  // TODO(issues/6): Change so that state isn't reset.
   redraw: function() {
     this.destroy();
     this.draw();

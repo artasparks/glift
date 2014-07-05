@@ -115,55 +115,36 @@
         margin: 0;
         padding: 0;
       }
+      body {
+        height: 100%;
+      }
       #glift_display1 {
-        height:100%;
+        height: 500px;
+        width: 100%;
         position:relative;
-      }
-      .otre-header {
-        position: absolute;
-        left: 10px;
-        top: 10px;
-        float: left;
-        font-size:4em;
-        color: #55A;
-        z-index: -1;
-      }
-
-      .otre-sub-header {
-        position: absolute;
-        left: 10px;
-        top: 100px;
-        float: left;
-        font-size:2em;
-        color: #99D;
-        z-index: -1;
       }
     </style>
   </head>
 
   <body>
-    <div class='container default-fonter' id='maincontainer'>
-      <div class='otre-header'>Jubango</div>
-      <div class='otre-sub-header'>Game 1</div>
-    </div>
     <div id="glift_display1"></div>
     <div id="wrap" style="position:relative;">
       <div id="gheader"></div>
       <div id="extra_info"></div>
-      <script type="text/javascript">
-        var boardEditor = glift.create({
-          sgf: {},
-          divId: 'glift_display1',
-          sgfDefaults: { widgetType: 'BOARD_EDITOR' },
-          display: {
-            theme: 'DEPTH',
-            goBoardBackground: '../themes/assets/bambootile_warm.jpg'
-          }
-        });
-        $(window).resize(function() {
-          boardEditor.destroy().draw();
-        });
-      </script>
     </div>
   </body>
+  <script type="text/javascript">
+    var boardEditor = glift.create({
+      sgf: {},
+      divId: 'glift_display1',
+      sgfDefaults: { widgetType: 'BOARD_EDITOR' },
+      display: {
+        theme: 'DEPTH',
+        goBoardBackground: '../themes/assets/bambootile_warm.jpg'
+      }
+    });
+    $(window).resize(function() {
+      boardEditor.destroy().draw();
+    });
+  </script>
 </html>

@@ -234,10 +234,22 @@ glift.controllers.BoardEditorMethods = {
 
   /**
    * Add a stone.
+   *
+   * Returns: partial data to apply
    */
   addStone: function(point, color) {
-    console.log(point);
-    console.log(color);
+    if (!this.canAddStone(point, color)) {
+      return null;
+    }
+
+    // TODO(kashomon): Use the addResult
+    var addResult = this.goban.addStone(point, color);
+
+    this.movetree.addNode();
+    this.movetree.properties().add(
+        glift.sgf.colorToToken(color),
+        point.toSgfCoord());
+    return this.getNextBoardState();
   },
 
   /**

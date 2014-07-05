@@ -26,7 +26,7 @@ glift.widgets = {
     actions.stoneActions = options.stoneActions;
     return new glift.widgets.WidgetManager(
         options.divId,
-        options.sgfList,
+        options.sgfCollection,
         options.initialListIndex,
         options.allowWrapAround,
         options.sgfDefaults,

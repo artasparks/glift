@@ -1,8 +1,7 @@
 /**
  * Board Editor options.
- *
- * The Board editor is so complex it needs its own directory!
  */
+// The Board editor is so complex it may need its own directory
 glift.widgets.options.BOARD_EDITOR = {
   _markMap: {
     bstone_a: glift.enums.marks.LABEL_ALPHA,
@@ -11,6 +10,7 @@ glift.widgets.options.BOARD_EDITOR = {
     bstone_triangle: glift.enums.marks.TRIANGLE
   },
 
+  // Map from icon name to color.
   _placementMap: {
     bstone: glift.enums.states.BLACK,
     wstone: glift.enums.states.WHITE
@@ -29,6 +29,11 @@ glift.widgets.options.BOARD_EDITOR = {
       widget.applyBoardData(partialData);
     } else if (iconToMark[iconName]) {
       var partialData = widget.controller.addMark(pt, iconToMark[iconName]);
+      if (partialData) {
+        widget.applyBoardData(partialData);
+      }
+    } else if (iconName === 'twostones') {
+      var partialData = widget.controller.addStone(pt, currentPlayer);
       if (partialData) {
         widget.applyBoardData(partialData);
       }
