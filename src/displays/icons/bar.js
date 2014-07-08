@@ -311,6 +311,7 @@ glift.displays.icons._IconBar.prototype = {
 
   _initOneIconAction: function(parentWidget, iconName, eventName, eventFunc) {
     this.setEvent(iconName, eventName, function(event, icon) {
+      parentWidget.manager.setActive();
       eventFunc(event, parentWidget, icon, this);
     }.bind(this));
   },

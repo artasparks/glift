@@ -18,7 +18,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.14.0',
+  version: '0.14.2',
   debugMode: false,
 
   // Options for performanceDebugLevel: NONE, INFO
@@ -28,11 +28,15 @@ glift.global = {
   // TODO(kashomon): Indicate that this is private and what it's used for.
   perf: {},
 
-  // The active registry.  Used to determine who has 'ownership' of key-presses.
+  // The registry.  Used to determine who has 'ownership' of key-presses.
   // The problem is that key presses have to be captured in a global scope (or
   // at least at the <body> level.  Unfortunate.
-  // (not used yet).
-  active: {}
+  instanceRegistry: {
+    // Map of manager ID (some-div-id-glift-1) to object instance.
+  },
+
+  // Id of the active instance.
+  activeInstanceId: null
 };
 glift.util = {
   logz: function(msg) {
@@ -402,7 +406,7 @@ glift.keyMappings = {
     ARROW_LEFT:37,
     ARROW_UP:38,
     ARROW_RIGHT:39,
-    ARROW_:40,
+    ARROW_DOWN:40,
     BACKSPACE:8,
     ENTER:13,
     SHIFT:16,
@@ -418,24 +422,134 @@ glift.keyMappings = {
     I:73,
     J:74,
     K:75
-    // TODO(kashomon): Complete this.
+    // TODO(kashomon): Add more codes.
   },
 
+  /** Convert a key name (see above) to a standard key code. */
   nameToCode: function(name) {
-    return glift.keyMappings._nameToCode[name];
+    if (glift.keyMappings._nameToCode[name]) {
+      return glift.keyMappings._nameToCode[name];
+    }
+    return null;
   },
 
-  _codeToName: undefined, // lazilyDefined
+  _codeToName: undefined, // lazilyDefined below.
 
+  /** Convert a standard key code to a key name (see above). */
   codeToName: function(keyCode) {
     if (glift.keyMappings._codeToName === undefined) {
-      var out = {};
+      var out = {}; // map from key code (e.g., 37) to name (ARROW_LEFT)
       for (var keyName in glift.keyMappings._nameToCode) {
         out[glift.keyMappings._nameToCode[keyName]] = keyName;
       }
       glift.keyMappings._codeToName = out;
     }
-    return glift.keyMappings._codeToName[keyCode];
+    if (glift.keyMappings._codeToName[keyCode]) {
+      return glift.keyMappings._codeToName[keyCode];
+    }
+    return null;
+  },
+
+  /**
+   * Maps:  
+   *  InstanceId -> (to)
+   *    KeyName -> (to)
+   *      Function or Icon
+   */
+  _keyBindingMap: {},
+
+  /**
+   * Registers a keybinding function with a manager instance.
+   *
+   * id: Glift manager instance id.
+   * keyName: string representing the keypress. Must be a member of _nameToCode.
+   * funcOrIcon: The function or icon.name to register.
+   */
+  registerKeyAction: function(id, keyName, funcOrIcon) {
+    var map = glift.keyMappings._keyBindingMap;
+    if (!glift.keyMappings.nameToCode(keyName)) {
+      // We don't know about this particular keyCode.  It might be an error, or
+      // it might be that it needs to be added to the above.
+      return;
+    }
+
+    if (!map[id]) {
+      map[id] = {};
+    }
+    if (id && keyName && funcOrIcon) {
+      map[id][keyName] = funcOrIcon;
+    }
+  },
+
+  /** Remove all keys associated with an ID. */
+  unregisterInstance: function(id) {
+    if (glift.keyMappings._keyBindingMap[id]) {
+      delete glift.keyMappings._keyBindingMap[id];
+    }
+  },
+
+  /**
+   * Gets a keybinding function or an icon path
+   *
+   * id: The glift manager instance id.
+   * keyName: The number representing the instance.
+   */
+  getFuncOrIcon: function(id, keyName) {
+    var map = glift.keyMappings._keyBindingMap;
+    if (id && keyName && map[id] && map[id][keyName]) {
+      return map[id][keyName];
+    }
+    return null;
+  },
+
+  /** Whether the listener has been initialized. */
+  _initializedListener: false,
+
+  /**
+   * Initializes a global listener on keypresses.  Should only be really
+   * initialized once, but it's ok to call this function more than once -- it
+   * will be idempotent.
+   */
+  initKeybindingListener: function() {
+    if (glift.keyMappings._initializedListener) {
+      return;
+    }
+    // TODO(kashomon): Remove jquery instances
+    $('body').keydown(glift.keyMappings._keyHandlerFunc);
+    glift.keyMappings._initializedListener = true;
+  },
+
+  /**
+   * Internal function for processing key-presses.
+   */
+  _keyHandlerFunc: function(keyEvent) {
+    var keyName = glift.keyMappings.codeToName(keyEvent.which);
+    var activeId = glift.global.activeInstanceId;
+    var bindingMap = glift.keyMappings._keyBindingMap;
+    var funcOrIcon = glift.keyMappings.getFuncOrIcon(activeId, keyName);
+    if (!funcOrIcon) { return; }
+
+    var argType = glift.util.typeOf(funcOrIcon)
+    if (argType === 'function') {
+      // TODO(kashomon): Add support for functions.  Left un-added for the
+      // time being because it's not clear what parameters to pass.
+      // funcOrIcon(); 
+    } else if (argType === 'string') {
+      // Assume it's an icon-action-path
+      var manager = glift.global.instanceRegistry[activeId];
+      if (!manager) { return; }
+
+      var widget = manager.getCurrentWidget();
+      if (!widget) { return; }
+
+      // icon namespaces look like: icons.arrowleft.mouseup
+      var actionNamespace = funcOrIcon.split('.');
+      var action = widget.actions[actionNamespace[0]];
+      for (var i = 1; i < actionNamespace.length; i++) {
+        action = action[actionNamespace[i]];
+      }
+      action(keyEvent, widget);
+    }
   }
 };
 glift.math = {
@@ -3553,6 +3667,7 @@ glift.displays.icons._IconBar.prototype = {
 
   _initOneIconAction: function(parentWidget, iconName, eventName, eventFunc) {
     this.setEvent(iconName, eventName, function(event, icon) {
+      parentWidget.manager.setActive();
       eventFunc(event, parentWidget, icon, this);
     }.bind(this));
   },
@@ -7331,7 +7446,7 @@ glift.bridge = {
       i += 1;
     }
 
-    if (boardData.lastMove && markLastMove &&
+    if (boardData.lastMove && boardData.lastMove.point && markLastMove &&
         !marksMap[boardData.lastMove.point.toString()]) {
       var lm = boardData.lastMove;
       display.intersections().addMarkPt(lm.point, marks.STONE_MARKER);
@@ -8260,7 +8375,8 @@ glift.widgets.BaseWidget.prototype = {
         left: bbox.left(),
         width: bbox.width(),
         height: bbox.height(),
-        position: 'absolute'
+        position: 'absolute',
+        cursor: 'default'
       };
       $('#' + newId).css(cssObj);
       return newId;
@@ -8318,10 +8434,12 @@ glift.widgets.BaseWidget.prototype = {
       actions.mouseout = this.sgfOptions.stoneMouseout;
     }
 
-
     var that = this;
     var wrapAction = function(func) {
-      return function(event, pt) { func(event, that, pt); };
+      return function(event, pt) { 
+        that.manager.setActive();
+        func(event, that, pt); 
+      };
     };
     var that = this
     if (actions.mouseover && actions.mouseout) {
@@ -8339,21 +8457,14 @@ glift.widgets.BaseWidget.prototype = {
    * Assign Key actions to some other action.
    */
   _initKeyHandlers: function() {
-    var that = this;
-    this.keyHandlerFunc = function(e) {
-      var name = glift.keyMappings.codeToName(e.which);
-      if (name && that.sgfOptions.keyMappings[name] !== undefined) {
-        var actionName = that.sgfOptions.keyMappings[name];
-        // actionNamespaces look like: icons.arrowleft.mouseup
-        var actionNamespace = actionName.split('.');
-        var action = that.actions[actionNamespace[0]];
-        for (var i = 1; i < actionNamespace.length; i++) {
-          action = action[actionNamespace[i]];
-        }
-        action(e, that);
-      }
-    };
-    $('body').keydown(this.keyHandlerFunc);
+    for (var keyName in this.sgfOptions.keyMappings) {
+      var iconPathOrFunc = this.sgfOptions.keyMappings[keyName]; 
+      glift.keyMappings.registerKeyAction(
+          this.manager.id,
+          keyName,
+          iconPathOrFunc);
+    }
+    glift.keyMappings.initKeybindingListener();
   },
 
   /**
@@ -8421,13 +8532,16 @@ glift.widgets.BaseWidget.prototype = {
    * Redraw the widget.  This also resets the widget state in perhaps confusing
    * ways.
    */
-  // TODO(issues/6): Change so that state isn't reset.
+  // TODO(kashomon): See issues/6: Change so that state isn't reset.
   redraw: function() {
     this.destroy();
     this.draw();
   },
 
   destroy: function() {
+    var managerId = this.manager.id;
+    glift.keyMappings.unregisterInstance(managerId);
+
     $('#' + this.wrapperDiv).empty();
     this.correctness = undefined;
     this.keyHandlerFunc !== undefined
@@ -8455,6 +8569,17 @@ glift.widgets.BaseWidget.prototype = {
  */
 glift.widgets.WidgetManager = function(divId, sgfCollection, sgfColIndex,
       allowWrapAround, sgfDefaults, displayOptions, bookData, actions) {
+  // Globally unique ID, at least across all glift instances in the current
+  // page. In theory, the divId should be globally unique, but might as well be
+  // absolutely sure.
+  this.id = divId + '-glift-' + glift.util.idGenerator.next();
+
+  // Register the instance. Maybe should be its own method.
+  glift.global.instanceRegistry[this.id] = this;
+
+  // Set as active, if the active instance hasn't already been set.
+  !glift.global.activeInstanceId && this.setActive();
+
   this.divId = divId;
 
   // Note: At creation time of the manager, The param sgfCollection may either
@@ -8488,14 +8613,15 @@ glift.widgets.WidgetManager = function(divId, sgfCollection, sgfColIndex,
 
 glift.widgets.WidgetManager.prototype = {
   draw: function() {
+    var that = this;
     var afterCollectionLoad = function() {
-      var curObj = this.getCurrentSgfObj();
-      this.getSgfString(curObj, function(sgfObj) {
+      var curObj = that.getCurrentSgfObj();
+      that.getSgfString(curObj, function(sgfObj) {
         // Prevent flickering by destroying the widget after loading the SGF.
-        this.destroy();
-        this.currentWidget = this.createWidget(sgfObj).draw();
-      }.bind(this));
-    }.bind(this);
+        that.destroy();
+        that.currentWidget = that.createWidget(sgfObj).draw();
+      });
+    };
 
     if (this.sgfCollection.length === 0 && this.sgfCollectionUrl) {
       $.ajax({
@@ -8513,6 +8639,9 @@ glift.widgets.WidgetManager.prototype = {
 
   /** Redraws current widget. */
   redraw: function() { this.currentWidget && this.currentWidget.redraw(); },
+
+  /** Set as the active widget in the global registry. */
+  setActive: function() {glift.global.activeInstanceId = this.id; },
 
   /** Gets the current widget object. */
   getCurrentWidget: function() { return this.currentWidget; },
@@ -8585,7 +8714,7 @@ glift.widgets.WidgetManager.prototype = {
    * case of the PROBLEM_SOLUTION_VIEWER.
    */
   createTemporaryWidget: function(sgfObj) {
-    this.currentWidget.destroy();
+    this.currentWidget && this.currentWidget.destroy();
     sgfObj = glift.widgets.options.setSgfOptions(sgfObj, this.sgfDefaults);
     this.temporaryWidget = this.createWidget(sgfObj).draw();
   },

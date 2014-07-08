@@ -17,6 +17,17 @@
  */
 glift.widgets.WidgetManager = function(divId, sgfCollection, sgfColIndex,
       allowWrapAround, sgfDefaults, displayOptions, bookData, actions) {
+  // Globally unique ID, at least across all glift instances in the current
+  // page. In theory, the divId should be globally unique, but might as well be
+  // absolutely sure.
+  this.id = divId + '-glift-' + glift.util.idGenerator.next();
+
+  // Register the instance. Maybe should be its own method.
+  glift.global.instanceRegistry[this.id] = this;
+
+  // Set as active, if the active instance hasn't already been set.
+  !glift.global.activeInstanceId && this.setActive();
+
   this.divId = divId;
 
   // Note: At creation time of the manager, The param sgfCollection may either
@@ -50,14 +61,15 @@ glift.widgets.WidgetManager = function(divId, sgfCollection, sgfColIndex,
 
 glift.widgets.WidgetManager.prototype = {
   draw: function() {
+    var that = this;
     var afterCollectionLoad = function() {
-      var curObj = this.getCurrentSgfObj();
-      this.getSgfString(curObj, function(sgfObj) {
+      var curObj = that.getCurrentSgfObj();
+      that.getSgfString(curObj, function(sgfObj) {
         // Prevent flickering by destroying the widget after loading the SGF.
-        this.destroy();
-        this.currentWidget = this.createWidget(sgfObj).draw();
-      }.bind(this));
-    }.bind(this);
+        that.destroy();
+        that.currentWidget = that.createWidget(sgfObj).draw();
+      });
+    };
 
     if (this.sgfCollection.length === 0 && this.sgfCollectionUrl) {
       $.ajax({
@@ -75,6 +87,9 @@ glift.widgets.WidgetManager.prototype = {
 
   /** Redraws current widget. */
   redraw: function() { this.currentWidget && this.currentWidget.redraw(); },
+
+  /** Set as the active widget in the global registry. */
+  setActive: function() {glift.global.activeInstanceId = this.id; },
 
   /** Gets the current widget object. */
   getCurrentWidget: function() { return this.currentWidget; },
@@ -147,7 +162,7 @@ glift.widgets.WidgetManager.prototype = {
    * case of the PROBLEM_SOLUTION_VIEWER.
    */
   createTemporaryWidget: function(sgfObj) {
-    this.currentWidget.destroy();
+    this.currentWidget && this.currentWidget.destroy();
     sgfObj = glift.widgets.options.setSgfOptions(sgfObj, this.sgfDefaults);
     this.temporaryWidget = this.createWidget(sgfObj).draw();
   },

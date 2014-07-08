@@ -134,6 +134,7 @@
 <!-- Otre Tests -->
 <script type="text/javascript" src=".././glift_test.js"></script>
 <!-- Util Tests -->
+<script type="text/javascript" src="../util/key_mappings_test.js"></script>
 <script type="text/javascript" src="../util/point_test.js"></script>
 <script type="text/javascript" src="../util/util_test.js"></script>
 <!-- Themes Tests -->
@@ -192,6 +193,8 @@ $(document).ready(function() {
   // glift.debugOn = true;
   glift.utilTest();
   glift.util.pointTest();
+  glift.keyMappingsTest();
+
   glift.themes.themesTest();
 
   glift.displays.bboxTest();

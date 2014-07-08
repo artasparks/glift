@@ -114,7 +114,8 @@ glift.widgets.BaseWidget.prototype = {
         left: bbox.left(),
         width: bbox.width(),
         height: bbox.height(),
-        position: 'absolute'
+        position: 'absolute',
+        cursor: 'default'
       };
       $('#' + newId).css(cssObj);
       return newId;
@@ -172,10 +173,12 @@ glift.widgets.BaseWidget.prototype = {
       actions.mouseout = this.sgfOptions.stoneMouseout;
     }
 
-
     var that = this;
     var wrapAction = function(func) {
-      return function(event, pt) { func(event, that, pt); };
+      return function(event, pt) { 
+        that.manager.setActive();
+        func(event, that, pt); 
+      };
     };
     var that = this
     if (actions.mouseover && actions.mouseout) {
@@ -193,21 +196,14 @@ glift.widgets.BaseWidget.prototype = {
    * Assign Key actions to some other action.
    */
   _initKeyHandlers: function() {
-    var that = this;
-    this.keyHandlerFunc = function(e) {
-      var name = glift.keyMappings.codeToName(e.which);
-      if (name && that.sgfOptions.keyMappings[name] !== undefined) {
-        var actionName = that.sgfOptions.keyMappings[name];
-        // actionNamespaces look like: icons.arrowleft.mouseup
-        var actionNamespace = actionName.split('.');
-        var action = that.actions[actionNamespace[0]];
-        for (var i = 1; i < actionNamespace.length; i++) {
-          action = action[actionNamespace[i]];
-        }
-        action(e, that);
-      }
-    };
-    $('body').keydown(this.keyHandlerFunc);
+    for (var keyName in this.sgfOptions.keyMappings) {
+      var iconPathOrFunc = this.sgfOptions.keyMappings[keyName]; 
+      glift.keyMappings.registerKeyAction(
+          this.manager.id,
+          keyName,
+          iconPathOrFunc);
+    }
+    glift.keyMappings.initKeybindingListener();
   },
 
   /**
@@ -275,13 +271,16 @@ glift.widgets.BaseWidget.prototype = {
    * Redraw the widget.  This also resets the widget state in perhaps confusing
    * ways.
    */
-  // TODO(issues/6): Change so that state isn't reset.
+  // TODO(kashomon): See issues/6: Change so that state isn't reset.
   redraw: function() {
     this.destroy();
     this.draw();
   },
 
   destroy: function() {
+    var managerId = this.manager.id;
+    glift.keyMappings.unregisterInstance(managerId);
+
     $('#' + this.wrapperDiv).empty();
     this.correctness = undefined;
     this.keyHandlerFunc !== undefined
