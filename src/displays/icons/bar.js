@@ -255,6 +255,8 @@ glift.displays.icons._IconBar.prototype = {
    *  iconId: the element id of the icon (for convenience).
    * }
    */
+  // TODO(kashomon): The event stuff here is waaaaaaay too complicated and needs
+  // to be consolidated with the stone actions event logic.
   setEvent: function(iconNameOrIndex, event, func) {
     var icon = this.getIcon(iconNameOrIndex);
     var button = this.svg.child(this.idGen.buttonGroup())
@@ -265,6 +267,15 @@ glift.displays.icons._IconBar.prototype = {
   },
 
   _setEvent: function(buttonId, icon, event, func) {
+    // TODO(kashomon): Process all DOM events in a common location.
+    if (event === 'click' && glift.platform.isMobile()) {
+      event = 'touchstart';
+    }
+    if ((event === 'mouseover' || event === 'mouseout') &&
+        glift.platform.isMobile()) {
+      return; // mouseover's have no meaning.
+    }
+    // TODO(kashomon): This id thing is such a hack =/
     var id = buttonId + '#' + event;
     this.events[id] = { icon: icon, func: func };
     return this;

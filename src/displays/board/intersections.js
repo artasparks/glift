@@ -329,16 +329,34 @@ glift.displays.board._Intersections.prototype = {
         .child(this.idGen.fullBoardButton())
         .data();
     var maxInts = this.boardPoints.numIntersections;
+
+    // X Calculations
     var left = data.tl.intPt.x();
-    var ptx = (e.offsetX) / data.spacing;
+    var offsetX = e.offsetX;
+    if (e.originalEvent.touches) {
+      // Only for OSX right now.
+      offsetX = e.originalEvent.touches[0].pageX
+          - document.getElementById(this.divId).getClientRects()[0].left;
+    }
+
+    var ptx = offsetX / data.spacing;
     var intPtx = Math.round(ptx) - 1 + left;
     if (intPtx < left) {
       intPtx = left
     } else if (intPtx > maxInts - 1) {
       intPtx = maxInts - 1
     }
+    
+    // Y calculations
     var top = data.tl.intPt.y();
-    var pty = (e.offsetY) / data.spacing;
+    var offsetY = e.offsetY;
+    if (e.originalEvent.touches) {
+      // Only for OSX right now.
+      offsetY = e.originalEvent.touches[0].pageY
+          - document.getElementById(this.divId).getClientRects()[0].top;
+    }
+
+    var pty = offsetY / data.spacing;
     var intPty = Math.round(pty) - 1 + top;
     if (intPty < top) {
       intPty = top;

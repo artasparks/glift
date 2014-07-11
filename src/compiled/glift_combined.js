@@ -18,7 +18,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.14.2',
+  version: '0.14.3',
   debugMode: false,
 
   // Options for performanceDebugLevel: NONE, INFO
@@ -615,6 +615,25 @@ glift.util.perfInit = function() {
 
 glift.util.perfTime = function() {
   return (new Date()).getTime();
+};
+glift.platform = {
+  _isIOS:  null,
+  isIOS: function() {
+    if (glift.platform._isIOS !== null) return glift.platform._isIOS;
+    glift.platform._isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    return glift.platform._isIOS;
+  },
+
+  _isAndroid: null,
+  isAndroid: function() {
+    if (glift.platform._isAndroid !== null) return glift.platform._isAndroid;
+    glift.platform._isAndroid = /Android/i.test(navigator.userAgent);
+    return glift.platform._isAndroid;
+  },
+
+  isMobile: function() {
+    return glift.platform.isAndroid() ||  glift.platform.isIOS();
+  }
 };
 (function() {
 /**
@@ -2785,16 +2804,39 @@ glift.displays.board._Intersections.prototype = {
         .child(this.idGen.fullBoardButton())
         .data();
     var maxInts = this.boardPoints.numIntersections;
+
+    // X Calculations
     var left = data.tl.intPt.x();
-    var ptx = (e.offsetX) / data.spacing;
+    var offsetX = e.offsetX;
+    if (e.originalEvent.touches) {
+      // var out = '';
+      // for (key in e.originalEvent.touches[0].target) {
+        // out += key + ',';
+      // }
+      // alert(out + '--');
+      offsetX = e.originalEvent.touches[0].pageX
+          // - e.originalEvent.touches[0].target.offsetLeft;
+          - document.getElementById(this.divId).getClientRects()[0].left;
+    }
+
+    var ptx = offsetX / data.spacing;
     var intPtx = Math.round(ptx) - 1 + left;
     if (intPtx < left) {
       intPtx = left
     } else if (intPtx > maxInts - 1) {
       intPtx = maxInts - 1
     }
+    
+    // Y calculations
     var top = data.tl.intPt.y();
-    var pty = (e.offsetY) / data.spacing;
+    var offsetY = e.offsetY;
+    // console.log(this.divId);
+    if (e.originalEvent.touches) {
+      offsetY = e.originalEvent.touches[0].pageY
+          - document.getElementById(this.divId).getClientRects()[0].top;
+    }
+
+    var pty = offsetY / data.spacing;
     var intPty = Math.round(pty) - 1 + top;
     if (intPty < top) {
       intPty = top;
@@ -3611,6 +3653,8 @@ glift.displays.icons._IconBar.prototype = {
    *  iconId: the element id of the icon (for convenience).
    * }
    */
+  // TODO(kashomon): The event stuff here is waaaaaaay too complicated and needs
+  // to be consolidated with the stone actions event logic.
   setEvent: function(iconNameOrIndex, event, func) {
     var icon = this.getIcon(iconNameOrIndex);
     var button = this.svg.child(this.idGen.buttonGroup())
@@ -3621,6 +3665,15 @@ glift.displays.icons._IconBar.prototype = {
   },
 
   _setEvent: function(buttonId, icon, event, func) {
+    // TODO(kashomon): Process all DOM events in a common location.
+    if (event === 'click' && glift.platform.isIOS()) {
+      event = 'touchstart';
+    }
+    if ((event === 'mouseover' || event === 'mouseout') &&
+        glift.platform.isMobile()) {
+      return; // mouseover's have no meaning.
+    }
+    // TODO(kashomon): This id thing is such a hack =/
     var id = buttonId + '#' + event;
     this.events[id] = { icon: icon, func: func };
     return this;
@@ -8442,20 +8495,25 @@ glift.widgets.BaseWidget.prototype = {
       };
     };
     var that = this
-    if (actions.mouseover && actions.mouseout) {
+    if (actions.mouseover && 
+        actions.mouseout &&
+        !glift.platform.isMobile()) {
       this.display.intersections().setHover(
           wrapAction(actions.mouseover),
           wrapAction(actions.mouseout));
     }
     if (actions.click) {
+      var actionName = 'click'; 
+      if (glift.platform.isIOS()) {
+        // Kinda a hack, but necessary to avoid the 300ms delay. 
+        var actionName = 'touchstart'; 
+      }
       this.display.intersections().setEvent(
-          'click', wrapAction(actions.click));
+          actionName, wrapAction(actions.click));
     }
   },
 
-  /**
-   * Assign Key actions to some other action.
-   */
+  /** Assign Key actions to some other action. */
   _initKeyHandlers: function() {
     for (var keyName in this.sgfOptions.keyMappings) {
       var iconPathOrFunc = this.sgfOptions.keyMappings[keyName]; 

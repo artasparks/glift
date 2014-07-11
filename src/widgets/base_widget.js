@@ -181,20 +181,25 @@ glift.widgets.BaseWidget.prototype = {
       };
     };
     var that = this
-    if (actions.mouseover && actions.mouseout) {
+    if (actions.mouseover && 
+        actions.mouseout &&
+        !glift.platform.isMobile()) {
       this.display.intersections().setHover(
           wrapAction(actions.mouseover),
           wrapAction(actions.mouseout));
     }
     if (actions.click) {
+      var actionName = 'click'; 
+      if (glift.platform.isMobile()) {
+        // Kinda a hack, but necessary to avoid the 300ms delay. 
+        var actionName = 'touchstart'; 
+      }
       this.display.intersections().setEvent(
-          'click', wrapAction(actions.click));
+          actionName, wrapAction(actions.click));
     }
   },
 
-  /**
-   * Assign Key actions to some other action.
-   */
+  /** Assign Key actions to some other action. */
   _initKeyHandlers: function() {
     for (var keyName in this.sgfOptions.keyMappings) {
       var iconPathOrFunc = this.sgfOptions.keyMappings[keyName]; 

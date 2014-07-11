@@ -4,7 +4,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.14.2',
+  version: '0.14.3',
   debugMode: false,
 
   // Options for performanceDebugLevel: NONE, INFO
