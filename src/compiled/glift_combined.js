@@ -18,7 +18,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.14.3',
+  version: '0.14.4',
   debugMode: false,
 
   // Options for performanceDebugLevel: NONE, INFO
@@ -2804,23 +2804,19 @@ glift.displays.board._Intersections.prototype = {
         .child(this.idGen.fullBoardButton())
         .data();
     var maxInts = this.boardPoints.numIntersections;
+    var enclButton = $('#' + this.idGen.fullBoardButton());
+    // var boundingRect = enclButton.getBoundingClientRect();
 
     // X Calculations
     var left = data.tl.intPt.x();
-    var offsetX = e.offsetX;
+    var pageOffsetX = e.pageX;
     if (e.originalEvent.touches) {
-      // var out = '';
-      // for (key in e.originalEvent.touches[0].target) {
-        // out += key + ',';
-      // }
-      // alert(out + '--');
-      offsetX = e.originalEvent.touches[0].pageX
-          // - e.originalEvent.touches[0].target.offsetLeft;
-          - document.getElementById(this.divId).getClientRects()[0].left;
+      var pageOffsetX = e.originalEvent.touches[0].pageX;
     }
 
-    var ptx = offsetX / data.spacing;
-    var intPtx = Math.round(ptx) - 1 + left;
+    var ptx = (pageOffsetX - enclButton.offset().left) / data.spacing;
+
+    var intPtx = Math.floor(ptx) + left;
     if (intPtx < left) {
       intPtx = left
     } else if (intPtx > maxInts - 1) {
@@ -2829,20 +2825,19 @@ glift.displays.board._Intersections.prototype = {
     
     // Y calculations
     var top = data.tl.intPt.y();
-    var offsetY = e.offsetY;
-    // console.log(this.divId);
+    var pageOffsetY = e.pageY;
     if (e.originalEvent.touches) {
-      offsetY = e.originalEvent.touches[0].pageY
-          - document.getElementById(this.divId).getClientRects()[0].top;
+      var pageOffsetY = e.originalEvent.touches[0].pageY;
     }
 
-    var pty = offsetY / data.spacing;
-    var intPty = Math.round(pty) - 1 + top;
+    var pty = (pageOffsetY - enclButton.offset().top) / data.spacing;
+    var intPty = Math.floor(pty) + top;
     if (intPty < top) {
       intPty = top;
     } else if (intPty > maxInts - 1) {
       intPty = maxInts - 1;
     }
+
     var pt = glift.util.point(intPtx, intPty);
     if (this.rotation != glift.enums.rotations.NO_ROTATION) {
       pt = pt.antirotate(this.boardPoints.numIntersections, this.rotation);
@@ -3666,7 +3661,7 @@ glift.displays.icons._IconBar.prototype = {
 
   _setEvent: function(buttonId, icon, event, func) {
     // TODO(kashomon): Process all DOM events in a common location.
-    if (event === 'click' && glift.platform.isIOS()) {
+    if (event === 'click' && glift.platform.isMobile()) {
       event = 'touchstart';
     }
     if ((event === 'mouseover' || event === 'mouseout') &&
@@ -8504,7 +8499,7 @@ glift.widgets.BaseWidget.prototype = {
     }
     if (actions.click) {
       var actionName = 'click'; 
-      if (glift.platform.isIOS()) {
+      if (glift.platform.isMobile()) {
         // Kinda a hack, but necessary to avoid the 300ms delay. 
         var actionName = 'touchstart'; 
       }

@@ -329,18 +329,19 @@ glift.displays.board._Intersections.prototype = {
         .child(this.idGen.fullBoardButton())
         .data();
     var maxInts = this.boardPoints.numIntersections;
+    // TODO(kashomon): Remove uses of jQuery
+    var enclButton = $('#' + this.idGen.fullBoardButton());
 
     // X Calculations
     var left = data.tl.intPt.x();
-    var offsetX = e.offsetX;
+    var pageOffsetX = e.pageX;
     if (e.originalEvent.touches) {
-      // Only for OSX right now.
-      offsetX = e.originalEvent.touches[0].pageX
-          - document.getElementById(this.divId).getClientRects()[0].left;
+      var pageOffsetX = e.originalEvent.touches[0].pageX;
     }
 
-    var ptx = offsetX / data.spacing;
-    var intPtx = Math.round(ptx) - 1 + left;
+    var ptx = (pageOffsetX - enclButton.offset().left) / data.spacing;
+
+    var intPtx = Math.floor(ptx) + left;
     if (intPtx < left) {
       intPtx = left
     } else if (intPtx > maxInts - 1) {
@@ -349,20 +350,19 @@ glift.displays.board._Intersections.prototype = {
     
     // Y calculations
     var top = data.tl.intPt.y();
-    var offsetY = e.offsetY;
+    var pageOffsetY = e.pageY;
     if (e.originalEvent.touches) {
-      // Only for OSX right now.
-      offsetY = e.originalEvent.touches[0].pageY
-          - document.getElementById(this.divId).getClientRects()[0].top;
+      var pageOffsetY = e.originalEvent.touches[0].pageY;
     }
 
-    var pty = offsetY / data.spacing;
-    var intPty = Math.round(pty) - 1 + top;
+    var pty = (pageOffsetY - enclButton.offset().top) / data.spacing;
+    var intPty = Math.floor(pty) + top;
     if (intPty < top) {
       intPty = top;
     } else if (intPty > maxInts - 1) {
       intPty = maxInts - 1;
     }
+
     var pt = glift.util.point(intPtx, intPty);
     if (this.rotation != glift.enums.rotations.NO_ROTATION) {
       pt = pt.antirotate(this.boardPoints.numIntersections, this.rotation);
