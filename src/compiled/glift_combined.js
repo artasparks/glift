@@ -18,7 +18,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.14.4',
+  version: '0.14.5',
   debugMode: false,
 
   // Options for performanceDebugLevel: NONE, INFO
@@ -941,6 +941,27 @@ glift.themes = {
     }
   }
 };
+glift.themes.registered.COLORFUL = {
+  board: {
+    fill: "#f5be7e"
+  }, 
+
+  commentBox: {
+    css: {
+      background: '#CCF',
+      border: '1px solid'
+    }
+  },
+
+  icons: {
+    DEFAULT: { 
+      fill: "#000"
+    },
+    DEFAULT_HOVER: {
+      fill: "#AAA"
+    }
+  }
+};
 /**
  * The base theme.  All possible theme options must be specified here.
  */
@@ -1037,12 +1058,12 @@ glift.themes.registered.DEFAULT = {
     horzMargin: 5,
 
     DEFAULT: { // TODO(kashomon): Change to default instead of DEFAULT.
-      fill: "#00A",
+      fill: "#000",
       stroke: 'black'
       //fill: "90-#337-#55B"
     },
     DEFAULT_HOVER: { // TODO(kashomon): Change to DEFAULT_HOVER
-      fill: 'red',
+      fill: '#AAA',
       stroke: 'black'
       //fill: "90-#337-#55D"
     }
@@ -1050,10 +1071,10 @@ glift.themes.registered.DEFAULT = {
 
   commentBox:  {
     css: {
-      background: '#CCF',
+      background: 'none',
       padding: '10px',
       'font-family':  'Baskerville',
-      border: '1px solid',
+      // border: '1px solid',
       'font-size': '16px'
     }
   },
@@ -2025,7 +2046,7 @@ glift.displays.positionWidget = function(
     useVertical = true;
   } else if (divBox.hwRatio() < 0.45 && longBoxRegions[boardRegion]) {
     useVertical = false;
-  } else if (divBox.hwRatio() < 0.600 && !longBoxRegions[boardRegion]) {
+  } else if (divBox.hwRatio() < 0.800 && !longBoxRegions[boardRegion]) {
     // In other words, the width == 1.5 * height;
     // Also: Requires a comment box
     useVertical = false;
@@ -2804,8 +2825,8 @@ glift.displays.board._Intersections.prototype = {
         .child(this.idGen.fullBoardButton())
         .data();
     var maxInts = this.boardPoints.numIntersections;
+    // TODO(kashomon): Remove uses of jQuery
     var enclButton = $('#' + this.idGen.fullBoardButton());
-    // var boundingRect = enclButton.getBoundingClientRect();
 
     // X Calculations
     var left = data.tl.intPt.x();
@@ -9100,7 +9121,8 @@ glift.widgets.options.baseOptions = {
 
     /**
      * You can, if you wish, override the total number of correct variations
-     * that a user must get correct.
+     * that a user must get correct. Currently only applies to
+     * CORRECT_VARIATIONS_PROBLEM.
      */
     totalCorrectVariationsOverride: undefined,
 
