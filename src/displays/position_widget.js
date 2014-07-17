@@ -35,7 +35,7 @@ glift.displays.positionWidget = function(
     useVertical = true;
   } else if (divBox.hwRatio() < 0.45 && longBoxRegions[boardRegion]) {
     useVertical = false;
-  } else if (divBox.hwRatio() < 0.600 && !longBoxRegions[boardRegion]) {
+  } else if (divBox.hwRatio() < 0.800 && !longBoxRegions[boardRegion]) {
     // In other words, the width == 1.5 * height;
     // Also: Requires a comment box
     useVertical = false;

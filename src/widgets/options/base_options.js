@@ -119,7 +119,8 @@ glift.widgets.options.baseOptions = {
 
     /**
      * You can, if you wish, override the total number of correct variations
-     * that a user must get correct.
+     * that a user must get correct. Currently only applies to
+     * CORRECT_VARIATIONS_PROBLEM.
      */
     totalCorrectVariationsOverride: undefined,
 

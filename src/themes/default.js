@@ -94,12 +94,12 @@ glift.themes.registered.DEFAULT = {
     horzMargin: 5,
 
     DEFAULT: { // TODO(kashomon): Change to default instead of DEFAULT.
-      fill: "#00A",
+      fill: "#000",
       stroke: 'black'
       //fill: "90-#337-#55B"
     },
     DEFAULT_HOVER: { // TODO(kashomon): Change to DEFAULT_HOVER
-      fill: 'red',
+      fill: '#AAA',
       stroke: 'black'
       //fill: "90-#337-#55D"
     }
@@ -107,10 +107,10 @@ glift.themes.registered.DEFAULT = {
 
   commentBox:  {
     css: {
-      background: '#CCF',
+      background: 'none',
       padding: '10px',
       'font-family':  'Baskerville',
-      border: '1px solid',
+      // border: '1px solid',
       'font-size': '16px'
     }
   },
