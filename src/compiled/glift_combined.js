@@ -18,7 +18,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.14.5',
+  version: '0.15.0',
   debugMode: false,
 
   // Options for performanceDebugLevel: NONE, INFO
@@ -1073,6 +1073,7 @@ glift.themes.registered.DEFAULT = {
     css: {
       background: 'none',
       padding: '10px',
+      margin: '0px',
       'font-family':  'Baskerville',
       // border: '1px solid',
       'font-size': '16px'
@@ -2530,7 +2531,9 @@ glift.displays.board._Intersections = function(
 
 glift.displays.board._Intersections.prototype = {
   /**
-   * Sets the color of a stone.
+   * Sets the color of a stone.  Note: the 'color' is really a key into the
+   * Theme, so it should always be BLACK or WHITE, which can then point to any
+   * color.
    */
   setStoneColor: function(pt, color) {
     pt = pt.rotate(this.boardPoints.numIntersections, this.rotation);
@@ -2825,8 +2828,8 @@ glift.displays.board._Intersections.prototype = {
         .child(this.idGen.fullBoardButton())
         .data();
     var maxInts = this.boardPoints.numIntersections;
-    // TODO(kashomon): Remove uses of jQuery
     var enclButton = $('#' + this.idGen.fullBoardButton());
+    var offset = enclButton.offset();
 
     // X Calculations
     var left = data.tl.intPt.x();
@@ -2835,7 +2838,7 @@ glift.displays.board._Intersections.prototype = {
       var pageOffsetX = e.originalEvent.touches[0].pageX;
     }
 
-    var ptx = (pageOffsetX - enclButton.offset().left) / data.spacing;
+    var ptx = (pageOffsetX - offset.left) / data.spacing;
 
     var intPtx = Math.floor(ptx) + left;
     if (intPtx < left) {
@@ -2851,7 +2854,7 @@ glift.displays.board._Intersections.prototype = {
       var pageOffsetY = e.originalEvent.touches[0].pageY;
     }
 
-    var pty = (pageOffsetY - enclButton.offset().top) / data.spacing;
+    var pty = (pageOffsetY - offset.top) / data.spacing;
     var intPty = Math.floor(pty) + top;
     if (intPty < top) {
       intPty = top;
@@ -3159,7 +3162,7 @@ glift.displays.commentbox._CommentBox.prototype = {
       'overflow-y': 'auto',
       'overflowY': 'auto',
       'MozBoxSizing': 'border-box',
-      'box-sizing': 'border-box'
+      'boxSizing': 'border-box'
     };
     for (var key in this.theme.commentBox.css) {
       cssObj[key] = this.theme.commentBox.css[key]
@@ -3450,11 +3453,18 @@ glift.displays.icons._IconBar = function(
   this.parentBbox = parentBbox;
   // Array of wrapped icons. See wrapped_icon.js.
   this.icons = glift.displays.icons.wrapIcons(iconsRaw);
+
+  // Map of icon name to icon object. initialized with _initNameMapping
+  // TODO(kashomon): Make this non-side-affecting.
   this.nameMapping = {};
+
   this.vertMargin = this.theme.icons.vertMargin;
   this.horzMargin = this.theme.icons.horzMargin;
   this.svg = undefined; // initialized by draw
   this.idGen = glift.displays.ids.generator(this.divId);
+
+  // When we need timeouts for tooltips.
+  this.tooltipTimer = undefined;
 
   // Object of objects of the form
   //  {
@@ -3505,6 +3515,9 @@ glift.displays.icons._IconBar.prototype = {
     return this;
   },
 
+  /**
+   * Actually draw the icon.
+   */
   _createIcons: function() {
     var svglib = glift.displays.svg;
     var container = svglib.group().attr('id', this.idGen.iconGroup());
@@ -3520,11 +3533,15 @@ glift.displays.icons._IconBar.prototype = {
     }
   },
 
+  /**
+   * We draw transparent boxes around the icon to use for touch events.  For
+   * complicated icons, it turns out to be obnoxious to try to select the icon.
+   */
   _createIconButtons: function() {
     var svglib = glift.displays.svg;
     var container = svglib.group().attr('id', this.idGen.buttonGroup());
     this.svg.append(container);
-    for (var i = 0, ii = this.icons.length; i < ii; i++) {
+    for (var i = 0, len = this.icons.length; i < len; i++) {
       var icon = this.icons[i];
       container.append(svglib.rect()
         .data(icon.iconName)
@@ -3538,33 +3555,14 @@ glift.displays.icons._IconBar.prototype = {
     }
   },
 
+  // TODO(kashomon): Delete this flush nonsense.  It's not necessary for the
+  // iconbar.
   flush: function() {
     this.svg.attachToParent(this.divId);
     var multi = this.getIcon('multiopen');
     if (multi !== undefined) {
       this.setCenteredTempIcon('multiopen', multi.getActive(), 'black');
     }
-    this.flushEvents();
-  },
-
-  flushEvents: function() {
-    var container = this.svg.child(this.idGen.buttonGroup());
-    var that = this;
-    for (var buttonId_event in this.events) {
-      var splat = buttonId_event.split('#');
-      var buttonId = splat[0];
-      var eventName = splat[1];
-      if (container.child(buttonId) !== undefined) {
-        var eventObj = this.events[buttonId_event];
-        this._flushOneEvent(buttonId, eventName, eventObj);
-      }
-    }
-  },
-
-  _flushOneEvent: function(buttonId, eventName, eventObj) {
-    $('#' + buttonId).on(eventName, function(event) {
-        eventObj.func(event, eventObj.icon);
-    });
   },
 
   /**
@@ -3701,7 +3699,6 @@ glift.displays.icons._IconBar.prototype = {
    */
   initIconActions: function(parentWidget, iconActions) {
     var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
-    var that = this;
     this.forEachIcon(function(icon) {
       var iconName = icon.iconName;
       if (!iconActions.hasOwnProperty(icon.iconName)) {
@@ -3728,17 +3725,58 @@ glift.displays.icons._IconBar.prototype = {
         var eventFunc = actionsForIcon[eventName];
         // We init each action separately so that we avoid the lazy binding of
         // eventFunc.
-        that._initOneIconAction(parentWidget, iconName, eventName, eventFunc);
+        this._initOneIconAction(parentWidget, icon, eventName, eventFunc);
       }
-    });
-    this.flushEvents();
+
+      if (iconActions[iconName].tooltip) {
+        this._initializeTooltip(icon, iconActions[iconName].tooltip)
+      }
+    }.bind(this));
   },
 
-  _initOneIconAction: function(parentWidget, iconName, eventName, eventFunc) {
-    this.setEvent(iconName, eventName, function(event, icon) {
+  _initOneIconAction: function(parentWidget, icon, eventName, eventFunc) {
+    var buttonId = this.idGen.button(icon.iconName);
+    $('#' + buttonId).on(eventName, function(event) {
       parentWidget.manager.setActive();
       eventFunc(event, parentWidget, icon, this);
     }.bind(this));
+  },
+
+  /** Initialize the icon tooltips. */
+  _initializeTooltip: function(icon, tooltip) {
+    var tooltipId = this.divId + '_tooltip';
+    var that = this;
+    var id = this.idGen.button(icon.iconName);
+    $('#' + id).on('mouseover', function(e) {
+      var tooltipTimerFunc = function() {
+        var buttonElement = $('#' + id);
+        $('#' + that.divId).append('<div id="' + tooltipId + 
+            '">' + tooltip + '</div>');
+        $('#' + tooltipId).css({
+              position: 'absolute',
+              top: -1.2 *(icon.bbox.height()),
+              padding: '5px',
+              'z-index': 100,
+              margin: '5px',
+              opacity: 1, // IE9+
+              background: '#555',
+              color: '#EEE',
+              webkitBorderRadius: '10px',
+              MozBorderRadius: '10px',
+              borderRadius: '10px',
+              boxSizing: 'border-box'
+            });
+        this.tooltipTimer = null;
+      }.bind(this);
+      this.tooltipTimer = setTimeout(tooltipTimerFunc, 2000);
+    });
+    $('#' + id).on('mouseout', function(e) {
+      if (this.tooltipTimer != null) {
+        clearTimeout(this.tooltipTimer);
+      }
+      this.tooltipTimer = null;
+      $('#' + tooltipId).remove();
+    });
   },
 
 
@@ -3789,6 +3827,10 @@ glift.displays.icons._IconBar.prototype = {
 
   destroy: function() {
     this.divId && $('#' + this.divId).empty();
+    if (this.tooltipTimer) {
+      clearTimeout(this.tooltipTimer);
+      this.tooltipTimer = null;
+    }
     this.bbox = undefined;
     return this;
   }
@@ -9377,52 +9419,60 @@ glift.widgets.options.baseOptions = {
     start: {
       click:  function(event, widget, icon, iconBar) {
         widget.applyBoardData(widget.controller.toBeginning());
-      }
+      },
+      tooltip: 'Go to the beginning'
     },
 
     end: {
       click:  function(event, widget, icon, iconBar) {
         widget.applyBoardData(widget.controller.toEnd());
-      }
+      },
+      tooltip: 'Go to the end'
     },
 
     arrowright: {
       click: function(event, widget, icon, iconBar) {
         widget.applyBoardData(widget.controller.nextMove());
-      }
+      },
+      tooltip: 'Go to the next move'
     },
 
     arrowleft: {
       click:  function(event, widget, icon, iconBar) {
         widget.applyBoardData(widget.controller.prevMove());
-      }
+      },
+      tooltip: 'Go to the previous move'
     },
 
     // Get next problem.
     'chevron-right': {
       click: function(event, widget, icon, iconBar) {
         widget.manager.nextSgf();
-      }
+      },
+      tooltip: 'Go to the next panel'
     },
 
     // Get the previous problem.
     'chevron-left': {
       click: function(event, widget, icon, iconBar) {
         widget.manager.prevSgf();
-      }
+      },
+      tooltip: 'Go to the previous panel'
     },
 
     // Try again
     refresh: {
       click: function(event, widget, icon, iconBar) {
         widget.reload();
-      }
+      },
+      tooltip: 'Try the problem again'
     },
 
     undo: {
       click: function(event, widget, icon, iconBar) {
         widget.manager.returnToOriginalWidget();
-      }
+      },
+      tooltip: 'Return to the parent widget'
     },
 
     // Go to the explain-board.
@@ -9441,7 +9491,8 @@ glift.widgets.options.baseOptions = {
           boardRegion: widget.sgfOptions.boardRegion
         }
         manager.createTemporaryWidget(sgfObj);
-      }
+      },
+      tooltip: 'Explore the solution'
     },
 
     multiopen: {
@@ -9456,6 +9507,12 @@ glift.widgets.options.baseOptions = {
           iconBar.setCenteredTempIcon('multiopen', multi.getActive(), 'black');
         });
       }
+    },
+
+    'multiopen-boxonly': {
+      mouseover: function() {},
+      mouseout: function() {},
+      tooltip: 'Shows if the problem is solved'
     }
   }
 };
