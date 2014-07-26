@@ -109,6 +109,7 @@ glift.themes.registered.DEFAULT = {
     css: {
       background: 'none',
       padding: '10px',
+      margin: '0px',
       'font-family':  'Baskerville',
       // border: '1px solid',
       'font-size': '16px'

@@ -375,52 +375,60 @@ glift.widgets.options.baseOptions = {
     start: {
       click:  function(event, widget, icon, iconBar) {
         widget.applyBoardData(widget.controller.toBeginning());
-      }
+      },
+      tooltip: 'Go to the beginning'
     },
 
     end: {
       click:  function(event, widget, icon, iconBar) {
         widget.applyBoardData(widget.controller.toEnd());
-      }
+      },
+      tooltip: 'Go to the end'
     },
 
     arrowright: {
       click: function(event, widget, icon, iconBar) {
         widget.applyBoardData(widget.controller.nextMove());
-      }
+      },
+      tooltip: 'Go to the next move'
     },
 
     arrowleft: {
       click:  function(event, widget, icon, iconBar) {
         widget.applyBoardData(widget.controller.prevMove());
-      }
+      },
+      tooltip: 'Go to the previous move'
     },
 
     // Get next problem.
     'chevron-right': {
       click: function(event, widget, icon, iconBar) {
         widget.manager.nextSgf();
-      }
+      },
+      tooltip: 'Go to the next panel'
     },
 
     // Get the previous problem.
     'chevron-left': {
       click: function(event, widget, icon, iconBar) {
         widget.manager.prevSgf();
-      }
+      },
+      tooltip: 'Go to the previous panel'
     },
 
     // Try again
     refresh: {
       click: function(event, widget, icon, iconBar) {
         widget.reload();
-      }
+      },
+      tooltip: 'Try the problem again'
     },
 
     undo: {
       click: function(event, widget, icon, iconBar) {
         widget.manager.returnToOriginalWidget();
-      }
+      },
+      tooltip: 'Return to the parent widget'
     },
 
     // Go to the explain-board.
@@ -439,7 +447,8 @@ glift.widgets.options.baseOptions = {
           boardRegion: widget.sgfOptions.boardRegion
         }
         manager.createTemporaryWidget(sgfObj);
-      }
+      },
+      tooltip: 'Explore the solution'
     },
 
     multiopen: {
@@ -454,6 +463,12 @@ glift.widgets.options.baseOptions = {
           iconBar.setCenteredTempIcon('multiopen', multi.getActive(), 'black');
         });
       }
+    },
+
+    'multiopen-boxonly': {
+      mouseover: function() {},
+      mouseout: function() {},
+      tooltip: 'Shows if the problem is solved'
     }
   }
 };

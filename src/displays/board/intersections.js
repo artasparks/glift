@@ -34,7 +34,9 @@ glift.displays.board._Intersections = function(
 
 glift.displays.board._Intersections.prototype = {
   /**
-   * Sets the color of a stone.
+   * Sets the color of a stone.  Note: the 'color' is really a key into the
+   * Theme, so it should always be BLACK or WHITE, which can then point to any
+   * color.
    */
   setStoneColor: function(pt, color) {
     pt = pt.rotate(this.boardPoints.numIntersections, this.rotation);
@@ -329,8 +331,8 @@ glift.displays.board._Intersections.prototype = {
         .child(this.idGen.fullBoardButton())
         .data();
     var maxInts = this.boardPoints.numIntersections;
-    // TODO(kashomon): Remove uses of jQuery
     var enclButton = $('#' + this.idGen.fullBoardButton());
+    var offset = enclButton.offset();
 
     // X Calculations
     var left = data.tl.intPt.x();
@@ -339,7 +341,7 @@ glift.displays.board._Intersections.prototype = {
       var pageOffsetX = e.originalEvent.touches[0].pageX;
     }
 
-    var ptx = (pageOffsetX - enclButton.offset().left) / data.spacing;
+    var ptx = (pageOffsetX - offset.left) / data.spacing;
 
     var intPtx = Math.floor(ptx) + left;
     if (intPtx < left) {
@@ -355,7 +357,7 @@ glift.displays.board._Intersections.prototype = {
       var pageOffsetY = e.originalEvent.touches[0].pageY;
     }
 
-    var pty = (pageOffsetY - enclButton.offset().top) / data.spacing;
+    var pty = (pageOffsetY - offset.top) / data.spacing;
     var intPty = Math.floor(pty) + top;
     if (intPty < top) {
       intPty = top;

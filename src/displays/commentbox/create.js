@@ -31,7 +31,7 @@ glift.displays.commentbox._CommentBox.prototype = {
       'overflow-y': 'auto',
       'overflowY': 'auto',
       'MozBoxSizing': 'border-box',
-      'box-sizing': 'border-box'
+      'boxSizing': 'border-box'
     };
     for (var key in this.theme.commentBox.css) {
       cssObj[key] = this.theme.commentBox.css[key]
