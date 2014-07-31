@@ -335,23 +335,26 @@ glift.displays.icons._IconBar.prototype = {
         var buttonElement = $('#' + id);
         $('#' + that.divId).append('<div id="' + tooltipId + 
             '">' + tooltip + '</div>');
-        $('#' + tooltipId).css({
-              position: 'absolute',
-              top: -1.2 *(icon.bbox.height()),
-              padding: '5px',
-              'z-index': 100,
-              margin: '5px',
-              opacity: 1, // IE9+
-              background: '#555',
-              color: '#EEE',
-              webkitBorderRadius: '10px',
-              MozBorderRadius: '10px',
-              borderRadius: '10px',
-              boxSizing: 'border-box'
-            });
+        var baseCssObj = {
+          position: 'absolute',
+          top: -1.2 * (icon.bbox.height()),
+          padding: '5px',
+          'z-index': 100,
+          background: '#555',
+          color: '#EEE',
+          webkitBorderRadius: '10px',
+          MozBorderRadius: '10px',
+          borderRadius: '10px',
+          boxSizing: 'border-box'
+        };
+        for (var key in that.theme.icons.tooltips) {
+          baseCssObj[key] = that.theme.icons.tooltips[key];
+        }
+        $('#' + tooltipId).css(baseCssObj);
         this.tooltipTimer = null;
       }.bind(this);
-      this.tooltipTimer = setTimeout(tooltipTimerFunc, 2000);
+      this.tooltipTimer = setTimeout(
+          tooltipTimerFunc, that.theme.icons.tooltipTimeout);
     });
     $('#' + id).on('mouseout', function(e) {
       if (this.tooltipTimer != null) {

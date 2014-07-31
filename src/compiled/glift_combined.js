@@ -18,7 +18,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.15.0',
+  version: '0.15.1',
   debugMode: false,
 
   // Options for performanceDebugLevel: NONE, INFO
@@ -1066,7 +1066,14 @@ glift.themes.registered.DEFAULT = {
       fill: '#AAA',
       stroke: 'black'
       //fill: "90-#337-#55D"
-    }
+    },
+
+    tooltips: {
+      fontSize: '16px',
+      fontFamily: 'Palatino'
+    },
+
+    tooltipTimeout: 2000 // milliseconds
   },
 
   commentBox:  {
@@ -1074,9 +1081,9 @@ glift.themes.registered.DEFAULT = {
       background: 'none',
       padding: '10px',
       margin: '0px',
-      'font-family':  'Baskerville',
       // border: '1px solid',
-      'font-size': '16px'
+      fontSize: '15px',
+      fontFamily: 'Palatino'
     }
   },
 
@@ -3752,23 +3759,26 @@ glift.displays.icons._IconBar.prototype = {
         var buttonElement = $('#' + id);
         $('#' + that.divId).append('<div id="' + tooltipId + 
             '">' + tooltip + '</div>');
-        $('#' + tooltipId).css({
-              position: 'absolute',
-              top: -1.2 *(icon.bbox.height()),
-              padding: '5px',
-              'z-index': 100,
-              margin: '5px',
-              opacity: 1, // IE9+
-              background: '#555',
-              color: '#EEE',
-              webkitBorderRadius: '10px',
-              MozBorderRadius: '10px',
-              borderRadius: '10px',
-              boxSizing: 'border-box'
-            });
+        var baseCssObj = {
+          position: 'absolute',
+          top: -1.2 * (icon.bbox.height()),
+          padding: '5px',
+          'z-index': 100,
+          background: '#555',
+          color: '#EEE',
+          webkitBorderRadius: '10px',
+          MozBorderRadius: '10px',
+          borderRadius: '10px',
+          boxSizing: 'border-box'
+        };
+        for (var key in that.theme.icons.tooltips) {
+          baseCssObj[key] = that.theme.icons.tooltips[key];
+        }
+        $('#' + tooltipId).css(baseCssObj);
         this.tooltipTimer = null;
       }.bind(this);
-      this.tooltipTimer = setTimeout(tooltipTimerFunc, 2000);
+      this.tooltipTimer = setTimeout(
+          tooltipTimerFunc, that.theme.icons.tooltipTimeout);
     });
     $('#' + id).on('mouseout', function(e) {
       if (this.tooltipTimer != null) {

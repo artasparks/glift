@@ -102,7 +102,14 @@ glift.themes.registered.DEFAULT = {
       fill: '#AAA',
       stroke: 'black'
       //fill: "90-#337-#55D"
-    }
+    },
+
+    tooltips: {
+      fontSize: '16px',
+      fontFamily: 'Palatino'
+    },
+
+    tooltipTimeout: 2000 // milliseconds
   },
 
   commentBox:  {
@@ -110,9 +117,9 @@ glift.themes.registered.DEFAULT = {
       background: 'none',
       padding: '10px',
       margin: '0px',
-      'font-family':  'Baskerville',
       // border: '1px solid',
-      'font-size': '16px'
+      fontSize: '15px',
+      fontFamily: 'Palatino'
     }
   },
 
