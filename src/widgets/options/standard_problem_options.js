@@ -14,24 +14,22 @@ glift.widgets.options.STANDARD_PROBLEM = {
     widget.applyBoardData(data);
     var probTypes = glift.enums.problemTypes;
     var callback = widget.sgfOptions.problemCallback;
-    if (widget.correctness === undefined) {
-      if (data.result === problemResults.CORRECT) {
-          widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'check', '#0CC');
-          widget.correctness = problemResults.CORRECT;
-          callback(problemResults.CORRECT);
-      } else if (data.result == problemResults.INCORRECT) {
-        widget.iconBar.destroyTempIcons();
-        widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
-        widget.correctness = problemResults.INCORRECT;
-        callback(problemResults.INCORRECT);
-      }
+    if (data.result === problemResults.CORRECT) {
+        widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'check', '#0CC');
+        widget.correctness = problemResults.CORRECT;
+        callback(problemResults.CORRECT);
+    } else if (data.result == problemResults.INCORRECT) {
+      widget.iconBar.destroyTempIcons();
+      widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
+      widget.correctness = problemResults.INCORRECT;
+      callback(problemResults.INCORRECT);
     }
   },
 
   showVariations: glift.enums.showVariations.NEVER,
 
   // TODO(kashomon): Consider using multiopen-boxonly instead of checkbox
-  icons: ['refresh', 'roadmap', 'multiopen-boxonly'],
+  icons: ['undo-problem-move', 'roadmap', 'multiopen-boxonly'],
 
   controllerFunc: glift.controllers.staticProblem
 };

@@ -228,7 +228,7 @@ glift.displays.icons._IconBar.prototype = {
   },
 
   destroyTempIcons: function() {
-    this.svg.child(this.idGen.tempIconGroup()).emptyChildren();
+    this.svg.child(this.idGen.tempIconGroup()).emptyChildrenAndUpdate();
     return this;
   },
 
@@ -338,13 +338,7 @@ glift.displays.icons._IconBar.prototype = {
         var baseCssObj = {
           position: 'absolute',
           top: -1.2 * (icon.bbox.height()),
-          padding: '5px',
           'z-index': 100,
-          background: '#555',
-          color: '#EEE',
-          webkitBorderRadius: '10px',
-          MozBorderRadius: '10px',
-          borderRadius: '10px',
           boxSizing: 'border-box'
         };
         for (var key in that.theme.icons.tooltips) {

@@ -190,6 +190,13 @@ Properties.prototype = {
     return glift.sgf.allSgfCoordsToPoints(this.getAllValues(prop));
   },
 
+  /**
+   * Get the current comment on the move. This is, of course, just a convenience
+   * method -- equivalent to properties().getOneValue('C'). It's provided as a
+   * convenience method since it's an extremely comment operation.
+   *
+   * Returns: string or null.
+   */
   getComment: function() {
     if (this.contains('C')) {
       return this.getOneValue('C');

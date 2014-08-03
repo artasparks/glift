@@ -1,7 +1,7 @@
 (function(){
 glift.rules.goban = {
   /**
-   * Create a Goban instance, just with intersections.
+   * Creates a Goban instance, just with intersections.
    */
   getInstance: function(intersections) {
     var ints = intersections || 19;
@@ -9,7 +9,7 @@ glift.rules.goban = {
   },
 
   /**
-   * Create a goban, from a move tree and (optionally) a treePath, which defines
+   * Creates a goban, from a move tree and (optionally) a treePath, which defines
    * how to get from the start to a given location.  Usually, the treePath is
    * the initialPosition, but not necessarily.  If the treepath is undefined, we
    * craft a treepath to the current location in the movetree.
@@ -19,8 +19,11 @@ glift.rules.goban = {
    * returns:
    *  {
    *    goban: Goban,
-   *    stoneDeltas: [StoneDelta, StoneDelta, ...]
+   *    captures: [<captures>, <capture>, ...]
    *  }
+   *
+   * where a capture object looks like:
+   *  { White: [...], Black: [..] }
    */
   getFromMoveTree: function(mt, treepath) {
     var goban = new Goban(mt.getIntersections()),

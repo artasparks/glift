@@ -39,10 +39,10 @@ glift.rules._MoveNode.prototype = {
    */
   getNodeNum: function() { return this._nodeId.nodeNum; },
 
-  /** Get the variation number. */
+  /** Gets the variation number. */
   getVarNum: function() { return this._nodeId.varNum; },
 
-  /** Get the number of children. */
+  /** Gets the number of children. */
   numChildren: function() { return this.children.length; },
 
   /** Add a new child node. */

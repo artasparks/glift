@@ -17,16 +17,19 @@ glift.widgets.BaseWidget = function(
   this.numCorrectAnswers = undefined;
   this.totalCorrectAnswers = undefined;
 
-  this.controller = undefined; // Initialized with draw.
-  this.display = undefined; // Initialized by draw.
-  this.iconBar = undefined; // Initialized by draw.
-  this.boardRegion = undefined; // Initialized by draw.
+  // These variables are initialized by draw
+  this.controller = undefined;
+  this.display = undefined;
+  this.iconBar = undefined;
+  this.boardRegion = undefined;
+  this.initialMoveNumber = undefined;
 };
 
 glift.widgets.BaseWidget.prototype = {
   /** Draw the widget. */
   draw: function() {
     this.controller = this.sgfOptions.controllerFunc(this.sgfOptions);
+    this.initialMoveNumber = this.controller.movetree.node().getNodeNum();
     glift.util.majorPerfLog('Created controller');
 
     this.displayOptions.intersections = this.controller.getIntersections();
@@ -82,7 +85,7 @@ glift.widgets.BaseWidget.prototype = {
         divIds.iconBarBoxId,
         positioning.iconBarBox,
         this.sgfOptions.icons,
-        parentDivBbox, 
+        parentDivBbox,
         theme);
     glift.util.majorPerfLog('IconBar');
 
@@ -100,7 +103,7 @@ glift.widgets.BaseWidget.prototype = {
   },
 
   _createDivsForPositioning: function(positioning, wrapperDiv) {
-    var expectedKeys = 
+    var expectedKeys =
         ['boardBox', 'iconBarBox', 'commentBox', 'extraIconBarBox'];
     var out = {};
     var that = this;
@@ -175,13 +178,13 @@ glift.widgets.BaseWidget.prototype = {
 
     var that = this;
     var wrapAction = function(func) {
-      return function(event, pt) { 
+      return function(event, pt) {
         that.manager.setActive();
-        func(event, that, pt); 
+        func(event, that, pt);
       };
     };
     var that = this
-    if (actions.mouseover && 
+    if (actions.mouseover &&
         actions.mouseout &&
         !glift.platform.isMobile()) {
       this.display.intersections().setHover(
@@ -189,10 +192,10 @@ glift.widgets.BaseWidget.prototype = {
           wrapAction(actions.mouseout));
     }
     if (actions.click) {
-      var actionName = 'click'; 
+      var actionName = 'click';
       if (glift.platform.isMobile()) {
-        // Kinda a hack, but necessary to avoid the 300ms delay. 
-        var actionName = 'touchstart'; 
+        // Kinda a hack, but necessary to avoid the 300ms delay.
+        var actionName = 'touchstart';
       }
       this.display.intersections().setEvent(
           actionName, wrapAction(actions.click));
@@ -202,12 +205,13 @@ glift.widgets.BaseWidget.prototype = {
   /** Assign Key actions to some other action. */
   _initKeyHandlers: function() {
     for (var keyName in this.sgfOptions.keyMappings) {
-      var iconPathOrFunc = this.sgfOptions.keyMappings[keyName]; 
+      var iconPathOrFunc = this.sgfOptions.keyMappings[keyName];
       glift.keyMappings.registerKeyAction(
           this.manager.id,
           keyName,
           iconPathOrFunc);
     }
+    // Lazy initialize the key mappings once.
     glift.keyMappings.initKeybindingListener();
   },
 

@@ -105,8 +105,14 @@ glift.themes.registered.DEFAULT = {
     },
 
     tooltips: {
-      fontSize: '16px',
-      fontFamily: 'Palatino'
+      padding: '5px',
+      background: '#555',
+      color: '#EEE',
+      webkitBorderRadius: '10px',
+      MozBorderRadius: '10px',
+      borderRadius: '10px'
+      // fontSize: '16px',
+      // fontFamily: 'Palatino'
     },
 
     tooltipTimeout: 2000 // milliseconds
@@ -116,10 +122,10 @@ glift.themes.registered.DEFAULT = {
     css: {
       background: 'none',
       padding: '10px',
-      margin: '0px',
+      margin: '0px'
       // border: '1px solid',
-      fontSize: '15px',
-      fontFamily: 'Palatino'
+      // fontSize: '15px',
+      // fontFamily: 'Palatino'
     }
   },
 

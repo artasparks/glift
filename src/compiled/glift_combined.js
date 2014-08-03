@@ -18,7 +18,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.15.1',
+  version: '0.15.2',
   debugMode: false,
 
   // Options for performanceDebugLevel: NONE, INFO
@@ -1069,8 +1069,14 @@ glift.themes.registered.DEFAULT = {
     },
 
     tooltips: {
-      fontSize: '16px',
-      fontFamily: 'Palatino'
+      padding: '5px',
+      background: '#555',
+      color: '#EEE',
+      webkitBorderRadius: '10px',
+      MozBorderRadius: '10px',
+      borderRadius: '10px'
+      // fontSize: '16px',
+      // fontFamily: 'Palatino'
     },
 
     tooltipTimeout: 2000 // milliseconds
@@ -1080,10 +1086,10 @@ glift.themes.registered.DEFAULT = {
     css: {
       background: 'none',
       padding: '10px',
-      margin: '0px',
+      margin: '0px'
       // border: '1px solid',
-      fontSize: '15px',
-      fontFamily: 'Palatino'
+      // fontSize: '15px',
+      // fontFamily: 'Palatino'
     }
   },
 
@@ -3652,7 +3658,7 @@ glift.displays.icons._IconBar.prototype = {
   },
 
   destroyTempIcons: function() {
-    this.svg.child(this.idGen.tempIconGroup()).emptyChildren();
+    this.svg.child(this.idGen.tempIconGroup()).emptyChildrenAndUpdate();
     return this;
   },
 
@@ -3762,13 +3768,7 @@ glift.displays.icons._IconBar.prototype = {
         var baseCssObj = {
           position: 'absolute',
           top: -1.2 * (icon.bbox.height()),
-          padding: '5px',
           'z-index': 100,
-          background: '#555',
-          color: '#EEE',
-          webkitBorderRadius: '10px',
-          MozBorderRadius: '10px',
-          borderRadius: '10px',
           boxSizing: 'border-box'
         };
         for (var key in that.theme.icons.tooltips) {
@@ -4221,6 +4221,30 @@ glift.displays.icons.svg = {
   rw: {
     string: "M5.5,15.499,15.8,21.447,15.8,15.846,25.5,21.447,25.5,9.552,15.8,15.152,15.8,9.552z",
     bbox: {}
+  },
+
+  // From iconmonstr
+  // http://iconmonstr.com/arrow-17-icon/
+  // Jump to previous variation or comment
+  'jump-left-arrow': {
+    string: "M 179.229,182.397 V 127.433 L 50,256.445 179.229,385.455 v -54.964 h 96.773 V 182.397 h -96.773 z m 123.385,0 h 47.184 V 330.491 H 302.614 V 182.397 z m 73.794,0 h 35.388 V 330.491 H 376.408 V 182.397 z m 62,0 H 462 V 330.491 H 438.408 V 182.397 z",
+    bbox: {"x":50,"y":127.433,"x2":462,"y2":385.455,"width":412,"height":258.022}
+  },
+
+  // From iconmonstr
+  // http://iconmonstr.com/arrow-17-icon/
+  // Jump to next variation or comment
+  'jump-right-arrow': {
+    string: "M332.771,182.397v-54.964L462,256.445l-129.229,129.01v-54.964h-96.773V182.397H332.771z    M209.386,182.397h-47.184v148.094h47.184V182.397z M135.592,182.397h-35.388v148.094h35.388V182.397z M73.592,182.397H50v148.094   h23.592V182.397z",
+    bbox: {"x":50,"y":127.433,"x2":462,"y2":385.455,"width":412,"height":258.022 }
+  },
+
+  // From iconmonstr
+  // http://iconmonstr.com/arrow-39-icon/
+  // Undo a play in a problem
+  'undo-problem-move': {
+    string: "m 256,50 c 113.771,0 206,92.229 206,206 0,113.771 -92.229,206 -206,206 C 142.229,462 50,369.771 50,256 50,142.229 142.229,50 256,50 z m 58.399,329.6 V 132.4 L 135.6,256.001 314.399,379.6 z",
+    bbox: {"x":50,"y":50,"x2":462,"y2":462,"width":412,"height":412}
   },
 
   ///////////////////////////////
@@ -4773,11 +4797,19 @@ glift.displays.svg.SvgObj.prototype = {
     return this._children;
   },
 
-  /**
-   * Empty out all the children.
-   */
+  /** Empty out all the children. */
   emptyChildren: function() {
     this._children = [];
+    return this;
+  },
+
+  /** Empty out all the children and update. */
+  emptyChildrenAndUpdate: function() {
+    this.emptyChildren();
+    var elem = document.getElementById(this.attr('id'))
+    while (elem && elem.firstChild) {
+      elem.removeChild(elem.firstChild);
+    }
     return this;
   },
 
@@ -4947,7 +4979,7 @@ glift.rules.clearnumbers = function(movetree) {
 (function(){
 glift.rules.goban = {
   /**
-   * Create a Goban instance, just with intersections.
+   * Creates a Goban instance, just with intersections.
    */
   getInstance: function(intersections) {
     var ints = intersections || 19;
@@ -4955,7 +4987,7 @@ glift.rules.goban = {
   },
 
   /**
-   * Create a goban, from a move tree and (optionally) a treePath, which defines
+   * Creates a goban, from a move tree and (optionally) a treePath, which defines
    * how to get from the start to a given location.  Usually, the treePath is
    * the initialPosition, but not necessarily.  If the treepath is undefined, we
    * craft a treepath to the current location in the movetree.
@@ -4965,8 +4997,11 @@ glift.rules.goban = {
    * returns:
    *  {
    *    goban: Goban,
-   *    stoneDeltas: [StoneDelta, StoneDelta, ...]
+   *    captures: [<captures>, <capture>, ...]
    *  }
+   *
+   * where a capture object looks like:
+   *  { White: [...], Black: [..] }
    */
   getFromMoveTree: function(mt, treepath) {
     var goban = new Goban(mt.getIntersections()),
@@ -5351,10 +5386,10 @@ glift.rules._MoveNode.prototype = {
    */
   getNodeNum: function() { return this._nodeId.nodeNum; },
 
-  /** Get the variation number. */
+  /** Gets the variation number. */
   getVarNum: function() { return this._nodeId.varNum; },
 
-  /** Get the number of children. */
+  /** Gets the number of children. */
   numChildren: function() { return this.children.length; },
 
   /** Add a new child node. */
@@ -6062,6 +6097,13 @@ Properties.prototype = {
     return glift.sgf.allSgfCoordsToPoints(this.getAllValues(prop));
   },
 
+  /**
+   * Get the current comment on the move. This is, of course, just a convenience
+   * method -- equivalent to properties().getOneValue('C'). It's provided as a
+   * convenience method since it's an extremely comment operation.
+   *
+   * Returns: string or null.
+   */
   getComment: function() {
     if (this.contains('C')) {
       return this.getOneValue('C');
@@ -6778,6 +6820,8 @@ var BaseController = function() {
   this.treepath = undefined;
   this.movetree = undefined;
   this.goban = undefined;
+  this.captureHistory = [];
+  this.currentMoveNumber = 0;
 };
 
 BaseController.prototype = {
@@ -6841,7 +6885,7 @@ BaseController.prototype = {
   initialize: function() {
     var rules = glift.rules;
     this.treepath = rules.treepath.parseInitPosition(this.initialPosition);
-    this.currentMoveNumber  = this.treepath.length
+    this.currentMoveNumber = this.treepath.length;
     this.movetree = rules.movetree.getFromSgf(this.sgfString, this.treepath);
     var gobanData = rules.goban.getFromMoveTree(this.movetree, this.treepath);
     this.goban = gobanData.goban;
@@ -6939,6 +6983,7 @@ BaseController.prototype = {
     if (this.treepath[this.currentMoveNumber] !== undefined &&
         (varNum === undefined ||
         this.treepath[this.currentMoveNumber] === varNum)) {
+      // Don't mess with the treepath, if we're 'on variation'.
       this.movetree.moveDown(this.treepath[this.currentMoveNumber]);
     } else {
       varNum = varNum === undefined ? 0 : varNum;
@@ -6948,6 +6993,7 @@ BaseController.prototype = {
         this.movetree.moveDown(varNum);
       } else {
         // TODO(kashomon): Add case for non-readonly goboard.
+        console.log("Text to log");
         return null; // No moves available
       }
     }
@@ -6989,6 +7035,15 @@ BaseController.prototype = {
     this.treepath = this.treepath.slice(0, this.currentMoveNumber);
     this.treepath.push(num % this.movetree.node().numChildren());
     return this;
+  },
+
+  /**
+   * Get the variation number of the next move. This will be something different
+   * if we've used setNextVariation or if we've already played into a variation.
+   * Otherwise, it will be 0.
+   */
+  getNextVariation: function() {
+    return this.treepath[this.currentMoveNumber] || 0;
   },
 
   /**
@@ -7343,6 +7398,34 @@ glift.controllers.GameViewerMethods = {
   },
 
   /**
+   * Go back to the previous branch or comment.
+   *
+   * Returns null in the case that we're at the root already.
+   */
+  previousCommentOrBranch: function() {
+    var displayDataList = []; // TODO(kashomon): Merge this together?
+    var displayData = null;
+    do {
+      displayData = this.prevMove();
+      var comment = this.movetree.properties().getOneValue('C');
+      var numChildern = this.movetree.node().numChildren();
+    } while (displayData && !comment && numChildern <= 1); 
+    // It's more expected to reset the 'next' variation to zero.
+    this.setNextVariation(0);
+    return this.getEntireBoardState();
+  },
+
+  nextCommentOrBranch: function() {
+    var displayData = null;
+    do {
+      displayData = this.nextMove();
+      var comment = this.movetree.properties().getOneValue('C');
+      var numChildern = this.movetree.node().numChildren();
+    } while (displayData && !comment && numChildern <= 1); 
+    return this.getEntireBoardState();
+  },
+
+  /**
    * Move up what variation will be next retrieved.
    */
   moveUpVariations: function() {
@@ -7470,10 +7553,12 @@ glift.controllers.StaticProblemMethods = {
         return outData;
       } else if (correctness === INDETERMINATE) {
         var prevOutData = this.getNextBoardState();
-        // Play for the opposite player. Should this be deterministic?
-        var randNext = glift.math.getRandomInt(
-            0, this.movetree.node().numChildren() - 1);
-        this.movetree.moveDown(randNext);
+        // Play for the opposite player. It used to be random, but randomness is
+        // confusing, and we aim to not surprise users.
+        // var nextVariation = glift.math.getRandomInt(
+            // 0, this.movetree.node().numChildren() - 1);
+        var nextVariation = 0;
+        this.movetree.moveDown(nextVariation);
         var nextMove = this.movetree.properties().getMove();
         var result = this.goban.addStone(nextMove.point, nextMove.color);
         var toRecord = {};
@@ -7489,7 +7574,7 @@ glift.controllers.StaticProblemMethods = {
         return outData;
       }
       else {
-        throw "Unexpected result output: " + correctness
+        throw 'Unexpected result output: ' + correctness
       }
     }
   }
@@ -8399,16 +8484,19 @@ glift.widgets.BaseWidget = function(
   this.numCorrectAnswers = undefined;
   this.totalCorrectAnswers = undefined;
 
-  this.controller = undefined; // Initialized with draw.
-  this.display = undefined; // Initialized by draw.
-  this.iconBar = undefined; // Initialized by draw.
-  this.boardRegion = undefined; // Initialized by draw.
+  // These variables are initialized by draw
+  this.controller = undefined;
+  this.display = undefined;
+  this.iconBar = undefined;
+  this.boardRegion = undefined;
+  this.initialMoveNumber = undefined;
 };
 
 glift.widgets.BaseWidget.prototype = {
   /** Draw the widget. */
   draw: function() {
     this.controller = this.sgfOptions.controllerFunc(this.sgfOptions);
+    this.initialMoveNumber = this.controller.movetree.node().getNodeNum();
     glift.util.majorPerfLog('Created controller');
 
     this.displayOptions.intersections = this.controller.getIntersections();
@@ -8464,7 +8552,7 @@ glift.widgets.BaseWidget.prototype = {
         divIds.iconBarBoxId,
         positioning.iconBarBox,
         this.sgfOptions.icons,
-        parentDivBbox, 
+        parentDivBbox,
         theme);
     glift.util.majorPerfLog('IconBar');
 
@@ -8482,7 +8570,7 @@ glift.widgets.BaseWidget.prototype = {
   },
 
   _createDivsForPositioning: function(positioning, wrapperDiv) {
-    var expectedKeys = 
+    var expectedKeys =
         ['boardBox', 'iconBarBox', 'commentBox', 'extraIconBarBox'];
     var out = {};
     var that = this;
@@ -8557,13 +8645,13 @@ glift.widgets.BaseWidget.prototype = {
 
     var that = this;
     var wrapAction = function(func) {
-      return function(event, pt) { 
+      return function(event, pt) {
         that.manager.setActive();
-        func(event, that, pt); 
+        func(event, that, pt);
       };
     };
     var that = this
-    if (actions.mouseover && 
+    if (actions.mouseover &&
         actions.mouseout &&
         !glift.platform.isMobile()) {
       this.display.intersections().setHover(
@@ -8571,10 +8659,10 @@ glift.widgets.BaseWidget.prototype = {
           wrapAction(actions.mouseout));
     }
     if (actions.click) {
-      var actionName = 'click'; 
+      var actionName = 'click';
       if (glift.platform.isMobile()) {
-        // Kinda a hack, but necessary to avoid the 300ms delay. 
-        var actionName = 'touchstart'; 
+        // Kinda a hack, but necessary to avoid the 300ms delay.
+        var actionName = 'touchstart';
       }
       this.display.intersections().setEvent(
           actionName, wrapAction(actions.click));
@@ -8584,12 +8672,13 @@ glift.widgets.BaseWidget.prototype = {
   /** Assign Key actions to some other action. */
   _initKeyHandlers: function() {
     for (var keyName in this.sgfOptions.keyMappings) {
-      var iconPathOrFunc = this.sgfOptions.keyMappings[keyName]; 
+      var iconPathOrFunc = this.sgfOptions.keyMappings[keyName];
       glift.keyMappings.registerKeyAction(
           this.manager.id,
           keyName,
           iconPathOrFunc);
     }
+    // Lazy initialize the key mappings once.
     glift.keyMappings.initKeybindingListener();
   },
 
@@ -8770,7 +8859,13 @@ glift.widgets.WidgetManager.prototype = {
   setActive: function() {glift.global.activeInstanceId = this.id; },
 
   /** Gets the current widget object. */
-  getCurrentWidget: function() { return this.currentWidget; },
+  getCurrentWidget: function() { 
+    if (this.temporaryWidget) {
+      return this.temporaryWidget;
+    } else {
+      return this.currentWidget; 
+    }
+  },
 
   /** Gets the current SGF Object from the SGF collection. */
   getCurrentSgfObj: function() { return this.getSgfObj(this.sgfColIndex); },
@@ -9087,7 +9182,7 @@ glift.widgets.options.baseOptions = {
     //
     // One of 'sgfString' or 'url' should be defined in each SGF in the
     // sgfCollection.
-    // 
+    //
     //sgfString: '',
     //url: '',
 
@@ -9444,14 +9539,14 @@ glift.widgets.options.baseOptions = {
       click: function(event, widget, icon, iconBar) {
         widget.applyBoardData(widget.controller.nextMove());
       },
-      tooltip: 'Go to the next move'
+      tooltip: 'Next move'
     },
 
     arrowleft: {
       click:  function(event, widget, icon, iconBar) {
         widget.applyBoardData(widget.controller.prevMove());
       },
-      tooltip: 'Go to the previous move'
+      tooltip: 'Previous move'
     },
 
     // Get next problem.
@@ -9459,7 +9554,7 @@ glift.widgets.options.baseOptions = {
       click: function(event, widget, icon, iconBar) {
         widget.manager.nextSgf();
       },
-      tooltip: 'Go to the next panel'
+      tooltip: 'Next panel'
     },
 
     // Get the previous problem.
@@ -9467,7 +9562,7 @@ glift.widgets.options.baseOptions = {
       click: function(event, widget, icon, iconBar) {
         widget.manager.prevSgf();
       },
-      tooltip: 'Go to the previous panel'
+      tooltip: 'Previous panel'
     },
 
     // Try again
@@ -9478,11 +9573,57 @@ glift.widgets.options.baseOptions = {
       tooltip: 'Try the problem again'
     },
 
+    'undo-problem-move': {
+      click:  function(event, widget, icon, iconBar) {
+        if (widget.controller.movetree.node().getNodeNum() <=
+            widget.initialMoveNumber) {
+          return;
+        }
+
+        widget.controller.prevMove();
+        if (widget.initialMoveNumber !==
+            widget.controller.movetree.node().getNodeNum()) {
+          widget.controller.prevMove();
+        }
+
+        if (widget.initialMoveNumber ===
+            widget.controller.movetree.node().getNodeNum()) {
+          // We're at the root.  We can assume correctness, so reset the widget.
+          widget.reload();
+        } else {
+          var move = widget.controller.movetree.properties().getMove();
+          widget.correctness = undefined;
+          widget.iconBar.destroyTempIcons();
+          widget.iconBar.flush();
+
+          widget.controller.prevMove();
+          widget.applyBoardData(widget.controller.getEntireBoardState());
+
+          widget.sgfOptions.stoneClick(null, widget, move.point);
+        }
+      },
+      tooltip: 'Undo last move attempt'
+    },
+
     undo: {
       click: function(event, widget, icon, iconBar) {
         widget.manager.returnToOriginalWidget();
       },
       tooltip: 'Return to the parent widget'
+    },
+
+    'jump-left-arrow': {
+      click: function(event, widget, icon, iconBar) {
+        widget.applyBoardData(widget.controller.previousCommentOrBranch());
+      },
+      tooltip: 'Previous branch or comment'
+    },
+
+    'jump-right-arrow': {
+      click: function(event, widget, icon, iconBar) {
+        widget.applyBoardData(widget.controller.nextCommentOrBranch());
+      },
+      tooltip: 'Previous branch or comment'
     },
 
     // Go to the explain-board.
@@ -9496,7 +9637,13 @@ glift.widgets.options.baseOptions = {
           showVariations: glift.enums.showVariations.ALWAYS,
           problemConditions: glift.util.simpleClone(
               widget.sgfOptions.problemConditions),
-          icons: ['start', 'end', 'arrowleft', 'arrowright', 'undo'],
+          icons: [
+            'jump-left-arrow',
+            'jump-right-arrow',
+            'arrowleft',
+            'arrowright',
+            'undo'
+          ],
           rotation: widget.sgfOptions.rotation,
           boardRegion: widget.sgfOptions.boardRegion
         }
@@ -9723,7 +9870,7 @@ glift.widgets.options.GAME_VIEWER = {
     ARROW_RIGHT: 'iconActions.arrowright.click'
   },
 
-  icons: ['start', 'end', 'arrowleft', 'arrowright'],
+  icons: ['jump-left-arrow', 'jump-right-arrow', 'arrowleft', 'arrowright'],
 
   showVariations: glift.enums.showVariations.MORE_THAN_ONE,
 
@@ -9765,24 +9912,22 @@ glift.widgets.options.STANDARD_PROBLEM = {
     widget.applyBoardData(data);
     var probTypes = glift.enums.problemTypes;
     var callback = widget.sgfOptions.problemCallback;
-    if (widget.correctness === undefined) {
-      if (data.result === problemResults.CORRECT) {
-          widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'check', '#0CC');
-          widget.correctness = problemResults.CORRECT;
-          callback(problemResults.CORRECT);
-      } else if (data.result == problemResults.INCORRECT) {
-        widget.iconBar.destroyTempIcons();
-        widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
-        widget.correctness = problemResults.INCORRECT;
-        callback(problemResults.INCORRECT);
-      }
+    if (data.result === problemResults.CORRECT) {
+        widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'check', '#0CC');
+        widget.correctness = problemResults.CORRECT;
+        callback(problemResults.CORRECT);
+    } else if (data.result == problemResults.INCORRECT) {
+      widget.iconBar.destroyTempIcons();
+      widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
+      widget.correctness = problemResults.INCORRECT;
+      callback(problemResults.INCORRECT);
     }
   },
 
   showVariations: glift.enums.showVariations.NEVER,
 
   // TODO(kashomon): Consider using multiopen-boxonly instead of checkbox
-  icons: ['refresh', 'roadmap', 'multiopen-boxonly'],
+  icons: ['undo-problem-move', 'roadmap', 'multiopen-boxonly'],
 
   controllerFunc: glift.controllers.staticProblem
 };

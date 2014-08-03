@@ -165,6 +165,30 @@ glift.displays.icons.svg = {
     bbox: {}
   },
 
+  // From iconmonstr
+  // http://iconmonstr.com/arrow-17-icon/
+  // Jump to previous variation or comment
+  'jump-left-arrow': {
+    string: "M 179.229,182.397 V 127.433 L 50,256.445 179.229,385.455 v -54.964 h 96.773 V 182.397 h -96.773 z m 123.385,0 h 47.184 V 330.491 H 302.614 V 182.397 z m 73.794,0 h 35.388 V 330.491 H 376.408 V 182.397 z m 62,0 H 462 V 330.491 H 438.408 V 182.397 z",
+    bbox: {"x":50,"y":127.433,"x2":462,"y2":385.455,"width":412,"height":258.022}
+  },
+
+  // From iconmonstr
+  // http://iconmonstr.com/arrow-17-icon/
+  // Jump to next variation or comment
+  'jump-right-arrow': {
+    string: "M332.771,182.397v-54.964L462,256.445l-129.229,129.01v-54.964h-96.773V182.397H332.771z    M209.386,182.397h-47.184v148.094h47.184V182.397z M135.592,182.397h-35.388v148.094h35.388V182.397z M73.592,182.397H50v148.094   h23.592V182.397z",
+    bbox: {"x":50,"y":127.433,"x2":462,"y2":385.455,"width":412,"height":258.022 }
+  },
+
+  // From iconmonstr
+  // http://iconmonstr.com/arrow-39-icon/
+  // Undo a play in a problem
+  'undo-problem-move': {
+    string: "m 256,50 c 113.771,0 206,92.229 206,206 0,113.771 -92.229,206 -206,206 C 142.229,462 50,369.771 50,256 50,142.229 142.229,50 256,50 z m 58.399,329.6 V 132.4 L 135.6,256.001 314.399,379.6 z",
+    bbox: {"x":50,"y":50,"x2":462,"y2":462,"width":412,"height":412}
+  },
+
   ///////////////////////////////
   // Icons used for GameEditor //
   ///////////////////////////////

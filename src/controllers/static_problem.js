@@ -86,10 +86,12 @@ glift.controllers.StaticProblemMethods = {
         return outData;
       } else if (correctness === INDETERMINATE) {
         var prevOutData = this.getNextBoardState();
-        // Play for the opposite player. Should this be deterministic?
-        var randNext = glift.math.getRandomInt(
-            0, this.movetree.node().numChildren() - 1);
-        this.movetree.moveDown(randNext);
+        // Play for the opposite player. It used to be random, but randomness is
+        // confusing, and we aim to not surprise users.
+        // var nextVariation = glift.math.getRandomInt(
+            // 0, this.movetree.node().numChildren() - 1);
+        var nextVariation = 0;
+        this.movetree.moveDown(nextVariation);
         var nextMove = this.movetree.properties().getMove();
         var result = this.goban.addStone(nextMove.point, nextMove.color);
         var toRecord = {};
@@ -105,7 +107,7 @@ glift.controllers.StaticProblemMethods = {
         return outData;
       }
       else {
-        throw "Unexpected result output: " + correctness
+        throw 'Unexpected result output: ' + correctness
       }
     }
   }

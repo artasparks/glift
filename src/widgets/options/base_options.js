@@ -33,7 +33,7 @@ glift.widgets.options.baseOptions = {
     //
     // One of 'sgfString' or 'url' should be defined in each SGF in the
     // sgfCollection.
-    // 
+    //
     //sgfString: '',
     //url: '',
 
@@ -390,14 +390,14 @@ glift.widgets.options.baseOptions = {
       click: function(event, widget, icon, iconBar) {
         widget.applyBoardData(widget.controller.nextMove());
       },
-      tooltip: 'Go to the next move'
+      tooltip: 'Next move'
     },
 
     arrowleft: {
       click:  function(event, widget, icon, iconBar) {
         widget.applyBoardData(widget.controller.prevMove());
       },
-      tooltip: 'Go to the previous move'
+      tooltip: 'Previous move'
     },
 
     // Get next problem.
@@ -405,7 +405,7 @@ glift.widgets.options.baseOptions = {
       click: function(event, widget, icon, iconBar) {
         widget.manager.nextSgf();
       },
-      tooltip: 'Go to the next panel'
+      tooltip: 'Next panel'
     },
 
     // Get the previous problem.
@@ -413,7 +413,7 @@ glift.widgets.options.baseOptions = {
       click: function(event, widget, icon, iconBar) {
         widget.manager.prevSgf();
       },
-      tooltip: 'Go to the previous panel'
+      tooltip: 'Previous panel'
     },
 
     // Try again
@@ -424,11 +424,57 @@ glift.widgets.options.baseOptions = {
       tooltip: 'Try the problem again'
     },
 
+    'undo-problem-move': {
+      click:  function(event, widget, icon, iconBar) {
+        if (widget.controller.movetree.node().getNodeNum() <=
+            widget.initialMoveNumber) {
+          return;
+        }
+
+        widget.controller.prevMove();
+        if (widget.initialMoveNumber !==
+            widget.controller.movetree.node().getNodeNum()) {
+          widget.controller.prevMove();
+        }
+
+        if (widget.initialMoveNumber ===
+            widget.controller.movetree.node().getNodeNum()) {
+          // We're at the root.  We can assume correctness, so reset the widget.
+          widget.reload();
+        } else {
+          var move = widget.controller.movetree.properties().getMove();
+          widget.correctness = undefined;
+          widget.iconBar.destroyTempIcons();
+          widget.iconBar.flush();
+
+          widget.controller.prevMove();
+          widget.applyBoardData(widget.controller.getEntireBoardState());
+
+          widget.sgfOptions.stoneClick(null, widget, move.point);
+        }
+      },
+      tooltip: 'Undo last move attempt'
+    },
+
     undo: {
       click: function(event, widget, icon, iconBar) {
         widget.manager.returnToOriginalWidget();
       },
       tooltip: 'Return to the parent widget'
+    },
+
+    'jump-left-arrow': {
+      click: function(event, widget, icon, iconBar) {
+        widget.applyBoardData(widget.controller.previousCommentOrBranch());
+      },
+      tooltip: 'Previous branch or comment'
+    },
+
+    'jump-right-arrow': {
+      click: function(event, widget, icon, iconBar) {
+        widget.applyBoardData(widget.controller.nextCommentOrBranch());
+      },
+      tooltip: 'Previous branch or comment'
     },
 
     // Go to the explain-board.
@@ -442,7 +488,13 @@ glift.widgets.options.baseOptions = {
           showVariations: glift.enums.showVariations.ALWAYS,
           problemConditions: glift.util.simpleClone(
               widget.sgfOptions.problemConditions),
-          icons: ['start', 'end', 'arrowleft', 'arrowright', 'undo'],
+          icons: [
+            'jump-left-arrow',
+            'jump-right-arrow',
+            'arrowleft',
+            'arrowright',
+            'undo'
+          ],
           rotation: widget.sgfOptions.rotation,
           boardRegion: widget.sgfOptions.boardRegion
         }

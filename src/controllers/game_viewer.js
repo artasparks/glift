@@ -49,6 +49,34 @@ glift.controllers.GameViewerMethods = {
   },
 
   /**
+   * Go back to the previous branch or comment.
+   *
+   * Returns null in the case that we're at the root already.
+   */
+  previousCommentOrBranch: function() {
+    var displayDataList = []; // TODO(kashomon): Merge this together?
+    var displayData = null;
+    do {
+      displayData = this.prevMove();
+      var comment = this.movetree.properties().getOneValue('C');
+      var numChildern = this.movetree.node().numChildren();
+    } while (displayData && !comment && numChildern <= 1); 
+    // It's more expected to reset the 'next' variation to zero.
+    this.setNextVariation(0);
+    return this.getEntireBoardState();
+  },
+
+  nextCommentOrBranch: function() {
+    var displayData = null;
+    do {
+      displayData = this.nextMove();
+      var comment = this.movetree.properties().getOneValue('C');
+      var numChildern = this.movetree.node().numChildren();
+    } while (displayData && !comment && numChildern <= 1); 
+    return this.getEntireBoardState();
+  },
+
+  /**
    * Move up what variation will be next retrieved.
    */
   moveUpVariations: function() {

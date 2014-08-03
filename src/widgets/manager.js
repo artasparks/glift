@@ -92,7 +92,13 @@ glift.widgets.WidgetManager.prototype = {
   setActive: function() {glift.global.activeInstanceId = this.id; },
 
   /** Gets the current widget object. */
-  getCurrentWidget: function() { return this.currentWidget; },
+  getCurrentWidget: function() { 
+    if (this.temporaryWidget) {
+      return this.temporaryWidget;
+    } else {
+      return this.currentWidget; 
+    }
+  },
 
   /** Gets the current SGF Object from the SGF collection. */
   getCurrentSgfObj: function() { return this.getSgfObj(this.sgfColIndex); },

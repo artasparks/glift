@@ -23,6 +23,8 @@ var BaseController = function() {
   this.treepath = undefined;
   this.movetree = undefined;
   this.goban = undefined;
+  this.captureHistory = [];
+  this.currentMoveNumber = 0;
 };
 
 BaseController.prototype = {
@@ -86,7 +88,7 @@ BaseController.prototype = {
   initialize: function() {
     var rules = glift.rules;
     this.treepath = rules.treepath.parseInitPosition(this.initialPosition);
-    this.currentMoveNumber  = this.treepath.length
+    this.currentMoveNumber = this.treepath.length;
     this.movetree = rules.movetree.getFromSgf(this.sgfString, this.treepath);
     var gobanData = rules.goban.getFromMoveTree(this.movetree, this.treepath);
     this.goban = gobanData.goban;
@@ -184,6 +186,7 @@ BaseController.prototype = {
     if (this.treepath[this.currentMoveNumber] !== undefined &&
         (varNum === undefined ||
         this.treepath[this.currentMoveNumber] === varNum)) {
+      // Don't mess with the treepath, if we're 'on variation'.
       this.movetree.moveDown(this.treepath[this.currentMoveNumber]);
     } else {
       varNum = varNum === undefined ? 0 : varNum;
@@ -193,6 +196,7 @@ BaseController.prototype = {
         this.movetree.moveDown(varNum);
       } else {
         // TODO(kashomon): Add case for non-readonly goboard.
+        console.log("Text to log");
         return null; // No moves available
       }
     }
@@ -234,6 +238,15 @@ BaseController.prototype = {
     this.treepath = this.treepath.slice(0, this.currentMoveNumber);
     this.treepath.push(num % this.movetree.node().numChildren());
     return this;
+  },
+
+  /**
+   * Get the variation number of the next move. This will be something different
+   * if we've used setNextVariation or if we've already played into a variation.
+   * Otherwise, it will be 0.
+   */
+  getNextVariation: function() {
+    return this.treepath[this.currentMoveNumber] || 0;
   },
 
   /**

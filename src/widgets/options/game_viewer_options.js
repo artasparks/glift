@@ -13,7 +13,7 @@ glift.widgets.options.GAME_VIEWER = {
     ARROW_RIGHT: 'iconActions.arrowright.click'
   },
 
-  icons: ['start', 'end', 'arrowleft', 'arrowright'],
+  icons: ['jump-left-arrow', 'jump-right-arrow', 'arrowleft', 'arrowright'],
 
   showVariations: glift.enums.showVariations.MORE_THAN_ONE,
 

@@ -191,11 +191,19 @@ glift.displays.svg.SvgObj.prototype = {
     return this._children;
   },
 
-  /**
-   * Empty out all the children.
-   */
+  /** Empty out all the children. */
   emptyChildren: function() {
     this._children = [];
+    return this;
+  },
+
+  /** Empty out all the children and update. */
+  emptyChildrenAndUpdate: function() {
+    this.emptyChildren();
+    var elem = document.getElementById(this.attr('id'))
+    while (elem && elem.firstChild) {
+      elem.removeChild(elem.firstChild);
+    }
     return this;
   },
 
