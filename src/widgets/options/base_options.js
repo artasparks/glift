@@ -424,6 +424,7 @@ glift.widgets.options.baseOptions = {
       tooltip: 'Try the problem again'
     },
 
+    // Undo for just problems (i.e., back one move).
     'undo-problem-move': {
       click:  function(event, widget, icon, iconBar) {
         if (widget.controller.movetree.node().getNodeNum() <=
@@ -431,26 +432,32 @@ glift.widgets.options.baseOptions = {
           return;
         }
 
-        widget.controller.prevMove();
-        if (widget.initialMoveNumber !==
-            widget.controller.movetree.node().getNodeNum()) {
+        if (widget.initialPlayerColor === widget.controller.getCurrentPlayer()) {
+          // If it's our move, then the last move was by the opponent -- we need
+          // an extra move backwards.
           widget.controller.prevMove();
         }
 
+        widget.controller.prevMove();
         if (widget.initialMoveNumber ===
             widget.controller.movetree.node().getNodeNum()) {
           // We're at the root.  We can assume correctness, so reset the widget.
           widget.reload();
         } else {
-          var move = widget.controller.movetree.properties().getMove();
-          widget.correctness = undefined;
+          var problemResults = glift.enums.problemResults;
+          var correctness = widget.controller.correctnessStatus();
           widget.iconBar.destroyTempIcons();
-          widget.iconBar.flush();
-
-          widget.controller.prevMove();
+          if (correctness === problemResults.CORRECT) {
+              widget.iconBar.setCenteredTempIcon(
+                  'multiopen-boxonly', 'check', '#0CC');
+              widget.correctness = problemResults.CORRECT;
+          } else if (correctness === problemResults.INCORRECT) {
+            widget.iconBar.destroyTempIcons();
+            widget.iconBar.setCenteredTempIcon(
+                'multiopen-boxonly', 'cross', 'red');
+            widget.correctness = problemResults.INCORRECT;
+          }
           widget.applyBoardData(widget.controller.getEntireBoardState());
-
-          widget.sgfOptions.stoneClick(null, widget, move.point);
         }
       },
       tooltip: 'Undo last move attempt'

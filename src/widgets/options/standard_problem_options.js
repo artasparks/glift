@@ -18,7 +18,7 @@ glift.widgets.options.STANDARD_PROBLEM = {
         widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'check', '#0CC');
         widget.correctness = problemResults.CORRECT;
         callback(problemResults.CORRECT);
-    } else if (data.result == problemResults.INCORRECT) {
+    } else if (data.result === problemResults.INCORRECT) {
       widget.iconBar.destroyTempIcons();
       widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
       widget.correctness = problemResults.INCORRECT;

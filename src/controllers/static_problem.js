@@ -110,5 +110,11 @@ glift.controllers.StaticProblemMethods = {
         throw 'Unexpected result output: ' + correctness
       }
     }
+  },
+
+  /** Get the current correctness status */
+  correctnessStatus: function() {
+    return glift.rules.problems.isCorrectPosition(
+        this.movetree, this.problemConditions);
   }
 };

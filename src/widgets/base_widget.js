@@ -10,19 +10,21 @@ glift.widgets.BaseWidget = function(
   this.actions = actions; // deeply nested -- not worth cloning.
   this.manager = manager;
 
-  // Used for problems, exclusively.
-  // TODO(kashomon): Factor these out into some sort of problemState.
-  this.correctness = undefined;
-  this.correctNextSet = undefined;
-  this.numCorrectAnswers = undefined;
-  this.totalCorrectAnswers = undefined;
 
   // These variables are initialized by draw
   this.controller = undefined;
   this.display = undefined;
   this.iconBar = undefined;
   this.boardRegion = undefined;
+
+  // Used for problems, exclusively.
+  // TODO(kashomon): Factor these out into some sort of problemState.
   this.initialMoveNumber = undefined;
+  this.initialPlayerColor = undefined;
+  this.correctness = undefined;
+  this.correctNextSet = undefined;
+  this.numCorrectAnswers = undefined;
+  this.totalCorrectAnswers = undefined;
 };
 
 glift.widgets.BaseWidget.prototype = {
@@ -30,6 +32,7 @@ glift.widgets.BaseWidget.prototype = {
   draw: function() {
     this.controller = this.sgfOptions.controllerFunc(this.sgfOptions);
     this.initialMoveNumber = this.controller.movetree.node().getNodeNum();
+    this.initialPlayerColor = this.controller.getCurrentPlayer();
     glift.util.majorPerfLog('Created controller');
 
     this.displayOptions.intersections = this.controller.getIntersections();

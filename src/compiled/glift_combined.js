@@ -7577,6 +7577,12 @@ glift.controllers.StaticProblemMethods = {
         throw 'Unexpected result output: ' + correctness
       }
     }
+  },
+
+  /** Get the current correctness status */
+  correctnessStatus: function() {
+    return glift.rules.problems.isCorrectPosition(
+        this.movetree, this.problemConditions);
   }
 };
 /**
@@ -8477,19 +8483,21 @@ glift.widgets.BaseWidget = function(
   this.actions = actions; // deeply nested -- not worth cloning.
   this.manager = manager;
 
-  // Used for problems, exclusively.
-  // TODO(kashomon): Factor these out into some sort of problemState.
-  this.correctness = undefined;
-  this.correctNextSet = undefined;
-  this.numCorrectAnswers = undefined;
-  this.totalCorrectAnswers = undefined;
 
   // These variables are initialized by draw
   this.controller = undefined;
   this.display = undefined;
   this.iconBar = undefined;
   this.boardRegion = undefined;
+
+  // Used for problems, exclusively.
+  // TODO(kashomon): Factor these out into some sort of problemState.
   this.initialMoveNumber = undefined;
+  this.initialPlayerColor = undefined;
+  this.correctness = undefined;
+  this.correctNextSet = undefined;
+  this.numCorrectAnswers = undefined;
+  this.totalCorrectAnswers = undefined;
 };
 
 glift.widgets.BaseWidget.prototype = {
@@ -8497,6 +8505,7 @@ glift.widgets.BaseWidget.prototype = {
   draw: function() {
     this.controller = this.sgfOptions.controllerFunc(this.sgfOptions);
     this.initialMoveNumber = this.controller.movetree.node().getNodeNum();
+    this.initialPlayerColor = this.controller.getCurrentPlayer();
     glift.util.majorPerfLog('Created controller');
 
     this.displayOptions.intersections = this.controller.getIntersections();
@@ -9573,6 +9582,7 @@ glift.widgets.options.baseOptions = {
       tooltip: 'Try the problem again'
     },
 
+    // Undo for just problems (i.e., back one move).
     'undo-problem-move': {
       click:  function(event, widget, icon, iconBar) {
         if (widget.controller.movetree.node().getNodeNum() <=
@@ -9580,26 +9590,32 @@ glift.widgets.options.baseOptions = {
           return;
         }
 
-        widget.controller.prevMove();
-        if (widget.initialMoveNumber !==
-            widget.controller.movetree.node().getNodeNum()) {
+        if (widget.initialPlayerColor === widget.controller.getCurrentPlayer()) {
+          // If it's our move, then the last move was by the opponent -- we need
+          // an extra move backwards.
           widget.controller.prevMove();
         }
 
+        widget.controller.prevMove();
         if (widget.initialMoveNumber ===
             widget.controller.movetree.node().getNodeNum()) {
           // We're at the root.  We can assume correctness, so reset the widget.
           widget.reload();
         } else {
-          var move = widget.controller.movetree.properties().getMove();
-          widget.correctness = undefined;
+          var problemResults = glift.enums.problemResults;
+          var correctness = widget.controller.correctnessStatus();
           widget.iconBar.destroyTempIcons();
-          widget.iconBar.flush();
-
-          widget.controller.prevMove();
+          if (correctness === problemResults.CORRECT) {
+              widget.iconBar.setCenteredTempIcon(
+                  'multiopen-boxonly', 'check', '#0CC');
+              widget.correctness = problemResults.CORRECT;
+          } else if (correctness === problemResults.INCORRECT) {
+            widget.iconBar.destroyTempIcons();
+            widget.iconBar.setCenteredTempIcon(
+                'multiopen-boxonly', 'cross', 'red');
+            widget.correctness = problemResults.INCORRECT;
+          }
           widget.applyBoardData(widget.controller.getEntireBoardState());
-
-          widget.sgfOptions.stoneClick(null, widget, move.point);
         }
       },
       tooltip: 'Undo last move attempt'
@@ -9916,7 +9932,7 @@ glift.widgets.options.STANDARD_PROBLEM = {
         widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'check', '#0CC');
         widget.correctness = problemResults.CORRECT;
         callback(problemResults.CORRECT);
-    } else if (data.result == problemResults.INCORRECT) {
+    } else if (data.result === problemResults.INCORRECT) {
       widget.iconBar.destroyTempIcons();
       widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
       widget.correctness = problemResults.INCORRECT;
