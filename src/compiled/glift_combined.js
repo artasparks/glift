@@ -18,7 +18,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.15.4',
+  version: '0.15.5',
   debugMode: false,
 
   // Options for performanceDebugLevel: NONE, INFO
@@ -1772,9 +1772,6 @@ glift.displays.dom.Element.prototype = {
  *  - The divId to be used
  */
 glift.displays.environment = {
-  TOPBAR_SIZE: 0.10,
-  BOTTOMBAR_SIZE: 0.10,
-
   get: function(options) {
     var point = glift.util.point;
     var bbox;
@@ -9358,8 +9355,7 @@ glift.widgets.options.baseOptions = {
 
 
     /**
-     * Mouseover/mouseout override for stones. Probably this will only need to
-     * be changed for the board editor.
+     * Mouseover/mouseout override for stones.
      */
     stoneMouseover: undefined,
     stoneMouseout: undefined
@@ -9859,7 +9855,12 @@ glift.widgets.options.EXAMPLE = {
 
   showVariations: glift.enums.showVariations.NEVER,
 
-  controllerFunc: glift.controllers.gameViewer
+  controllerFunc: glift.controllers.gameViewer,
+
+  // We disable mouseover and mouseout to make it clear you can't interact with
+  // the example widget.
+  stoneMouseover: function() {},
+  stoneMouseout: function() {}
 };
 /**
  * Additional Options for the GameViewers

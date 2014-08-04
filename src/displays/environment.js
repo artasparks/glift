@@ -7,9 +7,6 @@
  *  - The divId to be used
  */
 glift.displays.environment = {
-  TOPBAR_SIZE: 0.10,
-  BOTTOMBAR_SIZE: 0.10,
-
   get: function(options) {
     var point = glift.util.point;
     var bbox;

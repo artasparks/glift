@@ -209,8 +209,7 @@ glift.widgets.options.baseOptions = {
 
 
     /**
-     * Mouseover/mouseout override for stones. Probably this will only need to
-     * be changed for the board editor.
+     * Mouseover/mouseout override for stones.
      */
     stoneMouseover: undefined,
     stoneMouseout: undefined
