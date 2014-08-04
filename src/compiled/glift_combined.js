@@ -18,7 +18,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.15.2',
+  version: '0.15.3',
   debugMode: false,
 
   // Options for performanceDebugLevel: NONE, INFO
@@ -5119,6 +5119,24 @@ Goban.prototype = {
   },
 
   /**
+   * Try to add a stone on a new go board instance, but don't change state.
+   *
+   * Returns true / false depending on whether the 'add' was successful.
+   */
+  // TODO(kashomon): Needs a test.
+  testAddStone: function(point, color) {
+    var addStoneResult = this.addStone(point, color);
+
+    // Undo our changes.
+    this.clearStone(point);
+    var oppositeColor = glift.util.colors.oppositeColor(color);
+    for (var i = 0; i < addStoneResult.captures.length; i++) {
+      this._setColor(addStoneResult.captures[i], oppositeColor);
+    }
+    return addStoneResult.successful;
+  },
+
+  /**
    * addStone: Add a stone to the GoBoard (0-indexed).  Requires the
    * intersection (a point) where the stone is to be placed, and the color of
    * the stone to be placed.
@@ -7511,71 +7529,44 @@ glift.controllers.StaticProblemMethods = {
     var INDETERMINATE = problemResults.INDETERMINATE;
     var FAILURE = problemResults.FAILURE;
 
-    // Reminder -- the goban returns:
-    //  {
-    //    successful: <boolean>
-    //    captures: [ points]
-    //  }
-    var addResult = this.goban.addStone(point, color);
-    if (!addResult.successful) {
+    if (!this.goban.placeable(point) ||
+        !this.goban.testAddStone(point, color)) {
       return { result: FAILURE };
-    } else {
-      var toRecord = {};
-      toRecord[color] = addResult.captures;
-      this.recordCaptures(toRecord);
     }
 
-    // At this point, the move is allowed by the rules of Go.  Now the task is
-    // to determine whether tho move is 'correct' or not based on the data in
-    // the movetree, presumably from an SGF.
     var nextVarNum = this.movetree.findNextMove(point, color);
-
     if (nextVarNum === null) {
       // There are no variations corresponding to the move made (i.e.,
       // nextVarNum is null), so we assume that the move is INCORRECT. However,
       // we still add the move down the movetree, adding a node if necessary.
       // This allows us to maintain a consistent state.
-      this.movetree.addNode();
+      this.movetree.addNode(); // add node and move down
       this.movetree.properties().add(
           glift.sgf.colorToToken(color),
           point.toSgfCoord());
-      var outData = this.getNextBoardState();
-      outData.result = INCORRECT;
-      return outData;
-    } else {
-      this.movetree.moveDown(nextVarNum);
+      this.movetree.moveUp();
+      nextVarNum = this.movetree.node().numChildren() - 1;
+    }
 
-      var correctness = glift.rules.problems.isCorrectPosition(
-          this.movetree, this.problemConditions);
-      if (correctness === CORRECT || correctness == INCORRECT) {
-        var outData = this.getNextBoardState();
-        outData.result = correctness;
-        return outData;
-      } else if (correctness === INDETERMINATE) {
-        var prevOutData = this.getNextBoardState();
-        // Play for the opposite player. It used to be random, but randomness is
-        // confusing, and we aim to not surprise users.
-        // var nextVariation = glift.math.getRandomInt(
-            // 0, this.movetree.node().numChildren() - 1);
-        var nextVariation = 0;
-        this.movetree.moveDown(nextVariation);
-        var nextMove = this.movetree.properties().getMove();
-        var result = this.goban.addStone(nextMove.point, nextMove.color);
-        var toRecord = {};
-        toRecord[nextMove.color] = result.captures;
-        this.recordCaptures(toRecord);
-        var outData = this.getNextBoardState();
-        for (var color in prevOutData.stones) {
-          for (var i = 0; i < prevOutData.stones[color].length; i++) {
-            outData.stones[color].push(prevOutData.stones[color][i]);
-          }
-        }
-        outData.result = INDETERMINATE;
-        return outData;
-      }
-      else {
-        throw 'Unexpected result output: ' + correctness
-      }
+    var outData = this.nextMove(nextVarNum);
+    var correctness = glift.rules.problems.isCorrectPosition(
+        this.movetree, this.problemConditions);
+    if (correctness === CORRECT || correctness == INCORRECT) {
+      outData.result = correctness;
+      return outData;
+    } else if (correctness === INDETERMINATE) {
+      // Play for the opposite player. It used to be random, but randomness is
+      // confusing, and we aim to not surprise users.
+      // var nextVariation = glift.math.getRandomInt(
+          // 0, this.movetree.node().numChildren() - 1);
+      var nextVariation = 0;
+      this.nextMove(nextVariation);
+      var outData = this.getEntireBoardState();
+      outData.result = INDETERMINATE;
+      return outData;
+    }
+    else {
+      throw 'Unexpected result output: ' + correctness
     }
   },
 
@@ -9593,10 +9584,11 @@ glift.widgets.options.baseOptions = {
         if (widget.initialPlayerColor === widget.controller.getCurrentPlayer()) {
           // If it's our move, then the last move was by the opponent -- we need
           // an extra move backwards.
-          widget.controller.prevMove();
+          console.log('extra back');
+          widget.applyBoardData(widget.controller.prevMove());
         }
 
-        widget.controller.prevMove();
+        widget.applyBoardData(widget.controller.prevMove());
         if (widget.initialMoveNumber ===
             widget.controller.movetree.node().getNodeNum()) {
           // We're at the root.  We can assume correctness, so reset the widget.
@@ -9615,7 +9607,6 @@ glift.widgets.options.baseOptions = {
                 'multiopen-boxonly', 'cross', 'red');
             widget.correctness = problemResults.INCORRECT;
           }
-          widget.applyBoardData(widget.controller.getEntireBoardState());
         }
       },
       tooltip: 'Undo last move attempt'

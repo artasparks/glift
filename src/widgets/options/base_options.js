@@ -435,10 +435,11 @@ glift.widgets.options.baseOptions = {
         if (widget.initialPlayerColor === widget.controller.getCurrentPlayer()) {
           // If it's our move, then the last move was by the opponent -- we need
           // an extra move backwards.
-          widget.controller.prevMove();
+          console.log('extra back');
+          widget.applyBoardData(widget.controller.prevMove());
         }
 
-        widget.controller.prevMove();
+        widget.applyBoardData(widget.controller.prevMove());
         if (widget.initialMoveNumber ===
             widget.controller.movetree.node().getNodeNum()) {
           // We're at the root.  We can assume correctness, so reset the widget.
@@ -457,7 +458,6 @@ glift.widgets.options.baseOptions = {
                 'multiopen-boxonly', 'cross', 'red');
             widget.correctness = problemResults.INCORRECT;
           }
-          widget.applyBoardData(widget.controller.getEntireBoardState());
         }
       },
       tooltip: 'Undo last move attempt'

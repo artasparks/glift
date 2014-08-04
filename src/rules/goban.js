@@ -141,6 +141,24 @@ Goban.prototype = {
   },
 
   /**
+   * Try to add a stone on a new go board instance, but don't change state.
+   *
+   * Returns true / false depending on whether the 'add' was successful.
+   */
+  // TODO(kashomon): Needs a test.
+  testAddStone: function(point, color) {
+    var addStoneResult = this.addStone(point, color);
+
+    // Undo our changes.
+    this.clearStone(point);
+    var oppositeColor = glift.util.colors.oppositeColor(color);
+    for (var i = 0; i < addStoneResult.captures.length; i++) {
+      this._setColor(addStoneResult.captures[i], oppositeColor);
+    }
+    return addStoneResult.successful;
+  },
+
+  /**
    * addStone: Add a stone to the GoBoard (0-indexed).  Requires the
    * intersection (a point) where the stone is to be placed, and the color of
    * the stone to be placed.
