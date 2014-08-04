@@ -435,7 +435,6 @@ glift.widgets.options.baseOptions = {
         if (widget.initialPlayerColor === widget.controller.getCurrentPlayer()) {
           // If it's our move, then the last move was by the opponent -- we need
           // an extra move backwards.
-          console.log('extra back');
           widget.applyBoardData(widget.controller.prevMove());
         }
 
