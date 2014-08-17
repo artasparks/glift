@@ -24,6 +24,11 @@ glift.widgets = {
     var actions = {};
     actions.iconActions = options.iconActions;
     actions.stoneActions = options.stoneActions;
+
+    glift.init(
+        options.display.disableZoomForMobile,
+        options.divId);
+
     return new glift.widgets.WidgetManager(
         options.divId,
         options.sgfCollection,

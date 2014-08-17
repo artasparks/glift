@@ -313,18 +313,18 @@ glift.widgets.options.baseOptions = {
     },
 
     /**
-     * The name of the theme.
+     * The name of the theme to be used for this instance. Other themes include:
+     *  - DEPTH (stones with shadows)
+     *  - MOODY (gray background, no stone outlines)
+     *  - TRANSPARENT (board is transparent)
+     *  - TEXTBOOK (Everything black and white)
      */
     theme: 'DEFAULT',
 
-    /**
-     * Previous SGF icon
-     */
+    /** Previous SGF icon */
     previousSgfIcon: 'chevron-left',
 
-    /**
-     * Next SGF Icon
-     */
+    /** Next SGF Icon */
     nextSgfIcon: 'chevron-right',
 
     /**
@@ -332,7 +332,10 @@ glift.widgets.options.baseOptions = {
      * - On the left, use the numbers 1-19
      * - On the bottom, use A-T (all letters minus I)
      */
-    drawBoardCoords: false
+    drawBoardCoords: false,
+
+    /** For convenience: Disable zoom for mobile users. */
+    disableZoomForMobile: false
   },
 
   /**

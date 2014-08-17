@@ -292,18 +292,20 @@ glift.displays.icons._IconBar.prototype = {
       var actionsForIcon = {};
 
       actionsForIcon.click = iconActions[iconName].click;
-      actionsForIcon.mouseover = iconActions[iconName].mouseover ||
-        function(event, widgetRef, icon) {
-          $('#' + icon.elementId)
-              .attr('fill', widgetRef.iconBar.theme.icons.DEFAULT_HOVER.fill);
-        };
-      actionsForIcon.mouseout = iconActions[iconName].mouseout ||
-        function(event, widgetRef, icon) {
-          $('#' + icon.elementId)
-              .attr('fill', widgetRef.iconBar.theme.icons.DEFAULT.fill);
-        };
-      // TODO(kashomon): Add touch events conditionally based on the detected
-      // browser.
+
+      // Add hover events for non-mobile browsers.
+      if (!glift.platform.isMobile()) {
+        actionsForIcon.mouseover = iconActions[iconName].mouseover ||
+          function(event, widgetRef, icon) {
+            $('#' + icon.elementId)
+                .attr('fill', widgetRef.iconBar.theme.icons.DEFAULT_HOVER.fill);
+          };
+        actionsForIcon.mouseout = iconActions[iconName].mouseout ||
+          function(event, widgetRef, icon) {
+            $('#' + icon.elementId)
+                .attr('fill', widgetRef.iconBar.theme.icons.DEFAULT.fill);
+          };
+      }
       for (var eventName in actionsForIcon) {
         var eventFunc = actionsForIcon[eventName];
         // We init each action separately so that we avoid the lazy binding of
@@ -311,7 +313,9 @@ glift.displays.icons._IconBar.prototype = {
         this._initOneIconAction(parentWidget, icon, eventName, eventFunc);
       }
 
-      if (iconActions[iconName].tooltip) {
+      // Initialize tooltips.  Not currently supported for mobile.
+      if (iconActions[iconName].tooltip &&
+          !glift.platform.isMobile()) {
         this._initializeTooltip(icon, iconActions[iconName].tooltip)
       }
     }.bind(this));

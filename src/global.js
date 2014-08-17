@@ -1,3 +1,6 @@
+/**
+ * Useful global variables related to all glift instances on the page.
+ */
 glift.global = {
   /**
    * Semantic versioning is used to determine API behavior.
@@ -5,22 +8,43 @@ glift.global = {
    * Currently in alpha.
    */
   version: '0.15.6',
+
+  /** Indicates whether or not to store debug data. */
+  // TODO(kashomon): Remove this hack.
   debugMode: false,
 
-  // Options for performanceDebugLevel: NONE, INFO
+  /**
+   * Options for performanceDebugLevel: NONE, INFO
+   */
   performanceDebugLevel: 'NONE',
 
-  // Map of performance timestamps.
-  // TODO(kashomon): Indicate that this is private and what it's used for.
+  /**
+   * Map of performance timestamps.
+   * TODO(kashomon): Indicate that this is private and what it's used for.
+   */
   perf: {},
 
-  // The registry.  Used to determine who has 'ownership' of key-presses.
-  // The problem is that key presses have to be captured in a global scope (or
-  // at least at the <body> level.  Unfortunate.
+  /**
+   * The registry.  Used to determine who has 'ownership' of key-presses.
+   * The problem is that key presses have to be captured in a global scope (or
+   * at least at the <body> level.  Unfortunate.
+   */
   instanceRegistry: {
     // Map of manager ID (some-div-id-glift-1) to object instance.
   },
 
-  // Id of the active instance.
-  activeInstanceId: null
+  /**
+   * Id of the active instance.
+   */
+  activeInstanceId: null,
+
+  /**
+   * Global variable to mark whether the zoom has been disabled.
+   */
+  disabledZoom: false,
+
+  /**
+   * Global variable to mark whether the zoom has been disabled.
+   */
+  disabledZoom: false,
 };
