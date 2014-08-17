@@ -3,7 +3,7 @@
  *
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
- * @version 0.15.6
+ * @version 0.15.7
  * --------------------------------------
  */
 (function(w) {
@@ -13,31 +13,81 @@ if (w) {
   w.glift = glift;
 }
 })(window);
+/**
+ * Useful global variables related to all glift instances on the page.
+ */
 glift.global = {
   /**
    * Semantic versioning is used to determine API behavior.
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.15.6',
+  version: '0.15.7',
+
+  /** Indicates whether or not to store debug data. */
+  // TODO(kashomon): Remove this hack.
   debugMode: false,
 
-  // Options for performanceDebugLevel: NONE, INFO
+  /**
+   * Options for performanceDebugLevel: NONE, INFO
+   */
   performanceDebugLevel: 'NONE',
 
-  // Map of performance timestamps.
-  // TODO(kashomon): Indicate that this is private and what it's used for.
+  /**
+   * Map of performance timestamps.
+   * TODO(kashomon): Indicate that this is private and what it's used for.
+   */
   perf: {},
 
-  // The registry.  Used to determine who has 'ownership' of key-presses.
-  // The problem is that key presses have to be captured in a global scope (or
-  // at least at the <body> level.  Unfortunate.
+  /**
+   * The registry.  Used to determine who has 'ownership' of key-presses.
+   * The problem is that key presses have to be captured in a global scope (or
+   * at least at the <body> level.  Unfortunate.
+   */
   instanceRegistry: {
     // Map of manager ID (some-div-id-glift-1) to object instance.
   },
 
-  // Id of the active instance.
-  activeInstanceId: null
+  /**
+   * Id of the active instance.
+   */
+  activeInstanceId: null,
+
+  /**
+   * Global variable to mark whether the zoom has been disabled.
+   */
+  disabledZoom: false,
+
+  /**
+   * Global variable to mark whether the zoom has been disabled.
+   */
+  disabledZoom: false,
+};
+/**
+ * Initialization function to be run on glift creation.  Things performed:
+ *  - (Compatibility) Whether or not the page supports Glift (SVG)
+ *  - (Mobile-Zoom) Disable zoom for mobile, if option specified.
+ */
+glift.init = function(disableZoomForMobile, divId) {
+  // Compatibility.
+  if (!glift.platform.supportsSvg()) {
+    var text = 'Your browser does not support Glift (lack of SVG support). ' +
+        'Please upgrade or try one of ' +
+        '<a href="http://browsehappy.com/">these</a>';
+    $('#' + divId).append(text);
+    // Don't perform any other action and error out.
+    throw new Error(text);
+  }
+
+  // Disable Zoom for Mobile (should only happens once)
+  if (!glift.global.disabledZoom &&
+      disableZoomForMobile &&
+      glift.platform.isMobile()) {
+    $('head meta[name=viewport]').remove();
+    $('head').prepend('<meta name="viewport" content="width=device-width, ' +
+        'initial-scale=1, maximum-scale=10.0, minimum-scale=1, user-scalable=1" />');
+    glift.global.disabledZoom = true; // prevent from being called again.
+  }
 };
 glift.util = {
   logz: function(msg) {
@@ -633,8 +683,29 @@ glift.platform = {
     return glift.platform._isAndroid;
   },
 
+  _isWinPhone: null,
+  isWinPhone: function() {
+    if (glift.platform._isWinPhone !== null) return glift.platform._isWinPhone;
+    glift.platform._isWinPhone = /Windows Phone/i.test(navigator.userAgent);
+    return glift.platform._isWinPhone;
+  },
+
+  /** Whether a page is being viewed by a mobile browser. */
+  // TODO(kashomon): Change to inspecting viewport size?
   isMobile: function() {
-    return glift.platform.isAndroid() ||  glift.platform.isIOS();
+    return glift.platform.isAndroid() ||
+        glift.platform.isIOS() ||
+        glift.platform.isWinPhone();
+  },
+
+  /** Whether a page can support SVG (and thus Glift).*/
+  _supportsSvg: null,
+  supportsSvg: function() {
+    if (glift.platform._supportsSvg !== null) return glift.platform._supportsSvg;
+    // From: http://css-tricks.com/test-support-svg-img/
+    glift.platform._supportsSvg = document.implementation.hasFeature(
+        "http://www.w3.org/TR/SVG11/feature#Image", "1.1");
+    return glift.platform._supportsSvg;
   }
 };
 (function() {
@@ -3785,18 +3856,20 @@ glift.displays.icons._IconBar.prototype = {
       var actionsForIcon = {};
 
       actionsForIcon.click = iconActions[iconName].click;
-      actionsForIcon.mouseover = iconActions[iconName].mouseover ||
-        function(event, widgetRef, icon) {
-          $('#' + icon.elementId)
-              .attr('fill', widgetRef.iconBar.theme.icons.DEFAULT_HOVER.fill);
-        };
-      actionsForIcon.mouseout = iconActions[iconName].mouseout ||
-        function(event, widgetRef, icon) {
-          $('#' + icon.elementId)
-              .attr('fill', widgetRef.iconBar.theme.icons.DEFAULT.fill);
-        };
-      // TODO(kashomon): Add touch events conditionally based on the detected
-      // browser.
+
+      // Add hover events for non-mobile browsers.
+      if (!glift.platform.isMobile()) {
+        actionsForIcon.mouseover = iconActions[iconName].mouseover ||
+          function(event, widgetRef, icon) {
+            $('#' + icon.elementId)
+                .attr('fill', widgetRef.iconBar.theme.icons.DEFAULT_HOVER.fill);
+          };
+        actionsForIcon.mouseout = iconActions[iconName].mouseout ||
+          function(event, widgetRef, icon) {
+            $('#' + icon.elementId)
+                .attr('fill', widgetRef.iconBar.theme.icons.DEFAULT.fill);
+          };
+      }
       for (var eventName in actionsForIcon) {
         var eventFunc = actionsForIcon[eventName];
         // We init each action separately so that we avoid the lazy binding of
@@ -3804,7 +3877,9 @@ glift.displays.icons._IconBar.prototype = {
         this._initOneIconAction(parentWidget, icon, eventName, eventFunc);
       }
 
-      if (iconActions[iconName].tooltip) {
+      // Initialize tooltips.  Not currently supported for mobile.
+      if (iconActions[iconName].tooltip &&
+          !glift.platform.isMobile()) {
         this._initializeTooltip(icon, iconActions[iconName].tooltip)
       }
     }.bind(this));
@@ -8506,6 +8581,11 @@ glift.widgets = {
     var actions = {};
     actions.iconActions = options.iconActions;
     actions.stoneActions = options.stoneActions;
+
+    glift.init(
+        options.display.disableZoomForMobile,
+        options.divId);
+
     return new glift.widgets.WidgetManager(
         options.divId,
         options.sgfCollection,
@@ -9523,18 +9603,18 @@ glift.widgets.options.baseOptions = {
     },
 
     /**
-     * The name of the theme.
+     * The name of the theme to be used for this instance. Other themes include:
+     *  - DEPTH (stones with shadows)
+     *  - MOODY (gray background, no stone outlines)
+     *  - TRANSPARENT (board is transparent)
+     *  - TEXTBOOK (Everything black and white)
      */
     theme: 'DEFAULT',
 
-    /**
-     * Previous SGF icon
-     */
+    /** Previous SGF icon */
     previousSgfIcon: 'chevron-left',
 
-    /**
-     * Next SGF Icon
-     */
+    /** Next SGF Icon */
     nextSgfIcon: 'chevron-right',
 
     /**
@@ -9542,7 +9622,10 @@ glift.widgets.options.baseOptions = {
      * - On the left, use the numbers 1-19
      * - On the bottom, use A-T (all letters minus I)
      */
-    drawBoardCoords: false
+    drawBoardCoords: false,
+
+    /** For convenience: Disable zoom for mobile users. */
+    disableZoomForMobile: false
   },
 
   /**

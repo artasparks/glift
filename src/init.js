@@ -10,18 +10,17 @@ glift.init = function(disableZoomForMobile, divId) {
         'Please upgrade or try one of ' +
         '<a href="http://browsehappy.com/">these</a>';
     $('#' + divId).append(text);
-    // Stop doing any other action.
+    // Don't perform any other action and error out.
     throw new Error(text);
   }
 
-  // Disable Zoom for Mobile (only happens once)
+  // Disable Zoom for Mobile (should only happens once)
   if (!glift.global.disabledZoom &&
       disableZoomForMobile &&
       glift.platform.isMobile()) {
-
     $('head meta[name=viewport]').remove();
     $('head').prepend('<meta name="viewport" content="width=device-width, ' +
         'initial-scale=1, maximum-scale=10.0, minimum-scale=1, user-scalable=1" />');
-    glift.global.disabledZoom = true;
+    glift.global.disabledZoom = true; // prevent from being called again.
   }
 };
