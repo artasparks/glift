@@ -3,6 +3,7 @@
  *
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
+ * @version 0.15.6
  * --------------------------------------
  */
 (function(w) {
@@ -18,7 +19,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.15.5',
+  version: '0.15.6',
   debugMode: false,
 
   // Options for performanceDebugLevel: NONE, INFO
@@ -313,6 +314,7 @@ glift.enums = {
   svgElements: {
     SVG: 'svg',
     BOARD: 'board',
+    BOARD_COORD_LABELS: 'board_coord_labels',
     INTERSECTIONS_CONTAINER: 'intersections',
     BOARD_LINE: 'board_line',
     BOARD_LINE_CONTAINER: 'board_line_container',
@@ -722,6 +724,9 @@ GliftPoint.prototype = {
     return this.toString();
   },
 
+  /**
+   * Return a string representation of the coordinate.  I.e., "12,3".
+   */
   toString: function() {
     return glift.util.coordToString(this.x(), this.y());
   },
@@ -975,12 +980,19 @@ glift.themes.registered.DEFAULT = {
 
   starPoints: {
     sizeFraction: .15, // As a fraction of the spacing.
-    fill: '#000000'
+    fill: 'black'
   },
 
   lines: {
-    stroke: "#000000",
+    stroke: "black",
     'stroke-width': 0.5
+  },
+
+  boardCoordLabels: {
+    fill: 'black',
+    stroke: 'black',
+    opacity: '0.6',
+    'font-family': 'sans-serif'
   },
 
   stones: {
@@ -1196,13 +1208,16 @@ glift.themes.registered.TRANSPARENT = {
 };
 glift.displays = {
   /**
-   * Create the display.  Delegates to board.create(...), which currently
-   * creates an SVG based Go Board.
+   * Create the display.  Delegates to board.create(...), which creates an SVG
+   * based Go Board.
    */
   create: function(options, boardBox) {
     glift.util.majorPerfLog("Before environment creation");
     options.boardBox = boardBox;
-    var environment = glift.displays.environment.get(options);
+
+    // Create an environment wrapper, which performs all the calculations
+    // necessary to draw the board.
+    var env = glift.displays.environment.get(options);
 
     glift.util.majorPerfLog("After environment creation");
     var themeKey = options.theme || 'DEFAULT';
@@ -1210,8 +1225,7 @@ glift.displays = {
     if (options.goBoardBackground && options.goBoardBackground !== '') {
       glift.themes.setGoBoardBackground(theme, options.goBoardBackground);
     }
-    return glift.displays.board.create(
-        environment, themeKey, theme, options.rotation);
+    return glift.displays.board.create(env, themeKey, theme, options.rotation);
   }
 };
 glift.displays.bboxFromPts = function(topLeftPt, botRightPt) {
@@ -1395,54 +1409,94 @@ glift.displays._BoundingBox.prototype = {
   }
 };
 (function() {
-// TODO(kashomon): Add much better tests for these methods.  The BoardPoints are
-// pivotal to creating the go board, so we want them to really work.
-
 /**
- * Simple wrapper around the BoardPoints constructor.
+ * Construct the board points from a linebox.
  */
-glift.displays.boardPoints = function(points, spacing, maxIntersects) {
-  return new BoardPoints(points, spacing, maxIntersects);
-};
+glift.displays.boardPoints = function(
+    linebox, maxIntersects, drawBoardCoords) {
 
-/**
- * Construct the board points from a linebox (see linebox.js).
- *
- * TODO(kashomon): This is pretty irritating to test.  Is there an easier way to
- * structure this?
- */
-glift.displays.boardPointsFromLineBox = function(linebox, maxIntersects) {
+  // console.log(linebox);
   var spacing = linebox.spacing,
       radius = spacing / 2,
       linebbox = linebox.bbox,
-      left = linebbox.left() + linebox.extensionBox.left() * spacing,
-      top = linebbox.top() + linebox.extensionBox.top() * spacing,
+      leftExtAmt = linebox.extensionBox.left() * spacing,
+      rightExtAmt = linebox.extensionBox.right() * spacing,
+      left = linebbox.left() + leftExtAmt,
+
+      topExtAmt = linebox.extensionBox.top() * spacing,
+      botExtAmt = linebox.extensionBox.bottom() * spacing,
+      top = linebbox.top() + topExtAmt,
       leftPt = linebox.pointTopLeft.x(),
       topPt = linebox.pointTopLeft.y(),
-      // Mapping from int point hash, e.g., (0,18), to coordinate data.
-      points = {};
+      // Mapping from int point string, e.g., '0,18', to coordinate data.
+      points = {},
+      xCoordLabels = 'ABCDEFGHJKLMNOPQRSTUVWXYZ',
+      edgeCoords = [];
 
   for (var i = 0; i <= linebox.yPoints; i++) {
     for (var j = 0; j <= linebox.xPoints; j++) {
       var xCoord = left + j * spacing;
       var yCoord = top + i * spacing;
       var intPt = glift.util.point(leftPt + j, topPt + i);
-
-      // TODO(kashomon): Prehaps the coordinate point should be truncated?
-      // right now it's ~15 decimal places.  This is too much precision and it
-      // might hurt performance.
       var coordPt = glift.util.point(xCoord, yCoord);
-      points[intPt.hash()] = {
-        // Integer point.
-        intPt: intPt,
-        coordPt: coordPt,
-        bbox: glift.displays.bboxFromPts(
-            glift.util.point(coordPt.x() - radius, coordPt.y() - radius),
-            glift.util.point(coordPt.x() + radius, coordPt.y() + radius))
-      };
+
+      if (drawBoardCoords) {
+        if ((i === 0 || i === linebox.yPoints) &&
+            (j === 0 || j === linebox.xPoints)) {
+          // Discard corner points
+        } else if (i === 0 || i === linebox.yPoints) {
+          // Handle the top and bottom sides.
+          if (i === 0) {
+            coordPt = coordPt.translate(0, -1 * topExtAmt);
+          } else if (i === linebox.yPoints) {
+            coordPt = coordPt.translate(0, botExtAmt)
+          }
+          edgeCoords.push({
+            label: xCoordLabels.charAt(intPt.x()  - 1),
+            coordPt: coordPt
+          });
+        } else if (j === 0 || j === linebox.xPoints)  {
+          // Handle the left and right sides.
+          if (j === 0) {
+            coordPt = coordPt.translate(-1 * leftExtAmt, 0);
+          } else if (j === linebox.xPoints) {
+            coordPt = coordPt.translate(rightExtAmt, 0)
+          }
+          edgeCoords.push({
+            // Flip the actual label around the x-axis.
+            label: Math.abs(intPt.y() - maxIntersects) + 1,
+            coordPt: coordPt
+          });
+        } else {
+          intPt = intPt.translate(-1, -1);
+          points[intPt.hash()] = {
+            intPt: intPt,
+            coordPt: coordPt,
+            bbox: glift.displays.bboxFromPts(
+                glift.util.point(coordPt.x() - radius, coordPt.y() - radius),
+                glift.util.point(coordPt.x() + radius, coordPt.y() + radius))
+          };
+        }
+      } else {
+        // Default case: Don't draw coordinates
+        points[intPt.hash()] = {
+          intPt: intPt,
+          coordPt: coordPt,
+          bbox: glift.displays.bboxFromPts(
+              glift.util.point(coordPt.x() - radius, coordPt.y() - radius),
+              glift.util.point(coordPt.x() + radius, coordPt.y() + radius))
+        };
+      }
     }
   }
-  return glift.displays.boardPoints(points, spacing, maxIntersects);
+  return new BoardPoints(
+      points, spacing, maxIntersects, edgeCoords);
+};
+
+/** An edge coordinate label (i.e., A-T, 1-19, depending on side). */
+var EdgeCoordinate = function(pt, label) {
+  this.point = pt;
+  this.label = label;
 };
 
 /**
@@ -1461,24 +1515,16 @@ glift.displays.boardPointsFromLineBox = function(linebox, maxIntersects) {
  *
  *  Note: The integer points are 0 Indexed.
  */
-var BoardPoints = function(points, spacing, numIntersections) {
+var BoardPoints = function(points, spacing, numIntersections, edgeLabels) {
   this.points = points; // int hash is 0 indexed, i.e., 0->18.
   this.spacing = spacing;
   this.radius = spacing / 2;
   this.numIntersections = numIntersections; // 1 indexed (1->19)
+  this.edgeCoordLabels = edgeLabels;
   this.dataCache = undefined;
 };
 
 BoardPoints.prototype = {
-  /**
-   * Get the points.
-   *
-   * TODO(kashomon): Remove?  I don't think this is necessary any longer.
-   */
-  getCoords: function() {
-    return this.points;
-  },
-
   /**
    * Get the coordinate for a given integer point string.  Note: the integer
    * points are 0 indexed, i.e., 0->18 for a 19x19.  Recall that board points
@@ -1558,24 +1604,8 @@ BoardPoints.prototype = {
       }
     }
     return outStarPoints;
-  },
-
-  /**
-   * Draw a circle for every intersection, for debug purposes.
-   *
-   * TODO(kashomon): This is raphael-specific and should be removed, or changed
-   * to use D3.
-   */
-  _debugDraw: function(paper, color) {
-    for (var ptHash in this.points) {
-      var centerX = this.points[ptHash].bbox.center().x();
-      var centerY = this.points[ptHash].bbox.center().y();
-      var circ = paper.circle(centerX, centerY, this.radius);
-      circ.attr({fill:color, opacity:.3});
-    }
   }
 };
-
 })();
 glift.displays.cropbox = {
   LINE_EXTENSION: .5,
@@ -1586,12 +1616,16 @@ glift.displays.cropbox = {
     return new glift.displays._CropBox(cbox, extBox, minIntersects, maxIntersects);
   },
 
-  getFromRegion: function(region, intersects) {
+  getFromRegion: function(region, intersects, drawBoardCoords) {
     var util = glift.util,
         boardRegions = glift.enums.boardRegions,
         region = region || boardRegions.ALL,
+        drawBoardCoords = drawBoardCoords || false,
+        // we add an extra position around the edge for labels, so we need a
+        // label modifier. 1 or 0.
+        lblMod = drawBoardCoords ? 1 : 0,
         // So that we can 0 index, we subtract one.
-        maxIntersects = intersects - 1,
+        maxIntersects = drawBoardCoords ? intersects + 1 : intersects - 1,
         minIntersects = 0,
         defaultExtension = 0,
         lineExtension = .5,
@@ -1615,64 +1649,64 @@ glift.displays.cropbox = {
       // X -
       // X -
       case boardRegions.LEFT:
-          right = halfInts + 1;
+          right = halfInts + 1 + lblMod;
           rightExtension = this.LINE_EXTENSION;
           break;
 
       // - X
       // - X
       case boardRegions.RIGHT:
-          left = halfInts - 1;
+          left = halfInts - 1 - lblMod;
           leftExtension = this.LINE_EXTENSION;
           break;
 
       // X X
       // - -
       case boardRegions.TOP:
-          bot = halfInts + 1;
+          bot = halfInts + 1 + lblMod;
           botExtension = this.LINE_EXTENSION;
           break;
 
       // - -
       // X X
       case boardRegions.BOTTOM:
-          top = halfInts - 1;
+          top = halfInts - 1 - lblMod;
           topExtension = this.LINE_EXTENSION;
           break;
 
       // X -
       // - -
       case boardRegions.TOP_LEFT:
-          bot = halfInts + 1;
+          bot = halfInts + 1 + lblMod;
           botExtension = this.LINE_EXTENSION;
-          right = halfInts + 2;
+          right = halfInts + 2 + lblMod;
           rightExtension = this.LINE_EXTENSION;
           break;
 
       // - X
       // - -
       case boardRegions.TOP_RIGHT:
-          bot = halfInts + 1;
+          bot = halfInts + 1 + lblMod;
           botExtension = this.LINE_EXTENSION;
-          left = halfInts - 2;
+          left = halfInts - 2 - lblMod;
           leftExtension = this.LINE_EXTENSION;
           break;
 
       // - -
       // X -
       case boardRegions.BOTTOM_LEFT:
-          top = halfInts - 1;
+          top = halfInts - 1 - lblMod;
           topExtension = this.LINE_EXTENSION;
-          right = halfInts + 2;
+          right = halfInts + 2 + lblMod;
           rightExtension = this.LINE_EXTENSION;
           break;
 
       // - -
       // - X
       case boardRegions.BOTTOM_RIGHT:
-          top = halfInts - 1;
+          top = halfInts - 1 - lblMod;
           topExtension = this.LINE_EXTENSION;
-          left = halfInts - 2;
+          left = halfInts - 2 - lblMod;
           leftExtension = this.LINE_EXTENSION;
           break;
       default: break;
@@ -1772,8 +1806,15 @@ glift.displays.dom.Element.prototype = {
  *  - The divId to be used
  */
 glift.displays.environment = {
+  /**
+   * Get the environment wrapper, passing in the display options.
+   */
   get: function(options) {
     var point = glift.util.point;
+
+    // Calculate a new bounding box or use the bounding box that's passed in.
+    // For debugging reasons, we allow the user to provide a width and height
+    // override.
     var bbox;
     if (options.heightOverride && options.widthOverride) {
       bbox = glift.displays.bboxFromPts(
@@ -1794,14 +1835,17 @@ glift.displays.environment = {
 };
 
 var GuiEnvironment = function(options, bbox) {
-  this.bbox = options.bbox; // required
+  this.bbox = bbox; // required
   this.divId = options.divId || 'glift_display';
   this.divHeight = bbox.height();
   this.divWidth = bbox.width();
   this.boardRegion = options.boardRegion || glift.enums.boardRegions.ALL;
   this.intersections = options.intersections || 19;
+  this.drawBoardCoords = options.drawBoardCoords || false;
+
+  var cropNamespace = glift.displays.cropbox;
   this.cropbox = glift.displays.cropbox.getFromRegion(
-      this.boardRegion, this.intersections);
+      this.boardRegion, this.intersections, this.drawBoardCoords);
 };
 
 GuiEnvironment.prototype = {
@@ -1830,8 +1874,8 @@ GuiEnvironment.prototype = {
         goBoardLineBox = glift.displays.getLineBox(goBoardBox, cropbox),
 
         // Calculate the coordinates and bounding boxes for each intersection.
-        boardPoints = glift.displays.boardPointsFromLineBox(
-            goBoardLineBox, this.intersections);
+        boardPoints = glift.displays.boardPoints(
+            goBoardLineBox, this.intersections, this.drawBoardCoords);
     this.divBox = divBox;
     this.goBoardBox = goBoardBox;
     this.goBoardLineBox = goBoardLineBox;
@@ -1877,6 +1921,8 @@ glift.displays.ids = {
 
     this._svg = this._eid(this.divId, this._enum.SVG);
     this._board = this._eid(this.divId, this._enum.BOARD);
+    this._boardCoordLabelGroup =
+        this._eid(this.divId, this._enum.BOARD_COORD_LABELS);
     this._stoneGroup = this._eid(this.divId, this._enum.STONE_CONTAINER);
     this._stoneShadowGroup =
         this._eid(this.divId, this._enum.STONE_SHADOW_CONTAINER);
@@ -1886,7 +1932,7 @@ glift.displays.ids = {
     this._lineGroup = this._eid(this.divId, this._enum.BOARD_LINE_CONTAINER);
     this._markGroup = this._eid(this.divId, this._enum.MARK_CONTAINER);
     this._iconGroup = this._eid(this.divId, this._enum.ICON_CONTAINER);
-    this._intersectionsGroup =
+    this._intersectionsGroup = this._eid(this.divId, this._enum.BOARD);
         this._eid(this.divId, this._enum.INTERSECTIONS_CONTAINER);
     this._tempMarkGroup = this._eid(this.divId, this._enum.TEMP_MARK_CONTAINER);
   }
@@ -1899,6 +1945,9 @@ glift.displays.ids._Generator.prototype = {
   /** ID for the board. */
   board: function() { return this._board; },
 
+  /** Group id for the board coordinate label group */
+  boardCoordLabelGroup: function() { return this._boardCoordLabelGroup; },
+
   /** ID for the intersections group. */
   intersections: function() { return this._intersectionsGroup; },
 
@@ -1906,9 +1955,7 @@ glift.displays.ids._Generator.prototype = {
   stoneGroup: function() { return this._stoneGroup; },
 
   /** Id for a stone. */
-  stone: function(pt) {
-    return this._eid(this.divId, this._enum.STONE, pt);
-  },
+  stone: function(pt) { return this._eid(this.divId, this._enum.STONE, pt); },
 
   /** Group id for the stone shadows. */
   stoneShadowGroup: function() { return this._stoneShadowGroup; },
@@ -1986,7 +2033,6 @@ glift.displays.ids._Generator.prototype = {
     return this._eid(this.divId, this._enum.TEMP_TEXT, name);
   }
 };
-(function() {
 glift.displays.getLineBox = function(boardBox, cropbox) {
   var totalOverflow = glift.displays.cropbox.OVERFLOW;
   var oneSidedOverflow = totalOverflow / 2;
@@ -1995,31 +2041,29 @@ glift.displays.getLineBox = function(boardBox, cropbox) {
   var ySpacing = boardBox.height() / cropbox.heightMod();
   var top = ySpacing * oneSidedOverflow; // Scale the overflow by spacing
   var left = xSpacing * oneSidedOverflow; // Scale the overflow by spacing
-  var bot = ySpacing * (cropbox.heightMod() - oneSidedOverflow)
-  var right = xSpacing * (cropbox.widthMod() - oneSidedOverflow)
+  var bot = ySpacing * (cropbox.heightMod() - oneSidedOverflow);
+  var right = xSpacing * (cropbox.widthMod() - oneSidedOverflow);
   var leftBase = boardBox.topLeft().x();
   var topBase = boardBox.topLeft().y();
 
-      // The Line Box is an extended cropbox.
+  // The Line Box is an extended cropbox.
   var lineBoxBoundingBox = glift.displays.bboxFromPts(
-          glift.util.point(left + leftBase, top + topBase),
-          glift.util.point(right + leftBase, bot + topBase));
-      return new LineBox(lineBoxBoundingBox, xSpacing, ySpacing, cropbox);
+      glift.util.point(left + leftBase, top + topBase),
+      glift.util.point(right + leftBase, bot + topBase));
+
+  var out = new glift.displays._LineBox(
+      lineBoxBoundingBox, xSpacing, cropbox);
+  return out;
 };
 
-var LineBox = function(boundingBox, xSpacing, ySpacing, cropbox) {
+glift.displays._LineBox = function(boundingBox, spacing, cropbox) {
   this.bbox = boundingBox;
-  this._xSpacing = xSpacing; // For debug -- should be identical
-  this._ySpacing = ySpacing; // For debug -- should be identical
-  this.spacing = xSpacing;
-  // todo: Make these methods instead of variables
+  this.spacing = spacing;
   this.extensionBox = cropbox.extBox();
   this.pointTopLeft = cropbox.cbox().topLeft();
   this.xPoints = cropbox.xPoints();
   this.yPoints = cropbox.yPoints();
 };
-
-})();
 /**
  * Find the optimal positioning of the widget. Creates divs for all the
  * necessary elements and then returns the divIds. Specifically, returns:
@@ -2411,6 +2455,8 @@ glift.displays.board.Display.prototype = {
     var intGrp = svglib.group().attr('id', idGen.intersections());
     svg.append(intGrp);
 
+    board.boardLabels(intGrp, idGen, boardPoints, theme);
+
     board.lines(intGrp, idGen, boardPoints, theme);
     board.starpoints(intGrp, idGen, boardPoints, theme);
 
@@ -2479,6 +2525,26 @@ glift.displays.board.initBlurFilter = function(divId, svg) {
       // .attr("id", divId + '_svg_blur')
     // .append("svg:feGaussianBlur")
       // .attr("stdDeviation", 2);
+};
+glift.displays.board.boardLabels = function(svg, idGen, boardPoints, theme) {
+  var svglib = glift.displays.svg;
+  var container = svglib.group().attr('id', idGen.boardCoordLabelGroup());
+  svg.append(container);
+  var labels = boardPoints.edgeCoordLabels;
+  for (var i = 0, ii = labels.length; i < ii; i++) {
+    var lbl = labels[i];
+    container.append(svglib.text()
+        .text(lbl.label)
+        .attr('fill', theme.boardCoordLabels.fill)
+        .attr('stroke', theme.boardCoordLabels.stroke)
+        .attr('opacity', theme.boardCoordLabels.opacity)
+        .attr('text-anchor', 'middle')
+        .attr('dy', '.33em') // for vertical centering
+        .attr('x', lbl.coordPt.x()) // x and y are the anchor points.
+        .attr('y', lbl.coordPt.y())
+        .attr('font-family', theme.boardCoordLabels['font-family'])
+        .attr('font-size', boardPoints.spacing * 0.6));
+  }
 };
 /**
  * Create transparent buttons that overlay each intersection.
@@ -3102,14 +3168,14 @@ glift.displays.board.stones = function(svg, idGen, boardPoints, theme) {
   for (var i = 0, ii = data.length; i < ii; i++) {
     var pt = data[i];
     container.append(svglib.circle()
-      .attr("cx", pt.coordPt.x())
-      .attr("cy", pt.coordPt.y())
-      .attr("r", boardPoints.radius - .4) // subtract for stroke
-      .attr("opacity", 0)
-      .attr("stone_color", "EMPTY")
-      .attr("fill", 'blue') // dummy color
+      .attr('cx', pt.coordPt.x())
+      .attr('cy', pt.coordPt.y())
+      .attr('r', boardPoints.radius - .4) // subtract for stroke
+      .attr('opacity', 0)
+      .attr('stone_color', 'EMPTY')
+      .attr('fill', 'blue') // dummy color
       .attr('class', glift.enums.svgElements.STONE)
-      .attr("id", idGen.stone(pt.intPt)));
+      .attr('id', idGen.stone(pt.intPt)));
   }
 };
 
@@ -3127,15 +3193,15 @@ glift.displays.board.shadows = function(svg, idGen, boardPoints, theme) {
   for (var i = 0, ii = data.length; i < ii; i++) {
     var pt = data[i];
     container.append(svglib.circle()
-      .attr("cx", pt.coordPt.x() + boardPoints.radius / 7)
-      .attr("cy", pt.coordPt.y() + boardPoints.radius / 7)
-      .attr("r", boardPoints.radius - 0.4)
-      .attr("opacity", 0)
-      .attr("fill", theme.stones.shadows.fill)
-      // .attr("stroke", theme.stones.shadows.stroke)
-      // .attr("filter", 'url(#' + divId + "_svg_blur)")
+      .attr('cx', pt.coordPt.x() + boardPoints.radius / 7)
+      .attr('cy', pt.coordPt.y() + boardPoints.radius / 7)
+      .attr('r', boardPoints.radius - 0.4)
+      .attr('opacity', 0)
+      .attr('fill', theme.stones.shadows.fill)
+      // .attr('stroke', theme.stones.shadows.stroke)
+      // .attr('filter', 'url(#' + divId + '_svg_blur)')
       .attr('class', glift.enums.svgElements.STONE_SHADOW)
-      .attr("id", idGen.stoneShadow(pt.intPt)));
+      .attr('id', idGen.stoneShadow(pt.intPt)));
   }
 };
 glift.displays.commentbox = {};
@@ -7007,8 +7073,6 @@ BaseController.prototype = {
         this.setNextVariation(varNum);
         this.movetree.moveDown(varNum);
       } else {
-        // TODO(kashomon): Add case for non-readonly goboard.
-        console.log("Text to log");
         return null; // No moves available
       }
     }
@@ -9471,7 +9535,14 @@ glift.widgets.options.baseOptions = {
     /**
      * Next SGF Icon
      */
-    nextSgfIcon: 'chevron-right'
+    nextSgfIcon: 'chevron-right',
+
+    /**
+     * On the edges of the board, draw the board coordinates.
+     * - On the left, use the numbers 1-19
+     * - On the bottom, use A-T (all letters minus I)
+     */
+    drawBoardCoords: false
   },
 
   /**

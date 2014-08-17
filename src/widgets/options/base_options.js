@@ -332,7 +332,7 @@ glift.widgets.options.baseOptions = {
      * - On the left, use the numbers 1-19
      * - On the bottom, use A-T (all letters minus I)
      */
-    drawBoardCoords: false,
+    drawBoardCoords: false
   },
 
   /**
