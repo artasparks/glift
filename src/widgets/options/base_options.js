@@ -325,7 +325,14 @@ glift.widgets.options.baseOptions = {
     /**
      * Next SGF Icon
      */
-    nextSgfIcon: 'chevron-right'
+    nextSgfIcon: 'chevron-right',
+
+    /**
+     * On the edges of the board, draw the board coordinates.
+     * - On the left, use the numbers 1-19
+     * - On the bottom, use A-T (all letters minus I)
+     */
+    drawBoardCoords: false,
   },
 
   /**

@@ -34,6 +34,8 @@ glift.displays.ids = {
 
     this._svg = this._eid(this.divId, this._enum.SVG);
     this._board = this._eid(this.divId, this._enum.BOARD);
+    this._boardCoordLabelGroup =
+        this._eid(this.divId, this._enum.BOARD_COORD_LABELS);
     this._stoneGroup = this._eid(this.divId, this._enum.STONE_CONTAINER);
     this._stoneShadowGroup =
         this._eid(this.divId, this._enum.STONE_SHADOW_CONTAINER);
@@ -43,7 +45,7 @@ glift.displays.ids = {
     this._lineGroup = this._eid(this.divId, this._enum.BOARD_LINE_CONTAINER);
     this._markGroup = this._eid(this.divId, this._enum.MARK_CONTAINER);
     this._iconGroup = this._eid(this.divId, this._enum.ICON_CONTAINER);
-    this._intersectionsGroup =
+    this._intersectionsGroup = this._eid(this.divId, this._enum.BOARD);
         this._eid(this.divId, this._enum.INTERSECTIONS_CONTAINER);
     this._tempMarkGroup = this._eid(this.divId, this._enum.TEMP_MARK_CONTAINER);
   }
@@ -56,6 +58,9 @@ glift.displays.ids._Generator.prototype = {
   /** ID for the board. */
   board: function() { return this._board; },
 
+  /** Group id for the board coordinate label group */
+  boardCoordLabelGroup: function() { return this._boardCoordLabelGroup; },
+
   /** ID for the intersections group. */
   intersections: function() { return this._intersectionsGroup; },
 
@@ -63,9 +68,7 @@ glift.displays.ids._Generator.prototype = {
   stoneGroup: function() { return this._stoneGroup; },
 
   /** Id for a stone. */
-  stone: function(pt) {
-    return this._eid(this.divId, this._enum.STONE, pt);
-  },
+  stone: function(pt) { return this._eid(this.divId, this._enum.STONE, pt); },
 
   /** Group id for the stone shadows. */
   stoneShadowGroup: function() { return this._stoneShadowGroup; },

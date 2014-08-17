@@ -195,8 +195,6 @@ BaseController.prototype = {
         this.setNextVariation(varNum);
         this.movetree.moveDown(varNum);
       } else {
-        // TODO(kashomon): Add case for non-readonly goboard.
-        console.log("Text to log");
         return null; // No moves available
       }
     }

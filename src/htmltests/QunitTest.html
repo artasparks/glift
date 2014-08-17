@@ -69,6 +69,7 @@
 <!-- Displays board -->
 <script type="text/javascript" src="../displays/board/board.js"></script>
 <script type="text/javascript" src="../displays/board/board_base.js"></script>
+<script type="text/javascript" src="../displays/board/board_labels.js"></script>
 <script type="text/javascript" src="../displays/board/buttons.js"></script>
 <script type="text/javascript" src="../displays/board/intersections.js"></script>
 <script type="text/javascript" src="../displays/board/lines.js"></script>
@@ -143,6 +144,7 @@
 <script type="text/javascript" src="../themes/themes_test.js"></script>
 <!-- Displays Tests -->
 <script type="text/javascript" src="../displays/bbox_test.js"></script>
+<script type="text/javascript" src="../displays/board_points_test.js"></script>
 <script type="text/javascript" src="../displays/cropbox_test.js"></script>
 <script type="text/javascript" src="../displays/environment_test.js"></script>
 <script type="text/javascript" src="../displays/ids_test.js"></script>
@@ -201,8 +203,9 @@ $(document).ready(function() {
 
   glift.displays.bboxTest();
   glift.displays.cropboxTest();
-  glift.displays.environmentTest();
   glift.displays.resizedBoxTest();
+  glift.displays.boardPointsTest();
+  glift.displays.environmentTest();
   glift.displays.recalcSplitsTest();
   glift.displays.positionWidgetTest();
   glift.displays.idsTest();

@@ -7,12 +7,16 @@ glift.displays.cropbox = {
     return new glift.displays._CropBox(cbox, extBox, minIntersects, maxIntersects);
   },
 
-  getFromRegion: function(region, intersects) {
+  getFromRegion: function(region, intersects, drawBoardCoords) {
     var util = glift.util,
         boardRegions = glift.enums.boardRegions,
         region = region || boardRegions.ALL,
+        drawBoardCoords = drawBoardCoords || false,
+        // we add an extra position around the edge for labels, so we need a
+        // label modifier. 1 or 0.
+        lblMod = drawBoardCoords ? 1 : 0,
         // So that we can 0 index, we subtract one.
-        maxIntersects = intersects - 1,
+        maxIntersects = drawBoardCoords ? intersects + 1 : intersects - 1,
         minIntersects = 0,
         defaultExtension = 0,
         lineExtension = .5,
@@ -36,64 +40,64 @@ glift.displays.cropbox = {
       // X -
       // X -
       case boardRegions.LEFT:
-          right = halfInts + 1;
+          right = halfInts + 1 + lblMod;
           rightExtension = this.LINE_EXTENSION;
           break;
 
       // - X
       // - X
       case boardRegions.RIGHT:
-          left = halfInts - 1;
+          left = halfInts - 1 - lblMod;
           leftExtension = this.LINE_EXTENSION;
           break;
 
       // X X
       // - -
       case boardRegions.TOP:
-          bot = halfInts + 1;
+          bot = halfInts + 1 + lblMod;
           botExtension = this.LINE_EXTENSION;
           break;
 
       // - -
       // X X
       case boardRegions.BOTTOM:
-          top = halfInts - 1;
+          top = halfInts - 1 - lblMod;
           topExtension = this.LINE_EXTENSION;
           break;
 
       // X -
       // - -
       case boardRegions.TOP_LEFT:
-          bot = halfInts + 1;
+          bot = halfInts + 1 + lblMod;
           botExtension = this.LINE_EXTENSION;
-          right = halfInts + 2;
+          right = halfInts + 2 + lblMod;
           rightExtension = this.LINE_EXTENSION;
           break;
 
       // - X
       // - -
       case boardRegions.TOP_RIGHT:
-          bot = halfInts + 1;
+          bot = halfInts + 1 + lblMod;
           botExtension = this.LINE_EXTENSION;
-          left = halfInts - 2;
+          left = halfInts - 2 - lblMod;
           leftExtension = this.LINE_EXTENSION;
           break;
 
       // - -
       // X -
       case boardRegions.BOTTOM_LEFT:
-          top = halfInts - 1;
+          top = halfInts - 1 - lblMod;
           topExtension = this.LINE_EXTENSION;
-          right = halfInts + 2;
+          right = halfInts + 2 + lblMod;
           rightExtension = this.LINE_EXTENSION;
           break;
 
       // - -
       // - X
       case boardRegions.BOTTOM_RIGHT:
-          top = halfInts - 1;
+          top = halfInts - 1 - lblMod;
           topExtension = this.LINE_EXTENSION;
-          left = halfInts - 2;
+          left = halfInts - 2 - lblMod;
           leftExtension = this.LINE_EXTENSION;
           break;
       default: break;

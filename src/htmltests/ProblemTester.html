@@ -45,6 +45,7 @@
 <!-- Displays board -->
 <script type="text/javascript" src="../displays/board/board.js"></script>
 <script type="text/javascript" src="../displays/board/board_base.js"></script>
+<script type="text/javascript" src="../displays/board/board_labels.js"></script>
 <script type="text/javascript" src="../displays/board/buttons.js"></script>
 <script type="text/javascript" src="../displays/board/intersections.js"></script>
 <script type="text/javascript" src="../displays/board/lines.js"></script>
@@ -156,6 +157,9 @@
           divId: "glift_display1",
           sgfDefaults: {
             widgetType: 'STANDARD_PROBLEM'
+          },
+          display: {
+            drawBoardCoords: true
           }
         });
         $(window).resize(function() {

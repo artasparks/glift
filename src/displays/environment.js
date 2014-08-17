@@ -7,8 +7,15 @@
  *  - The divId to be used
  */
 glift.displays.environment = {
+  /**
+   * Get the environment wrapper, passing in the display options.
+   */
   get: function(options) {
     var point = glift.util.point;
+
+    // Calculate a new bounding box or use the bounding box that's passed in.
+    // For debugging reasons, we allow the user to provide a width and height
+    // override.
     var bbox;
     if (options.heightOverride && options.widthOverride) {
       bbox = glift.displays.bboxFromPts(
@@ -29,14 +36,17 @@ glift.displays.environment = {
 };
 
 var GuiEnvironment = function(options, bbox) {
-  this.bbox = options.bbox; // required
+  this.bbox = bbox; // required
   this.divId = options.divId || 'glift_display';
   this.divHeight = bbox.height();
   this.divWidth = bbox.width();
   this.boardRegion = options.boardRegion || glift.enums.boardRegions.ALL;
   this.intersections = options.intersections || 19;
+  this.drawBoardCoords = options.drawBoardCoords || false;
+
+  var cropNamespace = glift.displays.cropbox;
   this.cropbox = glift.displays.cropbox.getFromRegion(
-      this.boardRegion, this.intersections);
+      this.boardRegion, this.intersections, this.drawBoardCoords);
 };
 
 GuiEnvironment.prototype = {
@@ -65,8 +75,8 @@ GuiEnvironment.prototype = {
         goBoardLineBox = glift.displays.getLineBox(goBoardBox, cropbox),
 
         // Calculate the coordinates and bounding boxes for each intersection.
-        boardPoints = glift.displays.boardPointsFromLineBox(
-            goBoardLineBox, this.intersections);
+        boardPoints = glift.displays.boardPoints(
+            goBoardLineBox, this.intersections, this.drawBoardCoords);
     this.divBox = divBox;
     this.goBoardBox = goBoardBox;
     this.goBoardLineBox = goBoardLineBox;

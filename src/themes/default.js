@@ -11,12 +11,19 @@ glift.themes.registered.DEFAULT = {
 
   starPoints: {
     sizeFraction: .15, // As a fraction of the spacing.
-    fill: '#000000'
+    fill: 'black'
   },
 
   lines: {
-    stroke: "#000000",
+    stroke: "black",
     'stroke-width': 0.5
+  },
+
+  boardCoordLabels: {
+    fill: 'black',
+    stroke: 'black',
+    opacity: '0.6',
+    'font-family': 'sans-serif'
   },
 
   stones: {

@@ -1,52 +1,92 @@
 (function() {
-// TODO(kashomon): Add much better tests for these methods.  The BoardPoints are
-// pivotal to creating the go board, so we want them to really work.
-
 /**
- * Simple wrapper around the BoardPoints constructor.
+ * Construct the board points from a linebox.
  */
-glift.displays.boardPoints = function(points, spacing, maxIntersects) {
-  return new BoardPoints(points, spacing, maxIntersects);
-};
+glift.displays.boardPoints = function(
+    linebox, maxIntersects, drawBoardCoords) {
 
-/**
- * Construct the board points from a linebox (see linebox.js).
- *
- * TODO(kashomon): This is pretty irritating to test.  Is there an easier way to
- * structure this?
- */
-glift.displays.boardPointsFromLineBox = function(linebox, maxIntersects) {
+  // console.log(linebox);
   var spacing = linebox.spacing,
       radius = spacing / 2,
       linebbox = linebox.bbox,
-      left = linebbox.left() + linebox.extensionBox.left() * spacing,
-      top = linebbox.top() + linebox.extensionBox.top() * spacing,
+      leftExtAmt = linebox.extensionBox.left() * spacing,
+      rightExtAmt = linebox.extensionBox.right() * spacing,
+      left = linebbox.left() + leftExtAmt,
+
+      topExtAmt = linebox.extensionBox.top() * spacing,
+      botExtAmt = linebox.extensionBox.bottom() * spacing,
+      top = linebbox.top() + topExtAmt,
       leftPt = linebox.pointTopLeft.x(),
       topPt = linebox.pointTopLeft.y(),
-      // Mapping from int point hash, e.g., (0,18), to coordinate data.
-      points = {};
+      // Mapping from int point string, e.g., '0,18', to coordinate data.
+      points = {},
+      xCoordLabels = 'ABCDEFGHJKLMNOPQRSTUVWXYZ',
+      edgeCoords = [];
 
   for (var i = 0; i <= linebox.yPoints; i++) {
     for (var j = 0; j <= linebox.xPoints; j++) {
       var xCoord = left + j * spacing;
       var yCoord = top + i * spacing;
       var intPt = glift.util.point(leftPt + j, topPt + i);
-
-      // TODO(kashomon): Prehaps the coordinate point should be truncated?
-      // right now it's ~15 decimal places.  This is too much precision and it
-      // might hurt performance.
       var coordPt = glift.util.point(xCoord, yCoord);
-      points[intPt.hash()] = {
-        // Integer point.
-        intPt: intPt,
-        coordPt: coordPt,
-        bbox: glift.displays.bboxFromPts(
-            glift.util.point(coordPt.x() - radius, coordPt.y() - radius),
-            glift.util.point(coordPt.x() + radius, coordPt.y() + radius))
-      };
+
+      if (drawBoardCoords) {
+        if ((i === 0 || i === linebox.yPoints) &&
+            (j === 0 || j === linebox.xPoints)) {
+          // Discard corner points
+        } else if (i === 0 || i === linebox.yPoints) {
+          // Handle the top and bottom sides.
+          if (i === 0) {
+            coordPt = coordPt.translate(0, -1 * topExtAmt);
+          } else if (i === linebox.yPoints) {
+            coordPt = coordPt.translate(0, botExtAmt)
+          }
+          edgeCoords.push({
+            label: xCoordLabels.charAt(intPt.x()  - 1),
+            coordPt: coordPt
+          });
+        } else if (j === 0 || j === linebox.xPoints)  {
+          // Handle the left and right sides.
+          if (j === 0) {
+            coordPt = coordPt.translate(-1 * leftExtAmt, 0);
+          } else if (j === linebox.xPoints) {
+            coordPt = coordPt.translate(rightExtAmt, 0)
+          }
+          edgeCoords.push({
+            // Flip the actual label around the x-axis.
+            label: Math.abs(intPt.y() - maxIntersects) + 1,
+            coordPt: coordPt
+          });
+        } else {
+          intPt = intPt.translate(-1, -1);
+          points[intPt.hash()] = {
+            intPt: intPt,
+            coordPt: coordPt,
+            bbox: glift.displays.bboxFromPts(
+                glift.util.point(coordPt.x() - radius, coordPt.y() - radius),
+                glift.util.point(coordPt.x() + radius, coordPt.y() + radius))
+          };
+        }
+      } else {
+        // Default case: Don't draw coordinates
+        points[intPt.hash()] = {
+          intPt: intPt,
+          coordPt: coordPt,
+          bbox: glift.displays.bboxFromPts(
+              glift.util.point(coordPt.x() - radius, coordPt.y() - radius),
+              glift.util.point(coordPt.x() + radius, coordPt.y() + radius))
+        };
+      }
     }
   }
-  return glift.displays.boardPoints(points, spacing, maxIntersects);
+  return new BoardPoints(
+      points, spacing, maxIntersects, edgeCoords);
+};
+
+/** An edge coordinate label (i.e., A-T, 1-19, depending on side). */
+var EdgeCoordinate = function(pt, label) {
+  this.point = pt;
+  this.label = label;
 };
 
 /**
@@ -65,24 +105,16 @@ glift.displays.boardPointsFromLineBox = function(linebox, maxIntersects) {
  *
  *  Note: The integer points are 0 Indexed.
  */
-var BoardPoints = function(points, spacing, numIntersections) {
+var BoardPoints = function(points, spacing, numIntersections, edgeLabels) {
   this.points = points; // int hash is 0 indexed, i.e., 0->18.
   this.spacing = spacing;
   this.radius = spacing / 2;
   this.numIntersections = numIntersections; // 1 indexed (1->19)
+  this.edgeCoordLabels = edgeLabels;
   this.dataCache = undefined;
 };
 
 BoardPoints.prototype = {
-  /**
-   * Get the points.
-   *
-   * TODO(kashomon): Remove?  I don't think this is necessary any longer.
-   */
-  getCoords: function() {
-    return this.points;
-  },
-
   /**
    * Get the coordinate for a given integer point string.  Note: the integer
    * points are 0 indexed, i.e., 0->18 for a 19x19.  Recall that board points
@@ -162,22 +194,6 @@ BoardPoints.prototype = {
       }
     }
     return outStarPoints;
-  },
-
-  /**
-   * Draw a circle for every intersection, for debug purposes.
-   *
-   * TODO(kashomon): This is raphael-specific and should be removed, or changed
-   * to use D3.
-   */
-  _debugDraw: function(paper, color) {
-    for (var ptHash in this.points) {
-      var centerX = this.points[ptHash].bbox.center().x();
-      var centerY = this.points[ptHash].bbox.center().y();
-      var circ = paper.circle(centerX, centerY, this.radius);
-      circ.attr({fill:color, opacity:.3});
-    }
   }
 };
-
 })();

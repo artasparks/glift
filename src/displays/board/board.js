@@ -77,6 +77,8 @@ glift.displays.board.Display.prototype = {
     var intGrp = svglib.group().attr('id', idGen.intersections());
     svg.append(intGrp);
 
+    board.boardLabels(intGrp, idGen, boardPoints, theme);
+
     board.lines(intGrp, idGen, boardPoints, theme);
     board.starpoints(intGrp, idGen, boardPoints, theme);
 

@@ -85,6 +85,9 @@ GliftPoint.prototype = {
     return this.toString();
   },
 
+  /**
+   * Return a string representation of the coordinate.  I.e., "12,3".
+   */
   toString: function() {
     return glift.util.coordToString(this.x(), this.y());
   },

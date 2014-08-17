@@ -1,5 +1,5 @@
 glift.displays.environmentTest = function() {
-module("Environment Test Suite");
+  module('Environment Test Suite');
   var util = glift.util,
       displays = glift.displays,
       enums = glift.enums,
@@ -8,16 +8,30 @@ module("Environment Test Suite");
       WIDTH = 300,
       HEIGHT = 400;
 
+  test('Creation of env object', function() {
+    var envObj = env.get({
+      heightOverride: HEIGHT,
+      widthOverride: WIDTH
+    });
+    deepEqual(envObj.bbox.width(), WIDTH);
+    deepEqual(envObj.bbox.height(), HEIGHT);
+    deepEqual(envObj.divId, 'glift_display');
+    deepEqual(envObj.divWidth, WIDTH);
+    deepEqual(envObj.divHeight, HEIGHT);
+    deepEqual(envObj.boardRegion, glift.enums.boardRegions.ALL);
+    deepEqual(envObj.intersections, 19);
+    deepEqual(envObj.drawBoardCoords, false);
+  });
 
-  test("Test creation of square go board box", function() {
-    //glift.util.logz("farfar");
+  test('Creation of square go board box', function() {
+    //glift.util.logz('farfar');
     var guiEnv = env.getInitialized({
         divId: 'glift_display',
         heightOverride: HEIGHT,
         widthOverride: WIDTH
     });
     deepEqual(guiEnv.goBoardBox.height(), guiEnv.goBoardBox.width(),
-        "Must create a square board for a long box");
+        'Must create a square board for a long box');
 
     var guiEnv = env.getInitialized({
         divId: 'glift_display',
@@ -27,10 +41,10 @@ module("Environment Test Suite");
     deepEqual(
         Math.round(guiEnv.goBoardBox.height()),
         Math.round(guiEnv.goBoardBox.width()),
-        "Must create a square board for a tall box");
+        'Must create a square board for a tall box');
   });
 
-  test("Test creation: tall div, square board", function() {
+  test('Test creation: tall div, square board', function() {
     var e = env.getInitialized({
         heightOverride: 400,
         widthOverride: 200
@@ -45,7 +59,7 @@ module("Environment Test Suite");
     deepEqual(e.goBoardBox.botRight().y(), 300, 'botRight y');
   });
 
-  test("Test creation: wide div, square board", function() {
+  test('Test creation: wide div, square board', function() {
     var e = env.getInitialized({
         heightOverride: 200,
         widthOverride: 400
@@ -60,7 +74,7 @@ module("Environment Test Suite");
     deepEqual(e.goBoardBox.botRight().y(), 200, 'botRight y');
   });
 
-  test("Test with real (square) div", function() {
+  test('Test with real (square) div', function() {
     var env1 = env.getInitialized({
       divId: 'glift_display'
     });

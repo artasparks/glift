@@ -1,4 +1,3 @@
-(function() {
 glift.displays.getLineBox = function(boardBox, cropbox) {
   var totalOverflow = glift.displays.cropbox.OVERFLOW;
   var oneSidedOverflow = totalOverflow / 2;
@@ -7,28 +6,26 @@ glift.displays.getLineBox = function(boardBox, cropbox) {
   var ySpacing = boardBox.height() / cropbox.heightMod();
   var top = ySpacing * oneSidedOverflow; // Scale the overflow by spacing
   var left = xSpacing * oneSidedOverflow; // Scale the overflow by spacing
-  var bot = ySpacing * (cropbox.heightMod() - oneSidedOverflow)
-  var right = xSpacing * (cropbox.widthMod() - oneSidedOverflow)
+  var bot = ySpacing * (cropbox.heightMod() - oneSidedOverflow);
+  var right = xSpacing * (cropbox.widthMod() - oneSidedOverflow);
   var leftBase = boardBox.topLeft().x();
   var topBase = boardBox.topLeft().y();
 
-      // The Line Box is an extended cropbox.
+  // The Line Box is an extended cropbox.
   var lineBoxBoundingBox = glift.displays.bboxFromPts(
-          glift.util.point(left + leftBase, top + topBase),
-          glift.util.point(right + leftBase, bot + topBase));
-      return new LineBox(lineBoxBoundingBox, xSpacing, ySpacing, cropbox);
+      glift.util.point(left + leftBase, top + topBase),
+      glift.util.point(right + leftBase, bot + topBase));
+
+  var out = new glift.displays._LineBox(
+      lineBoxBoundingBox, xSpacing, cropbox);
+  return out;
 };
 
-var LineBox = function(boundingBox, xSpacing, ySpacing, cropbox) {
+glift.displays._LineBox = function(boundingBox, spacing, cropbox) {
   this.bbox = boundingBox;
-  this._xSpacing = xSpacing; // For debug -- should be identical
-  this._ySpacing = ySpacing; // For debug -- should be identical
-  this.spacing = xSpacing;
-  // todo: Make these methods instead of variables
+  this.spacing = spacing;
   this.extensionBox = cropbox.extBox();
   this.pointTopLeft = cropbox.cbox().topLeft();
   this.xPoints = cropbox.xPoints();
   this.yPoints = cropbox.yPoints();
 };
-
-})();
