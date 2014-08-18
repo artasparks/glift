@@ -7,7 +7,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.15.7',
+  version: '0.16.0',
 
   /** Indicates whether or not to store debug data. */
   // TODO(kashomon): Remove this hack.
@@ -41,5 +41,5 @@ glift.global = {
   /**
    * Used to mark whether the zoom has been disabled (for mobile).
    */
-  disabledZoom: false,
+  disabledZoom: false
 };

@@ -3,7 +3,7 @@
  *
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
- * @version 0.15.7
+ * @version 0.16.0
  * --------------------------------------
  */
 (function(w) {
@@ -22,7 +22,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.15.7',
+  version: '0.16.0',
 
   /** Indicates whether or not to store debug data. */
   // TODO(kashomon): Remove this hack.
@@ -54,14 +54,9 @@ glift.global = {
   activeInstanceId: null,
 
   /**
-   * Global variable to mark whether the zoom has been disabled.
+   * Used to mark whether the zoom has been disabled (for mobile).
    */
-  disabledZoom: false,
-
-  /**
-   * Global variable to mark whether the zoom has been disabled.
-   */
-  disabledZoom: false,
+  disabledZoom: false
 };
 /**
  * Initialization function to be run on glift creation.  Things performed:
@@ -5985,7 +5980,15 @@ glift.rules.problems = {
   /**
    * Determines if a 'move' is correct. Takes a movetree and a series of
    * conditions, which is a map of properties to an array of possible substring
-   * matches.  Only one conditien must be met
+   * matches.  Only one conditien must be met.
+   *
+   * Problem results:
+   *
+   * CORRECT - The position properties must match one of several problem
+   *    conditions.
+   * INDETERMINATE - There must exist at path to a correct position from the
+   *    current position.
+   * INCORRECT - The position has to path to a correct position.
    *
    * Some Examples:
    *    Correct if there is a GB property or the words 'Correct' or 'is correct' in
@@ -6028,8 +6031,13 @@ glift.rules.problems = {
       }
       if (successTracker[problemResults.CORRECT] &&
           !successTracker[problemResults.INCORRECT]) {
-        return problemResults.CORRECT;
-      } else if (successTracker[problemResults.CORRECT] &&
+        if (movetree.properties().matches(conditions)) {
+          return problemResults.CORRECT;
+        } else {
+          return problemResults.INDETERMINATE;
+        }
+      } else if (
+          successTracker[problemResults.CORRECT] &&
           successTracker[problemResults.INCORRECT]) {
         return problemResults.INDETERMINATE;
       } else {
