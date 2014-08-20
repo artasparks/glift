@@ -41,7 +41,7 @@ glift.widgets.widgetsTest = function() {
         }]
     });
     ok(manager !== undefined);
-    ok($('#' + manager.divId).text(), 'must not be empty.');
+    ok(glift.dom.elem(manager.divId).html(), 'must not be empty.');
 
     // It's rather nice to keep one copy of the widget manager around, to play
     // with after the tests run for manual verification.

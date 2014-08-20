@@ -106,7 +106,7 @@ glift.displays.board.Display.prototype = {
    * This makes redrawing the GoBoard much quicker.
    */
   destroy: function() {
-    $('#' + this.divId()).empty();
+    glift.dom.elem(this.divId()).empty();
     this._svg = undefined;
     this._svgBase = undefined;
     this._intersections = undefined;

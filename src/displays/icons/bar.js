@@ -170,7 +170,7 @@ glift.displays.icons._IconBar.prototype = {
     var tempIconId = this.idGen.tempIcon(parentIcon.iconName);
 
     // Remove if it exists.
-    $('#' + tempIconId).remove();
+    glift.dom.elem(tempIconId) && glift.dom.elem(tempIconId).remove();
 
     if (parentIcon.subboxIcon !== undefined) {
       tempIcon = parentIcon.centerWithinSubbox(tempIcon, vm, hm);
@@ -216,7 +216,8 @@ glift.displays.icons._IconBar.prototype = {
 
   clearTempText: function(iconName) {
     this.svg.rmChild(this.idGen.tempIconText(iconName));
-    $('#' + this.idGen.tempIconText(iconName)).remove();
+    var el = glift.dom.elem(this.idGen.tempIconText(iconName));
+    el && el.remove();
   },
 
   createIconSelector: function(baseIcon, icons) {
@@ -297,13 +298,16 @@ glift.displays.icons._IconBar.prototype = {
       if (!glift.platform.isMobile()) {
         actionsForIcon.mouseover = iconActions[iconName].mouseover ||
           function(event, widgetRef, icon) {
-            $('#' + icon.elementId)
+            glift.dom.elem(icon.elementId)
                 .attr('fill', widgetRef.iconBar.theme.icons.DEFAULT_HOVER.fill);
           };
         actionsForIcon.mouseout = iconActions[iconName].mouseout ||
           function(event, widgetRef, icon) {
-            $('#' + icon.elementId)
-                .attr('fill', widgetRef.iconBar.theme.icons.DEFAULT.fill);
+            var elem = glift.dom.elem(icon.elementId)
+            // elem can be null during transitions.
+            if (elem) {
+              elem.attr('fill', widgetRef.iconBar.theme.icons.DEFAULT.fill);
+            }
           };
       }
       for (var eventName in actionsForIcon) {
@@ -323,7 +327,7 @@ glift.displays.icons._IconBar.prototype = {
 
   _initOneIconAction: function(parentWidget, icon, eventName, eventFunc) {
     var buttonId = this.idGen.button(icon.iconName);
-    $('#' + buttonId).on(eventName, function(event) {
+    glift.dom.elem(buttonId).on(eventName, function(event) {
       parentWidget.manager.setActive();
       eventFunc(event, parentWidget, icon, this);
     }.bind(this));
@@ -334,32 +338,38 @@ glift.displays.icons._IconBar.prototype = {
     var tooltipId = this.divId + '_tooltip';
     var that = this;
     var id = this.idGen.button(icon.iconName);
-    $('#' + id).on('mouseover', function(e) {
+    glift.dom.elem(id).on('mouseover', function(e) {
       var tooltipTimerFunc = function() {
-        var buttonElement = $('#' + id);
-        $('#' + that.divId).append('<div id="' + tooltipId + 
-            '">' + tooltip + '</div>');
+        var newDiv = glift.dom.newDiv(tooltipId);
+        newDiv.appendText(tooltip);
         var baseCssObj = {
           position: 'absolute',
-          top: -1.2 * (icon.bbox.height()),
-          'z-index': 100,
+          top: -1.2 * (icon.bbox.height()) + 'px',
+          'z-index': 2,
           boxSizing: 'border-box'
         };
         for (var key in that.theme.icons.tooltips) {
           baseCssObj[key] = that.theme.icons.tooltips[key];
         }
-        $('#' + tooltipId).css(baseCssObj);
+        newDiv.css(baseCssObj);
+        var elem = glift.dom.elem(that.divId);
+        if (elem) {
+          // Elem can be null if we've started the time and changed the state.
+          elem.append(newDiv);
+        }
+        // document.getElementById(that.divId).appendChild(newDiv.el);
         this.tooltipTimer = null;
       }.bind(this);
       this.tooltipTimer = setTimeout(
           tooltipTimerFunc, that.theme.icons.tooltipTimeout);
     });
-    $('#' + id).on('mouseout', function(e) {
+    glift.dom.elem(id).on('mouseout', function(e) {
       if (this.tooltipTimer != null) {
         clearTimeout(this.tooltipTimer);
       }
       this.tooltipTimer = null;
-      $('#' + tooltipId).remove();
+      // Remove if it exists.
+      glift.dom.elem(tooltipId) && glift.dom.elem(tooltipId).remove();
     });
   },
 
@@ -410,7 +420,7 @@ glift.displays.icons._IconBar.prototype = {
   },
 
   destroy: function() {
-    this.divId && $('#' + this.divId).empty();
+    this.divId && glift.dom.elem(this.divId) && glift.dom.elem(this.divId).empty();
     if (this.tooltipTimer) {
       clearTimeout(this.tooltipTimer);
       this.tooltipTimer = null;

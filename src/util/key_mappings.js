@@ -111,8 +111,8 @@ glift.keyMappings = {
     if (glift.keyMappings._initializedListener) {
       return;
     }
-    // TODO(kashomon): Remove jquery instances
-    $('body').keydown(glift.keyMappings._keyHandlerFunc);
+    var body = document.body;
+    body.addEventListener('keydown', glift.keyMappings._keyHandlerFunc);
     glift.keyMappings._initializedListener = true;
   },
 

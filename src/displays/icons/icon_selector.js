@@ -31,7 +31,10 @@ glift.displays.icons._IconSelector.prototype = {
     var that = this;
     var svglib = glift.displays.svg;
     var parentBbox = glift.displays.bboxFromDiv(this.parentDivId);
-    var barPosition = $('#' + this.iconBarId).position();
+
+    var barElem = glift.dom.elem(this.iconBarId);
+    var barPosLeft = barElem.boundingClientRect().left;
+
     var iconBarBbox = glift.displays.bboxFromDiv(this.iconBarId);
     var iconBbox = this.icon.bbox;
     var columnWidth = iconBbox.height();
@@ -44,15 +47,13 @@ glift.displays.icons._IconSelector.prototype = {
       rewrapped.push(this.icon.associatedIcons[i].rewrapIcon());
     }
 
-    $('#' + this.parentDivId)
-        .append('<div id="' + this.wrapperDivId + '"></div>');
-
-    var $wrapperDiv = $('#' + this.wrapperDivId);
-    $wrapperDiv.css({
+    var newWrapperDiv = glift.dom.newDiv(this.wrapperDivId);
+    newWrapperDiv.css({
       position: 'absolute',
-      height: parentBbox.height(),
-      width: parentBbox.width()
+      height: parentBbox.height() + 'px',
+      width: parentBbox.width() + 'px'
     });
+    glift.dom.elem(this.parentDivId).append(newWrapperDiv);
 
     var columnIndex = 0;
     while (rewrapped.length > 0) {
@@ -60,15 +61,15 @@ glift.displays.icons._IconSelector.prototype = {
       var columnId = this.baseId + '_column_' + columnIndex;
       this.columnIdList.push(columnId);
 
-      $wrapperDiv.append('<div id="' + columnId + '"></div>')
-      $('#' + columnId).css({
-        bottom: iconBarBbox.height(),
-        height: columnHeight,
-        left: barPosition.left +
-            columnIndex * iconBbox.width(),
-        width: iconBbox.width(),
+      var newColumnDiv = glift.dom.newDiv(columnId);
+      newColumnDiv.css({
+        bottom: iconBarBbox.height() + 'px',
+        height: columnHeight + 'px',
+        left: barPosLeft + columnIndex * iconBbox.width() + 'px',
+        width: iconBbox.width() + 'px',
         position: 'absolute'
       });
+      newWrapperDiv.append(newColumnDiv);
 
       var columnBox = glift.displays.bboxFromDiv(columnId);
       var transforms = glift.displays.icons.columnCenterWrapped(
@@ -130,8 +131,7 @@ glift.displays.icons._IconSelector.prototype = {
 
   _setBackgroundEvent: function() {
     var that = this;
-    // TODO(kashomon): Wrap this in a generic method.
-    $('#' + this.wrapperDivId).on('click', function(event) {
+    glift.dom.elem(this.wrapperDivId).on('click', function(e) {
       this.remove();
     });
     return this;
@@ -150,12 +150,15 @@ glift.displays.icons._IconSelector.prototype = {
   },
 
   _setOneEvent: function(eventName, buttonId, icon, func) {
-    $('#' + buttonId).on(eventName, function(event) {func(event, icon); });
+    glift.dom.elem(buttonId).on(eventName, function(event) {
+      func(event, icon);
+    });
     return this;
   },
 
   destroy: function() {
-    $('#' + this.wrapperDivId).remove();
+    glift.dom.elem(this.wrapperDivId) &&
+        glift.dom.elem(this.wrapperDivId).remove();
     return this;
   }
 };

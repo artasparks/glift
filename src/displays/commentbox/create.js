@@ -23,7 +23,7 @@ glift.displays.commentbox._CommentBox = function(divId, positioningBbox, theme) 
 
 glift.displays.commentbox._CommentBox.prototype = {
   draw: function() {
-    this.el = glift.displays.dom.elem(this.divId);
+    this.el = glift.dom.elem(this.divId);
     if (this.el === null) {
       throw new Error('Could not find element with ID ' + this.divId);
     }

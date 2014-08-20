@@ -63,22 +63,19 @@ glift.widgets.WidgetManager.prototype = {
   draw: function() {
     var that = this;
     var afterCollectionLoad = function() {
-      var curObj = that.getCurrentSgfObj();
-      that.getSgfString(curObj, function(sgfObj) {
+      var curObj = this.getCurrentSgfObj();
+      this.getSgfString(curObj, function(sgfObj) {
         // Prevent flickering by destroying the widget after loading the SGF.
-        that.destroy();
-        that.currentWidget = that.createWidget(sgfObj).draw();
-      });
-    };
+        this.destroy();
+        this.currentWidget = this.createWidget(sgfObj).draw();
+      }.bind(this));
+    }.bind(this);
 
     if (this.sgfCollection.length === 0 && this.sgfCollectionUrl) {
-      $.ajax({
-        url: this.sgfCollectionUrl, dataType: 'text', cache: true,
-        success: function(data) {
-          this.sgfCollection = JSON.parse(data);
-          afterCollectionLoad();
-        }.bind(this)
-      });
+      glift.ajax.get(this.sgfCollectionUrl, function(data) {
+        this.sgfCollection = JSON.parse(data);
+        afterCollectionLoad();
+      }.bind(this));
     } else {
       afterCollectionLoad();
     }
@@ -216,14 +213,11 @@ glift.widgets.WidgetManager.prototype = {
       sgfObj.sgfString = this.sgfCache[url];
       callback(sgfObj);
     } else {
-      $.ajax({
-        url: url, dataType: 'text', cache: true,
-        success: function(data) {
-          this.sgfCache[url] = data;
-          sgfObj.sgfString = data;
-          callback(sgfObj);
-        }.bind(this)
-      });
+      glift.ajax.get(url, function(data) {
+        this.sgfCache[url] = data;
+        sgfObj.sgfString = data;
+        callback(sgfObj);
+      }.bind(this));
     }
   },
 

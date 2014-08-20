@@ -75,11 +75,11 @@ glift.displays.board._Intersections.prototype = {
         .child(this.idGen.stone(pt));
     if (stone) {
       // A stone might not exist if the board is cropped.
-      $('#' + stone.attr('id')).attr(stone.attrObj());
+      glift.dom.elem(stone.attr('id')).attr(stone.attrObj());
       var stoneShadowGroup = this.svg.child(this.idGen.stoneShadowGroup());
       if (stoneShadowGroup !== undefined) {
         var stoneShadow = stoneShadowGroup.child(this.idGen.stoneShadow(pt));
-        $('#' + stoneShadow.attr('id')).attr(stoneShadow.attrObj());
+        glift.dom.elem(stoneShadow.attr('id')).attr(stoneShadow.attrObj());
       }
     }
     return this;
@@ -186,10 +186,10 @@ glift.displays.board._Intersections.prototype = {
     if (this._reqClearForMark(pt, mark)) {
       var starp  = svg.child(idGen.starpointGroup()).child(idGen.starpoint(pt))
       if (starp) {
-        $('#' + starp.attr('id')).attr('opacity', starp.attr('opacity'));
+        glift.dom.elem(starp.attr('id')).attr('opacity', starp.attr('opacity'));
       }
       var linept = svg.child(idGen.lineGroup()).child(idGen.line(pt))
-      $('#' + linept.attr('id')).attr('opacity', linept.attr('opacity'));
+      glift.dom.elem(linept.attr('id')).attr('opacity', linept.attr('opacity'));
     }
     markGroup.child(idGen.mark(pt)).attachToParent(markGroup.attr('id'));
     this.markPts.push(pt);
@@ -214,7 +214,7 @@ glift.displays.board._Intersections.prototype = {
       }
     }
     markGroup.emptyChildren();
-    $('#' + markGroup.attr('id')).empty();
+    glift.dom.elem(markGroup.attr('id')).empty();
     return this;
   },
 
@@ -268,14 +268,14 @@ glift.displays.board._Intersections.prototype = {
 
     var stones = this.svg.child(this.idGen.stoneGroup()).children();
     for (var i = 0, len = stones.length; i < len; i++) {
-      $('#' + stones[i].attr('id')).attr(stoneAttrs);
+      glift.dom.elem(stones[i].attr('id')).attr(stoneAttrs);
     }
 
     var shadowGroup = this.svg.child(this.idGen.stoneShadowGroup());
     if (shadowGroup) {
       var shadows = shadowGroup.children();
       for (var i = 0, len = shadows.length; i < len; i++) {
-        $('#' + shadows[i].attr('id')).attr(shadowAttrs);
+        glift.dom.elem(shadows[i].attr('id')).attr(shadowAttrs);
       }
     }
     return this;
@@ -292,7 +292,7 @@ glift.displays.board._Intersections.prototype = {
     var id = this.svg.child(this.idGen.buttonGroup())
         .child(this.idGen.fullBoardButton())
         .attr('id');
-    $('#' + id).on(eventName, function(e) {
+    glift.dom.elem(id).on(eventName, function(e) {
       var pt = that._buttonEventPt(e);
       pt && func(e, pt);
     });
@@ -305,7 +305,7 @@ glift.displays.board._Intersections.prototype = {
     var id = this.svg.child(this.idGen.buttonGroup())
         .child(this.idGen.fullBoardButton())
         .attr('id');
-    $('#' + id).on('mousemove', function(e) {
+    glift.dom.elem(id).on('mousemove', function(e) {
       var lastpt = that.lastHoverPoint;
       var curpt = that._buttonEventPt(e);
       if (curpt && lastpt && !lastpt.equals(curpt)) {
@@ -316,13 +316,13 @@ glift.displays.board._Intersections.prototype = {
       }
       that.lastHoverPoint = curpt;
     });
-    $('#' + id).on('mouseout', function(e) {
+    glift.dom.elem(id).on('mouseout', function(e) {
       var lastpt = that.lastHoverPoint;
       that.lastHoverPoint = null;
       if (lastpt) {
         hoverOutFunc(e, lastpt);
       }
-    })
+    });
   },
 
   /** Get the point from an event on the button rectangle. */
@@ -331,14 +331,13 @@ glift.displays.board._Intersections.prototype = {
         .child(this.idGen.fullBoardButton())
         .data();
     var maxInts = this.boardPoints.numIntersections;
-    var enclButton = $('#' + this.idGen.fullBoardButton());
-    var offset = enclButton.offset();
+    var offset = glift.dom.elem(this.idGen.fullBoardButton()).offset();
 
     // X Calculations
     var left = data.tl.intPt.x();
     var pageOffsetX = e.pageX;
-    if (e.originalEvent.touches) {
-      var pageOffsetX = e.originalEvent.touches[0].pageX;
+    if (e.changedTouches && e.changedTouches[0]) {
+      var pageOffsetX = e.changedTouches[0].pageX;
     }
 
     var ptx = (pageOffsetX - offset.left) / data.spacing;
@@ -349,12 +348,13 @@ glift.displays.board._Intersections.prototype = {
     } else if (intPtx > maxInts - 1) {
       intPtx = maxInts - 1
     }
-    
+
+    // TODO(kashomon): Remove copy pasta here.
     // Y calculations
     var top = data.tl.intPt.y();
     var pageOffsetY = e.pageY;
-    if (e.originalEvent.touches) {
-      var pageOffsetY = e.originalEvent.touches[0].pageY;
+    if (e.changedTouches && e.changedTouches[0]) {
+      var pageOffsetY = e.changedTouches[0].pageY;
     }
 
     var pty = (pageOffsetY - offset.top) / data.spacing;
@@ -369,6 +369,6 @@ glift.displays.board._Intersections.prototype = {
     if (this.rotation != glift.enums.rotations.NO_ROTATION) {
       pt = pt.antirotate(this.boardPoints.numIntersections, this.rotation);
     }
-    return pt
+    return pt;
   }
 };

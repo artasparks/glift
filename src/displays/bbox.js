@@ -3,10 +3,11 @@ glift.displays.bboxFromPts = function(topLeftPt, botRightPt) {
 };
 
 glift.displays.bboxFromDiv = function(divId) {
+  var elem = glift.dom.elem(divId);
   return glift.displays.bbox(
       glift.util.point(0,0),
-      $('#' + divId).width(),
-      $('#' + divId).height());
+      elem.width(),
+      elem.height());
 };
 
 glift.displays.bbox = function(topLeft, width, height) {

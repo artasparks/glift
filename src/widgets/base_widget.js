@@ -112,18 +112,18 @@ glift.widgets.BaseWidget.prototype = {
     var that = this;
     var createDiv = function(bbox) {
       var newId = wrapperDiv + '_internal_div_' + glift.util.idGenerator.next();
-      $('#' + wrapperDiv).append('<div id="' + newId + '"></div>');
-      glift.displays.setNotSelectable(newId);
-      // that._setNotSelectable(newId);
+      var newDiv = glift.dom.newDiv(newId);
       var cssObj = {
-        top: bbox.top(),
-        left: bbox.left(),
-        width: bbox.width(),
-        height: bbox.height(),
+        top: bbox.top() + 'px',
+        left: bbox.left() + 'px',
+        width: bbox.width() + 'px',
+        height: bbox.height() + 'px',
         position: 'absolute',
         cursor: 'default'
       };
-      $('#' + newId).css(cssObj);
+      newDiv.css(cssObj);
+      glift.dom.elem(wrapperDiv).append(newDiv);
+      glift.displays.setNotSelectable(newId);
       return newId;
     };
     for (var i = 0; i < expectedKeys.length; i++) {
@@ -293,7 +293,8 @@ glift.widgets.BaseWidget.prototype = {
     var managerId = this.manager.id;
     glift.keyMappings.unregisterInstance(managerId);
 
-    $('#' + this.wrapperDiv).empty();
+    glift.dom.elem(this.wrapperDiv) &&
+        glift.dom.elem(this.wrapperDiv).empty();
     this.correctness = undefined;
     this.keyHandlerFunc !== undefined
         && $('body').unbind('keydown', this.keyHandlerFunc);

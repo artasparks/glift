@@ -3,7 +3,7 @@
  *
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
- * @version 0.16.0
+ * @version 0.17.0
  * --------------------------------------
  */
 (function(w) {
@@ -22,7 +22,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.16.0',
+  version: '0.17.0',
 
   /** Indicates whether or not to store debug data. */
   // TODO(kashomon): Remove this hack.
@@ -69,7 +69,7 @@ glift.init = function(disableZoomForMobile, divId) {
     var text = 'Your browser does not support Glift (lack of SVG support). ' +
         'Please upgrade or try one of ' +
         '<a href="http://browsehappy.com/">these</a>';
-    $('#' + divId).append(text);
+    glift.dom.elem(divId).html(text);
     // Don't perform any other action and error out.
     throw new Error(text);
   }
@@ -78,9 +78,19 @@ glift.init = function(disableZoomForMobile, divId) {
   if (!glift.global.disabledZoom &&
       disableZoomForMobile &&
       glift.platform.isMobile()) {
-    $('head meta[name=viewport]').remove();
-    $('head').prepend('<meta name="viewport" content="width=device-width, ' +
-        'initial-scale=1, maximum-scale=10.0, minimum-scale=1, user-scalable=1" />');
+    var metas = document.getElementsByTagName('meta');
+    var noZoomContent = 'width=device-width, ' +
+        'initial-scale=1, maximum-scale=10.0, minimum-scale=1, user-scalable=1'
+    for (var i = 0, len = metas.length; i < len; i++){
+      if (metas[i].getAttribute('name').toLowerCase() == 'viewport'){
+        glift.dom.elem(metas[i]).remove();
+      }
+    }
+    var head = glift.dom.elem(document.head);
+    var newMeta = glift.dom.elem(document.createElement('meta'));
+    newMeta.attr('name', 'viewport');
+    newMeta.attr('content', noZoomContent);
+    head.prepend(newMeta);
     glift.global.disabledZoom = true; // prevent from being called again.
   }
 };
@@ -561,8 +571,8 @@ glift.keyMappings = {
     if (glift.keyMappings._initializedListener) {
       return;
     }
-    // TODO(kashomon): Remove jquery instances
-    $('body').keydown(glift.keyMappings._keyHandlerFunc);
+    var body = document.body;
+    body.addEventListener('keydown', glift.keyMappings._keyHandlerFunc);
     glift.keyMappings._initializedListener = true;
   },
 
@@ -906,15 +916,200 @@ glift.testUtil = {
 
   assertFullDiv: function(divId) {
     // really this is just non-empty...
-    ok($('#' + divId).html().length > 0, "Div should contain contents."
-       + "  Was: " + $('#' + divId).html());
+    ok(glift.dom.elem(divId).html().length > 0, "Div should contain contents."
+       + "  Was: " + glift.dom.elem(divId).html());
   },
 
   assertEmptyDiv: function(divId) {
-    var contents = $('#' + divId).text();
-    ok(contents.length === 0,
+    var contents = glift.dom.elem(divId).html();
+    ok(contents.toString().length === 0,
         'Div should not contain contents. Instead was [' + contents + ']');
   }
+};
+glift.dom = {
+  /**
+   * Construct a glift dom element. If arg is a string, assume an ID is being
+   * passed in. If arg is an object and has nodeType and nodeType is 1
+   * (ELEMENT_NODE), 
+   */
+  elem: function(arg) {
+    var argtype = glift.util.typeOf(arg);
+    if (argtype === 'string') {
+      // Assume an element ID.
+      var el = document.getElementById(arg);
+      if (el === null) { return null; }
+      else { return new glift.dom.Element(el, arg); };
+    } else if (argtype === 'object' && arg.nodeType && arg.nodeType === 1) {
+      // Assume an HTML node.
+      // Note: nodeType of 1 => ELEMENT_NODE.
+      return new glift.dom.Element(arg);
+    }
+    return null;
+  },
+
+  newDiv: function(id) {
+    var elem = glift.dom.elem(document.createElement('div'));
+    elem.attr('id', id);
+    return elem;
+  },
+
+  /**
+   * A simple wrapper for a plain old dom element. Note, id can be null if the
+   * Element is constructed directly from elem.
+   */
+  Element: function(el, id) {
+    this.el = el;
+    this.id = id || null;
+  }
+};
+
+glift.dom.Element.prototype = {
+  /** Prepend an element, but only if it's a glift dom element. */
+  prepend: function(that) {
+    if (that.constructor === this.constructor) {
+      // It's ok if firstChild is null;
+      this.el.insertBefore(that.el, this.el.firstChild);
+    }
+    return this;
+  },
+
+  /** Append an element, but only if it's a glift dom element. */
+  append: function(that) {
+    if (that.constructor === this.constructor) {
+      this.el.appendChild(that.el);
+    }
+    return this;
+  },
+
+  /** Set a text node under this element. */
+  appendText: function(text) {
+    if (text) {
+      var newNode = this.el.ownerDocument.createTextNode(text);
+      this.el.appendChild(newNode);
+    }
+    return this;
+  },
+
+  /**
+   * Get or set an attribute on the HTML.
+   */
+  attr: function(key, value) {
+    if (key == null) { return null; }
+
+    var keyType = glift.util.typeOf(key);
+    if (keyType === 'object') {
+      var attrObj = key;
+      for (var attrObjKey in attrObj) {
+        var attrObjVal = attrObj[attrObjKey];
+        this.el.setAttribute(attrObjKey, attrObjVal);
+      }
+    }
+
+    if (keyType === 'string') {
+      if (value == null) {
+        return this.el.getAttribute(key);
+      } else {
+        this.el.setAttribute(key, value);
+        if (key === 'id' && glift.util.typeOf(value) === 'string') {
+          this.id = value;
+        }
+      }
+    }
+    return null;
+  },
+
+  /** Set the CSS with a CSS object */
+  css: function(obj) {
+    for (var key in obj) {
+      this.el.style[key] = obj[key];
+    }
+    return this;
+  },
+
+  /** Get the CSS with a CSS object */
+
+  /** Get the client height of the element */
+  height: function() { return this.el.clientHeight; },
+
+  /** Get the client width of the element */
+  width: function() { return this.el.clientWidth; },
+
+  /** Set an event on the element */
+  on: function(eventName, func) {
+    func.bind(this);
+    this.el.addEventListener(eventName, func);
+  },
+
+  /** Set the inner HTML. Rather dangerous -- should be used with caution. */
+  html: function(inhtml) {
+    if (inhtml) {
+      this.el.innerHTML = inhtml;
+    } else {
+      return this.el.innerHTML;
+    }
+  },
+
+  /** Remove the current element from the dom. */
+  remove: function() {
+    this.el.parentElement && this.el.parentElement.removeChild(this.el);
+  },
+
+  /** Empty out the children. */
+  empty: function() {
+    var node = this.el;
+    while (node.firstChild) {
+      node.removeChild(node.firstChild);
+    }
+  },
+
+  /**
+   * Get the current coordinates of the first element, or set the coordinates of
+   * every element, in the set of matched elements, relative to the document.
+   * Calculates a top and left. Largely taken from jQuery. 
+   */
+  offset: function() {
+    var box = {top: 0, left: 0};
+    var doc = this.el && this.el.ownerDocument;
+    var docElem = doc.documentElement;
+    var win = doc.defaultView;
+    // If we don't have gBCR, just use 0,0 rather than error
+    if (glift.util.typeOf(this.el.getBoundingClientRect) !== 'undefined') {
+      box = this.el.getBoundingClientRect();
+    }
+    return {
+      top: box.top + win.pageYOffset - docElem.clientTop,
+      left: box.left + win.pageXOffset - docElem.clientLeft
+    };
+  },
+
+  /** Gets the boundingClientRect */
+  boundingClientRect: function() {
+    return this.el.getBoundingClientRect();
+  }
+};
+// http://stackoverflow.com/questions/8567114/how-to-make-an-ajax-call-without-jquery
+glift.ajax = {
+  get: function(url, callback) {
+    request = new XMLHttpRequest();
+    request.open('GET', url, true);
+    request.setRequestHeader("Content-Type", "text/plain");
+    request.onload = function() {
+      if (request.readyState == 4) {
+        if (request.status == 200) {
+          callback(request.responseText);
+        } else {
+          // We reached our target server, but it returned an error
+          console.log('Error:' + request.status + '. ' + request.responseText);
+        }
+      }
+    };
+    request.onerror = function() {
+      throw new Error(request.responseText);
+      // There was a connection error of some sort
+    };
+    request.send();
+  }
+  // TODO(kashomon): Add support for POST requests.
 };
 glift.themes = {
   /**
@@ -1299,10 +1494,11 @@ glift.displays.bboxFromPts = function(topLeftPt, botRightPt) {
 };
 
 glift.displays.bboxFromDiv = function(divId) {
+  var elem = glift.dom.elem(divId);
   return glift.displays.bbox(
       glift.util.point(0,0),
-      $('#' + divId).width(),
-      $('#' + divId).height());
+      elem.width(),
+      elem.height());
 };
 
 glift.displays.bbox = function(topLeft, width, height) {
@@ -1820,49 +2016,6 @@ glift.displays._CropBox.prototype = {
         + this.extBox().botRight().y() + OVERFLOW;
   }
 };
-glift.displays.dom = {
-  elem: function(id) {
-    var el = document.getElementById(id);
-    if (el === null) { return null; }
-    else { return new glift.displays.dom.Element(id, el); };
-  },
-
-  /** A plain old dom element. */
-  Element: function(id, el) {
-    this.id = id;
-    this.el = el;
-  }
-};
-
-glift.displays.dom.Element.prototype = {
-  css: function(obj) {
-    for (var key in obj) {
-      this.el.style[key] = obj[key];
-    }
-    return this;
-  },
-
-  outerHeight: function() {
-    // Danger!!  This method is currently (11 April 2014) very slow -- on the
-    // order of 40 ms.  Avoid if possible
-    return this.el.offsetHeight;
-  },
-
-  outerWidth: function() {
-    // Danger!!  This method is currently (11 April 2014) very slow -- on the
-    // order of 40 ms.  Avoid if possible
-    return this.el.offsetWidth;
-  },
-
-  // TODO(kashomon): Sanitize
-  html: function(text) {
-    this.el.innerHTML = text;
-  },
-
-  remove: function() {
-    this.el.parentElement.removeChild(this.el);
-  }
-};
 (function() {
 /***
  * The Environment contains:
@@ -2371,7 +2524,7 @@ glift.displays.setNotSelectable = function(divId) {
   // -ms-property => msProperty
   // -o-property => OProperty
   // property => property
-  $('#' + divId).css({
+  glift.dom.elem(divId).css({
       'webkitTouchCallout': 'none',
       'webkitUserSelect': 'none',
       'MozUserSelect': 'moz-none',
@@ -2550,7 +2703,7 @@ glift.displays.board.Display.prototype = {
    * This makes redrawing the GoBoard much quicker.
    */
   destroy: function() {
-    $('#' + this.divId()).empty();
+    glift.dom.elem(this.divId()).empty();
     this._svg = undefined;
     this._svgBase = undefined;
     this._intersections = undefined;
@@ -2714,11 +2867,11 @@ glift.displays.board._Intersections.prototype = {
         .child(this.idGen.stone(pt));
     if (stone) {
       // A stone might not exist if the board is cropped.
-      $('#' + stone.attr('id')).attr(stone.attrObj());
+      glift.dom.elem(stone.attr('id')).attr(stone.attrObj());
       var stoneShadowGroup = this.svg.child(this.idGen.stoneShadowGroup());
       if (stoneShadowGroup !== undefined) {
         var stoneShadow = stoneShadowGroup.child(this.idGen.stoneShadow(pt));
-        $('#' + stoneShadow.attr('id')).attr(stoneShadow.attrObj());
+        glift.dom.elem(stoneShadow.attr('id')).attr(stoneShadow.attrObj());
       }
     }
     return this;
@@ -2825,10 +2978,10 @@ glift.displays.board._Intersections.prototype = {
     if (this._reqClearForMark(pt, mark)) {
       var starp  = svg.child(idGen.starpointGroup()).child(idGen.starpoint(pt))
       if (starp) {
-        $('#' + starp.attr('id')).attr('opacity', starp.attr('opacity'));
+        glift.dom.elem(starp.attr('id')).attr('opacity', starp.attr('opacity'));
       }
       var linept = svg.child(idGen.lineGroup()).child(idGen.line(pt))
-      $('#' + linept.attr('id')).attr('opacity', linept.attr('opacity'));
+      glift.dom.elem(linept.attr('id')).attr('opacity', linept.attr('opacity'));
     }
     markGroup.child(idGen.mark(pt)).attachToParent(markGroup.attr('id'));
     this.markPts.push(pt);
@@ -2853,7 +3006,7 @@ glift.displays.board._Intersections.prototype = {
       }
     }
     markGroup.emptyChildren();
-    $('#' + markGroup.attr('id')).empty();
+    glift.dom.elem(markGroup.attr('id')).empty();
     return this;
   },
 
@@ -2907,14 +3060,14 @@ glift.displays.board._Intersections.prototype = {
 
     var stones = this.svg.child(this.idGen.stoneGroup()).children();
     for (var i = 0, len = stones.length; i < len; i++) {
-      $('#' + stones[i].attr('id')).attr(stoneAttrs);
+      glift.dom.elem(stones[i].attr('id')).attr(stoneAttrs);
     }
 
     var shadowGroup = this.svg.child(this.idGen.stoneShadowGroup());
     if (shadowGroup) {
       var shadows = shadowGroup.children();
       for (var i = 0, len = shadows.length; i < len; i++) {
-        $('#' + shadows[i].attr('id')).attr(shadowAttrs);
+        glift.dom.elem(shadows[i].attr('id')).attr(shadowAttrs);
       }
     }
     return this;
@@ -2931,7 +3084,7 @@ glift.displays.board._Intersections.prototype = {
     var id = this.svg.child(this.idGen.buttonGroup())
         .child(this.idGen.fullBoardButton())
         .attr('id');
-    $('#' + id).on(eventName, function(e) {
+    glift.dom.elem(id).on(eventName, function(e) {
       var pt = that._buttonEventPt(e);
       pt && func(e, pt);
     });
@@ -2944,7 +3097,7 @@ glift.displays.board._Intersections.prototype = {
     var id = this.svg.child(this.idGen.buttonGroup())
         .child(this.idGen.fullBoardButton())
         .attr('id');
-    $('#' + id).on('mousemove', function(e) {
+    glift.dom.elem(id).on('mousemove', function(e) {
       var lastpt = that.lastHoverPoint;
       var curpt = that._buttonEventPt(e);
       if (curpt && lastpt && !lastpt.equals(curpt)) {
@@ -2955,13 +3108,13 @@ glift.displays.board._Intersections.prototype = {
       }
       that.lastHoverPoint = curpt;
     });
-    $('#' + id).on('mouseout', function(e) {
+    glift.dom.elem(id).on('mouseout', function(e) {
       var lastpt = that.lastHoverPoint;
       that.lastHoverPoint = null;
       if (lastpt) {
         hoverOutFunc(e, lastpt);
       }
-    })
+    });
   },
 
   /** Get the point from an event on the button rectangle. */
@@ -2970,14 +3123,13 @@ glift.displays.board._Intersections.prototype = {
         .child(this.idGen.fullBoardButton())
         .data();
     var maxInts = this.boardPoints.numIntersections;
-    var enclButton = $('#' + this.idGen.fullBoardButton());
-    var offset = enclButton.offset();
+    var offset = glift.dom.elem(this.idGen.fullBoardButton()).offset();
 
     // X Calculations
     var left = data.tl.intPt.x();
     var pageOffsetX = e.pageX;
-    if (e.originalEvent.touches) {
-      var pageOffsetX = e.originalEvent.touches[0].pageX;
+    if (e.changedTouches && e.changedTouches[0]) {
+      var pageOffsetX = e.changedTouches[0].pageX;
     }
 
     var ptx = (pageOffsetX - offset.left) / data.spacing;
@@ -2988,12 +3140,13 @@ glift.displays.board._Intersections.prototype = {
     } else if (intPtx > maxInts - 1) {
       intPtx = maxInts - 1
     }
-    
+
+    // TODO(kashomon): Remove copy pasta here.
     // Y calculations
     var top = data.tl.intPt.y();
     var pageOffsetY = e.pageY;
-    if (e.originalEvent.touches) {
-      var pageOffsetY = e.originalEvent.touches[0].pageY;
+    if (e.changedTouches && e.changedTouches[0]) {
+      var pageOffsetY = e.changedTouches[0].pageY;
     }
 
     var pty = (pageOffsetY - offset.top) / data.spacing;
@@ -3008,7 +3161,7 @@ glift.displays.board._Intersections.prototype = {
     if (this.rotation != glift.enums.rotations.NO_ROTATION) {
       pt = pt.antirotate(this.boardPoints.numIntersections, this.rotation);
     }
-    return pt
+    return pt;
   }
 };
 /**
@@ -3296,7 +3449,7 @@ glift.displays.commentbox._CommentBox = function(divId, positioningBbox, theme) 
 
 glift.displays.commentbox._CommentBox.prototype = {
   draw: function() {
-    this.el = glift.displays.dom.elem(this.divId);
+    this.el = glift.dom.elem(this.divId);
     if (this.el === null) {
       throw new Error('Could not find element with ID ' + this.divId);
     }
@@ -3729,7 +3882,7 @@ glift.displays.icons._IconBar.prototype = {
     var tempIconId = this.idGen.tempIcon(parentIcon.iconName);
 
     // Remove if it exists.
-    $('#' + tempIconId).remove();
+    glift.dom.elem(tempIconId) && glift.dom.elem(tempIconId).remove();
 
     if (parentIcon.subboxIcon !== undefined) {
       tempIcon = parentIcon.centerWithinSubbox(tempIcon, vm, hm);
@@ -3775,7 +3928,8 @@ glift.displays.icons._IconBar.prototype = {
 
   clearTempText: function(iconName) {
     this.svg.rmChild(this.idGen.tempIconText(iconName));
-    $('#' + this.idGen.tempIconText(iconName)).remove();
+    var el = glift.dom.elem(this.idGen.tempIconText(iconName));
+    el && el.remove();
   },
 
   createIconSelector: function(baseIcon, icons) {
@@ -3856,13 +4010,16 @@ glift.displays.icons._IconBar.prototype = {
       if (!glift.platform.isMobile()) {
         actionsForIcon.mouseover = iconActions[iconName].mouseover ||
           function(event, widgetRef, icon) {
-            $('#' + icon.elementId)
+            glift.dom.elem(icon.elementId)
                 .attr('fill', widgetRef.iconBar.theme.icons.DEFAULT_HOVER.fill);
           };
         actionsForIcon.mouseout = iconActions[iconName].mouseout ||
           function(event, widgetRef, icon) {
-            $('#' + icon.elementId)
-                .attr('fill', widgetRef.iconBar.theme.icons.DEFAULT.fill);
+            var elem = glift.dom.elem(icon.elementId)
+            // elem can be null during transitions.
+            if (elem) {
+              elem.attr('fill', widgetRef.iconBar.theme.icons.DEFAULT.fill);
+            }
           };
       }
       for (var eventName in actionsForIcon) {
@@ -3882,7 +4039,7 @@ glift.displays.icons._IconBar.prototype = {
 
   _initOneIconAction: function(parentWidget, icon, eventName, eventFunc) {
     var buttonId = this.idGen.button(icon.iconName);
-    $('#' + buttonId).on(eventName, function(event) {
+    glift.dom.elem(buttonId).on(eventName, function(event) {
       parentWidget.manager.setActive();
       eventFunc(event, parentWidget, icon, this);
     }.bind(this));
@@ -3893,32 +4050,38 @@ glift.displays.icons._IconBar.prototype = {
     var tooltipId = this.divId + '_tooltip';
     var that = this;
     var id = this.idGen.button(icon.iconName);
-    $('#' + id).on('mouseover', function(e) {
+    glift.dom.elem(id).on('mouseover', function(e) {
       var tooltipTimerFunc = function() {
-        var buttonElement = $('#' + id);
-        $('#' + that.divId).append('<div id="' + tooltipId + 
-            '">' + tooltip + '</div>');
+        var newDiv = glift.dom.newDiv(tooltipId);
+        newDiv.appendText(tooltip);
         var baseCssObj = {
           position: 'absolute',
-          top: -1.2 * (icon.bbox.height()),
-          'z-index': 100,
+          top: -1.2 * (icon.bbox.height()) + 'px',
+          'z-index': 2,
           boxSizing: 'border-box'
         };
         for (var key in that.theme.icons.tooltips) {
           baseCssObj[key] = that.theme.icons.tooltips[key];
         }
-        $('#' + tooltipId).css(baseCssObj);
+        newDiv.css(baseCssObj);
+        var elem = glift.dom.elem(that.divId);
+        if (elem) {
+          // Elem can be null if we've started the time and changed the state.
+          elem.append(newDiv);
+        }
+        // document.getElementById(that.divId).appendChild(newDiv.el);
         this.tooltipTimer = null;
       }.bind(this);
       this.tooltipTimer = setTimeout(
           tooltipTimerFunc, that.theme.icons.tooltipTimeout);
     });
-    $('#' + id).on('mouseout', function(e) {
+    glift.dom.elem(id).on('mouseout', function(e) {
       if (this.tooltipTimer != null) {
         clearTimeout(this.tooltipTimer);
       }
       this.tooltipTimer = null;
-      $('#' + tooltipId).remove();
+      // Remove if it exists.
+      glift.dom.elem(tooltipId) && glift.dom.elem(tooltipId).remove();
     });
   },
 
@@ -3969,7 +4132,7 @@ glift.displays.icons._IconBar.prototype = {
   },
 
   destroy: function() {
-    this.divId && $('#' + this.divId).empty();
+    this.divId && glift.dom.elem(this.divId) && glift.dom.elem(this.divId).empty();
     if (this.tooltipTimer) {
       clearTimeout(this.tooltipTimer);
       this.tooltipTimer = null;
@@ -4061,7 +4224,10 @@ glift.displays.icons._IconSelector.prototype = {
     var that = this;
     var svglib = glift.displays.svg;
     var parentBbox = glift.displays.bboxFromDiv(this.parentDivId);
-    var barPosition = $('#' + this.iconBarId).position();
+
+    var barElem = glift.dom.elem(this.iconBarId);
+    var barPosLeft = barElem.boundingClientRect().left;
+
     var iconBarBbox = glift.displays.bboxFromDiv(this.iconBarId);
     var iconBbox = this.icon.bbox;
     var columnWidth = iconBbox.height();
@@ -4074,15 +4240,13 @@ glift.displays.icons._IconSelector.prototype = {
       rewrapped.push(this.icon.associatedIcons[i].rewrapIcon());
     }
 
-    $('#' + this.parentDivId)
-        .append('<div id="' + this.wrapperDivId + '"></div>');
-
-    var $wrapperDiv = $('#' + this.wrapperDivId);
-    $wrapperDiv.css({
+    var newWrapperDiv = glift.dom.newDiv(this.wrapperDivId);
+    newWrapperDiv.css({
       position: 'absolute',
-      height: parentBbox.height(),
-      width: parentBbox.width()
+      height: parentBbox.height() + 'px',
+      width: parentBbox.width() + 'px'
     });
+    glift.dom.elem(this.parentDivId).append(newWrapperDiv);
 
     var columnIndex = 0;
     while (rewrapped.length > 0) {
@@ -4090,15 +4254,15 @@ glift.displays.icons._IconSelector.prototype = {
       var columnId = this.baseId + '_column_' + columnIndex;
       this.columnIdList.push(columnId);
 
-      $wrapperDiv.append('<div id="' + columnId + '"></div>')
-      $('#' + columnId).css({
-        bottom: iconBarBbox.height(),
-        height: columnHeight,
-        left: barPosition.left +
-            columnIndex * iconBbox.width(),
-        width: iconBbox.width(),
+      var newColumnDiv = glift.dom.newDiv(columnId);
+      newColumnDiv.css({
+        bottom: iconBarBbox.height() + 'px',
+        height: columnHeight + 'px',
+        left: barPosLeft + columnIndex * iconBbox.width() + 'px',
+        width: iconBbox.width() + 'px',
         position: 'absolute'
       });
+      newWrapperDiv.append(newColumnDiv);
 
       var columnBox = glift.displays.bboxFromDiv(columnId);
       var transforms = glift.displays.icons.columnCenterWrapped(
@@ -4160,8 +4324,7 @@ glift.displays.icons._IconSelector.prototype = {
 
   _setBackgroundEvent: function() {
     var that = this;
-    // TODO(kashomon): Wrap this in a generic method.
-    $('#' + this.wrapperDivId).on('click', function(event) {
+    glift.dom.elem(this.wrapperDivId).on('click', function(e) {
       this.remove();
     });
     return this;
@@ -4180,12 +4343,15 @@ glift.displays.icons._IconSelector.prototype = {
   },
 
   _setOneEvent: function(eventName, buttonId, icon, func) {
-    $('#' + buttonId).on(eventName, function(event) {func(event, icon); });
+    glift.dom.elem(buttonId).on(eventName, function(event) {
+      func(event, icon);
+    });
     return this;
   },
 
   destroy: function() {
-    $('#' + this.wrapperDivId).remove();
+    glift.dom.elem(this.wrapperDivId) &&
+        glift.dom.elem(this.wrapperDivId).remove();
     return this;
   }
 };
@@ -4683,23 +4849,9 @@ glift.displays.icons._WrappedIcon.prototype = {
   }
 };
 /**
- * SVG utilities.  The only dependency is on JQuery.
+ * SVG utilities.
  */
-glift.displays.svg = {
-  /**
-   * Refresh the SVG.  When we append SVG via JQuery, the browser thinks the
-   * content is HTML. When we reappend the SVG, the browser automatically does
-   * the namespace conversion to true SVG. Alternatively, the browser gives us
-   * several methods for adding SVG content. However, for efficiency, we want to
-   * add all the elements at once.
-   *
-   * See:
-   * http://stackoverflow.com/questions/3642035/jquerys-append-not-working-with-svg-element
-   */
-  refreshSvg:  function(id) {
-    $('#' + id).html($('#' + id).html());
-  }
-};
+glift.displays.svg = {};
 glift.displays.svg.pathutils = {
   /**
    * Move the current position to X,Y.  Usually used in the context of creating a
@@ -5634,7 +5786,6 @@ glift.rules.movetree = {
     if (sgfString === undefined || sgfString === "") {
       return glift.rules.movetree.getInstance(19);
     }
-    // var mt = new MoveTree(glift.sgf.parser.parse($.trim(sgfString)));
     glift.util.majorPerfLog('Before SGF parsing in movetree');
     var mt = glift.sgf.parse(sgfString);
     glift.util.majorPerfLog('After SGF parsing in movetree');
@@ -8725,18 +8876,18 @@ glift.widgets.BaseWidget.prototype = {
     var that = this;
     var createDiv = function(bbox) {
       var newId = wrapperDiv + '_internal_div_' + glift.util.idGenerator.next();
-      $('#' + wrapperDiv).append('<div id="' + newId + '"></div>');
-      glift.displays.setNotSelectable(newId);
-      // that._setNotSelectable(newId);
+      var newDiv = glift.dom.newDiv(newId);
       var cssObj = {
-        top: bbox.top(),
-        left: bbox.left(),
-        width: bbox.width(),
-        height: bbox.height(),
+        top: bbox.top() + 'px',
+        left: bbox.left() + 'px',
+        width: bbox.width() + 'px',
+        height: bbox.height() + 'px',
         position: 'absolute',
         cursor: 'default'
       };
-      $('#' + newId).css(cssObj);
+      newDiv.css(cssObj);
+      glift.dom.elem(wrapperDiv).append(newDiv);
+      glift.displays.setNotSelectable(newId);
       return newId;
     };
     for (var i = 0; i < expectedKeys.length; i++) {
@@ -8906,7 +9057,8 @@ glift.widgets.BaseWidget.prototype = {
     var managerId = this.manager.id;
     glift.keyMappings.unregisterInstance(managerId);
 
-    $('#' + this.wrapperDiv).empty();
+    glift.dom.elem(this.wrapperDiv) &&
+        glift.dom.elem(this.wrapperDiv).empty();
     this.correctness = undefined;
     this.keyHandlerFunc !== undefined
         && $('body').unbind('keydown', this.keyHandlerFunc);
@@ -8979,22 +9131,19 @@ glift.widgets.WidgetManager.prototype = {
   draw: function() {
     var that = this;
     var afterCollectionLoad = function() {
-      var curObj = that.getCurrentSgfObj();
-      that.getSgfString(curObj, function(sgfObj) {
+      var curObj = this.getCurrentSgfObj();
+      this.getSgfString(curObj, function(sgfObj) {
         // Prevent flickering by destroying the widget after loading the SGF.
-        that.destroy();
-        that.currentWidget = that.createWidget(sgfObj).draw();
-      });
-    };
+        this.destroy();
+        this.currentWidget = this.createWidget(sgfObj).draw();
+      }.bind(this));
+    }.bind(this);
 
     if (this.sgfCollection.length === 0 && this.sgfCollectionUrl) {
-      $.ajax({
-        url: this.sgfCollectionUrl, dataType: 'text', cache: true,
-        success: function(data) {
-          this.sgfCollection = JSON.parse(data);
-          afterCollectionLoad();
-        }.bind(this)
-      });
+      glift.ajax.get(this.sgfCollectionUrl, function(data) {
+        this.sgfCollection = JSON.parse(data);
+        afterCollectionLoad();
+      }.bind(this));
     } else {
       afterCollectionLoad();
     }
@@ -9132,14 +9281,11 @@ glift.widgets.WidgetManager.prototype = {
       sgfObj.sgfString = this.sgfCache[url];
       callback(sgfObj);
     } else {
-      $.ajax({
-        url: url, dataType: 'text', cache: true,
-        success: function(data) {
-          this.sgfCache[url] = data;
-          sgfObj.sgfString = data;
-          callback(sgfObj);
-        }.bind(this)
-      });
+      glift.ajax.get(url, function(data) {
+        this.sgfCache[url] = data;
+        sgfObj.sgfString = data;
+        callback(sgfObj);
+      }.bind(this));
     }
   },
 

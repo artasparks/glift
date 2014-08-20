@@ -239,7 +239,7 @@ glift.displays.setNotSelectable = function(divId) {
   // -ms-property => msProperty
   // -o-property => OProperty
   // property => property
-  $('#' + divId).css({
+  glift.dom.elem(divId).css({
       'webkitTouchCallout': 'none',
       'webkitUserSelect': 'none',
       'MozUserSelect': 'moz-none',

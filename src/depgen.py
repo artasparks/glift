@@ -33,6 +33,8 @@ FILES_TO_AUTOGEN = {
 DIR_ORDER = [
     '.',
     'util',
+    'dom',
+    'ajax',
     'themes',
     'displays',
     'displays/board',
