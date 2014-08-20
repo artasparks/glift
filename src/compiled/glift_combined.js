@@ -8971,6 +8971,9 @@ glift.widgets.BaseWidget.prototype = {
 
   /** Assign Key actions to some other action. */
   _initKeyHandlers: function() {
+    if (!this.displayOptions.enableKeyboardShortcuts) {
+      return;
+    }
     for (var keyName in this.sgfOptions.keyMappings) {
       var iconPathOrFunc = this.sgfOptions.keyMappings[keyName];
       glift.keyMappings.registerKeyAction(
@@ -9060,9 +9063,12 @@ glift.widgets.BaseWidget.prototype = {
     glift.dom.elem(this.wrapperDiv) &&
         glift.dom.elem(this.wrapperDiv).empty();
     this.correctness = undefined;
-    this.keyHandlerFunc !== undefined
-        && $('body').unbind('keydown', this.keyHandlerFunc);
+
+    if (this.keyHandlerFunc !== undefined) {
+      document.body.keydown = null;
+    }
     this.keyHandlerFunc = undefined;
+
     this.display = undefined;
   }
 }
@@ -9779,7 +9785,14 @@ glift.widgets.options.baseOptions = {
     drawBoardCoords: false,
 
     /** For convenience: Disable zoom for mobile users. */
-    disableZoomForMobile: false
+    disableZoomForMobile: false,
+
+    /**
+     * Whether or not to enable keyboard shortcuts. This currently binds
+     * keypress events to document.body, so it's not unlikely this could
+     * conflict with other applications
+     */
+    enableKeyboardShortcuts: true
   },
 
   /**
