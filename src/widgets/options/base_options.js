@@ -335,7 +335,14 @@ glift.widgets.options.baseOptions = {
     drawBoardCoords: false,
 
     /** For convenience: Disable zoom for mobile users. */
-    disableZoomForMobile: false
+    disableZoomForMobile: false,
+
+    /**
+     * Whether or not to enable keyboard shortcuts. This currently binds
+     * keypress events to document.body, so it's not unlikely this could
+     * conflict with other applications
+     */
+    enableKeyboardShortcuts: true
   },
 
   /**
