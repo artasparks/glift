@@ -3,7 +3,7 @@
 
  @copyright Josh Hoak
  @license MIT License (see LICENSE.txt)
- @version 0.17.0
+ @version 0.17.1
  --------------------------------------
 */
 (function(a){var b=b||a.glift||{};a&&(a.glift=b)})(window);glift.global={version:"0.17.1",debugMode:!1,performanceDebugLevel:"NONE",perf:{},instanceRegistry:{},activeInstanceId:null,disabledZoom:!1};
