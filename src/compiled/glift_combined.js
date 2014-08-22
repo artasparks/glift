@@ -22,7 +22,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.17.0',
+  version: '0.17.1',
 
   /** Indicates whether or not to store debug data. */
   // TODO(kashomon): Remove this hack.
@@ -1042,7 +1042,7 @@ glift.dom.Element.prototype = {
 
   /** Set the inner HTML. Rather dangerous -- should be used with caution. */
   html: function(inhtml) {
-    if (inhtml) {
+    if (inhtml !== undefined) {
       this.el.innerHTML = inhtml;
     } else {
       return this.el.innerHTML;
@@ -7384,7 +7384,6 @@ BaseController.prototype = {
 glift.controllers.boardEditor = function(sgfOptions) {
   var ctrl = glift.controllers;
   var baseController = glift.util.beget(ctrl.base());
-  glift.util.setMethods(baseController, ctrl.BoardEditorMethods);
   glift.util.setMethods(baseController, ctrl.BoardEditorMethods);
   baseController.initOptions(sgfOptions);
   return baseController;

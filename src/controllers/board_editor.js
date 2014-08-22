@@ -2,7 +2,6 @@ glift.controllers.boardEditor = function(sgfOptions) {
   var ctrl = glift.controllers;
   var baseController = glift.util.beget(ctrl.base());
   glift.util.setMethods(baseController, ctrl.BoardEditorMethods);
-  glift.util.setMethods(baseController, ctrl.BoardEditorMethods);
   baseController.initOptions(sgfOptions);
   return baseController;
 };

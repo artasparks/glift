@@ -114,7 +114,7 @@ glift.dom.Element.prototype = {
 
   /** Set the inner HTML. Rather dangerous -- should be used with caution. */
   html: function(inhtml) {
-    if (inhtml) {
+    if (inhtml !== undefined) {
       this.el.innerHTML = inhtml;
     } else {
       return this.el.innerHTML;
