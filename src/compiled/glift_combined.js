@@ -1087,19 +1087,17 @@ glift.dom.Element.prototype = {
     return this.el.getBoundingClientRect();
   }
 };
-// http://stackoverflow.com/questions/8567114/how-to-make-an-ajax-call-without-jquery
 glift.ajax = {
   get: function(url, callback) {
-    request = new XMLHttpRequest();
-    request.open('GET', url, true);
-    request.setRequestHeader("Content-Type", "text/plain");
-    request.onload = function() {
-      if (request.readyState == 4) {
-        if (request.status == 200) {
+    console.log('before get: ' + url);
+    var request = new XMLHttpRequest();
+    request.onreadystatechange = function() {
+      if (request.readyState === 4) {
+        if (request.status === 200 || request.status === 304) {
           callback(request.responseText);
         } else {
           // We reached our target server, but it returned an error
-          console.log('Error:' + request.status + '. ' + request.responseText);
+          console.log('(' + request.status + ') Error retrieving ' + url);
         }
       }
     };
@@ -1107,9 +1105,9 @@ glift.ajax = {
       throw new Error(request.responseText);
       // There was a connection error of some sort
     };
+    request.open('GET', url, true);
     request.send();
   }
-  // TODO(kashomon): Add support for POST requests.
 };
 glift.themes = {
   /**
@@ -9138,6 +9136,7 @@ glift.widgets.WidgetManager.prototype = {
     var afterCollectionLoad = function() {
       var curObj = this.getCurrentSgfObj();
       this.getSgfString(curObj, function(sgfObj) {
+        
         // Prevent flickering by destroying the widget after loading the SGF.
         this.destroy();
         this.currentWidget = this.createWidget(sgfObj).draw();
@@ -9287,6 +9286,8 @@ glift.widgets.WidgetManager.prototype = {
       callback(sgfObj);
     } else {
       glift.ajax.get(url, function(data) {
+        console.log('after get: ' + url);
+
         this.sgfCache[url] = data;
         sgfObj.sgfString = data;
         callback(sgfObj);
