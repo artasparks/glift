@@ -20,9 +20,10 @@ glift.init = function(disableZoomForMobile, divId) {
       glift.platform.isMobile()) {
     var metas = document.getElementsByTagName('meta');
     var noZoomContent = 'width=device-width, ' +
-        'initial-scale=1, maximum-scale=10.0, minimum-scale=1, user-scalable=1'
+        'maximum-scale=1.0, minimum-scale=1.0, user-scalable=no'
     for (var i = 0, len = metas.length; i < len; i++){
-      if (metas[i].getAttribute('name').toLowerCase() == 'viewport'){
+      var name = metas[i].getAttribute('name');
+      if (name && name.toLowerCase() === 'viewport'){
         glift.dom.elem(metas[i]).remove();
       }
     }

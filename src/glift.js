@@ -3,7 +3,7 @@
  *
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
- * @version 0.17.2
+ * @version 0.17.3
  * --------------------------------------
  */
 (function(w) {

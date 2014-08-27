@@ -3,7 +3,7 @@
  *
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
- * @version 0.17.2
+ * @version 0.17.3
  * --------------------------------------
  */
 (function(w) {
@@ -22,7 +22,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.17.2',
+  version: '0.17.3',
 
   /** Indicates whether or not to store debug data. */
   // TODO(kashomon): Remove this hack.
@@ -80,9 +80,10 @@ glift.init = function(disableZoomForMobile, divId) {
       glift.platform.isMobile()) {
     var metas = document.getElementsByTagName('meta');
     var noZoomContent = 'width=device-width, ' +
-        'initial-scale=1, maximum-scale=10.0, minimum-scale=1, user-scalable=1'
+        'maximum-scale=1.0, minimum-scale=1.0, user-scalable=no'
     for (var i = 0, len = metas.length; i < len; i++){
-      if (metas[i].getAttribute('name').toLowerCase() == 'viewport'){
+      var name = metas[i].getAttribute('name');
+      if (name && name.toLowerCase() === 'viewport'){
         glift.dom.elem(metas[i]).remove();
       }
     }
@@ -3758,17 +3759,6 @@ glift.displays.icons._IconBar = function(
   // When we need timeouts for tooltips.
   this.tooltipTimer = undefined;
 
-  // Object of objects of the form
-  //  {
-  //    <buttonId>#<eventName>: {
-  //      icon: <wrappedIcon>,
-  //      func: func
-  //    }
-  //  }
-  //
-  // Note that the funcs take two parameters: event and icon.
-  this.events = {};
-
   // Post constructor initializiation
   this._initIconIds(); // Set the ids for the icons above.
   this._initNameMapping(); // Init the name mapping.
@@ -3949,44 +3939,6 @@ glift.displays.icons._IconBar.prototype = {
   },
 
   /**
-   * Assign an event handler to the icon named with 'iconName' or, optionally,
-   * an index.
-   *
-   * Note, that the function 'func' will always be sent the object resulting
-   * from getIcon, namely,
-   *
-   * {
-   *  name: name of the icon
-   *  iconId: the element id of the icon (for convenience).
-   * }
-   */
-  // TODO(kashomon): The event stuff here is waaaaaaay too complicated and needs
-  // to be consolidated with the stone actions event logic.
-  setEvent: function(iconNameOrIndex, event, func) {
-    var icon = this.getIcon(iconNameOrIndex);
-    var button = this.svg.child(this.idGen.buttonGroup())
-        .child(this.idGen.button(icon.iconName));
-    var buttonId = button.attr('id');
-    this._setEvent(buttonId, icon, event, func);
-    return this;
-  },
-
-  _setEvent: function(buttonId, icon, event, func) {
-    // TODO(kashomon): Process all DOM events in a common location.
-    if (event === 'click' && glift.platform.isMobile()) {
-      event = 'touchstart';
-    }
-    if ((event === 'mouseover' || event === 'mouseout') &&
-        glift.platform.isMobile()) {
-      return; // mouseover's have no meaning.
-    }
-    // TODO(kashomon): This id thing is such a hack =/
-    var id = buttonId + '#' + event;
-    this.events[id] = { icon: icon, func: func };
-    return this;
-  },
-
-  /**
    * Initialize the icon actions.  These actions are received at widget-creation
    * time.
    */
@@ -4001,7 +3953,11 @@ glift.displays.icons._IconBar.prototype = {
       }
       var actionsForIcon = {};
 
-      actionsForIcon.click = iconActions[iconName].click;
+      if (glift.platform.isMobile()) {
+        actionsForIcon.touchstart = iconActions[iconName].click;
+      } else {
+        actionsForIcon.click = iconActions[iconName].click;
+      }
 
       // Add hover events for non-mobile browsers.
       if (!glift.platform.isMobile()) {
