@@ -3,7 +3,7 @@
  *
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
- * @version 0.17.1
+ * @version 0.17.2
  * --------------------------------------
  */
 (function(w) {
@@ -22,7 +22,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.17.1',
+  version: '0.17.2',
 
   /** Indicates whether or not to store debug data. */
   // TODO(kashomon): Remove this hack.
@@ -1089,7 +1089,6 @@ glift.dom.Element.prototype = {
 };
 glift.ajax = {
   get: function(url, callback) {
-    console.log('before get: ' + url);
     var request = new XMLHttpRequest();
     request.onreadystatechange = function() {
       if (request.readyState === 4) {
@@ -9136,7 +9135,6 @@ glift.widgets.WidgetManager.prototype = {
     var afterCollectionLoad = function() {
       var curObj = this.getCurrentSgfObj();
       this.getSgfString(curObj, function(sgfObj) {
-        
         // Prevent flickering by destroying the widget after loading the SGF.
         this.destroy();
         this.currentWidget = this.createWidget(sgfObj).draw();
@@ -9286,8 +9284,6 @@ glift.widgets.WidgetManager.prototype = {
       callback(sgfObj);
     } else {
       glift.ajax.get(url, function(data) {
-        console.log('after get: ' + url);
-
         this.sgfCache[url] = data;
         sgfObj.sgfString = data;
         callback(sgfObj);
