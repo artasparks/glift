@@ -51,7 +51,11 @@ glift.displays.commentbox._CommentBox.prototype = {
     for (var i = 0; i < textSegments.length; i++) {
       var seg = textSegments[i];
       var pNode = glift.dom.elem(document.createElement('p'));
-      pNode.attr('style', 'margin-bottom: 1em;');
+      pNode.css({
+        margin: 0,
+        padding: 0,
+        'min-height': '1em'
+      })
       pNode.html(seg);
       this.el.append(pNode);
     }
