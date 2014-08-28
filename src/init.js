@@ -6,7 +6,8 @@
 glift.init = function(disableZoomForMobile, divId) {
   // Compatibility.
   if (!glift.platform.supportsSvg()) {
-    var text = 'Your browser does not support Glift (lack of SVG support). ' +
+    var text = 'Your browser does not support Glift, this Go viewer, ' +
+        'due to lack of SVG support. ' +
         'Please upgrade or try one of ' +
         '<a href="http://browsehappy.com/">these</a>';
     glift.dom.elem(divId).html(text);
