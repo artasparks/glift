@@ -106,4 +106,18 @@ glift.controllers.gameViewerTest = function() {
     deepEqual(gameViewer.movetree.properties().getComment(), 'White dies.');
     deepEqual(gameViewer.movetree.node().getNodeNum(), 5)
   });
+
+
+  test('Next/Previous comment or branch: Max Moves', function() {
+    var gameViewer = glift.controllers.gameViewer({
+        sgfString: testdata.sgfs.leeGuGame6
+    });
+    ok(gameViewer !== undefined);
+    deepEqual(gameViewer.movetree.node().getNodeNum(), 0);
+    gameViewer.nextCommentOrBranch(20);
+    gameViewer.nextCommentOrBranch(20);
+    deepEqual(gameViewer.movetree.node().getNodeNum(), 40);
+    gameViewer.previousCommentOrBranch(20);
+    deepEqual(gameViewer.movetree.node().getNodeNum(), 20);
+  });
 };

@@ -3,7 +3,7 @@
  *
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
- * @version 0.17.3
+ * @version 0.17.4
  * --------------------------------------
  */
 (function(w) {
@@ -22,7 +22,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.17.3',
+  version: '0.17.4',
 
   /** Indicates whether or not to store debug data. */
   // TODO(kashomon): Remove this hack.
@@ -82,7 +82,7 @@ glift.init = function(disableZoomForMobile, divId) {
     var noZoomContent = 'width=device-width, ' +
         'maximum-scale=1.0, minimum-scale=1.0, user-scalable=no'
     for (var i = 0, len = metas.length; i < len; i++){
-      var name = metas[i].getAttribute('name');
+      var name = metas[i] ? metas[i].getAttribute('name') : null;
       if (name && name.toLowerCase() === 'viewport'){
         glift.dom.elem(metas[i]).remove();
       }
@@ -7665,27 +7665,50 @@ glift.controllers.GameViewerMethods = {
   /**
    * Go back to the previous branch or comment.
    *
+   * If maxMovesPrevious is defined, then we cap the number of moves at
+   * maxMovesPrevious. Otherwise, we keep going until we hit the beginning of
+   * the game.
+   *
    * Returns null in the case that we're at the root already.
    */
-  previousCommentOrBranch: function() {
+  previousCommentOrBranch: function(maxMovesPrevious) {
     var displayDataList = []; // TODO(kashomon): Merge this together?
     var displayData = null;
+    var movesSeen = 0;
     do {
       displayData = this.prevMove();
       var comment = this.movetree.properties().getOneValue('C');
       var numChildern = this.movetree.node().numChildren();
-    } while (displayData && !comment && numChildern <= 1); 
+      movesSeen++;
+      if (maxMovesPrevious && movesSeen === maxMovesPrevious) {
+        break;
+      }
+    } while (displayData && !comment && numChildern <= 1);
     // It's more expected to reset the 'next' variation to zero.
     this.setNextVariation(0);
     return this.getEntireBoardState();
   },
 
-  nextCommentOrBranch: function() {
+  /**
+   * Go to the next branch or comment.
+   *
+   * If maxMovesNext is defined, then we cap the number of moves at
+   * maxMovesNext. Otherwise, we keep going until we hit the beginning of
+   * the game.
+   *
+   * Returns null in the case that we're at the root already.
+   */
+  nextCommentOrBranch: function(maxMovesNext) {
     var displayData = null;
+    var movesSeen = 0;
     do {
       displayData = this.nextMove();
       var comment = this.movetree.properties().getOneValue('C');
       var numChildern = this.movetree.node().numChildren();
+      movesSeen++;
+      if (maxMovesNext && movesSeen === maxMovesNext) {
+        break;
+      }
     } while (displayData && !comment && numChildern <= 1); 
     return this.getEntireBoardState();
   },
@@ -9889,14 +9912,16 @@ glift.widgets.options.baseOptions = {
 
     'jump-left-arrow': {
       click: function(event, widget, icon, iconBar) {
-        widget.applyBoardData(widget.controller.previousCommentOrBranch());
+        var maxMoves = 20;
+        widget.applyBoardData(widget.controller.previousCommentOrBranch(maxMoves));
       },
       tooltip: 'Previous branch or comment'
     },
 
     'jump-right-arrow': {
       click: function(event, widget, icon, iconBar) {
-        widget.applyBoardData(widget.controller.nextCommentOrBranch());
+        var maxMoves = 20;
+        widget.applyBoardData(widget.controller.nextCommentOrBranch(maxMoves));
       },
       tooltip: 'Previous branch or comment'
     },

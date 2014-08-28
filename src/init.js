@@ -22,7 +22,7 @@ glift.init = function(disableZoomForMobile, divId) {
     var noZoomContent = 'width=device-width, ' +
         'maximum-scale=1.0, minimum-scale=1.0, user-scalable=no'
     for (var i = 0, len = metas.length; i < len; i++){
-      var name = metas[i].getAttribute('name');
+      var name = metas[i] ? metas[i].getAttribute('name') : null;
       if (name && name.toLowerCase() === 'viewport'){
         glift.dom.elem(metas[i]).remove();
       }

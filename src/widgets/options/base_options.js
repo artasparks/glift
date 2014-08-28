@@ -487,14 +487,16 @@ glift.widgets.options.baseOptions = {
 
     'jump-left-arrow': {
       click: function(event, widget, icon, iconBar) {
-        widget.applyBoardData(widget.controller.previousCommentOrBranch());
+        var maxMoves = 20;
+        widget.applyBoardData(widget.controller.previousCommentOrBranch(maxMoves));
       },
       tooltip: 'Previous branch or comment'
     },
 
     'jump-right-arrow': {
       click: function(event, widget, icon, iconBar) {
-        widget.applyBoardData(widget.controller.nextCommentOrBranch());
+        var maxMoves = 20;
+        widget.applyBoardData(widget.controller.nextCommentOrBranch(maxMoves));
       },
       tooltip: 'Previous branch or comment'
     },
