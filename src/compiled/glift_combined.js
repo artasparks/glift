@@ -3,7 +3,7 @@
  *
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
- * @version 0.17.4
+ * @version 0.17.5
  * --------------------------------------
  */
 (function(w) {
@@ -22,7 +22,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.17.4',
+  version: '0.17.5',
 
   /** Indicates whether or not to store debug data. */
   // TODO(kashomon): Remove this hack.
@@ -3469,7 +3469,15 @@ glift.displays.commentbox._CommentBox.prototype = {
   },
 
   setText: function(text) {
-    this.el.html('<p>' + text.replace(/\n/g, '<br>') + '</p>');
+    this.el.empty();
+    var textSegments = text.split('\n');
+    for (var i = 0; i < textSegments.length; i++) {
+      var seg = textSegments[i];
+      var pNode = glift.dom.elem(document.createElement('p'));
+      pNode.attr('style', 'margin-bottom: 1em;');
+      pNode.appendText(seg);
+      this.el.append(pNode);
+    }
   },
 
   clearText: function() {

@@ -45,7 +45,15 @@ glift.displays.commentbox._CommentBox.prototype = {
   },
 
   setText: function(text) {
-    this.el.html('<p>' + text.replace(/\n/g, '<br>') + '</p>');
+    this.el.empty();
+    var textSegments = text.split('\n');
+    for (var i = 0; i < textSegments.length; i++) {
+      var seg = textSegments[i];
+      var pNode = glift.dom.elem(document.createElement('p'));
+      pNode.attr('style', 'margin-bottom: 1em;');
+      pNode.appendText(seg);
+      this.el.append(pNode);
+    }
   },
 
   clearText: function() {
