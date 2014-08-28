@@ -57,7 +57,7 @@ glift.displays.commentbox._CommentBox.prototype = {
   },
 
   clearText: function() {
-    this.el.html('');
+    this.el.empty();
   },
 
   destroy: function() {
