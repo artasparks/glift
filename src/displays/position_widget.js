@@ -39,7 +39,7 @@ glift.displays.positionWidget = function(
     // In other words, the width == 1.5 * height;
     // Also: Requires a comment box
     useVertical = false;
-  } 
+  }
 
   if (useVertical) {
     var splits = glift.displays.recalcSplits(bcMap, oneColSplits);
@@ -50,10 +50,11 @@ glift.displays.positionWidget = function(
   }
 };
 
+
 glift.displays._extractRatios = function(column) {
   var out = [];
   for (var i = 0; i < column.length; i++) {
-    out.push(column[i].ratio);   
+    out.push(column[i].ratio);
   }
   return out;
 };
@@ -66,6 +67,8 @@ glift.displays._extractRatios = function(column) {
  */
 glift.displays.recalcSplits = function(compsToUseSet, columnSplits) {
   var out = {};
+  // Note: this is designed with the outer loop in this way to work with
+  // the one-col-split and two-col-split styles.
   for (var colKey in columnSplits) {
     var col = columnSplits[colKey];
     var colOut = [];
@@ -92,6 +95,9 @@ glift.displays.recalcSplits = function(compsToUseSet, columnSplits) {
   return out;
 };
 
+/**
+ * Position the widget vertically. Returns an outboxes object, which maps
+ */
 glift.displays.positionWidgetVert = function(
     divBox, cropbox, componentMap, oneColSplits) {
   var point = glift.util.point;
@@ -119,7 +125,7 @@ glift.displays.positionWidgetVert = function(
 
   // TODO(kashomon): Make this more algorithmic by looping over the splits.
   // This doesn't even do the right thing right now -- it forces the order to be
-  // board->comment_box->iconbar
+  // board->comment_box->iconbar.  Of course, this is very hard to get right.
   if (splitMap.COMMENT_BOX) {
     var bb = outBoxes.boardBase;
     var commentHeight = splitMap.COMMENT_BOX.height();

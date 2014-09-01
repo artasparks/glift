@@ -54,5 +54,5 @@ glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
 
   controllerFunc: glift.controllers.staticProblem,
 
-  correctVariationsResetTime: 500 // In milliseconds.
+  correctVariationsResetTime: 750 // In milliseconds.
 };

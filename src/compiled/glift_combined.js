@@ -3,7 +3,7 @@
  *
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
- * @version 0.17.6
+ * @version 0.17.7
  * --------------------------------------
  */
 (function(w) {
@@ -22,7 +22,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.17.6',
+  version: '0.17.7',
 
   /** Indicates whether or not to store debug data. */
   // TODO(kashomon): Remove this hack.
@@ -9553,6 +9553,8 @@ glift.widgets.options.baseOptions = {
      * For all correct, there are multiple correct answers that a user must get.
      * This allows us to specify (in ms) how long the user has until the problem
      * is automatically reset.
+     *
+     * Should be overridden by the widget options.
      */
     correctVariationsResetTime: undefined,
 
@@ -9562,51 +9564,6 @@ glift.widgets.options.baseOptions = {
      * CORRECT_VARIATIONS_PROBLEM.
      */
     totalCorrectVariationsOverride: undefined,
-
-    /**
-     * Book Data. Data used for
-     *
-     * If defined, should have the following form:
-     *
-     *  {
-     *    chapterTitle: "Chapter Title"
-     *    digramSize: "large" or "small"
-     *    ... future options
-     *  }
-     */
-    // TODO(kashomon): Remove this in favor of a general data option.
-    bookData: {
-      /**
-       * The diagram type.
-       * See: glift.enums.diagramTypes
-       */
-      diagramType: 'GAME_REVIEW',
-
-      /**
-       * Show the diagram.  Allows us to selectively keep
-       */
-      showDiagram: true
-
-      /**
-       * The number at which to start number.  By default, begins numbering at
-       * the number of moves + the nums from the most recent branch.  Can be
-       * overwridden though
-       */
-      // numberingStartNum:
-
-      /**
-       * How many moves ago to start performing numbering.
-       *
-       * By default, starts from:
-       *    min(most recent brach, 20 moves ago)
-       */
-      // minusMovesOverride:...:
-
-      /**
-       * Display the diagram in a chapterTitle format.
-       */
-      // chapterTitle:
-    },
 
     //-------------------------------------------------------------------------
     // These options must always be overriden by the widget type overrides.
@@ -9686,27 +9643,6 @@ glift.widgets.options.baseOptions = {
    * not to allow the user to go back to the beginnig (or conversely, the end).
    */
   allowWrapAround: false,
-
-  /**
-   * Global book data contains settings for book-creation.
-   *
-   * If defined, should have the following format:
-   *  {
-   *    title: 'My book',
-   *    author: 'Kashomon',
-   *    template: '/url/to/book/template.tex' or 'raw string'
-   *  }
-   */
-  globalBookData: {
-    title: 'My Go Book',
-    subtitle: 'Going the distance!',
-    authors: [],
-    publisher: 'Created with Glift',
-    diagramsPerPage: 2,
-    templateUrl: '', // not supported yet
-    /** Automatically number the diagrams. This prevents all number labels. */
-    autoNumber: true
-  },
 
   /**
    * Misc options for the web display.
@@ -10153,7 +10089,7 @@ glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
 
   controllerFunc: glift.controllers.staticProblem,
 
-  correctVariationsResetTime: 500 // In milliseconds.
+  correctVariationsResetTime: 750 // In milliseconds.
 };
 /**
  * Additional Options for EXAMPLEs
