@@ -26,8 +26,11 @@ Properties.prototype = {
   add: function(prop, value) {
     // Return if the property is not string or a real property
     if (!glift.sgf.allProperties[prop]) {
-      throw "Can't add undefined properties";
-    } else if (glift.util.typeOf(value) !== 'string' &&
+      glift.util.logz('Warning! The property [' + prop + ']' +
+          ' is not valid and is not recognized in the SGF spec.');
+    }
+
+    if (glift.util.typeOf(value) !== 'string' &&
         glift.util.typeOf(value) !== 'array') {
       // The value has to be either a string or an array.
       value = value.toString();

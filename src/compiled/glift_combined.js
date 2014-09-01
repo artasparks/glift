@@ -3,7 +3,7 @@
  *
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
- * @version 0.17.6
+ * @version 0.17.7
  * --------------------------------------
  */
 (function(w) {
@@ -22,7 +22,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.17.6',
+  version: '0.17.7',
 
   /** Indicates whether or not to store debug data. */
   // TODO(kashomon): Remove this hack.
@@ -98,12 +98,7 @@ glift.init = function(disableZoomForMobile, divId) {
 };
 glift.util = {
   logz: function(msg) {
-    var modmsg = msg;
-    if (glift.util.typeOf(msg) === "array" ||
-        glift.util.typeOf(msg) === "object") {
-      modmsg = JSON.stringify(msg);
-    }
-    console.log("" + modmsg);
+    console.log(msg);
     return null; // default value to return.
   },
 
@@ -6215,8 +6210,11 @@ Properties.prototype = {
   add: function(prop, value) {
     // Return if the property is not string or a real property
     if (!glift.sgf.allProperties[prop]) {
-      throw "Can't add undefined properties";
-    } else if (glift.util.typeOf(value) !== 'string' &&
+      glift.util.logz('Warning! The property [' + prop + ']' +
+          ' is not valid and is not recognized in the SGF spec.');
+    }
+
+    if (glift.util.typeOf(value) !== 'string' &&
         glift.util.typeOf(value) !== 'array') {
       // The value has to be either a string or an array.
       value = value.toString();
@@ -6822,7 +6820,10 @@ glift.sgf = {
 };
 /**
  * The new Glift SGF parser!
- * Takes a string, returns a movetree.  Probably needs refactoring.
+ * Takes a string, returns a movetree.  Easy =).
+ *
+ * Note: Because SGFs have notoriously bad data / properties, we log warnings
+ * for unknown properties rather than throwing errors.
  */
 glift.sgf.parse = function(sgfString) {
   var states = {
@@ -6832,6 +6833,7 @@ glift.sgf.parse = function(sgfString) {
     BETWEEN: 4 // 'AB[oe]_', '_AB[oe]'
   };
   var statesToString = {
+    0: 'BEGINNING_BEFORE_PAREN',
     1: 'BEGINNING',
     2: 'PROPERTY',
     3: 'PROP_DATA',
@@ -6848,7 +6850,7 @@ glift.sgf.parse = function(sgfString) {
   var wsRegex = /\s|\n/;
   var propRegex = /[A-Z]/;
 
-  var curstate = states.BEGINNING;
+  var curstate = states.BEGINNING_BEFORE_PAREN;
   var movetree = glift.rules.movetree.getInstance();
   var charBuffer = []; // List of characters.
   var propData = []; // List of Strings.
@@ -6860,7 +6862,11 @@ glift.sgf.parse = function(sgfString) {
   var colNum = 0;
 
   var perror = function(msg) {
-    glift.sgf.parseError(lineNum, colNum, curchar, msg);
+    glift.sgf.parseError(lineNum, colNum, curchar, msg, false /* iswarn */);
+  };
+
+  var pwarn = function(msg) {
+    glift.sgf.parseError(lineNum, colNum, curchar, msg, true /* iswarn */);
   };
 
   var flushCharBuffer = function() {
@@ -6877,9 +6883,9 @@ glift.sgf.parse = function(sgfString) {
     }
   };
 
+  // Run everything inside an anonymous function so we can use 'return' as a
+  // fullstop break.
   (function() {
-    // Run everything inside an anonymous function so we can use 'return' as a
-    // fullstop break.
     for (var i = 0; i < sgfString.length; i++) {
       colNum++; // This means that columns are 1 indexed.
       curchar = sgfString.charAt(i);
@@ -6893,34 +6899,43 @@ glift.sgf.parse = function(sgfString) {
       }
 
       switch (curstate) {
-        case states.BEGINNING:
+        case states.BEGINNING_BEFORE_PAREN:
           if (curchar === syn.LPAREN) {
             branchMoveNums.push(movetree.node().getNodeNum()); // Should Be 0.
-          } else if (curchar === syn.SCOLON) {
+            curstate = states.BEGINNING
+          } else if (wsRegex.test(curchar)) {
+            // We can ignore whitespace.
+          } else {
+            perror('Unexpected character. ' +
+              'Expected first non-whitespace char to be [(]');
+          }
+          break;
+        case states.BEGINNING:
+          if (curchar === syn.SCOLON) {
             curstate = states.BETWEEN; // The SGF Begins!
           } else if (wsRegex.test(curchar)) {
             // We can ignore whitespace.
           } else {
-            perror("Unexpected character");
+            perror('Unexpected character. Expected char to be [;]');
           }
           break;
         case states.PROPERTY:
           if (propRegex.test(curchar)) {
             charBuffer.push(curchar);
             if (charBuffer.length > 2) {
-              perror("Expected: length two proprety. Found: " + charBuffer);
+              perror('Expected: length two property. Found: ' + charBuffer);
             }
           } else if (curchar === syn.LBRACE) {
             curProp = flushCharBuffer();
             if (glift.sgf.allProperties[curProp] === undefined) {
-              perror('Unknown property: ' + curProp);
+              pwarn('Unknown property: ' + curProp);
             }
             curstate = states.PROP_DATA;
           } else if (wsRegex.test(curchar)) {
             // Should whitespace be allowed here?
-            perror('Unexpected whitespace in Property')
+            perror('Unexpected whitespace in property name')
           } else {
-            perror('Unexpected character');
+            perror('Unexpected character in property name');
           }
           break;
         case states.PROP_DATA:
@@ -6943,7 +6958,7 @@ glift.sgf.parse = function(sgfString) {
             if (curProp.length > 0) {
               curstate = states.PROP_DATA; // more data to process
             } else {
-              perror("Unexpected token.  Orphan property data.");
+              perror('Unexpected token.  Orphan property data.');
             }
           } else if (curchar === syn.LPAREN) {
             flushPropDataIfNecessary();
@@ -6970,7 +6985,7 @@ glift.sgf.parse = function(sgfString) {
           }
           break;
         default:
-          perror("Fatal Error: Unknown State!"); // Shouldn't get here.
+          perror('Fatal Error: Unknown State!'); // Shouldn't get here.
       }
     }
     if (movetree.node().getNodeNum() !== 0) {
@@ -6981,13 +6996,17 @@ glift.sgf.parse = function(sgfString) {
 };
 
 /**
- * Throw a parser error.  The message is optional.
+ * Throw a parser error or log a parse warning.  The message is optional.
  */
-glift.sgf.parseError =  function(lineNum, colNum, curchar, message) {
-  var err = 'SGF Parsing Error: At line [' + lineNum + '], column [' + colNum
+glift.sgf.parseError = function(lineNum, colNum, curchar, message, isWarning) {
+  var header = 'SGF Parsing ' + (isWarning ? 'Warning' : 'Error');
+  var err = header + ': At line [' + lineNum + '], column [' + colNum
       + '], char [' + curchar + '], ' + message;
-  glift.util.logz(err); // Should this error be logged this way?
-  throw err;
+  if (isWarning) {
+    glift.util.logz(err);
+  } else {
+    throw new Error(err);
+  }
 };
 // The allProperties object is used to check to make sure that a given property is
 // actually a real property
@@ -10153,7 +10172,7 @@ glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
 
   controllerFunc: glift.controllers.staticProblem,
 
-  correctVariationsResetTime: 500 // In milliseconds.
+  correctVariationsResetTime: 750 // In milliseconds.
 };
 /**
  * Additional Options for EXAMPLEs

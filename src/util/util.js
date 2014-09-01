@@ -1,11 +1,6 @@
 glift.util = {
   logz: function(msg) {
-    var modmsg = msg;
-    if (glift.util.typeOf(msg) === "array" ||
-        glift.util.typeOf(msg) === "object") {
-      modmsg = JSON.stringify(msg);
-    }
-    console.log("" + modmsg);
+    console.log(msg);
     return null; // default value to return.
   },
 
