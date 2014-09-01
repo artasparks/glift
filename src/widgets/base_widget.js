@@ -13,9 +13,13 @@ glift.widgets.BaseWidget = function(
 
   // These variables are initialized by draw
   this.controller = undefined;
-  this.display = undefined;
-  this.iconBar = undefined;
   this.boardRegion = undefined;
+
+  // The four major components. Also initialized by draw.
+  this.display = undefined;
+  this.titleBar = undefined;
+  this.commentBox = undefined;
+  this.iconBar = undefined;
 
   // Used for problems, exclusively.
   // TODO(kashomon): Factor these out into some sort of problemState.
@@ -92,6 +96,14 @@ glift.widgets.BaseWidget.prototype = {
         theme);
     glift.util.majorPerfLog('IconBar');
 
+    divIds.titleBarId && this._createIconBar(
+        divIds.titleBarId,
+        positioning.titleBarBox,
+        this.sgfOptions.icons,
+        parentDivBbox,
+        theme);
+    glift.util.majorPerfLog('IconBar');
+
     divIds.iconBarBoxId && this.iconBar.initIconActions(
         this, this.actions.iconActions);
 
@@ -147,6 +159,16 @@ glift.widgets.BaseWidget.prototype = {
       return probTypes.EXAMPLE;
     }
     return probTypes.STANDARD;
+  },
+
+  _createTitleBar: function(divId, bbox, parentBbox, icons, theme)  {
+    this.titleBar = glift.displays.icons.titlebar.create({
+      divId: divId,
+      bbox: bbox,
+      parentBbox: parentBbox,
+      icons: icons,
+      theme: theme
+    });
   },
 
   _createCommentBox: function(commentBoxId, positioning, theme) {
