@@ -8,10 +8,9 @@ glift.displays.titlebar = {
         options.bbox,
         options.parentBbox,
         options.icons,
-        options.theme);
+        options.theme).draw();
   }
 };
-
 
 /**
  * The title bar component. Displays at the top of Glift and is used to display
@@ -29,9 +28,20 @@ glift.displays.titlebar._TitleBar = function(
   this.icons = icons;
   /** Theme information. */
   this.theme = theme;
+
+  // Defined on draw.
+  /** The dom element */
+  this.el = undefined;
 };
 
 /** TitleBar methods. */
 glift.displays.titlebar._TitleBar.prototype = {
+  draw: function() {
+    var el = glift.dom.elem(divId);
+    el.css({
+      'ackground-color': 'red'
+    });
 
+    this.el = el;
+  }
 };

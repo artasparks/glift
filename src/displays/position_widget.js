@@ -1,3 +1,4 @@
+
 /**
  * Find the optimal positioning of the widget. Creates divs for all the
  * necessary elements and then returns the divIds. Specifically, returns:
@@ -179,7 +180,8 @@ glift.displays.positionWidgetHorz = function(
   var aligns = glift.enums.boardAlignments;
   var comps = glift.enums.boardComponents;
   if (!comps.hasOwnProperty(comps.COMMENT_BOX)) {
-    throw new Error('The component map must contain a comment box');
+    throw new Error(
+        'The component map must contain a comment box for horz positioning');
   }
   var boardBox = glift.displays.getResizedBox(divBox, cropbox, aligns.RIGHT);
   var outBoxes = {};

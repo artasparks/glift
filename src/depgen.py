@@ -43,6 +43,7 @@ DIR_ORDER = [
     'displays/icons',
     'displays/svg',
     'displays/titlebar',
+    'displays/position',
 
     # Rules and display are intentionally not linked, except via
     # bridge and the controllers.
@@ -181,6 +182,10 @@ def CombineSourceFiles(srcs):
   return outString
 
 def main(argv=None):
+  """
+  Generate imports for the HTML test files and, optionally concatenate and
+  compile the JavaScript.
+  """
   print ' '.join(sys.argv)
   flags = set(sys.argv[1:])
   flist = GetFileList(sys.argv[0])
