@@ -20,11 +20,6 @@ glift.displays.bboxTest = function() {
     deepEqual(bbox.height(), -11, 'Width should be br.y() - tl.y()');
   });
 
-  test('Height-Width Ratio', function() {
-    var bbox = bboxFromPts(point(0, 10), point(10, 15));
-    deepEqual(bbox.hwRatio(), 0.5);
-  });
-
   test('Equality test', function() {
     var bbox = bboxFromPts(point(1, 9), point(18, 20));
     var bbox_v2 = displays.bbox(point(1, 9), 17, 11);

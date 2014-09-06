@@ -30,13 +30,14 @@ glift.displays.positionWidget = function(
   // Whether to position vertically (one column) or horizontally (two column).
   // By default, we draw a vertical box.
   var useVertical = true;
+  var hwRatio = divBox.height() / divBox.width();
 
   if (!bcMap.hasOwnProperty(comps.COMMENT_BOX) ||
       !bcMap.hasOwnProperty(comps.BOARD)) {
     useVertical = true;
-  } else if (divBox.hwRatio() < 0.45 && longBoxRegions[boardRegion]) {
+  } else if (hwRatio < 0.45 && longBoxRegions[boardRegion]) {
     useVertical = false;
-  } else if (divBox.hwRatio() < 0.800 && !longBoxRegions[boardRegion]) {
+  } else if (hwRatio < 0.800 && !longBoxRegions[boardRegion]) {
     // In other words, the width == 1.5 * height;
     // Also: Requires a comment box
     useVertical = false;

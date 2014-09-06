@@ -34,7 +34,6 @@ glift.displays._BoundingBox.prototype = {
   left: function() { return this.topLeft().x(); },
   bottom: function() { return this.botRight().y(); },
   right: function() { return this.botRight().x(); },
-  hwRatio: function() { return this.height() / this.width(); },
 
   /**
    * Find the center of the box. Returns a point representing the center.

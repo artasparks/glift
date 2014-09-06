@@ -14,13 +14,21 @@
  * oneColSplits: The split percentages for a one-column format
  * twoColSplits: The split percentages for a two-column format
  */
-glift.displays.position.positionWidget = function (
+glift.displays.position.positioner = function(
     divBox,
     boardRegion,
     intersections,
     componentsToUse,
     oneColSplits,
     twoColSplits) {
+  if (!divBox) { throw new Error('No Div box. [' + divBox + ']'); }
+  if (!boardRegion || !glift.enums.boardRegions[boardRegion]) {
+      throw new Error('Invalid Board Region. [' + boardRegion + ']'); 
+  }
+  if (!intersections) {
+      throw new Error('No intersections. [' + intersections + + ']');
+  }
+
   return new glift.displays.position._WidgetPositioner(divBox, boardRegion,
       intersections, componentsToUse, oneColSplits, twoColSplits);
 };
@@ -63,26 +71,31 @@ glift.displays.position._WidgetPositioner.prototype = {
   calcVertPositioning: function() {
   },
 
-  /** Whether or not to use a horizontal orientation */
-  useHorzOrientation: function(divBox, boardRegion, componentSet) {
+  /**
+   * Whether to use a horizontal orientation or vertical orientation.
+   */
+  useHorzOrientation: function() {
+    var divBox = this.divBox,
+        boardRegion = this.boardRegion,
+        componentSet = this.componentSet;
+    var hwRatio = divBox.height() / divBox.width();
     var longBoxRegions = { TOP: true, BOTTOM: true };
-    // Force vert if no comment box or board (does not having a board make
-    // sense?).
+
     if (!componentSet[comps.COMMENT_BOX] ||
         !componentSet[comps.BOARD]) {
-      return false;
-    } else if (divBox.hwRatio() < 0.45 && longBoxRegions[boardRegion]) {
+      return false; // Force vertical if no comment box or board.
+    } else if (hwRatio < 0.45 && longBoxRegions[boardRegion]) {
       return true;
-    } else if (divBox.hwRatio() < 0.800 && !longBoxRegions[boardRegion]) {
-      // In other words, the width == 1.5 * height;
+    } else if (hwRatio < 0.800 && !longBoxRegions[boardRegion]) {
       return true;
     } else {
-      // Default to vertical orientation
-      return true;
+      return true; // Default to vertical orientation
     }
   },
 
+  ////////////////////////////
   // Private helper methods //
+  ////////////////////////////
 
   /** Converts the components to use array into a set (object=>true/false) */
   _getComponentSet: function() {
