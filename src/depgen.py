@@ -42,7 +42,7 @@ DIR_ORDER = [
     'displays/gui',
     'displays/icons',
     'displays/svg',
-    'displays/titlebar',
+    'displays/statusbar',
     'displays/position',
 
     # Rules and display are intentionally not linked, except via

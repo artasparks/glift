@@ -106,7 +106,7 @@ glift.widgets.options.baseOptions = {
     componentsToUse: [
       'BOARD',
       'COMMENT_BOX',
-      'TITLE_BAR',
+      'STATUS_BAR',
       'ICONBAR'
     ],
 
@@ -225,7 +225,7 @@ glift.widgets.options.baseOptions = {
      */
     oneColumnSplits: {
       first: [
-        { component: 'TITLE_BAR',   ratio: 0.05 },
+        { component: 'STATUS_BAR',   ratio: 0.05 },
         { component: 'BOARD',       ratio: 0.67 },
         { component: 'COMMENT_BOX', ratio: 0.18 },
         { component: 'ICONBAR',     ratio: 0.10 }
@@ -240,7 +240,7 @@ glift.widgets.options.baseOptions = {
         { component: 'BOARD', ratio: 1 }
       ],
       second: [
-        { component: 'TITLE_BAR',     ratio: 0.05 },
+        { component: 'STATUS_BAR',     ratio: 0.05 },
         { component: 'COMMENT_BOX',   ratio: 0.80 },
         { component: 'ICONBAR',       ratio: 0.15 }
       ]

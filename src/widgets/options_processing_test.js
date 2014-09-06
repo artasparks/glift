@@ -14,22 +14,10 @@ glift.widgets.optionsProcessingTest = function() {
   test('Test processing book data', function() {
     var mgr = createNoDraw({
       sgfCollection: [{
-        sgf: 'foo',
-        bookData: {
-          chapterTitle: 'Foo chapter',
-          diagramSize: 'large'
-        }
+        sgf: 'foo'
       },{
-        sgf: 'bar',
-        bookData: {
-          chapterTitle: 'Bar chapter',
-          diagramSize: 'small'
-        }
-      }],
-      globalBookData: {
-        title: 'My book',
-        author: 'Kashomon'
-      }
+        sgf: 'bar'
+      }]
     });
     deepEqual(mgr.sgfCollection.length, 2);
   });

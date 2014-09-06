@@ -17,7 +17,7 @@ glift.widgets.BaseWidget = function(
 
   // The four major components. Also initialized by draw.
   this.display = undefined;
-  this.titleBar = undefined;
+  this.statusBar = undefined;
   this.commentBox = undefined;
   this.iconBar = undefined;
 
@@ -96,13 +96,13 @@ glift.widgets.BaseWidget.prototype = {
         theme);
     glift.util.majorPerfLog('IconBar');
 
-    divIds.titleBarId && this._createIconBar(
-        divIds.titleBarId,
-        positioning.titleBarBox,
+    divIds.statusBarId && this._createStatusBar(
+        divIds.statusBarId,
+        positioning.statusBarBox,
         this.sgfOptions.icons,
         parentDivBbox,
         theme);
-    glift.util.majorPerfLog('IconBar');
+    glift.util.majorPerfLog('StatusBar');
 
     divIds.iconBarBoxId && this.iconBar.initIconActions(
         this, this.actions.iconActions);
@@ -161,8 +161,8 @@ glift.widgets.BaseWidget.prototype = {
     return probTypes.STANDARD;
   },
 
-  _createTitleBar: function(divId, bbox, parentBbox, icons, theme)  {
-    this.titleBar = glift.displays.icons.titlebar.create({
+  _createStatusBar: function(divId, bbox, parentBbox, icons, theme)  {
+    this.statusBar = glift.displays.statusbar.create({
       divId: divId,
       bbox: bbox,
       parentBbox: parentBbox,

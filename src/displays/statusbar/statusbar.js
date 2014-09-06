@@ -1,9 +1,9 @@
-glift.displays.titlebar = {
+glift.displays.statusbar = {
   /**
-   * Create a titlebar.  Also does option pre-preprocessing if necessary.
+   * Create a statusbar.  Also does option pre-preprocessing if necessary.
    */
   create: function(options) {
-    return new glift.displays.titlebar._TitleBar(
+    return new glift.displays.statusbar._StatusBar(
         options.divId,
         options.bbox,
         options.parentBbox,
@@ -13,10 +13,10 @@ glift.displays.titlebar = {
 };
 
 /**
- * The title bar component. Displays at the top of Glift and is used to display
+ * The status bar component. Displays at the top of Glift and is used to display
  * Game information like move number, settings, and game info.
  */
-glift.displays.titlebar._TitleBar = function(
+glift.displays.statusbar._StatusBar = function(
     divId, bbox, parentBbox, icons, theme) {
   /** DivId of the title bar. */
   this.divId = divId;
@@ -35,7 +35,7 @@ glift.displays.titlebar._TitleBar = function(
 };
 
 /** TitleBar methods. */
-glift.displays.titlebar._TitleBar.prototype = {
+glift.displays.statusbar._StatusBar.prototype = {
   draw: function() {
     var el = glift.dom.elem(divId);
     el.css({
