@@ -37,9 +37,9 @@ glift.displays.statusbar._StatusBar = function(
 /** TitleBar methods. */
 glift.displays.statusbar._StatusBar.prototype = {
   draw: function() {
-    var el = glift.dom.elem(divId);
+    var el = glift.dom.elem(this.divId);
     el.css({
-      'ackground-color': 'red'
+      'background-color': 'red'
     });
 
     this.el = el;

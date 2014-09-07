@@ -59,52 +59,52 @@ glift.widgets.BaseWidget.prototype = {
 
     // Recall that positioning returns an object that looks like:
     // {commentBox: ..., boardbox: ..., iconBarBox: ...)
-    var positioning = glift.displays.positionWidget(
-      parentDivBbox,
-      this.displayOptions.boardRegion,
-      this.displayOptions.intersections,
-      this.sgfOptions.componentsToUse,
-      this.displayOptions.oneColumnSplits,
-      this.displayOptions.twoColumnSplits);
+    var positioning = glift.displays.position.positioner(
+        parentDivBbox,
+        this.displayOptions.boardRegion,
+        this.displayOptions.intersections,
+        this.sgfOptions.componentsToUse,
+        this.displayOptions.oneColumnSplits,
+        this.displayOptions.twoColumnSplits).calcWidgetPositioning();
 
     var divIds = this._createDivsForPositioning(positioning, this.wrapperDiv);
     glift.util.majorPerfLog('Created divs');
 
     // TODO(kashomon): Remove these hacks. We shouldn't be modifying
     // displayOptions.
-    this.displayOptions.divId = divIds.boardBoxId;
+    this.displayOptions.divId = divIds.BOARD;
 
     var theme = glift.themes.get(this.displayOptions.theme);
 
     // TODO(kashomon): Pass in the theme rather than doing another copy here
     this.display = glift.displays.create(
         this.displayOptions,
-        positioning.boardBox);
+        positioning.getBbox('BOARD'));
     glift.util.majorPerfLog('Finish creating display');
 
-    divIds.commentBoxId && this._createCommentBox(
-        divIds.commentBoxId,
-        positioning.commentBox,
+    divIds.COMMENT_BOX && this._createCommentBox(
+        divIds.COMMENT_BOX,
+        positioning.getBbox('COMMENT_BOX'),
         theme);
     glift.util.majorPerfLog('CommentBox');
 
-    divIds.iconBarBoxId && this._createIconBar(
-        divIds.iconBarBoxId,
-        positioning.iconBarBox,
+    divIds.ICONBAR && this._createIconBar(
+        divIds.ICONBAR,
+        positioning.getBbox('ICONBAR'),
         this.sgfOptions.icons,
         parentDivBbox,
         theme);
     glift.util.majorPerfLog('IconBar');
 
-    divIds.statusBarId && this._createStatusBar(
-        divIds.statusBarId,
-        positioning.statusBarBox,
+    divIds.STATUS_BAR && this._createStatusBar(
+        divIds.STATUS_BAR,
+        positioning.getBbox('STATUS_BAR'),
         this.sgfOptions.icons,
         parentDivBbox,
         theme);
     glift.util.majorPerfLog('StatusBar');
 
-    divIds.iconBarBoxId && this.iconBar.initIconActions(
+    divIds.ICONBAR && this.iconBar.initIconActions(
         this, this.actions.iconActions);
 
     glift.util.majorPerfLog('Before stone event creation');
@@ -117,13 +117,14 @@ glift.widgets.BaseWidget.prototype = {
     return this;
   },
 
-  _createDivsForPositioning: function(positioning, wrapperDiv) {
-    var expectedKeys =
-        ['boardBox', 'iconBarBox', 'commentBox', 'extraIconBarBox'];
+  /**
+   * Create divs from positioning (WidgetBoxes) and the wrapper div id.
+   */
+  _createDivsForPositioning: function(positioning, wrapperDivId) {
+    // Map from component to ID.
     var out = {};
-    var that = this;
     var createDiv = function(bbox) {
-      var newId = wrapperDiv + '_internal_div_' + glift.util.idGenerator.next();
+      var newId = wrapperDivId + '_internal_div_' + glift.util.idGenerator.next();
       var newDiv = glift.dom.newDiv(newId);
       var cssObj = {
         top: bbox.top() + 'px',
@@ -134,15 +135,13 @@ glift.widgets.BaseWidget.prototype = {
         cursor: 'default'
       };
       newDiv.css(cssObj);
-      glift.dom.elem(wrapperDiv).append(newDiv);
+      glift.dom.elem(wrapperDivId).append(newDiv);
       glift.displays.setNotSelectable(newId);
       return newId;
     };
-    for (var i = 0; i < expectedKeys.length; i++) {
-      if (positioning[expectedKeys[i]]) {
-        out[expectedKeys[i] + 'Id'] = createDiv(positioning[expectedKeys[i]]);
-      }
-    }
+    positioning.map(function(key, bbox) {
+      out[key] = createDiv(bbox);
+    });
     return out;
   },
 
