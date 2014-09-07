@@ -240,9 +240,9 @@ glift.widgets.options.baseOptions = {
         { component: 'BOARD', ratio: 1 }
       ],
       second: [
-        { component: 'STATUS_BAR',     ratio: 0.05 },
-        { component: 'COMMENT_BOX',   ratio: 0.80 },
-        { component: 'ICONBAR',       ratio: 0.15 }
+        { component: 'STATUS_BAR',     ratio: 0.07 },
+        { component: 'COMMENT_BOX',   ratio: 0.83 },
+        { component: 'ICONBAR',       ratio: 0.10 }
       ]
     },
 
