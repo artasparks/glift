@@ -1,5 +1,5 @@
 glift.sgf.newParserTest = function() {
-  module('New Parser Test');
+  module('glift.sgf.newParserTest');
 
   test('Parse simple, real problem', function() {
     var mt = glift.sgf.parse(testdata.sgfs.realproblem);
@@ -45,6 +45,22 @@ glift.sgf.newParserTest = function() {
         'Actual msg: ' + parseErrors[3]);
 
     // reset the logger
+    glift.util.logz = oldLog;
+  });
+
+  test('Produce warnings on end-of-sgf garbage.', function() {
+    var oldLog = glift.util.logz;
+    var parseErrors = [];
+    var sgf = '(;GB[1]C[Foo])C[Foo])'
+    var testLogger = function(msg) {
+      parseErrors.push(msg);
+    };
+    glift.util.logz = testLogger;
+
+    var mt = glift.sgf.parse(sgf);
+    deepEqual(parseErrors.length, 7);
+    ok(parseErrors[0].indexOf('Garbage after finishing the SGF.') !== -1);
+
     glift.util.logz = oldLog;
   });
 

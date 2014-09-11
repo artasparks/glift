@@ -3,7 +3,7 @@
  *
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
- * @version 0.17.7
+ * @version 0.17.8
  * --------------------------------------
  */
 (function(w) {
@@ -22,7 +22,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.17.7',
+  version: '0.17.8',
 
   /** Indicates whether or not to store debug data. */
   // TODO(kashomon): Remove this hack.
@@ -6827,17 +6827,20 @@ glift.sgf = {
  */
 glift.sgf.parse = function(sgfString) {
   var states = {
+    BEGINNING_BEFORE_PAREN: 0,
     BEGINNING: 1,
     PROPERTY: 2, // e.g., 'AB[oe]' or 'A_B[oe]' or 'AB_[oe]'
     PROP_DATA: 3, // 'AB[o_e]'
-    BETWEEN: 4 // 'AB[oe]_', '_AB[oe]'
+    BETWEEN: 4, // 'AB[oe]_', '_AB[oe]'
+    FINISHED_SGF: 5
   };
   var statesToString = {
     0: 'BEGINNING_BEFORE_PAREN',
     1: 'BEGINNING',
     2: 'PROPERTY',
     3: 'PROP_DATA',
-    4: 'BETWEEN'
+    4: 'BETWEEN',
+    5: 'FINISHED_SGF'
   };
   var syn = {
     LBRACE:  '[',
@@ -6857,9 +6860,11 @@ glift.sgf.parse = function(sgfString) {
   var branchMoveNums = []; // used for when we pop up.
   var curProp = '';
   var curchar = '';
-  var i = 0; // defined here for closing over
   var lineNum = 0;
   var colNum = 0;
+  // We track how many parens we've seen, so we know when we've finished the
+  // SGF.
+  var parenDepth = 0;
 
   var perror = function(msg) {
     glift.sgf.parseError(lineNum, colNum, curchar, msg, false /* iswarn */);
@@ -6902,7 +6907,8 @@ glift.sgf.parse = function(sgfString) {
         case states.BEGINNING_BEFORE_PAREN:
           if (curchar === syn.LPAREN) {
             branchMoveNums.push(movetree.node().getNodeNum()); // Should Be 0.
-            curstate = states.BEGINNING
+            parenDepth++;
+            curstate = states.BEGINNING;
           } else if (wsRegex.test(curchar)) {
             // We can ignore whitespace.
           } else {
@@ -6961,19 +6967,25 @@ glift.sgf.parse = function(sgfString) {
               perror('Unexpected token.  Orphan property data.');
             }
           } else if (curchar === syn.LPAREN) {
+            parenDepth++;
             flushPropDataIfNecessary();
             branchMoveNums.push(movetree.node().getNodeNum());
           } else if (curchar === syn.RPAREN) {
+            parenDepth--;
             flushPropDataIfNecessary();
             if (branchMoveNums.length === 0) {
               while (movetree.node().getNodeNum() !== 0) {
-                movetree.moveUp(); // Is this necessary?
+                movetree.moveUp();
               }
               return movetree;
             }
             var parentBranchNum = branchMoveNums.pop();
             while (movetree.node().getNodeNum() !== parentBranchNum) {
               movetree.moveUp();
+            }
+            if (parenDepth === 0) {
+              // We've finished the SGF.
+              curstate = states.FINISHED_SGF;
             }
           } else if (curchar === syn.SCOLON) {
             flushPropDataIfNecessary();
@@ -6982,6 +6994,13 @@ glift.sgf.parse = function(sgfString) {
             // Do nothing.  Whitespace can be ignored here.
           } else {
             perror('Unknown token');
+          }
+          break;
+        case states.FINISHED_SGF:
+          if (wsRegex.test(curchar)) {
+            // Do nothing.  Whitespace can be ignored here.
+          } else {
+            pwarn('Garbage after finishing the SGF.');
           }
           break;
         default:
