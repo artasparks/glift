@@ -135,7 +135,7 @@
     var pathobj = paper.path(glift.displays.icons.svg[key].string);
     var bbox = pathobj.getBBox();
     glift.util.logz(key)
-    glift.util.logz(bbox);
+    glift.util.logz(JSON.stringify(bbox));
   };
 })();
 </script>

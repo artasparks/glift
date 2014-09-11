@@ -183,7 +183,7 @@ glift.displays.icons._IconBar.prototype = {
     var bbox = this.getIcon(iconName).bbox;
     // TODO(kashomon): Why does this constant work?  Replace the 0.54 nonsense
     // with something more sensible.
-    var fontSize = bbox.width() * 0.54; 
+    var fontSize = bbox.width() * 0.50;
     var id = this.idGen.tempIconText(iconName);
     var boxStrokeWidth = 7
     this.clearTempText(iconName);

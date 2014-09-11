@@ -154,8 +154,8 @@ glift.widgets.options.baseOptions = {
     controllerFunc: undefined,
 
     /**
-     * The icons to use in the icon-bar.  This is a list of icon-names, which
-     * must be spceified in glift.displays.gui.icons.
+     * The names of the icons to use in the icon-bar.  This is a list of
+     * icon-names, which must be spceified in glift.displays.icons.svg.
      */
     icons: undefined,
 
@@ -164,6 +164,10 @@ glift.widgets.options.baseOptions = {
      */
     stoneClick: undefined,
 
+    /**
+     * The names of the icons to use in the status-bar.
+     */
+    statusBarIcons: undefined,
 
     /**
      * Mouseover/mouseout override for stones.

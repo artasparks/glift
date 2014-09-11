@@ -30,18 +30,21 @@ glift.displays.statusbar._StatusBar = function(
   this.theme = theme;
 
   // Defined on draw.
-  /** The dom element */
-  this.el = undefined;
+  this.iconBar = undefined;
 };
 
 /** TitleBar methods. */
 glift.displays.statusbar._StatusBar.prototype = {
   draw: function() {
-    var el = glift.dom.elem(this.divId);
-    el.css({
-      'background-color': 'red'
-    });
-
-    this.el = el;
+    // TODO(kashomon): Change this to something more realistic.
+    this.iconBar = glift.displays.icons.bar({
+      divId: this.divId,
+      theme: this.theme.statusBar,
+      icons: ['game-info', 'loading-move-indicator'],
+      positioning: this.bbox,
+      parentBbox: this.parentBbox
+    })
+    this.iconBar.addTempText(
+        'loading-move-indicator', '14', 'black');
   }
 };

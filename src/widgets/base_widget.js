@@ -99,8 +99,8 @@ glift.widgets.BaseWidget.prototype = {
     divIds.STATUS_BAR && this._createStatusBar(
         divIds.STATUS_BAR,
         positioning.getBbox('STATUS_BAR'),
-        this.sgfOptions.icons,
         parentDivBbox,
+        this.sgfOptions.icons,
         theme);
     glift.util.majorPerfLog('StatusBar');
 

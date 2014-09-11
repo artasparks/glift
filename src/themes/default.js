@@ -92,8 +92,6 @@ glift.themes.registered.DEFAULT = {
     }
   },
 
-  // TODO(kashomon): Add support for gradients.  This requires that we attach
-  // defs at the beginning of the SVG.  Not hard, but a little bit of work.
   icons: {
     // Vertical margin in pixels.
     vertMargin: 5,
@@ -122,7 +120,35 @@ glift.themes.registered.DEFAULT = {
       // fontFamily: 'Palatino'
     },
 
-    tooltipTimeout: 2000 // milliseconds
+    tooltipTimeout: 1500 // milliseconds
+  },
+
+  statusBar: {
+    icons: {
+      vertMargin: 2,
+      horzMargin: 5,
+
+      DEFAULT: {
+        fill: "#000",
+        stroke: 'black'
+      },
+
+      DEFAULT_HOVER: {
+        fill: '#AAA',
+        stroke: 'black'
+      },
+
+      tooltips: {
+        padding: '5px',
+        background: '#555',
+        color: '#EEE',
+        webkitBorderRadius: '10px',
+        MozBorderRadius: '10px',
+        borderRadius: '10px'
+      },
+
+      tooltipTimeout: 1500 // milliseconds
+    }
   },
 
   commentBox:  {
