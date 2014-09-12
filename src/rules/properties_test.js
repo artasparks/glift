@@ -1,5 +1,5 @@
 glift.rules.propertiesTest = function() {
-  module("Properties Test");
+  module("glift.rules.propertiesTest");
   var properties = glift.rules.properties,
       point = glift.util.point;
 
@@ -52,5 +52,25 @@ glift.rules.propertiesTest = function() {
     deepEqual(props.getAllValues('TR'), ['aa', 'bb', 'cc']);
     props.removeOneValue('TR', 'bb');
     deepEqual(props.getAllValues('TR'), ['aa', 'cc']);
+  });
+
+  test("Test preprocess", function() {
+    var props = properties();
+    props.add('C', '[8k\\] Zed');
+    deepEqual(props.getOneValue('C'), '[8k] Zed')
+
+    props.remove('C');
+    props.add('C', '[8k] Dob');
+    deepEqual(props.getOneValue('C'), '[8k] Dob')
+
+    props.remove('C');
+    props.add('C', '[8k] Zed');
+    deepEqual(props.getOneValue('C'), '[8k] Zed')
+
+    props.set('C', '[8k\\] Zod');
+    deepEqual(props.getOneValue('C'), '[8k] Zod')
+
+    props.set('C', '[8k] Zod');
+    deepEqual(props.getOneValue('C'), '[8k] Zod')
   });
 };

@@ -227,7 +227,7 @@ glift.rules.movetreeTest = function() {
     deepEqual(mt.toSgf(), '(;AW[ab][bb])');
   });
 
-  test("Convert to SGF - variation", function() {
+  test('Convert to SGF - variation', function() {
     var mt = glift.rules.movetree.getInstance();
     mt.properties().add('C', 'Foo');
     mt.node().addChild();
@@ -236,6 +236,12 @@ glift.rules.movetreeTest = function() {
     mt.node().addChild();
     mt.moveDown(1).properties().add('B', 'bb');
     deepEqual(mt.toSgf(), '(;C[Foo]\n(;B[ab])\n(;B[bb]))');
+  });
+
+  test('Convert to SGF - escaped bracket', function() {
+    var mt = glift.rules.movetree.getInstance();
+    mt.properties().add('C', '[8k] Foo');
+    deepEqual(mt.toSgf(), '(;C[[8k\\] Foo])');
   });
 
   test("getCurrentPlayer Complex", function() {

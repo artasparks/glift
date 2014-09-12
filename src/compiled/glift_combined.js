@@ -3,7 +3,7 @@
  *
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
- * @version 0.17.8
+ * @version 0.17.9
  * --------------------------------------
  */
 (function(w) {
@@ -22,7 +22,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.17.8',
+  version: '0.17.9',
 
   /** Indicates whether or not to store debug data. */
   // TODO(kashomon): Remove this hack.
@@ -3442,6 +3442,7 @@ glift.displays.commentbox._CommentBox = function(divId, positioningBbox, theme) 
 };
 
 glift.displays.commentbox._CommentBox.prototype = {
+  /** Draw the comment box */
   draw: function() {
     this.el = glift.dom.elem(this.divId);
     if (this.el === null) {
@@ -3460,10 +3461,15 @@ glift.displays.commentbox._CommentBox.prototype = {
     return this;
   },
 
+  /** Sanitize the text in the comment box. */
   sanitize: function(text) {
     return glift.displays.commentbox.sanitize(text);
   },
 
+  /**
+   * Set the text of the comment box. Note: this sanitizes the text to prevent
+   * XSS and does some basic HTML-izing.
+   */
   setText: function(text) {
     text = this.sanitize(text);
     this.el.empty();
@@ -3481,10 +3487,12 @@ glift.displays.commentbox._CommentBox.prototype = {
     }
   },
 
+  /** Clear the text from the comment box. */
   clearText: function() {
     this.el.empty();
   },
 
+  /** Remove all the relevant comment box HTML. */
   destroy: function() {
     this.commentBoxObj.empty();
   }
@@ -6058,20 +6066,22 @@ glift.rules._MoveTree.prototype = {
   _toSgfBuffer: function(node, builder) {
     if (node.getParent()) {
       // Don't add a \n if we're at the root node
-      builder.push("\n");
+      builder.push('\n');
     }
 
     if (!node.getParent() || node.getParent().numChildren() > 1) {
       builder.push("(");
     }
 
-    builder.push(";");
+    builder.push(';');
     for (var prop in node.properties().propMap) {
       var values = node.properties().getAllValues(prop);
       var out = prop;
       if (values.length > 0) {
         for (var i = 0; i < values.length; i++) {
-          out += '[' + values[i] + ']'
+          // Ensure a string and escape right brackets.
+          var val = values[i].toString().replace(']', '\\]')
+          out += '[' + val + ']'
         }
       } else {
         out += '[]';
@@ -6084,7 +6094,7 @@ glift.rules._MoveTree.prototype = {
     }
 
     if (!node.getParent() || node.getParent().numChildren() > 1) {
-      builder.push(")");
+      builder.push(')');
     }
     return builder
   }
@@ -6216,17 +6226,22 @@ Properties.prototype = {
 
     if (glift.util.typeOf(value) !== 'string' &&
         glift.util.typeOf(value) !== 'array') {
-      // The value has to be either a string or an array.
-      value = value.toString();
+      // The value has to be either a string or an array.  Maybe we should throw
+      // an error?
+      value = [ value.toString().replace('\\]', ']') ];
     } else if (glift.util.typeOf(value) === 'array') {
       // Force all array values to be of type string.
       for (var i = 0, len = value.length; i < len; i++) {
         if (glift.util.typeOf(value[i]) !== 'string') {
-          value[i] = value[i].toString();
+          value[i] = value[i].toString().replace('\\]', ']');
         }
       }
+    } else if (glift.util.typeOf(value === 'string')) {
+      value = [ value.replace('\\]', ']') ];
+    } else {
+      throw new Error('Unexpected type ' +
+          glift.util.typeOf(value) + ' for item ' + item);
     }
-    value = glift.util.typeOf(value) === 'string' ? [value] : value;
 
     // If the type is a string, make into an array or concat.
     if (this.contains(prop)) {
@@ -6351,8 +6366,16 @@ Properties.prototype = {
   set: function(prop, value) {
     if (prop !== undefined && value !== undefined) {
       if (glift.util.typeOf(value) === 'string') {
-        this.propMap[prop] = [value]
+        this.propMap[prop] = [ value.replace('\\]', ']') ];
       } else if (glift.util.typeOf(value) === 'array') {
+        for (var i = 0; i < value.length; i++) {
+          if (glift.util.typeOf(value[i]) !== 'string') {
+            throw new Error('When setting via an array, all values ' +
+              'must be strings. was [' + glift.util.typeOf(value[i]) +
+              '], for value ' + value[i]);
+          }
+          value[i] = value[i].replace('\\]', ']');
+        }
         this.propMap[prop] = value
       }
     }

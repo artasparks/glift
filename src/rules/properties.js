@@ -32,17 +32,22 @@ Properties.prototype = {
 
     if (glift.util.typeOf(value) !== 'string' &&
         glift.util.typeOf(value) !== 'array') {
-      // The value has to be either a string or an array.
-      value = value.toString();
+      // The value has to be either a string or an array.  Maybe we should throw
+      // an error?
+      value = [ value.toString().replace('\\]', ']') ];
     } else if (glift.util.typeOf(value) === 'array') {
       // Force all array values to be of type string.
       for (var i = 0, len = value.length; i < len; i++) {
         if (glift.util.typeOf(value[i]) !== 'string') {
-          value[i] = value[i].toString();
+          value[i] = value[i].toString().replace('\\]', ']');
         }
       }
+    } else if (glift.util.typeOf(value === 'string')) {
+      value = [ value.replace('\\]', ']') ];
+    } else {
+      throw new Error('Unexpected type ' +
+          glift.util.typeOf(value) + ' for item ' + item);
     }
-    value = glift.util.typeOf(value) === 'string' ? [value] : value;
 
     // If the type is a string, make into an array or concat.
     if (this.contains(prop)) {
@@ -167,8 +172,16 @@ Properties.prototype = {
   set: function(prop, value) {
     if (prop !== undefined && value !== undefined) {
       if (glift.util.typeOf(value) === 'string') {
-        this.propMap[prop] = [value]
+        this.propMap[prop] = [ value.replace('\\]', ']') ];
       } else if (glift.util.typeOf(value) === 'array') {
+        for (var i = 0; i < value.length; i++) {
+          if (glift.util.typeOf(value[i]) !== 'string') {
+            throw new Error('When setting via an array, all values ' +
+              'must be strings. was [' + glift.util.typeOf(value[i]) +
+              '], for value ' + value[i]);
+          }
+          value[i] = value[i].replace('\\]', ']');
+        }
         this.propMap[prop] = value
       }
     }

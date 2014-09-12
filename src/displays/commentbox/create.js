@@ -22,6 +22,7 @@ glift.displays.commentbox._CommentBox = function(divId, positioningBbox, theme) 
 };
 
 glift.displays.commentbox._CommentBox.prototype = {
+  /** Draw the comment box */
   draw: function() {
     this.el = glift.dom.elem(this.divId);
     if (this.el === null) {
@@ -40,10 +41,15 @@ glift.displays.commentbox._CommentBox.prototype = {
     return this;
   },
 
+  /** Sanitize the text in the comment box. */
   sanitize: function(text) {
     return glift.displays.commentbox.sanitize(text);
   },
 
+  /**
+   * Set the text of the comment box. Note: this sanitizes the text to prevent
+   * XSS and does some basic HTML-izing.
+   */
   setText: function(text) {
     text = this.sanitize(text);
     this.el.empty();
@@ -61,10 +67,12 @@ glift.displays.commentbox._CommentBox.prototype = {
     }
   },
 
+  /** Clear the text from the comment box. */
   clearText: function() {
     this.el.empty();
   },
 
+  /** Remove all the relevant comment box HTML. */
   destroy: function() {
     this.commentBoxObj.empty();
   }

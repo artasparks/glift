@@ -356,20 +356,22 @@ glift.rules._MoveTree.prototype = {
   _toSgfBuffer: function(node, builder) {
     if (node.getParent()) {
       // Don't add a \n if we're at the root node
-      builder.push("\n");
+      builder.push('\n');
     }
 
     if (!node.getParent() || node.getParent().numChildren() > 1) {
       builder.push("(");
     }
 
-    builder.push(";");
+    builder.push(';');
     for (var prop in node.properties().propMap) {
       var values = node.properties().getAllValues(prop);
       var out = prop;
       if (values.length > 0) {
         for (var i = 0; i < values.length; i++) {
-          out += '[' + values[i] + ']'
+          // Ensure a string and escape right brackets.
+          var val = values[i].toString().replace(']', '\\]')
+          out += '[' + val + ']'
         }
       } else {
         out += '[]';
@@ -382,7 +384,7 @@ glift.rules._MoveTree.prototype = {
     }
 
     if (!node.getParent() || node.getParent().numChildren() > 1) {
-      builder.push(")");
+      builder.push(')');
     }
     return builder
   }
