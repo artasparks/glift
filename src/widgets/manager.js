@@ -82,8 +82,10 @@ glift.widgets.WidgetManager.prototype = {
     return this;
   },
 
-  /** Redraws current widget. */
-  redraw: function() { this.currentWidget && this.currentWidget.redraw(); },
+  /** Redraws the current widget. */
+  redraw: function() {
+    this.getCurrentWidget() && this.getCurrentWidget().redraw();
+  },
 
   /** Set as the active widget in the global registry. */
   setActive: function() {glift.global.activeInstanceId = this.id; },

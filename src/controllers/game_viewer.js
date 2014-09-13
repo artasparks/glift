@@ -40,11 +40,11 @@ glift.controllers.GameViewerMethods = {
    * will be.
    */
   getNextVariationNumber: function() {
-    if (this.currentMoveNumber > this.treepath.length ||
-        this.treepath[this.currentMoveNumber] === undefined) {
+    if (this.currentMoveNumber() > this.treepath.length ||
+        this.treepath[this.currentMoveNumber()] === undefined) {
       return 0;
     } else {
-      return this.treepath[this.currentMoveNumber];
+      return this.treepath[this.currentMoveNumber()];
     }
   },
 

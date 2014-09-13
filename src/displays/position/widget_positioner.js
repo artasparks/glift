@@ -119,16 +119,25 @@ glift.displays.position._WidgetPositioner.prototype = {
     var horzSplits = this.splitDivBoxHoriz();
     var boxes = new glift.displays.position.WidgetBoxes();
     boxes.first(this.calculateColumn(
-        splits.first, horzSplits[0], glift.enums.boardAlignments.RIGHT));
-    boxes.second(this.calculateColumn(splits.second, horzSplits[1], null));
+        splits.first,
+        horzSplits[0],
+        glift.enums.boardAlignments.RIGHT,
+        0 /* startTop */));
+    boxes.second(this.calculateColumn(
+        splits.second,
+        horzSplits[1],
+        null,
+        boxes.first().getBbox(boxes.first().ordering[0]).top()));
     return boxes;
   },
 
   /**
    * Calculate the a widget column.  General enough that it's used for vertical
    * or horizontal positioning.
+   *
+   * Returns the completed WidgetColumn.
    */
-  calculateColumn: function(recalCol, wrapperDiv, alignment) {
+  calculateColumn: function(recalCol, wrapperDiv, alignment, startTop) {
     var column = new glift.displays.position.WidgetColumn();
     var components = glift.enums.boardComponents;
     var divBoxSplits = [wrapperDiv];
@@ -136,7 +145,7 @@ glift.displays.position._WidgetPositioner.prototype = {
     column.setColumnOrdering(recalCol);
     if (ratios.length > 1) {
       // We remove the last ratio, so we can be exact about the last component
-      // ratio we assume that:
+      // ratio because we assume that:
       // splitN.ratio = 1 - split1.ratio + split2.ratio + ... splitN-1.ratio.
       //
       // This splits a div box into rows.
@@ -158,7 +167,7 @@ glift.displays.position._WidgetPositioner.prototype = {
       column.setComponent(components.BOARD, board);
     }
 
-    var top = 0;
+    var top = startTop || 0;
     var previousComp = null;
     var colWidth = board ? board.width() : wrapperDiv.width();
     var colLeft = board ? board.left() : wrapperDiv.left();

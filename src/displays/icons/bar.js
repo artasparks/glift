@@ -96,11 +96,14 @@ glift.displays.icons._IconBar.prototype = {
     this.svg.append(svglib.group().attr('id', this.idGen.tempIconGroup()));
     for (var i = 0, ii = this.icons.length; i < ii; i++) {
       var icon = this.icons[i];
-      container.append(svglib.path()
+      var path = svglib.path()
         .attr('d', icon.iconStr)
-        .attr('fill', this.theme.icons.DEFAULT.fill)
         .attr('id', icon.elementId)
-        .attr('transform', icon.transformString()));
+        .attr('transform', icon.transformString());
+      for (var key in this.theme.icons.DEFAULT) {
+        path.attr(key, this.theme.icons.DEFAULT[key]);
+      }
+      container.append(path);
     }
   },
 
@@ -252,15 +255,20 @@ glift.displays.icons._IconBar.prototype = {
       if (!glift.platform.isMobile()) {
         actionsForIcon.mouseover = iconActions[iconName].mouseover ||
           function(event, widgetRef, icon) {
-            glift.dom.elem(icon.elementId)
-                .attr('fill', widgetRef.iconBar.theme.icons.DEFAULT_HOVER.fill);
+            var elem = glift.dom.elem(icon.elementId);
+            var theme = widgetRef.iconBar.theme.icons;
+            for (var key in theme.DEFAULT_HOVER) {
+              elem.attr(key, theme.DEFAULT_HOVER[key]);
+            }
           };
         actionsForIcon.mouseout = iconActions[iconName].mouseout ||
           function(event, widgetRef, icon) {
             var elem = glift.dom.elem(icon.elementId)
-            // elem can be null during transitions.
-            if (elem) {
-              elem.attr('fill', widgetRef.iconBar.theme.icons.DEFAULT.fill);
+            if (elem) { // elem can be null during transitions.
+              var theme = widgetRef.iconBar.theme.icons;
+              for (var key in theme.DEFAULT) {
+                elem.attr(key, theme.DEFAULT[key]);
+              }
             }
           };
       }

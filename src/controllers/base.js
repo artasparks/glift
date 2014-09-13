@@ -24,7 +24,6 @@ var BaseController = function() {
   this.movetree = undefined;
   this.goban = undefined;
   this.captureHistory = [];
-  this.currentMoveNumber = 0;
 };
 
 BaseController.prototype = {
@@ -69,7 +68,6 @@ BaseController.prototype = {
    */
   // TODO(kashomon): Maybe this shouldn't increment move number?
   recordCaptures: function(captures) {
-    this.currentMoveNumber++;
     this.captureHistory.push(captures)
     return this;
   },
@@ -88,12 +86,26 @@ BaseController.prototype = {
   initialize: function() {
     var rules = glift.rules;
     this.treepath = rules.treepath.parseInitPosition(this.initialPosition);
-    this.currentMoveNumber = this.treepath.length;
     this.movetree = rules.movetree.getFromSgf(this.sgfString, this.treepath);
     var gobanData = rules.goban.getFromMoveTree(this.movetree, this.treepath);
     this.goban = gobanData.goban;
     this.captureHistory = gobanData.captures;
     return this;
+  },
+
+  /** Get the current move number.  */
+  currentMoveNumber: function(treepath) {
+    return this.captureHistory.length;
+  },
+
+  /** Get the treepath to the current position */
+  pathToCurrentPosition: function() {
+    return this.movetree.treepathToHere();
+  },
+
+  /** Set the movetree, gobanw, and capture history  */
+  setPosition: function(treepath) {
+    // this.treepath...
   },
 
   /**
@@ -134,7 +146,7 @@ BaseController.prototype = {
     if (this.captureHistory.length === 0) {
       return { BLACK: [], WHITE: [] };
     }
-    return this.captureHistory[this.currentMoveNumber - 1];
+    return this.captureHistory[this.currentMoveNumber() - 1];
   },
 
   /**
@@ -183,11 +195,11 @@ BaseController.prototype = {
    *   - We need to update the current move number.
    */
   nextMove: function(varNum) {
-    if (this.treepath[this.currentMoveNumber] !== undefined &&
+    if (this.treepath[this.currentMoveNumber()] !== undefined &&
         (varNum === undefined ||
-        this.treepath[this.currentMoveNumber] === varNum)) {
+        this.treepath[this.currentMoveNumber()] === varNum)) {
       // Don't mess with the treepath, if we're 'on variation'.
-      this.movetree.moveDown(this.treepath[this.currentMoveNumber]);
+      this.movetree.moveDown(this.treepath[this.currentMoveNumber()]);
     } else {
       varNum = varNum === undefined ? 0 : varNum;
       if (varNum >= 0 &&
@@ -209,16 +221,14 @@ BaseController.prototype = {
    * Returns null in the case that there is no previous move.
    */
   prevMove: function() {
-    if (this.currentMoveNumber === 0) {
+    if (this.currentMoveNumber() === 0) {
       return null;
     }
     var captures = this.getCaptures();
     var allCurrentStones = this.movetree.properties().getAllStones();
     this.captureHistory = this.captureHistory.slice(
-        0, this.currentMoveNumber - 1);
+        0, this.currentMoveNumber() - 1);
     this.goban.unloadStones(allCurrentStones, captures);
-    this.currentMoveNumber = this.currentMoveNumber === 0 ?
-        this.currentMoveNumber : this.currentMoveNumber - 1;
     this.movetree.moveUp();
     var displayData = glift.bridge.intersections.previousBoardData(
         this.movetree, allCurrentStones, captures, this.problemConditions);
@@ -233,7 +243,7 @@ BaseController.prototype = {
     // Recall that currentMoveNumber  s the same as the depth number ==
     // this.treepath.length (if at the end).  Thus, if the old treepath was
     // [0,1,2,0] and the currentMoveNumber was 2, we'll have [0, 1, num].
-    this.treepath = this.treepath.slice(0, this.currentMoveNumber);
+    this.treepath = this.treepath.slice(0, this.currentMoveNumber());
     this.treepath.push(num % this.movetree.node().numChildren());
     return this;
   },
@@ -244,7 +254,7 @@ BaseController.prototype = {
    * Otherwise, it will be 0.
    */
   getNextVariation: function() {
-    return this.treepath[this.currentMoveNumber] || 0;
+    return this.treepath[this.currentMoveNumber()] || 0;
   },
 
   /**
@@ -254,7 +264,6 @@ BaseController.prototype = {
     this.movetree = this.movetree.getTreeFromRoot();
     this.goban = glift.rules.goban.getFromMoveTree(this.movetree, []).goban;
     this.captureHistory = []
-    this.currentMoveNumber = 0;
     return this.getEntireBoardState();
   },
 

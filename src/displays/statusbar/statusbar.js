@@ -40,11 +40,12 @@ glift.displays.statusbar._StatusBar.prototype = {
     this.iconBar = glift.displays.icons.bar({
       divId: this.divId,
       theme: this.theme.statusBar,
-      icons: ['game-info', 'loading-move-indicator'],
+      icons: ['game-info', 'loading-move-indicator', 'fullscreen', 'settings-wrench'],
       positioning: this.bbox,
       parentBbox: this.parentBbox
     })
     this.iconBar.addTempText(
-        'loading-move-indicator', '14', 'black');
+        'loading-move-indicator', '14', this.theme.statusBar.icons.DEFAULT.fill);
+    return this;
   }
 };

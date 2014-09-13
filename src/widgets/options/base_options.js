@@ -106,7 +106,7 @@ glift.widgets.options.baseOptions = {
     componentsToUse: [
       'BOARD',
       'COMMENT_BOX',
-      // 'STATUS_BAR',
+      'STATUS_BAR',
       'ICONBAR'
     ],
 
@@ -229,10 +229,10 @@ glift.widgets.options.baseOptions = {
      */
     oneColumnSplits: {
       first: [
-        { component: 'STATUS_BAR',   ratio: 0.05 },
+        { component: 'STATUS_BAR',   ratio: 0.06 },
         { component: 'BOARD',       ratio: 0.67 },
         { component: 'COMMENT_BOX', ratio: 0.18 },
-        { component: 'ICONBAR',     ratio: 0.10 }
+        { component: 'ICONBAR',     ratio: 0.09 }
       ]
     },
 
@@ -483,6 +483,32 @@ glift.widgets.options.baseOptions = {
       mouseover: function() {},
       mouseout: function() {},
       tooltip: 'Shows if the problem is solved'
+    },
+
+    //////////////////////
+    // Status Bar Icons //
+    //////////////////////
+
+    'game-info': {
+      click: function() {},
+      tooltip: 'Show the game info'
+    },
+
+    'loading-move-indicator': {
+      click: function() {},
+      mouseover: function() {},
+      mouseout: function() {},
+      tooltip: 'Shows the current move number'
+    },
+
+    'fullscreen': {
+      click: function() {},
+      tooltip: 'Expand display to fill entire screen.'
+    },
+
+    'settings-wrench': {
+      click: function() {},
+      tooltip: 'Show Glift Settings'
     }
   }
 };

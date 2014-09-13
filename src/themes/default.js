@@ -98,14 +98,15 @@ glift.themes.registered.DEFAULT = {
     // Minimum horizontal margin in pixels.
     horzMargin: 5,
 
-    DEFAULT: { // TODO(kashomon): Change to default instead of DEFAULT.
+    DEFAULT: {
       fill: "#000",
       stroke: 'black'
       //fill: "90-#337-#55B"
     },
-    DEFAULT_HOVER: { // TODO(kashomon): Change to DEFAULT_HOVER
+
+    DEFAULT_HOVER: {
       fill: '#AAA',
-      stroke: 'black'
+      stroke: '#AAA'
       //fill: "90-#337-#55D"
     },
 
@@ -125,17 +126,19 @@ glift.themes.registered.DEFAULT = {
 
   statusBar: {
     icons: {
-      vertMargin: 2,
+      vertMargin: 4,
       horzMargin: 5,
 
       DEFAULT: {
         fill: "#000",
-        stroke: 'black'
+        stroke: '#000',
+        opacity: 1.0
       },
 
       DEFAULT_HOVER: {
-        fill: '#AAA',
-        stroke: 'black'
+        fill: '#000',
+        stroke: '#000',
+        opacity: 0.3
       },
 
       tooltips: {

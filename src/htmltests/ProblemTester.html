@@ -171,9 +171,9 @@
             drawBoardCoords: true
           }
         });
-        $(window).resize(function() {
-          basicProblem.destroy().draw();
-        });
+        window.onresize = function() {
+          basicProblem.redraw();
+        };
       </script>
     </div>
   </body>

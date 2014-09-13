@@ -18,12 +18,14 @@ glift.controllers.baseTest = function() {
 
   test('Test NextMove / Prev Move', function() {
     var base = glift.controllers.base().initOptions({sgfString: capturetest});
+    deepEqual(base.currentMoveNumber(), 0);
+
     var bstone = conv('sb');
     var wstones = glift.sgf.convertFromLabelArray(
         ['sa', 'qb', 'rb', 'qc', 'rc']);
 
     var data = base.nextMove();
-    deepEqual(base.currentMoveNumber, 1, 'Must number must be 1');
+    deepEqual(base.currentMoveNumber(), 1, 'Must number must be 1');
 
     var captures = base.getCaptures();
     deepEqual(captures.WHITE.length, 5, 'There must be 5 captures');
@@ -45,23 +47,23 @@ glift.controllers.baseTest = function() {
         sgfString: complexProblem
     });
     deepEqual(base.sgfString, complexProblem);
-    deepEqual(base.currentMoveNumber, 0);
+    deepEqual(base.currentMoveNumber(), 0);
     deepEqual(base.treepath, []);
     deepEqual(base.getNextVariation(), 0);
 
     base.nextMove(1);
-    deepEqual(base.currentMoveNumber, 1);
+    deepEqual(base.currentMoveNumber(), 1);
     deepEqual(base.getNextVariation(), 0);
     deepEqual(base.treepath, [1]);
     deepEqual(base.movetree.nextMoves().length, 3);
 
     base.nextMove(2);
-    deepEqual(base.currentMoveNumber, 2);
+    deepEqual(base.currentMoveNumber(), 2);
     deepEqual(base.getNextVariation(), 0);
     deepEqual(base.treepath, [1, 2]);
 
     base.prevMove();
-    deepEqual(base.currentMoveNumber, 1);
+    deepEqual(base.currentMoveNumber(), 1);
     deepEqual(base.treepath, [1, 2]);
     deepEqual(base.getNextVariation(), 2);
 

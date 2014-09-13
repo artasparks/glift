@@ -75,6 +75,11 @@ glift.displays.position.WidgetColumn.prototype = {
     this.mapping[component] = box;
   },
 
+  /** Get the boinding box of a component or return null*/
+  getBbox: function(component) {
+    return this.mapping[component] || null;
+  },
+
   /** Set the column from an ordering. */
   setColumnOrdering: function(column) {
     var ordering = [];

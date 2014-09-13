@@ -1,5 +1,5 @@
 /**
- * The base web UI widget.  It can be extended, if necessary.
+ * The base web UI widget.
  */
 glift.widgets.BaseWidget = function(
     divId, sgfOptions, displayOptions, actions, manager) {
@@ -95,6 +95,8 @@ glift.widgets.BaseWidget.prototype = {
         parentDivBbox,
         theme);
     glift.util.majorPerfLog('IconBar');
+    divIds.ICONBAR && this.iconBar.initIconActions(
+        this, this.actions.iconActions);
 
     divIds.STATUS_BAR && this._createStatusBar(
         divIds.STATUS_BAR,
@@ -103,8 +105,7 @@ glift.widgets.BaseWidget.prototype = {
         this.sgfOptions.icons,
         theme);
     glift.util.majorPerfLog('StatusBar');
-
-    divIds.ICONBAR && this.iconBar.initIconActions(
+    divIds.STATUS_BAR && this.statusBar.iconBar.initIconActions(
         this, this.actions.iconActions);
 
     glift.util.majorPerfLog('Before stone event creation');
@@ -294,6 +295,10 @@ glift.widgets.BaseWidget.prototype = {
     return this;
   },
 
+  /**
+   * Reload the problem.  Note: This is too problem specific and probably needs
+   * to be rethought
+   */
   reload: function() {
     if (this.correctness !== undefined) {
       this.correctNextSet = undefined;
@@ -301,6 +306,24 @@ glift.widgets.BaseWidget.prototype = {
       this.totalCorrectAnswers = undefined;
     }
     this.redraw();
+  },
+
+  /**
+   * Gets the current state of the widget, so what we can accurately redraw the
+   * widget.
+   */
+  getCurrentState: function() {
+    // TODO(kashomon): Make a full-fledged immutable object.
+    return {
+      currentTreepath: this.controller.treepathToHere()
+    };
+  },
+
+  /**
+   * Set the widget state from a state object.
+   */
+  setState: function() {
+    throw new Error('Not supported');
   },
 
   /**

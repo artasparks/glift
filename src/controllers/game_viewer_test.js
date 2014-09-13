@@ -7,7 +7,7 @@ glift.controllers.gameViewerTest = function() {
   test('Test Create', function() {
     var gameViewer = glift.controllers.gameViewer({ sgfString: problem });
     ok(gameViewer !== undefined, 'Make sure we can actually create an obj');
-    deepEqual(gameViewer.currentMoveNumber, 0, 'index init\'d to 0');
+    deepEqual(gameViewer.currentMoveNumber(), 0, 'index init\'d to 0');
     deepEqual(gameViewer.treepath, [], 'Gamepath set to beginning');
   });
 
@@ -19,7 +19,7 @@ glift.controllers.gameViewerTest = function() {
     ok(displayData !== undefined);
 
     // NextMove Assertions
-    deepEqual(gameViewer.currentMoveNumber, 1);
+    deepEqual(gameViewer.currentMoveNumber(), 1);
     deepEqual(gameViewer.treepath, [0]);
     ok(move, 'Must exist');
     deepEqual(move.color, states.BLACK); // m = 12, c = 2;
@@ -30,7 +30,7 @@ glift.controllers.gameViewerTest = function() {
 
     // NextMove Assertions
     var displayData = gameViewer.nextMove();
-    deepEqual(gameViewer.currentMoveNumber, 2);
+    deepEqual(gameViewer.currentMoveNumber(), 2);
     deepEqual(gameViewer.treepath, [0, 0]);
     var move = gameViewer.movetree.getLastMove();
     ok(move, 'Must exist');
@@ -42,7 +42,7 @@ glift.controllers.gameViewerTest = function() {
 
     // PrevMove Assertions
     var displayData = gameViewer.prevMove();
-    deepEqual(gameViewer.currentMoveNumber, 1);
+    deepEqual(gameViewer.currentMoveNumber(), 1);
     deepEqual(gameViewer.treepath, [0,0]);
     var moveToRemove = move;
     deepEqual(move.point.toString(), '13,2');
@@ -55,7 +55,7 @@ glift.controllers.gameViewerTest = function() {
     var gameViewer = glift.controllers.gameViewer({ sgfString: problem });
     var fullData = gameViewer.setNextVariation(1).nextMove();
     var move = gameViewer.movetree.getLastMove();
-    deepEqual(gameViewer.currentMoveNumber, 1);
+    deepEqual(gameViewer.currentMoveNumber(), 1);
     deepEqual(gameViewer.treepath, [1]);
     deepEqual(move.color, states.BLACK);
     deepEqual(move.point.toString(), '12,0'); // m = 12, a = 0
@@ -81,10 +81,10 @@ glift.controllers.gameViewerTest = function() {
     gameViewer.nextMove(); // [1,1,1,0x]
     gameViewer.prevMove(); // [1,1,1x,0]
     gameViewer.prevMove(); // [1,1x,1,0]
-    deepEqual(gameViewer.currentMoveNumber, 2);
+    deepEqual(gameViewer.currentMoveNumber(), 2);
     deepEqual(gameViewer.treepath, [1,1,1,0]);
     gameViewer.setNextVariation(0);
-    deepEqual(gameViewer.currentMoveNumber, 2);
+    deepEqual(gameViewer.currentMoveNumber(), 2);
     deepEqual(gameViewer.treepath, [1,1,0]);
   });
 
