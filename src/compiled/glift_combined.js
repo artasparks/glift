@@ -1346,7 +1346,7 @@ glift.themes.registered.DEFAULT = {
       // fontFamily: 'Palatino'
     },
 
-    tooltipTimeout: 2000 // milliseconds
+    tooltipTimeout: 1000 // milliseconds
   },
 
   commentBox:  {
@@ -3773,8 +3773,9 @@ glift.displays.icons._IconBar = function(
   this.svg = undefined; // initialized by draw
   this.idGen = glift.displays.ids.generator(this.divId);
 
-  // When we need timeouts for tooltips.
+  // Data related to tool tips.
   this.tooltipTimer = undefined;
+  this.tooltipId = undefined;
 
   // Post constructor initializiation
   this._initIconIds(); // Set the ids for the icons above.
@@ -3783,17 +3784,15 @@ glift.displays.icons._IconBar = function(
 
 glift.displays.icons._IconBar.prototype = {
   _initNameMapping: function() {
-    var that = this;
     this.forEachIcon(function(icon) {
-      that.nameMapping[icon.iconName] = icon;
-    });
+      this.nameMapping[icon.iconName] = icon;
+    }.bind(this));
   },
 
   _initIconIds: function() {
-    var that = this;
     this.forEachIcon(function(icon) {
-      icon.setElementId(that.idGen.icon(icon.iconName));
-    });
+      icon.setElementId(this.idGen.icon(icon.iconName));
+    }.bind(this));
   },
 
   draw: function() {
@@ -4010,6 +4009,20 @@ glift.displays.icons._IconBar.prototype = {
   _initOneIconAction: function(parentWidget, icon, eventName, eventFunc) {
     var buttonId = this.idGen.button(icon.iconName);
     glift.dom.elem(buttonId).on(eventName, function(event) {
+      if (eventName === 'click' && this.tooltipTimer) {
+        // Prevent the tooltip from appearing.
+        clearTimeout(this.tooltipTimer);
+        this.tooltipTimer = null;
+      }
+      if (this.tooltipId) {
+        // Clear the tool tip div if it exists
+        glift.dom.elem(this.tooltipId) &&
+            glift.dom.elem(this.tooltipId).remove();
+        this.tooltipId = null;
+      }
+
+      // We've interacted with this widget.  Set this widget as active for the
+      // purposes of key presses.
       parentWidget.manager.setActive();
       eventFunc(event, parentWidget, icon, this);
     }.bind(this));
@@ -4018,7 +4031,6 @@ glift.displays.icons._IconBar.prototype = {
   /** Initialize the icon tooltips. */
   _initializeTooltip: function(icon, tooltip) {
     var tooltipId = this.divId + '_tooltip';
-    var that = this;
     var id = this.idGen.button(icon.iconName);
     glift.dom.elem(id).on('mouseover', function(e) {
       var tooltipTimerFunc = function() {
@@ -4030,21 +4042,21 @@ glift.displays.icons._IconBar.prototype = {
           'z-index': 2,
           boxSizing: 'border-box'
         };
-        for (var key in that.theme.icons.tooltips) {
-          baseCssObj[key] = that.theme.icons.tooltips[key];
+        for (var key in this.theme.icons.tooltips) {
+          baseCssObj[key] = this.theme.icons.tooltips[key];
         }
         newDiv.css(baseCssObj);
-        var elem = glift.dom.elem(that.divId);
+        var elem = glift.dom.elem(this.divId);
         if (elem) {
           // Elem can be null if we've started the time and changed the state.
           elem.append(newDiv);
+          this.tooltipId = tooltipId;
         }
-        // document.getElementById(that.divId).appendChild(newDiv.el);
         this.tooltipTimer = null;
       }.bind(this);
       this.tooltipTimer = setTimeout(
-          tooltipTimerFunc, that.theme.icons.tooltipTimeout);
-    });
+          tooltipTimerFunc, this.theme.icons.tooltipTimeout);
+    }.bind(this));
     glift.dom.elem(id).on('mouseout', function(e) {
       if (this.tooltipTimer != null) {
         clearTimeout(this.tooltipTimer);
@@ -4052,7 +4064,7 @@ glift.displays.icons._IconBar.prototype = {
       this.tooltipTimer = null;
       // Remove if it exists.
       glift.dom.elem(tooltipId) && glift.dom.elem(tooltipId).remove();
-    });
+    }.bind(this));
   },
 
 
