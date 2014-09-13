@@ -68,7 +68,7 @@
 <script type="text/javascript" src="../displays/environment.js"></script>
 <script type="text/javascript" src="../displays/ids.js"></script>
 <script type="text/javascript" src="../displays/line_box.js"></script>
-<script type="text/javascript" src="../displays/position_widget.js"></script>
+<script type="text/javascript" src="../displays/not_selectable.js"></script>
 <script type="text/javascript" src="../displays/resized_box.js"></script>
 <!-- Displays board -->
 <script type="text/javascript" src="../displays/board/board.js"></script>
@@ -98,6 +98,12 @@
 <script type="text/javascript" src="../displays/svg/svg.js"></script>
 <script type="text/javascript" src="../displays/svg/pathutils.js"></script>
 <script type="text/javascript" src="../displays/svg/svgobj.js"></script>
+<!-- Displays statusbar -->
+<script type="text/javascript" src="../displays/statusbar/statusbar.js"></script>
+<!-- Displays position -->
+<script type="text/javascript" src="../displays/position/position.js"></script>
+<script type="text/javascript" src="../displays/position/widget_boxes.js"></script>
+<script type="text/javascript" src="../displays/position/widget_positioner.js"></script>
 <!-- Rules -->
 <script type="text/javascript" src="../rules/rules.js"></script>
 <script type="text/javascript" src="../rules/autonumber.js"></script>
@@ -152,8 +158,6 @@
 <script type="text/javascript" src="../displays/cropbox_test.js"></script>
 <script type="text/javascript" src="../displays/environment_test.js"></script>
 <script type="text/javascript" src="../displays/ids_test.js"></script>
-<script type="text/javascript" src="../displays/position_widget_test.js"></script>
-<script type="text/javascript" src="../displays/recalc_splits_test.js"></script>
 <script type="text/javascript" src="../displays/resized_box_test.js"></script>
 <!-- Displays commentbox Tests -->
 <script type="text/javascript" src="../displays/commentbox/sanitize_test.js"></script>
@@ -164,6 +168,8 @@
 <!-- Displays svg Tests -->
 <script type="text/javascript" src="../displays/svg/pathutils_test.js"></script>
 <script type="text/javascript" src="../displays/svg/svgobj_test.js"></script>
+<!-- Displays position Tests -->
+<script type="text/javascript" src="../displays/position/widget_positioner_test.js"></script>
 <!-- Rules Tests -->
 <script type="text/javascript" src="../rules/autonumber_test.js"></script>
 <script type="text/javascript" src="../rules/goban_test.js"></script>
@@ -210,11 +216,11 @@ $(document).ready(function() {
   glift.displays.resizedBoxTest();
   glift.displays.boardPointsTest();
   glift.displays.environmentTest();
-  glift.displays.recalcSplitsTest();
-  glift.displays.positionWidgetTest();
   glift.displays.idsTest();
 
   glift.displays.commentbox.sanitizeTest();
+
+  glift.displays.position.widgetPositionerTest();
 
   glift.displays.icons.wrappedIconTest();
 

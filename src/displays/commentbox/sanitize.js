@@ -1,3 +1,6 @@
+/**
+ * Tags currently allowed in the comment box.
+ */
 glift.displays.commentbox.sanitizeWhitelist_ = {
   'br': true,
   'b': true,

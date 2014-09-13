@@ -42,6 +42,8 @@ DIR_ORDER = [
     'displays/gui',
     'displays/icons',
     'displays/svg',
+    'displays/statusbar',
+    'displays/position',
 
     # Rules and display are intentionally not linked, except via
     # bridge and the controllers.
@@ -71,6 +73,7 @@ def CreateImport(name):
   return '<script type="text/javascript" src="../' + name + '"></script>'
 
 def AppendImports(out):
+  """ Concatenates a list of imports together """
   import_str = ''
   for section in out:
     for line in section:
@@ -94,6 +97,9 @@ def AddImports(src, tests):
     fd.close
 
 def GetFileList(scriptPath):
+  """ Gets list of files to be used in import/binary import creation.
+
+  """
   curdir = os.path.realpath(os.path.dirname(scriptPath))
   os.chdir(curdir)
   out = []
@@ -106,6 +112,8 @@ def GetFileList(scriptPath):
   return out
 
 def SeparateFiles(flist):
+  """ Separates a grouping of files into tests and non-tests.
+  """
   out = []
   out_test = []
   for grouping in flist:
@@ -129,12 +137,16 @@ def SeparateFiles(flist):
   return (out, out_test)
 
 
-def CreateHtmlImports(imps, suffix):
+def CreateHtmlImports(srcs, suffix):
   """
   Create the literal HTML import strings.
+
+  srcs: List of List of filenames.  The inner list is grouped by directory.
+  suffix: String suffix to append onto comment string. Right now, this is just
+      used to display tests.
   """
   out = []
-  for grouping in imps:
+  for grouping in srcs:
     if len(grouping) > 1:
       direct = grouping.pop(0)
       out.append('<!-- ' + direct.replace('/', ' ').replace(
@@ -170,8 +182,11 @@ def CombineSourceFiles(srcs):
   return outString
 
 def main(argv=None):
+  """
+  Generate imports for the HTML test files and, optionally concatenate and
+  compile the JavaScript.
+  """
   print ' '.join(sys.argv)
-  curdir = sys.argv[0]
   flags = set(sys.argv[1:])
   flist = GetFileList(sys.argv[0])
 

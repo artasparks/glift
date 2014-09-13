@@ -106,7 +106,7 @@ glift.widgets.options.baseOptions = {
     componentsToUse: [
       'BOARD',
       'COMMENT_BOX',
-      // 'TITLE_BAR', // Not currently supported
+      'STATUS_BAR',
       'ICONBAR'
     ],
 
@@ -114,6 +114,8 @@ glift.widgets.options.baseOptions = {
      * For all correct, there are multiple correct answers that a user must get.
      * This allows us to specify (in ms) how long the user has until the problem
      * is automatically reset.
+     *
+     * Should be overridden by the widget options.
      */
     correctVariationsResetTime: undefined,
 
@@ -123,51 +125,6 @@ glift.widgets.options.baseOptions = {
      * CORRECT_VARIATIONS_PROBLEM.
      */
     totalCorrectVariationsOverride: undefined,
-
-    /**
-     * Book Data. Data used for
-     *
-     * If defined, should have the following form:
-     *
-     *  {
-     *    chapterTitle: "Chapter Title"
-     *    digramSize: "large" or "small"
-     *    ... future options
-     *  }
-     */
-    // TODO(kashomon): Remove this in favor of a general data option.
-    bookData: {
-      /**
-       * The diagram type.
-       * See: glift.enums.diagramTypes
-       */
-      diagramType: 'GAME_REVIEW',
-
-      /**
-       * Show the diagram.  Allows us to selectively keep
-       */
-      showDiagram: true
-
-      /**
-       * The number at which to start number.  By default, begins numbering at
-       * the number of moves + the nums from the most recent branch.  Can be
-       * overwridden though
-       */
-      // numberingStartNum:
-
-      /**
-       * How many moves ago to start performing numbering.
-       *
-       * By default, starts from:
-       *    min(most recent brach, 20 moves ago)
-       */
-      // minusMovesOverride:...:
-
-      /**
-       * Display the diagram in a chapterTitle format.
-       */
-      // chapterTitle:
-    },
 
     //-------------------------------------------------------------------------
     // These options must always be overriden by the widget type overrides.
@@ -197,8 +154,8 @@ glift.widgets.options.baseOptions = {
     controllerFunc: undefined,
 
     /**
-     * The icons to use in the icon-bar.  This is a list of icon-names, which
-     * must be spceified in glift.displays.gui.icons.
+     * The names of the icons to use in the icon-bar.  This is a list of
+     * icon-names, which must be spceified in glift.displays.icons.svg.
      */
     icons: undefined,
 
@@ -207,6 +164,10 @@ glift.widgets.options.baseOptions = {
      */
     stoneClick: undefined,
 
+    /**
+     * The names of the icons to use in the status-bar.
+     */
+    statusBarIcons: undefined,
 
     /**
      * Mouseover/mouseout override for stones.
@@ -249,27 +210,6 @@ glift.widgets.options.baseOptions = {
   allowWrapAround: false,
 
   /**
-   * Global book data contains settings for book-creation.
-   *
-   * If defined, should have the following format:
-   *  {
-   *    title: 'My book',
-   *    author: 'Kashomon',
-   *    template: '/url/to/book/template.tex' or 'raw string'
-   *  }
-   */
-  globalBookData: {
-    title: 'My Go Book',
-    subtitle: 'Going the distance!',
-    authors: [],
-    publisher: 'Created with Glift',
-    diagramsPerPage: 2,
-    templateUrl: '', // not supported yet
-    /** Automatically number the diagrams. This prevents all number labels. */
-    autoNumber: true
-  },
-
-  /**
    * Misc options for the web display.
    */
   display: {
@@ -289,10 +229,9 @@ glift.widgets.options.baseOptions = {
      */
     oneColumnSplits: {
       first: [
-        // TODO(kashomon): Add support for a title bar
-        // { component: 'TITLE_BAR',   ratio: 0.05 },
-        { component: 'BOARD',       ratio: 0.70 },
-        { component: 'COMMENT_BOX', ratio: 0.20 },
+        { component: 'STATUS_BAR',   ratio: 0.05 },
+        { component: 'BOARD',       ratio: 0.67 },
+        { component: 'COMMENT_BOX', ratio: 0.18 },
         { component: 'ICONBAR',     ratio: 0.10 }
       ]
     },
@@ -305,10 +244,9 @@ glift.widgets.options.baseOptions = {
         { component: 'BOARD', ratio: 1 }
       ],
       second: [
-        // TODO(kashomon): Add support for a title bar
-        // { component: 'TITLE_BAR',     ratio: 0.10 },
-        { component: 'COMMENT_BOX',   ratio: 0.85 },
-        { component: 'ICONBAR',       ratio: 0.15 }
+        { component: 'STATUS_BAR',     ratio: 0.07 },
+        { component: 'COMMENT_BOX',   ratio: 0.83 },
+        { component: 'ICONBAR',       ratio: 0.10 }
       ]
     },
 
