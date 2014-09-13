@@ -106,7 +106,7 @@ glift.widgets.options.baseOptions = {
     componentsToUse: [
       'BOARD',
       'COMMENT_BOX',
-      'STATUS_BAR',
+      // 'STATUS_BAR',
       'ICONBAR'
     ],
 

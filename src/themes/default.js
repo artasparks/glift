@@ -149,7 +149,6 @@ glift.themes.registered.DEFAULT = {
 
       tooltipTimeout: 1500 // milliseconds
     }
->>>>>>> titlebar
   },
 
   commentBox:  {
