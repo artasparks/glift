@@ -122,7 +122,7 @@ glift.themes.registered.DEFAULT = {
       // fontFamily: 'Palatino'
     },
 
-    tooltipTimeout: 2000 // milliseconds
+    tooltipTimeout: 1000 // milliseconds
   },
 
   commentBox:  {
