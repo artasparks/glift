@@ -1,6 +1,6 @@
 glift.dom = {
   /**
-   * Construct a glift dom element. If arg is a string, assume an ID is being
+   * Constructs a glift dom element. If arg is a string, assume an ID is being
    * passed in. If arg is an object and has nodeType and nodeType is 1
    * (ELEMENT_NODE), 
    */
@@ -19,6 +19,7 @@ glift.dom = {
     return null;
   },
 
+  /** Creates a new div dom element with the relevant id. */
   newDiv: function(id) {
     var elem = glift.dom.elem(document.createElement('div'));
     elem.attr('id', id);

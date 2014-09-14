@@ -482,6 +482,7 @@ glift.widgets.options.baseOptions = {
     'multiopen-boxonly': {
       mouseover: function() {},
       mouseout: function() {},
+      click: function() {},
       tooltip: 'Shows if the problem is solved'
     },
 

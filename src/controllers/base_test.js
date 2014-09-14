@@ -76,4 +76,14 @@ glift.controllers.baseTest = function() {
     base.nextMove();
     deepEqual(base.getNextVariation(), 0);
   });
+
+  test('Initialize with a custom treepath', function() {
+    var base = glift.controllers.base().initOptions({
+        sgfString: complexProblem
+    });
+    deepEqual(base.currentMoveNumber(), 0);
+    base.initialize('0.0.0');
+    deepEqual(base.currentMoveNumber(), 2);
+    deepEqual(base.treepath, [0,0]);
+  });
 };

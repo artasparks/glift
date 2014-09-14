@@ -161,6 +161,9 @@
               disableZoomForMobile: true
             }
           });
+          window.onresize = function() {
+            gameViewer.redraw();
+          };
         })();
       </script>
     </div>

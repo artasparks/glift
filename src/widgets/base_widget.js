@@ -315,25 +315,33 @@ glift.widgets.BaseWidget.prototype = {
   getCurrentState: function() {
     // TODO(kashomon): Make a full-fledged immutable object.
     return {
-      currentTreepath: this.controller.treepathToHere()
+      currentTreepath: this.controller.pathToCurrentPosition()
     };
   },
 
   /**
-   * Set the widget state from a state object.
+   * Set the widget state from a state object and redraws.
    */
-  setState: function() {
-    throw new Error('Not supported');
+  applyState: function(stateObj) {
+    var types = glift.enums.widgetTypes;
+    if (this.sgfOptions.widgetType === types.REDUCED_GAME_VIEWER ||
+        this.sgfOptions.widgetType === types.GAME_VIEWER) {
+      var treepath = stateObj.currentTreepath;
+      this.controller.initialize(treepath);
+      this.applyBoardData(this.controller.getEntireBoardState());
+    }
+    // TODO(kashomon): Support problems here.
   },
 
   /**
    * Redraw the widget.  This also resets the widget state in perhaps confusing
    * ways.
    */
-  // TODO(kashomon): See issues/6: Change so that state isn't reset.
   redraw: function() {
     this.destroy();
+    var state = this.getCurrentState();
     this.draw();
+    this.applyState(state);
   },
 
   destroy: function() {
@@ -348,7 +356,6 @@ glift.widgets.BaseWidget.prototype = {
       document.body.keydown = null;
     }
     this.keyHandlerFunc = undefined;
-
     this.display = undefined;
   }
-}
+};

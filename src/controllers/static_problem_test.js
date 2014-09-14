@@ -30,7 +30,6 @@ glift.controllers.staticProblemTest = function() {
 
   test('Test Current Player Color', function() {
     var c = cont.staticProblem(options)
-    c.initialize();
     deepEqual(c.getCurrentPlayer(), states.BLACK, 'Must get player color');
   });
 
@@ -39,7 +38,6 @@ glift.controllers.staticProblemTest = function() {
         yes1 = conv('ob'),
         yes2 = conv('aa'),
         nope = conv('pc');
-    c.initialize();
     ok(c.canAddStone(yes1, states.BLACK), 'Must be allowed');
     ok(c.canAddStone(yes1, states.WHITE), 'Different color must be allowed');
     ok(c.canAddStone(yes2, states.BLACK), 'Must be allowed for a random position');
@@ -50,7 +48,6 @@ glift.controllers.staticProblemTest = function() {
   test('Test Add Stone: Failure', function() {
     var c = cont.staticProblem(options),
         pt = conv('pb');
-    c.initialize();
     var result = c.addStone(pt, states.BLACK);
     deepEqual(result.result, problemResults.FAILURE, 'Must be a failure');
   });
@@ -58,7 +55,6 @@ glift.controllers.staticProblemTest = function() {
   test('Test Add Stone: Incorrect - no variation', function() {
     var c = cont.staticProblem(options),
         pt = conv('aa');
-    c.initialize();
     var result = c.addStone(pt, states.BLACK);
     deepEqual(result.result, problemResults.INCORRECT, 'Must be incorrect');
   });
@@ -66,7 +62,6 @@ glift.controllers.staticProblemTest = function() {
   test('Test Add Stone: Incorrect - variation', function() {
     var c = cont.staticProblem(options),
         pt = conv('ob');
-    c.initialize();
     var result = c.addStone(pt, states.BLACK);
     deepEqual(result.result, problemResults.INCORRECT, 'Must be incorrect');
   });
@@ -79,7 +74,6 @@ glift.controllers.staticProblemTest = function() {
     });
     var pt = conv('ma');
     var possNext = [conv('oa'), conv('mc'), conv('nd')];
-    c.initialize();
     var result = c.addStone(pt, states.BLACK);
     deepEqual(result.result, problemResults.INDETERMINATE,
         'The result must be indeterminate');
@@ -94,7 +88,6 @@ glift.controllers.staticProblemTest = function() {
     var c = cont.staticProblem(options),
         pt = conv('nc'),
         nextPt  = conv('md');
-    c.initialize();
     var result = c.addStone(pt, states.BLACK);
     deepEqual(result.result, problemResults.INDETERMINATE,
         'Must be indeterminate: all children correct but position is not');
@@ -109,7 +102,6 @@ glift.controllers.staticProblemTest = function() {
         pt1 = conv('pd'),
         pt2 = conv('qe');
 
-    c.initialize(); // reset and try again
     var result = c.addStone(pt2, states.BLACK);
     deepEqual(result.result, problemResults.CORRECT, 'Must be correct');
 

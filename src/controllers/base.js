@@ -14,7 +14,7 @@ glift.controllers.base = function() {
 var BaseController = function() {
   // Options set with initOptions and intended to be immutable during the
   // lifetime of the controller.
-  this.sgfString = "";
+  this.sgfString = '';
   this.initialPosition = [];
   this.problemConditions = {};
 
@@ -35,9 +35,9 @@ BaseController.prototype = {
    */
   initOptions: function(sgfOptions) {
     if (sgfOptions === undefined) {
-      throw "Options is undefined!  Can't create controller"
+      throw 'Options is undefined!  Can\'t create controller'
     }
-    this.sgfString = sgfOptions.sgfString || "";
+    this.sgfString = sgfOptions.sgfString || '';
     this.initialPosition = sgfOptions.initialPosition || [];
     this.problemConditions = sgfOptions.problemConditions || undefined;
     this.initialize();
@@ -74,18 +74,22 @@ BaseController.prototype = {
 
   /**
    * Initialize the:
-   *  - initPosition -- description of where to start
-   *  - treepath -- the path to the current position.  An array of variaton
-   *  numbers
-   *  - movetree -- tree of move nodes from the SGF
-   *  - goban -- data structure describing the go board.  Really, the goban is
-   *  useful for telling you where stones can be placed, and (after placing)
-   *  what stones were captured.
-   *  - capture history -- the history of the captures
+   *  - initPosition -- Description of where to start.
+   *  - treepath -- The path to the current position.  An array of variaton
+   *    numbers.
+   *  - movetree -- Tree of move nodes from the SGF.
+   *  - goban -- Data structure describing the go board.  Really, the goban is
+   *    useful for telling you where stones can be placed, and (after placing)
+   *    what stones were captured.
+   *  - capture history -- The history of the captures.
+   *
+   * treepath: Optionally pass in the treepath from the beginning and use that
+   * instead of the initialPosition treepath.
    */
-  initialize: function() {
+  initialize: function(treepath) {
     var rules = glift.rules;
-    this.treepath = rules.treepath.parseInitPosition(this.initialPosition);
+    var initTreepath = treepath || this.initialPosition;
+    this.treepath = rules.treepath.parseInitPosition(initTreepath);
     this.movetree = rules.movetree.getFromSgf(this.sgfString, this.treepath);
     var gobanData = rules.goban.getFromMoveTree(this.movetree, this.treepath);
     this.goban = gobanData.goban;
@@ -93,7 +97,7 @@ BaseController.prototype = {
     return this;
   },
 
-  /** Get the current move number.  */
+  /** Get the current move number. */
   currentMoveNumber: function(treepath) {
     return this.captureHistory.length;
   },
@@ -101,11 +105,6 @@ BaseController.prototype = {
   /** Get the treepath to the current position */
   pathToCurrentPosition: function() {
     return this.movetree.treepathToHere();
-  },
-
-  /** Set the movetree, gobanw, and capture history  */
-  setPosition: function(treepath) {
-    // this.treepath...
   },
 
   /**
@@ -119,9 +118,9 @@ BaseController.prototype = {
    *      "1,2" : {
    *        point: {1, 2},
    *        STONE: "WHITE"
-   *      }
+   *      },
    *      ... etc ...
-   *    }
+   *    },
    *    comment : "foo"
    *  }
    */
