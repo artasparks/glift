@@ -516,6 +516,10 @@ glift.widgets.options.baseOptions = {
 
     unfullscreen: {
       click: function(event, widget, icon, iconBar) {
+        // We need to stop event propagation  because often the un-fullscreen
+        // button will be over some other clickable element.
+        event.preventDefault && event.preventDefault();
+        event.stopPropagation && event.stopPropagation();
         widget.statusBar && widget.statusBar.unfullscreen();
       },
       tooltip: 'Return display original size.'

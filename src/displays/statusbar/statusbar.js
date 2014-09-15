@@ -40,9 +40,16 @@ glift.displays.statusbar._StatusBar.prototype = {
         state = widget.getCurrentState();
     newDiv.css({
       position: 'absolute',
+      // this isn't quite right. 
       top: '0px', bottom: '0px', left: '0px', right: '0px',
       margin: '0px', padding: '0px',
-      'background-color': 'white'
+      // Some sites set the z-index obnoxiously high (looking at you bootstrap).
+      // So, to make it really fullscreen, we need to set the z-index pretty
+      // high.
+      'z-index': 11000,
+      'zIndex': 11000,
+      'background-color': 'rgba(255,255,255,0.7)',
+      'backgroundColor': 'rgba(255,255,255,0.7)'
     });
     body.append(newDiv);
     widget.manager.fullscreenDivId = newDivId;
