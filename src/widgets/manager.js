@@ -28,7 +28,14 @@ glift.widgets.WidgetManager = function(divId, sgfCollection, sgfColIndex,
   // Set as active, if the active instance hasn't already been set.
   !glift.global.activeInstanceId && this.setActive();
 
+  // The original div id.
   this.divId = divId;
+  // The fullscreen div id. Only set via the fullscreen button.
+  this.fullscreenDivId = null;
+
+  // If we set the window resize (done, for ex. in the case of full-screening),
+  // we track the window-resizing function.
+  this.oldWindowResize = null;
 
   // Note: At creation time of the manager, The param sgfCollection may either
   // be an array or a string representing a URL.  If the sgfCollection is a
@@ -84,11 +91,13 @@ glift.widgets.WidgetManager.prototype = {
 
   /** Redraws the current widget. */
   redraw: function() {
-    this.getCurrentWidget() && this.getCurrentWidget().redraw();
+    if (this.getCurrentWidget()) {
+      this.getCurrentWidget().redraw();
+    }
   },
 
   /** Set as the active widget in the global registry. */
-  setActive: function() {glift.global.activeInstanceId = this.id; },
+  setActive: function() { glift.global.activeInstanceId = this.id; },
 
   /** Gets the current widget object. */
   getCurrentWidget: function() { 
@@ -156,10 +165,19 @@ glift.widgets.WidgetManager.prototype = {
     }
   },
 
+  /** Get the currentDivId */
+  getDivId: function() {
+    if (this.fullscreenDivId) {
+      return this.fullscreenDivId;
+    } else {
+      return this.divId;
+    }
+  },
+
   /** Create a Sgf Widget. */
   createWidget: function(sgfObj) {
     return new glift.widgets.BaseWidget(
-        this.divId, sgfObj, this.displayOptions, this.actions, this);
+        this.getDivId(), sgfObj, this.displayOptions, this.actions, this);
   },
 
   /**
@@ -243,6 +261,18 @@ glift.widgets.WidgetManager.prototype = {
       }
     }.bind(this);
     checkDone(3); // Check that we've finished: (3 checks, 1.5s max time)
+  },
+
+  /** Enable auto-resizing of the glift instance. */
+  enableFullscreenAutoResize: function() {
+    if (window.onresize) { this.oldWindowResize = window.onresize; }
+    window.onresize = function() { this.redraw(); }.bind(this);
+  },
+
+  /** Disable auto-resizing of the glift instance. */
+  disableFullscreenAutoResize: function() {
+    window.onresize = this.oldWindowResize;
+    this.oldWindowResize = null;
   },
 
   /** Undraw the most recent widget and remove references to it. */

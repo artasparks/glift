@@ -4,11 +4,10 @@ glift.displays.statusbar = {
    */
   create: function(options) {
     return new glift.displays.statusbar._StatusBar(
-        options.divId,
-        options.bbox,
-        options.parentBbox,
-        options.icons,
-        options.theme).draw();
+        options.iconBarPrototype,
+        options.theme,
+        options.widget
+    );
   }
 };
 
@@ -17,35 +16,72 @@ glift.displays.statusbar = {
  * Game information like move number, settings, and game info.
  */
 glift.displays.statusbar._StatusBar = function(
-    divId, bbox, parentBbox, icons, theme) {
-  /** DivId of the title bar. */
-  this.divId = divId;
-  /** Bounding box of the divId. To save calculation time. */
-  this.bbox = bbox;
-  /** Bounding box of the parent divId. */
-  this.parentBbox = parentBbox;
-  /** General icons, including those not for the title bar. */
-  this.icons = icons;
-  /** Theme information. */
+    iconBarPrototype, theme, widget) {
+  this.iconBar = iconBarPrototype;
   this.theme = theme;
-
-  // Defined on draw.
-  this.iconBar = undefined;
+  this.widget = widget;
 };
 
 /** TitleBar methods. */
 glift.displays.statusbar._StatusBar.prototype = {
   draw: function() {
-    // TODO(kashomon): Change this to something more realistic.
-    this.iconBar = glift.displays.icons.bar({
-      divId: this.divId,
-      theme: this.theme.statusBar,
-      icons: ['game-info', 'loading-move-indicator', 'fullscreen', 'settings-wrench'],
-      positioning: this.bbox,
-      parentBbox: this.parentBbox
-    })
-    this.iconBar.addTempText(
-        'loading-move-indicator', '14', this.theme.statusBar.icons.DEFAULT.fill);
+    this.iconBar.draw();
     return this;
+  },
+
+  /** Make Glift full-screen */
+  fullscreen: function() {
+    var widget = this.widget,
+        wrapperDivId = widget.wrapperDiv,
+        wrapperDivEl = glift.dom.elem(wrapperDivId),
+        newDivId = wrapperDivId + '_fullscreen',
+        newDiv = glift.dom.newDiv(newDivId),
+        body = glift.dom.elem(document.body),
+        state = widget.getCurrentState();
+    newDiv.css({
+      position: 'absolute',
+      top: '0px', bottom: '0px', left: '0px', right: '0px',
+      margin: '0px', padding: '0px',
+      'background-color': 'white'
+    });
+    body.append(newDiv);
+    widget.manager.fullscreenDivId = newDivId;
+    widget.destroy();
+    widget.wrapperDiv = newDivId;
+    widget.draw();
+    widget.applyState(state);
+    widget.manager.enableFullscreenAutoResize();
+  },
+
+  /** Return Glift to non-fullscreen */
+  unfullscreen: function() {
+    var widget = this.widget,
+        wrapperDivEl = glift.dom.elem(widget.wrapperDiv),
+        state = widget.getCurrentState(),
+        manager = widget.manager,
+        state = widget.getCurrentState();
+
+    widget.destroy();
+    wrapperDivEl.remove(); // remove the fullscreen div completely
+    widget.wrapperDiv = widget.manager.divId;
+    manager.fullscreenDivId = null;
+    widget.draw();
+    widget.applyState(state);
+    widget.manager.disableFullscreenAutoResize();
+  },
+
+  /** Set the move number for the current move */
+  setMoveNumber: function(number) {
+    if (!this.iconBar.hasIcon) {
+      return;
+    }
+    var num = (number || '0') + ''; // Force to be a string.
+    var color = this.theme.statusBar.icons.DEFAULT.fill
+    var mod = num.length > 2 ? 0.3 : null;
+    this.iconBar.addTempText(
+        'loading-move-indicator',
+        number || '0',
+        { fill: color, stroke: color },
+        mod);
   }
 };

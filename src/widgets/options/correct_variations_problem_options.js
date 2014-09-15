@@ -12,7 +12,6 @@ glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
       return;
     }
     widget.applyBoardData(data);
-    var probTypes = glift.enums.problemTypes;
     var callback = widget.sgfOptions.problemCallback;
     if (widget.correctness === undefined) {
       if (data.result === problemResults.CORRECT) {
@@ -25,13 +24,13 @@ glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
             widget.iconBar.addTempText(
                 'multiopen-boxonly',
                 widget.numCorrectAnswers + '/' + widget.totalCorrectAnswers,
-                '#0CC');
+                { fill: '#0CC', stroke: '#0CC'});
             callback(problemResults.CORRECT);
           } else {
             widget.iconBar.addTempText(
                 'multiopen-boxonly',
                 widget.numCorrectAnswers + '/' + widget.totalCorrectAnswers,
-                '#000');
+                { fill: '#000', stroke: '#000'});
             setTimeout(function() {
               widget.controller.initialize();
               widget.applyBoardData(widget.controller.getEntireBoardState());

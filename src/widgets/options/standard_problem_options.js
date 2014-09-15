@@ -12,7 +12,6 @@ glift.widgets.options.STANDARD_PROBLEM = {
       return;
     }
     widget.applyBoardData(data);
-    var probTypes = glift.enums.problemTypes;
     var callback = widget.sgfOptions.problemCallback;
     if (data.result === problemResults.CORRECT) {
         widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'check', '#0CC');

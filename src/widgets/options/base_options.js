@@ -110,6 +110,16 @@ glift.widgets.options.baseOptions = {
       'ICONBAR'
     ],
 
+    /** Icons to use in the status bar. */
+    // TODO(kashomon): Make per widget type (mv num not necessary for problems?)
+    // TODO(kashomon): Enable game-info and settings when ready
+    statusBarIcons: [
+      // 'game-info',
+      'loading-move-indicator',
+      'fullscreen'
+      // 'settings-wrench'
+    ],
+
     /**
      * For all correct, there are multiple correct answers that a user must get.
      * This allows us to specify (in ms) how long the user has until the problem
@@ -163,11 +173,6 @@ glift.widgets.options.baseOptions = {
      * The action that is performed when a sure clicks on an intersection.
      */
     stoneClick: undefined,
-
-    /**
-     * The names of the icons to use in the status-bar.
-     */
-    statusBarIcons: undefined,
 
     /**
      * Mouseover/mouseout override for stones.
@@ -502,9 +507,18 @@ glift.widgets.options.baseOptions = {
       tooltip: 'Shows the current move number'
     },
 
-    'fullscreen': {
-      click: function() {},
+    fullscreen: {
+      click: function(event, widget, icon, iconBar) {
+        widget.statusBar && widget.statusBar.fullscreen();
+      },
       tooltip: 'Expand display to fill entire screen.'
+    },
+
+    unfullscreen: {
+      click: function(event, widget, icon, iconBar) {
+        widget.statusBar && widget.statusBar.unfullscreen();
+      },
+      tooltip: 'Return display original size.'
     },
 
     'settings-wrench': {

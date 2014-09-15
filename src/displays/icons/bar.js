@@ -13,7 +13,9 @@ glift.displays.icons.bar = function(options) {
       icons = options.icons || [],
       theme = options.theme,
       pbox = options.parentBbox,
-      position = options.positioning;
+      position = options.positioning,
+      allDivIds = options.allDivIds,
+      allPositioning = options.allPositioning;
   if (!theme) {
     throw new Error("Theme undefined in iconbar");
   }
@@ -21,11 +23,12 @@ glift.displays.icons.bar = function(options) {
     throw new Error("Must define an options 'divId' as an option");
   }
   return new glift.displays.icons._IconBar(
-      divId, position, icons, pbox, theme).draw();
+      divId, position, icons, pbox, theme, allDivIds, allPositioning);
 };
 
 glift.displays.icons._IconBar = function(
-    divId, position, iconsRaw, parentBbox, theme) {
+    divId, position, iconsRaw, parentBbox, theme,
+    allDivIds, allPositioning) {
   this.divId = divId;
   this.position = position;
   this.divBbox = glift.displays.bboxFromPts(
@@ -36,6 +39,10 @@ glift.displays.icons._IconBar = function(
   this.parentBbox = parentBbox;
   // Array of wrapped icons. See wrapped_icon.js.
   this.icons = glift.displays.icons.wrapIcons(iconsRaw);
+
+  // The positioning information for all divs.
+  this.allDivIds = allDivIds;
+  this.allPositioning = allPositioning;
 
   // Map of icon name to icon object. initialized with _initNameMapping
   // TODO(kashomon): Make this non-side-affecting.
@@ -180,19 +187,18 @@ glift.displays.icons._IconBar.prototype = {
   /**
    * Add some temporary text on top of an icon.
    */
-  addTempText: function(iconName, text, color) {
+  addTempText: function(iconName, text, attrsObj, textMod) {
     var svglib = glift.displays.svg;
     var bbox = this.getIcon(iconName).bbox;
-    // TODO(kashomon): Why does this constant work?  Replace the 0.54 nonsense
+    // TODO(kashomon): Why does this constant work?  Replace the 0.50 nonsense
     // with something more sensible.
-    var fontSize = bbox.width() * 0.50;
+    var textMultiplier = textMod || 0.50;
+    var fontSize = bbox.width() * textMultiplier;
     var id = this.idGen.tempIconText(iconName);
     var boxStrokeWidth = 7
     this.clearTempText(iconName);
-    this.svg.child(this.idGen.tempIconGroup()).appendAndAttach(svglib.text()
+    var textObj = svglib.text()
       .text(text)
-      .attr('fill', color)
-      .attr('stroke', color)
       .attr('class', 'tempIcon')
       .attr('font-family', 'sans-serif') // TODO(kashomon): Put in themes.
       .attr('font-size', fontSize + 'px')
@@ -201,7 +207,11 @@ glift.displays.icons._IconBar.prototype = {
       .attr('dy', '.33em') // Move down, for centering purposes
       .attr('style', 'text-anchor: middle; vertical-align: middle;')
       .attr('id', this.idGen.tempIconText(iconName))
-      .attr('lengthAdjust', 'spacing')); // also an opt: spacingAndGlyphs
+      .attr('lengthAdjust', 'spacing'); // also an opt: spacingAndGlyphs
+    for (var key in attrsObj) {
+      textObj.attr(key, attrsObj[key]);
+    }
+    this.svg.child(this.idGen.tempIconGroup()).appendAndAttach(textObj);
     return this;
   },
 

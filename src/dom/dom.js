@@ -37,7 +37,7 @@ glift.dom = {
 };
 
 glift.dom.Element.prototype = {
-  /** Prepend an element, but only if it's a glift dom element. */
+  /** Prepends an element, but only if it's a glift dom element. */
   prepend: function(that) {
     if (that.constructor === this.constructor) {
       // It's ok if firstChild is null;
@@ -46,7 +46,7 @@ glift.dom.Element.prototype = {
     return this;
   },
 
-  /** Append an element, but only if it's a glift dom element. */
+  /** Appends an element, but only if it's a glift dom element. */
   append: function(that) {
     if (that.constructor === this.constructor) {
       this.el.appendChild(that.el);
@@ -54,7 +54,7 @@ glift.dom.Element.prototype = {
     return this;
   },
 
-  /** Set a text node under this element. */
+  /** Sets a text node under this element. */
   appendText: function(text) {
     if (text) {
       var newNode = this.el.ownerDocument.createTextNode(text);
@@ -64,7 +64,7 @@ glift.dom.Element.prototype = {
   },
 
   /**
-   * Get or set an attribute on the HTML.
+   * Gets or set an attribute on the HTML.
    */
   attr: function(key, value) {
     if (key == null) { return null; }
@@ -91,15 +91,23 @@ glift.dom.Element.prototype = {
     return null;
   },
 
-  /** Set the CSS with a CSS object */
+  /** Gets all the attributes of the element, but as an object. */
+  attrs: function() {
+    var out = {};
+    for (var i = 0; i < this.el.attributes.length; i++) {
+      var att = this.el.attributes[i];
+      out[att.nodeName] = att.value;
+    }
+    return out;
+  },
+
+  /** Sets the CSS with a CSS object */
   css: function(obj) {
     for (var key in obj) {
       this.el.style[key] = obj[key];
     }
     return this;
   },
-
-  /** Get the CSS with a CSS object */
 
   /** Get the client height of the element */
   height: function() { return this.el.clientHeight; },

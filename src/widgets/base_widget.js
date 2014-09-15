@@ -32,7 +32,7 @@ glift.widgets.BaseWidget = function(
 };
 
 glift.widgets.BaseWidget.prototype = {
-  /** Draw the widget. */
+  /** Draws the widget. */
   draw: function() {
     this.controller = this.sgfOptions.controllerFunc(this.sgfOptions);
     this.initialMoveNumber = this.controller.movetree.node().getNodeNum();
@@ -79,31 +79,53 @@ glift.widgets.BaseWidget.prototype = {
     // TODO(kashomon): Pass in the theme rather than doing another copy here
     this.display = glift.displays.create(
         this.displayOptions,
-        positioning.getBbox('BOARD'));
+        positioning.getBbox(glift.enums.boardComponents.BOARD));
     glift.util.majorPerfLog('Finish creating display');
 
-    divIds.COMMENT_BOX && this._createCommentBox(
-        divIds.COMMENT_BOX,
-        positioning.getBbox('COMMENT_BOX'),
-        theme);
+    if (divIds.COMMENT_BOX) {
+      this.commentBox = glift.displays.commentbox.create(
+          divIds.COMMENT_BOX,
+          positioning.getBbox(glift.enums.boardComponents.COMMENT_BOX),
+          theme);
+    }
     glift.util.majorPerfLog('CommentBox');
 
-    divIds.ICONBAR && this._createIconBar(
-        divIds.ICONBAR,
-        positioning.getBbox('ICONBAR'),
-        this.sgfOptions.icons,
-        parentDivBbox,
-        theme);
+    if (divIds.ICONBAR) {
+      this.iconBar = glift.displays.icons.bar({
+          divId: divIds.ICONBAR,
+          positioning: positioning.getBbox(glift.enums.boardComponents.ICONBAR),
+          icons: this.sgfOptions.icons,
+          parentBbox: parentDivBbox,
+          theme: theme,
+          allDivIds: divIds,
+          allPositioning: positioning
+      }).draw();
+    }
     glift.util.majorPerfLog('IconBar');
     divIds.ICONBAR && this.iconBar.initIconActions(
         this, this.actions.iconActions);
 
-    divIds.STATUS_BAR && this._createStatusBar(
-        divIds.STATUS_BAR,
-        positioning.getBbox('STATUS_BAR'),
-        parentDivBbox,
-        this.sgfOptions.icons,
-        theme);
+    if (divIds.STATUS_BAR) {
+      var statusBarIcons = glift.util.simpleClone(this.sgfOptions.statusBarIcons);
+      if (this.manager.fullscreenDivId) {
+        var iconIndex = statusBarIcons.indexOf('fullscreen');
+        statusBarIcons[iconIndex] = 'unfullscreen';
+      }
+      var statusBarIconBar = glift.displays.icons.bar({
+          divId: divIds.STATUS_BAR,
+          positioning: positioning.getBbox(glift.enums.boardComponents.STATUS_BAR),
+          icons: statusBarIcons,
+          parentBbox: parentDivBbox,
+          theme: theme,
+          allDivIds: divIds,
+          allPositioning: positioning
+      });
+      this.statusBar = glift.displays.statusbar.create({
+          iconBarPrototype: statusBarIconBar,
+          theme: theme,
+          widget: this
+      }).draw();
+    }
     glift.util.majorPerfLog('StatusBar');
     divIds.STATUS_BAR && this.statusBar.iconBar.initIconActions(
         this, this.actions.iconActions);
@@ -146,49 +168,7 @@ glift.widgets.BaseWidget.prototype = {
     return out;
   },
 
-  _getProblemType: function() {
-    var props = this.controller.movetree.properties();
-    var probTypes = glift.enums.problemTypes;
-    if (props.contains('EV')) {
-      var value = props.getOneValue('EV').toUpperCase();
-      if (probTypes[value] !== undefined && value !== probTypes.AUTO) {
-        return value;
-      }
-    }
-    if (this.controller.movetree.nextMoves().length === 0) {
-      return probTypes.EXAMPLE;
-    }
-    return probTypes.STANDARD;
-  },
-
-  _createStatusBar: function(divId, bbox, parentBbox, icons, theme)  {
-    this.statusBar = glift.displays.statusbar.create({
-      divId: divId,
-      bbox: bbox,
-      parentBbox: parentBbox,
-      icons: icons,
-      theme: theme
-    });
-  },
-
-  _createCommentBox: function(commentBoxId, positioning, theme) {
-    this.commentBox = glift.displays.commentbox.create(
-        commentBoxId, positioning, theme);
-  },
-
-  _createIconBar: function(iconId, bbox, icons, parentBbox, theme) {
-    this.iconBar = glift.displays.icons.bar({
-      theme: theme,
-      divId: iconId,
-      icons: icons,
-      positioning: bbox,
-      parentBbox: parentBbox
-    });
-  },
-
-  /**
-   * Initialize the stone actions.
-   */
+  /** Initialize the stone actions. */
   _initStoneActions: function(baseActions) {
     var actions = {};
     actions.mouseover = baseActions.mouseover;
@@ -243,9 +223,7 @@ glift.widgets.BaseWidget.prototype = {
     glift.keyMappings.initKeybindingListener();
   },
 
-  /**
-   * Initialize properties based on problem type.
-   */
+  /** Initialize properties based on problem type. */
   _initProblemData: function() {
     if (this.sgfOptions.widgetType ===
         glift.enums.widgetTypes.CORRECT_VARIATIONS_PROBLEM) {
@@ -262,7 +240,7 @@ glift.widgets.BaseWidget.prototype = {
       this.iconBar.addTempText(
           'multiopen-boxonly',
           this.numCorrectAnswers + '/' + this.totalCorrectAnswers,
-          'black');
+          { fill: 'black', stroke: 'black'});
     }
   },
 
@@ -273,6 +251,8 @@ glift.widgets.BaseWidget.prototype = {
   applyBoardData: function(boardData) {
     if (boardData) {
       this.setCommentBox(boardData.comment);
+      this.statusBar &&
+          this.statusBar.setMoveNumber(this.controller.currentMoveNumber())
       glift.bridge.setDisplayState(
           boardData,
           this.display,
@@ -297,7 +277,7 @@ glift.widgets.BaseWidget.prototype = {
 
   /**
    * Reload the problem.  Note: This is too problem specific and probably needs
-   * to be rethought
+   * to be rethought.
    */
   reload: function() {
     if (this.correctness !== undefined) {
@@ -313,7 +293,6 @@ glift.widgets.BaseWidget.prototype = {
    * widget.
    */
   getCurrentState: function() {
-    // TODO(kashomon): Make a full-fledged immutable object.
     return {
       currentTreepath: this.controller.pathToCurrentPosition()
     };
@@ -347,14 +326,12 @@ glift.widgets.BaseWidget.prototype = {
   destroy: function() {
     var managerId = this.manager.id;
     glift.keyMappings.unregisterInstance(managerId);
-
     glift.dom.elem(this.wrapperDiv) &&
         glift.dom.elem(this.wrapperDiv).empty();
-    this.correctness = undefined;
-
     if (this.keyHandlerFunc !== undefined) {
       document.body.keydown = null;
     }
+    this.correctness = undefined;
     this.keyHandlerFunc = undefined;
     this.display = undefined;
   }
