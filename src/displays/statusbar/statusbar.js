@@ -48,8 +48,9 @@ glift.displays.statusbar._StatusBar.prototype = {
       // high.
       'z-index': 11000,
       'zIndex': 11000,
-      'background-color': 'rgba(255,255,255,0.7)',
-      'backgroundColor': 'rgba(255,255,255,0.7)'
+      // TODO(kashomon): Get background color from the themes.
+      'background-color': '#000',
+      'backgroundColor': '#000'
     });
     body.append(newDiv);
     widget.manager.fullscreenDivId = newDivId;
