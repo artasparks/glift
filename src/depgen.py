@@ -24,6 +24,7 @@ FILES_TO_AUTOGEN = {
     'htmltests/IconBarTester.html': False,
     'htmltests/KogosTester.html': False,
     'htmltests/MarksTester.html': False,
+    'htmltests/MoveNumberCircleTester.html': False,
     'htmltests/PositionTester.html': False,
     'htmltests/ProblemTester.html': False,
     'htmltests/QunitTest.html': True,

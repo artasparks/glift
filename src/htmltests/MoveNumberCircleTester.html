@@ -2,7 +2,8 @@
 <html>
 <head>
 
-<title> Theme Tester </title>
+<title> MoveNumberCircleTester </title>
+<script type="text/javascript" src="../libs/jquery-1.10.2.min.js"></script>
 <script type="text/javascript" src="../testdata/sgfs.js"></script>
 
 <!-- AUTO-GEN-DEPS -->
@@ -127,100 +128,113 @@
         margin: 0;
         padding: 0;
       }
-      body {
-        background:url('../themes/assets/bookelement5_crop.jpg') no-repeat fixed 50% 50%;
-        -webkit-background-size: cover;
-        -moz-background-size: cover;
-        -o-background-size: cover;
-        background-size: cover;
-      }
-      #glift_display1 {
-        position:relative;
-        width: 500px;
-        height: 500px;
-      }
-      #glift_display2 {
-        position:relative;
-        width: 600px;
-        height: 600px;
-      }
-      #glift_display3 {
-        position:relative;
-        width: 500px;
-        height: 500px;
-      }
-      #glift_display4 {
-        position:relative;
-        width: 500px;
-        height: 500px;
-      }
-      #glift_display5 {
-        position:relative;
-        width: 500px;
-        height: 500px;
-      }
-      #glift_display6 {
-        position:relative;
-        width: 500px;
-        height: 500px;
+      #glift_display_base {
+        position:absolute;
+        height: 400px;
+        width: 400px;
       }
     </style>
   </head>
 
   <body>
-    <div id="gheader"></div>
-    <div id="glift_display1"></div>
-    <div id="glift_display2"></div>
-    <div id="glift_display3"></div>
-    <div id="glift_display4"></div>
-    <div id="glift_display5"></div>
-    <div id="glift_display6"></div>
-    <div id="extra_info"></div>
-    <script type="text/javascript">
-      var basicProblem = glift.create({
-        sgf: testdata.sgfs.complexproblem,
-        divId: 'glift_display1',
-        display: {
-          theme: 'DEFAULT',
-        }
-      });
-      var basicProblem2 = glift.create({
-        sgf: testdata.sgfs.complexproblem,
-        divId: 'glift_display2',
-        display: {
-          theme: 'DEPTH',
-          goBoardBackground: '../themes/assets/bambootile_warm.jpg'
-        }
-      });
-      var basicProblem3 = glift.create({
-        sgf: testdata.sgfs.complexproblem,
-        divId: 'glift_display3',
-        display: {
-          theme: 'TEXTBOOK',
-        }
-      });
-      var basicProblem4 = glift.create({
-        sgf: testdata.sgfs.complexproblem,
-        divId: 'glift_display4',
-        display: {
-          theme: 'MOODY',
-        }
-      });
-      var basicProblem5 = glift.create({
-        sgf: testdata.sgfs.complexproblem,
-        divId: 'glift_display5',
-        display: {
-          theme: 'TRANSPARENT',
-        }
-      });
-      var basicProblem5 = glift.create({
-        sgf: testdata.sgfs.complexproblem,
-        divId: 'glift_display6',
-        display: {
-          theme: 'COLORFUL',
-        }
-      });
-    </script>
+    <div id="wrap" style="position:relative;">
+      <div id="glift_display_base"></div>
+      <script>
+        (function() {
+          var svglib = glift.displays.svg;
+          var divId = 'glift_display_base';
+          var svg = svglib.svg()
+            .attr('width', '100%')
+            .attr('height', '100%');
+
+          var percent = 0.999999;
+          var pi = 3.1415926535;
+          var degrees = 360 * percent;
+          console.log('degrees before: ' + degrees)
+          var part1 = 1;
+          var part2 = 1;
+          var xmod = 1;
+          var ymod = 1;
+          if (degrees < 90) {
+            degrees = 90 - degrees
+            part1 = 0;
+          } else if (degrees >= 90 && degrees < 180) {
+            degrees = degrees - 90;
+            part1 = 0;
+            ymod = -1;
+          } else if (degrees >= 180 && degrees < 270) {
+            degrees = 270 - degrees;
+            xmod = -1;
+            ymod = -1;
+            part2 = 1;
+          } else {
+            degrees = degrees - 270;
+            xmod = -1;
+            ymod = 1;
+            part2 = 1;
+          }
+          console.log('degrees after: ' + degrees)
+          var radians = degrees * ( 2 * pi / 360);
+          console.log('radz: ' + radians);
+          var centerX = 200;
+          var centerY = 200;
+          var radius = 100;
+          var cos = Math.cos(radians);
+          console.log('cos' + cos);
+          var sin = Math.sin(radians);
+          var xEdge = cos * radius * xmod + centerX;
+          var yEdge = centerY - sin * radius * ymod;
+          console.log(xEdge);
+          console.log(yEdge);
+          // start at the top of the circle.
+          var path = 'M200,100 A 100 100, 0, ' + part1 + ', ' + part2 + ', ' +
+              xEdge + ' ' + yEdge + ' L 200 200 Z';
+          console.log(path);
+
+          svg.append(svglib.path()
+              .attr('d', path)
+              .attr('fill', 'red'));
+
+          svg.append(svglib.circle()
+              .attr('cx', 200)
+              .attr('cy', 200)
+              .attr('r', 100)
+              .attr('fill', 'none')
+              .attr('stroke', 'black')
+              .attr('stroke-width', 5));
+
+          svg.append(svglib.circle()
+              .attr('cx', 200)
+              .attr('cy', 200)
+              .attr('r', 90)
+              .attr('fill', 'white')
+              .attr('stroke', 'black')
+              .attr('stroke-width', 5));
+
+          /*
+          svg.append(svglib.path()
+              .attr('d', 'M100 100 A 50 50, 0, 1, 1, 100 50 L 50 50 Z')
+              .attr('fill', 'red')
+              .attr('stroke', '#000'));
+
+          svg.append(svglib.path()
+              .attr('d', 'M235 230 A 40 40, 0, 1, 1, 230.0001 230.0001 Z')
+              .attr('fill', 'blue')
+              .attr('stroke', '#0C0'));
+          svg.append(svglib.circle()
+              .attr('cx', 230)
+              .attr('cy', 230)
+              .attr('r', 5)
+              .attr('fill', 'red'));
+          svg.append(svglib.circle()
+              .attr('cx', 100)
+              .attr('cy', 100)
+              .attr('r', 5)
+              .attr('fill', 'red'));
+          */
+          svg.attachToParent(divId);
+        })();
+      </script>
+    </div>
   </body>
 </html>
-

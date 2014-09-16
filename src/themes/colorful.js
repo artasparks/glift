@@ -11,11 +11,13 @@ glift.themes.registered.COLORFUL = {
   },
 
   icons: {
-    DEFAULT: { 
-      fill: "#000"
+    DEFAULT: {
+      fill: 'blue',
+      stroke: 'none'
     },
     DEFAULT_HOVER: {
-      fill: "#AAA"
+      fill: 'red',
+      stroke: 'none'
     }
   }
 };

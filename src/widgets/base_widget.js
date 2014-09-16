@@ -212,14 +212,21 @@ glift.widgets.BaseWidget.prototype = {
     if (!this.displayOptions.enableKeyboardShortcuts) {
       return;
     }
-    for (var keyName in this.sgfOptions.keyMappings) {
-      var iconPathOrFunc = this.sgfOptions.keyMappings[keyName];
+
+    var keyMappings = glift.util.simpleClone(this.sgfOptions.keyMappings);
+    if (this.manager.fullscreenDivId) {
+      // We're fullscreened.  Add ESC to escape =)
+      keyMappings['ESCAPE'] = 'iconActions.unfullscreen.click';
+    }
+
+    for (var keyName in keyMappings) {
+      var iconPathOrFunc = keyMappings[keyName];
       glift.keyMappings.registerKeyAction(
           this.manager.id,
           keyName,
           iconPathOrFunc);
     }
-    // Lazy initialize the key mappings once.
+    // Lazy initialize the key mappings. Only really runs once.
     glift.keyMappings.initKeybindingListener();
   },
 

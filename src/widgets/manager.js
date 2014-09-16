@@ -30,9 +30,13 @@ glift.widgets.WidgetManager = function(divId, sgfCollection, sgfColIndex,
 
   // The original div id.
   this.divId = divId;
-  // The fullscreen div id. Only set via the fullscreen button.
-  this.fullscreenDivId = null;
 
+  // The fullscreen div id. Only set via the fullscreen button. Necessary to
+  // have for problem collections.
+  this.fullscreenDivId = null;
+  // The fullscreen div will always be at the top. So we jump up to the top
+  // during fullscreen and jump back afterwards.
+  this.prevScrollTop = null;
   // If we set the window resize (done, for ex. in the case of full-screening),
   // we track the window-resizing function.
   this.oldWindowResize = null;

@@ -121,10 +121,15 @@ glift.themes.registered.DEFAULT = {
       // fontFamily: 'Palatino'
     },
 
-    tooltipTimeout: 1000 // milliseconds
+    tooltipTimeout: 1200 // milliseconds
   },
 
   statusBar: {
+    fullscreen: {
+      'background-color': '#FFF',
+      'backgroundColor': '#FFF'
+    },
+
     icons: {
       vertMargin: 4,
       horzMargin: 5,
@@ -136,9 +141,8 @@ glift.themes.registered.DEFAULT = {
       },
 
       DEFAULT_HOVER: {
-        fill: '#000',
-        stroke: '#000',
-        opacity: 0.3
+        fill: '#AAA',
+        stroke: '#AAA'
       },
 
       tooltips: {
@@ -150,7 +154,7 @@ glift.themes.registered.DEFAULT = {
         borderRadius: '10px'
       },
 
-      tooltipTimeout: 1500 // milliseconds
+      tooltipTimeout: 1200 // milliseconds
     }
   },
 

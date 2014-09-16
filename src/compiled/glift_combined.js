@@ -3,7 +3,7 @@
  *
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
- * @version 0.18.0
+ * @version 0.18.1
  * --------------------------------------
  */
 (function(w) {
@@ -22,7 +22,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.18.0',
+  version: '0.18.1',
 
   /** Indicates whether or not to store debug data. */
   // TODO(kashomon): Remove this hack.
@@ -457,26 +457,35 @@ glift.util._IdGenerator.prototype = {
 glift.util.idGenerator = new glift.util._IdGenerator(0);
 glift.keyMappings = {
   _nameToCode: {
+    0: 48, 1: 49, 2: 50, 3: 51, 4: 52, 5: 53, 6: 54, 7: 55, 8: 56, 9: 57,
+
+    A: 65, B: 66, C: 67, D: 68, E: 69, F: 70, G: 71, H: 72, I: 73, J: 74, K: 75,
+    L: 76, M: 77, N: 78, O: 79, P: 80, Q: 81, R: 82, S: 83, T: 84, U: 85, V: 86,
+    W: 87, X: 88, Y: 89, Z: 90,
+
+    a: 97, b: 98, c: 99, d: 100, e: 101, f: 102, g: 103, h: 104, i: 105, j: 106,
+    k: 107, l: 108, m: 109, n: 110, o: 111, p: 112, q: 113, r: 114, s: 115, t:
+    116, u: 117, v: 118, w: 119, x: 120, y: 121, z: 122,
+
+    ' ': 32,
+    '\n': 13,
+
+    // A miscellany of symbols, in order of appearance on programmer dvorak ;)
+    '~': 126, '$': 36, '%': 37, '&': 38, '[': 91, '{': 123, '}': 125, '(': 40,
+    '=': 61, '*': 42, ')': 41, '+': 43, ']': 93, '!': 33, '#': 35, '`': 96, '/':
+    47, '?': 63, '@': 64, '^': 94, '\\': 92, '|': 124, '-': 45, '_': 95,
+
+    ';': 59, ',': 44, '.': 46, ':': 58, '<': 60, '>': 62,
+
+    '\'': 39,
+    '"': 34,
+
+    BACKSPACE: 8,
+    ESCAPE: 27,
     ARROW_LEFT:37,
     ARROW_UP:38,
     ARROW_RIGHT:39,
-    ARROW_DOWN:40,
-    BACKSPACE:8,
-    ENTER:13,
-    SHIFT:16,
-    FORWARD_SLASH:191,
-    A:65,
-    B:66,
-    C:67,
-    D:68,
-    E:69,
-    F:70,
-    G:71,
-    H:72,
-    I:73,
-    J:74,
-    K:75
-    // TODO(kashomon): Add more codes.
+    ARROW_DOWN:40
   },
 
   /** Convert a key name (see above) to a standard key code. */
@@ -1223,11 +1232,13 @@ glift.themes.registered.COLORFUL = {
   },
 
   icons: {
-    DEFAULT: { 
-      fill: "#000"
+    DEFAULT: {
+      fill: 'blue',
+      stroke: 'none'
     },
     DEFAULT_HOVER: {
-      fill: "#AAA"
+      fill: 'red',
+      stroke: 'none'
     }
   }
 };
@@ -1354,10 +1365,15 @@ glift.themes.registered.DEFAULT = {
       // fontFamily: 'Palatino'
     },
 
-    tooltipTimeout: 1000 // milliseconds
+    tooltipTimeout: 1200 // milliseconds
   },
 
   statusBar: {
+    fullscreen: {
+      'background-color': '#FFF',
+      'backgroundColor': '#FFF'
+    },
+
     icons: {
       vertMargin: 4,
       horzMargin: 5,
@@ -1369,9 +1385,8 @@ glift.themes.registered.DEFAULT = {
       },
 
       DEFAULT_HOVER: {
-        fill: '#000',
-        stroke: '#000',
-        opacity: 0.3
+        fill: '#AAA',
+        stroke: '#AAA'
       },
 
       tooltips: {
@@ -1383,7 +1398,7 @@ glift.themes.registered.DEFAULT = {
         borderRadius: '10px'
       },
 
-      tooltipTimeout: 1500 // milliseconds
+      tooltipTimeout: 1200 // milliseconds
     }
   },
 
@@ -1436,17 +1451,6 @@ glift.themes.registered.MOODY = {
     }
   },
 
-  icons: {
-    DEFAULT : {
-      fill: "#000",
-      stroke: 'black'
-    },
-    DEFAULT_HOVER: {
-      fill: '#AAA',
-      stroke: 'black'
-    }
-  },
-
   commentBox: {
     css: {
       background: 'none',
@@ -1459,17 +1463,6 @@ glift.themes.registered.TEXTBOOK = {
     fill: '#FFF'
   },
 
-  icons: {
-    DEFAULT : {
-      fill: "#000",
-      stroke: 'black'
-    },
-    DEFAULT_HOVER: {
-      fill: '#AAA',
-      stroke: 'black'
-    }
-  },
-
   commentBox: {
     css: {
       background: '#FFF'
@@ -1479,17 +1472,6 @@ glift.themes.registered.TEXTBOOK = {
 glift.themes.registered.TRANSPARENT = {
   board: {
     fill: 'none'
-  },
-
-  icons: {
-    DEFAULT : {
-      fill: "#000",
-      stroke: 'black'
-    },
-    DEFAULT_HOVER: {
-      fill: '#AAA',
-      stroke: 'black'
-    }
   },
 
   commentBox: {
@@ -4995,41 +4977,53 @@ glift.displays.statusbar._StatusBar.prototype = {
         newDivId = wrapperDivId + '_fullscreen',
         newDiv = glift.dom.newDiv(newDivId),
         body = glift.dom.elem(document.body),
-        state = widget.getCurrentState();
-    newDiv.css({
-      position: 'absolute',
-      // this isn't quite right. 
-      top: '0px', bottom: '0px', left: '0px', right: '0px',
-      margin: '0px', padding: '0px',
-      // Some sites set the z-index obnoxiously high (looking at you bootstrap).
-      // So, to make it really fullscreen, we need to set the z-index pretty
-      // high.
-      'z-index': 11000,
-      'zIndex': 11000,
-      'background-color': 'rgba(255,255,255,0.7)',
-      'backgroundColor': 'rgba(255,255,255,0.7)'
-    });
+        state = widget.getCurrentState(),
+        manager = widget.manager,
+        cssObj = {
+          position: 'absolute',
+          top: '0px', bottom: '0px', left: '0px', right: '0px',
+          margin: '0px', padding: '0px',
+          // Some sites set the z-index obnoxiously high (looking at you bootstrap).
+          // So, to make it really fullscreen, we need to set the z-index pretty
+          // high.
+          'z-index': 110000,
+          'zIndex': 110000
+        };
+    for (var key in this.theme.statusBar.fullscreen) {
+      cssObj[key] = this.theme.statusBar.fullscreen[key];
+    }
+    newDiv.css(cssObj);
     body.append(newDiv);
-    widget.manager.fullscreenDivId = newDivId;
+    manager.prevScrollTop =
+        window.pageYOffset ||
+        document.body.scrollTop ||
+        document.documentElement.scrollTop || null;
+    window.scrollTo(0, 0);
+    manager.fullscreenDivId = newDivId;
     widget.destroy();
     widget.wrapperDiv = newDivId;
     widget.draw();
     widget.applyState(state);
-    widget.manager.enableFullscreenAutoResize();
+    manager.enableFullscreenAutoResize();
   },
 
   /** Return Glift to non-fullscreen */
   unfullscreen: function() {
+    if (!this.widget.manager.fullscreenDivId) {
+      return; // We're not fullscreened
+    }
     var widget = this.widget,
         wrapperDivEl = glift.dom.elem(widget.wrapperDiv),
         state = widget.getCurrentState(),
         manager = widget.manager,
+        prevScrollTop = manager.
         state = widget.getCurrentState();
-
     widget.destroy();
     wrapperDivEl.remove(); // remove the fullscreen div completely
     widget.wrapperDiv = widget.manager.divId;
+    window.scrollTo(0, manager.prevScrollTop || 0);
     manager.fullscreenDivId = null;
+    manager.prevScrollTop = null;
     widget.draw();
     widget.applyState(state);
     widget.manager.disableFullscreenAutoResize();
@@ -5037,12 +5031,10 @@ glift.displays.statusbar._StatusBar.prototype = {
 
   /** Set the move number for the current move */
   setMoveNumber: function(number) {
-    if (!this.iconBar.hasIcon) {
-      return;
-    }
+    if (!this.iconBar.hasIcon) { return; }
     var num = (number || '0') + ''; // Force to be a string.
     var color = this.theme.statusBar.icons.DEFAULT.fill
-    var mod = num.length > 2 ? 0.3 : null;
+    var mod = num.length > 2 ? 0.35 : null;
     this.iconBar.addTempText(
         'loading-move-indicator',
         number || '0',
@@ -9383,14 +9375,21 @@ glift.widgets.BaseWidget.prototype = {
     if (!this.displayOptions.enableKeyboardShortcuts) {
       return;
     }
-    for (var keyName in this.sgfOptions.keyMappings) {
-      var iconPathOrFunc = this.sgfOptions.keyMappings[keyName];
+
+    var keyMappings = glift.util.simpleClone(this.sgfOptions.keyMappings);
+    if (this.manager.fullscreenDivId) {
+      // We're fullscreened.  Add ESC to escape =)
+      keyMappings['ESCAPE'] = 'iconActions.unfullscreen.click';
+    }
+
+    for (var keyName in keyMappings) {
+      var iconPathOrFunc = keyMappings[keyName];
       glift.keyMappings.registerKeyAction(
           this.manager.id,
           keyName,
           iconPathOrFunc);
     }
-    // Lazy initialize the key mappings once.
+    // Lazy initialize the key mappings. Only really runs once.
     glift.keyMappings.initKeybindingListener();
   },
 
@@ -9539,9 +9538,13 @@ glift.widgets.WidgetManager = function(divId, sgfCollection, sgfColIndex,
 
   // The original div id.
   this.divId = divId;
-  // The fullscreen div id. Only set via the fullscreen button.
-  this.fullscreenDivId = null;
 
+  // The fullscreen div id. Only set via the fullscreen button. Necessary to
+  // have for problem collections.
+  this.fullscreenDivId = null;
+  // The fullscreen div will always be at the top. So we jump up to the top
+  // during fullscreen and jump back afterwards.
+  this.prevScrollTop = null;
   // If we set the window resize (done, for ex. in the case of full-screening),
   // we track the window-resizing function.
   this.oldWindowResize = null;
