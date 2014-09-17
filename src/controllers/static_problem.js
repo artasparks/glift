@@ -66,18 +66,20 @@ glift.controllers.StaticProblemMethods = {
     var outData = this.nextMove(nextVarNum);
     var correctness = glift.rules.problems.isCorrectPosition(
         this.movetree, this.problemConditions);
-    if (correctness === CORRECT || correctness == INCORRECT) {
-      outData.result = correctness;
-      return outData;
-    } else if (correctness === INDETERMINATE) {
+    if (correctness === CORRECT ||
+        correctness === INCORRECT ||
+        correctness === INDETERMINATE) {
       // Play for the opposite player. It used to be random, but randomness is
-      // confusing, and we aim to not surprise users.
+      // confusing.
       // var nextVariation = glift.math.getRandomInt(
           // 0, this.movetree.node().numChildren() - 1);
       var nextVariation = 0;
       this.nextMove(nextVariation);
+      // We return the entire board state because we've just moved two moves.
+      // In theory, we could combine the output of the next moves, but it's a
+      // little tricky and it doesn't seem to be worth the effort at the moment.
       var outData = this.getEntireBoardState();
-      outData.result = INDETERMINATE;
+      outData.result = correctness;
       return outData;
     }
     else {
