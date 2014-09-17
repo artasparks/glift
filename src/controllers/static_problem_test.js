@@ -105,8 +105,34 @@ glift.controllers.staticProblemTest = function() {
     var result = c.addStone(pt2, states.BLACK);
     deepEqual(result.result, problemResults.CORRECT, 'Must be correct');
 
-    c.initialize();
+    c.initialize(); // restart
     var result = c.addStone(pt1, states.BLACK);
     deepEqual(result.result, problemResults.CORRECT, 'Must be correct');
+  });
+
+  test('Test Play Through', function() {
+    var opts = {
+        sgfString: testdata.sgfs.gogameguruHard,
+        problemConditions: {C: ['Correct']}};
+    var c = cont.staticProblem(opts),
+        pt = conv('sq');
+    var result = c.addStone(pt, states.BLACK);
+    deepEqual(result.result, problemResults.INCORRECT);
+    deepEqual(c.movetree.node().getNodeNum(), 2,
+        'Must have moved down two moves');
+
+    c.initialize(); // restart
+    var indPt = conv('sr');
+    var result = c.addStone(indPt, states.BLACK);
+    deepEqual(result.result, problemResults.INDETERMINATE);
+    deepEqual(c.movetree.node().getNodeNum(), 2,
+        'Must have moved down two moves');
+
+    c.initialize(); // restart
+    var indPt = conv('bb');
+    var result = c.addStone(indPt, states.BLACK);
+    deepEqual(result.result, problemResults.INCORRECT);
+    deepEqual(c.movetree.node().getNodeNum(), 1,
+        'Must have moved down one move: no variation');
   });
 };
