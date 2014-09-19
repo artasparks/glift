@@ -36,7 +36,14 @@ glift.displays.position.WidgetBoxes.prototype = {
     return null;
   },
 
-  /** Iterate through all the boxes */
+  /**
+   * Iterate through all the bboxes.
+   *
+   * This method passes both the component name and the relevant to the fn.
+   * Another way to say this is fn has the form:
+   *
+   * fn(<component-name>, bbox>);
+   */
   map: function(fn) {
     if (glift.util.typeOf(fn) !== 'function') {
       return;
@@ -52,7 +59,38 @@ glift.displays.position.WidgetBoxes.prototype = {
         }
       }
     }
-  }
+  },
+
+  /**
+   * Get the bounding box for the whole widget. Useful for creating temporary
+   * divs.  Note: Returns a new bounding box everytime, since it's calculated
+   * based on the existing bboxes.
+   */
+  fullWidgetBbox: function() {
+    var top = null;
+    var left = null;
+    var bottom = null;
+    var right = null;
+    this.map(function(compName, bbox) {
+      if (top === null) {
+        top = bbox.top();
+        left = bbox.left();
+        bottom = bbox.bottom();
+        right = bbox.right();
+        return;
+      }
+      if (bbox.top() < top) { top = bbox.top(); }
+      if (bbox.left () < left) { left = bbox.left(); }
+      if (bbox.bottom() > bottom) { bottom = bbox.bottom(); }
+      if (bbox.right() > right) { right = bbox.right(); }
+    });
+    if (top !== null && left !== null && bottom !== null && right !== null) {
+      return glift.displays.bboxFromPts(
+          glift.util.point(left, top), glift.util.point(right, bottom));
+    } else  {
+      return null;
+    }
+  },
 };
 
 /**

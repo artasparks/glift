@@ -1,5 +1,5 @@
 glift.displays.position.widgetPositionerTest = function() {
-  module('glift.displays.position: Widget Positioner Tests');
+  module('glift.displays.position.widgetPositionerTest');
   var point = glift.util.point;
   var components = glift.enums.boardComponents;
   var horzBbox = glift.displays.bbox(point(100, 300), 300, 100);
