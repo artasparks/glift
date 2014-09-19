@@ -115,7 +115,7 @@ glift.widgets.options.baseOptions = {
     // TODO(kashomon): Enable game-info and settings when ready
     statusBarIcons: [
       // 'game-info',
-      'loading-move-indicator',
+      'move-indicator',
       'fullscreen'
       // 'settings-wrench'
     ],
@@ -500,7 +500,7 @@ glift.widgets.options.baseOptions = {
       tooltip: 'Show the game info'
     },
 
-    'loading-move-indicator': {
+    'move-indicator': {
       click: function() {},
       mouseover: function() {},
       mouseout: function() {},
@@ -516,7 +516,7 @@ glift.widgets.options.baseOptions = {
 
     unfullscreen: {
       click: function(event, widget, icon, iconBar) {
-        // We need to stop event propagation  because often the un-fullscreen
+        // We need to stop event propagation because often the un-fullscreen
         // button will be over some other clickable element.
         event.preventDefault && event.preventDefault();
         event.stopPropagation && event.stopPropagation();

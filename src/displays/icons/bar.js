@@ -189,7 +189,11 @@ glift.displays.icons._IconBar.prototype = {
    */
   addTempText: function(iconName, text, attrsObj, textMod) {
     var svglib = glift.displays.svg;
-    var bbox = this.getIcon(iconName).bbox;
+    var icon = this.getIcon(iconName);
+    var bbox = icon.bbox;
+    if (icon.subboxIcon) {
+      bbox = icon.subboxIcon.bbox;
+    }
     // TODO(kashomon): Why does this constant work?  Replace the 0.50 nonsense
     // with something more sensible.
     var textMultiplier = textMod || 0.50;
@@ -371,8 +375,9 @@ glift.displays.icons._IconBar.prototype = {
   /**
    * Return whether the iconBar has instantiated said icon or not
    */
+  // TODO(kashomon): Add test
   hasIcon: function(name) {
-    return this.newIconBboxes[name] === undefined;
+    return this.nameMapping[name] !== undefined;
   },
 
   /**

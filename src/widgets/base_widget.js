@@ -106,10 +106,13 @@ glift.widgets.BaseWidget.prototype = {
         this, this.actions.iconActions);
 
     if (divIds.STATUS_BAR) {
+      // TODO(kashomon): Move into a helper
       var statusBarIcons = glift.util.simpleClone(this.sgfOptions.statusBarIcons);
       if (this.manager.fullscreenDivId) {
-        var iconIndex = statusBarIcons.indexOf('fullscreen');
-        statusBarIcons[iconIndex] = 'unfullscreen';
+        glift.array.replace(statusBarIcons, 'fullscreen', 'unfullscreen');
+      }
+      if (this.manager.sgfCollection.length > 1) {
+        statusBarIcons.splice(0, 0, 'widget-page');
       }
       var statusBarIconBar = glift.displays.icons.bar({
           divId: divIds.STATUS_BAR,

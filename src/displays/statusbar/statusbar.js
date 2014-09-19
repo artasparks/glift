@@ -20,12 +20,15 @@ glift.displays.statusbar._StatusBar = function(
   this.iconBar = iconBarPrototype;
   this.theme = theme;
   this.widget = widget;
+  this.totalPages = widget.manager.sgfCollection.length;
+  this.pageIndex = widget.manager.sgfColIndex + 1;
 };
 
 /** TitleBar methods. */
 glift.displays.statusbar._StatusBar.prototype = {
   draw: function() {
     this.iconBar.draw();
+    this.setPageNumber(this.pageIndex, this.totalPages);
     return this;
   },
 
@@ -91,14 +94,27 @@ glift.displays.statusbar._StatusBar.prototype = {
 
   /** Set the move number for the current move */
   setMoveNumber: function(number) {
-    if (!this.iconBar.hasIcon) { return; }
+    if (!this.iconBar.hasIcon('move-indicator')) { return; }
     var num = (number || '0') + ''; // Force to be a string.
     var color = this.theme.statusBar.icons.DEFAULT.fill
     var mod = num.length > 2 ? 0.35 : null;
     this.iconBar.addTempText(
-        'loading-move-indicator',
-        number || '0',
+        'move-indicator',
+        num,
         { fill: color, stroke: color },
         mod);
+  },
+
+  /** Set the page number for the current move */
+  setPageNumber: function(number, denominator) {
+    if (!this.iconBar.hasIcon('widget-page')) { return; }
+    var num = (number || '0') + ''; // Force to be a string.
+    var denom = (denominator|| '0') + ''; // Force to be a string.
+    var color = this.theme.statusBar.icons.DEFAULT.fill
+    this.iconBar.addTempText(
+        'widget-page',
+        num,
+        { fill: color, stroke: color },
+        0.85);
   }
 };

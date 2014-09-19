@@ -22,27 +22,6 @@ glift.util = {
   },
 
   /**
-   * Array utility functions
-   * is_array is Taken from JavaScript: The Good Parts
-   */
-  isArray: function (value) {
-    return value && typeof value === 'object' && value.constructor === Array;
-  },
-
-  /**
-   * Test whether two arrays are (shallowly) equal.  We only test references on
-   * the elements of the array.
-   */
-  arrayEquals: function(arr1, arr2) {
-    if (arr1 === undefined || arr2 == undefined) return false;
-    if (arr1.length !== arr2.length) return false;
-    for (var i = 0; i < arr1.length; i++) {
-      if (arr1[i] !== arr2[i]) return false;
-    }
-    return true;
-  },
-
-  /**
    * Checks to make sure a number is inbounds.  In other words, whether a number
    * is between 0 (inclusive) and bounds (exclusive).
    */

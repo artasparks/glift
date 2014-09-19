@@ -3,7 +3,7 @@
  *
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
- * @version 0.18.1
+ * @version 0.18.2
  * --------------------------------------
  */
 (function(w) {
@@ -22,7 +22,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.18.1',
+  version: '0.18.2',
 
   /** Indicates whether or not to store debug data. */
   // TODO(kashomon): Remove this hack.
@@ -117,27 +117,6 @@ glift.util = {
       }
     }
     return s;
-  },
-
-  /**
-   * Array utility functions
-   * is_array is Taken from JavaScript: The Good Parts
-   */
-  isArray: function (value) {
-    return value && typeof value === 'object' && value.constructor === Array;
-  },
-
-  /**
-   * Test whether two arrays are (shallowly) equal.  We only test references on
-   * the elements of the array.
-   */
-  arrayEquals: function(arr1, arr2) {
-    if (arr1 === undefined || arr2 == undefined) return false;
-    if (arr1.length !== arr2.length) return false;
-    for (var i = 0; i < arr1.length; i++) {
-      if (arr1[i] !== arr2[i]) return false;
-    }
-    return true;
   },
 
   /**
@@ -260,6 +239,26 @@ glift.util.log = function(msg) {
   }
   if (console !== undefined && console.log !== undefined) {
     console.log(msg);
+  }
+};
+/**
+ * Collection of utility methods for arrays
+ */
+glift.array = {
+  remove: function(arr, elem) {
+    var index = arr.indexOf(elem);
+    if (index > -1) {
+      arr.splice(index, 1);
+    }
+    return arr;
+  },
+
+  replace: function(arr, elem, elemRep) {
+    var index = arr.indexOf(elem);
+    if (index > -1) {
+      arr[index] = elemRep;
+    }
+    return arr;
   }
 };
 glift.util.colors = {
@@ -3705,7 +3704,11 @@ glift.displays.icons._IconBar.prototype = {
    */
   addTempText: function(iconName, text, attrsObj, textMod) {
     var svglib = glift.displays.svg;
-    var bbox = this.getIcon(iconName).bbox;
+    var icon = this.getIcon(iconName);
+    var bbox = icon.bbox;
+    if (icon.subboxIcon) {
+      bbox = icon.subboxIcon.bbox;
+    }
     // TODO(kashomon): Why does this constant work?  Replace the 0.50 nonsense
     // with something more sensible.
     var textMultiplier = textMod || 0.50;
@@ -3887,8 +3890,9 @@ glift.displays.icons._IconBar.prototype = {
   /**
    * Return whether the iconBar has instantiated said icon or not
    */
+  // TODO(kashomon): Add test
   hasIcon: function(name) {
-    return this.newIconBboxes[name] === undefined;
+    return this.nameMapping[name] !== undefined;
   },
 
   /**
@@ -4318,7 +4322,7 @@ glift.displays.icons.svg = {
 
   // From Iconmonstr: http://iconmonstr.com/loading-14-icon/
   // Show current move number.  Part of the status bar.
-  'loading-move-indicator': {
+  'move-indicator': {
     string: "M256,50C142.23,50,50,142.23,50,256s92.23,206,206,206s206-92.23,206-206S369.77,50,256,50z M256.001,124.6c72.568,0,131.399,58.829,131.399,131.401c0,72.568-58.831,131.398-131.399,131.398 c-72.572,0-131.401-58.83-131.401-131.398C124.6,183.429,183.429,124.6,256.001,124.6z M70,256 c0-49.682,19.348-96.391,54.479-131.521S206.318,70,256,70v34.6c-83.482,0.001-151.4,67.918-151.4,151.401 c0,41.807,17.035,79.709,44.526,107.134l-24.269,24.757c-0.125-0.125-0.254-0.245-0.379-0.37C89.348,352.391,70,305.682,70,256z",
     bbox: {"x":50,"y":50,"x2":462,"y2":462,"width":412,"height":412}
   },
@@ -4342,9 +4346,21 @@ glift.displays.icons.svg = {
 
   // From Iconmonstr: http://iconmonstr.com/wrench-icon/
   // Glift settings (themes, etc)
+  // TODO(kashomon): Change to control panel?
   'settings-wrench': {
     string: "M447.087,375.073L281.4,209.387c-11.353-11.353-17.2-27.142-15.962-43.149 c2.345-30.325-8.074-61.451-31.268-84.644c-30.191-30.19-73.819-38.74-111.629-25.666l68.646,68.647 c1.576,26.781-39.832,68.188-66.612,66.612l-68.646-68.646c-13.076,37.81-4.525,81.439,25.665,111.629 c23.193,23.194,54.319,33.612,84.645,31.268c16.024-1.239,31.785,4.598,43.15,15.962l165.687,165.686 c19.885,19.886,52.126,19.886,72.013,0C466.972,427.2,466.972,394.959,447.087,375.073z M408.597,428.96 c-11.589,0-20.985-9.396-20.985-20.987c0-11.59,9.396-20.985,20.985-20.985c11.59,0,20.987,9.396,20.987,20.985 C429.584,419.564,420.187,428.96,408.597,428.96z",
     bbox: {"x":49.999876,"y":49.999979,"x2":462.001000,"y2":462.000500,"width":412.001124,"height":412.000522}
+  },
+
+  'widget-page': {
+    string: "M170.166,421.825V156.714H409.5c0,0,0,133.5,0,165.25c0,50.953-70.109,33.833-70.109,33.833 s16.609,66.028-32,66.028C275.328,421.825,288.508,421.825,170.166,421.825z M449.5,320.417V116.714H130.166v345.111H308 C376.165,461.825,449.5,381.819,449.5,320.417z M97.5,420.942V85.333h311V50.175h-346v370.768H97.5z",
+    bbox: {"x":62.5,"y":50.175,"x2":449.5,"y2":461.825,"width":387,"height":411.65},
+    subboxName: 'widget-page-inside'
+  },
+
+  'widget-page-inside': {
+    string: "m 169.51387,157.63164 240.08073,0 0,263.09167 -240.08073,0 z",
+    bbox: {"x":169.51387,"y":157.63164,"x2":409.5946,"y2":420.72331,"width":240.08073000000002,"height":263.09167}
   },
 
   ///////////////////////////////
@@ -4960,12 +4976,15 @@ glift.displays.statusbar._StatusBar = function(
   this.iconBar = iconBarPrototype;
   this.theme = theme;
   this.widget = widget;
+  this.totalPages = widget.manager.sgfCollection.length;
+  this.pageIndex = widget.manager.sgfColIndex + 1;
 };
 
 /** TitleBar methods. */
 glift.displays.statusbar._StatusBar.prototype = {
   draw: function() {
     this.iconBar.draw();
+    this.setPageNumber(this.pageIndex, this.totalPages);
     return this;
   },
 
@@ -5031,15 +5050,28 @@ glift.displays.statusbar._StatusBar.prototype = {
 
   /** Set the move number for the current move */
   setMoveNumber: function(number) {
-    if (!this.iconBar.hasIcon) { return; }
+    if (!this.iconBar.hasIcon('move-indicator')) { return; }
     var num = (number || '0') + ''; // Force to be a string.
     var color = this.theme.statusBar.icons.DEFAULT.fill
     var mod = num.length > 2 ? 0.35 : null;
     this.iconBar.addTempText(
-        'loading-move-indicator',
-        number || '0',
+        'move-indicator',
+        num,
         { fill: color, stroke: color },
         mod);
+  },
+
+  /** Set the page number for the current move */
+  setPageNumber: function(number, denominator) {
+    if (!this.iconBar.hasIcon('widget-page')) { return; }
+    var num = (number || '0') + ''; // Force to be a string.
+    var denom = (denominator|| '0') + ''; // Force to be a string.
+    var color = this.theme.statusBar.icons.DEFAULT.fill
+    this.iconBar.addTempText(
+        'widget-page',
+        num,
+        { fill: color, stroke: color },
+        0.85);
   }
 };
 glift.displays.position = {};
@@ -8245,18 +8277,20 @@ glift.controllers.StaticProblemMethods = {
     var outData = this.nextMove(nextVarNum);
     var correctness = glift.rules.problems.isCorrectPosition(
         this.movetree, this.problemConditions);
-    if (correctness === CORRECT || correctness == INCORRECT) {
-      outData.result = correctness;
-      return outData;
-    } else if (correctness === INDETERMINATE) {
+    if (correctness === CORRECT ||
+        correctness === INCORRECT ||
+        correctness === INDETERMINATE) {
       // Play for the opposite player. It used to be random, but randomness is
-      // confusing, and we aim to not surprise users.
+      // confusing.
       // var nextVariation = glift.math.getRandomInt(
           // 0, this.movetree.node().numChildren() - 1);
       var nextVariation = 0;
       this.nextMove(nextVariation);
+      // We return the entire board state because we've just moved two moves.
+      // In theory, we could combine the output of the next moves, but it's a
+      // little tricky and it doesn't seem to be worth the effort at the moment.
       var outData = this.getEntireBoardState();
-      outData.result = INDETERMINATE;
+      outData.result = correctness;
       return outData;
     }
     else {
@@ -9269,10 +9303,13 @@ glift.widgets.BaseWidget.prototype = {
         this, this.actions.iconActions);
 
     if (divIds.STATUS_BAR) {
+      // TODO(kashomon): Move into a helper
       var statusBarIcons = glift.util.simpleClone(this.sgfOptions.statusBarIcons);
       if (this.manager.fullscreenDivId) {
-        var iconIndex = statusBarIcons.indexOf('fullscreen');
-        statusBarIcons[iconIndex] = 'unfullscreen';
+        glift.array.replace(statusBarIcons, 'fullscreen', 'unfullscreen');
+      }
+      if (this.manager.sgfCollection.length > 1) {
+        statusBarIcons.splice(0, 0, 'widget-page');
       }
       var statusBarIconBar = glift.displays.icons.bar({
           divId: divIds.STATUS_BAR,
@@ -10035,7 +10072,7 @@ glift.widgets.options.baseOptions = {
     // TODO(kashomon): Enable game-info and settings when ready
     statusBarIcons: [
       // 'game-info',
-      'loading-move-indicator',
+      'move-indicator',
       'fullscreen'
       // 'settings-wrench'
     ],
@@ -10420,7 +10457,7 @@ glift.widgets.options.baseOptions = {
       tooltip: 'Show the game info'
     },
 
-    'loading-move-indicator': {
+    'move-indicator': {
       click: function() {},
       mouseover: function() {},
       mouseout: function() {},
@@ -10436,7 +10473,7 @@ glift.widgets.options.baseOptions = {
 
     unfullscreen: {
       click: function(event, widget, icon, iconBar) {
-        // We need to stop event propagation  because often the un-fullscreen
+        // We need to stop event propagation because often the un-fullscreen
         // button will be over some other clickable element.
         event.preventDefault && event.preventDefault();
         event.stopPropagation && event.stopPropagation();
