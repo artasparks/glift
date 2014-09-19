@@ -169,12 +169,13 @@ glift.displays.position._WidgetPositioner.prototype = {
 
     var top = startTop || 0;
     var previousComp = null;
+    var previousCompTop = null;
     var colWidth = board ? board.width() : wrapperDiv.width();
     var colLeft = board ? board.left() : wrapperDiv.left();
     column.orderFn(function(comp) {
       if (comp === components.BOARD) {
         previousComp = comp;
-        top += splitMap[comp].height()
+        top += board.height();
         return;
       }
       var split = splitMap[comp];
