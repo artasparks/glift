@@ -38,8 +38,9 @@ glift.global = {
    */
   activeInstanceId: null,
 
-  /**
-   * Used to mark whether the zoom has been disabled (for mobile).
-   */
-  disabledZoom: false
+  /** Used to mark whether the zoom has been disabled (for mobile). */
+  disabledZoom: false,
+
+  /** Added CSS classes (we only want to do this once). */
+  addedCssClasses: false
 };

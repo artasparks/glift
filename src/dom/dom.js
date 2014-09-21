@@ -109,6 +109,17 @@ glift.dom.Element.prototype = {
     return this;
   },
 
+  /** Add a CSS class. */
+  addClass: function(className) {
+    this.el.className += ' ' + className;
+  },
+
+  /** Remove a CSS class. */
+  removeClass: function(className) {
+    this.el.className = this.el.className.replace(
+        new RegExp('(?:^|\s)' + className + '(?!\S)', 'g'), '');
+  },
+
   /** Get the client height of the element */
   height: function() { return this.el.clientHeight; },
 

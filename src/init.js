@@ -35,4 +35,14 @@ glift.init = function(disableZoomForMobile, divId) {
     head.prepend(newMeta);
     glift.global.disabledZoom = true; // prevent from being called again.
   }
+
+  if (!glift.global.addedCssClasses) {
+    // Add any CSS classes that we need
+    var style = document.createElement('style');
+    style.type = 'text/css';
+    style.innerHTML =
+        '.glift-fullscreen-no-scroll { overflow: hidden; }';
+    document.getElementsByTagName('head')[0].appendChild(style);
+    glift.global.addedCssClasses = true;
+  }
 };

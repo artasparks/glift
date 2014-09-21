@@ -56,6 +56,7 @@ glift.displays.statusbar._StatusBar.prototype = {
       cssObj[key] = this.theme.statusBar.fullscreen[key];
     }
     newDiv.css(cssObj);
+    body.addClass('glift-fullscreen-no-scroll');
     body.append(newDiv);
     manager.prevScrollTop =
         window.pageYOffset ||
@@ -79,14 +80,18 @@ glift.displays.statusbar._StatusBar.prototype = {
         wrapperDivEl = glift.dom.elem(widget.wrapperDiv),
         state = widget.getCurrentState(),
         manager = widget.manager,
-        prevScrollTop = manager.
+        prevScrollTop = manager.prevScrollTop,
+        body = glift.dom.elem(document.body),
         state = widget.getCurrentState();
     widget.destroy();
     wrapperDivEl.remove(); // remove the fullscreen div completely
     widget.wrapperDiv = widget.manager.divId;
     window.scrollTo(0, manager.prevScrollTop || 0);
+    body.removeClass('glift-fullscreen-no-scroll');
+
     manager.fullscreenDivId = null;
     manager.prevScrollTop = null;
+
     widget.draw();
     widget.applyState(state);
     widget.manager.disableFullscreenAutoResize();
@@ -109,7 +114,7 @@ glift.displays.statusbar._StatusBar.prototype = {
   setPageNumber: function(number, denominator) {
     if (!this.iconBar.hasIcon('widget-page')) { return; }
     var num = (number || '0') + ''; // Force to be a string.
-    var denom = (denominator|| '0') + ''; // Force to be a string.
+    var denom = (denominator || '0') + ''; // Force to be a string.
     var color = this.theme.statusBar.icons.DEFAULT.fill
     this.iconBar.addTempText(
         'widget-page',
