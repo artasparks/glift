@@ -3,7 +3,7 @@
  *
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
- * @version 0.18.2
+ * @version 0.18.3
  * --------------------------------------
  */
 (function(w) {
@@ -22,7 +22,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.18.2',
+  version: '0.18.3',
 
   /** Indicates whether or not to store debug data. */
   // TODO(kashomon): Remove this hack.
@@ -53,10 +53,11 @@ glift.global = {
    */
   activeInstanceId: null,
 
-  /**
-   * Used to mark whether the zoom has been disabled (for mobile).
-   */
-  disabledZoom: false
+  /** Used to mark whether the zoom has been disabled (for mobile). */
+  disabledZoom: false,
+
+  /** Added CSS classes (we only want to do this once). */
+  addedCssClasses: false
 };
 /**
  * Initialization function to be run on glift creation.  Things performed:
@@ -94,6 +95,16 @@ glift.init = function(disableZoomForMobile, divId) {
     newMeta.attr('content', noZoomContent);
     head.prepend(newMeta);
     glift.global.disabledZoom = true; // prevent from being called again.
+  }
+
+  if (!glift.global.addedCssClasses) {
+    // Add any CSS classes that we need
+    var style = document.createElement('style');
+    style.type = 'text/css';
+    style.innerHTML =
+        '.glift-fullscreen-no-scroll { overflow: hidden; }';
+    document.getElementsByTagName('head')[0].appendChild(style);
+    glift.global.addedCssClasses = true;
   }
 };
 glift.util = {
@@ -1040,6 +1051,17 @@ glift.dom.Element.prototype = {
       this.el.style[key] = obj[key];
     }
     return this;
+  },
+
+  /** Add a CSS class. */
+  addClass: function(className) {
+    this.el.className += ' ' + className;
+  },
+
+  /** Remove a CSS class. */
+  removeClass: function(className) {
+    this.el.className = this.el.className.replace(
+        new RegExp('(?:^|\s)' + className + '(?!\S)', 'g'), '');
   },
 
   /** Get the client height of the element */
@@ -5012,6 +5034,7 @@ glift.displays.statusbar._StatusBar.prototype = {
       cssObj[key] = this.theme.statusBar.fullscreen[key];
     }
     newDiv.css(cssObj);
+    body.addClass('glift-fullscreen-no-scroll');
     body.append(newDiv);
     manager.prevScrollTop =
         window.pageYOffset ||
@@ -5035,14 +5058,18 @@ glift.displays.statusbar._StatusBar.prototype = {
         wrapperDivEl = glift.dom.elem(widget.wrapperDiv),
         state = widget.getCurrentState(),
         manager = widget.manager,
-        prevScrollTop = manager.
+        prevScrollTop = manager.prevScrollTop,
+        body = glift.dom.elem(document.body),
         state = widget.getCurrentState();
     widget.destroy();
     wrapperDivEl.remove(); // remove the fullscreen div completely
     widget.wrapperDiv = widget.manager.divId;
     window.scrollTo(0, manager.prevScrollTop || 0);
+    body.removeClass('glift-fullscreen-no-scroll');
+
     manager.fullscreenDivId = null;
     manager.prevScrollTop = null;
+
     widget.draw();
     widget.applyState(state);
     widget.manager.disableFullscreenAutoResize();
@@ -5065,7 +5092,7 @@ glift.displays.statusbar._StatusBar.prototype = {
   setPageNumber: function(number, denominator) {
     if (!this.iconBar.hasIcon('widget-page')) { return; }
     var num = (number || '0') + ''; // Force to be a string.
-    var denom = (denominator|| '0') + ''; // Force to be a string.
+    var denom = (denominator || '0') + ''; // Force to be a string.
     var color = this.theme.statusBar.icons.DEFAULT.fill
     this.iconBar.addTempText(
         'widget-page',
@@ -5113,7 +5140,14 @@ glift.displays.position.WidgetBoxes.prototype = {
     return null;
   },
 
-  /** Iterate through all the boxes */
+  /**
+   * Iterate through all the bboxes.
+   *
+   * This method passes both the component name and the relevant to the fn.
+   * Another way to say this is fn has the form:
+   *
+   * fn(<component-name>, bbox>);
+   */
   map: function(fn) {
     if (glift.util.typeOf(fn) !== 'function') {
       return;
@@ -5128,6 +5162,37 @@ glift.displays.position.WidgetBoxes.prototype = {
           fn(key, col.mapping[key]);
         }
       }
+    }
+  },
+
+  /**
+   * Get the bounding box for the whole widget. Useful for creating temporary
+   * divs.  Note: Returns a new bounding box everytime, since it's calculated
+   * based on the existing bboxes.
+   */
+  fullWidgetBbox: function() {
+    var top = null;
+    var left = null;
+    var bottom = null;
+    var right = null;
+    this.map(function(compName, bbox) {
+      if (top === null) {
+        top = bbox.top();
+        left = bbox.left();
+        bottom = bbox.bottom();
+        right = bbox.right();
+        return;
+      }
+      if (bbox.top() < top) { top = bbox.top(); }
+      if (bbox.left () < left) { left = bbox.left(); }
+      if (bbox.bottom() > bottom) { bottom = bbox.bottom(); }
+      if (bbox.right() > right) { right = bbox.right(); }
+    });
+    if (top !== null && left !== null && bottom !== null && right !== null) {
+      return glift.displays.bboxFromPts(
+          glift.util.point(left, top), glift.util.point(right, bottom));
+    } else  {
+      return null;
     }
   }
 };
@@ -5344,12 +5409,13 @@ glift.displays.position._WidgetPositioner.prototype = {
 
     var top = startTop || 0;
     var previousComp = null;
+    var previousCompTop = null;
     var colWidth = board ? board.width() : wrapperDiv.width();
     var colLeft = board ? board.left() : wrapperDiv.left();
     column.orderFn(function(comp) {
       if (comp === components.BOARD) {
         previousComp = comp;
-        top += splitMap[comp].height()
+        top += board.height();
         return;
       }
       var split = splitMap[comp];
@@ -8277,13 +8343,15 @@ glift.controllers.StaticProblemMethods = {
     var outData = this.nextMove(nextVarNum);
     var correctness = glift.rules.problems.isCorrectPosition(
         this.movetree, this.problemConditions);
-    if (correctness === CORRECT ||
+    if (correctness === CORRECT) {
+      // Don't play out variations for CORRECT>
+      outData.result = correctness;
+      return outData;
+    } else if (correctness === CORRECT ||
         correctness === INCORRECT ||
         correctness === INDETERMINATE) {
-      // Play for the opposite player. It used to be random, but randomness is
-      // confusing.
-      // var nextVariation = glift.math.getRandomInt(
-          // 0, this.movetree.node().numChildren() - 1);
+      // Play for the opposite player. Variation selection used to be random,
+      // but randomness is confusing.
       var nextVariation = 0;
       this.nextMove(nextVariation);
       // We return the entire board state because we've just moved two moves.

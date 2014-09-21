@@ -90,7 +90,7 @@ glift.displays.position.WidgetBoxes.prototype = {
     } else  {
       return null;
     }
-  },
+  }
 };
 
 /**
