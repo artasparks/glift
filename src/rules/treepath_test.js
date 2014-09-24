@@ -1,4 +1,5 @@
 glift.rules.treepathTest = function() {
+  module('glift.rules.treepathTest');
   var parse = glift.rules.treepath.parseInitPosition;
   var flatten = glift.rules.treepath.flattenMoveTree;
 

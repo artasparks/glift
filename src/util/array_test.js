@@ -1,5 +1,5 @@
 glift.arrayTest = function() {
-  module('glift.array');
+  module('glift.arrayTest');
   test('Remove Elem', function() {
     var arr = ['foo', 'bar', 'biff'];
     deepEqual(glift.array.remove(arr, 'bar'), ['foo', 'biff']);

@@ -38,6 +38,7 @@ glift.displays.commentbox._CommentBox.prototype = {
       cssObj[key] = this.theme.commentBox.css[key]
     }
     this.el.css(cssObj);
+    this.el.addClass('glift-comment-box');
     return this;
   },
 

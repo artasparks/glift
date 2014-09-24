@@ -40,8 +40,13 @@ glift.init = function(disableZoomForMobile, divId) {
     // Add any CSS classes that we need
     var style = document.createElement('style');
     style.type = 'text/css';
-    style.innerHTML =
-        '.glift-fullscreen-no-scroll { overflow: hidden; }';
+    // TODO(kashomon): Make these constants or something.
+    style.innerHTML = [
+        // Disable scrolling.  This appears to only work for desktops.
+        '.glift-fullscreen-no-scroll { overflow: hidden; }',
+        // Comment box class is used primarily as an identifier, but it's
+        // defined here as aglobal indicator.
+        '.glift-comment-box {}'].join('\n');
     document.getElementsByTagName('head')[0].appendChild(style);
     glift.global.addedCssClasses = true;
   }

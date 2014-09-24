@@ -8,6 +8,10 @@ glift.displays.statusbar = {
         options.theme,
         options.widget
     );
+  },
+
+  fullscreenTouchHandler: function() {
+    // TODO(kashomon): Do this... (issues/#67)
   }
 };
 
@@ -47,8 +51,8 @@ glift.displays.statusbar._StatusBar.prototype = {
           top: '0px', bottom: '0px', left: '0px', right: '0px',
           margin: '0px', padding: '0px',
           // Some sites set the z-index obnoxiously high (looking at you bootstrap).
-          // So, to make it really fullscreen, we need to set the z-index pretty
-          // high.
+          // So, to make it really fullscreen, we need to set the z-index higher
+          // =(
           'z-index': 110000,
           'zIndex': 110000
         };
@@ -56,7 +60,10 @@ glift.displays.statusbar._StatusBar.prototype = {
       cssObj[key] = this.theme.statusBar.fullscreen[key];
     }
     newDiv.css(cssObj);
+
+    // Prevent scrolling outside the div
     body.addClass('glift-fullscreen-no-scroll');
+
     body.append(newDiv);
     manager.prevScrollTop =
         window.pageYOffset ||
@@ -87,6 +94,8 @@ glift.displays.statusbar._StatusBar.prototype = {
     wrapperDivEl.remove(); // remove the fullscreen div completely
     widget.wrapperDiv = widget.manager.divId;
     window.scrollTo(0, manager.prevScrollTop || 0);
+
+    // Re-enable scrolling now that we're done with fullscreen.
     body.removeClass('glift-fullscreen-no-scroll');
 
     manager.fullscreenDivId = null;

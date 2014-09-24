@@ -1,8 +1,8 @@
 glift.widgets.widgetsTest = function() {
-  module("Widgets Test");
+  module('glift.widgets.widgetsTest');
   var testUtil = glift.testUtil;
 
-  test("Successfully create a basic widget (Game Viewer)", function() {
+  test('Successfully create a basic widget (Game Viewer)', function() {
     var manager = glift.widgets.create({
       sgf: testdata.sgfs.complexproblem,
     });
@@ -25,7 +25,7 @@ glift.widgets.widgetsTest = function() {
     manager.destroy();
   });
 
-  test("Succesfully create a complex problem series", function() {
+  test('Succesfully create a complex problem series', function() {
     var wtypes = glift.enums.widgetTypes;
     var sgfs = testdata.sgfs;
     var manager = glift.widgets.create({

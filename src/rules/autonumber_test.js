@@ -1,5 +1,5 @@
 glift.rules.autonumberTest = function() {
-  module("Autonumber Test");
+  module('glift.rules.autonumberTest');
   var autonumber = glift.rules.autonumber;
 
   test('Testing simple autonumber', function() {
@@ -21,9 +21,9 @@ glift.rules.autonumberTest = function() {
   });
 
   test('Testing complex autonumber', function() {
-    var sgf = "(;GM[1];B[aa]C[Foo]TR[aa];W[ab];B[ac];W[ad];B[ae];W[af]C[BAR]" +
-        "(;B[ag]C[Biff];W[ah];B[ai];W[aj])" +
-        "(;B[ah]C[Blarg];W[ai];B[aj]C[Flag];W[ak]))";
+    var sgf = '(;GM[1];B[aa]C[Foo]TR[aa];W[ab];B[ac];W[ad];B[ae];W[af]C[BAR]' +
+        '(;B[ag]C[Biff];W[ah];B[ai];W[aj])' +
+        '(;B[ah]C[Blarg];W[ai];B[aj]C[Flag];W[ak]))';
     var mt = glift.rules.movetree.getFromSgf(sgf, []);
     autonumber(mt);
 

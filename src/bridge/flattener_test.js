@@ -1,5 +1,5 @@
 glift.bridge.flattenerTest = function() {
-  module("Flattener");
+  module("glift.bridge.flattenerTest");
   var symb = glift.bridge.flattener.symbols;
   var flatten = glift.bridge.flattener.flatten;
   var boardRegions = glift.enums.boardRegions;

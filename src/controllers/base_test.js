@@ -1,5 +1,5 @@
 glift.controllers.baseTest = function() {
-  module('Base Controller Tests');
+  module('glift.controllers.baseTest');
   var capturetest = testdata.sgfs.capturetest;
   var complexProblem = testdata.sgfs.complexproblem;
   var ptlistToMap = glift.testUtil.ptlistToMap;

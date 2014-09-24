@@ -1,5 +1,5 @@
 glift.rules.problemsTest = function() {
-  module('Problems Tests');
+  module('glift.rules.problemsTest');
   test('IsCorrectPosition: trivial correctness', function() {
     var movt = glift.rules.movetree.getFromSgf(testdata.sgfs.trivialproblem),
         problemResults = glift.enums.problemResults;

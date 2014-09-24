@@ -1,5 +1,5 @@
 glift.controllers.controllersTest = function() {
-  module("Controllers Test");
+  module('glift.controllers.controllersTest');
 
   test("Must be able te create a controller", function() {
     throws(function() {

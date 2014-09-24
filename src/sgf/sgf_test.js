@@ -1,8 +1,8 @@
 glift.sgf.sgfTest = function() {
-  module("Tests for SGF utilities");
+  module('glift.sgf.sgfTest');
   var sgf = glift.sgf;
 
-  test("markToProperty", function() {
+  test('markToProperty', function() {
     deepEqual(sgf.markToProperty('LABEL_ALPHA'), 'LB');
     deepEqual(sgf.markToProperty('LABEL_NUMERIC'), 'LB');
     deepEqual(sgf.markToProperty('LABEL'), 'LB');
@@ -11,7 +11,7 @@ glift.sgf.sgfTest = function() {
     deepEqual(sgf.markToProperty('FOO'), null);
   });
 
-  test("propertyToMark", function() {
+  test('propertyToMark', function() {
     deepEqual(sgf.propertyToMark('LB'), 'LABEL');
     deepEqual(sgf.propertyToMark('CR'), 'CIRCLE');
     deepEqual(sgf.propertyToMark('SQ'), 'SQUARE');
@@ -19,7 +19,7 @@ glift.sgf.sgfTest = function() {
     deepEqual(sgf.propertyToMark('FOO'), null);
   });
 
-  test("allSgfCoordsToPoints", function() {
+  test('allSgfCoordsToPoints', function() {
     var point = glift.util.point;
     deepEqual(
         sgf.allSgfCoordsToPoints(['ab','ac', 'bb']),

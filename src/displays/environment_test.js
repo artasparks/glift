@@ -1,5 +1,5 @@
 glift.displays.environmentTest = function() {
-  module('Environment Test Suite');
+  module('glift.displays.environmentTest');
   var util = glift.util,
       displays = glift.displays,
       enums = glift.enums,

@@ -1,10 +1,10 @@
 glift.displays.idsTest = function() {
-  module("Element ID Tests");
+  module('glift.displays.idsTest');
   var idGen = glift.displays.ids.generator('foo');
   var pt = glift.util.point(0, 1);
   var name = 'start';
 
-  test("Testing to ensure all groups are defined", function() {
+  test('Testing to ensure all groups are defined', function() {
     deepEqual(idGen.svg(), 'foo_svg', 'svg');
     deepEqual(idGen.board(), 'foo_board', 'board');
     deepEqual(idGen.stoneGroup(), 'foo_stone_container', 'stonegroup');

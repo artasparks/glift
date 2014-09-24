@@ -1,5 +1,5 @@
 glift.bridge.intersectionsTest = function() {
-  module("Intersections Test");
+  module("glift.bridge.intersectionsTest");
   var sgfs = testdata.sgfs,
       mtm = glift.rules.movetree,
       mks = glift.enums.marks,

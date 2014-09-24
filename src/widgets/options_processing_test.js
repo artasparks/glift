@@ -1,5 +1,5 @@
 glift.widgets.optionsProcessingTest = function() {
-  module('Options processing tests');
+  module('glift.widgets.optionsProcessingTest');
   var createNoDraw = glift.widgets.createNoDraw;
 
   test('Test sgf and sgfList: Should throw an error', function() {
@@ -11,7 +11,7 @@ glift.widgets.optionsProcessingTest = function() {
     });
   });
 
-  test('Test processing book data', function() {
+  test('Test basic sgf collection', function() {
     var mgr = createNoDraw({
       sgfCollection: [{
         sgf: 'foo'

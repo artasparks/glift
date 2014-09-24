@@ -1,5 +1,5 @@
 glift.controllers.gameViewerTest = function() {
-  module('Game Viewer Test');
+  module('glift.controllers.gameViewerTest');
   var problem = testdata.sgfs.complexproblem;
   var states = glift.enums.states;
   var ptlistToMap = glift.testUtil.ptlistToMap;

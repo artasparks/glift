@@ -1,5 +1,5 @@
 glift.controllers.boardEditorTest = function() {
-  module("Board Editor Controller");
+  module('glift.controllers.boardEditorTest');
   var sgfs = testdata.sgfs;
   var boardEditor = glift.controllers.boardEditor;
 

@@ -1,5 +1,5 @@
 glift.displays.bboxTest = function() {
-  module('Bounding Box Tests');
+  module('glift.displays.bboxTest');
   var point = glift.util.point,
       bboxFromPts = glift.displays.bboxFromPts,
       displays = glift.displays;

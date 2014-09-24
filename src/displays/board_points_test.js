@@ -1,5 +1,5 @@
 glift.displays.boardPointsTest = function() {
-  module('BoardPoints Test Suite');
+  module('glift.displays.boardPointsTest');
   var maxInts = 19;
   var cropboxAll = glift.displays.cropbox.getFromRegion(
       glift.enums.boardRegions.ALL, maxInts);

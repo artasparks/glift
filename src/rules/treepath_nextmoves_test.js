@@ -1,16 +1,17 @@
 glift.rules.treepathNextmovesTest = function() {
+  module('glift.rules.treepathNextmovesTest');
   var findNextMoves = glift.rules.treepath.findNextMovesPath;
   var applyNextMoves = glift.rules.treepath.applyNextMoves;
   var point = glift.util.point;
   var sgfpoint = glift.util.pointFromSgfCoord;
 
   // 6 moves.
-  var simpleGame = "(;GM[1];B[aa];W[ab];B[ac];W[ad];B[ae];W[af])";
+  var simpleGame = '(;GM[1];B[aa];W[ab];B[ac];W[ad];B[ae];W[af])';
 
   // 6 moves + 2-4 move variations.
-  var gameVariation = "(;GM[1];B[aa];W[ab];B[ac];W[ad];B[ae];W[af]" +
-    "(;B[ag];W[ah];B[ai];W[aj])" + // variation 1 (mainline
-    "(;B[ah];W[ai];B[aj];W[ak]))"; // variation 2
+  var gameVariation = '(;GM[1];B[aa];W[ab];B[ac];W[ad];B[ae];W[af]' +
+    '(;B[ag];W[ah];B[ai];W[aj])' + // variation 1 (mainline
+    '(;B[ah];W[ai];B[aj];W[ak]))'; // variation 2
 
   test('Test init setup', function() {
     var mt = glift.rules.movetree.getFromSgf(simpleGame);

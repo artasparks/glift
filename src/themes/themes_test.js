@@ -1,15 +1,15 @@
 glift.themes.themesTest = function() {
-  module("Themes Test");
+  module('glift.themes.themesTest');
   var themes = glift.themes;
 
-  test("Has", function() {
+  test('Has', function() {
     ok(themes.has('DEFAULT'), 'has');
     ok(!themes.has('FOO'), 'not has');
   });
 
-  test("Get", function() {
+  test('Get', function() {
     deepEqual(themes.get('DEFAULT'), themes.registered.DEFAULT, 'get');
-    deepEqual(themes.get('FOO'), null, "non-get");
+    deepEqual(themes.get('FOO'), null, 'non-get');
   });
 
   test('DeepCopy', function() {

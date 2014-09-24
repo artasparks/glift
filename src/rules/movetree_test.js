@@ -1,49 +1,49 @@
 glift.rules.movetreeTest = function() {
-  module("Movetree Tests");
+  module('glift.rules.movetreeTest');
   var movetree = glift.rules.movetree;
   var sgfs = testdata.sgfs;
   var util = glift.util;
-  test("that parsing works", function() {
+  test('that parsing works', function() {
     movetree.getFromSgf(sgfs.veryeasy)
-    ok(true, "shouldn't throw an exception (a significant test!)");
+    ok(true, 'should not throw an exception (a significant test!)');
   });
 
-  test("that property retrieval works", function() {
+  test('that property retrieval works', function() {
     var mt = movetree.getFromSgf(sgfs.veryeasy);
     deepEqual(mt.node().getNodeNum(), 0, 'movenum');
-    var prop = mt.properties().getOneValue("FF");
-    ok(mt.properties().contains("FF"),
-        "should return true for an existing prop");
-    deepEqual(prop, "4", "should get an existing property");
+    var prop = mt.properties().getOneValue('FF');
+    ok(mt.properties().contains('FF'),
+        'should return true for an existing prop');
+    deepEqual(prop, '4', 'should get an existing property');
 
-    ok(!mt.properties().contains("ZZ"),
-        "should return false for non-real prop");
-    deepEqual(mt.properties().getAllValues("ZZ"), null,
-        "should return nothing for a non-real prop");
+    ok(!mt.properties().contains('ZZ'),
+        'should return false for non-real prop');
+    deepEqual(mt.properties().getAllValues('ZZ'), null,
+        'should return nothing for a non-real prop');
 
-    ok(!mt.properties().contains("B"),
-        "should return false for non-existent prop");
-    deepEqual(mt.properties().getAllValues("B"), null,
-        "should return nothing for a non-existent prop");
+    ok(!mt.properties().contains('B'),
+        'should return false for non-existent prop');
+    deepEqual(mt.properties().getAllValues('B'), null,
+        'should return nothing for a non-existent prop');
   });
 
-  test("Test that property retrieval for multiple props works", function() {
+  test('Test that property retrieval for multiple props works', function() {
     var mt = movetree.getFromSgf(sgfs.easy);
-    deepEqual(mt.properties().getAllValues("AB")[1], "qa",
-        "Should get the second property");
-    deepEqual(mt.properties().getAllValues("AW").toString(),
-        ["pa", "pb", "sb", "pc", "qc", "sc", "qd","rd", "sd"].toString(),
-        "should get a list of values");
+    deepEqual(mt.properties().getAllValues('AB')[1], 'qa',
+        'Should get the second property');
+    deepEqual(mt.properties().getAllValues('AW').toString(),
+        ['pa', 'pb', 'sb', 'pc', 'qc', 'sc', 'qd','rd', 'sd'].toString(),
+        'should get a list of values');
   });
 
-  test("that sgf point conversion works", function() {
-    var pt = glift.util.pointFromSgfCoord("ac");
-    deepEqual(pt.x(), 0, "pt.x");
-    deepEqual(pt.y(), 2, "pt.y");
-    deepEqual(pt.toSgfCoord(), "ac", "pt to sgf coord");
+  test('that sgf point conversion works', function() {
+    var pt = glift.util.pointFromSgfCoord('ac');
+    deepEqual(pt.x(), 0, 'pt.x');
+    deepEqual(pt.y(), 2, 'pt.y');
+    deepEqual(pt.toSgfCoord(), 'ac', 'pt to sgf coord');
   });
 
-  test("that moving up / down works correctly", function() {
+  test('that moving up / down works correctly', function() {
     var mt = movetree.getFromSgf(sgfs.easy);
     deepEqual(mt.node().getNodeNum(), 0, 'move num beg');
     deepEqual(mt.node().getVarNum(), 0, 'var num beg');
@@ -53,7 +53,7 @@ glift.rules.movetreeTest = function() {
     deepEqual(mt.node().getNodeNum(), 1, 'move num md_1');
     deepEqual(mt.node().getVarNum(), 0, 'var num md_1');
     deepEqual(mt.node().numChildren(), 1, 'next nodes md_1');
-    deepEqual(mt.properties().getOneValue("B"), "sa", "stoneMove");
+    deepEqual(mt.properties().getOneValue('B'), 'sa', 'stoneMove');
 
     mt.moveUp();
     deepEqual(mt.node().getNodeNum(), 0, 'move num');
@@ -64,11 +64,11 @@ glift.rules.movetreeTest = function() {
     deepEqual(mt.node().getNodeNum(), 1, 'move num');
     deepEqual(mt.node().getVarNum(), 1, 'var num');
     deepEqual(mt.node().numChildren(), 1, 'next nodes');
-    deepEqual(mt.properties().getOneValue("B"), "ra", "stoneMove");
+    deepEqual(mt.properties().getOneValue('B'), 'ra', 'stoneMove');
   });
 
-  test("that edge case of moving up: only one move left - works."
-      + "In other words, don't remove the last move", function() {
+  test('that edge case of moving up: only one move left - works.'
+      + 'In other words, dont remove the last move', function() {
     var mt = movetree.getFromSgf(sgfs.easy);
     mt.moveUp();
     deepEqual(mt.node().getNodeNum(), 0, 'move num');
@@ -76,73 +76,73 @@ glift.rules.movetreeTest = function() {
     deepEqual(mt.node().numChildren(), 3, 'next nodes');
   });
 
-  test("Test that deleting a property works", function() {
+  test('Test that deleting a property works', function() {
     var mt = movetree.getFromSgf(sgfs.veryeasy);
-    deepEqual(mt.properties().getOneValue("AP"), "CGoban:3",
-        "should get the AP prop");
-    deepEqual(mt.properties().remove("AP")[0],
-        "CGoban:3", "should delete the prop");
-    ok(!mt.properties().contains("AP"), "Prop shouldn't exist anymore");
+    deepEqual(mt.properties().getOneValue('AP'), 'CGoban:3',
+        'should get the AP prop');
+    deepEqual(mt.properties().remove('AP')[0],
+        'CGoban:3', 'should delete the prop');
+    ok(!mt.properties().contains('AP'), 'Prop shouldnt exist anymore');
   });
 
-  test("Test that adding properties works", function() {
+  test('Test that adding properties works', function() {
     var movt = movetree.getFromSgf(sgfs.veryeasy);
     movt.properties()
-        .set("C", "foo")
-        .add("EV", "tourny");
-    deepEqual(movt.properties().getOneValue("C"), "foo",
-        "Should get the correct comment");
-    deepEqual(movt.properties().getOneValue("EV"), "tourny",
-        "Chaining should work");
+        .set('C', 'foo')
+        .add('EV', 'tourny');
+    deepEqual(movt.properties().getOneValue('C'), 'foo',
+        'Should get the correct comment');
+    deepEqual(movt.properties().getOneValue('EV'), 'tourny',
+        'Chaining should work');
   });
 
-  test("Adding Nodes Works", function() {
+  test('Adding Nodes Works', function() {
     var movt = movetree.getInstance();
     movt.properties()
-        .add("C", "0th")
-        .add("EV", "AOEU");
+        .add('C', '0th')
+        .add('EV', 'AOEU');
     movt.addNode()
-        .properties().add("C", "1.0");
+        .properties().add('C', '1.0');
     movt.moveUp()
         .addNode()
-        .properties().add("C", "1.1");
+        .properties().add('C', '1.1');
     movt = movt.getTreeFromRoot();
 
-    deepEqual(movt.properties().getOneValue("C"), "0th",
-        "Should get the correct comment");
-    deepEqual(movt.node().getNodeNum(), 0, "Should get the move num");
-    deepEqual(movt.node().getVarNum(), 0, "Should get the var num");
+    deepEqual(movt.properties().getOneValue('C'), '0th',
+        'Should get the correct comment');
+    deepEqual(movt.node().getNodeNum(), 0, 'Should get the move num');
+    deepEqual(movt.node().getVarNum(), 0, 'Should get the var num');
 
     movt.moveDown()
-    deepEqual(movt.properties().getOneValue("C"), "1.0",
-        "Should get the correct comment");
-    deepEqual(movt.node().getNodeNum(), 1, "Should get the move num");
-    deepEqual(movt.node().getVarNum(), 0, "Should get the var num");
+    deepEqual(movt.properties().getOneValue('C'), '1.0',
+        'Should get the correct comment');
+    deepEqual(movt.node().getNodeNum(), 1, 'Should get the move num');
+    deepEqual(movt.node().getVarNum(), 0, 'Should get the var num');
 
     movt.moveUp()
     movt.moveDown(1)
-    deepEqual(movt.properties().getOneValue("C"), "1.1",
-        "Should get the correct comment");
+    deepEqual(movt.properties().getOneValue('C'), '1.1',
+        'Should get the correct comment');
     deepEqual(movt.node().getNodeNum(), 1,
-        "Should get the move num");
+        'Should get the move num');
     deepEqual(movt.node().getVarNum(), 1,
-        "Should get the var num");
+        'Should get the var num');
   });
 
-  test("Get Property as a Point", function() {
+  test('Get Property as a Point', function() {
     var movt = movetree.getInstance();
     movt.properties()
-        .add("C", "0th")
-        .add("EV", "AOEU");
+        .add('C', '0th')
+        .add('EV', 'AOEU');
     movt.addNode().properties()
-        .add("B", "pb");
-    deepEqual(movt.properties().getAsPoint("B").x(), 15,
-        "Should get and covert the x coord correctly");
-    deepEqual(movt.properties().getAsPoint("B").y(), 1,
-        "Should get and covert the y coord correctly");
+        .add('B', 'pb');
+    deepEqual(movt.properties().getAsPoint('B').x(), 15,
+        'Should get and covert the x coord correctly');
+    deepEqual(movt.properties().getAsPoint('B').y(), 1,
+        'Should get and covert the y coord correctly');
   });
 
-  test("Recursing through the nodes works", function() {
+  test('Recursing through the nodes works', function() {
     var movt = movetree.getInstance(),
         conv = glift.util.pointFromSgfCoord,
         expected = [
@@ -152,12 +152,12 @@ glift.rules.movetreeTest = function() {
             'b_' + conv('dd')],
         output = [];
 
-    movt.properties().add("C", "0th").add("EV", "AOEU");
-    movt.addNode().properties().add("B", "pb");
-    movt.addNode().properties().add("W", "nc");
-    movt.addNode().properties().add("B", "cc");
+    movt.properties().add('C', '0th').add('EV', 'AOEU');
+    movt.addNode().properties().add('B', 'pb');
+    movt.addNode().properties().add('W', 'nc');
+    movt.addNode().properties().add('B', 'cc');
     movt = movt.getTreeFromRoot();
-    movt.addNode().properties().add("B", "dd");
+    movt.addNode().properties().add('B', 'dd');
     movt.recurseFromRoot(function(mt) {
       var buff = '';
       if (mt.properties().contains('B')) {
@@ -171,7 +171,7 @@ glift.rules.movetreeTest = function() {
         'simple DFS recursing should work');
   });
 
-  test("Next Moves", function() {
+  test('Next Moves', function() {
     var movt = glift.rules.movetree.getFromSgf(sgfs.complexproblem);
     var states = glift.enums.states;
     var next = movt.nextMoves();
@@ -199,9 +199,9 @@ glift.rules.movetreeTest = function() {
     var main3 = [0,0,0,0,0,0,0,0];
     var nonMain1 = [0,0,0,0,0,0,1];
     var nonMain2 = [0,0,0,0,0,0,1,0];
-    var sgf = "(;GM[1];B[aa];W[ab];B[ac];W[ad];B[ae];W[af]" +
-        "(;B[ag];W[ah];B[ai];W[aj])" +
-        "(;B[ah];W[ai];B[aj];W[ak]))";
+    var sgf = '(;GM[1];B[aa];W[ab];B[ac];W[ad];B[ae];W[af]' +
+        '(;B[ag];W[ah];B[ai];W[aj])' +
+        '(;B[ah];W[ai];B[aj];W[ak]))';
     var mt = glift.rules.movetree.getFromSgf(sgf);
     ok(mt.getTreeFromRoot(main1).onMainline(), 'main1');
     ok(mt.getTreeFromRoot(main2).onMainline(), 'main2');
@@ -210,18 +210,18 @@ glift.rules.movetreeTest = function() {
     ok(!mt.getTreeFromRoot(nonMain2).onMainline(), 'non-main2');
   });
 
-  test("Convert to SGF! (No exceptions)", function() {
+  test('Convert to SGF! (No exceptions)', function() {
     var sgf = glift.rules.movetree.getFromSgf(sgfs.complexproblem).toSgf();
     ok(sgf !== undefined);
   });
 
-  test("Convert to SGF - comment", function() {
+  test('Convert to SGF - comment', function() {
     var mt = glift.rules.movetree.getInstance();
     mt.properties().add('C','Comment');
     deepEqual(mt.toSgf(), '(;C[Comment])');
   });
 
-  test("Convert to SGF - multi prop", function() {
+  test('Convert to SGF - multi prop', function() {
     var mt = glift.rules.movetree.getInstance();
     mt.properties().add('AW', ['ab','bb']);
     deepEqual(mt.toSgf(), '(;AW[ab][bb])');
@@ -244,7 +244,7 @@ glift.rules.movetreeTest = function() {
     deepEqual(mt.toSgf(), '(;C[[8k\\] Foo])');
   });
 
-  test("getCurrentPlayer Complex", function() {
+  test('getCurrentPlayer Complex', function() {
     var states = glift.enums.states
     var movetree = glift.rules.movetree.getFromSgf(
         testdata.sgfs.passingExample,  [0,0]);
@@ -260,9 +260,9 @@ glift.rules.movetreeTest = function() {
 
   test('treepathToHere', function() {
     var initPos = [0,0,0,0,0,0,1,0];
-    var sgf = "(;GM[1];B[aa];W[ab];B[ac];W[ad];B[ae];W[af]" +
-        "(;B[ag];W[ah];B[ai];W[aj])" +
-        "(;B[ah];W[ai];B[aj];W[ak]))";
+    var sgf = '(;GM[1];B[aa];W[ab];B[ac];W[ad];B[ae];W[af]' +
+        '(;B[ag];W[ah];B[ai];W[aj])' +
+        '(;B[ah];W[ai];B[aj];W[ak]))';
     var mt = glift.rules.movetree.getFromSgf(sgf, initPos);
     deepEqual(mt.treepathToHere(), initPos);
 
@@ -277,9 +277,9 @@ glift.rules.movetreeTest = function() {
 
   test('movesToMainline', function() {
     var initPos = [0,0,0,0,0,0,1,0,0];
-    var sgf = "(;GM[1];B[aa];W[ab];B[ac];W[ad];B[ae];W[af]" +
-        "(;B[ag];W[ah];B[ai];W[aj])" +
-        "(;B[ah];W[ai];B[aj];W[ak]))";
+    var sgf = '(;GM[1];B[aa];W[ab];B[ac];W[ad];B[ae];W[af]' +
+        '(;B[ag];W[ah];B[ai];W[aj])' +
+        '(;B[ah];W[ai];B[aj];W[ak]))';
     var mt = glift.rules.movetree.getFromSgf(sgf, initPos);
     deepEqual(mt.movesToMainline(), 3);
 

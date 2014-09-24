@@ -1,5 +1,5 @@
 glift.displays.commentbox.sanitizeTest = function() {
-  module('Sanitize Tests');
+  module('glift.displays.commentbox.sanitizeTest');
   var sanitize = glift.displays.commentbox.sanitize;
 
   test('Testing simple tag sanitize', function() {

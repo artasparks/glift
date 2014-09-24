@@ -1,5 +1,5 @@
 glift.controllers.staticProblemTest = function() {
-  module('Static Problem Controller');
+  module('glift.controllers.staticProblemTest');
   var cont = glift.controllers,
       util = glift.util,
       conv = glift.util.pointFromSgfCoord,

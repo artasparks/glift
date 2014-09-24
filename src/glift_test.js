@@ -1,13 +1,13 @@
 glift.gliftTest = function() {
-module("Glift API Test Suite");
+module('glift.gliftTest');
   var testUtil = glift.testUtil,
       boardRegions = glift.enums.boardRegions;
 
-  test("Assert exists", function() {
+  test('Assert exists', function() {
     ok(glift !== undefined);
   });
 
-  test("Test Create: No Options", function() {
+  test('Test Create: No Options', function() {
     var display = glift.displays.create({
       intersections: 9,
       divId:  'glift_display'

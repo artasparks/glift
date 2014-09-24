@@ -1,5 +1,5 @@
 glift.displays.svg.pathUtilsTest = function() {
-  module("Svg PathUtils Tests");
+  module("glift.displays.svg.pathUtilsTest");
   var path = glift.displays.svg.pathutils;
   var pt = glift.util.point(3, 5);
 

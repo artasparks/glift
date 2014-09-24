@@ -1,5 +1,5 @@
 glift.keyMappingsTest = function() {
-  module('Key Mappings Test Suite');
+  module('glift.keyMappingsTest');
   var keyMappings = glift.keyMappings;
 
   test('NameToCode', function() {

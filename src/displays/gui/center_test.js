@@ -1,5 +1,5 @@
 glift.displays.gui.centerTest = function() {
-  module("Center Tests");
+  module('glift.displays.gui.centerTest');
   var point = glift.util.point,
       rowCenter = glift.displays.gui.rowCenterSimple,
       columnCenter = glift.displays.gui.columnCenterSimple,

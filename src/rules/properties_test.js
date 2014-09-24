@@ -1,21 +1,21 @@
 glift.rules.propertiesTest = function() {
-  module("glift.rules.propertiesTest");
+  module('glift.rules.propertiesTest');
   var properties = glift.rules.properties,
       point = glift.util.point;
 
-  test("Test for GetAllStones", function() {
+  test('Test for GetAllStones', function() {
     var props = properties(),
         p1 = point(0, 0),
         p2 = point(18, 18);
     props.add('AB', p1.toSgfCoord()).add('AB', p2.toSgfCoord());
     ok(props.contains('AB'))
-    deepEqual(props.getAllValues('AB').length, 2, "Must have 2 elems");
+    deepEqual(props.getAllValues('AB').length, 2, 'Must have 2 elems');
     var allStones = props.getAllStones();
-    deepEqual(allStones.BLACK[0].toString(), "0,0");
-    deepEqual(allStones.BLACK[1].toString(), "18,18");
+    deepEqual(allStones.BLACK[0].toString(), '0,0');
+    deepEqual(allStones.BLACK[1].toString(), '18,18');
   })
 
-  test("Matches and not Matches", function() {
+  test('Matches and not Matches', function() {
     var props = properties();
     var p1 = point(0, 0);
     props.add('B', p1.toSgfCoord()).add('GB', '1').add('C', 'foo');
@@ -38,7 +38,7 @@ glift.rules.propertiesTest = function() {
     ok(props.matches({GB: [], C: ['is zog']}), 'Complex matcher');
   });
 
-  test("Remove propeties and values", function() {
+  test('Remove propeties and values', function() {
     var props = properties();
     props.add('SQ', 'ab').add('SQ', 'ac');
     deepEqual(props.getAllValues('SQ'), ['ab', 'ac']);
@@ -54,7 +54,7 @@ glift.rules.propertiesTest = function() {
     deepEqual(props.getAllValues('TR'), ['aa', 'cc']);
   });
 
-  test("Test preprocess", function() {
+  test('Test preprocess', function() {
     var props = properties();
     props.add('C', '[8k\\] Zed');
     deepEqual(props.getOneValue('C'), '[8k] Zed')

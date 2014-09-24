@@ -1,13 +1,13 @@
 glift.gib.gibParserTest = function() {
-  module("Gib (Tygem) Parser Test");
+  module('glift.gib.gibParserTest');
   var point = glift.util.point;
 
-  test("Testing basic parser: no exceptions", function() {
-    var mt = glift.gib.parse("");
+  test('Testing basic parser: no exceptions', function() {
+    var mt = glift.gib.parse('');
     ok(mt !== undefined);
   });
 
-  test("Parse real gib", function() {
+  test('Parse real gib', function() {
     var mt = glift.gib.parse(testdata.gib.tygemExample);
     deepEqual(mt.properties().getOneValue('PW'), 'Radagast (2K)');
     deepEqual(mt.properties().getOneValue('PB'), 'go48 (2K)');

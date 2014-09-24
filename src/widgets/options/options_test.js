@@ -1,5 +1,5 @@
 glift.widgets.options.optionsTest = function() {
-  module('Options processing tests');
+  module('glift.widgets.options.optionsTest');
   var optLib = glift.widgets.options;
   var template = glift.widgets.options.baseOptions;
 
