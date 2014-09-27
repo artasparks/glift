@@ -30,7 +30,6 @@ glift.displays.commentbox._CommentBox.prototype = {
     }
     var cssObj = {
       'overflow-y': 'auto',
-      'overflowY': 'auto',
       'MozBoxSizing': 'border-box',
       'boxSizing': 'border-box'
     };
@@ -42,30 +41,13 @@ glift.displays.commentbox._CommentBox.prototype = {
     return this;
   },
 
-  /** Sanitize the text in the comment box. */
-  sanitize: function(text) {
-    return glift.displays.commentbox.sanitize(text);
-  },
-
   /**
    * Set the text of the comment box. Note: this sanitizes the text to prevent
    * XSS and does some basic HTML-izing.
    */
   setText: function(text) {
-    text = this.sanitize(text);
     this.el.empty();
-    var textSegments = text.split('\n');
-    for (var i = 0; i < textSegments.length; i++) {
-      var seg = textSegments[i];
-      var pNode = glift.dom.elem(document.createElement('p'));
-      pNode.css({
-        margin: 0,
-        padding: 0,
-        'min-height': '1em'
-      })
-      pNode.html(seg);
-      this.el.append(pNode);
-    }
+    this.el.append(glift.dom.convertText(text));
   },
 
   /** Clear the text from the comment box. */

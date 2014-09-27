@@ -51,6 +51,7 @@
 <script type="text/javascript" src="../util/test_util.js"></script>
 <!-- Dom -->
 <script type="text/javascript" src="../dom/dom.js"></script>
+<script type="text/javascript" src="../dom/sanitize.js"></script>
 <!-- Ajax -->
 <script type="text/javascript" src="../ajax/ajax.js"></script>
 <!-- Themes -->
@@ -84,7 +85,6 @@
 <!-- Displays commentbox -->
 <script type="text/javascript" src="../displays/commentbox/commentbox.js"></script>
 <script type="text/javascript" src="../displays/commentbox/create.js"></script>
-<script type="text/javascript" src="../displays/commentbox/sanitize.js"></script>
 <!-- Displays gui -->
 <script type="text/javascript" src="../displays/gui/gui.js"></script>
 <script type="text/javascript" src="../displays/gui/center.js"></script>
@@ -152,6 +152,8 @@
 <script type="text/javascript" src="../util/key_mappings_test.js"></script>
 <script type="text/javascript" src="../util/point_test.js"></script>
 <script type="text/javascript" src="../util/util_test.js"></script>
+<!-- Dom Tests -->
+<script type="text/javascript" src="../dom/sanitize_test.js"></script>
 <!-- Themes Tests -->
 <script type="text/javascript" src="../themes/themes_test.js"></script>
 <!-- Displays Tests -->
@@ -161,8 +163,6 @@
 <script type="text/javascript" src="../displays/environment_test.js"></script>
 <script type="text/javascript" src="../displays/ids_test.js"></script>
 <script type="text/javascript" src="../displays/resized_box_test.js"></script>
-<!-- Displays commentbox Tests -->
-<script type="text/javascript" src="../displays/commentbox/sanitize_test.js"></script>
 <!-- Displays gui Tests -->
 <script type="text/javascript" src="../displays/gui/center_test.js"></script>
 <!-- Displays icons Tests -->
@@ -222,8 +222,6 @@ $(document).ready(function() {
   glift.displays.environmentTest();
   glift.displays.idsTest();
 
-  glift.displays.commentbox.sanitizeTest();
-
   glift.displays.position.widgetPositionerTest();
   glift.displays.position.widgetBoxesTest();
 
@@ -231,6 +229,8 @@ $(document).ready(function() {
 
   glift.displays.svg.svgObjTest();
   glift.displays.svg.pathUtilsTest();
+
+  glift.dom.sanitizeTest();
 
   // TODO(kashomon): recreate the board tests.
 

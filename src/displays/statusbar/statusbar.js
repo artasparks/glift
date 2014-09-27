@@ -6,7 +6,8 @@ glift.displays.statusbar = {
     return new glift.displays.statusbar._StatusBar(
         options.iconBarPrototype,
         options.theme,
-        options.widget
+        options.widget,
+        options.allPositioning
     );
   },
 
@@ -20,10 +21,17 @@ glift.displays.statusbar = {
  * Game information like move number, settings, and game info.
  */
 glift.displays.statusbar._StatusBar = function(
-    iconBarPrototype, theme, widget) {
+    iconBarPrototype, theme, widget, positioning) {
   this.iconBar = iconBarPrototype;
   this.theme = theme;
+  // TODO(kashomon): Restructure in such a way so the status bar doesn't need to
+  // depend on the widget object
   this.widget = widget;
+
+  // Bboxes for all components.
+  this.positioning = positioning;
+
+  // TODO(kashomon): Don't depend on manager data.
   this.totalPages = widget.manager.sgfCollection.length;
   this.pageIndex = widget.manager.sgfColIndex + 1;
 };
@@ -36,11 +44,69 @@ glift.displays.statusbar._StatusBar.prototype = {
     return this;
   },
 
+  /**
+   * Create a game info object.
+   *
+   * Takes a object that's transformed into the game info table.
+   */
+  gameInfo: function(gameInfoObj) {
+    var wrapperDivId = this.widget.wrapperDiv,
+        suffix = '_gameinfo',
+        newDivId = wrapperDivId + suffix + '_wrapper',
+        wrapperDivEl = glift.dom.elem(wrapperDivId),
+        newDiv = glift.dom.newDiv(newDivId),
+        theme = this.theme,
+        fullBox = this.positioning.fullWidgetBbox(),
+        cssObj = {
+          position: 'absolute',
+          margin: '0px',
+          padding: '0px',
+          top: fullBox.top() + 'px',
+          left: fullBox.left() + 'px',
+          width: fullBox.width() + 'px',
+          height: fullBox.height() + 'px',
+          // need to change zindex based on fullscreen
+          'z-index': 100
+        };
+    newDiv.css(cssObj);
+
+    var textDiv = glift.dom.newDiv(wrapperDivId + suffix + '_textdiv');
+    var textDivCss = {
+      position: 'relative',
+      margin: '0px',
+      padding: '0px',
+      height: fullBox.height() + 'px',
+      width: fullBox.width() + 'px'
+    };
+    for (var key in theme.statusBar.gameInfo.div) {
+      textDivCss[key] = theme.statusBar.gameInfo.div[key];
+    }
+
+    textDiv.css(textDivCss);
+    textDiv.on('click', function() {
+      newDiv.remove();
+    });
+
+    textDiv.append(glift.dom.convertText(
+        [
+          '<strong>Game Name:</strong> Derp',
+          '<strong>Player Black</strong>: Derper',
+          '<strong>Player White</strong>: Derper'
+        ].join('\n')).css({
+          padding: '10px',
+          color: '#FFF'
+        }));
+
+    newDiv.append(textDiv);
+
+    // Put the X icon in the upper left
+    wrapperDivEl.prepend(newDiv);
+  },
+
   /** Make Glift full-screen */
   fullscreen: function() {
     var widget = this.widget,
         wrapperDivId = widget.wrapperDiv,
-        wrapperDivEl = glift.dom.elem(wrapperDivId),
         newDivId = wrapperDivId + '_fullscreen',
         newDiv = glift.dom.newDiv(newDivId),
         body = glift.dom.elem(document.body),
@@ -53,14 +119,14 @@ glift.displays.statusbar._StatusBar.prototype = {
           // Some sites set the z-index obnoxiously high (looking at you bootstrap).
           // So, to make it really fullscreen, we need to set the z-index higher
           // =(
-          'z-index': 110000,
-          'zIndex': 110000
+          'z-index': 110000
         };
     for (var key in this.theme.statusBar.fullscreen) {
       cssObj[key] = this.theme.statusBar.fullscreen[key];
     }
     newDiv.css(cssObj);
 
+    // TODO(kashomon): Support true fullscreen: issues/69
     // Prevent scrolling outside the div
     body.addClass('glift-fullscreen-no-scroll');
 
@@ -78,7 +144,7 @@ glift.displays.statusbar._StatusBar.prototype = {
     manager.enableFullscreenAutoResize();
   },
 
-  /** Return Glift to non-fullscreen */
+  /** Returns Glift to non-fullscreen */
   unfullscreen: function() {
     if (!this.widget.manager.fullscreenDivId) {
       return; // We're not fullscreened
@@ -106,7 +172,7 @@ glift.displays.statusbar._StatusBar.prototype = {
     widget.manager.disableFullscreenAutoResize();
   },
 
-  /** Set the move number for the current move */
+  /** Sets the move number for the current move */
   setMoveNumber: function(number) {
     if (!this.iconBar.hasIcon('move-indicator')) { return; }
     var num = (number || '0') + ''; // Force to be a string.
@@ -119,7 +185,7 @@ glift.displays.statusbar._StatusBar.prototype = {
         mod);
   },
 
-  /** Set the page number for the current move */
+  /** Sets the page number for the current move */
   setPageNumber: function(number, denominator) {
     if (!this.iconBar.hasIcon('widget-page')) { return; }
     var num = (number || '0') + ''; // Force to be a string.

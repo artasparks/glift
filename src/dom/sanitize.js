@@ -1,23 +1,32 @@
-/**
- * Tags currently allowed in the comment box.
- */
-glift.displays.commentbox.sanitizeWhitelist_ = {
+/** Tags currently allowed. */
+glift.dom._sanitizeWhitelist = {
   'br': true,
   'b': true,
   'strong': true,
   'i': true,
   'u': true,
-  'em': true
+  'em': true,
+  'h1': true,
+  'h2': true,
+  'h3': true
+};
+
+/** Characters to escape */
+glift.dom._escapeMap = {
+ '&': '&amp;',
+ '"': '&quot;',
+ '\'': '&#x27;',
+ '/': '&#x2F;'
 };
 
 /**
  * Sanitizes text to prevent XSS. A single pass parser.
  */
-glift.displays.commentbox.sanitize = function(text) {
+glift.dom.sanitize = function(text) {
   var outbuffer = [];
   var strbuff = [];
   var states = { DEFAULT: 1, TAG: 2 };
-  var whitelist = glift.displays.commentbox.sanitizeWhitelist_;
+  var whitelist = glift.dom._sanitizeWhitelist;
   var curstate = states.DEFAULT;
   var numBrackets = 0;
   var lt = '&lt;';
@@ -55,6 +64,9 @@ glift.displays.commentbox.sanitize = function(text) {
       if (curstate === states.TAG) {
         strbuff.push(chr);
       } else {
+        if (chr in glift.dom._escapeMap) {
+          chr = glift.dom._escapeMap[chr];
+        }
         outbuffer.push(chr);
       }
     }

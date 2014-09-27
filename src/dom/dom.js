@@ -26,6 +26,29 @@ glift.dom = {
     return elem;
   },
 
+  /** Convert some text to some dom elements. */
+  convertText: function(text) {
+    text = glift.dom.sanitize(text);
+    var wrapper = glift.dom.newElem('div');
+    var textSegments = text.split('\n');
+    for (var i = 0; i < textSegments.length; i++) {
+      var seg = textSegments[i];
+      var pNode = glift.dom.newElem('p')
+          .css({
+              margin: 0,
+              padding: 0,
+              'min-height': '1em'})
+      pNode.html(seg);
+      wrapper.append(pNode);
+    }
+    return wrapper;
+  },
+
+  /** Convert a string. */
+  newElem: function(type) {
+    return type ? glift.dom.elem(document.createElement(type + '')) : null;
+  },
+
   /**
    * A simple wrapper for a plain old dom element. Note, id can be null if the
    * Element is constructed directly from elem.
@@ -42,6 +65,8 @@ glift.dom.Element.prototype = {
     if (that.constructor === this.constructor) {
       // It's ok if firstChild is null;
       this.el.insertBefore(that.el, this.el.firstChild);
+    } else {
+      throw new Error('Could not append unknown element: ' + that);
     }
     return this;
   },
@@ -50,6 +75,8 @@ glift.dom.Element.prototype = {
   append: function(that) {
     if (that.constructor === this.constructor) {
       this.el.appendChild(that.el);
+    } else {
+      throw new Error('Could not append unknown element: ' + that);
     }
     return this;
   },
@@ -101,10 +128,15 @@ glift.dom.Element.prototype = {
     return out;
   },
 
-  /** Sets the CSS with a CSS object */
+  /**
+   * Sets the CSS with a CSS object. Note this converts foo-bar to fooBar.
+   */
   css: function(obj) {
     for (var key in obj) {
-      this.el.style[key] = obj[key];
+      var outKey = key.replace(/-(.)?/g, function(match, group1) {
+        return group1 ? group1.toUpperCase() : '';
+      });
+      this.el.style[outKey] = obj[key];
     }
     return this;
   },

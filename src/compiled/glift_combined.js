@@ -975,6 +975,29 @@ glift.dom = {
     return elem;
   },
 
+  /** Convert some text to some dom elements. */
+  convertText: function(text) {
+    text = glift.dom.sanitize(text);
+    var wrapper = glift.dom.newElem('div');
+    var textSegments = text.split('\n');
+    for (var i = 0; i < textSegments.length; i++) {
+      var seg = textSegments[i];
+      var pNode = glift.dom.newElem('p')
+          .css({
+              margin: 0,
+              padding: 0,
+              'min-height': '1em'})
+      pNode.html(seg);
+      wrapper.append(pNode);
+    }
+    return wrapper;
+  },
+
+  /** Convert a string. */
+  newElem: function(type) {
+    return type ? glift.dom.elem(document.createElement(type + '')) : null;
+  },
+
   /**
    * A simple wrapper for a plain old dom element. Note, id can be null if the
    * Element is constructed directly from elem.
@@ -991,6 +1014,8 @@ glift.dom.Element.prototype = {
     if (that.constructor === this.constructor) {
       // It's ok if firstChild is null;
       this.el.insertBefore(that.el, this.el.firstChild);
+    } else {
+      throw new Error('Could not append unknown element: ' + that);
     }
     return this;
   },
@@ -999,6 +1024,8 @@ glift.dom.Element.prototype = {
   append: function(that) {
     if (that.constructor === this.constructor) {
       this.el.appendChild(that.el);
+    } else {
+      throw new Error('Could not append unknown element: ' + that);
     }
     return this;
   },
@@ -1050,10 +1077,15 @@ glift.dom.Element.prototype = {
     return out;
   },
 
-  /** Sets the CSS with a CSS object */
+  /**
+   * Sets the CSS with a CSS object. Note this converts foo-bar to fooBar.
+   */
   css: function(obj) {
     for (var key in obj) {
-      this.el.style[key] = obj[key];
+      var outKey = key.replace(/-(.)?/g, function(match, group1) {
+        return group1 ? group1.toUpperCase() : '';
+      });
+      this.el.style[outKey] = obj[key];
     }
     return this;
   },
@@ -1131,6 +1163,70 @@ glift.dom.Element.prototype = {
   boundingClientRect: function() {
     return this.el.getBoundingClientRect();
   }
+};
+/** Tags currently allowed. */
+glift.dom.sanitizeWhitelist_ = {
+  'br': true,
+  'b': true,
+  'strong': true,
+  'i': true,
+  'u': true,
+  'em': true,
+  'h1': true,
+  'h2': true,
+  'h3': true
+};
+
+/**
+ * Sanitizes text to prevent XSS. A single pass parser.
+ */
+glift.dom.sanitize = function(text) {
+  var outbuffer = [];
+  var strbuff = [];
+  var states = { DEFAULT: 1, TAG: 2 };
+  var whitelist = glift.dom.sanitizeWhitelist_;
+  var curstate = states.DEFAULT;
+  var numBrackets = 0;
+  var lt = '&lt;';
+  var gt = '&gt;';
+  for (var i = 0, len = text.length; i < len; i++) {
+    var chr = text.charAt(i);
+    if (chr === '<') {
+      curstate = states.TAG;
+      numBrackets++;
+      if (numBrackets > 1) {
+        strbuff.push(lt); 
+      }
+    } else if (chr === '>') {
+      numBrackets--;
+      if (numBrackets < 0) {
+        curstate = states.DEFAULT;
+        numBrackets = 0;
+        outbuffer.push(gt);
+      } else if (numBrackets > 0) { 
+        strbuff.push(gt);
+      } else if (numBrackets === 0) {
+        curstate = states.DEFAULT;
+        var strform = strbuff.join('');
+        strbuff = [];
+        if (strform in whitelist) {
+          outbuffer.push('<' + strform + '>');
+        } else if (strform.charAt(0) === '/' &&
+            strform.substring(1, strform.length) in whitelist) {
+          outbuffer.push('<' + strform + '>');
+        } else {
+          outbuffer.push(lt + strform + gt);
+        }
+      }
+    } else {
+      if (curstate === states.TAG) {
+        strbuff.push(chr);
+      } else {
+        outbuffer.push(chr);
+      }
+    }
+  }
+  return outbuffer.join('');
 };
 glift.ajax = {
   get: function(url, callback) {
@@ -1402,6 +1498,13 @@ glift.themes.registered.DEFAULT = {
     fullscreen: {
       'background-color': '#FFF',
       'backgroundColor': '#FFF'
+    },
+
+    gameInfo: {
+      div: {
+        'background-color': 'rgba(0,0,0,0.75)',
+        'border-radius': '25px'
+      }
     },
 
     icons: {
@@ -3269,7 +3372,6 @@ glift.displays.commentbox._CommentBox.prototype = {
     }
     var cssObj = {
       'overflow-y': 'auto',
-      'overflowY': 'auto',
       'MozBoxSizing': 'border-box',
       'boxSizing': 'border-box'
     };
@@ -3281,30 +3383,13 @@ glift.displays.commentbox._CommentBox.prototype = {
     return this;
   },
 
-  /** Sanitize the text in the comment box. */
-  sanitize: function(text) {
-    return glift.displays.commentbox.sanitize(text);
-  },
-
   /**
    * Set the text of the comment box. Note: this sanitizes the text to prevent
    * XSS and does some basic HTML-izing.
    */
   setText: function(text) {
-    text = this.sanitize(text);
     this.el.empty();
-    var textSegments = text.split('\n');
-    for (var i = 0; i < textSegments.length; i++) {
-      var seg = textSegments[i];
-      var pNode = glift.dom.elem(document.createElement('p'));
-      pNode.css({
-        margin: 0,
-        padding: 0,
-        'min-height': '1em'
-      })
-      pNode.html(seg);
-      this.el.append(pNode);
-    }
+    this.el.append(glift.dom.convertText(text));
   },
 
   /** Clear the text from the comment box. */
@@ -3316,69 +3401,6 @@ glift.displays.commentbox._CommentBox.prototype = {
   destroy: function() {
     this.commentBoxObj.empty();
   }
-};
-/**
- * Tags currently allowed in the comment box.
- */
-glift.displays.commentbox.sanitizeWhitelist_ = {
-  'br': true,
-  'b': true,
-  'strong': true,
-  'i': true,
-  'u': true,
-  'em': true
-};
-
-/**
- * Sanitizes text to prevent XSS. A single pass parser.
- */
-glift.displays.commentbox.sanitize = function(text) {
-  var outbuffer = [];
-  var strbuff = [];
-  var states = { DEFAULT: 1, TAG: 2 };
-  var whitelist = glift.displays.commentbox.sanitizeWhitelist_;
-  var curstate = states.DEFAULT;
-  var numBrackets = 0;
-  var lt = '&lt;';
-  var gt = '&gt;';
-  for (var i = 0, len = text.length; i < len; i++) {
-    var chr = text.charAt(i);
-    if (chr === '<') {
-      curstate = states.TAG;
-      numBrackets++;
-      if (numBrackets > 1) {
-        strbuff.push(lt); 
-      }
-    } else if (chr === '>') {
-      numBrackets--;
-      if (numBrackets < 0) {
-        curstate = states.DEFAULT;
-        numBrackets = 0;
-        outbuffer.push(gt);
-      } else if (numBrackets > 0) { 
-        strbuff.push(gt);
-      } else if (numBrackets === 0) {
-        curstate = states.DEFAULT;
-        var strform = strbuff.join('');
-        strbuff = [];
-        if (strform in whitelist) {
-          outbuffer.push('<' + strform + '>');
-        } else if (strform.charAt(0) === '/' &&
-            strform.substring(1, strform.length) in whitelist) {
-          outbuffer.push('<' + strform + '>');
-        } else {
-          outbuffer.push(lt + strform + gt);
-        }
-      }
-    } else {
-      if (curstate === states.TAG) {
-        strbuff.push(chr);
-      } else {
-        outbuffer.push(chr);
-      }
-    }
-  }
-  return outbuffer.join('');
 };
 /**
  * Extra GUI methods and data.  This also contains pieces used by widgets.
@@ -3633,8 +3655,8 @@ glift.displays.icons._IconBar.prototype = {
         point = glift.util.point;
     this.bbox = divBbox;
     this.svg = svglib.svg()
-      .attr("width", '100%')
-      .attr("height", '100%');
+      .attr('width', '100%')
+      .attr('height', '100%');
     glift.displays.icons.rowCenterWrapped(
         divBbox, this.icons, this.vertMargin, this.horzMargin)
     this._createIcons();
@@ -4997,7 +5019,8 @@ glift.displays.statusbar = {
     return new glift.displays.statusbar._StatusBar(
         options.iconBarPrototype,
         options.theme,
-        options.widget
+        options.widget,
+        options.allPositioning
     );
   },
 
@@ -5011,10 +5034,17 @@ glift.displays.statusbar = {
  * Game information like move number, settings, and game info.
  */
 glift.displays.statusbar._StatusBar = function(
-    iconBarPrototype, theme, widget) {
+    iconBarPrototype, theme, widget, positioning) {
   this.iconBar = iconBarPrototype;
   this.theme = theme;
+  // TODO(kashomon): Restructure in such a way so the status bar doesn't need to
+  // depend on the widget object
   this.widget = widget;
+
+  // Bboxes for all components.
+  this.positioning = positioning;
+
+  // TODO(kashomon): Don't depend on manager data.
   this.totalPages = widget.manager.sgfCollection.length;
   this.pageIndex = widget.manager.sgfColIndex + 1;
 };
@@ -5027,11 +5057,64 @@ glift.displays.statusbar._StatusBar.prototype = {
     return this;
   },
 
+  gameInfo: function() {
+    var wrapperDivId = this.widget.wrapperDiv,
+        suffix = '_gameinfo',
+        newDivId = wrapperDivId + suffix + '_wrapper',
+        wrapperDivEl = glift.dom.elem(wrapperDivId),
+        newDiv = glift.dom.newDiv(newDivId),
+        theme = this.theme,
+        fullBox = this.positioning.fullWidgetBbox(),
+        cssObj = {
+          position: 'absolute',
+          margin: '0px',
+          padding: '0px',
+          top: fullBox.top() + 'px',
+          left: fullBox.left() + 'px',
+          width: fullBox.width() + 'px',
+          height: fullBox.height() + 'px',
+          // need to change zindex based on fullscreen
+          'z-index': 100
+        };
+    newDiv.css(cssObj);
+
+    var textDiv = glift.dom.newDiv(wrapperDivId + suffix + '_textdiv');
+    var textDivCss = {
+      position: 'relative',
+      margin: '0px',
+      padding: '0px',
+      height: fullBox.height() + 'px',
+      width: fullBox.width() + 'px'
+    };
+    for (var key in theme.statusBar.gameInfo.div) {
+      textDivCss[key] = theme.statusBar.gameInfo.div[key];
+    }
+
+    textDiv.css(textDivCss);
+    textDiv.on('click', function() {
+      newDiv.remove();
+    });
+
+    textDiv.append(glift.dom.convertText(
+        [
+          '<strong>Game Name:</strong> Derp',
+          '<strong>Player Black</strong>: Derper',
+          '<strong>Player White</strong>: Derper'
+        ].join('\n')).css({
+          padding: '10px',
+          color: '#FFF'
+        }));
+
+    newDiv.append(textDiv);
+
+    // Put the X icon in the upper left
+    wrapperDivEl.prepend(newDiv);
+  },
+
   /** Make Glift full-screen */
   fullscreen: function() {
     var widget = this.widget,
         wrapperDivId = widget.wrapperDiv,
-        wrapperDivEl = glift.dom.elem(wrapperDivId),
         newDivId = wrapperDivId + '_fullscreen',
         newDiv = glift.dom.newDiv(newDivId),
         body = glift.dom.elem(document.body),
@@ -5044,8 +5127,7 @@ glift.displays.statusbar._StatusBar.prototype = {
           // Some sites set the z-index obnoxiously high (looking at you bootstrap).
           // So, to make it really fullscreen, we need to set the z-index higher
           // =(
-          'z-index': 110000,
-          'zIndex': 110000
+          'z-index': 110000
         };
     for (var key in this.theme.statusBar.fullscreen) {
       cssObj[key] = this.theme.statusBar.fullscreen[key];
@@ -5069,7 +5151,7 @@ glift.displays.statusbar._StatusBar.prototype = {
     manager.enableFullscreenAutoResize();
   },
 
-  /** Return Glift to non-fullscreen */
+  /** Returns Glift to non-fullscreen */
   unfullscreen: function() {
     if (!this.widget.manager.fullscreenDivId) {
       return; // We're not fullscreened
@@ -5097,7 +5179,7 @@ glift.displays.statusbar._StatusBar.prototype = {
     widget.manager.disableFullscreenAutoResize();
   },
 
-  /** Set the move number for the current move */
+  /** Sets the move number for the current move */
   setMoveNumber: function(number) {
     if (!this.iconBar.hasIcon('move-indicator')) { return; }
     var num = (number || '0') + ''; // Force to be a string.
@@ -5110,7 +5192,7 @@ glift.displays.statusbar._StatusBar.prototype = {
         mod);
   },
 
-  /** Set the page number for the current move */
+  /** Sets the page number for the current move */
   setPageNumber: function(number, denominator) {
     if (!this.iconBar.hasIcon('widget-page')) { return; }
     var num = (number || '0') + ''; // Force to be a string.
@@ -5335,6 +5417,8 @@ glift.displays.position._WidgetPositioner.prototype = {
   /**
    * Calculate the Widget Positioning.  This uses heuristics to determine if the
    * orientation should be horizontally oriented or vertically oriented.
+   *
+   * Returns a WidgetBoxes instance.
    */
   calcWidgetPositioning: function() {
     if (this.useHorzOrientation()) {
@@ -9440,6 +9524,7 @@ glift.widgets.BaseWidget.prototype = {
       this.statusBar = glift.displays.statusbar.create({
           iconBarPrototype: statusBarIconBar,
           theme: theme,
+          allPositioning: positioning,
           widget: this
       }).draw();
     }
@@ -10189,7 +10274,7 @@ glift.widgets.options.baseOptions = {
     // TODO(kashomon): Make per widget type (mv num not necessary for problems?)
     // TODO(kashomon): Enable game-info and settings when ready
     statusBarIcons: [
-      // 'game-info',
+      'game-info',
       'move-indicator',
       'fullscreen'
       // 'settings-wrench'
@@ -10571,7 +10656,10 @@ glift.widgets.options.baseOptions = {
     //////////////////////
 
     'game-info': {
-      click: function() {},
+      click: function(event, widget, icon, iconBar) {
+        widget.statusBar && 
+        widget.statusBar.gameInfo();
+      },
       tooltip: 'Show the game info'
     },
 

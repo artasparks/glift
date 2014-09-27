@@ -130,6 +130,13 @@ glift.themes.registered.DEFAULT = {
       'backgroundColor': '#FFF'
     },
 
+    gameInfo: {
+      div: {
+        'background-color': 'rgba(0,0,0,0.75)',
+        'border-radius': '25px'
+      }
+    },
+
     icons: {
       vertMargin: 4,
       horzMargin: 5,

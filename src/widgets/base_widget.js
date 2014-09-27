@@ -126,6 +126,7 @@ glift.widgets.BaseWidget.prototype = {
       this.statusBar = glift.displays.statusbar.create({
           iconBarPrototype: statusBarIconBar,
           theme: theme,
+          allPositioning: positioning,
           widget: this
       }).draw();
     }

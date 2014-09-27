@@ -1,6 +1,6 @@
-glift.displays.commentbox.sanitizeTest = function() {
-  module('glift.displays.commentbox.sanitizeTest');
-  var sanitize = glift.displays.commentbox.sanitize;
+glift.dom.sanitizeTest = function() {
+  module('glift.dom.sanitizeTest');
+  var sanitize = glift.dom.sanitize;
 
   test('Testing simple tag sanitize', function() {
     deepEqual(sanitize('foo<zed>bar'), 'foo&lt;zed&gt;bar');
@@ -24,5 +24,10 @@ glift.displays.commentbox.sanitizeTest = function() {
   test('Testing whitelist for tags with props', function() {
     var str = 'foo<b class="zed">';
     deepEqual(sanitize(str), 'foo&lt;b class="zed"&gt;');
+  });
+
+  test('Testing misc chares', function() {
+    var str = '&\'"/';
+    deepEqual(sanitize(str), '&amp;&#x27;&quot;&#x2F;');
   });
 };

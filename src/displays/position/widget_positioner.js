@@ -56,6 +56,8 @@ glift.displays.position._WidgetPositioner.prototype = {
   /**
    * Calculate the Widget Positioning.  This uses heuristics to determine if the
    * orientation should be horizontally oriented or vertically oriented.
+   *
+   * Returns a WidgetBoxes instance.
    */
   calcWidgetPositioning: function() {
     if (this.useHorzOrientation()) {

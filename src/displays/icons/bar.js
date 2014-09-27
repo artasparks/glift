@@ -83,8 +83,8 @@ glift.displays.icons._IconBar.prototype = {
         point = glift.util.point;
     this.bbox = divBbox;
     this.svg = svglib.svg()
-      .attr("width", '100%')
-      .attr("height", '100%');
+      .attr('width', '100%')
+      .attr('height', '100%');
     glift.displays.icons.rowCenterWrapped(
         divBbox, this.icons, this.vertMargin, this.horzMargin)
     this._createIcons();

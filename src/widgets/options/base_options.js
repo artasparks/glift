@@ -114,7 +114,7 @@ glift.widgets.options.baseOptions = {
     // TODO(kashomon): Make per widget type (mv num not necessary for problems?)
     // TODO(kashomon): Enable game-info and settings when ready
     statusBarIcons: [
-      // 'game-info',
+      'game-info',
       'move-indicator',
       'fullscreen'
       // 'settings-wrench'
@@ -496,7 +496,10 @@ glift.widgets.options.baseOptions = {
     //////////////////////
 
     'game-info': {
-      click: function() {},
+      click: function(event, widget, icon, iconBar) {
+        widget.statusBar && 
+        widget.statusBar.gameInfo();
+      },
       tooltip: 'Show the game info'
     },
 
