@@ -50,7 +50,7 @@ glift.widgets.BaseWidget.prototype = {
 
     // This should be the only time we get the base width and height, until the
     // entire widget is re-drawn.
-    var parentDivBbox = glift.displays.bboxFromDiv(this.wrapperDiv);
+    var parentDivBbox = glift.displays.bbox.fromDiv(this.wrapperDiv);
     if (parentDivBbox.width() === 0 || parentDivBbox.height() === 0) {
       throw new Error("Div has has invalid dimensions. Bounding box had " +
           "width: " + parentDivBbox.width() +
@@ -333,6 +333,7 @@ glift.widgets.BaseWidget.prototype = {
     this.applyState(state);
   },
 
+  /** remove the widget and do various cleanups. */
   destroy: function() {
     var managerId = this.manager.id;
     glift.keyMappings.unregisterInstance(managerId);

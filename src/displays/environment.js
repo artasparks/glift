@@ -18,12 +18,12 @@ glift.displays.environment = {
     // override.
     var bbox;
     if (options.heightOverride && options.widthOverride) {
-      bbox = glift.displays.bboxFromPts(
+      bbox = glift.displays.bbox.fromPts(
           point(0,0), point(options.widthOverride, options.heightOverride));
     } else if (options.boardBox) {
       bbox = options.boardBox;
     } else if (options.divId) {
-      bbox = glift.displays.bboxFromDiv(options.divId);
+      bbox = glift.displays.bbox.fromDiv(options.divId);
     } else {
       throw new Error("No Bounding Box defined for display environment!")
     }
@@ -62,7 +62,7 @@ GuiEnvironment.prototype = {
         // The box for the entire div.
         // TODO(kashomon): This is created twice, which is a little silly (but
         // not expensive) in _resetDimensions. Might want to replace.
-        divBox = displays.bboxFromPts(
+        divBox = displays.bbox.fromPts(
             glift.util.point(0, 0), // top left point
             glift.util.point(divWidth, divHeight)), // bottom right point
 

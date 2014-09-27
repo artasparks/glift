@@ -2,7 +2,7 @@
  * Takes a movetree and returns the optimal BoardRegion for cropping purposes.
  */
 glift.bridge.getCropFromMovetree = function(movetree) {
-  var bbox = glift.displays.bboxFromPts;
+  var bbox = glift.displays.bbox.fromPts;
   var point = glift.util.point;
   var boardRegions = glift.enums.boardRegions;
   // Intersections need to be 0 rather than 1 indexed for this method.

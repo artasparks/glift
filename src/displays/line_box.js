@@ -12,7 +12,7 @@ glift.displays.getLineBox = function(boardBox, cropbox) {
   var topBase = boardBox.topLeft().y();
 
   // The Line Box is an extended cropbox.
-  var lineBoxBoundingBox = glift.displays.bboxFromPts(
+  var lineBoxBoundingBox = glift.displays.bbox.fromPts(
       glift.util.point(left + leftBase, top + topBase),
       glift.util.point(right + leftBase, bot + topBase));
 

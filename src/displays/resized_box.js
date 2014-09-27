@@ -21,7 +21,7 @@ glift.displays.getResizedBox = function(divBox, cropbox, alignment) {
       yDelta = alignment === aligns.TOP ? 0 : yDiff / 2,
       newLeft = divBox.topLeft().x() + xDelta,
       newTop = divBox.topLeft().y() + yDelta,
-      newBox = glift.displays.bbox(
+      newBox = glift.displays.bbox.fromSides(
           util.point(newLeft, newTop), newWidth, newHeight);
   if (glift.global.debugMode) {
     newBox._debugInfo = function() {

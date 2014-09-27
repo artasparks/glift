@@ -45,7 +45,7 @@ glift.displays.icons._WrappedIcon = function(iconName) {
   this.iconName = glift.displays.icons.validateIcon(iconName);
   var iconData = glift.displays.icons.svg[iconName];
   this.iconStr = iconData.string;
-  this.originalBbox = glift.displays.bboxFromPts(
+  this.originalBbox = glift.displays.bbox.fromPts(
       glift.util.point(iconData.bbox.x, iconData.bbox.y),
       glift.util.point(iconData.bbox.x2, iconData.bbox.y2));
   this.associatedIcons = []; // Added with addAssociatedIcon

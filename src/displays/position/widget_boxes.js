@@ -85,7 +85,7 @@ glift.displays.position.WidgetBoxes.prototype = {
       if (bbox.right() > right) { right = bbox.right(); }
     });
     if (top !== null && left !== null && bottom !== null && right !== null) {
-      return glift.displays.bboxFromPts(
+      return glift.displays.bbox.fromPts(
           glift.util.point(left, top), glift.util.point(right, bottom));
     } else  {
       return null;
@@ -106,28 +106,45 @@ glift.displays.position.WidgetColumn = function() {
 
 glift.displays.position.WidgetColumn.prototype = {
   /** Set a mapping from from component to bounding box. */
-  setComponent: function(component, box) {
+  setComponent: function(component, bbox) {
     if (!glift.enums.boardComponents[component]) {
       throw new Error('Unknown component: ' + component);
     }
-    this.mapping[component] = box;
+    this.mapping[component] = bbox;
+    return this;
   },
 
-  /** Get the boinding box of a component or return null*/
+  /** Get the bbox of a component or return null */
   getBbox: function(component) {
     return this.mapping[component] || null;
   },
 
-  /** Set the column from an ordering. */
-  setColumnOrdering: function(column) {
+  /**
+   * Set the column from an ordering. Recall that ratio arrays have the
+   * following format:
+   * [
+   *  { component: BOARD, ratio: 0.3}
+   *  { component: COMMENT_BOX, ratio: 0.6}
+   *  ...
+   * ].
+   *
+   * This is typically set before setting components.
+   */
+  setOrderingFromRatioArray: function(column) {
     var ordering = [];
     for (var i = 0; i < column.length; i++) {
-      ordering.push(column[i].component);
+      var item = column[i];
+      if (item && item.component) {
+          ordering.push(item.component);
+      }
     }
     this.ordering = ordering;
+    return this;
   },
 
-  /** An ordering function. */
+  /**
+   * An ordering function. Expects the fn to take a component name.
+   */
   orderFn: function(fn) {
     for (var i = 0; i < this.ordering.length; i++) {
       fn(this.ordering[i]);

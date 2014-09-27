@@ -1533,21 +1533,24 @@ glift.displays = {
     return glift.displays.board.create(env, themeKey, theme, options.rotation);
   }
 };
-glift.displays.bboxFromPts = function(topLeftPt, botRightPt) {
-  return new glift.displays._BoundingBox(topLeftPt, botRightPt);
-};
+glift.displays.bbox = {
+  /** Return a new bounding box with two points. */
+  fromPts: function(topLeftPt, botRightPt) {
+    return new glift.displays._BoundingBox(topLeftPt, botRightPt);
+  },
 
-glift.displays.bboxFromDiv = function(divId) {
-  var elem = glift.dom.elem(divId);
-  return glift.displays.bbox(
-      glift.util.point(0,0),
-      elem.width(),
-      elem.height());
-};
+  /** Return a new bounding box with a top left point, a width, and a height. */
+  fromSides: function(topLeft, width, height) {
+    return new glift.displays._BoundingBox(
+        topLeft, glift.util.point(topLeft.x() + width, topLeft.y() + height));
+  },
 
-glift.displays.bbox = function(topLeft, width, height) {
-  return new glift.displays._BoundingBox(
-      topLeft, glift.util.point(topLeft.x() + width, topLeft.y() + height));
+  /** Return the bounding box for a div. */
+  fromDiv: function(divId) {
+    var elem = glift.dom.elem(divId);
+    return glift.displays.bbox.fromSides(
+        glift.util.point(0,0), elem.width(), elem.height());
+  }
 };
 
 /**
@@ -1609,7 +1612,7 @@ glift.displays._BoundingBox.prototype = {
         newWidth = this.width() * amount,
         newTopLeft = glift.util.point(
             this.topLeft().x() * amount, this.topLeft().y() * amount);
-    return glift.displays.bbox(newTopLeft, newWidth, newHeight);
+    return glift.displays.bbox.fromSides(newTopLeft, newWidth, newHeight);
   },
 
   toString: function() {
@@ -1617,7 +1620,7 @@ glift.displays._BoundingBox.prototype = {
   },
 
   translate: function(dx, dy) {
-    return glift.displays.bboxFromPts(
+    return glift.displays.bbox.fromPts(
         glift.util.point(this.topLeft().x() + dx, this.topLeft().y() + dy),
         glift.util.point(this.botRight().x() + dx, this.botRight().y() + dy));
   },
@@ -1701,7 +1704,7 @@ glift.displays._BoundingBox.prototype = {
           this.topLeft().y() + this.height() * currentSplitPercentage :
           this.botRight().y();
       var nextBotRight = glift.util.point(nextBotRightX, nextBotRightY);
-      outBboxes.push(glift.displays.bboxFromPts(currentTopLeft, nextBotRight));
+      outBboxes.push(glift.displays.bbox.fromPts(currentTopLeft, nextBotRight));
       var nextTopLeftX = d === 'h' ?
           currentTopLeft.x() :
           this.topLeft().x() + this.width() * currentSplitPercentage;
@@ -1777,7 +1780,7 @@ glift.displays.boardPoints = function(
           points[intPt.hash()] = {
             intPt: intPt,
             coordPt: coordPt,
-            bbox: glift.displays.bboxFromPts(
+            bbox: glift.displays.bbox.fromPts(
                 glift.util.point(coordPt.x() - radius, coordPt.y() - radius),
                 glift.util.point(coordPt.x() + radius, coordPt.y() + radius))
           };
@@ -1787,7 +1790,7 @@ glift.displays.boardPoints = function(
         points[intPt.hash()] = {
           intPt: intPt,
           coordPt: coordPt,
-          bbox: glift.displays.bboxFromPts(
+          bbox: glift.displays.bbox.fromPts(
               glift.util.point(coordPt.x() - radius, coordPt.y() - radius),
               glift.util.point(coordPt.x() + radius, coordPt.y() + radius))
         };
@@ -2017,9 +2020,9 @@ glift.displays.cropbox = {
       default: break;
     };
 
-    var cbox = glift.displays.bboxFromPts(
+    var cbox = glift.displays.bbox.fromPts(
         util.point(left, top), util.point(right, bot));
-    var extBox = glift.displays.bboxFromPts(
+    var extBox = glift.displays.bbox.fromPts(
         util.point(leftExtension, topExtension),
         util.point(rightExtension, botExtension));
     return glift.displays.cropbox.create(
@@ -2079,12 +2082,12 @@ glift.displays.environment = {
     // override.
     var bbox;
     if (options.heightOverride && options.widthOverride) {
-      bbox = glift.displays.bboxFromPts(
+      bbox = glift.displays.bbox.fromPts(
           point(0,0), point(options.widthOverride, options.heightOverride));
     } else if (options.boardBox) {
       bbox = options.boardBox;
     } else if (options.divId) {
-      bbox = glift.displays.bboxFromDiv(options.divId);
+      bbox = glift.displays.bbox.fromDiv(options.divId);
     } else {
       throw new Error("No Bounding Box defined for display environment!")
     }
@@ -2123,7 +2126,7 @@ GuiEnvironment.prototype = {
         // The box for the entire div.
         // TODO(kashomon): This is created twice, which is a little silly (but
         // not expensive) in _resetDimensions. Might want to replace.
-        divBox = displays.bboxFromPts(
+        divBox = displays.bbox.fromPts(
             glift.util.point(0, 0), // top left point
             glift.util.point(divWidth, divHeight)), // bottom right point
 
@@ -2309,7 +2312,7 @@ glift.displays.getLineBox = function(boardBox, cropbox) {
   var topBase = boardBox.topLeft().y();
 
   // The Line Box is an extended cropbox.
-  var lineBoxBoundingBox = glift.displays.bboxFromPts(
+  var lineBoxBoundingBox = glift.displays.bbox.fromPts(
       glift.util.point(left + leftBase, top + topBase),
       glift.util.point(right + leftBase, bot + topBase));
 
@@ -2368,7 +2371,7 @@ glift.displays.getResizedBox = function(divBox, cropbox, alignment) {
       yDelta = alignment === aligns.TOP ? 0 : yDiff / 2,
       newLeft = divBox.topLeft().x() + xDelta,
       newTop = divBox.topLeft().y() + yDelta,
-      newBox = glift.displays.bbox(
+      newBox = glift.displays.bbox.fromSides(
           util.point(newLeft, newTop), newWidth, newHeight);
   if (glift.global.debugMode) {
     newBox._debugInfo = function() {
@@ -3250,7 +3253,7 @@ glift.displays.commentbox.create = function(divId, posBbox, theme) {
 
 glift.displays.commentbox._CommentBox = function(divId, positioningBbox, theme) {
   this.divId = divId;
-  this.bbox = glift.displays.bboxFromPts(
+  this.bbox = glift.displays.bbox.fromPts(
       glift.util.point(0,0),
       glift.util.point(positioningBbox.width(), positioningBbox.height()));
   this.theme = theme;
@@ -3578,7 +3581,7 @@ glift.displays.icons._IconBar = function(
     allDivIds, allPositioning) {
   this.divId = divId;
   this.position = position;
-  this.divBbox = glift.displays.bboxFromPts(
+  this.divBbox = glift.displays.bbox.fromPts(
       glift.util.point(0,0),
       glift.util.point(position.width(), position.height()));
   this.theme = theme;
@@ -4048,12 +4051,12 @@ glift.displays.icons._IconSelector.prototype = {
     this.destroy();
     var that = this;
     var svglib = glift.displays.svg;
-    var parentBbox = glift.displays.bboxFromDiv(this.parentDivId);
+    var parentBbox = glift.displays.bbox.fromDiv(this.parentDivId);
 
     var barElem = glift.dom.elem(this.iconBarId);
     var barPosLeft = barElem.boundingClientRect().left;
 
-    var iconBarBbox = glift.displays.bboxFromDiv(this.iconBarId);
+    var iconBarBbox = glift.displays.bbox.fromDiv(this.iconBarId);
     var iconBbox = this.icon.bbox;
     var columnWidth = iconBbox.height();
     // This assumes that the iconbar is always on the bottom.
@@ -4089,7 +4092,7 @@ glift.displays.icons._IconSelector.prototype = {
       });
       newWrapperDiv.append(newColumnDiv);
 
-      var columnBox = glift.displays.bboxFromDiv(columnId);
+      var columnBox = glift.displays.bbox.fromDiv(columnId);
       var transforms = glift.displays.icons.columnCenterWrapped(
           columnBox, rewrapped, paddingPx, paddingPx);
 
@@ -4522,7 +4525,7 @@ glift.displays.icons._WrappedIcon = function(iconName) {
   this.iconName = glift.displays.icons.validateIcon(iconName);
   var iconData = glift.displays.icons.svg[iconName];
   this.iconStr = iconData.string;
-  this.originalBbox = glift.displays.bboxFromPts(
+  this.originalBbox = glift.displays.bbox.fromPts(
       glift.util.point(iconData.bbox.x, iconData.bbox.y),
       glift.util.point(iconData.bbox.x2, iconData.bbox.y2));
   this.associatedIcons = []; // Added with addAssociatedIcon
@@ -5057,7 +5060,7 @@ glift.displays.statusbar._StatusBar.prototype = {
         window.pageYOffset ||
         document.body.scrollTop ||
         document.documentElement.scrollTop || null;
-    window.scrollTo(0, 0);
+    window.scrollTo(0, 0); // Scroll to the top.
     manager.fullscreenDivId = newDivId;
     widget.destroy();
     widget.wrapperDiv = newDivId;
@@ -5208,7 +5211,7 @@ glift.displays.position.WidgetBoxes.prototype = {
       if (bbox.right() > right) { right = bbox.right(); }
     });
     if (top !== null && left !== null && bottom !== null && right !== null) {
-      return glift.displays.bboxFromPts(
+      return glift.displays.bbox.fromPts(
           glift.util.point(left, top), glift.util.point(right, bottom));
     } else  {
       return null;
@@ -5229,28 +5232,45 @@ glift.displays.position.WidgetColumn = function() {
 
 glift.displays.position.WidgetColumn.prototype = {
   /** Set a mapping from from component to bounding box. */
-  setComponent: function(component, box) {
+  setComponent: function(component, bbox) {
     if (!glift.enums.boardComponents[component]) {
       throw new Error('Unknown component: ' + component);
     }
-    this.mapping[component] = box;
+    this.mapping[component] = bbox;
+    return this;
   },
 
-  /** Get the boinding box of a component or return null*/
+  /** Get the bbox of a component or return null */
   getBbox: function(component) {
     return this.mapping[component] || null;
   },
 
-  /** Set the column from an ordering. */
-  setColumnOrdering: function(column) {
+  /**
+   * Set the column from an ordering. Recall that ratio arrays have the
+   * following format:
+   * [
+   *  { component: BOARD, ratio: 0.3}
+   *  { component: COMMENT_BOX, ratio: 0.6}
+   *  ...
+   * ].
+   *
+   * This is typically set before setting components.
+   */
+  setOrderingFromRatioArray: function(column) {
     var ordering = [];
     for (var i = 0; i < column.length; i++) {
-      ordering.push(column[i].component);
+      var item = column[i];
+      if (item && item.component) {
+          ordering.push(item.component);
+      }
     }
     this.ordering = ordering;
+    return this;
   },
 
-  /** An ordering function. */
+  /**
+   * An ordering function. Expects the fn to take a component name.
+   */
   orderFn: function(fn) {
     for (var i = 0; i < this.ordering.length; i++) {
       fn(this.ordering[i]);
@@ -5327,6 +5347,7 @@ glift.displays.position._WidgetPositioner.prototype = {
   /**
    * Determines whether or not to use a horizontal orientation or vertical
    * orientation.
+   * Returns: True or False
    */
   useHorzOrientation: function() {
     var divBox = this.divBox,
@@ -5401,7 +5422,7 @@ glift.displays.position._WidgetPositioner.prototype = {
     var components = glift.enums.boardComponents;
     var divBoxSplits = [wrapperDiv];
     var ratios = this._extractRatios(recalCol);
-    column.setColumnOrdering(recalCol);
+    column.setOrderingFromRatioArray(recalCol);
     if (ratios.length > 1) {
       // We remove the last ratio, so we can be exact about the last component
       // ratio because we assume that:
@@ -5438,7 +5459,7 @@ glift.displays.position._WidgetPositioner.prototype = {
         return;
       }
       var split = splitMap[comp];
-      var bbox = glift.displays.bbox(
+      var bbox = glift.displays.bbox.fromSides(
           glift.util.point(colLeft, top), colWidth, split.height());
       column.setComponent(comp, bbox);
       top += bbox.height();
@@ -5454,14 +5475,23 @@ glift.displays.position._WidgetPositioner.prototype = {
    * components.
    *
    * This is design to work with both one-column splits or two column splits.
+   *
+   * Returns a recalculated splits mapping. Has the form:
+   * {
+   *  first: [
+   *    { component: BOARD, ratio: 0.3 },
+   *    ...
+   *  ],
+   *  second: [...]
+   * }
    */
   recalcSplits: function(columnSplits) {
-    // TODO(kashomon): Just return if we don't need recalculation.
     var out = {};
     var compsToUseSet = this.componentSet;
     // Note: this is designed with the outer loop in this way to work with
     // the one-col-split and two-col-split styles.
     for (var colKey in columnSplits) {
+      // Grab array of component-ratio objs.
       var col = columnSplits[colKey];
       var colOut = [];
       var extra = 0;
@@ -5530,7 +5560,7 @@ glift.displays.position._WidgetPositioner.prototype = {
         splits[0], this.cropbox, glift.enums.boardAlignments.RIGHT);
 
     // Defer to the Go board height calculations.
-    var baseRightCol = glift.displays.bboxFromPts(
+    var baseRightCol = glift.displays.bbox.fromPts(
       glift.util.point(splits[1].topLeft().x(), resizedBox.topLeft().y()),
       glift.util.point(splits[1].botRight().x(), resizedBox.botRight().y()));
 
@@ -8509,7 +8539,7 @@ glift.bridge = {
  * Takes a movetree and returns the optimal BoardRegion for cropping purposes.
  */
 glift.bridge.getCropFromMovetree = function(movetree) {
-  var bbox = glift.displays.bboxFromPts;
+  var bbox = glift.displays.bbox.fromPts;
   var point = glift.util.point;
   var boardRegions = glift.enums.boardRegions;
   // Intersections need to be 0 rather than 1 indexed for this method.
@@ -9334,7 +9364,7 @@ glift.widgets.BaseWidget.prototype = {
 
     // This should be the only time we get the base width and height, until the
     // entire widget is re-drawn.
-    var parentDivBbox = glift.displays.bboxFromDiv(this.wrapperDiv);
+    var parentDivBbox = glift.displays.bbox.fromDiv(this.wrapperDiv);
     if (parentDivBbox.width() === 0 || parentDivBbox.height() === 0) {
       throw new Error("Div has has invalid dimensions. Bounding box had " +
           "width: " + parentDivBbox.width() +
@@ -9617,6 +9647,7 @@ glift.widgets.BaseWidget.prototype = {
     this.applyState(state);
   },
 
+  /** remove the widget and do various cleanups. */
   destroy: function() {
     var managerId = this.manager.id;
     glift.keyMappings.unregisterInstance(managerId);

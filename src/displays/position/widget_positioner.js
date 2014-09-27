@@ -68,6 +68,7 @@ glift.displays.position._WidgetPositioner.prototype = {
   /**
    * Determines whether or not to use a horizontal orientation or vertical
    * orientation.
+   * Returns: True or False
    */
   useHorzOrientation: function() {
     var divBox = this.divBox,
@@ -142,7 +143,7 @@ glift.displays.position._WidgetPositioner.prototype = {
     var components = glift.enums.boardComponents;
     var divBoxSplits = [wrapperDiv];
     var ratios = this._extractRatios(recalCol);
-    column.setColumnOrdering(recalCol);
+    column.setOrderingFromRatioArray(recalCol);
     if (ratios.length > 1) {
       // We remove the last ratio, so we can be exact about the last component
       // ratio because we assume that:
@@ -179,7 +180,7 @@ glift.displays.position._WidgetPositioner.prototype = {
         return;
       }
       var split = splitMap[comp];
-      var bbox = glift.displays.bbox(
+      var bbox = glift.displays.bbox.fromSides(
           glift.util.point(colLeft, top), colWidth, split.height());
       column.setComponent(comp, bbox);
       top += bbox.height();
@@ -195,14 +196,23 @@ glift.displays.position._WidgetPositioner.prototype = {
    * components.
    *
    * This is design to work with both one-column splits or two column splits.
+   *
+   * Returns a recalculated splits mapping. Has the form:
+   * {
+   *  first: [
+   *    { component: BOARD, ratio: 0.3 },
+   *    ...
+   *  ],
+   *  second: [...]
+   * }
    */
   recalcSplits: function(columnSplits) {
-    // TODO(kashomon): Just return if we don't need recalculation.
     var out = {};
     var compsToUseSet = this.componentSet;
     // Note: this is designed with the outer loop in this way to work with
     // the one-col-split and two-col-split styles.
     for (var colKey in columnSplits) {
+      // Grab array of component-ratio objs.
       var col = columnSplits[colKey];
       var colOut = [];
       var extra = 0;
@@ -271,7 +281,7 @@ glift.displays.position._WidgetPositioner.prototype = {
         splits[0], this.cropbox, glift.enums.boardAlignments.RIGHT);
 
     // Defer to the Go board height calculations.
-    var baseRightCol = glift.displays.bboxFromPts(
+    var baseRightCol = glift.displays.bbox.fromPts(
       glift.util.point(splits[1].topLeft().x(), resizedBox.topLeft().y()),
       glift.util.point(splits[1].botRight().x(), resizedBox.botRight().y()));
 

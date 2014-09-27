@@ -103,9 +103,9 @@ glift.displays.cropbox = {
       default: break;
     };
 
-    var cbox = glift.displays.bboxFromPts(
+    var cbox = glift.displays.bbox.fromPts(
         util.point(left, top), util.point(right, bot));
-    var extBox = glift.displays.bboxFromPts(
+    var extBox = glift.displays.bbox.fromPts(
         util.point(leftExtension, topExtension),
         util.point(rightExtension, botExtension));
     return glift.displays.cropbox.create(

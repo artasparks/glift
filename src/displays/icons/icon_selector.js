@@ -30,12 +30,12 @@ glift.displays.icons._IconSelector.prototype = {
     this.destroy();
     var that = this;
     var svglib = glift.displays.svg;
-    var parentBbox = glift.displays.bboxFromDiv(this.parentDivId);
+    var parentBbox = glift.displays.bbox.fromDiv(this.parentDivId);
 
     var barElem = glift.dom.elem(this.iconBarId);
     var barPosLeft = barElem.boundingClientRect().left;
 
-    var iconBarBbox = glift.displays.bboxFromDiv(this.iconBarId);
+    var iconBarBbox = glift.displays.bbox.fromDiv(this.iconBarId);
     var iconBbox = this.icon.bbox;
     var columnWidth = iconBbox.height();
     // This assumes that the iconbar is always on the bottom.
@@ -71,7 +71,7 @@ glift.displays.icons._IconSelector.prototype = {
       });
       newWrapperDiv.append(newColumnDiv);
 
-      var columnBox = glift.displays.bboxFromDiv(columnId);
+      var columnBox = glift.displays.bbox.fromDiv(columnId);
       var transforms = glift.displays.icons.columnCenterWrapped(
           columnBox, rewrapped, paddingPx, paddingPx);
 

@@ -14,7 +14,7 @@ glift.displays.commentbox.create = function(divId, posBbox, theme) {
 
 glift.displays.commentbox._CommentBox = function(divId, positioningBbox, theme) {
   this.divId = divId;
-  this.bbox = glift.displays.bboxFromPts(
+  this.bbox = glift.displays.bbox.fromPts(
       glift.util.point(0,0),
       glift.util.point(positioningBbox.width(), positioningBbox.height()));
   this.theme = theme;

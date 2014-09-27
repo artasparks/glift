@@ -62,7 +62,7 @@ glift.displays.boardPoints = function(
           points[intPt.hash()] = {
             intPt: intPt,
             coordPt: coordPt,
-            bbox: glift.displays.bboxFromPts(
+            bbox: glift.displays.bbox.fromPts(
                 glift.util.point(coordPt.x() - radius, coordPt.y() - radius),
                 glift.util.point(coordPt.x() + radius, coordPt.y() + radius))
           };
@@ -72,7 +72,7 @@ glift.displays.boardPoints = function(
         points[intPt.hash()] = {
           intPt: intPt,
           coordPt: coordPt,
-          bbox: glift.displays.bboxFromPts(
+          bbox: glift.displays.bbox.fromPts(
               glift.util.point(coordPt.x() - radius, coordPt.y() - radius),
               glift.util.point(coordPt.x() + radius, coordPt.y() + radius))
         };

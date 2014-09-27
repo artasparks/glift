@@ -1,18 +1,21 @@
-glift.displays.bboxFromPts = function(topLeftPt, botRightPt) {
-  return new glift.displays._BoundingBox(topLeftPt, botRightPt);
-};
+glift.displays.bbox = {
+  /** Return a new bounding box with two points. */
+  fromPts: function(topLeftPt, botRightPt) {
+    return new glift.displays._BoundingBox(topLeftPt, botRightPt);
+  },
 
-glift.displays.bboxFromDiv = function(divId) {
-  var elem = glift.dom.elem(divId);
-  return glift.displays.bbox(
-      glift.util.point(0,0),
-      elem.width(),
-      elem.height());
-};
+  /** Return a new bounding box with a top left point, a width, and a height. */
+  fromSides: function(topLeft, width, height) {
+    return new glift.displays._BoundingBox(
+        topLeft, glift.util.point(topLeft.x() + width, topLeft.y() + height));
+  },
 
-glift.displays.bbox = function(topLeft, width, height) {
-  return new glift.displays._BoundingBox(
-      topLeft, glift.util.point(topLeft.x() + width, topLeft.y() + height));
+  /** Return the bounding box for a div. */
+  fromDiv: function(divId) {
+    var elem = glift.dom.elem(divId);
+    return glift.displays.bbox.fromSides(
+        glift.util.point(0,0), elem.width(), elem.height());
+  }
 };
 
 /**
@@ -74,7 +77,7 @@ glift.displays._BoundingBox.prototype = {
         newWidth = this.width() * amount,
         newTopLeft = glift.util.point(
             this.topLeft().x() * amount, this.topLeft().y() * amount);
-    return glift.displays.bbox(newTopLeft, newWidth, newHeight);
+    return glift.displays.bbox.fromSides(newTopLeft, newWidth, newHeight);
   },
 
   toString: function() {
@@ -82,7 +85,7 @@ glift.displays._BoundingBox.prototype = {
   },
 
   translate: function(dx, dy) {
-    return glift.displays.bboxFromPts(
+    return glift.displays.bbox.fromPts(
         glift.util.point(this.topLeft().x() + dx, this.topLeft().y() + dy),
         glift.util.point(this.botRight().x() + dx, this.botRight().y() + dy));
   },
@@ -166,7 +169,7 @@ glift.displays._BoundingBox.prototype = {
           this.topLeft().y() + this.height() * currentSplitPercentage :
           this.botRight().y();
       var nextBotRight = glift.util.point(nextBotRightX, nextBotRightY);
-      outBboxes.push(glift.displays.bboxFromPts(currentTopLeft, nextBotRight));
+      outBboxes.push(glift.displays.bbox.fromPts(currentTopLeft, nextBotRight));
       var nextTopLeftX = d === 'h' ?
           currentTopLeft.x() :
           this.topLeft().x() + this.width() * currentSplitPercentage;

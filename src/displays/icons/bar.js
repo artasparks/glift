@@ -31,7 +31,7 @@ glift.displays.icons._IconBar = function(
     allDivIds, allPositioning) {
   this.divId = divId;
   this.position = position;
-  this.divBbox = glift.displays.bboxFromPts(
+  this.divBbox = glift.displays.bbox.fromPts(
       glift.util.point(0,0),
       glift.util.point(position.width(), position.height()));
   this.theme = theme;

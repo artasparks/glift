@@ -69,7 +69,7 @@ glift.displays.statusbar._StatusBar.prototype = {
         window.pageYOffset ||
         document.body.scrollTop ||
         document.documentElement.scrollTop || null;
-    window.scrollTo(0, 0);
+    window.scrollTo(0, 0); // Scroll to the top.
     manager.fullscreenDivId = newDivId;
     widget.destroy();
     widget.wrapperDiv = newDivId;
