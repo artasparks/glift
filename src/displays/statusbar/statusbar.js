@@ -45,11 +45,9 @@ glift.displays.statusbar._StatusBar.prototype = {
   },
 
   /**
-   * Create a game info object.
-   *
-   * Takes a object that's transformed into the game info table.
+   * Create a game info object. Takes a array of game info data.
    */
-  gameInfo: function(gameInfoObj) {
+  gameInfo: function(gameInfoArr) {
     var wrapperDivId = this.widget.wrapperDiv,
         suffix = '_gameinfo',
         newDivId = wrapperDivId + suffix + '_wrapper',
@@ -87,15 +85,22 @@ glift.displays.statusbar._StatusBar.prototype = {
       newDiv.remove();
     });
 
-    textDiv.append(glift.dom.convertText(
-        [
-          '<strong>Game Name:</strong> Derp',
-          '<strong>Player Black</strong>: Derper',
-          '<strong>Player White</strong>: Derper'
-        ].join('\n')).css({
+    var displayTextArr = [];
+    for (var i = 0; i < gameInfoArr.length; i++) {
+      var obj = gameInfoArr[i];
+      displayTextArr.push('<strong>' + obj.displayName + ': </strong>'
+          + obj.value);
+    }
+
+    textDiv.append(
+      glift.dom.convertText(displayTextArr.join('\n'), {'margin-bottom': '0.5em'})
+        .css({
           padding: '10px',
           color: '#FFF'
-        }));
+        })
+        .prepend(glift.dom.newElem('h3')
+            .appendText('Game Info')
+            .css({'margin-bottom': '1em'})));
 
     newDiv.append(textDiv);
 

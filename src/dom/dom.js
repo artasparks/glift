@@ -26,18 +26,24 @@ glift.dom = {
     return elem;
   },
 
-  /** Convert some text to some dom elements. */
-  convertText: function(text) {
+  /**
+   * Convert some text to some dom elements.
+   * text: The input raw text
+   * optCss: optional CSS object to apply to the lines.
+   */
+  convertText: function(text, optCss) {
     text = glift.dom.sanitize(text);
     var wrapper = glift.dom.newElem('div');
     var textSegments = text.split('\n');
     for (var i = 0; i < textSegments.length; i++) {
       var seg = textSegments[i];
-      var pNode = glift.dom.newElem('p')
-          .css({
-              margin: 0,
-              padding: 0,
-              'min-height': '1em'})
+      var baseCss = { margin: 0, padding: 0, 'min-height': '1em' };
+      if (optCss) {
+        for (var key in optCss) {
+          baseCss[key] = optCss[key];
+        }
+      }
+      var pNode = glift.dom.newElem('p').css(baseCss);
       pNode.html(seg);
       wrapper.append(pNode);
     }

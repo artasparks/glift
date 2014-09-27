@@ -75,7 +75,7 @@ Properties.prototype = {
   },
 
   /**
-   * Get one piece of data associated with a property. Default to the first
+   * Gets one piece of data associated with a property. Default to the first
    * element in the data associated with a property.
    *
    * Since the getOneValue() always returns an array, it's sometimes useful to
@@ -110,14 +110,14 @@ Properties.prototype = {
   },
 
   /**
-   * contains: Return true if the current move has the property "prop".  Return
+   * Returns true if the current move has the property "prop".  Return
    * false otherwise.
    */
   contains: function(prop) {
     return prop in this.propMap;
   },
 
-  /** hasValue: Test wether a prop contains a value */
+  /** Tests wether a prop contains a value */
   hasValue : function(prop, value) {
     if (!this.contains(prop)) {
       return false;
@@ -131,7 +131,7 @@ Properties.prototype = {
     return false;
   },
 
-  /** Delete the prop and return the value. */
+  /** Deletes the prop and return the value. */
   remove: function(prop) {
     if (this.contains(prop)) {
       var allValues = this.getAllValues(prop);
@@ -311,6 +311,42 @@ Properties.prototype = {
       out[move.color].push(move.point);
     }
     return out;
+  },
+
+  /**
+   * Get the game info key-value pairs. Ex:
+   * [{
+   *  prop: GN
+   *  displayName: 'Game Name',
+   *  value: 'Lee Sedol vs Gu Li'
+   * },...
+   * ]
+   */
+  getGameInfo: function() {
+    var gameInfoArr = [];
+    // Probably should live in a more canonical place (properties.js).
+    var propNameMap = {
+      GN: 'Game Name',
+      EV: 'Event',
+      PW: 'White Player',
+      PB: 'Black Player',
+      RE: 'Result',
+      RU: 'Ruleset',
+      KM: 'Komi',
+      AN: 'Commenter',
+      SO: 'Source'
+    };
+    for (var key in propNameMap) {
+      if (this.contains(key)) {
+        var displayName = propNameMap[key];
+        gameInfoArr.push({
+          prop: key,
+          displayName: displayName,
+          value: this.getOneValue(key),
+        });
+      }
+    }
+    return gameInfoArr;
   }
 };
 

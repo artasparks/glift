@@ -497,8 +497,8 @@ glift.widgets.options.baseOptions = {
 
     'game-info': {
       click: function(event, widget, icon, iconBar) {
-        widget.statusBar && 
-        widget.statusBar.gameInfo();
+        widget.statusBar &&
+        widget.statusBar.gameInfo(widget.controller.getGameInfo());
       },
       tooltip: 'Show the game info'
     },

@@ -107,6 +107,11 @@ BaseController.prototype = {
     return this.movetree.treepathToHere();
   },
 
+  /** Get the game info key-value pairs */
+  getGameInfo: function() {
+    return this.movetree.getTreeFromRoot().properties().getGameInfo();
+  },
+
   /**
    * Return the entire intersection data, including all stones, marks, and
    * comments.  This format allows the user to completely populate some UI of
