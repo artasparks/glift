@@ -2,12 +2,14 @@
  * Miscellaneous utility methods for UX.
  */
 glift.dom.ux = {
+  /** Provide scrolling, but only for the inner div.  Prepare for nastiness. */
   onlyInnerVertScroll: function(elem, bbox) {
     var preventScroll = function(ev) {
         ev.stopPropagation();
         ev.preventDefault();
         ev.returnValue = false;
     };
+
     elem.on('mousewheel', function(e) {
       var el = elem.el;
       var deltaY = e.deltaY;
@@ -23,7 +25,6 @@ glift.dom.ux = {
       if (!positiveDelta && deltaY + scrollTop < 0) {
         el.scrollTop = 0;
         preventScroll(e);
-
       } else if (positiveDelta > scrollHeight - actualScroll) {
         el.scrollTop = scrollHeight - height;
         preventScroll(e);

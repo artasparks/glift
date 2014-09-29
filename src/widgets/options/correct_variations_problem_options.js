@@ -49,7 +49,7 @@ glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
 
   showVariations: glift.enums.showVariations.NEVER,
 
-  icons: ['refresh', 'roadmap', 'multiopen-boxonly'],
+  icons: ['refresh', 'problem-explanation', 'multiopen-boxonly'],
 
   controllerFunc: glift.controllers.staticProblem,
 

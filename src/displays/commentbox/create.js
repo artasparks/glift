@@ -33,7 +33,8 @@ glift.displays.commentbox._CommentBox.prototype = {
       'MozBoxSizing': 'border-box',
       'boxSizing': 'border-box'
     }, this.theme.commentBox.css))
-    glift.dom.ux.onlyInnerVertScroll(this.el, this.bbox);
+    // TODO(kashomon): Maybe add this in.
+    // glift.dom.ux.onlyInnerVertScroll(this.el, this.bbox);
     this.el.addClass('glift-comment-box');
     return this;
   },

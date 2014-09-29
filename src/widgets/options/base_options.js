@@ -444,8 +444,9 @@ glift.widgets.options.baseOptions = {
       tooltip: 'Previous branch or comment'
     },
 
-    // Go to the explain-board.
-    roadmap: {
+    // Go to the explain-board for a problem.
+    // (was roadmap)
+    'problem-explanation': {
       click: function(event, widget, icon, iconBar) {
         var manager = widget.manager;
         var sgfObj = {

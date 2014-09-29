@@ -1270,6 +1270,41 @@ glift.dom.sanitize = function(text) {
   }
   return outbuffer.join('');
 };
+/**
+ * Miscellaneous utility methods for UX.
+ */
+glift.dom.ux = {
+  /** Provide scrolling, but only for the inner div.  Prepare for nastiness. */
+  onlyInnerVertScroll: function(elem, bbox) {
+    var preventScroll = function(ev) {
+        ev.stopPropagation();
+        ev.preventDefault();
+        ev.returnValue = false;
+    };
+
+    elem.on('mousewheel', function(e) {
+      var el = elem.el;
+      var deltaY = e.deltaY;
+      var scrollTop = el.scrollTop;
+      var scrollHeight = el.scrollHeight;
+      var height = bbox.height();
+      // Delta is positive if scrolling down and negative if scrolling up.
+      var positiveDelta = deltaY > 0; // for IE
+
+      var actualScroll = scrollTop + height;
+      // console.log('dy:' + deltaY + ',h:' + height
+          // + ',scrollTop:' + scrollTop + ',scrollHeight:' + scrollHeight);
+      if (!positiveDelta && deltaY + scrollTop < 0) {
+        el.scrollTop = 0;
+        preventScroll(e);
+      } else if (positiveDelta > scrollHeight - actualScroll) {
+        el.scrollTop = scrollHeight - height;
+        preventScroll(e);
+      }
+      return this;
+    });
+  }
+};
 glift.ajax = {
   get: function(url, callback) {
     var request = new XMLHttpRequest();
@@ -3416,15 +3451,13 @@ glift.displays.commentbox._CommentBox.prototype = {
     if (this.el === null) {
       throw new Error('Could not find element with ID ' + this.divId);
     }
-    var cssObj = {
+    this.el.css(glift.obj.flatMerge({
       'overflow-y': 'auto',
       'MozBoxSizing': 'border-box',
       'boxSizing': 'border-box'
-    };
-    for (var key in this.theme.commentBox.css) {
-      cssObj[key] = this.theme.commentBox.css[key]
-    }
-    this.el.css(cssObj);
+    }, this.theme.commentBox.css))
+    // TODO(kashomon): Maybe add this in.
+    // glift.dom.ux.onlyInnerVertScroll(this.el, this.bbox);
     this.el.addClass('glift-comment-box');
     return this;
   },
@@ -5102,7 +5135,7 @@ glift.displays.statusbar._StatusBar.prototype = {
   /**
    * Create a game info object. Takes a array of game info data.
    *
-   * Note: Key bindings are set in the base_widget.
+   * Note: Key bindings are set in the widget.
    */
   gameInfo: function(gameInfoArr) {
     var wrapperDivId = this.widget.wrapperDiv,
@@ -5160,7 +5193,7 @@ glift.displays.statusbar._StatusBar.prototype = {
   /**
    * Make Glift full-screen.
    *
-   * Note: Key bindings are set in the base_widget.
+   * Note: Key bindings are set in the widget.
    */
   fullscreen: function() {
     var widget = this.widget,
@@ -9670,14 +9703,12 @@ glift.widgets.BaseWidget.prototype = {
       actions.mouseout = this.sgfOptions.stoneMouseout;
     }
 
-    var that = this;
     var wrapAction = function(func) {
       return function(event, pt) {
-        that.manager.setActive();
-        func(event, that, pt);
-      };
-    };
-    var that = this
+        this.manager.setActive();
+        func(event, this, pt);
+      }.bind(this);
+    }.bind(this);
     if (actions.mouseover &&
         actions.mouseout &&
         !glift.platform.isMobile()) {
@@ -9689,7 +9720,7 @@ glift.widgets.BaseWidget.prototype = {
       var actionName = 'click';
       if (glift.platform.isMobile()) {
         // Kinda a hack, but necessary to avoid the 300ms delay.
-        var actionName = 'touchstart';
+        var actionName = 'touchend';
       }
       this.display.intersections().setEvent(
           actionName, wrapAction(actions.click));

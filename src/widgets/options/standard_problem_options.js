@@ -28,7 +28,7 @@ glift.widgets.options.STANDARD_PROBLEM = {
   showVariations: glift.enums.showVariations.NEVER,
 
   // TODO(kashomon): Consider using multiopen-boxonly instead of checkbox
-  icons: ['undo-problem-move', 'roadmap', 'multiopen-boxonly'],
+  icons: ['undo-problem-move', 'problem-explanation', 'multiopen-boxonly'],
 
   controllerFunc: glift.controllers.staticProblem
 };
