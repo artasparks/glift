@@ -154,6 +154,7 @@ glift.dom.Element.prototype = {
     } else {
       this.el.className += ' ' + className;
     }
+    return this;
   },
 
   /** Remove a CSS class. */

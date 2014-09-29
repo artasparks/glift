@@ -185,14 +185,12 @@ glift.widgets.BaseWidget.prototype = {
       actions.mouseout = this.sgfOptions.stoneMouseout;
     }
 
-    var that = this;
     var wrapAction = function(func) {
       return function(event, pt) {
-        that.manager.setActive();
-        func(event, that, pt);
+        this.manager.setActive();
+        func(event, this, pt);
       };
-    };
-    var that = this
+    }.bind(this);
     if (actions.mouseover &&
         actions.mouseout &&
         !glift.platform.isMobile()) {
@@ -204,7 +202,7 @@ glift.widgets.BaseWidget.prototype = {
       var actionName = 'click';
       if (glift.platform.isMobile()) {
         // Kinda a hack, but necessary to avoid the 300ms delay.
-        var actionName = 'touchstart';
+        var actionName = 'touchend';
       }
       this.display.intersections().setEvent(
           actionName, wrapAction(actions.click));

@@ -9,10 +9,6 @@ glift.displays.statusbar = {
         options.widget,
         options.allPositioning
     );
-  },
-
-  fullscreenTouchHandler: function() {
-    // TODO(kashomon): Do this... (issues/#67)
   }
 };
 
@@ -46,6 +42,8 @@ glift.displays.statusbar._StatusBar.prototype = {
 
   /**
    * Create a game info object. Takes a array of game info data.
+   *
+   * Note: Key bindings are set in the base_widget.
    */
   gameInfo: function(gameInfoArr) {
     var wrapperDivId = this.widget.wrapperDiv,
@@ -53,8 +51,9 @@ glift.displays.statusbar._StatusBar.prototype = {
         newDivId = wrapperDivId + suffix + '_wrapper',
         wrapperDivEl = glift.dom.elem(wrapperDivId),
         newDiv = glift.dom.newDiv(newDivId),
-        theme = this.theme,
+        gameInfoTheme = this.theme.statusBar.gameInfo,
         fullBox = this.positioning.fullWidgetBbox(),
+        // This CSS shouldn't be modified.
         cssObj = {
           position: 'absolute',
           margin: '0px',
@@ -63,52 +62,47 @@ glift.displays.statusbar._StatusBar.prototype = {
           left: fullBox.left() + 'px',
           width: fullBox.width() + 'px',
           height: fullBox.height() + 'px',
-          // need to change zindex based on fullscreen
           'z-index': 100
         };
     newDiv.css(cssObj);
 
     var textDiv = glift.dom.newDiv(wrapperDivId + suffix + '_textdiv');
-    var textDivCss = {
-      position: 'relative',
-      margin: '0px',
-      padding: '0px',
-      height: fullBox.height() + 'px',
-      width: fullBox.width() + 'px'
-    };
-    for (var key in theme.statusBar.gameInfo.div) {
-      textDivCss[key] = theme.statusBar.gameInfo.div[key];
-    }
+    var textDivCss = glift.obj.flatMerge({
+        position: 'relative',
+        margin: '0px',
+        padding: '0px',
+        'overflow-y': 'auto',
+        height: fullBox.height() + 'px',
+        width: fullBox.width() + 'px'
+      }, gameInfoTheme.textDiv);
 
     textDiv.css(textDivCss);
-    textDiv.on('click', function() {
-      newDiv.remove();
-    });
-
-    var displayTextArr = [];
-    for (var i = 0; i < gameInfoArr.length; i++) {
-      var obj = gameInfoArr[i];
-      displayTextArr.push('<strong>' + obj.displayName + ': </strong>'
-          + obj.value);
+    if (glift.platform.isMobile()) {
+      textDiv.on('touchend', function() { newDiv.remove(); });
+    } else {
+      textDiv.on('click', function() { newDiv.remove(); });
     }
 
-    textDiv.append(
-      glift.dom.convertText(displayTextArr.join('\n'), {'margin-bottom': '0.5em'})
-        .css({
-          padding: '10px',
-          color: '#FFF'
-        })
+    var textArray = [];
+    for (var i = 0; i < gameInfoArr.length; i++) {
+      var obj = gameInfoArr[i];
+      textArray.push('<strong>' + obj.displayName + ': </strong>' + obj.value);
+    }
+
+    textDiv.append(glift.dom.convertText(textArray.join('\n'), gameInfoTheme.text)
+        .css({ padding: '10px'})
         .prepend(glift.dom.newElem('h3')
             .appendText('Game Info')
-            .css({'margin-bottom': '1em'})));
-
+            .css(gameInfoTheme.textTitle)));
     newDiv.append(textDiv);
-
-    // Put the X icon in the upper left
     wrapperDivEl.prepend(newDiv);
   },
 
-  /** Make Glift full-screen */
+  /**
+   * Make Glift full-screen.
+   *
+   * Note: Key bindings are set in the base_widget.
+   */
   fullscreen: function() {
     var widget = this.widget,
         wrapperDivId = widget.wrapperDiv,
@@ -116,26 +110,22 @@ glift.displays.statusbar._StatusBar.prototype = {
         newDiv = glift.dom.newDiv(newDivId),
         body = glift.dom.elem(document.body),
         state = widget.getCurrentState(),
-        manager = widget.manager,
-        cssObj = {
-          position: 'absolute',
-          top: '0px', bottom: '0px', left: '0px', right: '0px',
-          margin: '0px', padding: '0px',
-          // Some sites set the z-index obnoxiously high (looking at you bootstrap).
-          // So, to make it really fullscreen, we need to set the z-index higher
-          // =(
-          'z-index': 110000
-        };
-    for (var key in this.theme.statusBar.fullscreen) {
-      cssObj[key] = this.theme.statusBar.fullscreen[key];
-    }
+        manager = widget.manager;
+
+    var cssObj = glift.obj.flatMerge({
+        position: 'absolute',
+        top: '0px', bottom: '0px', left: '0px', right: '0px',
+        margin: '0px', padding: '0px',
+        // Some sites set the z-index obnoxiously high (looking at you bootstrap).
+        // So, to make it really fullscreen, we need to set the z-index higher.
+        'z-index': 110000
+      }, this.theme.statusBar.fullscreen);
     newDiv.css(cssObj);
 
     // TODO(kashomon): Support true fullscreen: issues/69
-    // Prevent scrolling outside the div
-    body.addClass('glift-fullscreen-no-scroll');
 
-    body.append(newDiv);
+    // Prevent scrolling outside the div
+    body.addClass('glift-fullscreen-no-scroll').append(newDiv);
     manager.prevScrollTop =
         window.pageYOffset ||
         document.body.scrollTop ||

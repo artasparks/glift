@@ -116,7 +116,7 @@ glift.themes.registered.DEFAULT = {
       color: '#EEE',
       webkitBorderRadius: '10px',
       MozBorderRadius: '10px',
-      borderRadius: '10px'
+      'border-radius': '10px'
       // fontSize: '16px',
       // fontFamily: 'Palatino'
     },
@@ -126,14 +126,21 @@ glift.themes.registered.DEFAULT = {
 
   statusBar: {
     fullscreen: {
-      'background-color': '#FFF',
-      'backgroundColor': '#FFF'
+      'background-color': '#FFF'
     },
 
     gameInfo: {
-      div: {
+      textDiv: {
         'background-color': 'rgba(0,0,0,0.75)',
-        'border-radius': '25px'
+        'border-radius': '25px',
+        'fontFamily': '"Helvetica Neue", Helvetica, Arial, sans-serif',
+        color: '#FFF'
+      },
+      textTitle: {
+        'margin-bottom': '1em'
+      },
+      text: {
+        'margin-bottom': '0.5em'
       }
     },
 
@@ -170,9 +177,6 @@ glift.themes.registered.DEFAULT = {
       background: 'none',
       padding: '10px',
       margin: '0px'
-      // border: '1px solid',
-      // fontSize: '15px',
-      // fontFamily: 'Palatino'
     }
   },
 

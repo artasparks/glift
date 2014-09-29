@@ -645,6 +645,30 @@ glift.math = {
     return Math.abs(v1 - v2) < epsilon
   }
 };
+glift.obj = {
+  /**
+   * A helper for merging obj information (typically CSS or SVG rules).  This
+   * method is non-recursive and.
+   */
+  flatMerge: function(base, varargs) {
+    var newObj = {};
+    if (glift.util.typeOf(base) !== 'object') {
+      return newObj;
+    }
+    for (var key in base) {
+      newObj[key] = base[key];
+    }
+    for (var i = 1; arguments.length >= 2 && i < arguments.length; i++) {
+      var arg = arguments[i];
+      if (glift.util.typeOf(arg) === 'object') {
+        for (var key in arg) {
+          newObj[key] = arg[key];
+        }
+      }
+    }
+    return newObj;
+  }
+};
 glift.util.perfLog = function(msg) {
   if (glift.global.performanceDebugLevel === undefined ||
       glift.global.performanceDebugLevel === 'NONE') {
@@ -975,18 +999,24 @@ glift.dom = {
     return elem;
   },
 
-  /** Convert some text to some dom elements. */
-  convertText: function(text) {
+  /**
+   * Convert some text to some dom elements.
+   * text: The input raw text
+   * optCss: optional CSS object to apply to the lines.
+   */
+  convertText: function(text, optCss) {
     text = glift.dom.sanitize(text);
     var wrapper = glift.dom.newElem('div');
     var textSegments = text.split('\n');
     for (var i = 0; i < textSegments.length; i++) {
       var seg = textSegments[i];
-      var pNode = glift.dom.newElem('p')
-          .css({
-              margin: 0,
-              padding: 0,
-              'min-height': '1em'})
+      var baseCss = { margin: 0, padding: 0, 'min-height': '1em' };
+      if (optCss) {
+        for (var key in optCss) {
+          baseCss[key] = optCss[key];
+        }
+      }
+      var pNode = glift.dom.newElem('p').css(baseCss);
       pNode.html(seg);
       wrapper.append(pNode);
     }
@@ -1097,6 +1127,7 @@ glift.dom.Element.prototype = {
     } else {
       this.el.className += ' ' + className;
     }
+    return this;
   },
 
   /** Remove a CSS class. */
@@ -1165,7 +1196,7 @@ glift.dom.Element.prototype = {
   }
 };
 /** Tags currently allowed. */
-glift.dom.sanitizeWhitelist_ = {
+glift.dom._sanitizeWhitelist = {
   'br': true,
   'b': true,
   'strong': true,
@@ -1177,6 +1208,14 @@ glift.dom.sanitizeWhitelist_ = {
   'h3': true
 };
 
+/** Characters to escape */
+glift.dom._escapeMap = {
+ '&': '&amp;',
+ '"': '&quot;',
+ '\'': '&#x27;',
+ '/': '&#x2F;'
+};
+
 /**
  * Sanitizes text to prevent XSS. A single pass parser.
  */
@@ -1184,7 +1223,7 @@ glift.dom.sanitize = function(text) {
   var outbuffer = [];
   var strbuff = [];
   var states = { DEFAULT: 1, TAG: 2 };
-  var whitelist = glift.dom.sanitizeWhitelist_;
+  var whitelist = glift.dom._sanitizeWhitelist;
   var curstate = states.DEFAULT;
   var numBrackets = 0;
   var lt = '&lt;';
@@ -1222,6 +1261,9 @@ glift.dom.sanitize = function(text) {
       if (curstate === states.TAG) {
         strbuff.push(chr);
       } else {
+        if (chr in glift.dom._escapeMap) {
+          chr = glift.dom._escapeMap[chr];
+        }
         outbuffer.push(chr);
       }
     }
@@ -1486,7 +1528,7 @@ glift.themes.registered.DEFAULT = {
       color: '#EEE',
       webkitBorderRadius: '10px',
       MozBorderRadius: '10px',
-      borderRadius: '10px'
+      'border-radius': '10px'
       // fontSize: '16px',
       // fontFamily: 'Palatino'
     },
@@ -1496,14 +1538,21 @@ glift.themes.registered.DEFAULT = {
 
   statusBar: {
     fullscreen: {
-      'background-color': '#FFF',
-      'backgroundColor': '#FFF'
+      'background-color': '#FFF'
     },
 
     gameInfo: {
-      div: {
+      textDiv: {
         'background-color': 'rgba(0,0,0,0.75)',
-        'border-radius': '25px'
+        'border-radius': '25px',
+        'fontFamily': '"Helvetica Neue", Helvetica, Arial, sans-serif',
+        color: '#FFF'
+      },
+      textTitle: {
+        'margin-bottom': '1em'
+      },
+      text: {
+        'margin-bottom': '0.5em'
       }
     },
 
@@ -1540,9 +1589,6 @@ glift.themes.registered.DEFAULT = {
       background: 'none',
       padding: '10px',
       margin: '0px'
-      // border: '1px solid',
-      // fontSize: '15px',
-      // fontFamily: 'Palatino'
     }
   },
 
@@ -3832,7 +3878,7 @@ glift.displays.icons._IconBar.prototype = {
       var actionsForIcon = {};
 
       if (glift.platform.isMobile()) {
-        actionsForIcon.touchstart = iconActions[iconName].click;
+        actionsForIcon.touchend = iconActions[iconName].click;
       } else {
         actionsForIcon.click = iconActions[iconName].click;
       }
@@ -5022,10 +5068,6 @@ glift.displays.statusbar = {
         options.widget,
         options.allPositioning
     );
-  },
-
-  fullscreenTouchHandler: function() {
-    // TODO(kashomon): Do this... (issues/#67)
   }
 };
 
@@ -5057,14 +5099,20 @@ glift.displays.statusbar._StatusBar.prototype = {
     return this;
   },
 
-  gameInfo: function() {
+  /**
+   * Create a game info object. Takes a array of game info data.
+   *
+   * Note: Key bindings are set in the base_widget.
+   */
+  gameInfo: function(gameInfoArr) {
     var wrapperDivId = this.widget.wrapperDiv,
         suffix = '_gameinfo',
         newDivId = wrapperDivId + suffix + '_wrapper',
         wrapperDivEl = glift.dom.elem(wrapperDivId),
         newDiv = glift.dom.newDiv(newDivId),
-        theme = this.theme,
+        gameInfoTheme = this.theme.statusBar.gameInfo,
         fullBox = this.positioning.fullWidgetBbox(),
+        // This CSS shouldn't be modified.
         cssObj = {
           position: 'absolute',
           margin: '0px',
@@ -5073,45 +5121,47 @@ glift.displays.statusbar._StatusBar.prototype = {
           left: fullBox.left() + 'px',
           width: fullBox.width() + 'px',
           height: fullBox.height() + 'px',
-          // need to change zindex based on fullscreen
           'z-index': 100
         };
     newDiv.css(cssObj);
 
     var textDiv = glift.dom.newDiv(wrapperDivId + suffix + '_textdiv');
-    var textDivCss = {
-      position: 'relative',
-      margin: '0px',
-      padding: '0px',
-      height: fullBox.height() + 'px',
-      width: fullBox.width() + 'px'
-    };
-    for (var key in theme.statusBar.gameInfo.div) {
-      textDivCss[key] = theme.statusBar.gameInfo.div[key];
-    }
+    var textDivCss = glift.obj.flatMerge({
+        position: 'relative',
+        margin: '0px',
+        padding: '0px',
+        'overflow-y': 'auto',
+        height: fullBox.height() + 'px',
+        width: fullBox.width() + 'px'
+      }, gameInfoTheme.textDiv);
 
     textDiv.css(textDivCss);
-    textDiv.on('click', function() {
-      newDiv.remove();
-    });
+    if (glift.platform.isMobile()) {
+      textDiv.on('touchend', function() { newDiv.remove(); });
+    } else {
+      textDiv.on('click', function() { newDiv.remove(); });
+    }
 
-    textDiv.append(glift.dom.convertText(
-        [
-          '<strong>Game Name:</strong> Derp',
-          '<strong>Player Black</strong>: Derper',
-          '<strong>Player White</strong>: Derper'
-        ].join('\n')).css({
-          padding: '10px',
-          color: '#FFF'
-        }));
+    var textArray = [];
+    for (var i = 0; i < gameInfoArr.length; i++) {
+      var obj = gameInfoArr[i];
+      textArray.push('<strong>' + obj.displayName + ': </strong>' + obj.value);
+    }
 
+    textDiv.append(glift.dom.convertText(textArray.join('\n'), gameInfoTheme.text)
+        .css({ padding: '10px'})
+        .prepend(glift.dom.newElem('h3')
+            .appendText('Game Info')
+            .css(gameInfoTheme.textTitle)));
     newDiv.append(textDiv);
-
-    // Put the X icon in the upper left
     wrapperDivEl.prepend(newDiv);
   },
 
-  /** Make Glift full-screen */
+  /**
+   * Make Glift full-screen.
+   *
+   * Note: Key bindings are set in the base_widget.
+   */
   fullscreen: function() {
     var widget = this.widget,
         wrapperDivId = widget.wrapperDiv,
@@ -5119,25 +5169,22 @@ glift.displays.statusbar._StatusBar.prototype = {
         newDiv = glift.dom.newDiv(newDivId),
         body = glift.dom.elem(document.body),
         state = widget.getCurrentState(),
-        manager = widget.manager,
-        cssObj = {
-          position: 'absolute',
-          top: '0px', bottom: '0px', left: '0px', right: '0px',
-          margin: '0px', padding: '0px',
-          // Some sites set the z-index obnoxiously high (looking at you bootstrap).
-          // So, to make it really fullscreen, we need to set the z-index higher
-          // =(
-          'z-index': 110000
-        };
-    for (var key in this.theme.statusBar.fullscreen) {
-      cssObj[key] = this.theme.statusBar.fullscreen[key];
-    }
+        manager = widget.manager;
+
+    var cssObj = glift.obj.flatMerge({
+        position: 'absolute',
+        top: '0px', bottom: '0px', left: '0px', right: '0px',
+        margin: '0px', padding: '0px',
+        // Some sites set the z-index obnoxiously high (looking at you bootstrap).
+        // So, to make it really fullscreen, we need to set the z-index higher.
+        'z-index': 110000
+      }, this.theme.statusBar.fullscreen);
     newDiv.css(cssObj);
 
-    // Prevent scrolling outside the div
-    body.addClass('glift-fullscreen-no-scroll');
+    // TODO(kashomon): Support true fullscreen: issues/69
 
-    body.append(newDiv);
+    // Prevent scrolling outside the div
+    body.addClass('glift-fullscreen-no-scroll').append(newDiv);
     manager.prevScrollTop =
         window.pageYOffset ||
         document.body.scrollTop ||
@@ -6841,7 +6888,7 @@ Properties.prototype = {
   },
 
   /**
-   * Get one piece of data associated with a property. Default to the first
+   * Gets one piece of data associated with a property. Default to the first
    * element in the data associated with a property.
    *
    * Since the getOneValue() always returns an array, it's sometimes useful to
@@ -6876,14 +6923,14 @@ Properties.prototype = {
   },
 
   /**
-   * contains: Return true if the current move has the property "prop".  Return
+   * Returns true if the current move has the property "prop".  Return
    * false otherwise.
    */
   contains: function(prop) {
     return prop in this.propMap;
   },
 
-  /** hasValue: Test wether a prop contains a value */
+  /** Tests wether a prop contains a value */
   hasValue : function(prop, value) {
     if (!this.contains(prop)) {
       return false;
@@ -6897,7 +6944,7 @@ Properties.prototype = {
     return false;
   },
 
-  /** Delete the prop and return the value. */
+  /** Deletes the prop and return the value. */
   remove: function(prop) {
     if (this.contains(prop)) {
       var allValues = this.getAllValues(prop);
@@ -7077,6 +7124,41 @@ Properties.prototype = {
       out[move.color].push(move.point);
     }
     return out;
+  },
+
+  /**
+   * Get the game info key-value pairs. Ex:
+   * [{
+   *  prop: GN
+   *  displayName: 'Game Name',
+   *  value: 'Lee Sedol vs Gu Li'
+   * },...
+   * ]
+   */
+  getGameInfo: function() {
+    var gameInfoArr = [];
+    // Probably should live in a more canonical place (properties.js).
+    var propNameMap = {
+      GN: 'Game Name',
+      PW: 'White Player',
+      PB: 'Black Player',
+      RE: 'Result',
+      AN: 'Commenter',
+      SO: 'Source',
+      RU: 'Ruleset',
+      KM: 'Komi'
+    };
+    for (var key in propNameMap) {
+      if (this.contains(key)) {
+        var displayName = propNameMap[key];
+        gameInfoArr.push({
+          prop: key,
+          displayName: displayName,
+          value: this.getOneValue(key)
+        });
+      }
+    }
+    return gameInfoArr;
   }
 };
 
@@ -7817,6 +7899,11 @@ BaseController.prototype = {
   /** Get the treepath to the current position */
   pathToCurrentPosition: function() {
     return this.movetree.treepathToHere();
+  },
+
+  /** Get the game info key-value pairs */
+  getGameInfo: function() {
+    return this.movetree.getTreeFromRoot().properties().getGameInfo();
   },
 
   /**
@@ -10657,8 +10744,8 @@ glift.widgets.options.baseOptions = {
 
     'game-info': {
       click: function(event, widget, icon, iconBar) {
-        widget.statusBar && 
-        widget.statusBar.gameInfo();
+        widget.statusBar &&
+        widget.statusBar.gameInfo(widget.controller.getGameInfo());
       },
       tooltip: 'Show the game info'
     },

@@ -260,7 +260,7 @@ glift.displays.icons._IconBar.prototype = {
       var actionsForIcon = {};
 
       if (glift.platform.isMobile()) {
-        actionsForIcon.touchstart = iconActions[iconName].click;
+        actionsForIcon.touchend = iconActions[iconName].click;
       } else {
         actionsForIcon.click = iconActions[iconName].click;
       }

@@ -327,14 +327,13 @@ Properties.prototype = {
     // Probably should live in a more canonical place (properties.js).
     var propNameMap = {
       GN: 'Game Name',
-      EV: 'Event',
       PW: 'White Player',
       PB: 'Black Player',
       RE: 'Result',
-      RU: 'Ruleset',
-      KM: 'Komi',
       AN: 'Commenter',
-      SO: 'Source'
+      SO: 'Source',
+      RU: 'Ruleset',
+      KM: 'Komi'
     };
     for (var key in propNameMap) {
       if (this.contains(key)) {
@@ -342,7 +341,7 @@ Properties.prototype = {
         gameInfoArr.push({
           prop: key,
           displayName: displayName,
-          value: this.getOneValue(key),
+          value: this.getOneValue(key)
         });
       }
     }
