@@ -28,15 +28,12 @@ glift.displays.commentbox._CommentBox.prototype = {
     if (this.el === null) {
       throw new Error('Could not find element with ID ' + this.divId);
     }
-    var cssObj = {
+    this.el.css(glift.obj.flatMerge({
       'overflow-y': 'auto',
       'MozBoxSizing': 'border-box',
       'boxSizing': 'border-box'
-    };
-    for (var key in this.theme.commentBox.css) {
-      cssObj[key] = this.theme.commentBox.css[key]
-    }
-    this.el.css(cssObj);
+    }, this.theme.commentBox.css))
+    glift.dom.ux.onlyInnerVertScroll(this.el, this.bbox);
     this.el.addClass('glift-comment-box');
     return this;
   },

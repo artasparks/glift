@@ -189,7 +189,7 @@ glift.widgets.BaseWidget.prototype = {
       return function(event, pt) {
         this.manager.setActive();
         func(event, this, pt);
-      };
+      }.bind(this);
     }.bind(this);
     if (actions.mouseover &&
         actions.mouseout &&
