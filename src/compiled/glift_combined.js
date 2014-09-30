@@ -3,7 +3,7 @@
  *
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
- * @version 0.18.3
+ * @version 0.19.0
  * --------------------------------------
  */
 (function(w) {
@@ -22,7 +22,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.18.3',
+  version: '0.19.0',
 
   /** Indicates whether or not to store debug data. */
   // TODO(kashomon): Remove this hack.

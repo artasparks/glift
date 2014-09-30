@@ -3,10 +3,10 @@
 
  @copyright Josh Hoak
  @license MIT License (see LICENSE.txt)
- @version 0.18.3
+ @version 0.19.0
  --------------------------------------
 */
-(function(a){var b=b||a.glift||{};a&&(a.glift=b)})(window);glift.global={version:"0.18.3",debugMode:!1,performanceDebugLevel:"NONE",perf:{},instanceRegistry:{},activeInstanceId:null,disabledZoom:!1,addedCssClasses:!1};
+(function(a){var b=b||a.glift||{};a&&(a.glift=b)})(window);glift.global={version:"0.19.0",debugMode:!1,performanceDebugLevel:"NONE",perf:{},instanceRegistry:{},activeInstanceId:null,disabledZoom:!1,addedCssClasses:!1};
 glift.init=function(a,b){if(!glift.platform.supportsSvg())throw glift.dom.elem(b).html('Your browser does not support Glift, this Go viewer, due to lack of SVG support. Please upgrade or try one of <a href="http://browsehappy.com/">these</a>'),Error('Your browser does not support Glift, this Go viewer, due to lack of SVG support. Please upgrade or try one of <a href="http://browsehappy.com/">these</a>');if(!glift.global.disabledZoom&&a&&glift.platform.isMobile()){for(var c=document.getElementsByTagName("meta"),
 d=0,e=c.length;d<e;d++){var f=c[d]?c[d].getAttribute("name"):null;f&&"viewport"===f.toLowerCase()&&glift.dom.elem(c[d]).remove()}c=glift.dom.elem(document.head);d=glift.dom.elem(document.createElement("meta"));d.attr("name","viewport");d.attr("content","width=device-width, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no");c.prepend(d);glift.global.disabledZoom=!0}glift.global.addedCssClasses||(c=document.createElement("style"),c.type="text/css",c.innerHTML=".glift-fullscreen-no-scroll { overflow: hidden; }\n.glift-comment-box {}",
 document.getElementsByTagName("head")[0].appendChild(c),glift.global.addedCssClasses=!0)};
