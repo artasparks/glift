@@ -19,14 +19,17 @@ glift.controllers.staticProblem = function(sgfOptions) {
 glift.controllers.StaticProblemMethods = {
   /** Override extra options */
   extraOptions: function() {
-    // Rebase the movetree.
-    // this.movetree = this.movetree.rebase();
-    // this.treepath = [];
-    // this.captureHistory = [];
-    // It's a hack to reset the SGF string, but it's used by the problem
-    // explanation button/widget.
-    // this.sgfString = this.movetree.toSgf();
-    // Shouldn't need to reset the goban.
+    // Rebase the movetree, if we're not at the zeroth move
+    if (this.movetree.node().getNodeNum() !== 0) {
+      this.movetree = this.movetree.rebase();
+      this.treepath = [];
+      this.captureHistory = [];
+      this.initialPosition = [];
+      // It's a hack to reset the SGF string, but it's used by the problem
+      // explanation button/widget.
+      this.sgfString = this.movetree.toSgf();
+      // Shouldn't need to reset the goban.
+    }
   },
 
   /**

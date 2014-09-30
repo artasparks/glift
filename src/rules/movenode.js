@@ -17,7 +17,7 @@ glift.rules._MoveNode = function(properties, children, nodeId, parentNode) {
 
 glift.rules._MoveNode.prototype = {
   /** Get the properties */
-  properties:  function() { return this._properties; },
+  properties: function() { return this._properties; },
 
   /**
    * Set the NodeId. Each node has an ID based on the depth and variation

@@ -129,31 +129,36 @@ glift.rules._MoveTree.prototype = {
     return this;
   },
 
-  /** Get the current player as a color. */
+  /**
+   * Get the current player as a color.
+   */
   getCurrentPlayer: function() {
     var states = glift.enums.states;
+    var tokenMap = {W: 'WHITE', B: 'BLACK'};
     var curNode = this._currentNode;
-    var move = curNode.properties().getMove();
 
-    var curPlayer = states.BLACK;
+    // The PL property is a short circuit. Usually only used on the root node.
+    if (this.properties().contains('PL')) {
+      return tokenMap[this.properties().getOneValue('PL')]
+    }
+
+    var move = curNode.properties().getMove();
     while (!move) {
       curNode = curNode.getParent();
       if (!curNode) {
-        curPlayer = states.BLACK;
-        break;
+        return states.BLACK;
       }
       move = curNode.properties().getMove();
     }
     if (!move) {
-      curPlayer = states.BLACK;
+      return states.BLACK;
     } else if (move.color === states.BLACK) {
-      curPlayer = states.WHITE;
+      return states.WHITE;
     } else if (move.color === states.WHITE) {
-      curPlayer = states.BLACK;
+      return states.BLACK;
     } else {
-      curPlayer = states.BLACK;
+      return states.BLACK;
     }
-    return curPlayer;
   },
 
   /**
@@ -301,16 +306,18 @@ glift.rules._MoveTree.prototype = {
   },
 
   /**
-   * Construct a new movetree, but add all the previous stones as placements.
+   * Construct an entirely new movetree, but add all the previous stones as
+   * placements.  If the tree is at the root, it's equivalent to a copy of the
+   * movetree.
    */
-  // TODO(kashomon): Actually make this work.
   rebase: function() {
     var path = this.treepathToHere();
-    var mt = this.getTreeFromRoot();
     var oldMt = this.getTreeFromRoot();
+    var oldCurrentPlayer = this.getCurrentPlayer();
+
+    var mt = glift.rules.movetree.getInstance();
     var propMap = { 'BLACK': 'AB', 'WHITE': 'AW' };
-    for (var i = 0; i < path.length; i++) {
-      oldMt.moveDown(path[i]);
+    for (var i = 0; i <= path.length; i++) {
       var stones = oldMt.properties().getAllStones();
       for (var color in stones) {
         var moves = stones[color];
@@ -322,9 +329,34 @@ glift.rules._MoveTree.prototype = {
           }
         }
       }
+      if (i < path.length) {
+        oldMt.moveDown(path[i]);
+      }
     }
-    mt.node().children = this.node().children;
-    mt.node().renumber();
+
+    // Recursive function for copying data.
+    var copier = function(oldnode, newnode) {
+      for (var prop in oldnode.properties().propMap) {
+        if (newnode.getNodeNum() === 0 && (prop === 'AB' || prop === 'AW')) {
+          continue; // Ignore. We've already copied stones on the root.
+        }
+        newnode.properties().set(prop,
+            glift.util.simpleClone(oldnode.properties().getAllValues(prop)));
+      }
+      for (var i = 0; i < oldnode.children.length; i++) {
+        var oldChild = oldnode.getChild(i);
+        var newChild = newnode.addChild().getChild(i);
+        copier(oldChild, newChild);
+      }
+    }
+    copier(oldMt.node(), mt.node());
+
+    // Ensure the current player remains the same.
+    var tokenmap = {BLACK: 'B', WHITE: 'W'};
+    var mtCurPlayer = mt.getCurrentPlayer();
+    if (mtCurPlayer !== oldCurrentPlayer) {
+      mt.properties().add('PL', tokenmap[oldCurrentPlayer]);
+    }
     return mt;
   },
 

@@ -36,14 +36,14 @@ glift.rules.movetreeTest = function() {
         'should get a list of values');
   });
 
-  test('that sgf point conversion works', function() {
+  test('Sgf point conversion works', function() {
     var pt = glift.util.pointFromSgfCoord('ac');
     deepEqual(pt.x(), 0, 'pt.x');
     deepEqual(pt.y(), 2, 'pt.y');
     deepEqual(pt.toSgfCoord(), 'ac', 'pt to sgf coord');
   });
 
-  test('that moving up / down works correctly', function() {
+  test('Moving up / down works correctly', function() {
     var mt = movetree.getFromSgf(sgfs.easy);
     deepEqual(mt.node().getNodeNum(), 0, 'move num beg');
     deepEqual(mt.node().getVarNum(), 0, 'var num beg');
@@ -67,7 +67,7 @@ glift.rules.movetreeTest = function() {
     deepEqual(mt.properties().getOneValue('B'), 'ra', 'stoneMove');
   });
 
-  test('that edge case of moving up: only one move left - works.'
+  test('Edge case of moving up: only one move left - works.'
       + 'In other words, dont remove the last move', function() {
     var mt = movetree.getFromSgf(sgfs.easy);
     mt.moveUp();
@@ -244,7 +244,14 @@ glift.rules.movetreeTest = function() {
     deepEqual(mt.toSgf(), '(;C[[8k\\] Foo])');
   });
 
-  test('getCurrentPlayer Complex', function() {
+  test('getCurrentPlayer -- complex problem', function() {
+    var states = glift.enums.states
+    var mt = glift.rules.movetree.getFromSgf(
+        testdata.sgfs.complexproblem);
+    deepEqual(mt.getCurrentPlayer(), states.BLACK);
+  });
+
+  test('getCurrentPlayer passing example', function() {
     var states = glift.enums.states
     var movetree = glift.rules.movetree.getFromSgf(
         testdata.sgfs.passingExample,  [0,0]);
@@ -302,8 +309,8 @@ glift.rules.movetreeTest = function() {
 
   test('Rebase Test', function() {
     var initPos = [0];
-    var sgf = '(;GM[1]AW[jj][jk][jl]AB[kk][kl];' +
-        'B[aa];W[ab];B[ac];W[ad];B[ae];W[af]' +
+    var sgf = '(;GM[1]AW[jj][jk][jl]AB[kk][kl]C[foo];' +
+        'B[aa]C[bar];W[ab];B[ac];W[ad];B[ae];W[af]C[zed]' +
         '(;B[ag];W[ah];B[ai];W[aj])' +
         '(;B[ah];W[ai];B[aj];W[ak]))';
     var mt = glift.rules.movetree.getFromSgf(sgf, initPos);
@@ -311,20 +318,28 @@ glift.rules.movetreeTest = function() {
 
     var newmt = mt.rebase();
     deepEqual(newmt.node().getNodeNum(), 0);
+    deepEqual(newmt.node().getVarNum(), 0);
     deepEqual(newmt.properties().getAllValues('AW'), ['jj', 'jk' ,'jl']);
     deepEqual(newmt.properties().getAllValues('AB'), ['kk', 'kl' ,'aa']);
-    newmt.moveDown();
+    deepEqual(newmt.properties().getOneValue('C'), 'bar');
+    deepEqual(newmt.moveDown().properties().getOneValue('W'), 'ab');
     deepEqual(newmt.node().getNodeNum(), 1);
+    deepEqual(newmt.node().getVarNum(), 0);
+
+    newmt.moveDown()  // ac
+        .moveDown()   // ad
+        .moveDown()   // ae
+        .moveDown()   // af
+    deepEqual(newmt.properties().getOneValue('W'), 'af');
+    deepEqual(newmt.properties().getOneValue('C'), 'zed');
+    deepEqual(newmt.node().children.length, 2);
+    deepEqual(newmt.node().getNodeNum(), 5);
   });
 
-  test('Rebase Test: passing test', function() {
-    var mt = glift.rules.movetree.getFromSgf(sgfs.passingExample, 2)
-    deepEqual(mt.treepathToHere(), [0,0]);
-    deepEqual(mt.node().getNodeNum(), 2);
-
+  test('Rebase Test: player set', function() {
+    var mt = glift.rules.movetree.getFromSgf(testdata.sgfs.passingExample, 2);
+    deepEqual(mt.getCurrentPlayer(), 'WHITE');
     mt = mt.rebase();
-    deepEqual(mt.node().getNodeNum(), 0);
-    deepEqual(mt.properties().getAllValues('AW'), ['qc']);
-    deepEqual(mt.properties().getAllValues('AB'), ['pd']);
+    deepEqual(mt.getCurrentPlayer(), 'WHITE');
   });
 };
