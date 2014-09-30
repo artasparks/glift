@@ -194,13 +194,13 @@ Properties.prototype = {
 
   // Get all the placements for a color (BLACK or WHITE).  Return as an array.
   getPlacementsAsPoints: function(color) {
-    var prop = "";
+    var prop = '';
     if (color === glift.enums.states.BLACK) {
       prop = glift.sgf.allProperties.AB;
     } else if (color === glift.enums.states.WHITE) {
       prop = glift.sgf.allProperties.AW;
     }
-    if (prop === "" || !this.contains(prop)) {
+    if (prop === '' || !this.contains(prop)) {
       return [];
     }
     return glift.sgf.allSgfCoordsToPoints(this.getAllValues(prop));
@@ -333,7 +333,9 @@ Properties.prototype = {
       AN: 'Commenter',
       SO: 'Source',
       RU: 'Ruleset',
-      KM: 'Komi'
+      KM: 'Komi',
+      PC: 'Place Name',
+      DT: 'Date'
     };
     for (var key in propNameMap) {
       if (this.contains(key)) {

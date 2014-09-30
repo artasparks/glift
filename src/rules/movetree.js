@@ -43,11 +43,16 @@ glift.rules.movetree = {
   /** Create a MoveTree from an SGF. */
   getFromSgf: function(sgfString, initPosition) {
     initPosition = initPosition || []; // treepath.
-    if (sgfString === undefined || sgfString === "") {
+    if (glift.util.typeOf(initPosition) === 'string' ||
+        glift.util.typeOf(initPosition) === 'number') {
+      initPosition = glift.rules.treepath.parseInitPosition(initPosition);
+    }
+    if (sgfString === undefined || sgfString === '') {
       return glift.rules.movetree.getInstance(19);
     }
     glift.util.majorPerfLog('Before SGF parsing in movetree');
     var mt = glift.sgf.parse(sgfString);
+
     glift.util.majorPerfLog('After SGF parsing in movetree');
     for (var i = 0; i < initPosition.length; i++) {
       mt.moveDown(initPosition[i]);
@@ -124,25 +129,31 @@ glift.rules._MoveTree.prototype = {
     return this;
   },
 
-  /** Get the current playeras a color. */
+  /** Get the current player as a color. */
   getCurrentPlayer: function() {
     var states = glift.enums.states;
     var curNode = this._currentNode;
     var move = curNode.properties().getMove();
+
+    var curPlayer = states.BLACK;
     while (!move) {
       curNode = curNode.getParent();
-      if (!curNode) { return states.BLACK; }
+      if (!curNode) {
+        curPlayer = states.BLACK;
+        break;
+      }
       move = curNode.properties().getMove();
     }
     if (!move) {
-      return states.BLACK;
+      curPlayer = states.BLACK;
     } else if (move.color === states.BLACK) {
-      return states.WHITE;
+      curPlayer = states.WHITE;
     } else if (move.color === states.WHITE) {
-      return states.BLACK;
+      curPlayer = states.BLACK;
     } else {
-      return states.BLACK;
+      curPlayer = states.BLACK;
     }
+    return curPlayer;
   },
 
   /**
@@ -287,6 +298,34 @@ glift.rules._MoveTree.prototype = {
       this._markedMainline = true;
     }
     return this.node()._mainline;
+  },
+
+  /**
+   * Construct a new movetree, but add all the previous stones as placements.
+   */
+  // TODO(kashomon): Actually make this work.
+  rebase: function() {
+    var path = this.treepathToHere();
+    var mt = this.getTreeFromRoot();
+    var oldMt = this.getTreeFromRoot();
+    var propMap = { 'BLACK': 'AB', 'WHITE': 'AW' };
+    for (var i = 0; i < path.length; i++) {
+      oldMt.moveDown(path[i]);
+      var stones = oldMt.properties().getAllStones();
+      for (var color in stones) {
+        var moves = stones[color];
+        var prop = propMap[color];
+        for (var j = 0; j < moves.length; j++) {
+          var point = moves[j];
+          if (point && prop) {
+            mt.properties().add(prop, point.toSgfCoord());
+          }
+        }
+      }
+    }
+    mt.node().children = this.node().children;
+    mt.node().renumber();
+    return mt;
   },
 
   /** Recursive over the movetree. func is called on the movetree. */

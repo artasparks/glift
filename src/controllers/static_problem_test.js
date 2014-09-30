@@ -17,7 +17,7 @@ glift.controllers.staticProblemTest = function() {
         bstone = conv('oc');
     ok(c.problemConditions !== undefined, 'problemConditions must be defined');
     ok(c.problemConditions['GB'] !== undefined, 'GB must be specified');
-    deepEqual(c.sgfString, sgfs.realproblem);
+    // deepEqual(c.sgfString, sgfs.realproblem); -- no longer true
     var data = c.initialize().getEntireBoardState();
     var whiteStones = ptlistToMap(data.stones.WHITE)
     var blackStones = ptlistToMap(data.stones.BLACK)
@@ -25,7 +25,15 @@ glift.controllers.staticProblemTest = function() {
         'Must find a white stone where expected');
     ok(blackStones[bstone.toString()] !== undefined,
         'Must find a black stone where expected');
+  });
 
+  test('Test rebase', function() {
+    var c = cont.staticProblem({
+      sgfString: sgfs.passingExample,
+      problemConditions: {GB: []}
+    });
+    deepEqual(c.movetree.node().getNodeNum(), 0);
+    deepEqual(c.movetree.node().getNodeNum(), 0);
   });
 
   test('Test Current Player Color', function() {

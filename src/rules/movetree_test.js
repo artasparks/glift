@@ -299,4 +299,32 @@ glift.rules.movetreeTest = function() {
     var mt = glift.rules.movetree.getFromSgf(sgf, initPos);
     deepEqual(mt.movesToMainline(), 3);
   });
+
+  test('Rebase Test', function() {
+    var initPos = [0];
+    var sgf = '(;GM[1]AW[jj][jk][jl]AB[kk][kl];' +
+        'B[aa];W[ab];B[ac];W[ad];B[ae];W[af]' +
+        '(;B[ag];W[ah];B[ai];W[aj])' +
+        '(;B[ah];W[ai];B[aj];W[ak]))';
+    var mt = glift.rules.movetree.getFromSgf(sgf, initPos);
+    deepEqual(initPos, mt.treepathToHere());
+
+    var newmt = mt.rebase();
+    deepEqual(newmt.node().getNodeNum(), 0);
+    deepEqual(newmt.properties().getAllValues('AW'), ['jj', 'jk' ,'jl']);
+    deepEqual(newmt.properties().getAllValues('AB'), ['kk', 'kl' ,'aa']);
+    newmt.moveDown();
+    deepEqual(newmt.node().getNodeNum(), 1);
+  });
+
+  test('Rebase Test: passing test', function() {
+    var mt = glift.rules.movetree.getFromSgf(sgfs.passingExample, 2)
+    deepEqual(mt.treepathToHere(), [0,0]);
+    deepEqual(mt.node().getNodeNum(), 2);
+
+    mt = mt.rebase();
+    deepEqual(mt.node().getNodeNum(), 0);
+    deepEqual(mt.properties().getAllValues('AW'), ['qc']);
+    deepEqual(mt.properties().getAllValues('AB'), ['pd']);
+  });
 };

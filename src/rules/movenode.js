@@ -72,6 +72,7 @@ glift.rules._MoveNode.prototype = {
 
   /**
    * Renumber the nodes.  Useful for when nodes are deleted during SGF editing.
+   * Note: This performs the renumbering recursively
    */
   renumber: function() {
     numberMoves(this, this._nodeId.nodeNum, this._nodeId.varNum);

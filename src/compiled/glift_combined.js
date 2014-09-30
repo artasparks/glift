@@ -1270,11 +1270,24 @@ glift.dom.sanitize = function(text) {
   }
   return outbuffer.join('');
 };
+// Note to self: common vendor property patterns:
+//
+// -webkit-property => webkitProperty
+// -moz-property => MozProperty
+// -ms-property => msProperty
+// -o-property => OProperty
+// property => property
+
+
 /**
  * Miscellaneous utility methods for UX.
  */
 glift.dom.ux = {
-  /** Provide scrolling, but only for the inner div.  Prepare for nastiness. */
+  /**
+   * Provide scrolling, but only for the inner div.  Prepare for nastiness.
+   * It's not totally clear that this is the right UX experience.  For boards
+   * that don't over flow, it's actually kind of obnoxious.
+   */
   onlyInnerVertScroll: function(elem, bbox) {
     var preventScroll = function(ev) {
         ev.stopPropagation();
@@ -1302,6 +1315,22 @@ glift.dom.ux = {
         preventScroll(e);
       }
       return this;
+    });
+  },
+
+  /**
+   * Sets a div (or other element), as not selectable.
+   */
+  setNotSelectable: function(id) {
+    glift.dom.elem(id).css({
+      'webkitTouchCallout': 'none',
+      'webkitUserSelect': 'none',
+      'MozUserSelect': 'moz-none',
+      'msUserSelect': 'none',
+      'user-select': 'none',
+      'webkitHighlight': 'none',
+      'webkitTapHighlightColor': 'rgba(0,0,0,0)',
+      'cursor': 'default'
     });
   }
 };
@@ -2512,25 +2541,6 @@ glift.displays._LineBox = function(boundingBox, spacing, cropbox) {
   this.pointTopLeft = cropbox.cbox().topLeft();
   this.xPoints = cropbox.xPoints();
   this.yPoints = cropbox.yPoints();
-};
-glift.displays.setNotSelectable = function(divId) {
-  // Note to self: common vendor property patterns:
-  //
-  // -webkit-property => webkitProperty
-  // -moz-property => MozProperty
-  // -ms-property => msProperty
-  // -o-property => OProperty
-  // property => property
-  glift.dom.elem(divId).css({
-      'webkitTouchCallout': 'none',
-      'webkitUserSelect': 'none',
-      'MozUserSelect': 'moz-none',
-      'msUserSelect': 'none',
-      'user-select': 'none',
-      'webkitHighlight': 'none',
-      'webkitTapHighlightColor': 'rgba(0,0,0,0)',
-      'cursor': 'default'
-  });
 };
 /**
  * Resize the box optimally into the divBox (bounding box). Currently this finds
@@ -4353,12 +4363,20 @@ glift.displays.icons.svg = {
     }
   },
 
+  // Left around for convenience.
   // http://raphaeljs.com/icons/#roadmap
   roadmap: {
     string: "M23.188,3.735c0-0.975-0.789-1.766-1.766-1.766s-1.766,0.791-1.766,1.766s1.766,4.267,1.766,4.267S23.188,4.71,23.188,3.735zM20.578,3.734c0-0.466,0.378-0.843,0.844-0.843c0.467,0,0.844,0.377,0.844,0.844c0,0.466-0.377,0.843-0.844,0.843C20.956,4.578,20.578,4.201,20.578,3.734zM25.281,18.496c-0.562,0-1.098,0.046-1.592,0.122L11.1,13.976c0.199-0.181,0.312-0.38,0.312-0.59c0-0.108-0.033-0.213-0.088-0.315l8.41-2.239c0.459,0.137,1.023,0.221,1.646,0.221c1.521,0,2.75-0.485,2.75-1.083c0-0.599-1.229-1.083-2.75-1.083s-2.75,0.485-2.75,1.083c0,0.069,0.021,0.137,0.054,0.202L9.896,12.2c-0.633-0.188-1.411-0.303-2.265-0.303c-2.088,0-3.781,0.667-3.781,1.49c0,0.823,1.693,1.489,3.781,1.489c0.573,0,1.11-0.054,1.597-0.144l11.99,4.866c-0.19,0.192-0.306,0.401-0.306,0.623c0,0.188,0.096,0.363,0.236,0.532L8.695,25.415c-0.158-0.005-0.316-0.011-0.477-0.011c-3.241,0-5.87,1.037-5.87,2.312c0,1.276,2.629,2.312,5.87,2.312c3.241,0,5.87-1.034,5.87-2.312c0-0.22-0.083-0.432-0.229-0.633l10.265-5.214c0.37,0.04,0.753,0.066,1.155,0.066c2.414,0,4.371-0.771,4.371-1.723C29.65,19.268,27.693,18.496,25.281,18.496z",
     bbox: {
       "x":2.348,"y":1.969,"x2":29.65,"y2":30.028,"width":27.302,"height":28.059
     }
+  },
+
+  // Problem answer icon
+  // http://iconmonstr.com/help-3-icon/
+  'problem-explanation': {
+    string: "M256,90c91.74,0,166,74.244,166,166c0,91.741-74.245,166-166,166c-91.741,0-166-74.245-166-166 C90,164.259,164.244,90,256,90 M256,50C142.229,50,50,142.229,50,256s92.229,206,206,206s206-92.229,206-206S369.771,50,256,50 L256,50z M258.025,379.511c-14.546,0-26.343-11.797-26.343-26.349c0-14.543,11.797-26.336,26.343-26.336 c14.549,0,26.342,11.793,26.342,26.336C284.367,367.714,272.574,379.511,258.025,379.511z M278.735,301.646v4.739 c0,0-39.494,0-43.423,0v-4.739c0-13.408,1.956-30.61,17.523-45.565c15.569-14.958,35.024-27.312,35.024-45.996 c0-20.655-14.335-31.581-32.409-31.581c-30.116,0-32.085,31.234-32.827,38.112H180.39c1.125-32.57,14.891-78.127,75.315-78.127 c52.363,0,75.905,35.07,75.905,67.957C331.61,258.793,278.735,267.886,278.735,301.646z",
+    bbox: {"x":50,"y":50,"x2":462,"y2":462,"width":412,"height":412}
   },
 
   /////////////////////////////
@@ -4577,6 +4595,21 @@ glift.displays.icons.svg = {
   'nostone-xmark': {
     string: "M462,256c0,113.771-92.229,206-206,206S50,369.771,50,256S142.229,50,256,50S462,142.229,462,256z M422,256c0-91.755-74.258-166-166-166c-91.755,0-166,74.259-166,166c0,91.755,74.258,166,166,166C347.755,422,422,347.741,422,256z M325.329,362.49l-67.327-67.324l-67.329,67.332l-36.164-36.186l67.314-67.322l-67.321-67.317l36.185-36.164l67.31,67.301 l67.3-67.309l36.193,36.17l-67.312,67.315l67.32,67.31L325.329,362.49z",
     bbox: {"x":50,"y":50,"x2":462,"y2":462,"width":412,"height":412}
+  },
+
+  //////////////////
+  // Misc Helpers //
+  //////////////////
+
+  // TODO(kashomon): Use for overflow indicator.
+  simpletriangleup: {
+    string: "M256,77.599 L462,434.4 L50,434.4Z",
+    bbox:{"x":50,"y":77.599,"x2":462,"y2":434.4,"width":412,"height":356.801} 
+  },
+
+  simpletriangledown: {
+    string: "M256,434.4 L462,77.599 L50,77.599Z",
+    bbox:{"x":50,"y":77.599,"x2":462,"y2":434.4,"width":412,"height":356.801} 
   }
 };
 /**
@@ -5135,7 +5168,7 @@ glift.displays.statusbar._StatusBar.prototype = {
   /**
    * Create a game info object. Takes a array of game info data.
    *
-   * Note: Key bindings are set in the widget.
+   * Note: Key bindings are set in the base_widget.
    */
   gameInfo: function(gameInfoArr) {
     var wrapperDivId = this.widget.wrapperDiv,
@@ -5193,7 +5226,7 @@ glift.displays.statusbar._StatusBar.prototype = {
   /**
    * Make Glift full-screen.
    *
-   * Note: Key bindings are set in the widget.
+   * Note: Key bindings are set in the base_widget.
    */
   fullscreen: function() {
     var widget = this.widget,
@@ -6344,6 +6377,7 @@ glift.rules._MoveNode.prototype = {
 
   /**
    * Renumber the nodes.  Useful for when nodes are deleted during SGF editing.
+   * Note: This performs the renumbering recursively
    */
   renumber: function() {
     numberMoves(this, this._nodeId.nodeNum, this._nodeId.varNum);
@@ -6405,11 +6439,16 @@ glift.rules.movetree = {
   /** Create a MoveTree from an SGF. */
   getFromSgf: function(sgfString, initPosition) {
     initPosition = initPosition || []; // treepath.
-    if (sgfString === undefined || sgfString === "") {
+    if (glift.util.typeOf(initPosition) === 'string' ||
+        glift.util.typeOf(initPosition) === 'number') {
+      initPosition = glift.rules.treepath.parseInitPosition(initPosition);
+    }
+    if (sgfString === undefined || sgfString === '') {
       return glift.rules.movetree.getInstance(19);
     }
     glift.util.majorPerfLog('Before SGF parsing in movetree');
     var mt = glift.sgf.parse(sgfString);
+
     glift.util.majorPerfLog('After SGF parsing in movetree');
     for (var i = 0; i < initPosition.length; i++) {
       mt.moveDown(initPosition[i]);
@@ -6486,25 +6525,31 @@ glift.rules._MoveTree.prototype = {
     return this;
   },
 
-  /** Get the current playeras a color. */
+  /** Get the current player as a color. */
   getCurrentPlayer: function() {
     var states = glift.enums.states;
     var curNode = this._currentNode;
     var move = curNode.properties().getMove();
+
+    var curPlayer = states.BLACK;
     while (!move) {
       curNode = curNode.getParent();
-      if (!curNode) { return states.BLACK; }
+      if (!curNode) {
+        curPlayer = states.BLACK;
+        break;
+      }
       move = curNode.properties().getMove();
     }
     if (!move) {
-      return states.BLACK;
+      curPlayer = states.BLACK;
     } else if (move.color === states.BLACK) {
-      return states.WHITE;
+      curPlayer = states.WHITE;
     } else if (move.color === states.WHITE) {
-      return states.BLACK;
+      curPlayer = states.BLACK;
     } else {
-      return states.BLACK;
+      curPlayer = states.BLACK;
     }
+    return curPlayer;
   },
 
   /**
@@ -6649,6 +6694,34 @@ glift.rules._MoveTree.prototype = {
       this._markedMainline = true;
     }
     return this.node()._mainline;
+  },
+
+  /**
+   * Construct a new movetree, but add all the previous stones as placements.
+   */
+  // TODO(kashomon): Actually make this work.
+  rebase: function() {
+    var path = this.treepathToHere();
+    var mt = this.getTreeFromRoot();
+    var oldMt = this.getTreeFromRoot();
+    var propMap = { 'BLACK': 'AB', 'WHITE': 'AW' };
+    for (var i = 0; i < path.length; i++) {
+      oldMt.moveDown(path[i]);
+      var stones = oldMt.properties().getAllStones();
+      for (var color in stones) {
+        var moves = stones[color];
+        var prop = propMap[color];
+        for (var j = 0; j < moves.length; j++) {
+          var point = moves[j];
+          if (point && prop) {
+            mt.properties().add(prop, point.toSgfCoord());
+          }
+        }
+      }
+    }
+    mt.node().children = this.node().children;
+    mt.node().renumber();
+    return mt;
   },
 
   /** Recursive over the movetree. func is called on the movetree. */
@@ -7040,13 +7113,13 @@ Properties.prototype = {
 
   // Get all the placements for a color (BLACK or WHITE).  Return as an array.
   getPlacementsAsPoints: function(color) {
-    var prop = "";
+    var prop = '';
     if (color === glift.enums.states.BLACK) {
       prop = glift.sgf.allProperties.AB;
     } else if (color === glift.enums.states.WHITE) {
       prop = glift.sgf.allProperties.AW;
     }
-    if (prop === "" || !this.contains(prop)) {
+    if (prop === '' || !this.contains(prop)) {
       return [];
     }
     return glift.sgf.allSgfCoordsToPoints(this.getAllValues(prop));
@@ -7179,7 +7252,9 @@ Properties.prototype = {
       AN: 'Commenter',
       SO: 'Source',
       RU: 'Ruleset',
-      KM: 'Komi'
+      KM: 'Komi',
+      PC: 'Place Name',
+      DT: 'Date'
     };
     for (var key in propNameMap) {
       if (this.contains(key)) {
@@ -7868,7 +7943,32 @@ BaseController.prototype = {
     this.initialPosition = sgfOptions.initialPosition || [];
     this.problemConditions = sgfOptions.problemConditions || undefined;
     this.initialize();
-    this.extraOptions(sgfOptions); // Overridden by implementers
+    return this;
+  },
+
+  /**
+   * Initialize the:
+   *  - initPosition -- Description of where to start.
+   *  - treepath -- The path to the current position.  An array of variaton
+   *    numbers.
+   *  - movetree -- Tree of move nodes from the SGF.
+   *  - goban -- Data structure describing the go board.  Really, the goban is
+   *    useful for telling you where stones can be placed, and (after placing)
+   *    what stones were captured.
+   *  - capture history -- The history of the captures.
+   *
+   * treepath: Optionally pass in the treepath from the beginning and use that
+   * instead of the initialPosition treepath.
+   */
+  initialize: function(treepath) {
+    var rules = glift.rules;
+    var initTreepath = treepath || this.initialPosition;
+    this.treepath = rules.treepath.parseInitPosition(initTreepath);
+    this.movetree = rules.movetree.getFromSgf(this.sgfString, this.treepath);
+    var gobanData = rules.goban.getFromMoveTree(this.movetree, this.treepath);
+    this.goban = gobanData.goban;
+    this.captureHistory = gobanData.captures;
+    this.extraOptions(); // Overridden by implementers
     return this;
   },
 
@@ -7899,34 +7999,9 @@ BaseController.prototype = {
     return this;
   },
 
-  /**
-   * Initialize the:
-   *  - initPosition -- Description of where to start.
-   *  - treepath -- The path to the current position.  An array of variaton
-   *    numbers.
-   *  - movetree -- Tree of move nodes from the SGF.
-   *  - goban -- Data structure describing the go board.  Really, the goban is
-   *    useful for telling you where stones can be placed, and (after placing)
-   *    what stones were captured.
-   *  - capture history -- The history of the captures.
-   *
-   * treepath: Optionally pass in the treepath from the beginning and use that
-   * instead of the initialPosition treepath.
-   */
-  initialize: function(treepath) {
-    var rules = glift.rules;
-    var initTreepath = treepath || this.initialPosition;
-    this.treepath = rules.treepath.parseInitPosition(initTreepath);
-    this.movetree = rules.movetree.getFromSgf(this.sgfString, this.treepath);
-    var gobanData = rules.goban.getFromMoveTree(this.movetree, this.treepath);
-    this.goban = gobanData.goban;
-    this.captureHistory = gobanData.captures;
-    return this;
-  },
-
   /** Get the current move number. */
   currentMoveNumber: function(treepath) {
-    return this.captureHistory.length;
+    return this.movetree.node().getNodeNum();
   },
 
   /** Get the treepath to the current position */
@@ -8003,9 +8078,17 @@ BaseController.prototype = {
     return this.movetree.getCurrentPlayer();
   },
 
-  /**
-   * Returns the number of intersections.  Should be known at load time.
-   */
+  /** Get the current SGF string. */
+  currentSgf: function() {
+    return this.movetree.toSgf();
+  },
+
+  /** Get the original SGF string. */
+  originalSgf: function() {
+    return this.sgfString;
+  },
+
+  /** Returns the number of intersections.  Should be known at load time. */
   getIntersections: function() {
     return this.movetree.getIntersections();
   },
@@ -8088,9 +8171,7 @@ BaseController.prototype = {
     return this.treepath[this.currentMoveNumber()] || 0;
   },
 
-  /**
-   * Go back to the beginning.
-   */
+  /** Go back to the beginning. */
   toBeginning: function() {
     this.movetree = this.movetree.getTreeFromRoot();
     this.goban = glift.rules.goban.getFromMoveTree(this.movetree, []).goban;
@@ -8098,9 +8179,7 @@ BaseController.prototype = {
     return this.getEntireBoardState();
   },
 
-  /**
-   * Go to the end.
-   */
+  /** Go to the end. */
   toEnd: function() {
     while (this.nextMove()) {
       // All the action happens in nextMoveNoState.
@@ -8122,7 +8201,7 @@ glift.controllers.BoardEditorMethods = {
    * Called during initialization, after the goban/movetree have been
    * initializied.
    */
-  extraOptions: function(sgfOptions) {
+  extraOptions: function() {
     // _initLabelTrackers creates:
     //
     // this._alphaLabels: An array of available alphabetic labels.
@@ -8407,7 +8486,7 @@ glift.controllers.GameViewerMethods = {
    * treepath.  This allows us to 'remember' the last variation taken by the
    * player, which seems to be the standard behavior.
    */
-  extraOptions: function(options) {},
+  extraOptions: function() {},
 
   /**
    * Find the variation associated with the played move.
@@ -8547,6 +8626,18 @@ glift.controllers.staticProblem = function(sgfOptions) {
 };
 
 glift.controllers.StaticProblemMethods = {
+  /** Override extra options */
+  extraOptions: function() {
+    // Rebase the movetree.
+    // this.movetree = this.movetree.rebase();
+    // this.treepath = [];
+    // this.captureHistory = [];
+    // It's a hack to reset the SGF string, but it's used by the problem
+    // explanation button/widget.
+    // this.sgfString = this.movetree.toSgf();
+    // Shouldn't need to reset the goban.
+  },
+
   /**
    * Reload the problems.
    *
@@ -9517,354 +9608,6 @@ glift.widgets = {
  */
 glift.create = glift.widgets.create;
 /**
- * The base web UI widget.
- */
-glift.widgets.BaseWidget = function(
-    divId, sgfOptions, displayOptions, actions, manager) {
-  this.wrapperDiv = divId; // We split the wrapper div.
-  this.type = sgfOptions.type;
-  this.sgfOptions = glift.util.simpleClone(sgfOptions);
-  this.displayOptions = glift.util.simpleClone(displayOptions);
-  this.actions = actions; // deeply nested -- not worth cloning.
-  this.manager = manager;
-
-
-  // These variables are initialized by draw
-  this.controller = undefined;
-  this.boardRegion = undefined;
-
-  // The four major components. Also initialized by draw.
-  this.display = undefined;
-  this.statusBar = undefined;
-  this.commentBox = undefined;
-  this.iconBar = undefined;
-
-  // Used for problems, exclusively.
-  // TODO(kashomon): Factor these out into some sort of problemState.
-  this.initialMoveNumber = undefined;
-  this.initialPlayerColor = undefined;
-  this.correctness = undefined;
-  this.correctNextSet = undefined;
-  this.numCorrectAnswers = undefined;
-  this.totalCorrectAnswers = undefined;
-};
-
-glift.widgets.BaseWidget.prototype = {
-  /** Draws the widget. */
-  draw: function() {
-    this.controller = this.sgfOptions.controllerFunc(this.sgfOptions);
-    this.initialMoveNumber = this.controller.movetree.node().getNodeNum();
-    this.initialPlayerColor = this.controller.getCurrentPlayer();
-    glift.util.majorPerfLog('Created controller');
-
-    this.displayOptions.intersections = this.controller.getIntersections();
-
-    this.displayOptions.boardRegion =
-        this.sgfOptions.boardRegion === glift.enums.boardRegions.AUTO
-        ? glift.bridge.getCropFromMovetree(this.controller.movetree)
-        : this.sgfOptions.boardRegion;
-    this.displayOptions.rotation = this.sgfOptions.rotation;
-    glift.util.majorPerfLog('Calculated board regions');
-
-    // This should be the only time we get the base width and height, until the
-    // entire widget is re-drawn.
-    var parentDivBbox = glift.displays.bbox.fromDiv(this.wrapperDiv);
-    if (parentDivBbox.width() === 0 || parentDivBbox.height() === 0) {
-      throw new Error("Div has has invalid dimensions. Bounding box had " +
-          "width: " + parentDivBbox.width() +
-          ", height: " + parentDivBbox.height());
-    }
-
-    // Recall that positioning returns an object that looks like:
-    // {commentBox: ..., boardbox: ..., iconBarBox: ...)
-    var positioning = glift.displays.position.positioner(
-        parentDivBbox,
-        this.displayOptions.boardRegion,
-        this.displayOptions.intersections,
-        this.sgfOptions.componentsToUse,
-        this.displayOptions.oneColumnSplits,
-        this.displayOptions.twoColumnSplits).calcWidgetPositioning();
-
-    var divIds = this._createDivsForPositioning(positioning, this.wrapperDiv);
-    glift.util.majorPerfLog('Created divs');
-
-    // TODO(kashomon): Remove these hacks. We shouldn't be modifying
-    // displayOptions.
-    this.displayOptions.divId = divIds.BOARD;
-
-    var theme = glift.themes.get(this.displayOptions.theme);
-
-    // TODO(kashomon): Pass in the theme rather than doing another copy here
-    this.display = glift.displays.create(
-        this.displayOptions,
-        positioning.getBbox(glift.enums.boardComponents.BOARD));
-    glift.util.majorPerfLog('Finish creating display');
-
-    if (divIds.COMMENT_BOX) {
-      this.commentBox = glift.displays.commentbox.create(
-          divIds.COMMENT_BOX,
-          positioning.getBbox(glift.enums.boardComponents.COMMENT_BOX),
-          theme);
-    }
-    glift.util.majorPerfLog('CommentBox');
-
-    if (divIds.ICONBAR) {
-      this.iconBar = glift.displays.icons.bar({
-          divId: divIds.ICONBAR,
-          positioning: positioning.getBbox(glift.enums.boardComponents.ICONBAR),
-          icons: this.sgfOptions.icons,
-          parentBbox: parentDivBbox,
-          theme: theme,
-          allDivIds: divIds,
-          allPositioning: positioning
-      }).draw();
-    }
-    glift.util.majorPerfLog('IconBar');
-    divIds.ICONBAR && this.iconBar.initIconActions(
-        this, this.actions.iconActions);
-
-    if (divIds.STATUS_BAR) {
-      // TODO(kashomon): Move into a helper
-      var statusBarIcons = glift.util.simpleClone(this.sgfOptions.statusBarIcons);
-      if (this.manager.fullscreenDivId) {
-        glift.array.replace(statusBarIcons, 'fullscreen', 'unfullscreen');
-      }
-      if (this.manager.sgfCollection.length > 1) {
-        statusBarIcons.splice(0, 0, 'widget-page');
-      }
-      var statusBarIconBar = glift.displays.icons.bar({
-          divId: divIds.STATUS_BAR,
-          positioning: positioning.getBbox(glift.enums.boardComponents.STATUS_BAR),
-          icons: statusBarIcons,
-          parentBbox: parentDivBbox,
-          theme: theme,
-          allDivIds: divIds,
-          allPositioning: positioning
-      });
-      this.statusBar = glift.displays.statusbar.create({
-          iconBarPrototype: statusBarIconBar,
-          theme: theme,
-          allPositioning: positioning,
-          widget: this
-      }).draw();
-    }
-    glift.util.majorPerfLog('StatusBar');
-    divIds.STATUS_BAR && this.statusBar.iconBar.initIconActions(
-        this, this.actions.iconActions);
-
-    glift.util.majorPerfLog('Before stone event creation');
-    this._initStoneActions(this.actions.stoneActions);
-    this._initKeyHandlers();
-    glift.util.majorPerfLog('After stone event creation');
-
-    this._initProblemData();
-    this.applyBoardData(this.controller.getEntireBoardState());
-    return this;
-  },
-
-  /**
-   * Create divs from positioning (WidgetBoxes) and the wrapper div id.
-   */
-  _createDivsForPositioning: function(positioning, wrapperDivId) {
-    // Map from component to ID.
-    var out = {};
-    var createDiv = function(bbox) {
-      var newId = wrapperDivId + '_internal_div_' + glift.util.idGenerator.next();
-      var newDiv = glift.dom.newDiv(newId);
-      var cssObj = {
-        top: bbox.top() + 'px',
-        left: bbox.left() + 'px',
-        width: bbox.width() + 'px',
-        height: bbox.height() + 'px',
-        position: 'absolute',
-        cursor: 'default'
-      };
-      newDiv.css(cssObj);
-      glift.dom.elem(wrapperDivId).append(newDiv);
-      glift.displays.setNotSelectable(newId);
-      return newId;
-    };
-    positioning.map(function(key, bbox) {
-      out[key] = createDiv(bbox);
-    });
-    return out;
-  },
-
-  /** Initialize the stone actions. */
-  _initStoneActions: function(baseActions) {
-    var actions = {};
-    actions.mouseover = baseActions.mouseover;
-    actions.mouseout = baseActions.mouseout;
-    actions.click = this.sgfOptions.stoneClick;
-    if (this.sgfOptions.stoneMouseover) {
-      actions.mouseover = this.sgfOptions.stoneMouseover;
-    }
-    if (this.sgfOptions.stoneMouseout) {
-      actions.mouseout = this.sgfOptions.stoneMouseout;
-    }
-
-    var wrapAction = function(func) {
-      return function(event, pt) {
-        this.manager.setActive();
-        func(event, this, pt);
-      }.bind(this);
-    }.bind(this);
-    if (actions.mouseover &&
-        actions.mouseout &&
-        !glift.platform.isMobile()) {
-      this.display.intersections().setHover(
-          wrapAction(actions.mouseover),
-          wrapAction(actions.mouseout));
-    }
-    if (actions.click) {
-      var actionName = 'click';
-      if (glift.platform.isMobile()) {
-        // Kinda a hack, but necessary to avoid the 300ms delay.
-        var actionName = 'touchend';
-      }
-      this.display.intersections().setEvent(
-          actionName, wrapAction(actions.click));
-    }
-  },
-
-  /** Assign Key actions to some other action. */
-  _initKeyHandlers: function() {
-    if (!this.displayOptions.enableKeyboardShortcuts) {
-      return;
-    }
-
-    var keyMappings = glift.util.simpleClone(this.sgfOptions.keyMappings);
-    if (this.manager.fullscreenDivId) {
-      // We're fullscreened.  Add ESC to escape =)
-      keyMappings['ESCAPE'] = 'iconActions.unfullscreen.click';
-    }
-
-    for (var keyName in keyMappings) {
-      var iconPathOrFunc = keyMappings[keyName];
-      glift.keyMappings.registerKeyAction(
-          this.manager.id,
-          keyName,
-          iconPathOrFunc);
-    }
-    // Lazy initialize the key mappings. Only really runs once.
-    glift.keyMappings.initKeybindingListener();
-  },
-
-  /** Initialize properties based on problem type. */
-  _initProblemData: function() {
-    if (this.sgfOptions.widgetType ===
-        glift.enums.widgetTypes.CORRECT_VARIATIONS_PROBLEM) {
-      var correctNext = glift.rules.problems.correctNextMoves(
-          this.controller.movetree, this.sgfOptions.problemConditions);
-      // A Set: i.e., a map of points to true
-      this.correctNextSet = this.correctNextSet || {};
-      this.numCorrectAnswers = this.numCorrectAnswers || 0;
-      this.totalCorrectAnswers = this.totalCorrectAnswers
-          || this.sgfOptions.totalCorrectVariationsOverride
-          || correctNext.length;
-      // TODO(kashomon): Remove this hack: The icon should be specified with
-      // some sort of options.
-      this.iconBar.addTempText(
-          'multiopen-boxonly',
-          this.numCorrectAnswers + '/' + this.totalCorrectAnswers,
-          { fill: 'black', stroke: 'black'});
-    }
-  },
-
-  /**
-   * Apply the BoardData to both the comments box and the board. Uses
-   * glift.bridge to communicate with the display.
-   */
-  applyBoardData: function(boardData) {
-    if (boardData) {
-      this.setCommentBox(boardData.comment);
-      this.statusBar &&
-          this.statusBar.setMoveNumber(this.controller.currentMoveNumber())
-      glift.bridge.setDisplayState(
-          boardData,
-          this.display,
-          this.sgfOptions.showVariations,
-          this.sgfOptions.markLastMove);
-    }
-  },
-
-  /**
-   * Set the CommentBox with some specified text, if the comment box exists.
-   */
-  setCommentBox: function(text) {
-    if (this.commentBox === undefined) {
-      // Do nothing -- there is no comment box to set.
-    } else if (text) {
-      this.commentBox.setText(text);
-    } else {
-      this.commentBox.clearText();
-    }
-    return this;
-  },
-
-  /**
-   * Reload the problem.  Note: This is too problem specific and probably needs
-   * to be rethought.
-   */
-  reload: function() {
-    if (this.correctness !== undefined) {
-      this.correctNextSet = undefined;
-      this.numCorrectAnswers = undefined;
-      this.totalCorrectAnswers = undefined;
-    }
-    this.redraw();
-  },
-
-  /**
-   * Gets the current state of the widget, so what we can accurately redraw the
-   * widget.
-   */
-  getCurrentState: function() {
-    return {
-      currentTreepath: this.controller.pathToCurrentPosition()
-    };
-  },
-
-  /**
-   * Set the widget state from a state object and redraws.
-   */
-  applyState: function(stateObj) {
-    var types = glift.enums.widgetTypes;
-    if (this.sgfOptions.widgetType === types.REDUCED_GAME_VIEWER ||
-        this.sgfOptions.widgetType === types.GAME_VIEWER) {
-      var treepath = stateObj.currentTreepath;
-      this.controller.initialize(treepath);
-      this.applyBoardData(this.controller.getEntireBoardState());
-    }
-    // TODO(kashomon): Support problems here.
-  },
-
-  /**
-   * Redraw the widget.  This also resets the widget state in perhaps confusing
-   * ways.
-   */
-  redraw: function() {
-    this.destroy();
-    var state = this.getCurrentState();
-    this.draw();
-    this.applyState(state);
-  },
-
-  /** remove the widget and do various cleanups. */
-  destroy: function() {
-    var managerId = this.manager.id;
-    glift.keyMappings.unregisterInstance(managerId);
-    glift.dom.elem(this.wrapperDiv) &&
-        glift.dom.elem(this.wrapperDiv).empty();
-    if (this.keyHandlerFunc !== undefined) {
-      document.body.keydown = null;
-    }
-    this.correctness = undefined;
-    this.keyHandlerFunc = undefined;
-    this.display = undefined;
-  }
-};
-/**
  * The Widget Manager manages state across widgets.  When widgets are created,
  * they are always created in the context of a Widget Manager.
  *
@@ -10152,6 +9895,354 @@ glift.widgets.WidgetManager.prototype = {
     this.temporaryWidget && this.temporaryWidget.destroy();
     this.temporaryWidget = undefined;
     return this;
+  }
+};
+/**
+ * The base web UI widget.
+ */
+glift.widgets.BaseWidget = function(
+    divId, sgfOptions, displayOptions, actions, manager) {
+  this.wrapperDiv = divId; // We split the wrapper div.
+  this.type = sgfOptions.type;
+  this.sgfOptions = glift.util.simpleClone(sgfOptions);
+  this.displayOptions = glift.util.simpleClone(displayOptions);
+  this.actions = actions; // deeply nested -- not worth cloning.
+  this.manager = manager;
+
+
+  // These variables are initialized by draw
+  this.controller = undefined;
+  this.boardRegion = undefined;
+
+  // The four major components. Also initialized by draw.
+  this.display = undefined;
+  this.statusBar = undefined;
+  this.commentBox = undefined;
+  this.iconBar = undefined;
+
+  // Used for problems, exclusively.
+  // TODO(kashomon): Factor these out into some sort of problemState.
+  this.initialMoveNumber = undefined;
+  this.initialPlayerColor = undefined;
+  this.correctness = undefined;
+  this.correctNextSet = undefined;
+  this.numCorrectAnswers = undefined;
+  this.totalCorrectAnswers = undefined;
+};
+
+glift.widgets.BaseWidget.prototype = {
+  /** Draws the widget. */
+  draw: function() {
+    this.controller = this.sgfOptions.controllerFunc(this.sgfOptions);
+    this.initialMoveNumber = this.controller.movetree.node().getNodeNum();
+    this.initialPlayerColor = this.controller.getCurrentPlayer();
+    glift.util.majorPerfLog('Created controller');
+
+    this.displayOptions.intersections = this.controller.getIntersections();
+
+    this.displayOptions.boardRegion =
+        this.sgfOptions.boardRegion === glift.enums.boardRegions.AUTO
+        ? glift.bridge.getCropFromMovetree(this.controller.movetree)
+        : this.sgfOptions.boardRegion;
+    this.displayOptions.rotation = this.sgfOptions.rotation;
+    glift.util.majorPerfLog('Calculated board regions');
+
+    // This should be the only time we get the base width and height, until the
+    // entire widget is re-drawn.
+    var parentDivBbox = glift.displays.bbox.fromDiv(this.wrapperDiv);
+    if (parentDivBbox.width() === 0 || parentDivBbox.height() === 0) {
+      throw new Error("Div has has invalid dimensions. Bounding box had " +
+          "width: " + parentDivBbox.width() +
+          ", height: " + parentDivBbox.height());
+    }
+
+    // Recall that positioning returns an object that looks like:
+    // {commentBox: ..., boardbox: ..., iconBarBox: ...)
+    var positioning = glift.displays.position.positioner(
+        parentDivBbox,
+        this.displayOptions.boardRegion,
+        this.displayOptions.intersections,
+        this.sgfOptions.componentsToUse,
+        this.displayOptions.oneColumnSplits,
+        this.displayOptions.twoColumnSplits).calcWidgetPositioning();
+
+    var divIds = this._createDivsForPositioning(positioning, this.wrapperDiv);
+    glift.util.majorPerfLog('Created divs');
+
+    // TODO(kashomon): Remove these hacks. We shouldn't be modifying
+    // displayOptions.
+    this.displayOptions.divId = divIds.BOARD;
+
+    var theme = glift.themes.get(this.displayOptions.theme);
+
+    // TODO(kashomon): Pass in the theme rather than doing another copy here
+    this.display = glift.displays.create(
+        this.displayOptions,
+        positioning.getBbox(glift.enums.boardComponents.BOARD));
+    glift.util.majorPerfLog('Finish creating display');
+
+    if (divIds.COMMENT_BOX) {
+      this.commentBox = glift.displays.commentbox.create(
+          divIds.COMMENT_BOX,
+          positioning.getBbox(glift.enums.boardComponents.COMMENT_BOX),
+          theme);
+    }
+    glift.util.majorPerfLog('CommentBox');
+
+    if (divIds.ICONBAR) {
+      this.iconBar = glift.displays.icons.bar({
+          divId: divIds.ICONBAR,
+          positioning: positioning.getBbox(glift.enums.boardComponents.ICONBAR),
+          icons: this.sgfOptions.icons,
+          parentBbox: parentDivBbox,
+          theme: theme,
+          allDivIds: divIds,
+          allPositioning: positioning
+      }).draw();
+    }
+    glift.util.majorPerfLog('IconBar');
+    divIds.ICONBAR && this.iconBar.initIconActions(
+        this, this.actions.iconActions);
+
+    if (divIds.STATUS_BAR) {
+      // TODO(kashomon): Move into a helper
+      var statusBarIcons = glift.util.simpleClone(this.sgfOptions.statusBarIcons);
+      if (this.manager.fullscreenDivId) {
+        glift.array.replace(statusBarIcons, 'fullscreen', 'unfullscreen');
+      }
+      if (this.manager.sgfCollection.length > 1) {
+        statusBarIcons.splice(0, 0, 'widget-page');
+      }
+      var statusBarIconBar = glift.displays.icons.bar({
+          divId: divIds.STATUS_BAR,
+          positioning: positioning.getBbox(glift.enums.boardComponents.STATUS_BAR),
+          icons: statusBarIcons,
+          parentBbox: parentDivBbox,
+          theme: theme,
+          allDivIds: divIds,
+          allPositioning: positioning
+      });
+      this.statusBar = glift.displays.statusbar.create({
+          iconBarPrototype: statusBarIconBar,
+          theme: theme,
+          allPositioning: positioning,
+          widget: this
+      }).draw();
+    }
+    glift.util.majorPerfLog('StatusBar');
+    divIds.STATUS_BAR && this.statusBar.iconBar.initIconActions(
+        this, this.actions.iconActions);
+
+    glift.util.majorPerfLog('Before stone event creation');
+    this._initStoneActions(this.actions.stoneActions);
+    this._initKeyHandlers();
+    glift.util.majorPerfLog('After stone event creation');
+
+    this._initProblemData();
+    this.applyBoardData(this.controller.getEntireBoardState());
+    return this;
+  },
+
+  /**
+   * Create divs from positioning (WidgetBoxes) and the wrapper div id.
+   */
+  _createDivsForPositioning: function(positioning, wrapperDivId) {
+    // Map from component to ID.
+    var out = {};
+    var createDiv = function(bbox) {
+      var newId = wrapperDivId + '_internal_div_' + glift.util.idGenerator.next();
+      var newDiv = glift.dom.newDiv(newId);
+      var cssObj = {
+        top: bbox.top() + 'px',
+        left: bbox.left() + 'px',
+        width: bbox.width() + 'px',
+        height: bbox.height() + 'px',
+        position: 'absolute',
+        cursor: 'default'
+      };
+      newDiv.css(cssObj);
+      glift.dom.elem(wrapperDivId).append(newDiv);
+      glift.dom.ux.setNotSelectable(newId);
+      return newId;
+    };
+    positioning.map(function(key, bbox) {
+      out[key] = createDiv(bbox);
+    });
+    return out;
+  },
+
+  /** Initialize the stone actions. */
+  _initStoneActions: function(baseActions) {
+    var actions = {};
+    actions.mouseover = baseActions.mouseover;
+    actions.mouseout = baseActions.mouseout;
+    actions.click = this.sgfOptions.stoneClick;
+    if (this.sgfOptions.stoneMouseover) {
+      actions.mouseover = this.sgfOptions.stoneMouseover;
+    }
+    if (this.sgfOptions.stoneMouseout) {
+      actions.mouseout = this.sgfOptions.stoneMouseout;
+    }
+
+    var wrapAction = function(func) {
+      return function(event, pt) {
+        this.manager.setActive();
+        func(event, this, pt);
+      }.bind(this);
+    }.bind(this);
+    if (actions.mouseover &&
+        actions.mouseout &&
+        !glift.platform.isMobile()) {
+      this.display.intersections().setHover(
+          wrapAction(actions.mouseover),
+          wrapAction(actions.mouseout));
+    }
+    if (actions.click) {
+      var actionName = 'click';
+      if (glift.platform.isMobile()) {
+        // Kinda a hack, but necessary to avoid the 300ms delay.
+        var actionName = 'touchend';
+      }
+      this.display.intersections().setEvent(
+          actionName, wrapAction(actions.click));
+    }
+  },
+
+  /** Assign Key actions to some other action. */
+  _initKeyHandlers: function() {
+    if (!this.displayOptions.enableKeyboardShortcuts) {
+      return;
+    }
+
+    var keyMappings = glift.util.simpleClone(this.sgfOptions.keyMappings);
+    if (this.manager.fullscreenDivId) {
+      // We're fullscreened.  Add ESC to escape =)
+      keyMappings['ESCAPE'] = 'iconActions.unfullscreen.click';
+    }
+
+    for (var keyName in keyMappings) {
+      var iconPathOrFunc = keyMappings[keyName];
+      glift.keyMappings.registerKeyAction(
+          this.manager.id,
+          keyName,
+          iconPathOrFunc);
+    }
+    // Lazy initialize the key mappings. Only really runs once.
+    glift.keyMappings.initKeybindingListener();
+  },
+
+  /** Initialize properties based on problem type. */
+  _initProblemData: function() {
+    if (this.sgfOptions.widgetType ===
+        glift.enums.widgetTypes.CORRECT_VARIATIONS_PROBLEM) {
+      var correctNext = glift.rules.problems.correctNextMoves(
+          this.controller.movetree, this.sgfOptions.problemConditions);
+      // A Set: i.e., a map of points to true
+      this.correctNextSet = this.correctNextSet || {};
+      this.numCorrectAnswers = this.numCorrectAnswers || 0;
+      this.totalCorrectAnswers = this.totalCorrectAnswers
+          || this.sgfOptions.totalCorrectVariationsOverride
+          || correctNext.length;
+      // TODO(kashomon): Remove this hack: The icon should be specified with
+      // some sort of options.
+      this.iconBar.addTempText(
+          'multiopen-boxonly',
+          this.numCorrectAnswers + '/' + this.totalCorrectAnswers,
+          { fill: 'black', stroke: 'black'});
+    }
+  },
+
+  /**
+   * Apply the BoardData to both the comments box and the board. Uses
+   * glift.bridge to communicate with the display.
+   */
+  applyBoardData: function(boardData) {
+    if (boardData) {
+      this.setCommentBox(boardData.comment);
+      this.statusBar &&
+          this.statusBar.setMoveNumber(this.controller.currentMoveNumber())
+      glift.bridge.setDisplayState(
+          boardData,
+          this.display,
+          this.sgfOptions.showVariations,
+          this.sgfOptions.markLastMove);
+    }
+  },
+
+  /**
+   * Set the CommentBox with some specified text, if the comment box exists.
+   */
+  setCommentBox: function(text) {
+    if (this.commentBox === undefined) {
+      // Do nothing -- there is no comment box to set.
+    } else if (text) {
+      this.commentBox.setText(text);
+    } else {
+      this.commentBox.clearText();
+    }
+    return this;
+  },
+
+  /**
+   * Reload the problem.  Note: This is too problem specific and probably needs
+   * to be rethought.
+   */
+  reload: function() {
+    if (this.correctness !== undefined) {
+      this.correctNextSet = undefined;
+      this.numCorrectAnswers = undefined;
+      this.totalCorrectAnswers = undefined;
+    }
+    this.redraw();
+  },
+
+  /**
+   * Gets the current state of the widget, so what we can accurately redraw the
+   * widget.
+   */
+  getCurrentState: function() {
+    return {
+      currentTreepath: this.controller.pathToCurrentPosition()
+    };
+  },
+
+  /**
+   * Set the widget state from a state object and redraws.
+   */
+  applyState: function(stateObj) {
+    var types = glift.enums.widgetTypes;
+    if (this.sgfOptions.widgetType === types.REDUCED_GAME_VIEWER ||
+        this.sgfOptions.widgetType === types.GAME_VIEWER) {
+      var treepath = stateObj.currentTreepath;
+      this.controller.initialize(treepath);
+      this.applyBoardData(this.controller.getEntireBoardState());
+    }
+    // TODO(kashomon): Support problems here.
+  },
+
+  /**
+   * Redraw the widget.  This also resets the widget state in perhaps confusing
+   * ways.
+   */
+  redraw: function() {
+    this.destroy();
+    var state = this.getCurrentState();
+    this.draw();
+    this.applyState(state);
+  },
+
+  /** remove the widget and do various cleanups. */
+  destroy: function() {
+    var managerId = this.manager.id;
+    glift.keyMappings.unregisterInstance(managerId);
+    glift.dom.elem(this.wrapperDiv) &&
+        glift.dom.elem(this.wrapperDiv).empty();
+    if (this.keyHandlerFunc !== undefined) {
+      document.body.keydown = null;
+    }
+    this.correctness = undefined;
+    this.keyHandlerFunc = undefined;
+    this.display = undefined;
   }
 };
 glift.widgets.options = {
@@ -10722,14 +10813,15 @@ glift.widgets.options.baseOptions = {
       tooltip: 'Previous branch or comment'
     },
 
-    // Go to the explain-board.
-    roadmap: {
+    // Go to the explain-board for a problem.
+    // (was roadmap)
+    'problem-explanation': {
       click: function(event, widget, icon, iconBar) {
         var manager = widget.manager;
         var sgfObj = {
           widgetType: glift.enums.widgetTypes.GAME_VIEWER,
-          initialPosition: widget.sgfOptions.initialPosition,
-          sgfString: widget.sgfOptions.sgfString,
+          initialPosition: widget.controller.initialPosition,
+          sgfString: widget.controller.originalSgf(),
           showVariations: glift.enums.showVariations.ALWAYS,
           problemConditions: glift.util.simpleClone(
               widget.sgfOptions.problemConditions),
@@ -10973,7 +11065,7 @@ glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
 
   showVariations: glift.enums.showVariations.NEVER,
 
-  icons: ['refresh', 'roadmap', 'multiopen-boxonly'],
+  icons: ['refresh', 'problem-explanation', 'multiopen-boxonly'],
 
   controllerFunc: glift.controllers.staticProblem,
 
@@ -11069,7 +11161,7 @@ glift.widgets.options.STANDARD_PROBLEM = {
   showVariations: glift.enums.showVariations.NEVER,
 
   // TODO(kashomon): Consider using multiopen-boxonly instead of checkbox
-  icons: ['undo-problem-move', 'roadmap', 'multiopen-boxonly'],
+  icons: ['undo-problem-move', 'problem-explanation', 'multiopen-boxonly'],
 
   controllerFunc: glift.controllers.staticProblem
 };

@@ -163,7 +163,7 @@ glift.widgets.BaseWidget.prototype = {
       };
       newDiv.css(cssObj);
       glift.dom.elem(wrapperDivId).append(newDiv);
-      glift.displays.setNotSelectable(newId);
+      glift.dom.ux.setNotSelectable(newId);
       return newId;
     };
     positioning.map(function(key, bbox) {

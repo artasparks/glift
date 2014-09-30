@@ -11,7 +11,7 @@ glift.controllers.BoardEditorMethods = {
    * Called during initialization, after the goban/movetree have been
    * initializied.
    */
-  extraOptions: function(sgfOptions) {
+  extraOptions: function() {
     // _initLabelTrackers creates:
     //
     // this._alphaLabels: An array of available alphabetic labels.

@@ -451,8 +451,8 @@ glift.widgets.options.baseOptions = {
         var manager = widget.manager;
         var sgfObj = {
           widgetType: glift.enums.widgetTypes.GAME_VIEWER,
-          initialPosition: widget.sgfOptions.initialPosition,
-          sgfString: widget.sgfOptions.sgfString,
+          initialPosition: widget.controller.initialPosition,
+          sgfString: widget.controller.originalSgf(),
           showVariations: glift.enums.showVariations.ALWAYS,
           problemConditions: glift.util.simpleClone(
               widget.sgfOptions.problemConditions),

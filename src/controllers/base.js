@@ -41,7 +41,32 @@ BaseController.prototype = {
     this.initialPosition = sgfOptions.initialPosition || [];
     this.problemConditions = sgfOptions.problemConditions || undefined;
     this.initialize();
-    this.extraOptions(sgfOptions); // Overridden by implementers
+    return this;
+  },
+
+  /**
+   * Initialize the:
+   *  - initPosition -- Description of where to start.
+   *  - treepath -- The path to the current position.  An array of variaton
+   *    numbers.
+   *  - movetree -- Tree of move nodes from the SGF.
+   *  - goban -- Data structure describing the go board.  Really, the goban is
+   *    useful for telling you where stones can be placed, and (after placing)
+   *    what stones were captured.
+   *  - capture history -- The history of the captures.
+   *
+   * treepath: Optionally pass in the treepath from the beginning and use that
+   * instead of the initialPosition treepath.
+   */
+  initialize: function(treepath) {
+    var rules = glift.rules;
+    var initTreepath = treepath || this.initialPosition;
+    this.treepath = rules.treepath.parseInitPosition(initTreepath);
+    this.movetree = rules.movetree.getFromSgf(this.sgfString, this.treepath);
+    var gobanData = rules.goban.getFromMoveTree(this.movetree, this.treepath);
+    this.goban = gobanData.goban;
+    this.captureHistory = gobanData.captures;
+    this.extraOptions(); // Overridden by implementers
     return this;
   },
 
@@ -72,34 +97,9 @@ BaseController.prototype = {
     return this;
   },
 
-  /**
-   * Initialize the:
-   *  - initPosition -- Description of where to start.
-   *  - treepath -- The path to the current position.  An array of variaton
-   *    numbers.
-   *  - movetree -- Tree of move nodes from the SGF.
-   *  - goban -- Data structure describing the go board.  Really, the goban is
-   *    useful for telling you where stones can be placed, and (after placing)
-   *    what stones were captured.
-   *  - capture history -- The history of the captures.
-   *
-   * treepath: Optionally pass in the treepath from the beginning and use that
-   * instead of the initialPosition treepath.
-   */
-  initialize: function(treepath) {
-    var rules = glift.rules;
-    var initTreepath = treepath || this.initialPosition;
-    this.treepath = rules.treepath.parseInitPosition(initTreepath);
-    this.movetree = rules.movetree.getFromSgf(this.sgfString, this.treepath);
-    var gobanData = rules.goban.getFromMoveTree(this.movetree, this.treepath);
-    this.goban = gobanData.goban;
-    this.captureHistory = gobanData.captures;
-    return this;
-  },
-
   /** Get the current move number. */
   currentMoveNumber: function(treepath) {
-    return this.captureHistory.length;
+    return this.movetree.node().getNodeNum();
   },
 
   /** Get the treepath to the current position */
@@ -176,9 +176,17 @@ BaseController.prototype = {
     return this.movetree.getCurrentPlayer();
   },
 
-  /**
-   * Returns the number of intersections.  Should be known at load time.
-   */
+  /** Get the current SGF string. */
+  currentSgf: function() {
+    return this.movetree.toSgf();
+  },
+
+  /** Get the original SGF string. */
+  originalSgf: function() {
+    return this.sgfString;
+  },
+
+  /** Returns the number of intersections.  Should be known at load time. */
   getIntersections: function() {
     return this.movetree.getIntersections();
   },
@@ -261,9 +269,7 @@ BaseController.prototype = {
     return this.treepath[this.currentMoveNumber()] || 0;
   },
 
-  /**
-   * Go back to the beginning.
-   */
+  /** Go back to the beginning. */
   toBeginning: function() {
     this.movetree = this.movetree.getTreeFromRoot();
     this.goban = glift.rules.goban.getFromMoveTree(this.movetree, []).goban;
@@ -271,9 +277,7 @@ BaseController.prototype = {
     return this.getEntireBoardState();
   },
 
-  /**
-   * Go to the end.
-   */
+  /** Go to the end. */
   toEnd: function() {
     while (this.nextMove()) {
       // All the action happens in nextMoveNoState.

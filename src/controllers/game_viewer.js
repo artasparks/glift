@@ -18,7 +18,7 @@ glift.controllers.GameViewerMethods = {
    * treepath.  This allows us to 'remember' the last variation taken by the
    * player, which seems to be the standard behavior.
    */
-  extraOptions: function(options) {},
+  extraOptions: function() {},
 
   /**
    * Find the variation associated with the played move.
