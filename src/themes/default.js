@@ -132,7 +132,7 @@ glift.themes.registered.DEFAULT = {
     gameInfo: {
       textDiv: {
         'background-color': 'rgba(0,0,0,0.75)',
-        'border-radius': '25px',
+        'border-radius': '25px'
       },
       text: {
         'fontFamily': '"Helvetica Neue", Helvetica, Arial, sans-serif',

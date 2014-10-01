@@ -322,6 +322,7 @@ Properties.prototype = {
    * },...
    * ]
    */
+  // TODO(kashomon): Add test
   getGameInfo: function() {
     var gameInfoArr = [];
     // Probably should live in a more canonical place (properties.js).
@@ -335,16 +336,25 @@ Properties.prototype = {
       RU: 'Ruleset',
       KM: 'Komi',
       PC: 'Place Name',
-      DT: 'Date'
+      DT: 'Date',
+      EV: 'Event',
+      RO: 'Round'
     };
     for (var key in propNameMap) {
       if (this.contains(key)) {
         var displayName = propNameMap[key];
-        gameInfoArr.push({
+        var obj = {
           prop: key,
           displayName: displayName,
           value: this.getOneValue(key)
-        });
+        };
+        // We attach the ranks like Josh Hoak [9d], if they exist.
+        if (key === 'PW' && this.contains('WR')) {
+          obj.value += ' [' + this.getOneValue('WR') + ']';
+        } else if (key === 'PB' && this.contains('BR')) {
+          obj.value += ' [' + this.getOneValue('BR') + ']';
+        }
+        gameInfoArr.push(obj);
       }
     }
     return gameInfoArr;
