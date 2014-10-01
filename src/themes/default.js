@@ -133,14 +133,16 @@ glift.themes.registered.DEFAULT = {
       textDiv: {
         'background-color': 'rgba(0,0,0,0.75)',
         'border-radius': '25px',
+      },
+      text: {
         'fontFamily': '"Helvetica Neue", Helvetica, Arial, sans-serif',
         color: '#FFF'
       },
+      textBody: {
+        'margin-bottom': '0.5em'
+      },
       textTitle: {
         'margin-bottom': '1em'
-      },
-      text: {
-        'margin-bottom': '0.5em'
       }
     },
 

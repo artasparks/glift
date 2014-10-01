@@ -89,11 +89,14 @@ glift.displays.statusbar._StatusBar.prototype = {
       textArray.push('<strong>' + obj.displayName + ': </strong>' + obj.value);
     }
 
-    textDiv.append(glift.dom.convertText(textArray.join('\n'), gameInfoTheme.text)
-        .css({ padding: '10px'})
-        .prepend(glift.dom.newElem('h3')
-            .appendText('Game Info')
-            .css(gameInfoTheme.textTitle)));
+
+    textDiv
+      .append(glift.dom.newElem('h3')
+        .appendText('Game Info')
+        .css(glift.obj.flatMerge(gameInfoTheme.textTitle, gameInfoTheme.text)))
+      .append(glift.dom.convertText(textArray.join('\n'),
+            glift.obj.flatMerge(gameInfoTheme.textBody, gameInfoTheme.text)))
+      .css({ padding: '10px'})
     newDiv.append(textDiv);
     wrapperDivEl.prepend(newDiv);
   },
