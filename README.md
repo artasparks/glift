@@ -6,8 +6,8 @@ Glift
 Glift is a modern javascript client for the game
 <a href="http://en.wikipedia.org/wiki/Go_(game)">Go</a>
 Glift was created to be a modern Go UI that supports mobile and desktop alike.
-It was built from the beginning to support both viewing games and studying go
-problems.
+It was built from the beginning to support fully featured experiences viewing
+games, studying go problems, and constructing Go lessons.
 
 See [GliftGo.com](http://www.gliftgo.com) if you want to see Glift in action and
 lots of code samples!
