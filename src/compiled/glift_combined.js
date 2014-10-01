@@ -3,7 +3,7 @@
  *
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
- * @version 0.19.0
+ * @version 0.19.1
  * --------------------------------------
  */
 (function(w) {
@@ -22,7 +22,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.19.0',
+  version: '0.19.1',
 
   /** Indicates whether or not to store debug data. */
   // TODO(kashomon): Remove this hack.
@@ -6322,7 +6322,7 @@ glift.rules._MoveNode = function(properties, children, nodeId, parentNode) {
 
 glift.rules._MoveNode.prototype = {
   /** Get the properties */
-  properties:  function() { return this._properties; },
+  properties: function() { return this._properties; },
 
   /**
    * Set the NodeId. Each node has an ID based on the depth and variation
@@ -6525,31 +6525,36 @@ glift.rules._MoveTree.prototype = {
     return this;
   },
 
-  /** Get the current player as a color. */
+  /**
+   * Get the current player as a color.
+   */
   getCurrentPlayer: function() {
     var states = glift.enums.states;
+    var tokenMap = {W: 'WHITE', B: 'BLACK'};
     var curNode = this._currentNode;
-    var move = curNode.properties().getMove();
 
-    var curPlayer = states.BLACK;
+    // The PL property is a short circuit. Usually only used on the root node.
+    if (this.properties().contains('PL')) {
+      return tokenMap[this.properties().getOneValue('PL')]
+    }
+
+    var move = curNode.properties().getMove();
     while (!move) {
       curNode = curNode.getParent();
       if (!curNode) {
-        curPlayer = states.BLACK;
-        break;
+        return states.BLACK;
       }
       move = curNode.properties().getMove();
     }
     if (!move) {
-      curPlayer = states.BLACK;
+      return states.BLACK;
     } else if (move.color === states.BLACK) {
-      curPlayer = states.WHITE;
+      return states.WHITE;
     } else if (move.color === states.WHITE) {
-      curPlayer = states.BLACK;
+      return states.BLACK;
     } else {
-      curPlayer = states.BLACK;
+      return states.BLACK;
     }
-    return curPlayer;
   },
 
   /**
@@ -6697,16 +6702,18 @@ glift.rules._MoveTree.prototype = {
   },
 
   /**
-   * Construct a new movetree, but add all the previous stones as placements.
+   * Construct an entirely new movetree, but add all the previous stones as
+   * placements.  If the tree is at the root, it's equivalent to a copy of the
+   * movetree.
    */
-  // TODO(kashomon): Actually make this work.
   rebase: function() {
     var path = this.treepathToHere();
-    var mt = this.getTreeFromRoot();
     var oldMt = this.getTreeFromRoot();
+    var oldCurrentPlayer = this.getCurrentPlayer();
+
+    var mt = glift.rules.movetree.getInstance();
     var propMap = { 'BLACK': 'AB', 'WHITE': 'AW' };
-    for (var i = 0; i < path.length; i++) {
-      oldMt.moveDown(path[i]);
+    for (var i = 0; i <= path.length; i++) {
       var stones = oldMt.properties().getAllStones();
       for (var color in stones) {
         var moves = stones[color];
@@ -6718,9 +6725,34 @@ glift.rules._MoveTree.prototype = {
           }
         }
       }
+      if (i < path.length) {
+        oldMt.moveDown(path[i]);
+      }
     }
-    mt.node().children = this.node().children;
-    mt.node().renumber();
+
+    // Recursive function for copying data.
+    var copier = function(oldnode, newnode) {
+      for (var prop in oldnode.properties().propMap) {
+        if (newnode.getNodeNum() === 0 && (prop === 'AB' || prop === 'AW')) {
+          continue; // Ignore. We've already copied stones on the root.
+        }
+        newnode.properties().set(prop,
+            glift.util.simpleClone(oldnode.properties().getAllValues(prop)));
+      }
+      for (var i = 0; i < oldnode.children.length; i++) {
+        var oldChild = oldnode.getChild(i);
+        var newChild = newnode.addChild().getChild(i);
+        copier(oldChild, newChild);
+      }
+    }
+    copier(oldMt.node(), mt.node());
+
+    // Ensure the current player remains the same.
+    var tokenmap = {BLACK: 'B', WHITE: 'W'};
+    var mtCurPlayer = mt.getCurrentPlayer();
+    if (mtCurPlayer !== oldCurrentPlayer) {
+      mt.properties().add('PL', tokenmap[oldCurrentPlayer]);
+    }
     return mt;
   },
 
@@ -8628,14 +8660,17 @@ glift.controllers.staticProblem = function(sgfOptions) {
 glift.controllers.StaticProblemMethods = {
   /** Override extra options */
   extraOptions: function() {
-    // Rebase the movetree.
-    // this.movetree = this.movetree.rebase();
-    // this.treepath = [];
-    // this.captureHistory = [];
-    // It's a hack to reset the SGF string, but it's used by the problem
-    // explanation button/widget.
-    // this.sgfString = this.movetree.toSgf();
-    // Shouldn't need to reset the goban.
+    // Rebase the movetree, if we're not at the zeroth move
+    if (this.movetree.node().getNodeNum() !== 0) {
+      this.movetree = this.movetree.rebase();
+      this.treepath = [];
+      this.captureHistory = [];
+      this.initialPosition = [];
+      // It's a hack to reset the SGF string, but it's used by the problem
+      // explanation button/widget.
+      this.sgfString = this.movetree.toSgf();
+      // Shouldn't need to reset the goban.
+    }
   },
 
   /**
@@ -9605,6 +9640,8 @@ glift.widgets = {
 /**
  * A convenient alias.  This is the public method that most users of Glift will
  * call.
+ *
+ * @api(1.0)
  */
 glift.create = glift.widgets.create;
 /**
@@ -9962,7 +9999,7 @@ glift.widgets.BaseWidget.prototype = {
         parentDivBbox,
         this.displayOptions.boardRegion,
         this.displayOptions.intersections,
-        this.sgfOptions.componentsToUse,
+        this.sgfOptions.uiComponents,
         this.displayOptions.oneColumnSplits,
         this.displayOptions.twoColumnSplits).calcWidgetPositioning();
 
@@ -10392,22 +10429,36 @@ glift.widgets.options.baseOptions = {
    *
    * As you might expect, if the user sets sgf to a literal string form or to a
    * url, it is transformed into an SGF object internally.
+   *
+   * @api(1.0)
    */
   sgf: undefined,
 
   /**
-   * The defaults or SGF objects.
+   * The defaults or SGF objects. These are equivalent to the options used for
+   * each SGF.  In other words, you can set these options either in each
+   * individual SGF, or you may set these options in the SGF defaults. Some
+   * options are specified here, but should only be specified in the individual
+   * SGF (sgfString, url).
+   *
+   * @api(1.0)
    */
   sgfDefaults: {
-    //
-    // One of 'sgfString' or 'url' should be defined in each SGF in the
-    // sgfCollection.
-    //
-    //sgfString: '',
-    //url: '',
+    /**
+     * A literal SGF String.  Should not be specified in SGF defaults
+     * @api(1.0)
+     */
+    sgfString: undefined,
+
+    /**
+     * URL (usually relative) to an SGF.
+     * @api(1.0)
+     */
+    url: undefined,
 
     /**
      * The default widget type. Specifies what type of widget to create.
+     * @api(1.0)
      */
     widgetType: glift.enums.widgetTypes.GAME_VIEWER,
 
@@ -10426,23 +10477,27 @@ glift.widgets.options.baseOptions = {
      * 0.0.0.0   - Start at the 3rd move, going through all the top variations
      * 2.3-4.1   - Start at the 1st variation of the 4th move, arrived at by
      *             traveling through the 3rd varition on the 2nd move
+     * @api(1.0)
      */
     initialPosition: '',
 
     /**
      * The board region to display.  The boardRegion will be 'guessed' if it's set
      * to 'AUTO'.
+     * @api(1.0)
      */
     boardRegion: glift.enums.boardRegions.AUTO,
 
     /**
      * What rotation to apply to -just- the display of the stones. Any of:
      * NO_ROTATION, CLOCKWISE_90, CLOCKWISE_180, CLOCKWISE_270, or undefined;
+     * @api(beta)
      */
     rotation: glift.enums.rotations.NO_ROTATION,
 
     /**
      * Callback to perform once a problem is considered correct / incorrect.
+     * @api(beta)
      */
     problemCallback: function() {},
 
@@ -10454,6 +10509,7 @@ glift.widgets.options.baseOptions = {
      *
      * The default tests whether there is a 'GB' property or a 'C' (comment)
      * property containing 'Correct' or 'is correct'.
+     * @api(1.0)
      */
     problemConditions: {
       GB: [],
@@ -10463,23 +10519,28 @@ glift.widgets.options.baseOptions = {
     /**
      * Specifies what action to perform based on a particular keystroke.  In
      * otherwords, a mapping from key-enum to action path.
-     *
      * See glift.keyMappings
+     * @api(beta)
      */
     keyMappings: {
       ARROW_LEFT: 'iconActions.chevron-left.click',
       ARROW_RIGHT: 'iconActions.chevron-right.click'
     },
 
-    /** The UI Components to use for this display */
-    componentsToUse: [
+    /**
+     * The UI Components to use for this display.
+     * @api(1.0)
+     */
+    uiComponents: [
       'BOARD',
       'COMMENT_BOX',
       'STATUS_BAR',
       'ICONBAR'
     ],
 
-    /** Icons to use in the status bar. */
+    /**
+     * Icons to use in the status bar.
+     */
     // TODO(kashomon): Make per widget type (mv num not necessary for problems?)
     // TODO(kashomon): Enable game-info and settings when ready
     statusBarIcons: [
