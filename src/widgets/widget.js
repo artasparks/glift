@@ -63,7 +63,7 @@ glift.widgets.BaseWidget.prototype = {
         parentDivBbox,
         this.displayOptions.boardRegion,
         this.displayOptions.intersections,
-        this.sgfOptions.componentsToUse,
+        this.sgfOptions.uiComponents,
         this.displayOptions.oneColumnSplits,
         this.displayOptions.twoColumnSplits).calcWidgetPositioning();
 

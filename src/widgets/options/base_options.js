@@ -23,22 +23,36 @@ glift.widgets.options.baseOptions = {
    *
    * As you might expect, if the user sets sgf to a literal string form or to a
    * url, it is transformed into an SGF object internally.
+   *
+   * @api(1.0)
    */
   sgf: undefined,
 
   /**
-   * The defaults or SGF objects.
+   * The defaults or SGF objects. These are equivalent to the options used for
+   * each SGF.  In other words, you can set these options either in each
+   * individual SGF, or you may set these options in the SGF defaults. Some
+   * options are specified here, but should only be specified in the individual
+   * SGF (sgfString, url).
+   *
+   * @api(1.0)
    */
   sgfDefaults: {
-    //
-    // One of 'sgfString' or 'url' should be defined in each SGF in the
-    // sgfCollection.
-    //
-    //sgfString: '',
-    //url: '',
+    /**
+     * A literal SGF String.  Should not be specified in SGF defaults
+     * @api(1.0)
+     */
+    sgfString: undefined,
+
+    /**
+     * URL (usually relative) to an SGF.
+     * @api(1.0)
+     */
+    url: undefined,
 
     /**
      * The default widget type. Specifies what type of widget to create.
+     * @api(1.0)
      */
     widgetType: glift.enums.widgetTypes.GAME_VIEWER,
 
@@ -57,23 +71,27 @@ glift.widgets.options.baseOptions = {
      * 0.0.0.0   - Start at the 3rd move, going through all the top variations
      * 2.3-4.1   - Start at the 1st variation of the 4th move, arrived at by
      *             traveling through the 3rd varition on the 2nd move
+     * @api(1.0)
      */
     initialPosition: '',
 
     /**
      * The board region to display.  The boardRegion will be 'guessed' if it's set
      * to 'AUTO'.
+     * @api(1.0)
      */
     boardRegion: glift.enums.boardRegions.AUTO,
 
     /**
      * What rotation to apply to -just- the display of the stones. Any of:
      * NO_ROTATION, CLOCKWISE_90, CLOCKWISE_180, CLOCKWISE_270, or undefined;
+     * @api(beta)
      */
     rotation: glift.enums.rotations.NO_ROTATION,
 
     /**
      * Callback to perform once a problem is considered correct / incorrect.
+     * @api(beta)
      */
     problemCallback: function() {},
 
@@ -85,6 +103,7 @@ glift.widgets.options.baseOptions = {
      *
      * The default tests whether there is a 'GB' property or a 'C' (comment)
      * property containing 'Correct' or 'is correct'.
+     * @api(1.0)
      */
     problemConditions: {
       GB: [],
@@ -94,23 +113,28 @@ glift.widgets.options.baseOptions = {
     /**
      * Specifies what action to perform based on a particular keystroke.  In
      * otherwords, a mapping from key-enum to action path.
-     *
      * See glift.keyMappings
+     * @api(beta)
      */
     keyMappings: {
       ARROW_LEFT: 'iconActions.chevron-left.click',
       ARROW_RIGHT: 'iconActions.chevron-right.click'
     },
 
-    /** The UI Components to use for this display */
-    componentsToUse: [
+    /**
+     * The UI Components to use for this display.
+     * @api(1.0)
+     */
+    uiComponents: [
       'BOARD',
       'COMMENT_BOX',
       'STATUS_BAR',
       'ICONBAR'
     ],
 
-    /** Icons to use in the status bar. */
+    /**
+     * Icons to use in the status bar.
+     */
     // TODO(kashomon): Make per widget type (mv num not necessary for problems?)
     // TODO(kashomon): Enable game-info and settings when ready
     statusBarIcons: [

@@ -44,5 +44,7 @@ glift.widgets = {
 /**
  * A convenient alias.  This is the public method that most users of Glift will
  * call.
+ *
+ * @api(1.0)
  */
 glift.create = glift.widgets.create;
