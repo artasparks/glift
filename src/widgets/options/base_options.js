@@ -134,6 +134,7 @@ glift.widgets.options.baseOptions = {
 
     /**
      * Icons to use in the status bar.
+     * @api(1.0)
      */
     // TODO(kashomon): Make per widget type (mv num not necessary for problems?)
     // TODO(kashomon): Enable game-info and settings when ready
@@ -184,17 +185,20 @@ glift.widgets.options.baseOptions = {
     /**
      * The function that creates the controller at widget-creation time.
      * See glift.controllers for more detail
+     * @api(1.0)
      */
     controllerFunc: undefined,
 
     /**
      * The names of the icons to use in the icon-bar.  This is a list of
      * icon-names, which must be spceified in glift.displays.icons.svg.
+     * @api(1.0)
      */
     icons: undefined,
 
     /**
      * The action that is performed when a sure clicks on an intersection.
+     * @api(1.0)
      */
     stoneClick: undefined,
 
@@ -213,6 +217,7 @@ glift.widgets.options.baseOptions = {
   /**
    * The div id in which we create the go board.  The default is glift_display,
    * but this will almost certainly need to be set by the user.
+   * @api(1.0)
    */
   divId: 'glift_display',
 
@@ -223,14 +228,16 @@ glift.widgets.options.baseOptions = {
    * - An array of SGF objects.
    * - A URL (to load the collection asynchronously).  The received data must be
    *   a JSON array, containing a list of serialized SGF objects.
+   * @api(1.0)
    */
   sgfCollection: undefined,
 
   /**
-   * Index into the above list.  This is mostly useful for remembering someone's
-   * position in the sgf collection.
+   * Index into the above collection.  This is mostly useful for remembering
+   * someone's position in the sgf collection.
+   * @api(1.0)
    */
-  initialListIndex: 0,
+  initialIndex: 0,
 
   /**
    * If there are multiple SGFs in the SGF list, this flag indicates whether or
@@ -240,6 +247,7 @@ glift.widgets.options.baseOptions = {
 
   /**
    * Misc options for the web display.
+   * @api(1.0)
    */
   display: {
     /**
@@ -250,8 +258,27 @@ glift.widgets.options.baseOptions = {
      * Examples:
      * 'images/kaya.jpg'
      * 'http://www.mywebbie.com/images/kaya.jpg'
+     * @api(1.0)
      */
     goBoardBackground: '',
+
+    /**
+     * The name of the theme to be used for this instance. Other themes include:
+     *  - DEPTH (stones with shadows)
+     *  - MOODY (gray background, no stone outlines)
+     *  - TRANSPARENT (board is transparent)
+     *  - TEXTBOOK (Everything black and white)
+     * @api(1.0)
+     */
+    theme: 'DEFAULT',
+
+    /**
+     * On the edges of the board, draw the board coordinates.
+     * - On the left, use the numbers 1-19
+     * - On the bottom, use A-T (all letters minus I)
+     * @api(1.0)
+     */
+    drawBoardCoords: false,
 
     /**
      * Split percentages to use for a one-column widget format.
@@ -279,27 +306,11 @@ glift.widgets.options.baseOptions = {
       ]
     },
 
-    /**
-     * The name of the theme to be used for this instance. Other themes include:
-     *  - DEPTH (stones with shadows)
-     *  - MOODY (gray background, no stone outlines)
-     *  - TRANSPARENT (board is transparent)
-     *  - TEXTBOOK (Everything black and white)
-     */
-    theme: 'DEFAULT',
-
     /** Previous SGF icon */
     previousSgfIcon: 'chevron-left',
 
     /** Next SGF Icon */
     nextSgfIcon: 'chevron-right',
-
-    /**
-     * On the edges of the board, draw the board coordinates.
-     * - On the left, use the numbers 1-19
-     * - On the bottom, use A-T (all letters minus I)
-     */
-    drawBoardCoords: false,
 
     /** For convenience: Disable zoom for mobile users. */
     disableZoomForMobile: false,
@@ -313,15 +324,15 @@ glift.widgets.options.baseOptions = {
   },
 
   /**
-    * Actions for stones.  If the user specifies his own actions, then the
-    * actions specified by the user will take precedence.
-    */
+   * Actions for stones.  If the user specifies his own actions, then the
+   * actions specified by the user will take precedence.
+   */
   stoneActions: {
     /**
-      * click is specified in sgfOptions as stoneClick.  The actions that must
-      * happen on each click vary for each widget, so we can't make a general
-      * click function here.
-      */
+     * click is specified in sgfOptions as stoneClick.  The actions that must
+     * happen on each click vary for each widget, so we can't make a general
+     * click function here.
+     */
     click: undefined,
 
     /** Add ghost-stone for cursor hovering. */
@@ -352,8 +363,8 @@ glift.widgets.options.baseOptions = {
   },
 
   /**
-    * The actions for the icons.  The keys in iconACtions
-    */
+   * The actions for the icons.  The keys in iconACtions
+   */
   iconActions: {
     start: {
       click:  function(event, widget, icon, iconBar) {

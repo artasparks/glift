@@ -16,7 +16,7 @@ glift.widgets.options = {
     var topLevelOptions = [
         'divId',
         'sgfCollection',
-        'initialListIndex',
+        'initialIndex',
         'allowWrapAround'];
     for (var i = 0; i < topLevelOptions.length; i++) {
       if (!options.hasOwnProperty(topLevelOptions[i])) {

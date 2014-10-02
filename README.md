@@ -7,12 +7,12 @@ Glift is a modern javascript client for the game
 <a href="http://en.wikipedia.org/wiki/Go_(game)">Go</a>
 Glift was created to be a modern Go UI that supports mobile and desktop alike.
 It was built from the beginning to support:
+
    - Viewing games
    - Studying go problems
-   - Constructing Go lessons
+   - Constructing complex go lessons
 
-See [GliftGo.com](http://www.gliftgo.com) if you want to see Glift in action and
-lots of code samples!
+### Example
 
 Here's a simple example, to create a game viewer for a game in div.
 
@@ -21,13 +21,19 @@ Here's a simple example, to create a game viewer for a game in div.
         sgf: 'mysgfs/lee_sedol_vs_gu_li.sgf'
       });
 
+See [GliftGo.com](http://www.gliftgo.com) if you want to see Glift in action and
+lots of code samples!
+
+### Supported Browsers
+
 The complied Glift JavaScript is completely self-contained and supports the
 following browsers:
 
-   - IE 9+
    - Chrome
    - Chrome on Android
+   - IE 9+
    - Firefox
+   - Opera
    - Safari
    - Safari on iOS
 
@@ -51,6 +57,8 @@ And the following options (see src/widgets/options/base_options.js)
 
    * `divId` - ID of the container div.
    * `sgf` - String, url, or object, with options from sgfDefaults.
+   * `sgfCollection` - Array of SGFs
+   * `initialIndex` - Where to start in the SGF collection
    * `sgfDefaults`
       * `sgfString` - String for the SGF. Only specified in sgf objects.
       * `url` - URL of the sgf. Only specified in sgf objects.
@@ -59,6 +67,10 @@ And the following options (see src/widgets/options/base_options.js)
       * `boardRegion` - The region of the borad to display. Defaults to AUTO.
       * `problemConditions` - The conditions for getting a problem correct.
       * `uiComponents` - UI components to use.
+   * `display` - Display variables
+      * `goBoardBackground` - URL for a go board background image.
+      * `theme` - The Glift theme
+      * `drawBoardCoords` - Whether or not to draw go board coordinates.
 
 ### Development
 
