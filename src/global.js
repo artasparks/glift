@@ -7,7 +7,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.19.1',
+  version: '1.0.0',
 
   /** Indicates whether or not to store debug data. */
   // TODO(kashomon): Remove this hack.

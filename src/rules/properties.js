@@ -348,11 +348,16 @@ Properties.prototype = {
           displayName: displayName,
           value: this.getOneValue(key)
         };
-        // We attach the ranks like Josh Hoak [9d], if they exist.
+        // Post processing for some values.
+        // We attach the ranks like Kashomon [9d], if they exist.
         if (key === 'PW' && this.contains('WR')) {
           obj.value += ' [' + this.getOneValue('WR') + ']';
         } else if (key === 'PB' && this.contains('BR')) {
           obj.value += ' [' + this.getOneValue('BR') + ']';
+        }
+        // Remove trailing zeroes on komi amounts.
+        else if (key === 'KM') {
+          obj.value = parseFloat(this.getOneValue(key)) + '' || '0';
         }
         gameInfoArr.push(obj);
       }

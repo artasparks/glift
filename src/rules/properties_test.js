@@ -73,4 +73,42 @@ glift.rules.propertiesTest = function() {
     props.set('C', '[8k] Zod');
     deepEqual(props.getOneValue('C'), '[8k] Zod')
   });
+
+  test('Test game info: simple', function() {
+    var props = properties();
+    props.add('GN', 'Zod').add('PW', 'Rod').add('PB', 'Zod');
+    deepEqual(props.getGameInfo(), [
+      { prop: 'GN', displayName: 'Game Name', value: 'Zod'},
+      { prop: 'PW', displayName: 'White Player', value: 'Rod'},
+      { prop: 'PB', displayName: 'Black Player', value: 'Zod'},
+    ]);
+  });
+
+  test('Test game info: rank && player', function() {
+    var props = properties();
+    props.add('PW', 'Rod').add('PB', 'Zod')
+        .add('BR', '9d').add('WR', '7d');
+    deepEqual(props.getGameInfo(), [
+      { prop: 'PW', displayName: 'White Player', value: 'Rod [7d]'},
+      { prop: 'PB', displayName: 'Black Player', value: 'Zod [9d]'},
+    ]);
+  });
+
+  test('Test game info: float', function() {
+    var props = properties().add('KM', '0.00');
+    deepEqual(props.getGameInfo(),
+        [{ prop: 'KM', displayName: 'Komi', value: '0'}]);
+
+    props.set('KM', '7.5');
+    deepEqual(props.getGameInfo(),
+        [{ prop: 'KM', displayName: 'Komi', value: '7.5'}]);
+
+    props.set('KM', '1.50');
+    deepEqual(props.getGameInfo(),
+        [{ prop: 'KM', displayName: 'Komi', value: '1.5'}]);
+
+    props.set('KM', '3.25');
+    deepEqual(props.getGameInfo(),
+        [{ prop: 'KM', displayName: 'Komi', value: '3.25'}]);
+  });
 };
