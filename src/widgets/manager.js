@@ -10,13 +10,13 @@
  * sgfColIndex: numbered index into the sgfCollection.
  * allowWrapAround: true or false.  Whether to allow wrap around in the SGF
  *    manager.
+ * loadColInBack: true or false. Whether or to load the SGFs in the background.
  * sgfDefaults: filled-in sgf default options.  See ./options/base_options.js
  * displayOptions: filled-in display options. See ./options/base_options.js
- * bookData: global book data.
  * actions: combination of stone actions and icon actions.
  */
 glift.widgets.WidgetManager = function(divId, sgfCollection, sgfColIndex,
-      allowWrapAround, sgfDefaults, displayOptions, bookData, actions) {
+      allowWrapAround, loadColInBack, sgfDefaults, displayOptions, actions) {
   // Globally unique ID, at least across all glift instances in the current
   // page. In theory, the divId should be globally unique, but might as well be
   // absolutely sure.
@@ -49,7 +49,7 @@ glift.widgets.WidgetManager = function(divId, sgfCollection, sgfColIndex,
   this.sgfCollectionUrl = null;
 
   // Suppert either explicit arrays or URLs for fetching JSON.
-  if (glift.util.typeOf(sgfCollection) === 'string') { 
+  if (glift.util.typeOf(sgfCollection) === 'string') {
     this.sgfCollectionUrl = sgfCollection;
   } else {
     this.sgfCollection = sgfCollection;
@@ -59,8 +59,11 @@ glift.widgets.WidgetManager = function(divId, sgfCollection, sgfColIndex,
   this.allowWrapAround = allowWrapAround
   this.sgfDefaults = sgfDefaults;
   this.displayOptions = displayOptions;
-  this.bookData = bookData;
   this.actions = actions;
+
+  // True or false. Whether to load SGFs in the background.
+  this.loadColInBack = loadColInBack;
+  this.initBackgroundLoading = false;
 
   // Defined on draw
   this.currentWidget = undefined;
@@ -74,6 +77,11 @@ glift.widgets.WidgetManager.prototype = {
   draw: function() {
     var that = this;
     var afterCollectionLoad = function() {
+      if (!this.initBackgroundLoading && this.loadColInBack) {
+        // Only start background loading once.
+        this.initBackgroundLoading = true;
+        this.backgroundLoad();
+      }
       var curObj = this.getCurrentSgfObj();
       this.getSgfString(curObj, function(sgfObj) {
         // Prevent flickering by destroying the widget after loading the SGF.
@@ -245,26 +253,22 @@ glift.widgets.WidgetManager.prototype = {
     }
   },
 
-  /** Prepopulate the SGF Cache. */
-  prepopulateCache: function(callback) {
-    var done = 0;
-    for (var i = 0; i < this.sgfCollection.length; i++) {
-      var curObj = this.getSgfObj(i);
-      this.getSgfString(curObj, function() {
-        done += 1;
-      });
-    }
-
-    var checkDone = function(val) {
-      if (val > 0 && done < this.sgfCollection.length) {
-        window.setTimeout(function() {
-          checkDone(val - 1);
-        }, 500); // 500ms to try again to see if complete.
-      } else {
-        callback();
+  /**
+   * Load the SGFs in the background.  Try once every 250ms until we get to the
+   * end of the SGF collection.
+   */
+  backgroundLoad: function() {
+    var loader = function(idx) {
+      if (idx < this.sgfCollection.length) {
+        var curObj = this.getSgfObj(idx);
+        this.getSgfString(curObj, function() {
+          setTimeout(function() {
+            loader(idx + 1);
+          }.bind(this), 250); // 250ms
+        });
       }
     }.bind(this);
-    checkDone(3); // Check that we've finished: (3 checks, 1.5s max time)
+    loader(this.sgfColIndex + 1);
   },
 
   /** Enable auto-resizing of the glift instance. */

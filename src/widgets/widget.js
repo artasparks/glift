@@ -3,6 +3,7 @@
  */
 glift.widgets.BaseWidget = function(
     divId, sgfOptions, displayOptions, actions, manager) {
+  // TODO(kashomon): rename to wrapperDivId. Too confusing as is.
   this.wrapperDiv = divId; // We split the wrapper div.
   this.type = sgfOptions.type;
   this.sgfOptions = glift.util.simpleClone(sgfOptions);

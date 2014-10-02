@@ -17,7 +17,8 @@ glift.widgets.options = {
         'divId',
         'sgfCollection',
         'initialIndex',
-        'allowWrapAround'];
+        'allowWrapAround',
+        'loadCollectionInBackground'];
     for (var i = 0; i < topLevelOptions.length; i++) {
       if (!options.hasOwnProperty(topLevelOptions[i])) {
         options[topLevelOptions[i]] = template[topLevelOptions[i]];

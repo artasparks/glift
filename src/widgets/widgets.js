@@ -34,9 +34,9 @@ glift.widgets = {
         options.sgfCollection,
         options.initialIndex,
         options.allowWrapAround,
+        options.loadCollectionInBackground,
         options.sgfDefaults,
         options.display,
-        options.globalBookData,
         actions);
   }
 };

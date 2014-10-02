@@ -246,7 +246,12 @@ glift.widgets.options.baseOptions = {
   allowWrapAround: false,
 
   /**
-   * Misc options for the web display.
+   * Wether or not to load the the collection in the background via XHR requests.
+   */
+  loadCollectionInBackground: true,
+
+  /**
+   * Miscellaneous options for display.
    * @api(1.0)
    */
   display: {

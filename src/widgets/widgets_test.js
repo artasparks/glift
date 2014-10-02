@@ -14,6 +14,7 @@ glift.widgets.widgetsTest = function() {
     deepEqual(manager.sgfCollectionUrl, null);
     ok(manager.currentWidget !== undefined);
     ok(manager.displayOptions !== undefined);
+    ok(manager.loadColInBack === true);
 
     var currentWidget = manager.currentWidget;
     var sgfObj = currentWidget.sgfOptions;
@@ -28,6 +29,7 @@ glift.widgets.widgetsTest = function() {
   test('Succesfully create a complex problem series', function() {
     var wtypes = glift.enums.widgetTypes;
     var sgfs = testdata.sgfs;
+    // TODO(kashomon): Do more extensive integration testing here.
     var manager = glift.widgets.create({
       sgfCollection: [{
           sgfString: sgfs.complexproblem,
