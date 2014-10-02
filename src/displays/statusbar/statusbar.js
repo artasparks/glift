@@ -62,7 +62,9 @@ glift.displays.statusbar._StatusBar.prototype = {
           left: fullBox.left() + 'px',
           width: fullBox.width() + 'px',
           height: fullBox.height() + 'px',
-          'z-index': 100
+          'z-index': 100,
+          MozBoxSizing: 'border-box',
+          boxSizing: 'border-box'
         };
     newDiv.css(cssObj);
 
@@ -73,7 +75,9 @@ glift.displays.statusbar._StatusBar.prototype = {
         padding: '0px',
         'overflow-y': 'auto',
         height: fullBox.height() + 'px',
-        width: fullBox.width() + 'px'
+        width: fullBox.width() + 'px',
+        MozBoxSizing: 'border-box',
+        boxSizing: 'border-box'
       }, gameInfoTheme.textDiv);
 
     textDiv.css(textDivCss);

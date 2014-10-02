@@ -94,21 +94,17 @@ glift.rules.propertiesTest = function() {
     ]);
   });
 
-  test('Test game info: float', function() {
+  test('Test game info: komi', function() {
     var props = properties().add('KM', '0.00');
     deepEqual(props.getGameInfo(),
         [{ prop: 'KM', displayName: 'Komi', value: '0'}]);
-
     props.set('KM', '7.5');
     deepEqual(props.getGameInfo(),
         [{ prop: 'KM', displayName: 'Komi', value: '7.5'}]);
-
     props.set('KM', '1.50');
-    deepEqual(props.getGameInfo(),
-        [{ prop: 'KM', displayName: 'Komi', value: '1.5'}]);
-
+    ok(props.getGameInfo()[0].value, '1.5')
+    ok(props.getGameInfo()[0].value, '1.50');
     props.set('KM', '3.25');
-    deepEqual(props.getGameInfo(),
-        [{ prop: 'KM', displayName: 'Komi', value: '3.25'}]);
+    deepEqual(props.getGameInfo()[0].value, '3.25');
   });
 };
