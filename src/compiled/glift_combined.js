@@ -3,7 +3,7 @@
  *
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
- * @version 0.19.1
+ * @version 1.0.0
  * --------------------------------------
  */
 (function(w) {
@@ -22,7 +22,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '0.19.1',
+  version: '1.0.0',
 
   /** Indicates whether or not to store debug data. */
   // TODO(kashomon): Remove this hack.
@@ -5189,7 +5189,9 @@ glift.displays.statusbar._StatusBar.prototype = {
           left: fullBox.left() + 'px',
           width: fullBox.width() + 'px',
           height: fullBox.height() + 'px',
-          'z-index': 100
+          'z-index': 100,
+          MozBoxSizing: 'border-box',
+          boxSizing: 'border-box'
         };
     newDiv.css(cssObj);
 
@@ -5200,7 +5202,9 @@ glift.displays.statusbar._StatusBar.prototype = {
         padding: '0px',
         'overflow-y': 'auto',
         height: fullBox.height() + 'px',
-        width: fullBox.width() + 'px'
+        width: fullBox.width() + 'px',
+        MozBoxSizing: 'border-box',
+        boxSizing: 'border-box'
       }, gameInfoTheme.textDiv);
 
     textDiv.css(textDivCss);
@@ -7304,11 +7308,16 @@ Properties.prototype = {
           displayName: displayName,
           value: this.getOneValue(key)
         };
-        // We attach the ranks like Josh Hoak [9d], if they exist.
+        // Post processing for some values.
+        // We attach the ranks like Kashomon [9d], if they exist.
         if (key === 'PW' && this.contains('WR')) {
           obj.value += ' [' + this.getOneValue('WR') + ']';
         } else if (key === 'PB' && this.contains('BR')) {
           obj.value += ' [' + this.getOneValue('BR') + ']';
+        }
+        // Remove trailing zeroes on komi amounts.
+        else if (key === 'KM') {
+          obj.value = parseFloat(this.getOneValue(key)) + '' || '0';
         }
         gameInfoArr.push(obj);
       }
@@ -9643,11 +9652,11 @@ glift.widgets = {
     return new glift.widgets.WidgetManager(
         options.divId,
         options.sgfCollection,
-        options.initialListIndex,
+        options.initialIndex,
         options.allowWrapAround,
+        options.loadCollectionInBackground,
         options.sgfDefaults,
         options.display,
-        options.globalBookData,
         actions);
   }
 };
@@ -9671,13 +9680,13 @@ glift.create = glift.widgets.create;
  * sgfColIndex: numbered index into the sgfCollection.
  * allowWrapAround: true or false.  Whether to allow wrap around in the SGF
  *    manager.
+ * loadColInBack: true or false. Whether or to load the SGFs in the background.
  * sgfDefaults: filled-in sgf default options.  See ./options/base_options.js
  * displayOptions: filled-in display options. See ./options/base_options.js
- * bookData: global book data.
  * actions: combination of stone actions and icon actions.
  */
 glift.widgets.WidgetManager = function(divId, sgfCollection, sgfColIndex,
-      allowWrapAround, sgfDefaults, displayOptions, bookData, actions) {
+      allowWrapAround, loadColInBack, sgfDefaults, displayOptions, actions) {
   // Globally unique ID, at least across all glift instances in the current
   // page. In theory, the divId should be globally unique, but might as well be
   // absolutely sure.
@@ -9710,7 +9719,7 @@ glift.widgets.WidgetManager = function(divId, sgfCollection, sgfColIndex,
   this.sgfCollectionUrl = null;
 
   // Suppert either explicit arrays or URLs for fetching JSON.
-  if (glift.util.typeOf(sgfCollection) === 'string') { 
+  if (glift.util.typeOf(sgfCollection) === 'string') {
     this.sgfCollectionUrl = sgfCollection;
   } else {
     this.sgfCollection = sgfCollection;
@@ -9720,8 +9729,11 @@ glift.widgets.WidgetManager = function(divId, sgfCollection, sgfColIndex,
   this.allowWrapAround = allowWrapAround
   this.sgfDefaults = sgfDefaults;
   this.displayOptions = displayOptions;
-  this.bookData = bookData;
   this.actions = actions;
+
+  // True or false. Whether to load SGFs in the background.
+  this.loadColInBack = loadColInBack;
+  this.initBackgroundLoading = false;
 
   // Defined on draw
   this.currentWidget = undefined;
@@ -9735,6 +9747,11 @@ glift.widgets.WidgetManager.prototype = {
   draw: function() {
     var that = this;
     var afterCollectionLoad = function() {
+      if (!this.initBackgroundLoading && this.loadColInBack) {
+        // Only start background loading once.
+        this.initBackgroundLoading = true;
+        this.backgroundLoad();
+      }
       var curObj = this.getCurrentSgfObj();
       this.getSgfString(curObj, function(sgfObj) {
         // Prevent flickering by destroying the widget after loading the SGF.
@@ -9906,26 +9923,22 @@ glift.widgets.WidgetManager.prototype = {
     }
   },
 
-  /** Prepopulate the SGF Cache. */
-  prepopulateCache: function(callback) {
-    var done = 0;
-    for (var i = 0; i < this.sgfCollection.length; i++) {
-      var curObj = this.getSgfObj(i);
-      this.getSgfString(curObj, function() {
-        done += 1;
-      });
-    }
-
-    var checkDone = function(val) {
-      if (val > 0 && done < this.sgfCollection.length) {
-        window.setTimeout(function() {
-          checkDone(val - 1);
-        }, 500); // 500ms to try again to see if complete.
-      } else {
-        callback();
+  /**
+   * Load the SGFs in the background.  Try once every 250ms until we get to the
+   * end of the SGF collection.
+   */
+  backgroundLoad: function() {
+    var loader = function(idx) {
+      if (idx < this.sgfCollection.length) {
+        var curObj = this.getSgfObj(idx);
+        this.getSgfString(curObj, function() {
+          setTimeout(function() {
+            loader(idx + 1);
+          }.bind(this), 250); // 250ms
+        });
       }
     }.bind(this);
-    checkDone(3); // Check that we've finished: (3 checks, 1.5s max time)
+    loader(this.sgfColIndex + 1);
   },
 
   /** Enable auto-resizing of the glift instance. */
@@ -9954,6 +9967,7 @@ glift.widgets.WidgetManager.prototype = {
  */
 glift.widgets.BaseWidget = function(
     divId, sgfOptions, displayOptions, actions, manager) {
+  // TODO(kashomon): rename to wrapperDivId. Too confusing as is.
   this.wrapperDiv = divId; // We split the wrapper div.
   this.type = sgfOptions.type;
   this.sgfOptions = glift.util.simpleClone(sgfOptions);
@@ -10315,8 +10329,9 @@ glift.widgets.options = {
     var topLevelOptions = [
         'divId',
         'sgfCollection',
-        'initialListIndex',
-        'allowWrapAround'];
+        'initialIndex',
+        'allowWrapAround',
+        'loadCollectionInBackground'];
     for (var i = 0; i < topLevelOptions.length; i++) {
       if (!options.hasOwnProperty(topLevelOptions[i])) {
         options[topLevelOptions[i]] = template[topLevelOptions[i]];
@@ -10555,6 +10570,7 @@ glift.widgets.options.baseOptions = {
 
     /**
      * Icons to use in the status bar.
+     * @api(1.0)
      */
     // TODO(kashomon): Make per widget type (mv num not necessary for problems?)
     // TODO(kashomon): Enable game-info and settings when ready
@@ -10605,17 +10621,20 @@ glift.widgets.options.baseOptions = {
     /**
      * The function that creates the controller at widget-creation time.
      * See glift.controllers for more detail
+     * @api(1.0)
      */
     controllerFunc: undefined,
 
     /**
      * The names of the icons to use in the icon-bar.  This is a list of
      * icon-names, which must be spceified in glift.displays.icons.svg.
+     * @api(1.0)
      */
     icons: undefined,
 
     /**
      * The action that is performed when a sure clicks on an intersection.
+     * @api(1.0)
      */
     stoneClick: undefined,
 
@@ -10634,6 +10653,7 @@ glift.widgets.options.baseOptions = {
   /**
    * The div id in which we create the go board.  The default is glift_display,
    * but this will almost certainly need to be set by the user.
+   * @api(1.0)
    */
   divId: 'glift_display',
 
@@ -10644,14 +10664,16 @@ glift.widgets.options.baseOptions = {
    * - An array of SGF objects.
    * - A URL (to load the collection asynchronously).  The received data must be
    *   a JSON array, containing a list of serialized SGF objects.
+   * @api(1.0)
    */
   sgfCollection: undefined,
 
   /**
-   * Index into the above list.  This is mostly useful for remembering someone's
-   * position in the sgf collection.
+   * Index into the above collection.  This is mostly useful for remembering
+   * someone's position in the sgf collection.
+   * @api(1.0)
    */
-  initialListIndex: 0,
+  initialIndex: 0,
 
   /**
    * If there are multiple SGFs in the SGF list, this flag indicates whether or
@@ -10660,7 +10682,13 @@ glift.widgets.options.baseOptions = {
   allowWrapAround: false,
 
   /**
-   * Misc options for the web display.
+   * Wether or not to load the the collection in the background via XHR requests.
+   */
+  loadCollectionInBackground: true,
+
+  /**
+   * Miscellaneous options for display.
+   * @api(1.0)
    */
   display: {
     /**
@@ -10671,8 +10699,27 @@ glift.widgets.options.baseOptions = {
      * Examples:
      * 'images/kaya.jpg'
      * 'http://www.mywebbie.com/images/kaya.jpg'
+     * @api(1.0)
      */
     goBoardBackground: '',
+
+    /**
+     * The name of the theme to be used for this instance. Other themes include:
+     *  - DEPTH (stones with shadows)
+     *  - MOODY (gray background, no stone outlines)
+     *  - TRANSPARENT (board is transparent)
+     *  - TEXTBOOK (Everything black and white)
+     * @api(1.0)
+     */
+    theme: 'DEFAULT',
+
+    /**
+     * On the edges of the board, draw the board coordinates.
+     * - On the left, use the numbers 1-19
+     * - On the bottom, use A-T (all letters minus I)
+     * @api(1.0)
+     */
+    drawBoardCoords: false,
 
     /**
      * Split percentages to use for a one-column widget format.
@@ -10700,27 +10747,11 @@ glift.widgets.options.baseOptions = {
       ]
     },
 
-    /**
-     * The name of the theme to be used for this instance. Other themes include:
-     *  - DEPTH (stones with shadows)
-     *  - MOODY (gray background, no stone outlines)
-     *  - TRANSPARENT (board is transparent)
-     *  - TEXTBOOK (Everything black and white)
-     */
-    theme: 'DEFAULT',
-
     /** Previous SGF icon */
     previousSgfIcon: 'chevron-left',
 
     /** Next SGF Icon */
     nextSgfIcon: 'chevron-right',
-
-    /**
-     * On the edges of the board, draw the board coordinates.
-     * - On the left, use the numbers 1-19
-     * - On the bottom, use A-T (all letters minus I)
-     */
-    drawBoardCoords: false,
 
     /** For convenience: Disable zoom for mobile users. */
     disableZoomForMobile: false,
@@ -10734,15 +10765,15 @@ glift.widgets.options.baseOptions = {
   },
 
   /**
-    * Actions for stones.  If the user specifies his own actions, then the
-    * actions specified by the user will take precedence.
-    */
+   * Actions for stones.  If the user specifies his own actions, then the
+   * actions specified by the user will take precedence.
+   */
   stoneActions: {
     /**
-      * click is specified in sgfOptions as stoneClick.  The actions that must
-      * happen on each click vary for each widget, so we can't make a general
-      * click function here.
-      */
+     * click is specified in sgfOptions as stoneClick.  The actions that must
+     * happen on each click vary for each widget, so we can't make a general
+     * click function here.
+     */
     click: undefined,
 
     /** Add ghost-stone for cursor hovering. */
@@ -10773,8 +10804,8 @@ glift.widgets.options.baseOptions = {
   },
 
   /**
-    * The actions for the icons.  The keys in iconACtions
-    */
+   * The actions for the icons.  The keys in iconACtions
+   */
   iconActions: {
     start: {
       click:  function(event, widget, icon, iconBar) {
