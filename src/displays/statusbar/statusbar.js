@@ -45,7 +45,7 @@ glift.displays.statusbar._StatusBar.prototype = {
    *
    * Note: Key bindings are set in the base_widget.
    */
-  gameInfo: function(gameInfoArr) {
+  gameInfo: function(gameInfoArr, captureCount) {
     var wrapperDivId = this.widget.wrapperDiv,
         suffix = '_gameinfo',
         newDivId = wrapperDivId + suffix + '_wrapper',
@@ -87,12 +87,18 @@ glift.displays.statusbar._StatusBar.prototype = {
       textDiv.on('click', function() { newDiv.remove(); });
     }
 
+    // This is a hack until a better solution for captures can be crafted.
+    var captureArr = [
+      {displayName: 'Captured White Stones', value: captureCount.WHITE},
+      {displayName: 'Captured Black Stones', value: captureCount.BLACK}
+    ];
+    gameInfoArr = captureArr.concat(gameInfoArr);
+
     var textArray = [];
     for (var i = 0; i < gameInfoArr.length; i++) {
       var obj = gameInfoArr[i];
       textArray.push('<strong>' + obj.displayName + ': </strong>' + obj.value);
     }
-
 
     textDiv
       .append(glift.dom.newElem('h3')

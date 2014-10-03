@@ -134,23 +134,39 @@ BaseController.prototype = {
         this.movetree, this.goban, this.problemConditions);
   },
 
-  /**
-   * Return only the necessary information to update the board
-   */
+  /** Return only the necessary information to update the board. */
   // TODO(kashomon): Rename to getCurrentBoardState
   getNextBoardState: function() {
     return glift.bridge.intersections.nextBoardData(
         this.movetree, this.getCaptures(), this.problemConditions);
   },
 
-  /**
-   * Get the captures that occured for the current move.
-   */
+  /** Get the captures that occured for the current move. */
   getCaptures: function() {
     if (this.captureHistory.length === 0) {
       return { BLACK: [], WHITE: [] };
     }
     return this.captureHistory[this.currentMoveNumber() - 1];
+  },
+
+  /**
+   * Get the captures count. Returns an object of the form
+   *  {
+   *    BLACK: <number>
+   *    WHITE: <number>
+   *  }
+   */
+  // TODO(kashomon): Add tests
+  getCaptureCount: function() {
+    var countObj = { BLACK: 0, WHITE: 0 };
+    for (var i = 0; i < this.captureHistory.length; i++ ) {
+      var obj = this.captureHistory[i];
+      console.log(obj);
+      for (var color in obj) {
+        countObj[color] += obj[color].length;
+      }
+    }
+    return countObj;
   },
 
   /**

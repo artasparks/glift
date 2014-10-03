@@ -5172,7 +5172,7 @@ glift.displays.statusbar._StatusBar.prototype = {
    *
    * Note: Key bindings are set in the base_widget.
    */
-  gameInfo: function(gameInfoArr) {
+  gameInfo: function(gameInfoArr, captureCount) {
     var wrapperDivId = this.widget.wrapperDiv,
         suffix = '_gameinfo',
         newDivId = wrapperDivId + suffix + '_wrapper',
@@ -5214,12 +5214,18 @@ glift.displays.statusbar._StatusBar.prototype = {
       textDiv.on('click', function() { newDiv.remove(); });
     }
 
+    // This is a hack until a better solution for captures can be crafted.
+    var captureArr = [
+      {displayName: 'Captured White Stones', value: captureCount.WHITE},
+      {displayName: 'Captured Black Stones', value: captureCount.BLACK}
+    ];
+    gameInfoArr = captureArr.concat(gameInfoArr);
+
     var textArray = [];
     for (var i = 0; i < gameInfoArr.length; i++) {
       var obj = gameInfoArr[i];
       textArray.push('<strong>' + obj.displayName + ': </strong>' + obj.value);
     }
-
 
     textDiv
       .append(glift.dom.newElem('h3')
@@ -7287,7 +7293,6 @@ Properties.prototype = {
     var gameInfoArr = [];
     // Probably should live in a more canonical place (properties.js).
     var propNameMap = {
-      GN: 'Game Name',
       PW: 'White Player',
       PB: 'Black Player',
       RE: 'Result',
@@ -7295,10 +7300,11 @@ Properties.prototype = {
       SO: 'Source',
       RU: 'Ruleset',
       KM: 'Komi',
-      PC: 'Place Name',
-      DT: 'Date',
+      GN: 'Game Name',
       EV: 'Event',
-      RO: 'Round'
+      RO: 'Round',
+      PC: 'Place Name',
+      DT: 'Date'
     };
     for (var key in propNameMap) {
       if (this.contains(key)) {
@@ -8092,23 +8098,39 @@ BaseController.prototype = {
         this.movetree, this.goban, this.problemConditions);
   },
 
-  /**
-   * Return only the necessary information to update the board
-   */
+  /** Return only the necessary information to update the board. */
   // TODO(kashomon): Rename to getCurrentBoardState
   getNextBoardState: function() {
     return glift.bridge.intersections.nextBoardData(
         this.movetree, this.getCaptures(), this.problemConditions);
   },
 
-  /**
-   * Get the captures that occured for the current move.
-   */
+  /** Get the captures that occured for the current move. */
   getCaptures: function() {
     if (this.captureHistory.length === 0) {
       return { BLACK: [], WHITE: [] };
     }
     return this.captureHistory[this.currentMoveNumber() - 1];
+  },
+
+  /**
+   * Get the captures count. Returns an object of the form
+   *  {
+   *    BLACK: <number>
+   *    WHITE: <number>
+   *  }
+   */
+  // TODO(kashomon): Add tests
+  getCaptureCount: function() {
+    var countObj = { BLACK: 0, WHITE: 0 };
+    for (var i = 0; i < this.captureHistory.length; i++ ) {
+      var obj = this.captureHistory[i];
+      console.log(obj);
+      for (var color in obj) {
+        countObj[color] += obj[color].length;
+      }
+    }
+    return countObj;
   },
 
   /**
@@ -10697,8 +10719,9 @@ glift.widgets.options.baseOptions = {
      * requests.
      *
      * Examples:
-     * 'images/kaya.jpg'
-     * 'http://www.mywebbie.com/images/kaya.jpg'
+     *  'images/kaya.jpg'
+     *  'http://www.mywebbie.com/images/kaya.jpg'
+     *
      * @api(1.0)
      */
     goBoardBackground: '',
@@ -10767,6 +10790,7 @@ glift.widgets.options.baseOptions = {
   /**
    * Actions for stones.  If the user specifies his own actions, then the
    * actions specified by the user will take precedence.
+   * @api(1.0)
    */
   stoneActions: {
     /**
@@ -10975,7 +10999,9 @@ glift.widgets.options.baseOptions = {
     'game-info': {
       click: function(event, widget, icon, iconBar) {
         widget.statusBar &&
-        widget.statusBar.gameInfo(widget.controller.getGameInfo());
+        widget.statusBar.gameInfo(
+            widget.controller.getGameInfo(),
+            widget.controller.getCaptureCount());
       },
       tooltip: 'Show the game info'
     },

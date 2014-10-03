@@ -78,9 +78,9 @@ glift.rules.propertiesTest = function() {
     var props = properties();
     props.add('GN', 'Zod').add('PW', 'Rod').add('PB', 'Zod');
     deepEqual(props.getGameInfo(), [
-      { prop: 'GN', displayName: 'Game Name', value: 'Zod'},
       { prop: 'PW', displayName: 'White Player', value: 'Rod'},
       { prop: 'PB', displayName: 'Black Player', value: 'Zod'},
+      { prop: 'GN', displayName: 'Game Name', value: 'Zod'}
     ]);
   });
 

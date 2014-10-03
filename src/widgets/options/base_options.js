@@ -261,8 +261,9 @@ glift.widgets.options.baseOptions = {
      * requests.
      *
      * Examples:
-     * 'images/kaya.jpg'
-     * 'http://www.mywebbie.com/images/kaya.jpg'
+     *  'images/kaya.jpg'
+     *  'http://www.mywebbie.com/images/kaya.jpg'
+     *
      * @api(1.0)
      */
     goBoardBackground: '',
@@ -331,6 +332,7 @@ glift.widgets.options.baseOptions = {
   /**
    * Actions for stones.  If the user specifies his own actions, then the
    * actions specified by the user will take precedence.
+   * @api(1.0)
    */
   stoneActions: {
     /**
@@ -539,7 +541,9 @@ glift.widgets.options.baseOptions = {
     'game-info': {
       click: function(event, widget, icon, iconBar) {
         widget.statusBar &&
-        widget.statusBar.gameInfo(widget.controller.getGameInfo());
+        widget.statusBar.gameInfo(
+            widget.controller.getGameInfo(),
+            widget.controller.getCaptureCount());
       },
       tooltip: 'Show the game info'
     },
