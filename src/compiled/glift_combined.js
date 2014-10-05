@@ -3,7 +3,7 @@
  *
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
- * @version 1.0.0
+ * @version 1.0.1
  * --------------------------------------
  */
 (function(w) {
@@ -22,7 +22,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '1.0.0',
+  version: '1.0.1',
 
   /** Indicates whether or not to store debug data. */
   // TODO(kashomon): Remove this hack.
@@ -7775,9 +7775,8 @@ glift.sgf.parse = function(sgfString) {
         case states.PROPERTY:
           if (propRegex.test(curchar)) {
             charBuffer.push(curchar);
-            if (charBuffer.length > 2) {
-              perror('Expected: length two property. Found: ' + charBuffer);
-            }
+            // In the SGF Specification, SGF properties can be of arbitrary
+            // lengths, even though all standard SGF properties are 1-2 chars.
           } else if (curchar === syn.LBRACE) {
             curProp = flushCharBuffer();
             if (glift.sgf.allProperties[curProp] === undefined) {
