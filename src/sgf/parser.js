@@ -108,9 +108,8 @@ glift.sgf.parse = function(sgfString) {
         case states.PROPERTY:
           if (propRegex.test(curchar)) {
             charBuffer.push(curchar);
-            if (charBuffer.length > 2) {
-              perror('Expected: length two property. Found: ' + charBuffer);
-            }
+            // In the SGF Specification, SGF properties can be of arbitrary
+            // lengths, even though all standard SGF properties are 1-2 chars.
           } else if (curchar === syn.LBRACE) {
             curProp = flushCharBuffer();
             if (glift.sgf.allProperties[curProp] === undefined) {

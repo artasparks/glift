@@ -64,6 +64,23 @@ glift.sgf.newParserTest = function() {
     glift.util.logz = oldLog;
   });
 
+
+  test('Produce warnings on too-long-properties.', function() {
+    var oldLog = glift.util.logz;
+    var parseErrors = [];
+    var sgf = '(;GB[1]C[Foo]MULTIGOGM[1])';
+    var testLogger = function(msg) {
+      parseErrors.push(msg);
+    };
+    glift.util.logz = testLogger;
+
+    var mt = glift.sgf.parse(sgf);
+    deepEqual(parseErrors.length, 2);
+    ok(parseErrors[0].indexOf('Unknown property: MULTIGOGM') !== -1);
+    ok(parseErrors[1].indexOf('[MULTIGOGM] is not valid') !== -1);
+    glift.util.logz = oldLog;
+  });
+
   test('Throw errors on bad syntax: no first paren', function() {
     var sgf = ';GM[1]'
     try {
