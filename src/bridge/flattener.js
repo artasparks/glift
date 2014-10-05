@@ -3,9 +3,9 @@
  */
 glift.bridge.flattener = {
   symbols: {
-    //----------------------------------------//
-    // First Layer Symbols (lines and stones) //
-    //----------------------------------------//
+    //-----------------------------//
+    // First Layer Symbols (lines) //
+    //-----------------------------//
     // Base board marks
     TL_CORNER: 1,
     TR_CORNER: 2,
@@ -18,6 +18,11 @@ glift.bridge.flattener = {
     CENTER: 9,
     // Center + starpoint
     CENTER_STARPOINT: 10,
+
+    //-------------------------------//
+    // Second Layer Symbols (stones) //
+    //-------------------------------//
+
     // Stones
     BSTONE: 11,
     WSTONE: 12,
@@ -26,9 +31,9 @@ glift.bridge.flattener = {
     // for removed the first layer when we wish to add text labels.
     EMPTY: 13,
 
-    //-----------------------------------------//
-    // Second Layer Symbols (labels and marks) //
-    //-----------------------------------------//
+    //----------------------------------------//
+    // Third Layer Symbols (labels and marks) //
+    //----------------------------------------//
     // Marks and StoneMarks
     TRIANGLE: 14,
     SQUARE: 15,
@@ -36,9 +41,10 @@ glift.bridge.flattener = {
     XMARK: 17,
     // Text Labeling (numbers or letters)
     TEXTLABEL: 18,
+
     // Extra marks, used for display.  These are not specified by the SGF
     // specification, but they are often useful.
-    LASTMOVE: 19, // Should probably never be used, but is useful
+    LASTMOVE: 19,
     // It's useful to destinguish between standard TEXTLABELs and NEXTVARIATION
     // labels.
     NEXTVARIATION: 20
@@ -284,7 +290,7 @@ glift.bridge.flattener = {
    *    ],
    *    [...],
    *    ...
-   * ]
+   *  ]
    *
    */
   _generateSymbolArr: function(cropping, stoneMap, marks, ints) {
