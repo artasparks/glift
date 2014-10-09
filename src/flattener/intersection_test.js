@@ -74,10 +74,10 @@ glift.flattener.intersectionTest = function() {
   });
 
   test('Create - starpoints - 9x9', function() {
-    deepEqual(create({pt: pt(2, 2), ints: 9}).base(), sym.CENTER_STARPOINT);
-    deepEqual(create({pt: pt(2, 6), ints: 9}).base(), sym.CENTER_STARPOINT);
-    deepEqual(create({pt: pt(6, 2), ints: 9}).base(), sym.CENTER_STARPOINT);
-    deepEqual(create({pt: pt(6, 6), ints: 9}).base(), sym.CENTER_STARPOINT);
+    deepEqual(create({pt: pt(2, 2), ints: 9}).base(), sym.CENTER);
+    deepEqual(create({pt: pt(2, 6), ints: 9}).base(), sym.CENTER);
+    deepEqual(create({pt: pt(6, 2), ints: 9}).base(), sym.CENTER);
+    deepEqual(create({pt: pt(6, 6), ints: 9}).base(), sym.CENTER);
     deepEqual(create({pt: pt(4, 4), ints: 9}).base(), sym.CENTER_STARPOINT);
   });
 

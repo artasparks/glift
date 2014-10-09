@@ -7,34 +7,40 @@ glift.flattener = {
    * array (really a 2D array) of symbols, (a Flattened object).
    *
    * Some notes about the parameters:
-   *  - The goban is used for extracting all the inital stones.
+   *
+   * Required parameters:
    *  - The movetree is used for extracting:
    *    -> The marks
    *    -> The next moves
    *    -> The previous move
    *    -> subsequent stones, if a nextMovesTreepath is present.  These are
    *    given labels.
-   *  - The boardRegion indicates what region to crop on.
    *
    * Optional parameters:
+   *  - goban: used for extracting all the inital stones.
+   *  - boardRegion: indicates what region to crop on.
    *  - nextMovesTreepath.  Defaults to [].  This is typically only used for
    *    printed diagrams.
    *  - startingMoveNum.  Optionally override the move number. Usually used for
    *  variations.
    */
-  flatten: function(
-      movetreeInitial,
-      goban,
-      boardRegion,
-      showNextVariationsType,
-      nextMovesTreepath,
-      startingMoveNum) {
-    var s = glift.flattener.symbols;
+  flatten: function(movetreeInitial, options) {
+    // create a new ref to avoid changing original tree ref.
     var mt = movetreeInitial.newTreeRef();
-    var showVars = showNextVariationsType || glift.enums.showVariations.NEVER;
-    var nmtp = nextMovesTreepath || [];
-    var startingMoveNum = startingMoveNum || 1;
-    var boardRegion = boardRegion || glift.enums.boardRegions.ALL;
+    options = options || {};
+
+    // Use the provided goban, or reclaculate it.  This is somewhat inefficient,
+    // so it's recommended that the goban be provided.
+    var goban = options.goban || glift.rules.goban.getFromMoveTree(
+        mt.getTreeFromRoot(), mt.treepathToHere()).goban;
+    var boardRegion =
+        options.boardRegion || glift.enums.boardRegions.ALL;
+    var showVars =
+        options.showNextVariationsType  || glift.enums.showVariations.NEVER;
+    var nmtp = options.nextMovesTreepath || [];
+    var startingMoveNum = options.startingMoveNum || 1;
+
+    // Calculate the board region.
     if (boardRegion === glift.enums.boardRegions.AUTO) {
       boardRegion = glift.bridge.getCropFromMovetree(mt);
     }
@@ -63,16 +69,15 @@ glift.flattener = {
 
     // Calculate the collision stones and update the marks / labels maps if
     // necessary.
-    var collisions = glift.flattener._labelForCollisions(
+    var collisions = glift.flattener._createStoneLabels(
         applied.stones, marks, labels, startingMoveNum);
 
     // Finally! Generate the intersections double-array.
-    var intersections = glift.flattener.intersection.boardArray(
+    var board = glift.flattener.board.create(
         cropping.cbox(), stoneMap, marks, labels, mt.getIntersections());
 
     var comment = mt.properties().getComment() || '';
-    return new glift.flattener.Flattened(
-        intersections, collisions, comment, boardRegion, cropping);
+    return new glift.flattener.Flattened(board, collisions, comment, boardRegion);
   },
 
   /**
@@ -91,11 +96,11 @@ glift.flattener = {
     }
 
     for (var i = 0; i < nextStones.length; i++) {
-      var stone = nextStones.stones[i];
+      var stone = nextStones[i];
       var mv = { point: stone.point, color: stone.color };
       var ptstr = mv.point.toString();
-      if (!stoneMap[ptstr]) {
-        stoneMap[ptstr] = mv;
+      if (!out[ptstr]) {
+        out[ptstr] = mv;
       }
     }
     return out;
@@ -123,13 +128,13 @@ glift.flattener = {
    */
   _markMap: function(movetree) {
     var out = { marks: {}, labels: {} };
-    var s = glift.flattener.symbols;
+    var symbols = glift.flattener.symbols;
     var propertiesToSymbols = {
-      CR: s.CIRCLE,
-      LB: s.TEXTLABEL,
-      MA: s.XMARK,
-      SQ: s.SQUARE,
-      TR: s.TRIANGLE
+      CR: symbols.CIRCLE,
+      LB: symbols.TEXTLABEL,
+      MA: symbols.XMARK,
+      SQ: symbols.SQUARE,
+      TR: symbols.TRIANGLE
     };
     for (var prop in propertiesToSymbols) {
       var symbol = propertiesToSymbols[prop];
@@ -175,7 +180,8 @@ glift.flattener = {
    *
    * Sadly, this has has the side effect of altering the marks / labels maps.
    */
-  _labelForCollisions: function(stones, marks, labels, startingMoveNum) {
+  // TODO(kashomon): Guard this with a autoLabelMoves flag.
+  _createStoneLabels: function(stones, marks, labels, startingMoveNum) {
     if (!stones || stones.length === 0) {
       return []; // Don't perform relabeling if no stones are found.
     }
@@ -185,7 +191,8 @@ glift.flattener = {
     var symb = glift.flattener.symbols;
     var collisions = []; // {color: <color>, num: <number>, label: <lbl>}
 
-    // Remove any number labels currently existing in the marks map
+    // Remove any number labels currently existing in the marks map.  This
+    // method also numbers stones.
     var digitRegex = /[0-9]/;
     for (var ptstr in labels) {
       if (digitRegex.test(labels[ptstr])) {
@@ -194,11 +201,18 @@ glift.flattener = {
       }
     }
 
+    // Create labels for each stone in the 'next-stones'.
     for (var i = 0; i < stones.length; i++) {
       var stone = stones[i];
       var ptStr = stone.point.toString();
+
+      // This is a collision stone. Perform collision labeling.
       if (stone.hasOwnProperty('collision')) {
-        var col = {color: stone.color, mvnum: (i + startingMoveNum) + ''};
+        var col = {
+          color: stone.color,
+          mvnum: (i + startingMoveNum) + '',
+          label: undefined
+        };
         if (labels[ptStr]) { // First see if there are any available labels.
           col.label = labels[ptStr];
         } else if (glift.util.typeOf(stone.collision) === 'number') {
@@ -211,9 +225,10 @@ glift.flattener = {
           labels[ptStr] = lbl;
         }
         collisions.push(col);
+
+      // This is not a collision stone. Perform standard move-labeling.
       } else {
-        // Create new labels for our move number (should this be flag
-        // controlled?).
+        // Create new labels for our move number.
         marks[ptStr] = symb.TEXTLABEL; // Override labels.
         labels[ptStr] = (i + startingMoveNum) + ''
       }
@@ -234,7 +249,7 @@ glift.flattener = {
         if (labels[ptStr] === undefined) {
           labels[ptStr] = '' + (i + 1);
         }
-        marks[ptStr] = s.NEXTVARIATION;
+        marks[ptStr] = glift.flattener.symbols.NEXTVARIATION;
       }
     }
   }

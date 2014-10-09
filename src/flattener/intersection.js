@@ -1,32 +1,4 @@
 glift.flattener.intersection = {
-  /**
-   * Returns 2D array of intersections.
-   *
-   * cbox: a bounding box from a crop box.
-   * stoneMap: map from pt-string to stone {point: <pt>, color: <color>}
-   * markMap: map from pt-string to mark symbol (flattener.symbols)
-   * labelMap: map from pt-string to label string
-   * ints: max intersections of the board (typically 9, 13, or 19)
-   */
-  boardArray: function(cbox, stoneMap, markMap, labelMap, ints) {
-    var point = glift.util.point;
-    var board = [];
-    for (var y = cbox.top(); y <= cbox.bottom(); y++) {
-      var row = [];
-      for (var x = cbox.left(); x <= cbox.right(); x++) {
-        var pt = point(x, y);
-        var ptStr = pt.toString();
-        var stone = stoneMap[ptStr];
-        var stoneColor = stone ? stone.color : undefined;
-        var mark = markMap[ptStr];
-        var label = labelMap[ptStr]
-        row.push(glift.flattener.intersection.create(
-            pt, stoneColor, mark, label, ints));
-      }
-      board.push(row);
-    }
-    return board;
-  },
 
   /**
    * Creates an intersection obj.
@@ -93,7 +65,7 @@ glift.flattener.intersection = {
 
   // TODO(kashomon): Should arbitrary sized go boards be supported?
   _starPointSets: {
-    9 : [{2:true, 6:true}, {4:true}],
+    9 : [{4:true}],
     13 : [{3:true, 9:true}, {6:true}],
     19 : [{3:true, 9:true, 15:true}]
   },
