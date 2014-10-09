@@ -131,8 +131,12 @@
 <!-- Bridge -->
 <script type="text/javascript" src="../bridge/bridge.js"></script>
 <script type="text/javascript" src="../bridge/cropping.js"></script>
-<script type="text/javascript" src="../bridge/flattener.js"></script>
 <script type="text/javascript" src="../bridge/intersections.js"></script>
+<!-- Flattener -->
+<script type="text/javascript" src="../flattener/flattener.js"></script>
+<script type="text/javascript" src="../flattener/flattened.js"></script>
+<script type="text/javascript" src="../flattener/intersection.js"></script>
+<script type="text/javascript" src="../flattener/symbols.js"></script>
 <!-- Widgets -->
 <script type="text/javascript" src="../widgets/widgets.js"></script>
 <script type="text/javascript" src="../widgets/manager.js"></script>
@@ -197,8 +201,11 @@
 <script type="text/javascript" src="../controllers/static_problem_test.js"></script>
 <!-- Bridge Tests -->
 <script type="text/javascript" src="../bridge/cropping_test.js"></script>
-<script type="text/javascript" src="../bridge/flattener_test.js"></script>
 <script type="text/javascript" src="../bridge/intersections_test.js"></script>
+<!-- Flattener Tests -->
+<script type="text/javascript" src="../flattener/flattener_test.js"></script>
+<script type="text/javascript" src="../flattener/intersection_test.js"></script>
+<script type="text/javascript" src="../flattener/symbols_test.js"></script>
 <!-- Widgets Tests -->
 <script type="text/javascript" src="../widgets/options_processing_test.js"></script>
 <script type="text/javascript" src="../widgets/widgets_test.js"></script>
@@ -264,7 +271,10 @@ $(document).ready(function() {
   // Display + Rules bridge tests
   glift.bridge.croppingTest();
   glift.bridge.intersectionsTest();
-  glift.bridge.flattenerTest();
+
+  glift.flattener.symbolsTest();
+  glift.flattener.intersectionTest();
+  glift.flattener.flattenTest();
 
   // And finally: an end to end test!
   glift.widgets.options.optionsTest();

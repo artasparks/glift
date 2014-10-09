@@ -31,6 +31,8 @@ FILES_TO_AUTOGEN = {
     'htmltests/ThemeTester.html': False,
     }
 
+# The desired directory order.  Shouldn't be necessary any more except for the
+# glift definition. But oh well.
 DIR_ORDER = [
     '.',
     'util',
@@ -55,6 +57,7 @@ DIR_ORDER = [
     'gib',
     'controllers',
     'bridge',
+    'flattener',
     'widgets',
     'widgets/options',
     ]

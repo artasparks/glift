@@ -1,33 +1,32 @@
-glift.bridge.flattenerTest = function() {
-  module("glift.bridge.flattenerTest");
-  var symb = glift.bridge.flattener.symbols;
-  var flatten = glift.bridge.flattener.flatten;
+glift.flattener.flattenTest = function() {
+  module('glift.flattener.flattenTest');
+  var symb = glift.flattener.symbols;
   var boardRegions = glift.enums.boardRegions;
   var showV = glift.enums.showVariations;
   var sgfs = testdata.sgfs;
-  var fer = glift.bridge.flattener;
+  var flattener  = glift.flattener;
 
   var testExpected = function(flattened, expBase, expMarks, expectedLabels) {
     var toPt = glift.util.pointFromSgfCoord;
     for (var keyPt in expBase) {
-      var sb = flattened.getSymbolPairIntPt(toPt(keyPt));
-      ok(sb !== undefined, "undefined at " + toPt(keyPt).toString()
-         + " for keyPt " + keyPt);
+      var int = flattened.getIntBoardIdx(toPt(keyPt));
+      ok(int !== undefined, 
+          "undefined at " + toPt(keyPt).toString() + " for keyPt " + keyPt);
       var s = sb.base;
       deepEqual(s, expBase[keyPt],
           "For sgfPt: " + keyPt + ", and point " + toPt(keyPt)
-          + ", Expected: " + fer.symbolFromEnum(expBase[keyPt])
-          + ", Found: " + fer.symbolFromEnum(s));
+          + ", Expected: " + flattener.symbolStr(expBase[keyPt])
+          + ", Found: " + flattener.symbolStr(s));
     }
     for (var keyPt in expMarks) {
       var sb = flattened.getSymbolPairIntPt(toPt(keyPt));
-      ok(sb !== undefined, "undefined at " + toPt(keyPt).toString()
-         + " for keyPt " + keyPt);
+      ok(sb !== undefined,
+          "undefined at " + toPt(keyPt).toString() + " for keyPt " + keyPt);
       var s = sb.mark;
       deepEqual(s, expMarks[keyPt],
           "For sgfPt: " + keyPt + ", and point " + toPt(keyPt)
-          + ", Expected: " + fer.symbolFromEnum(expMarks[keyPt])
-          + ", Found: " + fer.symbolFromEnum(s));
+          + ", Expected: " + flattener.symbolFromEnum(expMarks[keyPt])
+          + ", Found: " + flattener.symbolFromEnum(s));
       if (s === symb.TEXTLABEL || s === symb.NEXTVARIATION) {
         var lbl = flattened.getLabelIntPt(toPt(keyPt))
         ok(lbl !== undefined)
@@ -36,37 +35,15 @@ glift.bridge.flattenerTest = function() {
     }
   };
 
-  test("Symbol vals unique", function() {
-    var sset = {};
-    for (var key in symb) {
-      ok(!sset[symb[key]], "Collision for " + key);
-      sset[symb[key]] = true;
-    }
-  });
-
   test("Basic Flattened", function() {
     var movetree = glift.rules.movetree.getFromSgf(sgfs.marktest);
     var goban = glift.rules.goban.getFromMoveTree(movetree, []).goban;
-    var f = flatten(movetree, goban);
+    var f = flattener.flatten(movetree, goban);
     ok(f !== undefined, "Flattened must not be undefined");
-    deepEqual(f.comment, "Mark Test");
-    ok(f.labelData !== undefined, "labelData, not undefined");
-    deepEqual(f.collisions, []);
-    deepEqual(f.symbolPairs.length, 19);
-    deepEqual(f.symbolPairs[0].length, 19);
-    for (var i = 0; i < f.symbolPairs.length; i++) {
-      var row = f.symbolPairs[0];
-      for (var j = 0; j < row.length; j++) {
-        var base = row[j].base
-        var mark = row[j].mark
-        ok(glift.bridge.flattener.symbolFromEnum(base) !== undefined,
-            "BaseSymbol not defined in table: " + base
-            + " at i,j=" + i + "," + j);
-        ok(glift.bridge.flattener.symbolFromEnum(mark) !== undefined,
-            "BaseSymbol not defined in table: " + mark
-            + " at i,j=" + i + "," + j);
-      }
-    }
+    deepEqual(f.comment(), "Mark Test");
+    deepEqual(f.collisions(), []);
+    deepEqual(f._intersections.length, 19);
+    deepEqual(f._intersections[0].length, 19);
 
     // Some assertions based on known contents of the marktest SGF.
     var expected = {
@@ -141,6 +118,7 @@ glift.bridge.flattenerTest = function() {
     };
     testExpected(f, expected, expectedMarks, expectedText);
   });
+  /*
 
   test("NextVariations", function() {
     var movetree = glift.rules.movetree.getFromSgf(sgfs.complexproblem);
@@ -170,4 +148,5 @@ glift.bridge.flattenerTest = function() {
     ok(f.getSymbolPairIntPt(glift.util.point(0,0)) == undefined);
     testExpected(f, expected, expectedMarks, expectedText);
   });
+  */
 };
