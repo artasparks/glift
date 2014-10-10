@@ -5,7 +5,6 @@
 glift.displays.boardPoints = function(
     linebox, maxIntersects, drawBoardCoords) {
 
-  // console.log(linebox);
   var spacing = linebox.spacing,
       radius = spacing / 2,
       linebbox = linebox.bbox,
