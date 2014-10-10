@@ -3,8 +3,8 @@
  */
 glift.flattener.symbols = {
   // Empty location.  Useful for creating dense arrays.  Can be used for any of
-  // the three layers.
-  EMPTY: 1,
+  // the three layers. Assigned to 0 for the usefulness of truthiness.
+  EMPTY: 0,
 
   //
   // Board symbols.  This comprises the first layer.

@@ -2,15 +2,15 @@ glift.flattener.board = {
   /**
    * Constructs a board object: a 2D array of intersections.
    *
-   * cbox: a bounding box from a crop box.
+   * cropping: A cropping object, which says how to crop the board.
    * stoneMap: map from pt-string to stone {point: <pt>, color: <color>}
    * markMap: map from pt-string to mark symbol (flattener.symbols)
    * labelMap: map from pt-string to label string
-   * ints: max intersections of the board (typically 9, 13, or 19)
    */
-  create: function(cbox, stoneMap, markMap, labelMap, ints) {
+  create: function(cropping, stoneMap, markMap, labelMap) {
     var point = glift.util.point;
     var board = [];
+    var cbox = cropping.cbox();
     for (var y = cbox.top(); y <= cbox.bottom(); y++) {
       var row = [];
       for (var x = cbox.left(); x <= cbox.right(); x++) {
@@ -21,23 +21,30 @@ glift.flattener.board = {
         var mark = markMap[ptStr];
         var label = labelMap[ptStr]
         row.push(glift.flattener.intersection.create(
-            pt, stoneColor, mark, label, ints));
+            pt, stoneColor, mark, label, cropping.maxBoardSize()));
       }
       board.push(row);
     }
-    return new glift.flattener._Board(board, cbox);
+    return new glift.flattener._Board(board, cbox, cropping.maxBoardSize());
   }
 };
 
 /**
  * Board object.  Meant to be created with the static constuctor method 'create'.
  */
-glift.flattener._Board = function(boardArray, cbox) {
-  /** 2D Array of intersections. */
+glift.flattener._Board = function(boardArray, cbox, maxBoardSize) {
+  /**
+   * 2D Array of intersections. Generally, this is an array of intersections,
+   * but could be backed by a different underlying objects based on a
+   * transformation.
+   */
   this._boardArray = boardArray;
 
   /** Bounding box for the crop box. */
   this._cbox = cbox;
+
+  /** Maximum board size.  Generally 9, 13, or 19. */
+  this._maxBoardSize = maxBoardSize;
 };
 
 glift.flattener._Board.prototype = {
@@ -46,10 +53,8 @@ glift.flattener._Board.prototype = {
    * intersection.  Note, this uses the board indexing as opposed to the indexing
    * in the array.
    */
-  getIntBoardIdx: function(pt) {
-    var row = this._boardArray[pt.y() - this._cbox.top()];
-    if (row === undefined) { return row; }
-    return row[pt.x() - this._cbox.left()];
+  getIntBoardPt: function(pt) {
+    return this.getInt(this.boardPtToPt(pt));
   },
 
   /**
@@ -57,20 +62,53 @@ glift.flattener._Board.prototype = {
    * positioning. Returns undefined if the pt doesn't exist on the board.
    */
   getInt: function(pt) {
-    var row = this.boardArray[pt.y()];
+    var row = this._boardArray[pt.y()];
     if (row === undefined) { return row; }
     return row[pt.x()];
   },
 
   /** Turns a 0 indexed pt to a point that's board-indexed. */
   ptToBoardPt: function(pt) {
-    return glift.util.point(
-        pt.x() + this._cbox.left(),
-        pt.y() + this._cbox.top());
+    return pt.translate(this._cbox.left(), this._cbox.top());
   },
 
-  /** Returns the board array of intersections. */
-  intersections: function() {
+  /** Turns a 0 indexed pt to a point that's board-indexed. */
+  boardPtToPt: function(pt) {
+    return pt.translate(-this._cbox.left(), -this._cbox.top());
+  },
+
+  /** Returns the board array. */
+  boardArray: function() {
     return this._boardArray;
+  },
+
+  /** Returns the size of the board. Usually 9, 13 or 19. */
+  maxBoardSize: function() {
+    return this._maxBoardSize;
+  },
+
+  /**
+   * Transforms the intersections into a board instance based on the
+   * transformation function.
+   *
+   * Generally, expects a function of the form:
+   *    fn(intersection, x, y);
+   *
+   * Where X and Y are indexed from the top left and range from 0 to the
+   * cropping box width / height respectively.  Equivalently, you can think of x
+   * and y as the column and row, although I find this more confusing.
+   */
+  transform: function(fn) {
+    var outArray = [];
+    for (var y = 0; y < this._boardArray.length; y++) {
+      var row = [];
+      // Assumes a rectangular double array but this should always be the case.
+      for (var x = 0; x < this._boardArray[0].length; x++) {
+        var intersect = this._boardArray[y][x];
+        row.push(fn(intersect, x, y));
+      }
+      outArray.push(row);
+    }
+    return new glift.flattener._Board(outArray, this._cbox, this._maxBoardSize);
   }
 };

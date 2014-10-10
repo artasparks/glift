@@ -14,16 +14,16 @@ glift.flattener.flattenTest = function() {
     deepEqual(f.comment(), 'foo');
 
     var board = f.board();
-    deepEqual(board.intersections().length, 19);
-    deepEqual(board.intersections()[0].length, 19);
+    deepEqual(board.boardArray().length, 19);
+    deepEqual(board.boardArray()[0].length, 19);
 
-    var i = board.getIntBoardIdx(toPt('aa'));
+    var i = board.getIntBoardPt(toPt('aa'));
     ok(i !== undefined);
     deepEqual(i.base(), symb.TL_CORNER);
     deepEqual(i.stone(), symb.WSTONE);
     deepEqual(i.mark(), symb.EMPTY);
 
-    i = board.getIntBoardIdx(toPt('ab'));
+    i = board.getIntBoardPt(toPt('ab'));
     deepEqual(i.base(), symb.LEFT_EDGE);
     deepEqual(i.stone(), symb.BSTONE);
     deepEqual(i.mark(), symb.TEXTLABEL);
@@ -36,8 +36,8 @@ glift.flattener.flattenTest = function() {
     var f = flattener.flatten(mt);
 
     deepEqual(f.comment(), 'zed');
-    deepEqual(f.board().getIntBoardIdx(toPt('aa')).stone(), symb.BSTONE);
-    deepEqual(f.board().getIntBoardIdx(toPt('ab')).stone(), symb.WSTONE);
+    deepEqual(f.board().getIntBoardPt(toPt('aa')).stone(), symb.BSTONE);
+    deepEqual(f.board().getIntBoardPt(toPt('ab')).stone(), symb.WSTONE);
   });
 
   test('Simple next moves + labeling', function() {
@@ -47,12 +47,12 @@ glift.flattener.flattenTest = function() {
       nextMovesTreepath: [0,0]
     });
 
-    var i = f.board().getIntBoardIdx(toPt('aa'));
+    var i = f.board().getIntBoardPt(toPt('aa'));
     deepEqual(i.stone(), symb.BSTONE);
     deepEqual(i.mark(), symb.TEXTLABEL);
     deepEqual(i.textLabel(), '1');
 
-    i = f.board().getIntBoardIdx(toPt('ab'));
+    i = f.board().getIntBoardPt(toPt('ab'));
     deepEqual(i.stone(), symb.WSTONE);
     deepEqual(i.mark(), symb.TEXTLABEL);
     deepEqual(i.textLabel(), '2');
@@ -95,5 +95,5 @@ glift.flattener.flattenTest = function() {
     deepEqual(col[0].label, 'X');
   });
 
-  // TODO(kashomon): Add cropping test.
+  // TODO(kashomon): Add cropping / board region test.
 };

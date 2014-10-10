@@ -1938,7 +1938,6 @@ glift.displays._BoundingBox.prototype = {
 glift.displays.boardPoints = function(
     linebox, maxIntersects, drawBoardCoords) {
 
-  // console.log(linebox);
   var spacing = linebox.spacing,
       radius = spacing / 2,
       linebbox = linebox.bbox,
@@ -2135,10 +2134,10 @@ glift.displays.cropbox = {
   DEFAULT_EXTENSION: 0, // Wut.
   OVERFLOW: 1.5, // The line spacing that goes around the edge.
 
-  create: function(cbox, extBox, minIntersects, maxIntersects) {
-    return new glift.displays._CropBox(cbox, extBox, minIntersects, maxIntersects);
-  },
-
+  /**
+   * Creates a cropbox based on a region, the number of intersections, and a
+   * true/false flag for drawing the board coordinates.
+   */
   getFromRegion: function(region, intersects, drawBoardCoords) {
     var util = glift.util,
         boardRegions = glift.enums.boardRegions,
@@ -2240,8 +2239,7 @@ glift.displays.cropbox = {
     var extBox = glift.displays.bbox.fromPts(
         util.point(leftExtension, topExtension),
         util.point(rightExtension, botExtension));
-    return glift.displays.cropbox.create(
-        cbox, extBox, minIntersects, maxIntersects);
+    return new glift.displays._CropBox(cbox, extBox, maxIntersects);
   }
 };
 
@@ -2249,15 +2247,42 @@ glift.displays.cropbox = {
  * A cropbox is similar to a bounding box, but instead of a box based on pixels,
  * it's a box based on points.
  */
-glift.displays._CropBox = function(cbox, extBox, minIntersects, maxIntersects) {
+glift.displays._CropBox = function(cbox, extBox, maxIntersects) {
   this._cbox = cbox;
   this._extBox = extBox;
+  this._maxInts = maxIntersects;
 };
 
 glift.displays._CropBox.prototype = {
+  /**
+   * Returns the cbox. The cbox is a bounding box that describes what points on
+   * the go board should be displayed. Generally, both the width and height of
+   * the cbox must be between 0 (exclusive) and maxIntersects (inclusive)
+   */
   cbox: function() { return this._cbox; },
+
+  /**
+   * Returns the maximum board size.  Often referred to as max intersections
+   * elsewhere.  Typically 9, 13 or 19.
+   */
+  maxBoardSize: function() { return this._maxInts; },
+
+  /**
+   * The extension box is a special bounding box for cropped boards.  Due to
+   * some quirks of the way the board is drawn, it's convenient to add this here
+   * to indicate an extra amount around the edge necessary for the overflow
+   * lines (the ragged crop-edge).
+   */
   extBox: function() { return this._extBox; },
+
+  /**
+   * Number of x points (or columns) for the cropped go board.
+   */
   xPoints: function() { return this.cbox().width(); },
+
+  /**
+   * Number of y points (or rows) for the cropped go board.
+   */
   yPoints: function() { return this.cbox().height(); },
 
   /**
@@ -2271,6 +2296,7 @@ glift.displays._CropBox.prototype = {
     return this.cbox().width() + this.extBox().topLeft().x()
         + this.extBox().botRight().x() + OVERFLOW;
   },
+
   heightMod: function() {
     var OVERFLOW = glift.displays.cropbox.OVERFLOW;
     return this.cbox().height() + this.extBox().topLeft().y()

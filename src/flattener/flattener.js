@@ -76,8 +76,7 @@ glift.flattener = {
         applied.stones, marks, labels, startingMoveNum);
 
     // Finally! Generate the intersections double-array.
-    var board = glift.flattener.board.create(
-        cropping.cbox(), stoneMap, marks, labels, mt.getIntersections());
+    var board = glift.flattener.board.create(cropping, stoneMap, marks, labels);
 
     var comment = mt.properties().getComment() || '';
     return new glift.flattener.Flattened(board, collisions, comment, boardRegion);

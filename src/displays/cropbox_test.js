@@ -10,6 +10,7 @@ module('glift.displays.cropboxTest');
     deepEqual(box.cbox().topLeft().y(), 0, 'topLeft.y() must be 0, for ALL');
     deepEqual(box.cbox().botRight().x(), 18, 'botRight.x() must be 18, for ALL');
     deepEqual(box.cbox().botRight().y(), 18, 'botRight.y() must be 18, for ALL');
+    deepEqual(box.maxBoardSize(), 19);
   });
 
   test('For half boards', function() {
@@ -20,18 +21,22 @@ module('glift.displays.cropboxTest');
     deepEqual(lbox.cbox().botRight().x(), 10, 'right coord for LEFT');
     deepEqual(lbox.widthMod(), 10.5 + overf, 'width ext for LEFT');
     deepEqual(lbox.heightMod(), 18 + overf, 'height for LEFT');
+    deepEqual(lbox.maxBoardSize(), 19);
 
     deepEqual(rbox.cbox().topLeft().x(), 8, 'left coord for RIGHT');
     deepEqual(rbox.widthMod(), 10.5 + overf, 'width for RIGHT');
     deepEqual(rbox.heightMod(), 18 + overf, 'height for RIGHT');
+    deepEqual(rbox.maxBoardSize(), 19);
 
     deepEqual(tbox.cbox().botRight().y(), 10, 'bottom coord for TOP');
     deepEqual(tbox.heightMod(), 10.5 + overf, 'height for TOP');
     deepEqual(tbox.widthMod(), 18 + overf, 'width for TOP');
+    deepEqual(tbox.maxBoardSize(), 19);
 
     deepEqual(bbox.cbox().topLeft().y(), 8, 'top coord for BOTTOM');
     deepEqual(bbox.heightMod(), 10.5 + overf, 'height for BOTTOM');
     deepEqual(bbox.widthMod(), 18 + overf, 'width for BOTTOM');
+    deepEqual(bbox.maxBoardSize(), 19);
   });
 
   test('Cropbox tests for quarter boards', function() {

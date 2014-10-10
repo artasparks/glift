@@ -108,7 +108,7 @@ glift.displays.cropbox = {
     var extBox = glift.displays.bbox.fromPts(
         util.point(leftExtension, topExtension),
         util.point(rightExtension, botExtension));
-    return new glift.displays._CropBox(cbox, extBox, maxIntersects);
+    return new glift.displays._CropBox(cbox, extBox, intersects);
   }
 };
 
