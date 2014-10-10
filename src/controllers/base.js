@@ -61,7 +61,7 @@ BaseController.prototype = {
   initialize: function(treepath) {
     var rules = glift.rules;
     var initTreepath = treepath || this.initialPosition;
-    this.treepath = rules.treepath.parseInitPosition(initTreepath);
+    this.treepath = rules.treepath.parsePath(initTreepath);
     this.movetree = rules.movetree.getFromSgf(this.sgfString, this.treepath);
     var gobanData = rules.goban.getFromMoveTree(this.movetree, this.treepath);
     this.goban = gobanData.goban;

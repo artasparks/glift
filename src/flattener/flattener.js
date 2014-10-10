@@ -22,7 +22,7 @@ glift.flattener = {
    *  - nextMovesTreepath.  Defaults to [].  This is typically only used for
    *    printed diagrams.
    *  - startingMoveNum.  Optionally override the move number. Usually used for
-   *  variations.
+   *    variations.
    */
   flatten: function(movetreeInitial, options) {
     // create a new ref to avoid changing original tree ref.
@@ -38,6 +38,9 @@ glift.flattener = {
     var showVars =
         options.showNextVariationsType  || glift.enums.showVariations.NEVER;
     var nmtp = options.nextMovesTreepath || [];
+    if (glift.util.typeOf(nmtp) === 'string') {
+      nmtp = glift.rules.treepath.parsePath(nmtp);
+    }
     var startingMoveNum = options.startingMoveNum || 1;
 
     // Calculate the board region.

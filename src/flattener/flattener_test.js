@@ -94,4 +94,6 @@ glift.flattener.flattenTest = function() {
     deepEqual(col[0].mvnum, '2');
     deepEqual(col[0].label, 'X');
   });
+
+  // TODO(kashomon): Add cropping test.
 };

@@ -108,8 +108,7 @@ glift.displays.cropbox = {
     var extBox = glift.displays.bbox.fromPts(
         util.point(leftExtension, topExtension),
         util.point(rightExtension, botExtension));
-    return glift.displays.cropbox.create(
-        cbox, extBox, minIntersects, maxIntersects);
+    return glift.displays.cropbox.create(cbox, extBox, maxIntersects);
   }
 };
 
@@ -117,13 +116,15 @@ glift.displays.cropbox = {
  * A cropbox is similar to a bounding box, but instead of a box based on pixels,
  * it's a box based on points.
  */
-glift.displays._CropBox = function(cbox, extBox, minIntersects, maxIntersects) {
+glift.displays._CropBox = function(cbox, extBox, maxIntersects) {
   this._cbox = cbox;
   this._extBox = extBox;
+  this._maxInts = maxIntersects;
 };
 
 glift.displays._CropBox.prototype = {
   cbox: function() { return this._cbox; },
+  maxBoardSize: function: { return this._maxInts; },
   extBox: function() { return this._extBox; },
   xPoints: function() { return this.cbox().width(); },
   yPoints: function() { return this.cbox().height(); },

@@ -14,7 +14,7 @@ glift.flattener.intersection = {
    */
   create: function(pt, stoneColor, mark, textLabel, maxInts) {
     var sym = glift.flattener.symbols;
-    var int = new glift.flattener._Intersection(pt);
+    var intsect = new glift.flattener._Intersection(pt);
 
     if (pt.x() < 0 || pt.y() < 0 ||
         pt.x() >= maxInts || pt.y() >= maxInts) {
@@ -44,23 +44,23 @@ glift.flattener.intersection = {
     } else {
       baseSymb = sym.CENTER;
     }
-    int.base(baseSymb);
+    intsect.base(baseSymb);
 
     if (stoneColor === glift.enums.states.BLACK) {
-      int.stone(sym.BSTONE);
+      intsect.stone(sym.BSTONE);
     } else if (stoneColor === glift.enums.states.WHITE) {
-      int.stone(sym.WSTONE);
+      intsect.stone(sym.WSTONE);
     }
 
     if (mark !== undefined) {
-      int.mark(mark);
+      intsect.mark(mark);
     }
 
     if (textLabel !== undefined) {
-      int.textLabel(textLabel);
+      intsect.textLabel(textLabel);
     }
 
-    return int;
+    return intsect;
   },
 
   // TODO(kashomon): Should arbitrary sized go boards be supported?

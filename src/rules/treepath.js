@@ -33,12 +33,12 @@
  * 0.2.6+  becomes [2,6,0,...(500 times)]
  */
 glift.rules.treepath = {
-  parseInitPosition: function(initPos) {
+  parsePath: function(initPos) {
     var errors = glift.errors
     if (initPos === undefined) {
       return [];
     } else if (glift.util.typeOf(initPos) === 'number') {
-      initPos = "" + initPos;
+      initPos = '' + initPos;
     } else if (glift.util.typeOf(initPos) === 'array') {
       return initPos;
     } else if (glift.util.typeOf(initPos) === 'string') {

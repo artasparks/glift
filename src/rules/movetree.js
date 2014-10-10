@@ -45,7 +45,7 @@ glift.rules.movetree = {
     initPosition = initPosition || []; // treepath.
     if (glift.util.typeOf(initPosition) === 'string' ||
         glift.util.typeOf(initPosition) === 'number') {
-      initPosition = glift.rules.treepath.parseInitPosition(initPosition);
+      initPosition = glift.rules.treepath.parsePath(initPosition);
     }
     if (sgfString === undefined || sgfString === '') {
       return glift.rules.movetree.getInstance(19);

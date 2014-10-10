@@ -6456,7 +6456,7 @@ glift.rules.movetree = {
     initPosition = initPosition || []; // treepath.
     if (glift.util.typeOf(initPosition) === 'string' ||
         glift.util.typeOf(initPosition) === 'number') {
-      initPosition = glift.rules.treepath.parseInitPosition(initPosition);
+      initPosition = glift.rules.treepath.parsePath(initPosition);
     }
     if (sgfString === undefined || sgfString === '') {
       return glift.rules.movetree.getInstance(19);
@@ -7368,12 +7368,12 @@ Properties.prototype = {
  * 0.2.6+  becomes [2,6,0,...(500 times)]
  */
 glift.rules.treepath = {
-  parseInitPosition: function(initPos) {
+  parsePath: function(initPos) {
     var errors = glift.errors
     if (initPos === undefined) {
       return [];
     } else if (glift.util.typeOf(initPos) === 'number') {
-      initPos = "" + initPos;
+      initPos = '' + initPos;
     } else if (glift.util.typeOf(initPos) === 'array') {
       return initPos;
     } else if (glift.util.typeOf(initPos) === 'string') {
@@ -8024,7 +8024,7 @@ BaseController.prototype = {
   initialize: function(treepath) {
     var rules = glift.rules;
     var initTreepath = treepath || this.initialPosition;
-    this.treepath = rules.treepath.parseInitPosition(initTreepath);
+    this.treepath = rules.treepath.parsePath(initTreepath);
     this.movetree = rules.movetree.getFromSgf(this.sgfString, this.treepath);
     var gobanData = rules.goban.getFromMoveTree(this.movetree, this.treepath);
     this.goban = gobanData.goban;
@@ -8986,496 +8986,6 @@ glift.bridge._getRegionFromTracker = function(tracker, numstones) {
   }
   return glift.boardRegions.ALL;
 };
-/**
- * Helps flatten a go board into a diagram definition.
- */
-glift.bridge.flattener = {
-  symbols: {
-    //----------------------------------------//
-    // First Layer Symbols (lines and stones) //
-    //----------------------------------------//
-    // Base board marks
-    TL_CORNER: 1,
-    TR_CORNER: 2,
-    BL_CORNER: 3,
-    BR_CORNER: 4,
-    TOP_EDGE: 5,
-    BOT_EDGE: 6,
-    LEFT_EDGE: 7,
-    RIGHT_EDGE: 8,
-    CENTER: 9,
-    // Center + starpoint
-    CENTER_STARPOINT: 10,
-    // Stones
-    BSTONE: 11,
-    WSTONE: 12,
-
-    // A dummy symbol so we can create dense arrays of mark symbols.  Also used
-    // for removed the first layer when we wish to add text labels.
-    EMPTY: 13,
-
-    //-----------------------------------------//
-    // Second Layer Symbols (labels and marks) //
-    //-----------------------------------------//
-    // Marks and StoneMarks
-    TRIANGLE: 14,
-    SQUARE: 15,
-    CIRCLE: 16,
-    XMARK: 17,
-    // Text Labeling (numbers or letters)
-    TEXTLABEL: 18,
-    // Extra marks, used for display.  These are not specified by the SGF
-    // specification, but they are often useful.
-    LASTMOVE: 19, // Should probably never be used, but is useful
-    // It's useful to destinguish between standard TEXTLABELs and NEXTVARIATION
-    // labels.
-    NEXTVARIATION: 20
-  },
-
-  symbolFromEnum: function(value) {
-    if (glift.bridge.flattener._reverseSymbol !== undefined) {
-      return glift.bridge.flattener._reverseSymbol[value];
-    }
-    var reverse = {};
-    var symb = glift.bridge.flattener.symbols;
-    for (var key in glift.bridge.flattener.symbols) {
-      reverse[symb[key]] = key;
-    }
-    glift.bridge.flattener._reverseSymbol = reverse;
-    return glift.bridge.flattener._reverseSymbol[value];
-  },
-
-  /**
-   * Flatten the combination of movetree, goban, cropping, and treepath into an
-   * array (really a 2D array) of symbols, (a _Flattened object).
-   *
-   * Some notes about the parameters:
-   *  - The goban is used for extracting all the inital stones.
-   *  - The movetree is used for extracting:
-   *    -> The marks
-   *    -> The next moves
-   *    -> The previous move
-   *    -> subsequent stones, if a nextMovesTreepath is present.  These are
-   *    given labels.
-   *  - The boardRegion indicates how big to make the board (i.e., the 2D array)
-   *
-   * Optional parameters:
-   *  - nextMovesTreepath.  Defaults to [].  This is typically only used for
-   *    printed diagrams.
-   *  - Cropping.  Defaults to nextMovesCropping
-   */
-  flatten: function(
-      movetreeInitial,
-      goban,
-      boardRegion,
-      showNextVariationsType,
-      nextMovesTreepath,
-      startingMoveNum) {
-    var s = glift.bridge.flattener.symbols;
-    var mt = movetreeInitial.newTreeRef();
-    var showVars = showNextVariationsType || glift.enums.showVariations.NEVER;
-    var nmtp = nextMovesTreepath || [];
-    var startingMoveNum = startingMoveNum || 1;
-    var boardRegion = boardRegion || glift.enums.boardRegions.ALL;
-    if (boardRegion === glift.enums.boardRegions.AUTO) {
-      boardRegion = glift.bridge.getCropFromMovetree(mt);
-    }
-    var cropping = glift.displays.cropbox.getFromRegion(
-        boardRegion, mt.getIntersections());
-
-    // Map of ptString to move.
-    var stoneMap = glift.bridge.flattener._stoneMap(goban);
-    var applied = glift.rules.treepath.applyNextMoves(mt, goban, nmtp);
-    mt = applied.movetree;
-
-    for (var i = 0; i < applied.stones.length; i++) {
-      var stone = applied.stones[i];
-      var mv = { point: stone.point, color: stone.color };
-      var ptstr = mv.point.toString();
-      if (!stoneMap[ptstr]) {
-        stoneMap[ptstr] = mv;
-      }
-    }
-
-    var mksOut = glift.bridge.flattener._markMap(mt);
-    var labels = mksOut.labels; // map of ptstr to label str
-    var marks = mksOut.marks; // map of ptstr to symbol int
-
-    var collisions = glift.bridge.flattener._labelForCollisions(
-        applied.stones, marks, labels, startingMoveNum);
-
-    var sv = glift.enums.showVariations
-    if (showVars === sv.ALWAYS ||
-        (showVars === sv.MORE_THAN_ONE && mt.node().numChildren() > 1)) {
-      for (var i = 0; i < mt.node().numChildren(); i++) {
-        var move = mt.node().getChild(i).properties().getMove();
-        if (move && move.point) {
-          var pt = move.point;
-          var ptStr = pt.toString();
-          if (labels[ptStr] === undefined) {
-            labels[ptStr] = "" + (i + 1);
-          }
-          marks[ptStr] = s.NEXTVARIATION;
-        }
-      }
-    }
-
-    // Finally! Generate the symbols array.
-    var symbolPairs = glift.bridge.flattener._generateSymbolArr(
-        cropping, stoneMap, marks, mt.getIntersections());
-
-    var comment = mt.properties().getComment() || '';
-    return new glift.bridge._Flattened(
-        symbolPairs, labels, collisions, comment, boardRegion, cropping);
-  },
-
-  /**
-   * Get map from pt string to stone {point: <point>, color: <color>}.
-   */
-  _stoneMap: function(goban) {
-    var out = {};
-    // Array of {color: <color>, point: <point>}
-    var gobanStones = goban.getAllPlacedStones();
-    for (var i = 0; i < gobanStones.length; i++) {
-      var stone = gobanStones[i];
-      out[stone.point.toString()] = stone;
-    }
-    return out;
-  },
-
-  /**
-   * Get the relevant marks.  Returns an object containing two fields: marks,
-   * which is a map from ptString to Symbol ID. and labels, which is a map
-   * from ptString to text label.
-   *
-   * If there are two marks on the same intersection specified, the behavior is
-   * undefined.  Either mark might succeed in being placed.
-   *
-   * Example return value:
-   * {
-   *  marks: {
-   *    "12.5": 13
-   *    "12.3": 23
-   *  },
-   *  labels: {
-   *    "12,3": "A"
-   *    "12,4": "B"
-   *  }
-   * }
-   */
-  _markMap: function(movetree) {
-    var out = { marks: {}, labels: {} };
-    var s = glift.bridge.flattener.symbols;
-    var propertiesToSymbols = {
-      CR: s.CIRCLE,
-      LB: s.TEXTLABEL,
-      MA: s.XMARK,
-      SQ: s.SQUARE,
-      TR: s.TRIANGLE
-    };
-    for (var prop in propertiesToSymbols) {
-      var symbol = propertiesToSymbols[prop];
-      if (movetree.properties().contains(prop)) {
-        var data = movetree.properties().getAllValues(prop);
-        for (var i = 0; i < data.length; i++) {
-          if (prop === glift.sgf.allProperties.LB) {
-            var lblPt = glift.sgf.convertFromLabelData(data[i]);
-            var key = lblPt.point.toString();
-            out.marks[key] = symbol;
-            out.labels[key] = lblPt.value;
-          } else {
-            var pt = glift.util.pointFromSgfCoord(data[i]);
-            out.marks[pt.toString()] = symbol;
-          }
-        }
-      }
-    }
-    return out;
-  },
-
-  /**
-   * Create or apply labels to identify collisions that occurred during apply
-   *
-   * stones: stones
-   * marks: map from ptstring to Mark symbol int.
-   *    see -- glift.bridg.flattener.symbols.
-   * labels: map from ptstring to label string.
-   * startingMoveNum: The number at which to start creating labels
-   *
-   * returns: an array of collision objects:
-   *
-   *  {
-   *    color: <color of the move to be played>,
-   *    mvnum: <move number>,
-   *    label: <label>
-   *  }
-   *
-   * This data is meant to be used like the following:
-   *    '<color> <mvnum> at <label>'
-   * as in this example:
-   *    'Black 13 at 2'
-   *
-   * Sadly, this has has the side effect of altering the marks / labels maps.
-   */
-  _labelForCollisions: function(stones, marks, labels, startingMoveNum) {
-    if (!stones || stones.length === 0) {
-      return []; // Don't perform relabeling if no stones are found.
-    }
-    // Collision labels, for when stone.collision = null.
-    var extraLabs = 'abcdefghijklmnopqrstuvwxyz';
-    var labsIdx = 0;
-    var symb = glift.bridge.flattener.symbols;
-    var collisions = []; // {color: <color>, num: <number>, label: <lbl>}
-
-    // Remove any number labels currently existing in the marks map
-    var digitRegex = /[0-9]/;
-    for (var ptstr in labels) {
-      if (digitRegex.test(labels[ptstr])) {
-        delete labels[ptstr];
-        delete marks[ptstr];
-      }
-    }
-
-    for (var i = 0; i < stones.length; i++) {
-      var stone = stones[i];
-      var ptStr = stone.point.toString();
-      if (stone.hasOwnProperty('collision')) {
-        var col = {color: stone.color, mvnum: (i + startingMoveNum) + ''};
-        if (labels[ptStr]) { // First see if there are any available labels.
-          col.label = labels[ptStr];
-        } else if (glift.util.typeOf(stone.collision) === 'number') {
-          col.label = (stone.collision + startingMoveNum) + ''; // label is idx.
-        } else { // should be null
-          var lbl = extraLabs.charAt(labsIdx);
-          labsIdx++;
-          col.label = lbl;
-          marks[ptStr] = symb.TEXTLABEL;
-          labels[ptStr] = lbl;
-        }
-        collisions.push(col);
-      } else {
-        // Create new labels for our move number (should this be flag
-        // controlled?).
-        marks[ptStr] = symb.TEXTLABEL; // Override labels.
-        labels[ptStr] = (i + startingMoveNum) + ''
-      }
-    }
-    return collisions;
-  },
-
-  /**
-   * Returns:
-   *  [
-   *    [
-   *      {base: 3, mark: 20},
-   *      ...
-   *    ],
-   *    [...],
-   *    ...
-   * ]
-   *
-   */
-  _generateSymbolArr: function(cropping, stoneMap, marks, ints) {
-    var cb = cropping.cbox();
-    var point = glift.util.point;
-    var symbols = [];
-    for (var y = cb.top(); y <= cb.bottom(); y++) {
-      var row = [];
-      for (var x = cb.left(); x <= cb.right(); x++) {
-        var pt = point(x, y);
-        var ptStr = pt.toString();
-        var stone = stoneMap[ptStr];
-        var mark = marks[ptStr];
-        row.push(this._getSymbolPair(pt, stone, mark, ints));
-      }
-      symbols.push(row);
-    }
-    return symbols;
-  },
-
-  /**
-   * pt: Point of interest.
-   * stone: {point: <point>, color: <color>} or undefined,
-   */
-  _getSymbolPair: function(pt, stone, mark, intersections) {
-    var s = glift.bridge.flattener.symbols;
-    var BLACK = glift.enums.states.BLACK;
-    var WHITE = glift.enums.states.WHITE;
-    var EMPTY = glift.enums.states.EMPTY;
-    var base = undefined;
-    var outMark = s.EMPTY;
-    if (mark !== undefined) {
-      var color = EMPTY
-      if (stone !== undefined) { color = stone.color; }
-      switch(mark) {
-        case s.TRIANGLE: outMark = s.TRIANGLE; break;
-        case s.SQUARE: outMark = s.SQUARE; break;
-        case s.CIRCLE: outMark = s.CIRCLE; break;
-        case s.XMARK: outMark = s.XMARK; break;
-        case s.LASTMOVE: outMark = s.LASTMOVE; break;
-        case s.TEXTLABEL:
-          outMark = s.TEXTLABEL;
-          if (color === EMPTY) {
-            base = s.EMPTY;
-          }
-          break;
-        case s.NEXTVARIATION:
-          outMark = s.NEXTVARIATION;
-          if (color === EMPTY) {
-            base = s.EMPTY;
-          }
-          break;
-      }
-    }
-    var ints = intersections - 1;
-    if (base === s.EMPTY) {
-      // Do nothing.
-    } else if (stone !== undefined && stone.color === BLACK) {
-      base = s.BSTONE;
-    } else if (stone !== undefined && stone.color === WHITE) {
-      base = s.WSTONE;
-    } else if (pt.x() === 0 && pt.y() === 0) {
-      base = s.TL_CORNER;
-    } else if (pt.x() === 0 && pt.y() === ints) {
-      base = s.BL_CORNER;
-    } else if (pt.x() === ints && pt.y() === 0) {
-      base = s.TR_CORNER;
-    } else if (pt.x() === ints && pt.y() === ints) {
-      base = s.BR_CORNER;
-    } else if (pt.y() === 0) {
-      base = s.TOP_EDGE;
-    } else if (pt.x() === 0) {
-      base = s.LEFT_EDGE;
-    } else if (pt.x() === ints) {
-      base = s.RIGHT_EDGE;
-    } else if (pt.y() === ints) {
-      base = s.BOT_EDGE;
-    } else if (this._isStarpoint(pt, intersections)) {
-      base = s.CENTER_STARPOINT;
-    } else {
-      base = s.CENTER;
-    }
-    return {base: base, mark: outMark};
-  },
-
-  _starPointSets: {
-    9 : [{2:true, 6:true}, {4:true}],
-    13 : [{3:true, 9:true}, {6:true}],
-    19 : [{3:true, 9:true, 15:true}]
-  },
-
-  /**
-   * Determine whether a pt is a starpoint.  Intersections is 1-indexed, but the
-   * pt is 0-indexed.
-   */
-  _isStarpoint: function(pt, intersections) {
-    var starPointSets = glift.bridge.flattener._starPointSets[intersections];
-    for (var i = 0; i < starPointSets.length; i++) {
-      var set = starPointSets[i];
-      if (set[pt.x()] && set[pt.y()]) {
-        return true;
-      }
-    }
-    return false;
-  }
-};
-
-/**
- * Data used to populate either a display or diagram.
- */
-glift.bridge._Flattened = function(
-    symbolPairs, lblData, coll, comment, boardRegion, cropping) {
-  /**
-   * Dense two level array designating what the base layer of the board looks like.
-   * Example:
-   *  [
-   *    [
-   *      {mark: EMPTY, base: TR_CORNER},
-   *      {mark: EMPTY, base: BSTONE},
-   *      {mark: TRIANGLE, base: WSTONE},
-   *      ...
-   *    ], [
-   *      ...
-   *    ]
-   *    ...
-   *  ]
-   */
-  this.symbolPairs = symbolPairs;
-
-  /**
-   * Map from ptstring to label data.
-   * Example:
-   *  {
-   *    "12,3": "A",
-   *    ...
-   *  }
-   */
-  this.labelData = lblData;
-
-  /**
-   * Array of collisions objects.  In other words, we record stones that
-   * couldn't be placed on the board.
-   *
-   * Each object in the collisions array looks like:
-   * {color: <color>, mvnum: <number>, label: <label>}
-   */
-  this.collisions = coll;
-
-  /** Comment string. */
-  this.comment = comment;
-
-  /** The board region this flattened representation is meant to display. */
-  this.boardRegion = boardRegion;
-
-  /** The cropping object. */
-  // TODO(kashomon): Describe this.
-  this.cropping = cropping;
-};
-
-glift.bridge._Flattened.prototype = {
-  /**
-   * Provide a SGF Point (intersection-point) and retrieve the relevant symbol.
-   * Note, this uses the SGF indexing as opposed to the indexing in the array,
-   * so if the cropping is provided
-   */
-  getSymbolPairIntPt: function(pt) {
-    var row = this.symbolPairs[pt.y() - this.cropping.cbox().top()];
-    if (row === undefined) { return row; }
-    return row[pt.x() - this.cropping.cbox().left()];
-  },
-
-  /**
-   * Get a symbol from a the symbol pair table.
-   */
-  getSymbolPair: function(pt) {
-    var row = this.symbolPairs[pt.y()];
-    if (row === undefined) { return row; }
-    return row[pt.x()];
-  },
-
-  /**
-   * Get a Int pt Label Point, using an integer point.
-   */
-  getLabelIntPt: function(pt) {
-    return this.labelData[pt.toString()];
-  },
-
-  /*
-   * Get a Int pt Label Point
-   */
-  getLabel: function(pt) {
-    return this.getLabelIntPt(this.ptToIntpt(pt));
-  },
-
-  /**
-   * Turn a 0 indexed pt to an intersection point.
-   */
-  ptToIntpt: function(pt) {
-    return glift.util.point(
-        pt.x() + this.cropping.cbox().left(),
-        pt.y() + this.cropping.cbox().top());
-  }
-};
 /*
  * Intersection Data is the precise set of information necessary to display the
  * Go Board, which is to say, it is the set of stones and display information.
@@ -9638,6 +9148,628 @@ glift.bridge.intersections = {
     }
     return outMarks;
   }
+};
+/**
+ * Helps flatten a go board into a diagram definition.
+ */
+glift.flattener = {
+  /**
+   * Flatten the combination of movetree, goban, cropping, and treepath into an
+   * array (really a 2D array) of symbols, (a Flattened object).
+   *
+   * Some notes about the parameters:
+   *
+   * Required parameters:
+   *  - The movetree is used for extracting:
+   *    -> The marks
+   *    -> The next moves
+   *    -> The previous move
+   *    -> subsequent stones, if a nextMovesTreepath is present.  These are
+   *    given labels.
+   *
+   * Optional parameters:
+   *  - goban: used for extracting all the inital stones.
+   *  - boardRegion: indicates what region to crop on.
+   *  - nextMovesTreepath.  Defaults to [].  This is typically only used for
+   *    printed diagrams.
+   *  - startingMoveNum.  Optionally override the move number. Usually used for
+   *    variations.
+   */
+  flatten: function(movetreeInitial, options) {
+    // create a new ref to avoid changing original tree ref.
+    var mt = movetreeInitial.newTreeRef();
+    options = options || {};
+
+    // Use the provided goban, or reclaculate it.  This is somewhat inefficient,
+    // so it's recommended that the goban be provided.
+    var goban = options.goban || glift.rules.goban.getFromMoveTree(
+        mt.getTreeFromRoot(), mt.treepathToHere()).goban;
+    var boardRegion =
+        options.boardRegion || glift.enums.boardRegions.ALL;
+    var showVars =
+        options.showNextVariationsType  || glift.enums.showVariations.NEVER;
+    var nmtp = options.nextMovesTreepath || [];
+    if (glift.util.typeOf(nmtp) === 'string') {
+      nmtp = glift.rules.treepath.parsePath(nmtp);
+    }
+    var startingMoveNum = options.startingMoveNum || 1;
+
+    // Calculate the board region.
+    if (boardRegion === glift.enums.boardRegions.AUTO) {
+      boardRegion = glift.bridge.getCropFromMovetree(mt);
+    }
+    var cropping = glift.displays.cropbox.getFromRegion(
+        boardRegion, mt.getIntersections());
+
+    // Map of ptString to move.
+    var applied = glift.rules.treepath.applyNextMoves(mt, goban, nmtp);
+    // Map of ptString to stone obj.
+    var stoneMap = glift.flattener._stoneMap(goban, applied.stones);
+
+    // Replace the movetree reference with the new position
+    mt = applied.movetree;
+
+    // Get the marks at the current position
+    var mksOut = glift.flattener._markMap(mt);
+    var labels = mksOut.labels; // map of ptstr to label str
+    var marks = mksOut.marks; // map of ptstr to symbol
+
+    // Optionally update the labels with labels used to indicate variations.
+    var sv = glift.enums.showVariations
+    if (showVars === sv.ALWAYS || (
+        showVars === sv.MORE_THAN_ONE && mt.node().numChildren() > 1)) {
+      glift.flattener._updateLabelsWithVariations(mt, marks, labels);
+    }
+
+    // Calculate the collision stones and update the marks / labels maps if
+    // necessary.
+    var collisions = glift.flattener._createStoneLabels(
+        applied.stones, marks, labels, startingMoveNum);
+
+    // Finally! Generate the intersections double-array.
+    var board = glift.flattener.board.create(
+        cropping.cbox(), stoneMap, marks, labels, mt.getIntersections());
+
+    var comment = mt.properties().getComment() || '';
+    return new glift.flattener.Flattened(board, collisions, comment, boardRegion);
+  },
+
+  /**
+   * Get map from pt string to stone {point: <point>, color: <color>}.
+   * goban: a glift.rules.goban instance.
+   * nextStones: array of stone objects -- {point: <pt>, color: <color>}
+   *    that are a result of applying a next-moves-treepath.
+   */
+  _stoneMap: function(goban, nextStones) {
+    var out = {};
+    // Array of {color: <color>, point: <point>}
+    var gobanStones = goban.getAllPlacedStones();
+    for (var i = 0; i < gobanStones.length; i++) {
+      var stone = gobanStones[i];
+      out[stone.point.toString()] = stone;
+    }
+
+    for (var i = 0; i < nextStones.length; i++) {
+      var stone = nextStones[i];
+      var mv = { point: stone.point, color: stone.color };
+      var ptstr = mv.point.toString();
+      if (!out[ptstr]) {
+        out[ptstr] = mv;
+      }
+    }
+    return out;
+  },
+
+  /**
+   * Get the relevant marks.  Returns an object containing two fields: marks,
+   * which is a map from ptString to Symbol ID. and labels, which is a map
+   * from ptString to text label.
+   *
+   * If there are two marks on the same intersection specified, the behavior is
+   * undefined.  Either mark might succeed in being placed.
+   *
+   * Example return value:
+   * {
+   *  marks: {
+   *    "12.5": 13
+   *    "12.3": 23
+   *  },
+   *  labels: {
+   *    "12,3": "A"
+   *    "12,4": "B"
+   *  }
+   * }
+   */
+  _markMap: function(movetree) {
+    var out = { marks: {}, labels: {} };
+    var symbols = glift.flattener.symbols;
+    var propertiesToSymbols = {
+      CR: symbols.CIRCLE,
+      LB: symbols.TEXTLABEL,
+      MA: symbols.XMARK,
+      SQ: symbols.SQUARE,
+      TR: symbols.TRIANGLE
+    };
+    for (var prop in propertiesToSymbols) {
+      var symbol = propertiesToSymbols[prop];
+      if (movetree.properties().contains(prop)) {
+        var data = movetree.properties().getAllValues(prop);
+        for (var i = 0; i < data.length; i++) {
+          if (prop === glift.sgf.allProperties.LB) {
+            var lblPt = glift.sgf.convertFromLabelData(data[i]);
+            var key = lblPt.point.toString();
+            out.marks[key] = symbol;
+            out.labels[key] = lblPt.value;
+          } else {
+            var pt = glift.util.pointFromSgfCoord(data[i]);
+            out.marks[pt.toString()] = symbol;
+          }
+        }
+      }
+    }
+    return out;
+  },
+
+  /**
+   * Create or apply labels to identify collisions that occurred during apply
+   *
+   * stones: stones
+   * marks: map from ptstring to Mark symbol int.
+   *    see -- glift.bridg.flattener.symbols.
+   * labels: map from ptstring to label string.
+   * startingMoveNum: The number at which to start creating labels
+   *
+   * returns: an array of collision objects:
+   *
+   *  {
+   *    color: <color of the move to be played>,
+   *    mvnum: <move number>,
+   *    label: <label>
+   *  }
+   *
+   * This data is meant to be used like the following:
+   *    '<color> <mvnum> at <label>'
+   * as in this example:
+   *    'Black 13 at 2'
+   *
+   * Sadly, this has has the side effect of altering the marks / labels maps.
+   */
+  // TODO(kashomon): Guard this with a autoLabelMoves flag.
+  _createStoneLabels: function(stones, marks, labels, startingMoveNum) {
+    if (!stones || stones.length === 0) {
+      return []; // Don't perform relabeling if no stones are found.
+    }
+    // Collision labels, for when stone.collision = null.
+    var extraLabs = 'abcdefghijklmnopqrstuvwxyz';
+    var labsIdx = 0;
+    var symb = glift.flattener.symbols;
+    var collisions = []; // {color: <color>, num: <number>, label: <lbl>}
+
+    // Remove any number labels currently existing in the marks map.  This
+    // method also numbers stones.
+    var digitRegex = /[0-9]/;
+    for (var ptstr in labels) {
+      if (digitRegex.test(labels[ptstr])) {
+        delete labels[ptstr];
+        delete marks[ptstr];
+      }
+    }
+
+    // Create labels for each stone in the 'next-stones'.
+    for (var i = 0; i < stones.length; i++) {
+      var stone = stones[i];
+      var ptStr = stone.point.toString();
+
+      // This is a collision stone. Perform collision labeling.
+      if (stone.hasOwnProperty('collision')) {
+        var col = {
+          color: stone.color,
+          mvnum: (i + startingMoveNum) + '',
+          label: undefined
+        };
+        if (labels[ptStr]) { // First see if there are any available labels.
+          col.label = labels[ptStr];
+        } else if (glift.util.typeOf(stone.collision) === 'number') {
+          col.label = (stone.collision + startingMoveNum) + ''; // label is idx.
+        } else { // should be null
+          var lbl = extraLabs.charAt(labsIdx);
+          labsIdx++;
+          col.label = lbl;
+          marks[ptStr] = symb.TEXTLABEL;
+          labels[ptStr] = lbl;
+        }
+        collisions.push(col);
+
+      // This is not a collision stone. Perform standard move-labeling.
+      } else {
+        // Create new labels for our move number.
+        marks[ptStr] = symb.TEXTLABEL; // Override labels.
+        labels[ptStr] = (i + startingMoveNum) + ''
+      }
+    }
+    return collisions;
+  },
+
+  /**
+   * Update the labels with variations numbers. This is an optional step and
+   * usually isn't done for diagrams-for-print.
+   */
+  _updateLabelsWithVariations: function(mt, marks, labels) {
+    for (var i = 0; i < mt.node().numChildren(); i++) {
+      var move = mt.node().getChild(i).properties().getMove();
+      if (move && move.point) {
+        var pt = move.point;
+        var ptStr = pt.toString();
+        if (labels[ptStr] === undefined) {
+          labels[ptStr] = '' + (i + 1);
+        }
+        marks[ptStr] = glift.flattener.symbols.NEXTVARIATION;
+      }
+    }
+  }
+};
+glift.flattener.board = {
+  /**
+   * Constructs a board object: a 2D array of intersections.
+   *
+   * cbox: a bounding box from a crop box.
+   * stoneMap: map from pt-string to stone {point: <pt>, color: <color>}
+   * markMap: map from pt-string to mark symbol (flattener.symbols)
+   * labelMap: map from pt-string to label string
+   * ints: max intersections of the board (typically 9, 13, or 19)
+   */
+  create: function(cbox, stoneMap, markMap, labelMap, ints) {
+    var point = glift.util.point;
+    var board = [];
+    for (var y = cbox.top(); y <= cbox.bottom(); y++) {
+      var row = [];
+      for (var x = cbox.left(); x <= cbox.right(); x++) {
+        var pt = point(x, y);
+        var ptStr = pt.toString();
+        var stone = stoneMap[ptStr];
+        var stoneColor = stone ? stone.color : undefined;
+        var mark = markMap[ptStr];
+        var label = labelMap[ptStr]
+        row.push(glift.flattener.intersection.create(
+            pt, stoneColor, mark, label, ints));
+      }
+      board.push(row);
+    }
+    return new glift.flattener._Board(board, cbox);
+  }
+};
+
+/**
+ * Board object.  Meant to be created with the static constuctor method 'create'.
+ */
+glift.flattener._Board = function(boardArray, cbox) {
+  /** 2D Array of intersections. */
+  this._boardArray = boardArray;
+
+  /** Bounding box for the crop box. */
+  this._cbox = cbox;
+};
+
+glift.flattener._Board.prototype = {
+  /**
+   * Provide a SGF Point (intersection-point) and retrieve the relevant
+   * intersection.  Note, this uses the board indexing as opposed to the indexing
+   * in the array.
+   */
+  getIntBoardIdx: function(pt) {
+    var row = this._boardArray[pt.y() - this._cbox.top()];
+    if (row === undefined) { return row; }
+    return row[pt.x() - this._cbox.left()];
+  },
+
+  /**
+   * Get an intersection from a the intersection table. Uses the absolute array
+   * positioning. Returns undefined if the pt doesn't exist on the board.
+   */
+  getInt: function(pt) {
+    var row = this.boardArray[pt.y()];
+    if (row === undefined) { return row; }
+    return row[pt.x()];
+  },
+
+  /** Turns a 0 indexed pt to a point that's board-indexed. */
+  ptToBoardPt: function(pt) {
+    return glift.util.point(
+        pt.x() + this._cbox.left(),
+        pt.y() + this._cbox.top());
+  },
+
+  /** Returns the board array of intersections. */
+  intersections: function() {
+    return this._boardArray;
+  }
+};
+/**
+ * Data used to populate either a display or diagram.
+ */
+glift.flattener.Flattened = function(
+    board, collisions, comment, boardRegion, cropping) {
+  /**
+   * Board wrapper. Essentially a double array of intersection objects.
+   */
+  this._board = board;
+
+  /**
+   * Array of collisions objects.  In other words, we record stones that
+   * couldn't be placed on the board.
+   *
+   * Each object in the collisions array looks like:
+   * {color: <color>, mvnum: <number>, label: <label>}
+   */
+  this._collisions = collisions;
+
+  /** Comment string. */
+  this._comment = comment;
+
+  /** The board region this flattened representation is meant to display. */
+  this._boardRegion = boardRegion;
+
+  /**
+   * The cropping object. Probably shouldn't be accessed directly.
+   */
+  this._cropping = cropping;
+};
+
+glift.flattener.Flattened.prototype = {
+  /** Returns the board wrapper. */
+  board: function() { return this._board; },
+
+  /** Returns the comment. */
+  comment: function() { return this._comment; },
+
+  /** Returns the collisions. */
+  collisions: function() { return this._collisions; }
+};
+glift.flattener.intersection = {
+
+  /**
+   * Creates an intersection obj.
+   *
+   * pt: A glift point. 0-indexed and bounded by the number of intersections.
+   *    Thus, typically between 0 and 18. Note, the zero for this point is the
+   *    top-left rather than the more traditional bottom-right, as it is for
+   *    kifus.
+   * stoneColor: A stone state. Member of glift.enums.states.
+   * mark: Mark element from glift.flattener.symbols.
+   * textLabel: text label for the stone.
+   * maxInts: The maximum number of intersections on the board.
+   */
+  create: function(pt, stoneColor, mark, textLabel, maxInts) {
+    var sym = glift.flattener.symbols;
+    var intsect = new glift.flattener._Intersection(pt);
+
+    if (pt.x() < 0 || pt.y() < 0 ||
+        pt.x() >= maxInts || pt.y() >= maxInts) {
+      throw new Error('Pt (' + pt.x() + ',' + pt.y() + ')' + ' is out of bounds.');
+    }
+
+    var intz = maxInts - 1;
+    var baseSymb = sym.EMPTY;
+    if (pt.x() === 0 && pt.y() === 0) {
+      baseSymb = sym.TL_CORNER;
+    } else if (pt.x() === 0 && pt.y() === intz) {
+      baseSymb = sym.BL_CORNER;
+    } else if (pt.x() === intz && pt.y() === 0) {
+      baseSymb = sym.TR_CORNER;
+    } else if (pt.x() === intz && pt.y() === intz) {
+      baseSymb = sym.BR_CORNER;
+    } else if (pt.y() === 0) {
+      baseSymb = sym.TOP_EDGE;
+    } else if (pt.x() === 0) {
+      baseSymb = sym.LEFT_EDGE;
+    } else if (pt.x() === intz) {
+      baseSymb = sym.RIGHT_EDGE;
+    } else if (pt.y() === intz) {
+      baseSymb = sym.BOT_EDGE;
+    } else if (this._isStarpoint(pt, maxInts)) {
+      baseSymb = sym.CENTER_STARPOINT;
+    } else {
+      baseSymb = sym.CENTER;
+    }
+    intsect.base(baseSymb);
+
+    if (stoneColor === glift.enums.states.BLACK) {
+      intsect.stone(sym.BSTONE);
+    } else if (stoneColor === glift.enums.states.WHITE) {
+      intsect.stone(sym.WSTONE);
+    }
+
+    if (mark !== undefined) {
+      intsect.mark(mark);
+    }
+
+    if (textLabel !== undefined) {
+      intsect.textLabel(textLabel);
+    }
+
+    return intsect;
+  },
+
+  // TODO(kashomon): Should arbitrary sized go boards be supported?
+  _starPointSets: {
+    9 : [{4:true}],
+    13 : [{3:true, 9:true}, {6:true}],
+    19 : [{3:true, 9:true, 15:true}]
+  },
+
+  /**
+   * Determine whether a pt is a starpoint.  Intersections is 1-indexed, but the
+   * pt is 0-indexed.
+   */
+  _isStarpoint: function(pt, maxInts) {
+    var starPointSets = glift.flattener.intersection._starPointSets[maxInts];
+    for (var i = 0; i < starPointSets.length; i++) {
+      var set = starPointSets[i];
+      if (set[pt.x()] && set[pt.y()]) {
+        return true;
+      }
+    }
+    return false;
+  }
+};
+
+/**
+ * Represents a flattened intersection. Separated into 3 layers: 
+ *  - Base layer (intersection abels)
+ *  - Stone layer (black, white, or empty)
+ *  - Mark layer (shapes, text labels, etc.)
+ *
+ * Shouldn't be constructed directly outside of this file.
+ */
+glift.flattener._Intersection = function(pt) {
+  var EMPTY = glift.flattener.symbols.EMPTY;
+  this._pt = pt;
+  this._baseLayer = EMPTY;
+  this._stoneLayer = EMPTY;
+  this._markLayer = EMPTY;
+
+  // Optional text label. Should only be set when the mark layer symbol is some
+  // sort of text-symbol (e.g., TEXTLABEL, NEXTVARIATION)
+  this._textLabel = null;
+};
+
+glift.flattener._Intersection.prototype = {
+  _validateSymbol: function(s, layer) {
+    var sym = glift.flattener.symbols;
+    var layerMapping = {
+      base: {
+        EMPTY: true, TL_CORNER: true, TR_CORNER: true, BL_CORNER: true,
+        BR_CORNER: true, TOP_EDGE: true, BOT_EDGE: true, LEFT_EDGE: true,
+        RIGHT_EDGE: true, CENTER: true, CENTER_STARPOINT: true
+      },
+      stone: {
+        EMPTY: true, BSTONE: true, WSTONE: true
+      },
+      mark: {
+        EMPTY: true, TRIANGLE: true, SQUARE: true, CIRCLE: true, XMARK: true,
+        TEXTLABEL: true, LASTMOVE: true, NEXTVARIATION: true
+      }
+    };
+    if (!glift.flattener.symbolStr(s)) {
+      throw new Error('Symbol Val: ' + s + ' is not a defined symbol.');
+    }
+    var str = glift.flattener.symbolStr(s);
+    if (!layerMapping[layer][str]) {
+      throw new Error('Incorrect layer for: ' + str + ',' + s +
+          '. Layer was ' + layer);
+    }
+    return s;
+  },
+
+  /** Sets or gets the base layer. */
+  base: function(s) {
+    if (s !== undefined) {
+      this._baseLayer = this._validateSymbol(s, 'base');
+      return this;
+    } else {
+      return this._baseLayer;
+    }
+  },
+
+  /** Sets or gets the stone layer. */
+  stone: function(s) {
+    if (s !== undefined) {
+      this._stoneLayer = this._validateSymbol(s, 'stone');
+      return this;
+    } else {
+      return this._stoneLayer;
+    }
+  },
+
+  /** Sets or gets the mark layer. */
+  mark: function(s) {
+    if (s !== undefined) {
+      this._markLayer = this._validateSymbol(s, 'mark');
+      return this;
+    } else {
+      return this._markLayer;
+    }
+  },
+
+  /** Sets or gets the text label. */
+  textLabel: function(t) {
+    if (t != null) {
+      this._textLabel = t + '';
+      return this;
+    } else {
+      return this._textLabel;
+    }
+  },
+
+  /** Clear the text label */
+  clearTextLabel: function() {
+    this._textLabel = null;
+    return this;
+  }
+};
+/**
+ * Symbolic representation of a Go Board display.
+ */
+glift.flattener.symbols = {
+  // Empty location.  Useful for creating dense arrays.  Can be used for any of
+  // the three layers.
+  EMPTY: 1,
+
+  //
+  // Board symbols.  This comprises the first layer.
+  //
+  TL_CORNER: 2,
+  TR_CORNER: 3,
+  BL_CORNER: 4,
+  BR_CORNER: 5,
+  TOP_EDGE: 6,
+  BOT_EDGE: 7,
+  LEFT_EDGE: 8,
+  RIGHT_EDGE: 9,
+  CENTER: 10,
+  // Center + starpoint. Maybe should just be starpoint, but this is more clear.
+  CENTER_STARPOINT: 11,
+
+  //
+  // Stone symbols. This comprises the second layer.
+  //
+  BSTONE: 20,
+  WSTONE: 21,
+
+  //
+  // Labels and marks. This comprises the third layer.
+  //
+  TRIANGLE: 30,
+  SQUARE: 31,
+  CIRCLE: 32,
+  XMARK: 33,
+
+  // Text Labeling (numbers or letters)
+  TEXTLABEL: 34,
+
+  // Extra marks, used for display.  These are not specified by the SGF
+  // specification, but they are often useful.
+  LASTMOVE: 35,
+
+  // It's useful to destinguish between standard TEXTLABELs and NEXTVARIATION
+  // labels.
+  NEXTVARIATION: 36
+};
+
+/**
+ * Convert a symbol number to a symbol string.
+ */
+glift.flattener.symbolStr = function(num) {
+  if (glift.flattener._reverseSymbol === undefined) {
+    // Create and store a reverse mapping.
+    var reverse = {};
+    var symb = glift.flattener.symbols;
+    for (var key in glift.flattener.symbols) {
+      reverse[symb[key]] = key;
+    }
+    glift.flattener._reverseSymbol = reverse;
+  }
+  return glift.flattener._reverseSymbol[num];
 };
 /**
  * Widgets are toplevel objects, which combine display and

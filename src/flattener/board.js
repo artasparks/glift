@@ -26,7 +26,7 @@ glift.flattener.board = {
       board.push(row);
     }
     return new glift.flattener._Board(board, cbox);
-  },
+  }
 };
 
 /**

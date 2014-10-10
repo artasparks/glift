@@ -36,7 +36,7 @@ glift.bridge.intersectionsTest = function() {
   });
 
   test("Test FullBoardData", function() {
-    var initPosition = glift.rules.treepath.parseInitPosition(2),
+    var initPosition = glift.rules.treepath.parsePath(2),
         movetree = mtm.getFromSgf(sgfs.marky, initPosition),
         goban = glift.rules.goban.getFromMoveTree(movetree, initPosition).goban,
         data = glift.bridge.intersections.getFullBoardData(movetree, goban),
