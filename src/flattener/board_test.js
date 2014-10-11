@@ -60,6 +60,17 @@ glift.flattener.boardTest = function() {
     deepEqual(i.mark(), symb.SQUARE);
   });
 
+  test('Test get as numbers', function() {
+    var board = defaultCreate();
+    var i = board.getInt(0, 0);
+    deepEqual(i.base(), symb.TOP_EDGE);
+
+    i = board.getIntBoardPt(14,1);
+    deepEqual(i.base(), symb.CENTER);
+    deepEqual(i.stone(), symb.BSTONE);
+    deepEqual(i.mark(), symb.SQUARE);
+  });
+
   test('ptToBoardPt', function() {
     var board = defaultCreate();
     deepEqual(

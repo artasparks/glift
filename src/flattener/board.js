@@ -53,7 +53,13 @@ glift.flattener._Board.prototype = {
    * intersection.  Note, this uses the board indexing as opposed to the indexing
    * in the array.
    */
-  getIntBoardPt: function(pt) {
+  getIntBoardPt: function(ptOrX, optionalY) {
+    if (glift.util.typeOf(ptOrX) === 'number' &&
+        glift.util.typeOf(optionalY) === 'number') {
+      var pt = glift.util.point(ptOrX, optionalY);
+    } else {
+      var pt = ptOrX;
+    }
     return this.getInt(this.boardPtToPt(pt));
   },
 
@@ -61,7 +67,13 @@ glift.flattener._Board.prototype = {
    * Get an intersection from a the intersection table. Uses the absolute array
    * positioning. Returns undefined if the pt doesn't exist on the board.
    */
-  getInt: function(pt) {
+  getInt: function(ptOrX, optionalY) {
+    if (glift.util.typeOf(ptOrX) === 'number' &&
+        glift.util.typeOf(optionalY) === 'number') {
+      var pt = glift.util.point(ptOrX, optionalY);
+    } else {
+      var pt = ptOrX;
+    }
     var row = this._boardArray[pt.y()];
     if (row === undefined) { return row; }
     return row[pt.x()];
