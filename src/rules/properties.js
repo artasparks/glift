@@ -29,20 +29,19 @@ Properties.prototype = {
       glift.util.logz('Warning! The property [' + prop + ']' +
           ' is not valid and is not recognized in the SGF spec.');
     }
+    var valueType = glift.util.typeOf(value);
 
-    if (glift.util.typeOf(value) !== 'string' &&
-        glift.util.typeOf(value) !== 'array') {
+    if (valueType !== 'string' && valueType !== 'array') {
       // The value has to be either a string or an array.  Maybe we should throw
       // an error?
       value = [ value.toString().replace('\\]', ']') ];
-    } else if (glift.util.typeOf(value) === 'array') {
+    } else if (valueType === 'array') {
       // Force all array values to be of type string.
       for (var i = 0, len = value.length; i < len; i++) {
-        if (glift.util.typeOf(value[i]) !== 'string') {
-          value[i] = value[i].toString().replace('\\]', ']');
-        }
+        // Ensure properties are strings
+        value[i] = value[i].toString().replace('\\]', ']');
       }
-    } else if (glift.util.typeOf(value === 'string')) {
+    } else if (valueType === 'string') {
       value = [ value.replace('\\]', ']') ];
     } else {
       throw new Error('Unexpected type ' +

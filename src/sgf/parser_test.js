@@ -9,6 +9,12 @@ glift.sgf.newParserTest = function() {
     deepEqual(rp.getAllValues('GM'), ['1'], 'GM must be 1');
   });
 
+  test('Parse problem with lots of properties, escaped bracket', function() {
+    var mt = glift.sgf.parse(testdata.sgfs.marktest);
+    var props = mt.properties();
+    deepEqual(props.getOneValue('C'), '[Mark Test]');
+  });
+
   test('Parse pass', function() {
     var sgf = '(;GM[1]C[It begins];B[]C[pass])';
     var mt = glift.sgf.parse(sgf);
