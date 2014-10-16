@@ -143,7 +143,11 @@ glift.widgets.WidgetManager.prototype = {
     return processedObj;
   },
 
-  /** Get the current SGF Object from the sgfCollection. */
+  /**
+   * Get the current SGF Object from the sgfCollection. Note: If the item in the
+   * array is a string, then we try to figure out whether we're looking at an
+   * SGF or a URL and then we manufacture a simple sgf object.
+   */
   getSgfObj: function(index) {
     if (index < 0 || index > this.sgfCollection.length) {
       throw new Error("Index [" + index +  " ] out of bounds."
@@ -168,11 +172,33 @@ glift.widgets.WidgetManager.prototype = {
   /**
    * Get the SGF string.  Since these can be loaded with ajax, the data needs to
    * be returned with a callback.
+   *
+   * sgfObj: A standard SGF Object.
    */
   getSgfString: function(sgfObj, callback) {
-    if (sgfObj.url) {
+    var alias = sgfObj.alias;
+    var url = sgfObj.url;
+    if (alias && this.sgfCache[alias]) {
+      // First, check the cache for aliases.
+      sgfObj.sgfString = this.sgfCache[alias];
+      callback(sgfObj);
+    } else if (url && this.sgfCache[url]) {
+      // Next, check the cache for urls.
+      sgfObj.sgfString = this.sgfCache[url];
+      callback(sgfObj);
+    } else if (sgfObj.url) {
+      // Check if we need to do an AJAX request.
       this.loadSgfWithAjax(sgfObj.url, sgfObj, callback);
     } else {
+      // Lastly: Just send the SGF object back.  Typically, this will be because
+      // either:
+      //  1. The SGF has been aliased.
+      //  2. We want to start with a blank state (i.e., in the case of the
+      //     editor).
+      if (sgfObj.alias && sgfObj.sgfString) {
+        // Create a new cache entry.
+        this.sgfCache[sgfObj.alias] = sgfObj.sgfString;
+      }
       callback(sgfObj);
     }
   },
@@ -241,16 +267,11 @@ glift.widgets.WidgetManager.prototype = {
    * assume that the caller is trying to set some objects in the widget.
    */
   loadSgfWithAjax: function(url, sgfObj, callback) {
-    if (url && this.sgfCache[url]) {
-      sgfObj.sgfString = this.sgfCache[url];
+    glift.ajax.get(url, function(data) {
+      this.sgfCache[url] = data;
+      sgfObj.sgfString = data;
       callback(sgfObj);
-    } else {
-      glift.ajax.get(url, function(data) {
-        this.sgfCache[url] = data;
-        sgfObj.sgfString = data;
-        callback(sgfObj);
-      }.bind(this));
-    }
+    }.bind(this));
   },
 
   /**

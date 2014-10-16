@@ -25,7 +25,9 @@ glift.widgets.options = {
       }
     }
 
-    // One level deep objects;
+    // One level deep objects. We don't want to recursively copy keys over --
+    // Some options are specified as objects or arrays which need to be
+    // overwritten in full if they are specified.
     var templateKeys = [
         'sgfDefaults',
         'globalBookData',

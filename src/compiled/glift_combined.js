@@ -7021,20 +7021,19 @@ Properties.prototype = {
       glift.util.logz('Warning! The property [' + prop + ']' +
           ' is not valid and is not recognized in the SGF spec.');
     }
+    var valueType = glift.util.typeOf(value);
 
-    if (glift.util.typeOf(value) !== 'string' &&
-        glift.util.typeOf(value) !== 'array') {
+    if (valueType !== 'string' && valueType !== 'array') {
       // The value has to be either a string or an array.  Maybe we should throw
       // an error?
       value = [ value.toString().replace('\\]', ']') ];
-    } else if (glift.util.typeOf(value) === 'array') {
+    } else if (valueType === 'array') {
       // Force all array values to be of type string.
       for (var i = 0, len = value.length; i < len; i++) {
-        if (glift.util.typeOf(value[i]) !== 'string') {
-          value[i] = value[i].toString().replace('\\]', ']');
-        }
+        // Ensure properties are strings
+        value[i] = value[i].toString().replace('\\]', ']');
       }
-    } else if (glift.util.typeOf(value === 'string')) {
+    } else if (valueType === 'string') {
       value = [ value.replace('\\]', ']') ];
     } else {
       throw new Error('Unexpected type ' +
@@ -10041,7 +10040,11 @@ glift.widgets.WidgetManager.prototype = {
     return processedObj;
   },
 
-  /** Get the current SGF Object from the sgfCollection. */
+  /**
+   * Get the current SGF Object from the sgfCollection. Note: If the item in the
+   * array is a string, then we try to figure out whether we're looking at an
+   * SGF or a URL and then we manufacture a simple sgf object.
+   */
   getSgfObj: function(index) {
     if (index < 0 || index > this.sgfCollection.length) {
       throw new Error("Index [" + index +  " ] out of bounds."
@@ -10066,11 +10069,33 @@ glift.widgets.WidgetManager.prototype = {
   /**
    * Get the SGF string.  Since these can be loaded with ajax, the data needs to
    * be returned with a callback.
+   *
+   * sgfObj: A standard SGF Object.
    */
   getSgfString: function(sgfObj, callback) {
-    if (sgfObj.url) {
+    var alias = sgfObj.alias;
+    var url = sgfObj.url;
+    if (alias && this.sgfCache[alias]) {
+      // First, check the cache for aliases.
+      sgfObj.sgfString = this.sgfCache[alias];
+      callback(sgfObj);
+    } else if (url && this.sgfCache[url]) {
+      // Next, check the cache for urls.
+      sgfObj.sgfString = this.sgfCache[url];
+      callback(sgfObj);
+    } else if (sgfObj.url) {
+      // Check if we need to do an AJAX request.
       this.loadSgfWithAjax(sgfObj.url, sgfObj, callback);
     } else {
+      // Lastly: Just send the SGF object back.  Typically, this will be because
+      // either:
+      //  1. The SGF has been aliased.
+      //  2. We want to start with a blank state (i.e., in the case of the
+      //     editor).
+      if (sgfObj.alias && sgfObj.sgfString) {
+        // Create a new cache entry.
+        this.sgfCache[sgfObj.alias] = sgfObj.sgfString;
+      }
       callback(sgfObj);
     }
   },
@@ -10139,16 +10164,11 @@ glift.widgets.WidgetManager.prototype = {
    * assume that the caller is trying to set some objects in the widget.
    */
   loadSgfWithAjax: function(url, sgfObj, callback) {
-    if (url && this.sgfCache[url]) {
-      sgfObj.sgfString = this.sgfCache[url];
+    glift.ajax.get(url, function(data) {
+      this.sgfCache[url] = data;
+      sgfObj.sgfString = data;
       callback(sgfObj);
-    } else {
-      glift.ajax.get(url, function(data) {
-        this.sgfCache[url] = data;
-        sgfObj.sgfString = data;
-        callback(sgfObj);
-      }.bind(this));
-    }
+    }.bind(this));
   },
 
   /**
@@ -10566,7 +10586,9 @@ glift.widgets.options = {
       }
     }
 
-    // One level deep objects;
+    // One level deep objects. We don't want to recursively copy keys over --
+    // Some options are specified as objects or arrays which need to be
+    // overwritten in full if they are specified.
     var templateKeys = [
         'sgfDefaults',
         'globalBookData',
@@ -10667,16 +10689,30 @@ glift.widgets.options = {
  *
  * Generally, there are three classes of options:
  *
- * 1. Manager Options. Meta options hoving to do with managing widgets
+ * 1. Manager Options. Meta options hoving to do with managing widgets.  These
+ *    are generally at the top level.
  * 2. Display Options. Options having to do with how widgets are displayed
- * 3. Sgf Options. Options having to do specifically with each SGF.
+ * 3. SGF Options. Options having to do specifically with each SGF.
+ *
+ * Terminology:
+ *  - I use SGF through this file and in Glift to refer to a go-data-file.  This
+ *    is largely due to myopia early in the dev process. With the @api(1.X) in
+ *    full sway, it's not possible to change this distinction. Regardless, it is
+ *    possible that in the future, SGF strings and SGF URLs will grow to
+ *    encompass other types go-data, like the Tygem .gib filetypes.
+ *
+ * API annotations:
+ *  - @api(1.X) Indicates an option supported for the lifetime of the 1.X
+ *    release.
+ *  - @api(beta) Indicates an option currently slated to become a 1.X option.
+ *  - @api(experimental) Indicates an option in testing.
  */
 glift.widgets.options.baseOptions = {
   /**
    * The sgf parameter can be one of the following:
    *  - An SGF in literal string form.
    *  - A URL to an SGF.
-   *  - An SGF Object.
+   *  - An SGF Object, with parameters specified in SGF Defaults
    *
    * If sgf is specified as an object in can contain any of the options
    * specified in sgfDefaults.  In addition, the follow parameters may be
@@ -10709,10 +10745,18 @@ glift.widgets.options.baseOptions = {
     sgfString: undefined,
 
     /**
-     * URL (usually relative) to an SGF.
+     * URL (usually relative) to an SGF. Once loaded, the resulting data is
+     * cached to speed recall time.
      * @api(1.0)
      */
     url: undefined,
+
+    /**
+     * A name to by which an SGF String can be referred to later.  This is only
+     * necessary for SGF Strings -- URLs are their own aliases.
+     * @api(beta)
+     */
+    alias: undefined,
 
     /**
      * The default widget type. Specifies what type of widget to create.
@@ -10892,6 +10936,10 @@ glift.widgets.options.baseOptions = {
    * - An array of SGF objects.
    * - A URL (to load the collection asynchronously).  The received data must be
    *   a JSON array, containing a list of serialized SGF objects.
+   *
+   * Once an SGF Collection is loaded, Glift looks through each entry in the
+   * collection.  If an SGF URL is found, the SGF is loaded in the background
+   * and cached.
    * @api(1.0)
    */
   sgfCollection: undefined,
@@ -10911,6 +10959,7 @@ glift.widgets.options.baseOptions = {
 
   /**
    * Wether or not to load the the collection in the background via XHR requests.
+   * @api(beta)
    */
   loadCollectionInBackground: true,
 

@@ -3,16 +3,30 @@
  *
  * Generally, there are three classes of options:
  *
- * 1. Manager Options. Meta options hoving to do with managing widgets
+ * 1. Manager Options. Meta options hoving to do with managing widgets.  These
+ *    are generally at the top level.
  * 2. Display Options. Options having to do with how widgets are displayed
- * 3. Sgf Options. Options having to do specifically with each SGF.
+ * 3. SGF Options. Options having to do specifically with each SGF.
+ *
+ * Terminology:
+ *  - I use SGF through this file and in Glift to refer to a go-data-file.  This
+ *    is largely due to myopia early in the dev process. With the @api(1.X) in
+ *    full sway, it's not possible to change this distinction. Regardless, it is
+ *    possible that in the future, SGF strings and SGF URLs will grow to
+ *    encompass other types go-data, like the Tygem .gib filetypes.
+ *
+ * API annotations:
+ *  - @api(1.X) Indicates an option supported for the lifetime of the 1.X
+ *    release.
+ *  - @api(beta) Indicates an option currently slated to become a 1.X option.
+ *  - @api(experimental) Indicates an option in testing.
  */
 glift.widgets.options.baseOptions = {
   /**
    * The sgf parameter can be one of the following:
    *  - An SGF in literal string form.
    *  - A URL to an SGF.
-   *  - An SGF Object.
+   *  - An SGF Object, with parameters specified in SGF Defaults
    *
    * If sgf is specified as an object in can contain any of the options
    * specified in sgfDefaults.  In addition, the follow parameters may be
@@ -45,10 +59,18 @@ glift.widgets.options.baseOptions = {
     sgfString: undefined,
 
     /**
-     * URL (usually relative) to an SGF.
+     * URL (usually relative) to an SGF. Once loaded, the resulting data is
+     * cached to speed recall time.
      * @api(1.0)
      */
     url: undefined,
+
+    /**
+     * A name to by which an SGF String can be referred to later.  This is only
+     * necessary for SGF Strings -- URLs are their own aliases.
+     * @api(beta)
+     */
+    alias: undefined,
 
     /**
      * The default widget type. Specifies what type of widget to create.
@@ -228,6 +250,10 @@ glift.widgets.options.baseOptions = {
    * - An array of SGF objects.
    * - A URL (to load the collection asynchronously).  The received data must be
    *   a JSON array, containing a list of serialized SGF objects.
+   *
+   * Once an SGF Collection is loaded, Glift looks through each entry in the
+   * collection.  If an SGF URL is found, the SGF is loaded in the background
+   * and cached.
    * @api(1.0)
    */
   sgfCollection: undefined,
@@ -247,6 +273,7 @@ glift.widgets.options.baseOptions = {
 
   /**
    * Wether or not to load the the collection in the background via XHR requests.
+   * @api(beta)
    */
   loadCollectionInBackground: true,
 
