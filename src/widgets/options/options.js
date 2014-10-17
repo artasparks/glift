@@ -18,7 +18,8 @@ glift.widgets.options = {
         'sgfCollection',
         'initialIndex',
         'allowWrapAround',
-        'loadCollectionInBackground'];
+        'loadCollectionInBackground',
+        'metadata'];
     for (var i = 0; i < topLevelOptions.length; i++) {
       if (!options.hasOwnProperty(topLevelOptions[i])) {
         options[topLevelOptions[i]] = template[topLevelOptions[i]];
@@ -30,7 +31,6 @@ glift.widgets.options = {
     // overwritten in full if they are specified.
     var templateKeys = [
         'sgfDefaults',
-        'globalBookData',
         'display',
         'iconActions',
         'stoneActions'];
@@ -106,18 +106,9 @@ glift.widgets.options = {
       }
     }
 
-    var nestedData = {'bookData': true};
     for (var key in sgfDefaults) {
       if (!sgf[key] && sgfDefaults[key] !== undefined) {
         sgf[key] = sgfDefaults[key];
-      } else if (nestedData[key]) {
-        // The SGF must contain the key.
-        // TODO(kashomon): Remove this hack.
-        for (var subkey in sgfDefaults[key]) {
-          if (!sgf[key].hasOwnProperty(subkey)) {
-            sgf[key][subkey] = sgfDefaults[key][subkey];
-          }
-        }
       }
     }
     return sgf;

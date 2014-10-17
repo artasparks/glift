@@ -14,9 +14,11 @@
  * sgfDefaults: filled-in sgf default options.  See ./options/base_options.js
  * displayOptions: filled-in display options. See ./options/base_options.js
  * actions: combination of stone actions and icon actions.
+ * metadata: metadata about the this instance of glift.
  */
 glift.widgets.WidgetManager = function(divId, sgfCollection, sgfColIndex,
-      allowWrapAround, loadColInBack, sgfDefaults, displayOptions, actions) {
+      allowWrapAround, loadColInBack, sgfDefaults, displayOptions, actions,
+      metadata) {
   // Globally unique ID, at least across all glift instances in the current
   // page. In theory, the divId should be globally unique, but might as well be
   // absolutely sure.
@@ -71,6 +73,11 @@ glift.widgets.WidgetManager = function(divId, sgfCollection, sgfColIndex,
   // Cache of SGFs.  Useful for reducing the number AJAX calls.
   // Map from SGF name to String contents.
   this.sgfCache = {};
+
+  /**
+   * Global metadata for this manager instance.
+   */
+  this.metadata = metadata || undefined;
 };
 
 glift.widgets.WidgetManager.prototype = {

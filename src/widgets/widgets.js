@@ -37,7 +37,8 @@ glift.widgets = {
         options.loadCollectionInBackground,
         options.sgfDefaults,
         options.display,
-        actions);
+        actions,
+        options.metadata);
   }
 };
 

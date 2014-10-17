@@ -38,4 +38,21 @@ glift.widgets.optionsProcessingTest = function() {
     deepEqual(mgr.displayOptions.goBoardBackground,
         '../themes/assets/bambootile_warm.jpg');
   });
+
+  test('Test processing metadata ', function() {
+    var mgr = createNoDraw({
+      sgf: {},
+      divId: 'glift_display1',
+    })
+    deepEqual(mgr.metadata, undefined);
+    deepEqual(mgr.getCurrentSgfObj().metadata, undefined);
+
+    var mgr = createNoDraw({
+      sgf: { metadata: 'zed' },
+      divId: 'glift_display1',
+      metadata: { foo: 'bar'}
+    })
+    deepEqual(mgr.metadata, {foo: 'bar'});
+    deepEqual(mgr.getCurrentSgfObj().metadata, 'zed');
+  })
 };

@@ -159,13 +159,22 @@ glift.widgets.options.baseOptions = {
      * @api(1.0)
      */
     // TODO(kashomon): Make per widget type (mv num not necessary for problems?)
-    // TODO(kashomon): Enable game-info and settings when ready
+    // TODO(kashomon): Enable settings when ready
     statusBarIcons: [
       'game-info',
       'move-indicator',
       'fullscreen'
+      // TODO(kashomon): Add a settings icon.
       // 'settings-wrench'
     ],
+
+    /**
+     * Metadata for this SGF.  Like the global metadata, this option is not
+     * meant to be used directly by Glift but by other programs utilizing Glift
+     * and so the metadata has no expected structure.
+     * @api(experimental)
+     */
+    metadata: undefined,
 
     /**
      * For all correct, there are multiple correct answers that a user must get.
@@ -276,6 +285,14 @@ glift.widgets.options.baseOptions = {
    * @api(beta)
    */
   loadCollectionInBackground: true,
+
+  /**
+   * Global metadata for this set of options or SGF collection.  These is not
+   * meant to be used directly by Glift but by other programs utilizing Glift
+   * and so the metadata has no expected structure.
+   * @api(experimental)
+   */
+  metadata: undefined,
 
   /**
    * Miscellaneous options for display.
