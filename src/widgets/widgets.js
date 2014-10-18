@@ -32,6 +32,7 @@ glift.widgets = {
     return new glift.widgets.WidgetManager(
         options.divId,
         options.sgfCollection,
+        options.sgfMapping,
         options.initialIndex,
         options.allowWrapAround,
         options.loadCollectionInBackground,

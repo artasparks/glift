@@ -7,6 +7,7 @@
  *    manager, The param sgfCollection may either be an array or a string
  *    representing a URL.  If the sgfCollection is a string, then the JSON is
  *    requsted at draw-time and passed to this.sgfCollection.
+ * sgfCache: An initial setup for the SGF cache.
  * sgfColIndex: numbered index into the sgfCollection.
  * allowWrapAround: true or false.  Whether to allow wrap around in the SGF
  *    manager.
@@ -16,9 +17,9 @@
  * actions: combination of stone actions and icon actions.
  * metadata: metadata about the this instance of glift.
  */
-glift.widgets.WidgetManager = function(divId, sgfCollection, sgfColIndex,
-      allowWrapAround, loadColInBack, sgfDefaults, displayOptions, actions,
-      metadata) {
+glift.widgets.WidgetManager = function(divId, sgfCollection, sgfMapping,
+    sgfColIndex, allowWrapAround, loadColInBack, sgfDefaults, displayOptions,
+    actions, metadata) {
   // Globally unique ID, at least across all glift instances in the current
   // page. In theory, the divId should be globally unique, but might as well be
   // absolutely sure.
@@ -48,6 +49,12 @@ glift.widgets.WidgetManager = function(divId, sgfCollection, sgfColIndex,
   // string, then the JSON is requsted at draw-time and passed to
   // this.sgfCollection
   this.sgfCollection = [];
+
+  // Cache of SGFs.  Useful for reducing the number AJAX calls.
+  // Map from SGF name to String contents.
+  this.sgfCache = sgfMapping || {};
+
+  // URL for getting the entire SGF collection.
   this.sgfCollectionUrl = null;
 
   // Suppert either explicit arrays or URLs for fetching JSON.
@@ -69,10 +76,6 @@ glift.widgets.WidgetManager = function(divId, sgfCollection, sgfColIndex,
 
   // Defined on draw
   this.currentWidget = undefined;
-
-  // Cache of SGFs.  Useful for reducing the number AJAX calls.
-  // Map from SGF name to String contents.
-  this.sgfCache = {};
 
   /**
    * Global metadata for this manager instance.
@@ -182,6 +185,8 @@ glift.widgets.WidgetManager.prototype = {
    *
    * sgfObj: A standard SGF Object.
    */
+  // TODO(kashomon): Rename this or change it to actually return a string rather
+  // than an SGF object.
   getSgfString: function(sgfObj, callback) {
     var alias = sgfObj.alias;
     var url = sgfObj.url;
@@ -265,9 +270,6 @@ glift.widgets.WidgetManager.prototype = {
 
   /** Get the next SGF.  Requires that the list be non-empty. */
   prevSgf: function() { this._nextSgfInternal(-1); },
-
-  /** Clear out the SGF Cache. */
-  clearSgfCache: function() { this.sgfCache = {}; },
 
   /**
    * Load a urlOrObject with AJAX.  If the urlOrObject is an object, then we

@@ -68,7 +68,9 @@ glift.widgets.options.baseOptions = {
     /**
      * A name to by which an SGF String can be referred to later.  This is only
      * necessary for SGF Strings -- URLs are their own aliases.
-     * @api(beta)
+     *
+     * Note: If this feature is used, the SGF should be supplied in a SGF Mapping.
+     * @api(experimental)
      */
     alias: undefined,
 
@@ -268,6 +270,19 @@ glift.widgets.options.baseOptions = {
   sgfCollection: undefined,
 
   /**
+   * An experimental feature. Create an association between.  This defines the
+   * basis of the manager SGF cache.
+   *
+   * Expects the structure:
+   *  {
+   *    [name/alias]: <sgf string>
+   *  }
+   *
+   * @api(experimental)
+   */
+  sgfMapping: undefined,
+
+  /**
    * Index into the above collection.  This is mostly useful for remembering
    * someone's position in the sgf collection.
    * @api(1.0)
@@ -277,6 +292,7 @@ glift.widgets.options.baseOptions = {
   /**
    * If there are multiple SGFs in the SGF list, this flag indicates whether or
    * not to allow the user to go back to the beginnig (or conversely, the end).
+   * @api(experimental)
    */
   allowWrapAround: false,
 

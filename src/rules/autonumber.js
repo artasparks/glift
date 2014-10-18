@@ -1,9 +1,10 @@
 /**
  * Autonumber the shit out of the movetree.
  *
- * NOTE! This removes all numeric labels and replaces them with.
+ * NOTE! This removes all numeric labels and replaces them with the labels
+ * constructed here, but that's sort of the point.
  *
- * Modifies the current movtree
+ * Modifies the current movtree.
  */
 glift.rules.autonumber = function(movetree) {
   var digitregex = /\d+/;

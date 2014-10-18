@@ -16,6 +16,7 @@ glift.widgets.options = {
     var topLevelOptions = [
         'divId',
         'sgfCollection',
+        'sgfMapping',
         'initialIndex',
         'allowWrapAround',
         'loadCollectionInBackground',

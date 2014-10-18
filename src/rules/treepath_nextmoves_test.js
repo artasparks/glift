@@ -21,13 +21,8 @@ glift.rules.treepathNextmovesTest = function() {
   });
 
   test('Test simplecase', function() {
-    var mt = glift.rules.movetree.getInstance();
-    mt.properties().add('AW', 'aa');
-    mt.node().addChild();
-    mt.moveDown();
-    mt.properties().add('B', 'ab');
-    mt.moveDown();
-
+    var mt = glift.rules.movetree.getFromSgf(
+        '(;GM[1]AW[aa];B[ab];W[bbr])', [0]);
     var out = findNextMoves(mt);
     deepEqual(out.treepath, []);
     deepEqual(out.nextMoves, [0]);

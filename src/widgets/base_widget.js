@@ -11,7 +11,6 @@ glift.widgets.BaseWidget = function(
   this.actions = actions; // deeply nested -- not worth cloning.
   this.manager = manager;
 
-
   // These variables are initialized by draw
   this.controller = undefined;
   this.boardRegion = undefined;

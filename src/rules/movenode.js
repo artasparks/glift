@@ -60,10 +60,11 @@ glift.rules._MoveNode.prototype = {
    * movetree.
    */
   getChild: function(variationNum) {
-    if (variationNum === undefined) {
-      return this.children[0];
-    } else {
+    var variationNum = variationNum || 0;
+    if (this.children.length > 0) {
       return this.children[variationNum];
+    } else {
+      return null;
     }
   },
 

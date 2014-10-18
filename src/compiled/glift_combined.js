@@ -3,7 +3,7 @@
  *
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
- * @version 1.0.1
+ * @version 1.0.2
  * --------------------------------------
  */
 (function(w) {
@@ -22,7 +22,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '1.0.1',
+  version: '1.0.2',
 
   /** Indicates whether or not to store debug data. */
   // TODO(kashomon): Remove this hack.
@@ -9884,7 +9884,8 @@ glift.widgets = {
         options.loadCollectionInBackground,
         options.sgfDefaults,
         options.display,
-        actions);
+        actions,
+        options.metadata);
   }
 };
 
@@ -9911,9 +9912,11 @@ glift.create = glift.widgets.create;
  * sgfDefaults: filled-in sgf default options.  See ./options/base_options.js
  * displayOptions: filled-in display options. See ./options/base_options.js
  * actions: combination of stone actions and icon actions.
+ * metadata: metadata about the this instance of glift.
  */
 glift.widgets.WidgetManager = function(divId, sgfCollection, sgfColIndex,
-      allowWrapAround, loadColInBack, sgfDefaults, displayOptions, actions) {
+      allowWrapAround, loadColInBack, sgfDefaults, displayOptions, actions,
+      metadata) {
   // Globally unique ID, at least across all glift instances in the current
   // page. In theory, the divId should be globally unique, but might as well be
   // absolutely sure.
@@ -9968,6 +9971,11 @@ glift.widgets.WidgetManager = function(divId, sgfCollection, sgfColIndex,
   // Cache of SGFs.  Useful for reducing the number AJAX calls.
   // Map from SGF name to String contents.
   this.sgfCache = {};
+
+  /**
+   * Global metadata for this manager instance.
+   */
+  this.metadata = metadata || undefined;
 };
 
 glift.widgets.WidgetManager.prototype = {
@@ -10579,7 +10587,8 @@ glift.widgets.options = {
         'sgfCollection',
         'initialIndex',
         'allowWrapAround',
-        'loadCollectionInBackground'];
+        'loadCollectionInBackground',
+        'metadata'];
     for (var i = 0; i < topLevelOptions.length; i++) {
       if (!options.hasOwnProperty(topLevelOptions[i])) {
         options[topLevelOptions[i]] = template[topLevelOptions[i]];
@@ -10591,7 +10600,6 @@ glift.widgets.options = {
     // overwritten in full if they are specified.
     var templateKeys = [
         'sgfDefaults',
-        'globalBookData',
         'display',
         'iconActions',
         'stoneActions'];
@@ -10667,18 +10675,9 @@ glift.widgets.options = {
       }
     }
 
-    var nestedData = {'bookData': true};
     for (var key in sgfDefaults) {
       if (!sgf[key] && sgfDefaults[key] !== undefined) {
         sgf[key] = sgfDefaults[key];
-      } else if (nestedData[key]) {
-        // The SGF must contain the key.
-        // TODO(kashomon): Remove this hack.
-        for (var subkey in sgfDefaults[key]) {
-          if (!sgf[key].hasOwnProperty(subkey)) {
-            sgf[key][subkey] = sgfDefaults[key][subkey];
-          }
-        }
       }
     }
     return sgf;
@@ -10845,13 +10844,22 @@ glift.widgets.options.baseOptions = {
      * @api(1.0)
      */
     // TODO(kashomon): Make per widget type (mv num not necessary for problems?)
-    // TODO(kashomon): Enable game-info and settings when ready
+    // TODO(kashomon): Enable settings when ready
     statusBarIcons: [
       'game-info',
       'move-indicator',
       'fullscreen'
+      // TODO(kashomon): Add a settings icon.
       // 'settings-wrench'
     ],
+
+    /**
+     * Metadata for this SGF.  Like the global metadata, this option is not
+     * meant to be used directly by Glift but by other programs utilizing Glift
+     * and so the metadata has no expected structure.
+     * @api(experimental)
+     */
+    metadata: undefined,
 
     /**
      * For all correct, there are multiple correct answers that a user must get.
@@ -10962,6 +10970,14 @@ glift.widgets.options.baseOptions = {
    * @api(beta)
    */
   loadCollectionInBackground: true,
+
+  /**
+   * Global metadata for this set of options or SGF collection.  These is not
+   * meant to be used directly by Glift but by other programs utilizing Glift
+   * and so the metadata has no expected structure.
+   * @api(experimental)
+   */
+  metadata: undefined,
 
   /**
    * Miscellaneous options for display.

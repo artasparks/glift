@@ -54,5 +54,22 @@ glift.widgets.optionsProcessingTest = function() {
     })
     deepEqual(mgr.metadata, {foo: 'bar'});
     deepEqual(mgr.getCurrentSgfObj().metadata, 'zed');
+  });
+
+  test('Test processing SGF mapping', function() {
+    var testSgf = '(;GM[1]C[foo])';
+    var mgr = createNoDraw({
+      sgf: {
+        alias: 'zed'
+      },
+      divId: 'glift_display1',
+      sgfMapping: {
+        zed: testSgf
+      }
+    });
+    deepEqual(mgr.sgfCache['zed'], testSgf);
+    mgr.getSgfString(mgr.getSgfObj(0), function(obj) {
+      deepEqual(obj, testSgf);
+    });
   })
 };
