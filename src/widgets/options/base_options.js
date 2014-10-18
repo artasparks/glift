@@ -82,13 +82,13 @@ glift.widgets.options.baseOptions = {
 
     /**
      * Defines where to start on the go board. An empty string implies the very
-     * beginning. Rather than describe how you can detail the paths, here are
-     * some examples of ways to specify an initial position.
+     * beginning, which is equally equivalent to 0 or [0].
+     *
+     * Rather than describe how you can detail the paths, here are some examples
+     * of ways to specify an initial position.
      * 0         - Start at the 0th move (the root node)
-     * 1         - Start at the 1st move. This is often used in combination with
-     *             a black pass to specify that white should play in a
-     *             particular problem.
-     * 53        - Start at the 53rd move, taking the primary path
+     * 1         - Start at the 1st move.
+     * 53        - Start at the 53rd move, taking the primary (main-line) path
      * 2.3       - Start at the 3rd variation on move 2 (actually move 3)
      * 3         - Start at the 3rd move, going through all the top variations
      * 2.0       - Start at the 3rd move, going through all the top variations
