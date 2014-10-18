@@ -69,7 +69,7 @@ glift.widgets.optionsProcessingTest = function() {
     });
     deepEqual(mgr.sgfCache['zed'], testSgf);
     mgr.getSgfString(mgr.getSgfObj(0), function(obj) {
-      deepEqual(obj, testSgf);
+      deepEqual(obj.sgfString, testSgf);
     });
   })
 };
