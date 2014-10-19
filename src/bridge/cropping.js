@@ -3,33 +3,28 @@
  */
 glift.bridge.getCropFromMovetree = function(movetree) {
   var bbox = glift.displays.bbox.fromPts;
-  var point = glift.util.point;
+  var pt = glift.util.point;
   var boardRegions = glift.enums.boardRegions;
   // Intersections need to be 0 rather than 1 indexed for this method.
   var ints = movetree.getIntersections() - 1;
   var middle = Math.ceil(ints / 2);
 
-  // Quads is a map from BoardRegion to the points that the board region
-  // represents.
-  var quads = {};
-
-  // Tracker is a mapfrom
+  // Tracker is a map from quad-key to array of points.
   var tracker = {};
   var numstones = 0;
 
-  // TODO(kashomon): Reevaluate this later.  It's not clear to me if we should
-  // be cropping boards smaller than 19.  It usually looks pretty weird.
+  // It's not clear to me if we should be cropping boards smaller than 19.  It
+  // usually looks pretty weird, so hence this override.
   if (movetree.getIntersections() !== 19) {
-    return glift.enums.boardRegions.ALL;
+    return boardRegions.ALL;
   }
-  quads[boardRegions.TOP_LEFT] =
-      bbox(point(0, 0), point(middle, middle));
-  quads[boardRegions.TOP_RIGHT] =
-      bbox(point(middle, 0), point(ints, middle));
-  quads[boardRegions.BOTTOM_LEFT] =
-      bbox(point(0, middle), point(middle, ints));
-  quads[boardRegions.BOTTOM_RIGHT] =
-      bbox(point(middle, middle), point(ints, ints));
+
+  var quads = {};
+  quads[boardRegions.TOP_LEFT] = bbox(pt(0, 0), pt(middle, middle));
+  quads[boardRegions.TOP_RIGHT] = bbox(pt(middle, 0), pt(ints, middle));
+  quads[boardRegions.BOTTOM_LEFT] = bbox(pt(0, middle), pt(middle, ints));
+  quads[boardRegions.BOTTOM_RIGHT] = bbox(pt(middle, middle), pt(ints, ints));
+
   movetree.recurseFromRoot(function(mt) {
     var stones = mt.properties().getAllStones();
     for (var color in stones) {

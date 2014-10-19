@@ -1,5 +1,5 @@
 (function() {
-/***
+/**
  * The Environment contains:
  *  - The bounding box for the lines.
  *  - The bounding box for the whole board
@@ -8,36 +8,30 @@
  */
 glift.displays.environment = {
   /**
-   * Get the environment wrapper, passing in the display options.
+   * Gets the environment wrapper, passing in the display options. This is the
+   * preferred method.  It's expected that the proper display code will
    */
-  get: function(options) {
-    var point = glift.util.point;
-
-    // Calculate a new bounding box or use the bounding box that's passed in.
-    // For debugging reasons, we allow the user to provide a width and height
-    // override.
-    var bbox;
-    if (options.heightOverride && options.widthOverride) {
-      bbox = glift.displays.bbox.fromPts(
-          point(0,0), point(options.widthOverride, options.heightOverride));
-    } else if (options.boardBox) {
-      bbox = options.boardBox;
-    } else if (options.divId) {
-      bbox = glift.displays.bbox.fromDiv(options.divId);
-    } else {
-      throw new Error("No Bounding Box defined for display environment!")
+  get: function(divId, boardBox, options) {
+    if (!divId) {
+      throw new Error('No DivId Specified!')
     }
-    return new GuiEnvironment(options, bbox);
-  },
 
-  getInitialized: function(options) {
-    return glift.displays.environment.get(options).init();
+    // For speed and isolation purposes, it's preferred to define the boardBox
+    // rather than to calculate the h/w by inspecting the div here.
+    if (divId && !boardBox) {
+      boardBox = glift.displays.bbox.fromDiv(divId);
+    }
+
+    if (!boardBox) {
+      throw new Error('No Bounding Box defined for display environment!')
+    }
+    return new GuiEnvironment(divId, boardBox, options);
   }
 };
 
-var GuiEnvironment = function(options, bbox) {
+var GuiEnvironment = function(divId, bbox, options) {
+  this.divId = divId;
   this.bbox = bbox; // required
-  this.divId = options.divId || 'glift_display';
   this.divHeight = bbox.height();
   this.divWidth = bbox.width();
   this.boardRegion = options.boardRegion || glift.enums.boardRegions.ALL;
@@ -84,5 +78,4 @@ GuiEnvironment.prototype = {
     return this;
   }
 };
-
 })();

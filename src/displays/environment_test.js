@@ -5,17 +5,19 @@ glift.displays.environmentTest = function() {
       enums = glift.enums,
       env = glift.displays.environment,
       cropbox = displays.cropbox,
+      divId = 'zed',
+      pt = glift.util.point,
+      tl = pt(0,0),
+      bbox = glift.displays.bbox,
+      opts = {},
       WIDTH = 300,
       HEIGHT = 400;
 
   test('Creation of env object', function() {
-    var envObj = env.get({
-      heightOverride: HEIGHT,
-      widthOverride: WIDTH
-    });
+    var envObj = env.get(divId, bbox.fromPts(tl, pt(WIDTH, HEIGHT)), opts);
     deepEqual(envObj.bbox.width(), WIDTH);
     deepEqual(envObj.bbox.height(), HEIGHT);
-    deepEqual(envObj.divId, 'glift_display');
+    deepEqual(envObj.divId, divId);
     deepEqual(envObj.divWidth, WIDTH);
     deepEqual(envObj.divHeight, HEIGHT);
     deepEqual(envObj.boardRegion, glift.enums.boardRegions.ALL);
@@ -24,20 +26,11 @@ glift.displays.environmentTest = function() {
   });
 
   test('Creation of square go board box', function() {
-    //glift.util.logz('farfar');
-    var guiEnv = env.getInitialized({
-        divId: 'glift_display',
-        heightOverride: HEIGHT,
-        widthOverride: WIDTH
-    });
+    var guiEnv = env.get(divId, bbox.fromPts(tl, pt(WIDTH, HEIGHT)), opts).init();
     deepEqual(guiEnv.goBoardBox.height(), guiEnv.goBoardBox.width(),
         'Must create a square board for a long box');
 
-    var guiEnv = env.getInitialized({
-        divId: 'glift_display',
-        heightOverride: WIDTH,
-        widthOverride: HEIGHT
-    });
+    var guiEnv = env.get(divId, bbox.fromPts(tl, pt(HEIGHT, WIDTH)), opts).init();
     deepEqual(
         Math.round(guiEnv.goBoardBox.height()),
         Math.round(guiEnv.goBoardBox.width()),
@@ -45,10 +38,7 @@ glift.displays.environmentTest = function() {
   });
 
   test('Test creation: tall div, square board', function() {
-    var e = env.getInitialized({
-        heightOverride: 400,
-        widthOverride: 200
-    });
+    var e = env.get(divId, bbox.fromPts(tl, pt(200, 400)), opts).init();
     deepEqual(e.divBox.width(), 200, 'divBox width');
     deepEqual(e.divBox.height(), 400, 'divBox height');
     deepEqual(e.goBoardBox.height(), 200, 'goBoardBox height');
@@ -60,10 +50,7 @@ glift.displays.environmentTest = function() {
   });
 
   test('Test creation: wide div, square board', function() {
-    var e = env.getInitialized({
-        heightOverride: 200,
-        widthOverride: 400
-    });
+    var e = env.get(divId, bbox.fromPts(tl, pt(400, 200)), opts).init();
     deepEqual(e.divBox.width(), 400, 'divBox width');
     deepEqual(e.divBox.height(), 200, 'divBox height');
     deepEqual(e.goBoardBox.height(), 200, 'goBoardBox height');
@@ -75,9 +62,8 @@ glift.displays.environmentTest = function() {
   });
 
   test('Test with real (square) div', function() {
-    var env1 = env.getInitialized({
-      divId: 'glift_display'
-    });
+    // Note: This relies an the glift_display div existing in the dom.
+    var env1 = env.get('glift_display', null, opts).init();
     deepEqual(env1.divHeight, 400);
     deepEqual(env1.divWidth, 400);
     ok(env1.divBox !== undefined);

@@ -576,7 +576,7 @@ glift.widgets.options.baseOptions = {
     multiopen: {
       click: function(event, widget, icon, iconBar) {
         var ic = glift.displays.icons.iconSelector(
-            widget.wrapperDiv,
+            widget.wrapperDivId,
             iconBar.divId,
             icon);
         ic.setIconEvents('click', function(event, wrappedIcon) {

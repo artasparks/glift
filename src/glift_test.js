@@ -8,16 +8,18 @@ module('glift.gliftTest');
   });
 
   test('Test Create: No Options', function() {
-    var display = glift.displays.create({
-      intersections: 9,
-      divId:  'glift_display'
-    });
+    var theme = glift.themes.get('DEFAULT');
+    var display = glift.displays.create(
+        'glift_display', // divId
+        null, // board box -- get from divId
+        theme, // theme
+        {
+          intersections: 9
+        });
     ok(display !== undefined);
     ok(display.divId() !== undefined);
-    ok(display.theme() !== undefined);
     ok(display.intersectionPoints() !== undefined);
     deepEqual(display.divId(), 'glift_display', 'div id');
-    deepEqual(display.theme(), 'DEFAULT', 'theme name');
     deepEqual(display.intersectionPoints(), 9, 'intersections');
     deepEqual(display.boardRegion(), boardRegions.ALL, 'board region');
     deepEqual(display.rotation(),

@@ -1,6 +1,6 @@
-// Glift: A Go Studying Program
-// Copyright (c) 2011-2013, Josh <jrhoak@gmail.com>
-// Code licensed under the MIT License
+/**
+ * Various constants used throughout glift.
+ */
 glift.enums = {
   // Also sometimes referred to as colors. Might be good to change back
   states: {
@@ -22,7 +22,6 @@ glift.enums = {
     BOTTOM: 'BOTTOM'
   },
 
-  // The directions should work with the boardRegions.
   boardRegions: {
     LEFT: 'LEFT',
     RIGHT: 'RIGHT',
@@ -32,9 +31,11 @@ glift.enums = {
     TOP_RIGHT: 'TOP_RIGHT',
     BOTTOM_LEFT: 'BOTTOM_LEFT',
     BOTTOM_RIGHT: 'BOTTOM_RIGHT',
-    // TODO(kashomon): Perhaps remove these last two, or at least 'AUTO'
     ALL: 'ALL',
-    AUTO: 'AUTO'
+    // Automatically determine the board region.
+    AUTO: 'AUTO',
+    // Minimal cropbox, modulo some heuristics.
+    MINIMAL: 'MINIMAL'
   },
 
 

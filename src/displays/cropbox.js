@@ -12,7 +12,7 @@ glift.displays.cropbox = {
         boardRegions = glift.enums.boardRegions,
         region = region || boardRegions.ALL,
         drawBoardCoords = drawBoardCoords || false,
-        // we add an extra position around the edge for labels, so we need a
+        // We add an extra position around the edge for labels, so we need a
         // label modifier. 1 or 0.
         lblMod = drawBoardCoords ? 1 : 0,
         // So that we can 0 index, we subtract one.
@@ -100,7 +100,11 @@ glift.displays.cropbox = {
           left = halfInts - 2 - lblMod;
           leftExtension = this.LINE_EXTENSION;
           break;
-      default: break;
+
+      default:
+          // Note: this can happen if we've let AUTO or MINIMAL slip in here
+          // somehow.
+          throw new Error('Unknown board region: ' + region);
     };
 
     var cbox = glift.displays.bbox.fromPts(

@@ -46,7 +46,7 @@ glift.displays.statusbar._StatusBar.prototype = {
    * Note: Key bindings are set in the base_widget.
    */
   gameInfo: function(gameInfoArr, captureCount) {
-    var wrapperDivId = this.widget.wrapperDiv,
+    var wrapperDivId = this.widget.wrapperDivId,
         suffix = '_gameinfo',
         newDivId = wrapperDivId + suffix + '_wrapper',
         wrapperDivEl = glift.dom.elem(wrapperDivId),
@@ -118,7 +118,7 @@ glift.displays.statusbar._StatusBar.prototype = {
    */
   fullscreen: function() {
     var widget = this.widget,
-        wrapperDivId = widget.wrapperDiv,
+        wrapperDivId = widget.wrapperDivId,
         newDivId = wrapperDivId + '_fullscreen',
         newDiv = glift.dom.newDiv(newDivId),
         body = glift.dom.elem(document.body),
@@ -146,7 +146,7 @@ glift.displays.statusbar._StatusBar.prototype = {
     window.scrollTo(0, 0); // Scroll to the top.
     manager.fullscreenDivId = newDivId;
     widget.destroy();
-    widget.wrapperDiv = newDivId;
+    widget.wrapperDivId = newDivId;
     widget.draw();
     widget.applyState(state);
     manager.enableFullscreenAutoResize();
@@ -158,7 +158,7 @@ glift.displays.statusbar._StatusBar.prototype = {
       return; // We're not fullscreened
     }
     var widget = this.widget,
-        wrapperDivEl = glift.dom.elem(widget.wrapperDiv),
+        wrapperDivEl = glift.dom.elem(widget.wrapperDivId),
         state = widget.getCurrentState(),
         manager = widget.manager,
         prevScrollTop = manager.prevScrollTop,
@@ -166,7 +166,7 @@ glift.displays.statusbar._StatusBar.prototype = {
         state = widget.getCurrentState();
     widget.destroy();
     wrapperDivEl.remove(); // remove the fullscreen div completely
-    widget.wrapperDiv = widget.manager.divId;
+    widget.wrapperDivId = widget.manager.divId;
     window.scrollTo(0, manager.prevScrollTop || 0);
 
     // Re-enable scrolling now that we're done with fullscreen.

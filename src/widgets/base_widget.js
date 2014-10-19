@@ -3,8 +3,7 @@
  */
 glift.widgets.BaseWidget = function(
     divId, sgfOptions, displayOptions, actions, manager) {
-  // TODO(kashomon): rename to wrapperDivId. Too confusing as is.
-  this.wrapperDiv = divId; // We split the wrapper div.
+  this.wrapperDivId = divId; // We split the wrapper div.
   this.type = sgfOptions.type;
   this.sgfOptions = glift.util.simpleClone(sgfOptions);
   this.displayOptions = glift.util.simpleClone(displayOptions);
@@ -45,16 +44,17 @@ glift.widgets.BaseWidget.prototype = {
         this.sgfOptions.boardRegion === glift.enums.boardRegions.AUTO
         ? glift.bridge.getCropFromMovetree(this.controller.movetree)
         : this.sgfOptions.boardRegion;
+
     this.displayOptions.rotation = this.sgfOptions.rotation;
     glift.util.majorPerfLog('Calculated board regions');
 
     // This should be the only time we get the base width and height, until the
     // entire widget is re-drawn.
-    var parentDivBbox = glift.displays.bbox.fromDiv(this.wrapperDiv);
+    var parentDivBbox = glift.displays.bbox.fromDiv(this.wrapperDivId);
     if (parentDivBbox.width() === 0 || parentDivBbox.height() === 0) {
-      throw new Error("Div has has invalid dimensions. Bounding box had " +
-          "width: " + parentDivBbox.width() +
-          ", height: " + parentDivBbox.height());
+      throw new Error('Div has has invalid dimensions. Bounding box had ' +
+          'width: ' + parentDivBbox.width() +
+          ', height: ' + parentDivBbox.height());
     }
 
     // Recall that positioning returns an object that looks like:
@@ -67,19 +67,20 @@ glift.widgets.BaseWidget.prototype = {
         this.displayOptions.oneColumnSplits,
         this.displayOptions.twoColumnSplits).calcWidgetPositioning();
 
-    var divIds = this._createDivsForPositioning(positioning, this.wrapperDiv);
+    var divIds = this._createDivsForPositioning(positioning, this.wrapperDivId);
     glift.util.majorPerfLog('Created divs');
 
-    // TODO(kashomon): Remove these hacks. We shouldn't be modifying
-    // displayOptions.
-    this.displayOptions.divId = divIds.BOARD;
-
     var theme = glift.themes.get(this.displayOptions.theme);
+    if (this.displayOptions.goBoardBackground) {
+      glift.themes.setGoBoardBackground(
+          theme, this.displayOptions.goBoardBackground);
+    }
 
-    // TODO(kashomon): Pass in the theme rather than doing another copy here
     this.display = glift.displays.create(
-        this.displayOptions,
-        positioning.getBbox(glift.enums.boardComponents.BOARD));
+        divIds.BOARD,
+        positioning.getBbox(glift.enums.boardComponents.BOARD),
+        theme,
+        this.displayOptions);
     glift.util.majorPerfLog('Finish creating display');
 
     if (divIds.COMMENT_BOX) {
@@ -336,8 +337,8 @@ glift.widgets.BaseWidget.prototype = {
   destroy: function() {
     var managerId = this.manager.id;
     glift.keyMappings.unregisterInstance(managerId);
-    glift.dom.elem(this.wrapperDiv) &&
-        glift.dom.elem(this.wrapperDiv).empty();
+    glift.dom.elem(this.wrapperDivId) &&
+        glift.dom.elem(this.wrapperDivId).empty();
     if (this.keyHandlerFunc !== undefined) {
       document.body.keydown = null;
     }

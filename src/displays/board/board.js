@@ -1,20 +1,17 @@
 glift.displays.board = {
-  create: function(env, themeName, theme, rotation) {
-    return new glift.displays.board.Display(
-        env, themeName, theme, rotation).draw();
+  create: function(env, theme, rotation) {
+    return new glift.displays.board.Display(env, theme, rotation).draw();
   }
 };
 
 /**
  * The core Display object returned to the user.
  */
-glift.displays.board.Display = function(
-    inEnvironment, themeName, theme, rotation) {
+glift.displays.board.Display = function(inEnvironment, theme, rotation) {
   // Due layering issues, we need to keep track of the order in which we
   // created the objects.
   this._objectHistory = [];
   this._environment = inEnvironment;
-  this._themeName = themeName;
   this._theme = theme;
 
   // Rotation indicates whether we should rotate by stones/marks in the display
@@ -33,7 +30,6 @@ glift.displays.board.Display.prototype = {
   intersectionPoints: function() { return this._environment.intersections; },
   intersections: function() { return this._intersections; },
   rotation: function() { return this._rotation; },
-  theme: function() { return this._themeName; },
   width: function() { return this._environment.goBoardBox.width() },
   height: function() { return this._environment.goBoardBox.height() },
 
