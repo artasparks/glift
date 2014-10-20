@@ -156,8 +156,10 @@ glift.rules.movetreeTest = function() {
     movt.addNode().properties().add('B', 'pb');
     movt.addNode().properties().add('W', 'nc');
     movt.addNode().properties().add('B', 'cc');
+
     movt = movt.getTreeFromRoot();
     movt.addNode().properties().add('B', 'dd');
+
     movt.recurseFromRoot(function(mt) {
       var buff = '';
       if (mt.properties().contains('B')) {

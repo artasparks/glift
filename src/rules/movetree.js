@@ -72,9 +72,9 @@ glift.rules.movetree = {
   searchMoveTreeDFS: function(moveTree, func) {
     func(moveTree);
     for (var i = 0; i < moveTree.node().numChildren(); i++) {
-      glift.rules.movetree.searchMoveTreeDFS(moveTree.moveDown(i), func);
+      var mtz = moveTree.newTreeRef();
+      glift.rules.movetree.searchMoveTreeDFS(mtz.moveDown(i), func);
     }
-    moveTree.moveUp();
   }
 };
 
