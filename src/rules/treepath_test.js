@@ -39,6 +39,29 @@ glift.rules.treepathTest = function() {
     deepEqual(parse('1.1-3.2-6.7'), [0,1,0,2,0,0,7], 'Should parse correctly');
   });
 
+  test('Convert back to an init path string', function() {
+    var convert  = glift.rules.treepath.toInitPathString;
+    deepEqual(convert([]), '')
+    deepEqual(convert([0]), '1')
+    deepEqual(convert([0,0,0]), '3')
+    deepEqual(convert([0,0,0,1]), '3.1')
+    deepEqual(convert([0,0,0,1,0]), '3.1.0')
+    deepEqual(convert([0,0,0,1,0,0]), '3.1.0.0')
+  });
+
+  test('Parse a fragment', function() {
+    var parseFragment = glift.rules.treepath.parseFragment;
+    deepEqual(parseFragment([1,0]), [1,0]);
+    deepEqual(parseFragment('1.2.0.2'), [1,2,0,2]);
+    deepEqual(parseFragment('1.2-5.2'), [1,2,2], 'Should ignore the -5');
+  });
+
+  test('Convert back to an path fragment string', function() {
+    var convertToString = glift.rules.treepath.toFragmentString;
+    deepEqual(convertToString([0,1,0,2,0,0,7]), '0.1.0.2.0.0.7');
+    deepEqual(convertToString('0'), '0');
+  });
+
   test('Test to end paths', function() {
     deepEqual(parse('0.1+'), [1].concat(glift.rules.treepath.toEnd()));
     deepEqual(parse('0.2.3+'), [2,3].concat(glift.rules.treepath.toEnd()));

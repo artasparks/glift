@@ -6497,9 +6497,9 @@ glift.rules.movetree = {
   searchMoveTreeDFS: function(moveTree, func) {
     func(moveTree);
     for (var i = 0; i < moveTree.node().numChildren(); i++) {
-      glift.rules.movetree.searchMoveTreeDFS(moveTree.moveDown(i), func);
+      var mtz = moveTree.newTreeRef();
+      glift.rules.movetree.searchMoveTreeDFS(mtz.moveDown(i), func);
     }
-    moveTree.moveUp();
   }
 };
 
@@ -7381,6 +7381,9 @@ Properties.prototype = {
  * 0.2.6+  becomes [2,6,0,...(500 times)]
  */
 glift.rules.treepath = {
+  /**
+   * Parse a treepath
+   */
   parsePath: function(initPos) {
     var errors = glift.errors
     if (initPos === undefined) {
@@ -7429,6 +7432,73 @@ glift.rules.treepath = {
       }
     }
     return out;
+  },
+
+  /**
+   * Path fragments are like path strings except that path fragments only allow
+   * the 0.0.1.0 or [0,0,1,0] syntax. Also, paths like 3.2.1 are transformed
+   * into [3,2,1] rather than [0,0,0,2,1]
+   *
+   * path: an initial path. Should be an array
+   */
+  parseFragment: function(pathStr) {
+    var vartype = glift.util.typeOf(pathStr);
+    if (vartype === 'array') {
+      return pathStr; // assume the array is in the correct format
+    }
+    if (vartype !== 'string') {
+      throw new Error('When parsing fragments, type should be string. was: ' + 
+          vartype);
+    }
+    var splat = pathStr.split('.');
+    var out = [];
+    for (var i = 0; i < splat.length; i++) {
+      out.push(parseInt(splat[i]));
+    }
+    return out;
+  },
+
+  /**
+   * Converts a treepath back to a string.  In other words, transform
+   *    [2,0,1,2,6]
+   * to 
+   *    2.0.1.2.6
+   */
+  toFragmentString: function(path) {
+    if (glift.util.typeOf(path) !== 'array') {
+      return path.toString();
+    }
+    return path.join('.');
+  },
+
+  /**
+   * Converts a treepath back to an initial path string. This is like the
+   * toFragmentString, except that long strings of zeroes are converted to move
+   * numbers.  I.e, 0,0,0,0 => 3
+   *
+   * Note: Once we're on a variation, we don't collapse the path
+   */
+  toInitPathString: function(path) {
+    var out = [];
+    var onMainLine = true;
+    for (var i = 0; i < path.length; i++) {
+      var elem = path[i];
+      if (elem === 0) {
+        if (onMainLine && i === path.length - 1) {
+          out.push(i + 1);
+        } else if (!onMainLine) {
+          out.push(elem);
+        }
+        // ignore otherwise
+      } else if (elem > 0) {
+        out.push(i);
+        out.push(elem);
+        if (onMainLine) {
+          onMainLine = false;
+        }
+      }
+    }
+    return out.join('.');
   },
 
   /**
@@ -8925,8 +8995,10 @@ glift.bridge = {
 
 /**
  * Takes a movetree and returns the optimal BoardRegion for cropping purposes.
+ *
+ * Optionally, take a treepath
  */
-glift.bridge.getCropFromMovetree = function(movetree) {
+glift.bridge.getCropFromMovetree = function(movetree, treepath) {
   var bbox = glift.displays.bbox.fromPts;
   var pt = glift.util.point;
   var boardRegions = glift.enums.boardRegions;
