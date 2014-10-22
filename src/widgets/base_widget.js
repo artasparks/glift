@@ -57,8 +57,6 @@ glift.widgets.BaseWidget.prototype = {
           ', height: ' + parentDivBbox.height());
     }
 
-    // Recall that positioning returns an object that looks like:
-    // {commentBox: ..., boardbox: ..., iconBarBox: ...)
     var positioning = glift.displays.position.positioner(
         parentDivBbox,
         this.displayOptions.boardRegion,
@@ -107,7 +105,7 @@ glift.widgets.BaseWidget.prototype = {
         this, this.actions.iconActions);
 
     if (divIds.STATUS_BAR) {
-      // TODO(kashomon): Move into a helper
+      // TODO(kashomon): Move this logic into a helper.
       var statusBarIcons = glift.util.simpleClone(this.sgfOptions.statusBarIcons);
       if (this.manager.fullscreenDivId) {
         glift.array.replace(statusBarIcons, 'fullscreen', 'unfullscreen');

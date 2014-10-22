@@ -72,4 +72,15 @@ glift.widgets.optionsProcessingTest = function() {
       deepEqual(obj.sgfString, testSgf);
     });
   })
+
+  test('Test processing nextMovesPath', function() {
+    var mgr = createNoDraw({
+      sgf: {
+        sgfString: '(;GM[1])',
+        nextMovesPath: '0.0.0'
+      }
+    });
+    var obj = mgr.getSgfObj(0);
+    deepEqual(obj.nextMovesPath, '0.0.0');
+  });
 };

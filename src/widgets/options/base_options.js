@@ -95,9 +95,34 @@ glift.widgets.options.baseOptions = {
      * 0.0.0.0   - Start at the 3rd move, going through all the top variations
      * 2.3-4.1   - Start at the 1st variation of the 4th move, arrived at by
      *             traveling through the 3rd varition on the 2nd move
+     * 0+        - Go to the end of the game
+     * 2.3+      - Start at the 3rd variation on move 2, and go to the end
      * @api(1.0)
      */
     initialPosition: '',
+
+    /**
+     * The next moves path indicates moves that should be played past the
+     * initial position. This should only be used for 'EXAMPLE' types and is
+     * meant to simulate print diagriams.
+     *
+     * The next moves path is a path similar to the initial position in that it
+     * specifies a path.  However, it's more restricted because we can't specify
+     * move numbers -- only variation numbers -- since a next moves path is a
+     * path fragment. Moreover, the first number is interpreted as a variation
+     * number rather than a move number, as is the case for the initial
+     * position.
+     *
+     * In otherwords, these are allowed:
+     *  1         - Go through the 1st variation
+     *  0.0.0.0   - Go through the 0th varation 4 times
+     *  2.3       - Go through the 2nd variation and the 3rd variation
+     *  2.0+      - Go through the 2nd variation and go to the end.
+     *
+     * These are not:
+     *  2-3
+     */
+    nextMovesPath: '',
 
     /**
      * The board region to display.  The boardRegion will be 'guessed' if it's set

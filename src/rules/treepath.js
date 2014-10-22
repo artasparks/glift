@@ -1,6 +1,7 @@
 /**
  * The treepath is specified by a String, which tells how to get to particular
- * position in a game / problem.
+ * position in a game / problem. This implies that the treeptahs discussed below
+ * are initial treepaths.
  *
  * Note: Both moves and and variations are 0 indexed.
  *
@@ -15,7 +16,8 @@
  *             through the 3rd varition of the 2nd move
  *
  * Note: '+' is a special symbol which means "go to the end via the first
- * variation."
+ * variation." This is implemented with a by appending 500 0s to the path array.
+ * This is a hack, but in practice games don't go over 500 moves.
  *
  * The init position returned is an array of variation numbers traversed through.
  * The move number is precisely the length of the array.
@@ -31,6 +33,20 @@
  * 1+      becomes [0,0,...(500 times)]
  * 0.1+    becomes [1,0,...(500 times)]
  * 0.2.6+  becomes [2,6,0,...(500 times)]
+ *
+ * Treepath Fragments
+ *
+ * In contrast to initial treepaths, treepaths can also be fragments that say
+ * how to get from position n to position m.  Thus treepath fragments only
+ * allow variation numbers and disallow the 3-10 syntax.
+ *
+ * This is how fragment strings are parsed:
+ * 0       becomes [0]
+ * 1       becomes [1]
+ * 53      becomes [53]
+ * 2.3     becomes [2,3]
+ * 0.0.0.0 becomes [0,0,0]
+ * 1+      becomes [1,0...(500 times)]
  */
 glift.rules.treepath = {
   /**
@@ -89,7 +105,7 @@ glift.rules.treepath = {
   /**
    * Path fragments are like path strings except that path fragments only allow
    * the 0.0.1.0 or [0,0,1,0] syntax. Also, paths like 3.2.1 are transformed
-   * into [3,2,1] rather than [0,0,0,2,1]
+   * into [3,2,1] rather than [0,0,0,2,1].
    *
    * path: an initial path. Should be an array
    */
@@ -105,16 +121,21 @@ glift.rules.treepath = {
     var splat = pathStr.split('.');
     var out = [];
     for (var i = 0; i < splat.length; i++) {
-      out.push(parseInt(splat[i]));
+      var num = splat[i];
+      if (num.charAt(num.length - 1) === '+') {
+        num = num.slice(0, num.length - 1);
+        out.push(parseInt(num))
+        out = out.concat(glift.rules.treepath.toEnd());
+      } else {
+        out.push(parseInt(num));
+      }
     }
     return out;
   },
 
   /**
-   * Converts a treepath back to a string.  In other words, transform
-   *    [2,0,1,2,6]
-   * to 
-   *    2.0.1.2.6
+   * Converts a treepath fragement back to a string.  In other words:
+   *    [2,0,1,2,6] => 2.0.1.2.6
    */
   toFragmentString: function(path) {
     if (glift.util.typeOf(path) !== 'array') {

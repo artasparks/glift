@@ -54,6 +54,9 @@ glift.rules.treepathTest = function() {
     deepEqual(parseFragment([1,0]), [1,0]);
     deepEqual(parseFragment('1.2.0.2'), [1,2,0,2]);
     deepEqual(parseFragment('1.2-5.2'), [1,2,2], 'Should ignore the -5');
+    deepEqual(
+        parseFragment('1.11+'),
+        [1,11].concat(glift.rules.treepath.toEnd()));
   });
 
   test('Convert back to an path fragment string', function() {
@@ -78,6 +81,7 @@ glift.rules.treepathTest = function() {
     ok(true, 'foo');
     deepEqual(out, [[0,0,0,0], [0,1,0], [1,0]], 'Must flatten correctly');
     mt.moveDown();
+
     var out2 = flatten(mt);
     deepEqual(out2, [[0,0,0], [1,0]], 'Must flatten correctly after moveDown');
   });
