@@ -93,7 +93,7 @@ glift.widgets.WidgetManager.prototype = {
         this.backgroundLoad();
       }
       var curObj = this.getCurrentSgfObj();
-      this.getSgfString(curObj, function(sgfObj) {
+      this.loadSgfString(curObj, function(sgfObj) {
         // Prevent flickering by destroying the widget after loading the SGF.
         this.destroy();
         this.currentWidget = this.createWidget(sgfObj).draw();
@@ -185,9 +185,7 @@ glift.widgets.WidgetManager.prototype = {
    *
    * sgfObj: A standard SGF Object.
    */
-  // TODO(kashomon): Rename this or change it to actually return a string rather
-  // than an SGF object.
-  getSgfString: function(sgfObj, callback) {
+  loadSgfString: function(sgfObj, callback) {
     var alias = sgfObj.alias;
     var url = sgfObj.url;
     if (alias && this.sgfCache[alias]) {
@@ -212,6 +210,27 @@ glift.widgets.WidgetManager.prototype = {
         this.sgfCache[sgfObj.alias] = sgfObj.sgfString;
       }
       callback(sgfObj);
+    }
+  },
+
+  /**
+   * Like the above function, but doesn't do XHR -- returns the input SGF object
+   * if no SGF exists in the sgf cache. Convenient for contexts where you are
+   * certain that the SGF has already been loaded.
+   */
+  loadSgfStringSync: function(sgfObj) {
+    var alias = sgfObj.alias;
+    var url = sgfObj.url;
+    if (alias && this.sgfCache[alias]) {
+      // First, check the cache for aliases.
+      sgfObj.sgfString = this.sgfCache[alias];
+      return sgfObj;
+    } else if (url && this.sgfCache[url]) {
+      // Next, check the cache for urls.
+      sgfObj.sgfString = this.sgfCache[url];
+      return sgfObj;
+    } else {
+      return sgfObj;
     }
   },
 
@@ -291,7 +310,7 @@ glift.widgets.WidgetManager.prototype = {
     var loader = function(idx) {
       if (idx < this.sgfCollection.length) {
         var curObj = this.getSgfObj(idx);
-        this.getSgfString(curObj, function() {
+        this.loadSgfString(curObj, function() {
           setTimeout(function() {
             loader(idx + 1);
           }.bind(this), 250); // 250ms

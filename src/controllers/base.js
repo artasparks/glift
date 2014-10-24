@@ -16,6 +16,12 @@ var BaseController = function() {
   // lifetime of the controller.
   this.sgfString = '';
   this.initialPosition = [];
+
+  // These next two are widget specific, but are here, for convenience.
+
+  // Used only for examples.
+  this.nextMovesPath = [];
+  // Used only for problem-types
   this.problemConditions = {};
 
   // State variables that are defined on initialize and that could are
@@ -40,6 +46,7 @@ BaseController.prototype = {
     this.sgfString = sgfOptions.sgfString || '';
     this.initialPosition = sgfOptions.initialPosition || [];
     this.problemConditions = sgfOptions.problemConditions || undefined;
+    this.nextMovesPath = sgfOptions.nextMovesPath || [];
     this.initialize();
     return this;
   },
@@ -62,6 +69,14 @@ BaseController.prototype = {
     var rules = glift.rules;
     var initTreepath = treepath || this.initialPosition;
     this.treepath = rules.treepath.parsePath(initTreepath);
+
+    // TODO(kashomon): Appending the nextmoves path is hack until the UI
+    // supports passing using true flattened data representation.
+    if (this.nextMovesPath) {
+      this.treepath = this.treepath.concat(
+          rules.treepath.parseFragment(this.nextMovesPath));
+    }
+
     this.movetree = rules.movetree.getFromSgf(this.sgfString, this.treepath);
     var gobanData = rules.goban.getFromMoveTree(this.movetree, this.treepath);
     this.goban = gobanData.goban;
