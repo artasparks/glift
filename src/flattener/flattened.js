@@ -2,7 +2,7 @@
  * Data used to populate either a display or diagram.
  */
 glift.flattener.Flattened = function(
-    board, collisions, comment, boardRegion, cropping) {
+    board, collisions, comment, boardRegion, cropping, isOnMainPath) {
   /**
    * Board wrapper. Essentially a double array of intersection objects.
    */
@@ -23,10 +23,11 @@ glift.flattener.Flattened = function(
   /** The board region this flattened representation is meant to display. */
   this._boardRegion = boardRegion;
 
-  /**
-   * The cropping object. Probably shouldn't be accessed directly.
-   */
+  /** The cropping object. Probably shouldn't be accessed directly. */
   this._cropping = cropping;
+
+  /** Whether or not the position is on the 'top' (zeroth) variation. */
+  this._isOnMainPath = isOnMainPath;
 };
 
 glift.flattener.Flattened.prototype = {
@@ -37,5 +38,12 @@ glift.flattener.Flattened.prototype = {
   comment: function() { return this._comment; },
 
   /** Returns the collisions. */
-  collisions: function() { return this._collisions; }
+  collisions: function() { return this._collisions; },
+
+  /**
+   * Whether or not this position is on the main line or path variation.  For
+   * game review diagrams, it's usually nice to distinguish between diagrams for
+   * the real game and diagrams for exploratory variations.
+   */
+  isOnMainPath: function() { return this._isOnMainPath; }
 };

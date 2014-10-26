@@ -293,6 +293,7 @@ glift.rules._MoveTree.prototype = {
 
   /** Returns true if the tree is currently on a mainline variation. */
   onMainline: function() {
+    // TODO(kashomon): Make this simpler
     if (!this._markedMainline) {
       var mt = this.getTreeFromRoot();
       mt.node()._mainline = true;

@@ -25,7 +25,7 @@ glift.flattener = {
    *    variations.
    */
   flatten: function(movetreeInitial, options) {
-    // create a new ref to avoid changing original tree ref.
+    // Create a new ref to avoid changing original tree ref.
     var mt = movetreeInitial.newTreeRef();
     options = options || {};
 
@@ -55,7 +55,9 @@ glift.flattener = {
     // Map of ptString to stone obj.
     var stoneMap = glift.flattener._stoneMap(goban, applied.stones);
 
-    // Replace the movetree reference with the new position
+    // Replace the movetree reference with the new position.  This movetree
+    // should be equivalent to applying the initial treepath and then applying
+    // the nextmoves treepath.
     mt = applied.movetree;
 
     // Get the marks at the current position
@@ -79,7 +81,8 @@ glift.flattener = {
     var board = glift.flattener.board.create(cropping, stoneMap, marks, labels);
 
     var comment = mt.properties().getComment() || '';
-    return new glift.flattener.Flattened(board, collisions, comment, boardRegion);
+    return new glift.flattener.Flattened(
+        board, collisions, comment, boardRegion, cropping, mt.onMainline());
   },
 
   /**

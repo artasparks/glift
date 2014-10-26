@@ -95,5 +95,31 @@ glift.flattener.flattenTest = function() {
     deepEqual(col[0].label, 'X');
   });
 
-  // TODO(kashomon): Add cropping / board region test.
+  test('Test ensure cropping exists', function() {
+    var sgf = '(;GB[1]AW[aa][ba]AB[ab][bb])';
+    var mt = glift.rules.movetree.getFromSgf(sgf);
+    var f = flattener.flatten(mt, { boardRegion: 'TOP_LEFT' });
+    deepEqual(glift.util.typeOf(f._cropping), 'object');
+    deepEqual(f._cropping, glift.displays.cropbox.getFromRegion('TOP_LEFT', 19));
+  });
+
+  test('isOnMainPath', function() {
+    var sgf = '(;GB[1](;B[aa])(;B[ab]))';
+    var mt = glift.rules.movetree.getFromSgf(sgf);
+    var f = flattener.flatten(mt, {
+      nextMovesTreepath: [0]
+    });
+
+    f = flattener.flatten(mt, {
+      nextMovesTreepath: [1]
+    });
+    var inter = f.board().getIntBoardPt(toPt('ab'));
+    deepEqual(inter.stone(), symb.BSTONE);
+    ok(!f.isOnMainPath());
+
+    mt = glift.rules.movetree.getFromSgf(sgf, [1]);
+    ok(!mt.onMainline());
+    f = flattener.flatten(mt);
+    ok(!f.isOnMainPath());
+  })
 };

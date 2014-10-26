@@ -6718,6 +6718,7 @@ glift.rules._MoveTree.prototype = {
 
   /** Returns true if the tree is currently on a mainline variation. */
   onMainline: function() {
+    // TODO(kashomon): Make this simpler
     if (!this._markedMainline) {
       var mt = this.getTreeFromRoot();
       mt.node()._mainline = true;
@@ -9292,7 +9293,7 @@ glift.flattener = {
    *    variations.
    */
   flatten: function(movetreeInitial, options) {
-    // create a new ref to avoid changing original tree ref.
+    // Create a new ref to avoid changing original tree ref.
     var mt = movetreeInitial.newTreeRef();
     options = options || {};
 
@@ -9322,7 +9323,9 @@ glift.flattener = {
     // Map of ptString to stone obj.
     var stoneMap = glift.flattener._stoneMap(goban, applied.stones);
 
-    // Replace the movetree reference with the new position
+    // Replace the movetree reference with the new position.  This movetree
+    // should be equivalent to applying the initial treepath and then applying
+    // the nextmoves treepath.
     mt = applied.movetree;
 
     // Get the marks at the current position
@@ -9346,7 +9349,8 @@ glift.flattener = {
     var board = glift.flattener.board.create(cropping, stoneMap, marks, labels);
 
     var comment = mt.properties().getComment() || '';
-    return new glift.flattener.Flattened(board, collisions, comment, boardRegion);
+    return new glift.flattener.Flattened(
+        board, collisions, comment, boardRegion, cropping, mt.onMainline());
   },
 
   /**
@@ -9653,7 +9657,7 @@ glift.flattener._Board.prototype = {
  * Data used to populate either a display or diagram.
  */
 glift.flattener.Flattened = function(
-    board, collisions, comment, boardRegion, cropping) {
+    board, collisions, comment, boardRegion, cropping, isOnMainPath) {
   /**
    * Board wrapper. Essentially a double array of intersection objects.
    */
@@ -9674,10 +9678,11 @@ glift.flattener.Flattened = function(
   /** The board region this flattened representation is meant to display. */
   this._boardRegion = boardRegion;
 
-  /**
-   * The cropping object. Probably shouldn't be accessed directly.
-   */
+  /** The cropping object. Probably shouldn't be accessed directly. */
   this._cropping = cropping;
+
+  /** Whether or not the position is on the 'top' (zeroth) variation. */
+  this._isOnMainPath = isOnMainPath;
 };
 
 glift.flattener.Flattened.prototype = {
@@ -9688,7 +9693,14 @@ glift.flattener.Flattened.prototype = {
   comment: function() { return this._comment; },
 
   /** Returns the collisions. */
-  collisions: function() { return this._collisions; }
+  collisions: function() { return this._collisions; },
+
+  /**
+   * Whether or not this position is on the main line or path variation.  For
+   * game review diagrams, it's usually nice to distinguish between diagrams for
+   * the real game and diagrams for exploratory variations.
+   */
+  isOnMainPath: function() { return this._isOnMainPath; }
 };
 glift.flattener.intersection = {
 
