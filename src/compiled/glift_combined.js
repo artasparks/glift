@@ -294,6 +294,16 @@ glift.util.colors = {
  * Various constants used throughout glift.
  */
 glift.enums = {
+  /**
+   * Camel cases an enum. Can be useful for things that have functions or
+   * packages named from enum names.
+   */
+  toCamelCase: function(input) {
+    return input.toLowerCase().replace(/_(.)?/g, function(match, group1) {
+      return group1 ? group1.toUpperCase() : '';
+    });
+  },
+
   // Also sometimes referred to as colors. Might be good to change back
   states: {
     BLACK: 'BLACK',

@@ -37,10 +37,7 @@ glift.flattener = {
         options.boardRegion || glift.enums.boardRegions.ALL;
     var showVars =
         options.showNextVariationsType  || glift.enums.showVariations.NEVER;
-    var nmtp = options.nextMovesTreepath || [];
-    if (glift.util.typeOf(nmtp) === 'string') {
-      nmtp = glift.rules.treepath.parsePath(nmtp);
-    }
+    var nmtp = glift.rules.treepath.parseFragment(options.nextMovesTreepath);
     var startingMoveNum = options.startingMoveNum || 1;
 
     // Calculate the board region.

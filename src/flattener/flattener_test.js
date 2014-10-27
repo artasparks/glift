@@ -121,5 +121,5 @@ glift.flattener.flattenTest = function() {
     ok(!mt.onMainline());
     f = flattener.flatten(mt);
     ok(!f.isOnMainPath());
-  })
+  });
 };

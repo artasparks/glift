@@ -110,6 +110,9 @@ glift.rules.treepath = {
    * path: an initial path. Should be an array
    */
   parseFragment: function(pathStr) {
+    if (!pathStr) {
+      pathStr = [];
+    }
     var vartype = glift.util.typeOf(pathStr);
     if (vartype === 'array') {
       return pathStr; // assume the array is in the correct format
@@ -294,6 +297,7 @@ glift.rules.treepath = {
    */
   flattenMoveTree: function(movetree) {
     var out = [];
+    movetree = movetree.newTreeRef();
     for (var i = 0; i < movetree.node().numChildren(); i++) {
       movetree.moveDown(i);
       var result = glift.rules.treepath._flattenMoveTree(movetree, []);
