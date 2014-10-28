@@ -9,6 +9,11 @@ glift.widgets = {
   create: function(options) {
     glift.util.perfInit();
     var manager = glift.widgets.createNoDraw(options);
+
+    glift.init(
+        manager.displayOptions.disableZoomForMobile,
+        manager.divId);
+
     glift.util.majorPerfLog('Finish creating manager');
     manager.draw();
     glift.util.majorPerfLog('Finish drawing manager');
@@ -17,17 +22,14 @@ glift.widgets = {
   },
 
   /**
-   * Create a widgetManager without performing 'draw'.
+   * Create a widgetManager without performing 'draw'.  This also has the
+   * side effect of avoiding init code.
    */
   createNoDraw: function(inOptions) {
     var options = glift.widgets.options.setOptionDefaults(inOptions);
     var actions = {};
     actions.iconActions = options.iconActions;
     actions.stoneActions = options.stoneActions;
-
-    glift.init(
-        options.display.disableZoomForMobile,
-        options.divId);
 
     return new glift.widgets.WidgetManager(
         options.divId,

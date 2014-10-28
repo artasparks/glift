@@ -66,7 +66,7 @@ glift.flattener.flattenTest = function() {
         ';W[ca];B[ba])'; // collisions
     var mt = glift.rules.movetree.getFromSgf(sgf);
     var f = flattener.flatten(mt, {
-      nextMovesTreepath: [0,0,0,0,0]
+      nextMovesTreepath: [0,0,0,0,0],
     });
 
     deepEqual(f.collisions().length, 2);
@@ -86,7 +86,7 @@ glift.flattener.flattenTest = function() {
         ';W[aa]LB[aa:X])'; // collision + labels
     var mt = glift.rules.movetree.getFromSgf(sgf);
     var f = flattener.flatten(mt, {
-      nextMovesTreepath: [0,0]
+      nextMovesTreepath: [0,0],
     });
     deepEqual(f.collisions().length, 1);
     var col = f.collisions();
@@ -121,5 +121,26 @@ glift.flattener.flattenTest = function() {
     ok(!mt.onMainline());
     f = flattener.flatten(mt);
     ok(!f.isOnMainPath());
+  });
+
+  test('findStartingMoveNum', function() {
+    findNum = glift.flattener._findStartingMoveNum;
+    var sgf = '(;GB[1]' +
+        ';B[aa]' +
+        '(;W[ba](;B[cc])(;B[dd]))' +
+        '(;W[ab](;B[cc])(;B[dd])))';
+    var mt = glift.rules.movetree.getFromSgf(sgf, []);
+    deepEqual(findNum(mt, []), 1, 'at root');
+    deepEqual(findNum(mt, [0]), 1, 'at root with next moves');
+    deepEqual(findNum(mt, [1]), 1, 'at root with next moves on var');
+
+    mt.moveDown()
+    deepEqual(findNum(mt, []), 2, 'next move mainpath');
+    deepEqual(findNum(mt, [0]), 2, 'next move, mainpath, next on root');
+    deepEqual(findNum(mt, [1]), 1, 'next move, mainpath, next on variation');
+
+    mt.moveDown(1);
+    deepEqual(findNum(mt, [0]), 2, 'next move, variation, next on variation');
+    deepEqual(findNum(mt, [1]), 2, 'next move, variation, next on variation');
   });
 };

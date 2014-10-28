@@ -21,8 +21,9 @@ glift.flattener = {
    *  - boardRegion: indicates what region to crop on.
    *  - nextMovesTreepath.  Defaults to [].  This is typically only used for
    *    printed diagrams.
-   *  - startingMoveNum.  Optionally override the move number. Usually used for
-   *    variations.
+   *  - startingMoveNum.  Optionally override the move number. If not set, it's
+   *    automatically determined based on whether the position is on the
+   *    mainpath or a variation.
    */
   flatten: function(movetreeInitial, options) {
     // Create a new ref to avoid changing original tree ref.
@@ -38,7 +39,8 @@ glift.flattener = {
     var showVars =
         options.showNextVariationsType  || glift.enums.showVariations.NEVER;
     var nmtp = glift.rules.treepath.parseFragment(options.nextMovesTreepath);
-    var startingMoveNum = options.startingMoveNum || 1;
+
+    var startingMoveNum = options.startingMoveNum || null;
 
     // Calculate the board region.
     if (boardRegion === glift.enums.boardRegions.AUTO) {
@@ -46,6 +48,11 @@ glift.flattener = {
     }
     var cropping = glift.displays.cropbox.getFromRegion(
         boardRegion, mt.getIntersections());
+
+    // Find the starting move number before applying the next move path.
+    if (startingMoveNum === null) {
+      startingMoveNum = glift.flattener._findStartingMoveNum(mt, nmtp);
+    }
 
     // Map of ptString to move.
     var applied = glift.rules.treepath.applyNextMoves(mt, goban, nmtp);
@@ -156,6 +163,37 @@ glift.flattener = {
       }
     }
     return out;
+  },
+
+  /**
+   * Automatically finds the starting move number given a movetree position. This
+   * is meant to be for well-formed variation paths.  That is, if we are
+   * currently on the main path, we expect the next move paths will immediately
+   * start on the variation or stay on the main path.
+   *
+   * Given this, there are three cases to consider:
+   *    1. The movetree is on the mainpath and the next moves path stays on the
+   *    main path:  Return the nodenum + 1 (this is the
+   *    2. The movetere is on the mainpath, but the next move puts us on a
+   *    variation. Return 1 (start over)
+   *    3.  The movetree starts on a variation.  Count the number of moves since
+   *    the mainpath branch.
+   */
+  _findStartingMoveNum: function(mt, nextMovesPath) {
+    mt = mt.newTreeRef();
+    if (mt.onMainline()) {
+      if (nextMovesPath.length > 0 && nextMovesPath[0] > 0) {
+        return 1;
+      } else {
+        return mt.node().getNodeNum() + 1;
+      }
+    }
+    var mvnum = 1;
+    while (!mt.onMainline()) {
+      mvnum++;
+      mt.moveUp();
+    }
+    return mvnum;
   },
 
   /**
