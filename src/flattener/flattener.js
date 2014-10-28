@@ -245,18 +245,28 @@ glift.flattener = {
     for (var i = 0; i < stones.length; i++) {
       var stone = stones[i];
       var ptStr = stone.point.toString();
+      var nextMoveNum = i + startingMoveNum;
+      if (nextMoveNum % 100 !== 0) {
+        // We don't truncate the 100 moves, e.g., 100, 200, etc.,
+        // but otherwise, 3 digit labels are awkward.
+        nextMoveNum = nextMoveNum % 100;
+      }
 
       // This is a collision stone. Perform collision labeling.
       if (stone.hasOwnProperty('collision')) {
         var col = {
           color: stone.color,
-          mvnum: (i + startingMoveNum) + '',
+          mvnum: (nextMoveNum) + '',
           label: undefined
         };
         if (labels[ptStr]) { // First see if there are any available labels.
           col.label = labels[ptStr];
         } else if (glift.util.typeOf(stone.collision) === 'number') {
-          col.label = (stone.collision + startingMoveNum) + ''; // label is idx.
+          var collisionNum = stone.collision + startingMoveNum;
+          if (collisionNum % 100 !== 0) {
+            collisionNum = collisionNum % 100;
+          }
+          col.label = (collisionNum) + ''; // label is idx.
         } else { // should be null
           var lbl = extraLabs.charAt(labsIdx);
           labsIdx++;
@@ -270,7 +280,7 @@ glift.flattener = {
       } else {
         // Create new labels for our move number.
         marks[ptStr] = symb.TEXTLABEL; // Override labels.
-        labels[ptStr] = (i + startingMoveNum) + ''
+        labels[ptStr] = (nextMoveNum) + ''
       }
     }
     return collisions;
