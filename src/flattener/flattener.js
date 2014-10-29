@@ -192,12 +192,12 @@ glift.flattener = {
     mt = mt.newTreeRef();
     if (mt.onMainline()) {
       if (nextMovesPath.length > 0 && nextMovesPath[0] > 0) {
-        return 1;
+        return 0;
       } else {
-        return mt.node().getNodeNum() + 1;
+        return mt.node().getNodeNum();
       }
     }
-    var mvnum = 1;
+    var mvnum = 0;
     while (!mt.onMainline()) {
       mvnum++;
       mt.moveUp();
@@ -236,9 +236,10 @@ glift.flattener = {
     }
     // Collision labels, for when stone.collision = null.
     var extraLabs = 'abcdefghijklmnopqrstuvwxyz';
-    var labsIdx = 0;
+    var labsIdx = 0; // index into extra labels string above.
     var symb = glift.flattener.symbols;
-    var collisions = []; // {color: <color>, num: <number>, label: <lbl>}
+    // TODO(kashomon): Make the collisions first class.
+    var collisions = []; // {color: <color>, mvnum: <number>, label: <lbl>}
 
     // Remove any number labels currently existing in the marks map.  This
     // method also numbers stones.
@@ -254,7 +255,7 @@ glift.flattener = {
     for (var i = 0; i < stones.length; i++) {
       var stone = stones[i];
       var ptStr = stone.point.toString();
-      var nextMoveNum = i + startingMoveNum;
+      var nextMoveNum = i + startingMoveNum + 1;
       if (nextMoveNum % 100 !== 0) {
         // We don't truncate the 100 moves, e.g., 100, 200, etc.,
         // but otherwise, 3 digit labels are awkward.
