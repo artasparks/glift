@@ -55,7 +55,7 @@ glift.flattener = {
     }
 
     // Initial move number -- used to calculate the ending move number.
-    var initMoveNumber = mt.node().getNodeNum();
+    var initNodeNumber = mt.node().getNodeNum();
 
     // Map of ptString to move.
     var applied = glift.rules.treepath.applyNextMoves(mt, goban, nmtp);
@@ -67,9 +67,11 @@ glift.flattener = {
     // the nextmoves treepath.
     mt = applied.movetree;
 
-    // Calculate the ending move number.
+    // Calculate the ending move number. Note -- we subtract one since the
+    // 'starting' move number is what the next move number should be.  In other
+    // words, we expect the starting move to be one behind the initMove Number
     var endingMoveNum = startingMoveNum +
-        (mt.node().getNodeNum() - initMoveNumber);
+        (mt.node().getNodeNum() - initNodeNumber);
 
     // Get the marks at the current position
     var mksOut = glift.flattener._markMap(mt);
@@ -187,17 +189,21 @@ glift.flattener = {
    *    variation. Return 1 (start over)
    *    3.  The movetree starts on a variation.  Count the number of moves since
    *    the mainpath branch.
+   *
+   * Note: The starting move is only interesting in the case where there's a
+   * next-moves-path. If there's no next-moves-path specified, this number is
+   * effectively unused.
    */
   _findStartingMoveNum: function(mt, nextMovesPath) {
     mt = mt.newTreeRef();
     if (mt.onMainline()) {
       if (nextMovesPath.length > 0 && nextMovesPath[0] > 0) {
-        return 0;
+        return 1;
       } else {
-        return mt.node().getNodeNum();
+        return mt.node().getNodeNum() + 1;
       }
     }
-    var mvnum = 0;
+    var mvnum = 1;
     while (!mt.onMainline()) {
       mvnum++;
       mt.moveUp();
@@ -251,11 +257,12 @@ glift.flattener = {
       }
     }
 
-    // Create labels for each stone in the 'next-stones'.
+    // Create labels for each stone in the 'next-stones'. Note -- we only add
+    // labels in the case when there's a next moves path.
     for (var i = 0; i < stones.length; i++) {
       var stone = stones[i];
       var ptStr = stone.point.toString();
-      var nextMoveNum = i + startingMoveNum + 1;
+      var nextMoveNum = i + startingMoveNum;
       if (nextMoveNum % 100 !== 0) {
         // We don't truncate the 100 moves, e.g., 100, 200, etc.,
         // but otherwise, 3 digit labels are awkward.

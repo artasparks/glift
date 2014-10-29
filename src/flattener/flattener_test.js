@@ -130,18 +130,18 @@ glift.flattener.flattenTest = function() {
         '(;W[ba](;B[cc])(;B[dd]))' +
         '(;W[ab](;B[cc])(;B[dd])))';
     var mt = glift.rules.movetree.getFromSgf(sgf, []);
-    deepEqual(findNum(mt, []), 0, 'at root');
-    deepEqual(findNum(mt, [0]), 0, 'at root with next moves');
-    deepEqual(findNum(mt, [1]), 0, 'at root with next moves on var');
+    deepEqual(findNum(mt, []), 1, 'at root');
+    deepEqual(findNum(mt, [0]), 1, 'at root with next moves');
+    deepEqual(findNum(mt, [1]), 1, 'at root with next moves on var');
 
     mt.moveDown()
-    deepEqual(findNum(mt, []), 1, 'next move mainpath');
-    deepEqual(findNum(mt, [0]), 1, 'next move, mainpath, next on root');
-    deepEqual(findNum(mt, [1]), 0, 'next move, mainpath, next on variation');
+    deepEqual(findNum(mt, []), 2, 'next move mainpath');
+    deepEqual(findNum(mt, [0]), 2, 'next move, mainpath, next on root');
+    deepEqual(findNum(mt, [1]), 1, 'next move, mainpath, next on variation');
 
     mt.moveDown(1);
-    deepEqual(findNum(mt, [0]), 1, 'next move, variation, next on variation');
-    deepEqual(findNum(mt, [1]), 1, 'next move, variation, next on variation');
+    deepEqual(findNum(mt, [0]), 2, 'next move, variation, next on variation');
+    deepEqual(findNum(mt, [1]), 2, 'next move, variation, next on variation');
   });
 
   test('startingMoveNumber', function() {
@@ -149,23 +149,26 @@ glift.flattener.flattenTest = function() {
     var mt = glift.rules.movetree.getFromSgf(simpleSgf, '2');
     deepEqual(mt.node().getNodeNum(), 2);
     var f = flattener.flatten(mt);
-    deepEqual(f.startingMoveNum(), 2);
-    deepEqual(f.endingMoveNum(), 2);
+
+    // Note: the next move should be the current position + 1 since it's design
+    // for auto-labeling of next-move-paths.
+    deepEqual(f.startingMoveNum(), 3, 'no next path');
+    deepEqual(f.endingMoveNum(), 3, 'no next path');
 
     var mainpathSgf = '(;GB[1];B[aa];W[bb];B[cc];W[dd];B[ee];W[ff])';
     mt = glift.rules.movetree.getFromSgf(mainpathSgf, '1');
     f = flattener.flatten(mt, {
       nextMovesTreepath: [0,0,0,0]
     });
-    deepEqual(f.startingMoveNum(), 1);
-    deepEqual(f.endingMoveNum(), 5);
+    deepEqual(f.startingMoveNum(), 2, 'next path on main line');
+    deepEqual(f.endingMoveNum(), 6, 'next path on main line');
 
     var variationSgf = '(;GB[1];B[aa];W[bb](;B[kk])(;B[cc];W[dd];B[ee];W[ff]))';
     mt = glift.rules.movetree.getFromSgf(variationSgf, '2');
     f = flattener.flatten(mt, {
       nextMovesTreepath: [1,0,0,0]
     });
-    deepEqual(f.startingMoveNum(), 0);
-    deepEqual(f.endingMoveNum(), 4);
+    deepEqual(f.startingMoveNum(), 1);
+    deepEqual(f.endingMoveNum(), 5);
   });
 };

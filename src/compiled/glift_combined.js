@@ -9337,7 +9337,7 @@ glift.flattener = {
     }
 
     // Initial move number -- used to calculate the ending move number.
-    var initMoveNumber = mt.node().getNodeNum();
+    var initNodeNumber = mt.node().getNodeNum();
 
     // Map of ptString to move.
     var applied = glift.rules.treepath.applyNextMoves(mt, goban, nmtp);
@@ -9349,9 +9349,11 @@ glift.flattener = {
     // the nextmoves treepath.
     mt = applied.movetree;
 
-    // Calculate the ending move number.
+    // Calculate the ending move number. Note -- we subtract one since the
+    // 'starting' move number is what the next move number should be.  In other
+    // words, we expect the starting move to be one behind the initMove Number
     var endingMoveNum = startingMoveNum +
-        (mt.node().getNodeNum() - initMoveNumber);
+        (mt.node().getNodeNum() - initNodeNumber);
 
     // Get the marks at the current position
     var mksOut = glift.flattener._markMap(mt);
@@ -9469,6 +9471,10 @@ glift.flattener = {
    *    variation. Return 1 (start over)
    *    3.  The movetree starts on a variation.  Count the number of moves since
    *    the mainpath branch.
+   *
+   * Note: The starting move is only interesting in the case where there's a
+   * next-moves-path. If there's no next-moves-path specified, this number is
+   * effectively unused.
    */
   _findStartingMoveNum: function(mt, nextMovesPath) {
     mt = mt.newTreeRef();
@@ -9518,9 +9524,10 @@ glift.flattener = {
     }
     // Collision labels, for when stone.collision = null.
     var extraLabs = 'abcdefghijklmnopqrstuvwxyz';
-    var labsIdx = 0;
+    var labsIdx = 0; // index into extra labels string above.
     var symb = glift.flattener.symbols;
-    var collisions = []; // {color: <color>, num: <number>, label: <lbl>}
+    // TODO(kashomon): Make the collisions first class.
+    var collisions = []; // {color: <color>, mvnum: <number>, label: <lbl>}
 
     // Remove any number labels currently existing in the marks map.  This
     // method also numbers stones.
@@ -9532,7 +9539,8 @@ glift.flattener = {
       }
     }
 
-    // Create labels for each stone in the 'next-stones'.
+    // Create labels for each stone in the 'next-stones'. Note -- we only add
+    // labels in the case when there's a next moves path.
     for (var i = 0; i < stones.length; i++) {
       var stone = stones[i];
       var ptStr = stone.point.toString();
