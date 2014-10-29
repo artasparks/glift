@@ -9336,6 +9336,9 @@ glift.flattener = {
       startingMoveNum = glift.flattener._findStartingMoveNum(mt, nmtp);
     }
 
+    // Initial move number -- used to calculate the ending move number.
+    var initMoveNumber = mt.node().getNodeNum();
+
     // Map of ptString to move.
     var applied = glift.rules.treepath.applyNextMoves(mt, goban, nmtp);
     // Map of ptString to stone obj.
@@ -9346,10 +9349,15 @@ glift.flattener = {
     // the nextmoves treepath.
     mt = applied.movetree;
 
+    // Calculate the ending move number.
+    var endingMoveNum = startingMoveNum +
+        (mt.node().getNodeNum() - initMoveNumber);
+
     // Get the marks at the current position
     var mksOut = glift.flattener._markMap(mt);
     var labels = mksOut.labels; // map of ptstr to label str
     var marks = mksOut.marks; // map of ptstr to symbol
+
 
     // Optionally update the labels with labels used to indicate variations.
     var sv = glift.enums.showVariations
@@ -9368,7 +9376,8 @@ glift.flattener = {
 
     var comment = mt.properties().getComment() || '';
     return new glift.flattener.Flattened(
-        board, collisions, comment, boardRegion, cropping, mt.onMainline());
+        board, collisions, comment, boardRegion, cropping, mt.onMainline(),
+        startingMoveNum, endingMoveNum);
   },
 
   /**
@@ -9716,7 +9725,8 @@ glift.flattener._Board.prototype = {
  * Data used to populate either a display or diagram.
  */
 glift.flattener.Flattened = function(
-    board, collisions, comment, boardRegion, cropping, isOnMainPath) {
+    board, collisions, comment, boardRegion, cropping, isOnMainPath,
+    startMoveNum, endMoveNum) {
   /**
    * Board wrapper. Essentially a double array of intersection objects.
    */
@@ -9742,6 +9752,13 @@ glift.flattener.Flattened = function(
 
   /** Whether or not the position is on the 'top' (zeroth) variation. */
   this._isOnMainPath = isOnMainPath;
+
+  /**
+   * The starting and ending move numbers. These are typically used for
+   * labeling diagrams.
+   */
+  this._startMoveNum = startMoveNum;
+  this._endMoveNum = endMoveNum;
 };
 
 glift.flattener.Flattened.prototype = {
@@ -9759,7 +9776,13 @@ glift.flattener.Flattened.prototype = {
    * game review diagrams, it's usually nice to distinguish between diagrams for
    * the real game and diagrams for exploratory variations.
    */
-  isOnMainPath: function() { return this._isOnMainPath; }
+  isOnMainPath: function() { return this._isOnMainPath; },
+
+  /** Returns the starting move number. */
+  startingMoveNum: function() { return this._startMoveNum; },
+
+  /** Returns the ending move number. */
+  endingMoveNum: function() { return this._endMoveNum; }
 };
 glift.flattener.intersection = {
 

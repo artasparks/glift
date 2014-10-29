@@ -143,4 +143,24 @@ glift.flattener.flattenTest = function() {
     deepEqual(findNum(mt, [0]), 2, 'next move, variation, next on variation');
     deepEqual(findNum(mt, [1]), 2, 'next move, variation, next on variation');
   });
+
+  test('startingMoveNumber', function() {
+    var mainpathSgf = '(;GB[1];B[aa];W[bb];B[cc];W[dd];B[ee];W[ff])';
+    var mt = glift.rules.movetree.getFromSgf(mainpathSgf, [1]);
+    var f = flattener.flatten(mt, {
+      nextMovesTreepath: [0,0,0,0]
+    });
+    deepEqual(f.startingMoveNum(), 1);
+    deepEqual(f.endingMoveNum(), 5);
+
+    // TODO(kashomon): Fix these tests should give the same answers, right?
+
+    var variationSgf = '(;GB[1];B[aa];W[bb](;B[kk])(;B[cc];W[dd];B[ee];W[ff]))';
+    mt = glift.rules.movetree.getFromSgf(variationSgf, [2]);
+    f = flattener.flatten(mt, {
+      nextMovesTreepath: [1,0,0,0]
+    });
+    deepEqual(f.startingMoveNum(), 1);
+    deepEqual(f.endingMoveNum(), 4);
+  });
 };

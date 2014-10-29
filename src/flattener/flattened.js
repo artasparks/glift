@@ -2,7 +2,8 @@
  * Data used to populate either a display or diagram.
  */
 glift.flattener.Flattened = function(
-    board, collisions, comment, boardRegion, cropping, isOnMainPath) {
+    board, collisions, comment, boardRegion, cropping, isOnMainPath,
+    startMoveNum, endMoveNum) {
   /**
    * Board wrapper. Essentially a double array of intersection objects.
    */
@@ -28,6 +29,13 @@ glift.flattener.Flattened = function(
 
   /** Whether or not the position is on the 'top' (zeroth) variation. */
   this._isOnMainPath = isOnMainPath;
+
+  /**
+   * The starting and ending move numbers. These are typically used for
+   * labeling diagrams.
+   */
+  this._startMoveNum = startMoveNum;
+  this._endMoveNum = endMoveNum;
 };
 
 glift.flattener.Flattened.prototype = {
@@ -45,5 +53,11 @@ glift.flattener.Flattened.prototype = {
    * game review diagrams, it's usually nice to distinguish between diagrams for
    * the real game and diagrams for exploratory variations.
    */
-  isOnMainPath: function() { return this._isOnMainPath; }
+  isOnMainPath: function() { return this._isOnMainPath; },
+
+  /** Returns the starting move number. */
+  startingMoveNum: function() { return this._startMoveNum; },
+
+  /** Returns the ending move number. */
+  endingMoveNum: function() { return this._endMoveNum; }
 };
