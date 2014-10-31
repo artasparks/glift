@@ -305,13 +305,8 @@ Goban.prototype = {
         this.addStone(captures[color][i], color);
       }
     }
-  },
-
-  // for debug, of course =)
-  _debug: function() {
-    glift.util.logz(this.stones);
   }
-}
+};
 
 // Utiity functions
 

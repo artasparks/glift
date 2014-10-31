@@ -176,7 +176,6 @@ BaseController.prototype = {
     var countObj = { BLACK: 0, WHITE: 0 };
     for (var i = 0; i < this.captureHistory.length; i++ ) {
       var obj = this.captureHistory[i];
-      console.log(obj);
       for (var color in obj) {
         countObj[color] += obj[color].length;
       }

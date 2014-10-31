@@ -6261,13 +6261,8 @@ Goban.prototype = {
         this.addStone(captures[color][i], color);
       }
     }
-  },
-
-  // for debug, of course =)
-  _debug: function() {
-    glift.util.logz(this.stones);
   }
-}
+};
 
 // Utiity functions
 
@@ -8258,7 +8253,6 @@ BaseController.prototype = {
     var countObj = { BLACK: 0, WHITE: 0 };
     for (var i = 0; i < this.captureHistory.length; i++ ) {
       var obj = this.captureHistory[i];
-      console.log(obj);
       for (var color in obj) {
         countObj[color] += obj[color].length;
       }
@@ -9349,11 +9343,10 @@ glift.flattener = {
     // the nextmoves treepath.
     mt = applied.movetree;
 
-    // Calculate the ending move number. Note -- we subtract one since the
-    // 'starting' move number is what the next move number should be.  In other
-    // words, we expect the starting move to be one behind the initMove Number
-    var endingMoveNum = startingMoveNum +
-        (mt.node().getNodeNum() - initNodeNumber);
+    // Calculate the ending move number. Since starting move num is only used
+    // in conjunction with next moves paths, we can just look at the next moves
+    // path array.
+    var endingMoveNum = startingMoveNum + nmtp.length - 1;
 
     // Get the marks at the current position
     var mksOut = glift.flattener._markMap(mt);
