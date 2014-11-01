@@ -36,19 +36,6 @@ glift.controllers.GameViewerMethods = {
   },
 
   /**
-   * Based on the game path, get what the next variation number to be retrieved
-   * will be.
-   */
-  getNextVariationNumber: function() {
-    if (this.currentMoveNumber() > this.treepath.length ||
-        this.treepath[this.currentMoveNumber()] === undefined) {
-      return 0;
-    } else {
-      return this.treepath[this.currentMoveNumber()];
-    }
-  },
-
-  /**
    * Go back to the previous branch or comment.
    *
    * If maxMovesPrevious is defined, then we cap the number of moves at
@@ -103,7 +90,7 @@ glift.controllers.GameViewerMethods = {
    * Move up what variation will be next retrieved.
    */
   moveUpVariations: function() {
-    return this.setNextVariation((this.getNextVariationNumber() + 1)
+    return this.setNextVariation((this.nextVariationNumber() + 1)
         % this.movetree.node().numChildren());
   },
 
@@ -113,7 +100,7 @@ glift.controllers.GameViewerMethods = {
   moveDownVariations: function() {
     // Module is defined incorrectly for negative numbers.  So, we need to add n
     // to the result.
-    return this.setNextVariation((this.getNextVariationNumber() - 1 +
+    return this.setNextVariation((this.nextVariationNumber() - 1 +
         + this.movetree.node().numChildren())
         % this.movetree.node().numChildren());
   },

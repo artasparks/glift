@@ -117,12 +117,38 @@ BaseController.prototype = {
     return this.movetree.node().getNodeNum();
   },
 
-  /** Get the treepath to the current position */
+  /**
+   * Gets the variation number of the next move. This will be something different
+   * if we've used setNextVariation or if we've already played into a variation.
+   * Otherwise, it will be 0.
+   */
+  nextVariationNumber: function() {
+    return this.treepath[this.currentMoveNumber()] || 0;
+  },
+
+  /**
+   * Sets what the next variation will be.  The number is applied modulo the
+   * number of possible variations.
+   */
+  setNextVariation: function(num) {
+    // Recall that currentMoveNumber  s the same as the depth number ==
+    // this.treepath.length (if at the end).  Thus, if the old treepath was
+    // [0,1,2,0] and the currentMoveNumber was 2, we'll have [0, 1, num].
+    this.treepath = this.treepath.slice(0, this.currentMoveNumber());
+    this.treepath.push(num % this.movetree.node().numChildren());
+    return this;
+  },
+
+  /** Gets the treepath to the current position */
   pathToCurrentPosition: function() {
     return this.movetree.treepathToHere();
   },
 
-  /** Get the game info key-value pairs */
+  /**
+   * Gets the game info key-value pairs. This consists of global data about the
+   * game, such as the names of the players, the result of the game, the
+   * name of the tournament, etc.
+   */
   getGameInfo: function() {
     return this.movetree.getTreeFromRoot().properties().getGameInfo();
   },
@@ -153,7 +179,9 @@ BaseController.prototype = {
   // TODO(kashomon): Rename to getCurrentBoardState
   getNextBoardState: function() {
     return glift.bridge.intersections.nextBoardData(
-        this.movetree, this.getCaptures(), this.problemConditions);
+        this.movetree,
+        this.getCaptures(),
+        this.problemConditions);
   },
 
   /** Get the captures that occured for the current move. */
@@ -238,10 +266,9 @@ BaseController.prototype = {
    */
   nextMove: function(varNum) {
     if (this.treepath[this.currentMoveNumber()] !== undefined &&
-        (varNum === undefined ||
-        this.treepath[this.currentMoveNumber()] === varNum)) {
+        (varNum === undefined || this.nextVariationNumber() === varNum)) {
       // Don't mess with the treepath, if we're 'on variation'.
-      this.movetree.moveDown(this.treepath[this.currentMoveNumber()]);
+      this.movetree.moveDown(this.nextVariationNumber());
     } else {
       varNum = varNum === undefined ? 0 : varNum;
       if (varNum >= 0 &&
@@ -275,28 +302,6 @@ BaseController.prototype = {
     var displayData = glift.bridge.intersections.previousBoardData(
         this.movetree, allCurrentStones, captures, this.problemConditions);
     return displayData;
-  },
-
-  /**
-   * Set what the next variation will be.  The number is applied modulo the
-   * number of possible variations.
-   */
-  setNextVariation: function(num) {
-    // Recall that currentMoveNumber  s the same as the depth number ==
-    // this.treepath.length (if at the end).  Thus, if the old treepath was
-    // [0,1,2,0] and the currentMoveNumber was 2, we'll have [0, 1, num].
-    this.treepath = this.treepath.slice(0, this.currentMoveNumber());
-    this.treepath.push(num % this.movetree.node().numChildren());
-    return this;
-  },
-
-  /**
-   * Get the variation number of the next move. This will be something different
-   * if we've used setNextVariation or if we've already played into a variation.
-   * Otherwise, it will be 0.
-   */
-  getNextVariation: function() {
-    return this.treepath[this.currentMoveNumber()] || 0;
   },
 
   /** Go back to the beginning. */

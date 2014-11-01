@@ -49,32 +49,32 @@ glift.controllers.baseTest = function() {
     deepEqual(base.sgfString, complexProblem);
     deepEqual(base.currentMoveNumber(), 0);
     deepEqual(base.treepath, []);
-    deepEqual(base.getNextVariation(), 0);
+    deepEqual(base.nextVariationNumber(), 0);
 
     base.nextMove(1);
     deepEqual(base.currentMoveNumber(), 1);
-    deepEqual(base.getNextVariation(), 0);
+    deepEqual(base.nextVariationNumber(), 0);
     deepEqual(base.treepath, [1]);
     deepEqual(base.movetree.nextMoves().length, 3);
 
     base.nextMove(2);
     deepEqual(base.currentMoveNumber(), 2);
-    deepEqual(base.getNextVariation(), 0);
+    deepEqual(base.nextVariationNumber(), 0);
     deepEqual(base.treepath, [1, 2]);
 
     base.prevMove();
     deepEqual(base.currentMoveNumber(), 1);
     deepEqual(base.treepath, [1, 2]);
-    deepEqual(base.getNextVariation(), 2);
+    deepEqual(base.nextVariationNumber(), 2);
 
     base.prevMove();
-    deepEqual(base.getNextVariation(), 1);
+    deepEqual(base.nextVariationNumber(), 1);
 
     base.setNextVariation(1);
-    deepEqual(base.getNextVariation(), 1);
+    deepEqual(base.nextVariationNumber(), 1);
 
     base.nextMove();
-    deepEqual(base.getNextVariation(), 0);
+    deepEqual(base.nextVariationNumber(), 0);
   });
 
   test('Initialize with a custom treepath', function() {
