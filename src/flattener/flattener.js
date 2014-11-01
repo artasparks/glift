@@ -71,6 +71,12 @@ glift.flattener = {
     // in conjunction with next moves paths, we can just look at the next moves
     // path array.
     var endingMoveNum = startingMoveNum + nmtp.length - 1;
+    if (endingMoveNum < startingMoveNum) {
+      // This can occur if we haven't move anywhere. In that case, we won't be
+      // using the starting / ending move numbers for labeling the next moves,
+      // but it's nice to keep the starting/ending moves coherent.
+      endingMoveNum = startingMoveNum;
+    }
 
     // Get the marks at the current position
     var mksOut = glift.flattener._markMap(mt);

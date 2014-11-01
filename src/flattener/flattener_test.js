@@ -152,8 +152,8 @@ glift.flattener.flattenTest = function() {
 
     // Note: the next move should be the current position + 1 since it's design
     // for auto-labeling of next-move-paths.
-    deepEqual(f.startingMoveNum(), 3, 'no next path');
-    deepEqual(f.endingMoveNum(), 3, 'no next path');
+    deepEqual(f.startingMoveNum(), 3, 'no next path, start');
+    deepEqual(f.endingMoveNum(), 3, 'no next path, end');
 
     var mainpathSgf = '(;GB[1];B[aa];W[bb];B[cc];W[dd];B[ee];W[ff])';
     mt = glift.rules.movetree.getFromSgf(mainpathSgf, '1');
@@ -161,7 +161,7 @@ glift.flattener.flattenTest = function() {
       nextMovesTreepath: [0,0,0,0]
     });
     deepEqual(f.startingMoveNum(), 2, 'next path on main line');
-    deepEqual(f.endingMoveNum(), 6, 'next path on main line');
+    deepEqual(f.endingMoveNum(), 5, 'next path on main line');
 
     var variationSgf = '(;GB[1];B[aa];W[bb](;B[kk])(;B[cc];W[dd];B[ee];W[ff]))';
     mt = glift.rules.movetree.getFromSgf(variationSgf, '2');
@@ -169,6 +169,6 @@ glift.flattener.flattenTest = function() {
       nextMovesTreepath: [1,0,0,0]
     });
     deepEqual(f.startingMoveNum(), 1);
-    deepEqual(f.endingMoveNum(), 5);
+    deepEqual(f.endingMoveNum(), 4);
   });
 };
