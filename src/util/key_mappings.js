@@ -1,28 +1,9 @@
 glift.keyMappings = {
-  _nameToCode: {
-    0: 48, 1: 49, 2: 50, 3: 51, 4: 52, 5: 53, 6: 54, 7: 55, 8: 56, 9: 57,
-
-    A: 65, B: 66, C: 67, D: 68, E: 69, F: 70, G: 71, H: 72, I: 73, J: 74, K: 75,
-    L: 76, M: 77, N: 78, O: 79, P: 80, Q: 81, R: 82, S: 83, T: 84, U: 85, V: 86,
-    W: 87, X: 88, Y: 89, Z: 90,
-
-    a: 97, b: 98, c: 99, d: 100, e: 101, f: 102, g: 103, h: 104, i: 105, j: 106,
-    k: 107, l: 108, m: 109, n: 110, o: 111, p: 112, q: 113, r: 114, s: 115, t:
-    116, u: 117, v: 118, w: 119, x: 120, y: 121, z: 122,
-
-    ' ': 32,
-    '\n': 13,
-
-    // A miscellany of symbols, in order of appearance on programmer dvorak ;)
-    '~': 126, '$': 36, '%': 37, '&': 38, '[': 91, '{': 123, '}': 125, '(': 40,
-    '=': 61, '*': 42, ')': 41, '+': 43, ']': 93, '!': 33, '#': 35, '`': 96, '/':
-    47, '?': 63, '@': 64, '^': 94, '\\': 92, '|': 124, '-': 45, '_': 95,
-
-    ';': 59, ',': 44, '.': 46, ':': 58, '<': 60, '>': 62,
-
-    '\'': 39,
-    '"': 34,
-
+  /**
+   * Some keys must be bound with 'keydown' rather than key code
+   * mappings.
+   */
+  _nameToCodeKeyDown: {
     BACKSPACE: 8,
     ESCAPE: 27,
     ARROW_LEFT:37,
@@ -31,33 +12,43 @@ glift.keyMappings = {
     ARROW_DOWN:40
   },
 
+  _codeToNameKeyDown: undefined, // lazilyDefined
+
   /** Convert a key name (see above) to a standard key code. */
   nameToCode: function(name) {
-    if (glift.keyMappings._nameToCode[name]) {
-      return glift.keyMappings._nameToCode[name];
+    if (name.length !== 1) {
+      if (/[A-Z](_[A-Z]+)+/.test(name)) {
+        return glift.keyMappings._nameToCodeKeyDown[name] || null
+      } else {
+        return null
+      }
+    } else {
+      return name.charCodeAt(0);
     }
-    return null;
   },
-
-  _codeToName: undefined, // lazilyDefined below.
 
   /** Convert a standard key code to a key name (see above). */
   codeToName: function(keyCode) {
-    if (glift.keyMappings._codeToName === undefined) {
-      var out = {}; // map from key code (e.g., 37) to name (ARROW_LEFT)
-      for (var keyName in glift.keyMappings._nameToCode) {
-        out[glift.keyMappings._nameToCode[keyName]] = keyName;
+    if (!glift.keyMappings._codeToNameKeyDown) {
+      // Bite the bullet and define the map.
+      var newmap = {};
+      for (var name in glift.keyMappings._nameToCodeKeyDown) {
+        var keycode = glift.keyMappings._nameToCodeKeyDown[name]
+        newmap[keycode] = name;
       }
-      glift.keyMappings._codeToName = out;
+      glift.keyMappings._codeToNameKeyDown = newmap;
     }
-    if (glift.keyMappings._codeToName[keyCode]) {
-      return glift.keyMappings._codeToName[keyCode];
+    if (glift.keyMappings._codeToNameKeyDown[keyCode]) {
+      return glift.keyMappings._codeToNameKeyDown[keyCode];
+    } else {
+      return String.fromCharCode(keyCode) || null;
     }
-    return null;
   },
 
   /**
-   * Maps:  
+   * The master keybinding registry.
+   *
+   * Maps:
    *  InstanceId -> (to)
    *    KeyName -> (to)
    *      Function or Icon
@@ -76,7 +67,7 @@ glift.keyMappings = {
     if (!glift.keyMappings.nameToCode(keyName)) {
       // We don't know about this particular keyCode.  It might be an error, or
       // it might be that it needs to be added to the above.
-      return;
+      throw new Error('Unknown key name: ' + keyName);
     }
 
     if (!map[id]) {
@@ -121,7 +112,13 @@ glift.keyMappings = {
       return;
     }
     var body = document.body;
+
+    // Note: difference between keypress and keydown!
+    //
+    // We use keydown so we can capture the left/right arrow keys, but keypress
+    // should be preferred since it's easier to get the char code.
     body.addEventListener('keydown', glift.keyMappings._keyHandlerFunc);
+    body.addEventListener('keypress', glift.keyMappings._keyHandlerFunc);
     glift.keyMappings._initializedListener = true;
   },
 
@@ -129,25 +126,32 @@ glift.keyMappings = {
    * Internal function for processing key-presses.
    */
   _keyHandlerFunc: function(keyEvent) {
-    var keyName = glift.keyMappings.codeToName(keyEvent.which);
+    var keyName = glift.keyMappings.codeToName(keyEvent.which);// || e.charCode);
+    if (keyEvent.type === 'keydown' && !(/[A-Z_]+/.test(keyName))) {
+      // This key should be processed by the keypress event rather than this
+      // one.
+      return;
+    }
+
     var activeId = glift.global.activeInstanceId;
     var bindingMap = glift.keyMappings._keyBindingMap;
     var funcOrIcon = glift.keyMappings.getFuncOrIcon(activeId, keyName);
     if (!funcOrIcon) { return; }
 
+    var manager = glift.global.instanceRegistry[activeId];
+    if (!manager) { return; }
+
+    var widget = manager.getCurrentWidget();
+    if (!widget) { return; }
+
     var argType = glift.util.typeOf(funcOrIcon)
+
     if (argType === 'function') {
-      // TODO(kashomon): Add support for functions.  Left un-added for the
-      // time being because it's not clear what parameters to pass.
-      // funcOrIcon(); 
+      funcOrIcon(widget);
+      if (event.preventDefault) event.preventDefault();
+      else  event.returnValue = false; // IE
     } else if (argType === 'string') {
       // Assume it's an icon-action-path
-      var manager = glift.global.instanceRegistry[activeId];
-      if (!manager) { return; }
-
-      var widget = manager.getCurrentWidget();
-      if (!widget) { return; }
-
       // icon namespaces look like: icons.arrowleft.mouseup
       var actionNamespace = funcOrIcon.split('.');
       var action = widget.actions[actionNamespace[0]];
@@ -155,6 +159,8 @@ glift.keyMappings = {
         action = action[actionNamespace[i]];
       }
       action(keyEvent, widget);
+      if (event.preventDefault) event.preventDefault();
+      else  event.returnValue = false; // IE
     }
   }
 };

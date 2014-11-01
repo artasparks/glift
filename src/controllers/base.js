@@ -172,7 +172,10 @@ BaseController.prototype = {
    */
   getEntireBoardState: function() {
     return glift.bridge.intersections.getFullBoardData(
-        this.movetree, this.goban, this.problemConditions);
+        this.movetree,
+        this.goban,
+        this.problemConditions,
+        this.nextVariationNumber());
   },
 
   /** Return only the necessary information to update the board. */
@@ -181,7 +184,8 @@ BaseController.prototype = {
     return glift.bridge.intersections.nextBoardData(
         this.movetree,
         this.getCaptures(),
-        this.problemConditions);
+        this.problemConditions,
+        this.nextVariationNumber());
   },
 
   /** Get the captures that occured for the current move. */
@@ -300,7 +304,11 @@ BaseController.prototype = {
     this.goban.unloadStones(allCurrentStones, captures);
     this.movetree.moveUp();
     var displayData = glift.bridge.intersections.previousBoardData(
-        this.movetree, allCurrentStones, captures, this.problemConditions);
+        this.movetree,
+        allCurrentStones,
+        captures,
+        this.problemConditions,
+        this.nextVariationNumber());
     return displayData;
   },
 

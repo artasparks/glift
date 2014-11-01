@@ -482,30 +482,11 @@ glift.util._IdGenerator.prototype = {
 
 glift.util.idGenerator = new glift.util._IdGenerator(0);
 glift.keyMappings = {
-  _nameToCode: {
-    0: 48, 1: 49, 2: 50, 3: 51, 4: 52, 5: 53, 6: 54, 7: 55, 8: 56, 9: 57,
-
-    A: 65, B: 66, C: 67, D: 68, E: 69, F: 70, G: 71, H: 72, I: 73, J: 74, K: 75,
-    L: 76, M: 77, N: 78, O: 79, P: 80, Q: 81, R: 82, S: 83, T: 84, U: 85, V: 86,
-    W: 87, X: 88, Y: 89, Z: 90,
-
-    a: 97, b: 98, c: 99, d: 100, e: 101, f: 102, g: 103, h: 104, i: 105, j: 106,
-    k: 107, l: 108, m: 109, n: 110, o: 111, p: 112, q: 113, r: 114, s: 115, t:
-    116, u: 117, v: 118, w: 119, x: 120, y: 121, z: 122,
-
-    ' ': 32,
-    '\n': 13,
-
-    // A miscellany of symbols, in order of appearance on programmer dvorak ;)
-    '~': 126, '$': 36, '%': 37, '&': 38, '[': 91, '{': 123, '}': 125, '(': 40,
-    '=': 61, '*': 42, ')': 41, '+': 43, ']': 93, '!': 33, '#': 35, '`': 96, '/':
-    47, '?': 63, '@': 64, '^': 94, '\\': 92, '|': 124, '-': 45, '_': 95,
-
-    ';': 59, ',': 44, '.': 46, ':': 58, '<': 60, '>': 62,
-
-    '\'': 39,
-    '"': 34,
-
+  /**
+   * Some keys must be bound with 'keydown' rather than key code
+   * mappings.
+   */
+  _nameToCodeKeyDown: {
     BACKSPACE: 8,
     ESCAPE: 27,
     ARROW_LEFT:37,
@@ -514,33 +495,43 @@ glift.keyMappings = {
     ARROW_DOWN:40
   },
 
+  _codeToNameKeyDown: undefined, // lazilyDefined
+
   /** Convert a key name (see above) to a standard key code. */
   nameToCode: function(name) {
-    if (glift.keyMappings._nameToCode[name]) {
-      return glift.keyMappings._nameToCode[name];
+    if (name.length !== 1) {
+      if (/[A-Z](_[A-Z]+)+/.test(name)) {
+        return glift.keyMappings._nameToCodeKeyDown[name] || null
+      } else {
+        return null
+      }
+    } else {
+      return name.charCodeAt(0);
     }
-    return null;
   },
-
-  _codeToName: undefined, // lazilyDefined below.
 
   /** Convert a standard key code to a key name (see above). */
   codeToName: function(keyCode) {
-    if (glift.keyMappings._codeToName === undefined) {
-      var out = {}; // map from key code (e.g., 37) to name (ARROW_LEFT)
-      for (var keyName in glift.keyMappings._nameToCode) {
-        out[glift.keyMappings._nameToCode[keyName]] = keyName;
+    if (!glift.keyMappings._codeToNameKeyDown) {
+      // Bite the bullet and define the map.
+      var newmap = {};
+      for (var name in glift.keyMappings._nameToCodeKeyDown) {
+        var keycode = glift.keyMappings._nameToCodeKeyDown[name]
+        newmap[keycode] = name;
       }
-      glift.keyMappings._codeToName = out;
+      glift.keyMappings._codeToNameKeyDown = newmap;
     }
-    if (glift.keyMappings._codeToName[keyCode]) {
-      return glift.keyMappings._codeToName[keyCode];
+    if (glift.keyMappings._codeToNameKeyDown[keyCode]) {
+      return glift.keyMappings._codeToNameKeyDown[keyCode];
+    } else {
+      return String.fromCharCode(keyCode) || null;
     }
-    return null;
   },
 
   /**
-   * Maps:  
+   * The master keybinding registry.
+   *
+   * Maps:
    *  InstanceId -> (to)
    *    KeyName -> (to)
    *      Function or Icon
@@ -559,7 +550,7 @@ glift.keyMappings = {
     if (!glift.keyMappings.nameToCode(keyName)) {
       // We don't know about this particular keyCode.  It might be an error, or
       // it might be that it needs to be added to the above.
-      return;
+      throw new Error('Unknown key name: ' + keyName);
     }
 
     if (!map[id]) {
@@ -604,7 +595,13 @@ glift.keyMappings = {
       return;
     }
     var body = document.body;
+
+    // Note: difference between keypress and keydown!
+    //
+    // We use keydown so we can capture the left/right arrow keys, but keypress
+    // should be preferred since it's easier to get the char code.
     body.addEventListener('keydown', glift.keyMappings._keyHandlerFunc);
+    body.addEventListener('keypress', glift.keyMappings._keyHandlerFunc);
     glift.keyMappings._initializedListener = true;
   },
 
@@ -612,25 +609,32 @@ glift.keyMappings = {
    * Internal function for processing key-presses.
    */
   _keyHandlerFunc: function(keyEvent) {
-    var keyName = glift.keyMappings.codeToName(keyEvent.which);
+    var keyName = glift.keyMappings.codeToName(keyEvent.which);// || e.charCode);
+    if (keyEvent.type === 'keydown' && !(/[A-Z_]+/.test(keyName))) {
+      // This key should be processed by the keypress event rather than this
+      // one.
+      return;
+    }
+
     var activeId = glift.global.activeInstanceId;
     var bindingMap = glift.keyMappings._keyBindingMap;
     var funcOrIcon = glift.keyMappings.getFuncOrIcon(activeId, keyName);
     if (!funcOrIcon) { return; }
 
+    var manager = glift.global.instanceRegistry[activeId];
+    if (!manager) { return; }
+
+    var widget = manager.getCurrentWidget();
+    if (!widget) { return; }
+
     var argType = glift.util.typeOf(funcOrIcon)
+
     if (argType === 'function') {
-      // TODO(kashomon): Add support for functions.  Left un-added for the
-      // time being because it's not clear what parameters to pass.
-      // funcOrIcon(); 
+      funcOrIcon(widget);
+      if (event.preventDefault) event.preventDefault();
+      else  event.returnValue = false; // IE
     } else if (argType === 'string') {
       // Assume it's an icon-action-path
-      var manager = glift.global.instanceRegistry[activeId];
-      if (!manager) { return; }
-
-      var widget = manager.getCurrentWidget();
-      if (!widget) { return; }
-
       // icon namespaces look like: icons.arrowleft.mouseup
       var actionNamespace = funcOrIcon.split('.');
       var action = widget.actions[actionNamespace[0]];
@@ -638,6 +642,8 @@ glift.keyMappings = {
         action = action[actionNamespace[i]];
       }
       action(keyEvent, widget);
+      if (event.preventDefault) event.preventDefault();
+      else  event.returnValue = false; // IE
     }
   }
 };
@@ -8194,12 +8200,38 @@ BaseController.prototype = {
     return this.movetree.node().getNodeNum();
   },
 
-  /** Get the treepath to the current position */
+  /**
+   * Gets the variation number of the next move. This will be something different
+   * if we've used setNextVariation or if we've already played into a variation.
+   * Otherwise, it will be 0.
+   */
+  nextVariationNumber: function() {
+    return this.treepath[this.currentMoveNumber()] || 0;
+  },
+
+  /**
+   * Sets what the next variation will be.  The number is applied modulo the
+   * number of possible variations.
+   */
+  setNextVariation: function(num) {
+    // Recall that currentMoveNumber  s the same as the depth number ==
+    // this.treepath.length (if at the end).  Thus, if the old treepath was
+    // [0,1,2,0] and the currentMoveNumber was 2, we'll have [0, 1, num].
+    this.treepath = this.treepath.slice(0, this.currentMoveNumber());
+    this.treepath.push(num % this.movetree.node().numChildren());
+    return this;
+  },
+
+  /** Gets the treepath to the current position */
   pathToCurrentPosition: function() {
     return this.movetree.treepathToHere();
   },
 
-  /** Get the game info key-value pairs */
+  /**
+   * Gets the game info key-value pairs. This consists of global data about the
+   * game, such as the names of the players, the result of the game, the
+   * name of the tournament, etc.
+   */
   getGameInfo: function() {
     return this.movetree.getTreeFromRoot().properties().getGameInfo();
   },
@@ -8223,14 +8255,20 @@ BaseController.prototype = {
    */
   getEntireBoardState: function() {
     return glift.bridge.intersections.getFullBoardData(
-        this.movetree, this.goban, this.problemConditions);
+        this.movetree,
+        this.goban,
+        this.problemConditions,
+        this.nextVariationNumber());
   },
 
   /** Return only the necessary information to update the board. */
   // TODO(kashomon): Rename to getCurrentBoardState
   getNextBoardState: function() {
     return glift.bridge.intersections.nextBoardData(
-        this.movetree, this.getCaptures(), this.problemConditions);
+        this.movetree,
+        this.getCaptures(),
+        this.problemConditions,
+        this.nextVariationNumber());
   },
 
   /** Get the captures that occured for the current move. */
@@ -8315,10 +8353,9 @@ BaseController.prototype = {
    */
   nextMove: function(varNum) {
     if (this.treepath[this.currentMoveNumber()] !== undefined &&
-        (varNum === undefined ||
-        this.treepath[this.currentMoveNumber()] === varNum)) {
+        (varNum === undefined || this.nextVariationNumber() === varNum)) {
       // Don't mess with the treepath, if we're 'on variation'.
-      this.movetree.moveDown(this.treepath[this.currentMoveNumber()]);
+      this.movetree.moveDown(this.nextVariationNumber());
     } else {
       varNum = varNum === undefined ? 0 : varNum;
       if (varNum >= 0 &&
@@ -8350,30 +8387,12 @@ BaseController.prototype = {
     this.goban.unloadStones(allCurrentStones, captures);
     this.movetree.moveUp();
     var displayData = glift.bridge.intersections.previousBoardData(
-        this.movetree, allCurrentStones, captures, this.problemConditions);
+        this.movetree,
+        allCurrentStones,
+        captures,
+        this.problemConditions,
+        this.nextVariationNumber());
     return displayData;
-  },
-
-  /**
-   * Set what the next variation will be.  The number is applied modulo the
-   * number of possible variations.
-   */
-  setNextVariation: function(num) {
-    // Recall that currentMoveNumber  s the same as the depth number ==
-    // this.treepath.length (if at the end).  Thus, if the old treepath was
-    // [0,1,2,0] and the currentMoveNumber was 2, we'll have [0, 1, num].
-    this.treepath = this.treepath.slice(0, this.currentMoveNumber());
-    this.treepath.push(num % this.movetree.node().numChildren());
-    return this;
-  },
-
-  /**
-   * Get the variation number of the next move. This will be something different
-   * if we've used setNextVariation or if we've already played into a variation.
-   * Otherwise, it will be 0.
-   */
-  getNextVariation: function() {
-    return this.treepath[this.currentMoveNumber()] || 0;
   },
 
   /** Go back to the beginning. */
@@ -8709,19 +8728,6 @@ glift.controllers.GameViewerMethods = {
   },
 
   /**
-   * Based on the game path, get what the next variation number to be retrieved
-   * will be.
-   */
-  getNextVariationNumber: function() {
-    if (this.currentMoveNumber() > this.treepath.length ||
-        this.treepath[this.currentMoveNumber()] === undefined) {
-      return 0;
-    } else {
-      return this.treepath[this.currentMoveNumber()];
-    }
-  },
-
-  /**
    * Go back to the previous branch or comment.
    *
    * If maxMovesPrevious is defined, then we cap the number of moves at
@@ -8776,7 +8782,7 @@ glift.controllers.GameViewerMethods = {
    * Move up what variation will be next retrieved.
    */
   moveUpVariations: function() {
-    return this.setNextVariation((this.getNextVariationNumber() + 1)
+    return this.setNextVariation((this.nextVariationNumber() + 1)
         % this.movetree.node().numChildren());
   },
 
@@ -8786,7 +8792,7 @@ glift.controllers.GameViewerMethods = {
   moveDownVariations: function() {
     // Module is defined incorrectly for negative numbers.  So, we need to add n
     // to the result.
-    return this.setNextVariation((this.getNextVariationNumber() - 1 +
+    return this.setNextVariation((this.nextVariationNumber() - 1 +
         + this.movetree.node().numChildren())
         % this.movetree.node().numChildren());
   },
@@ -8970,9 +8976,13 @@ glift.bridge = {
         markPtString = markPt.toString();
         marksMap[markPtString] = true;
         if (markType === marks.LABEL) {
-          if (variationMap[markPtString] !== undefined) {
+          if (variationMap[markPtString] &&
+              this.shouldShowNextMoves(boardData, showVariations)) {
+            // This is a variation label && we should show it
+            var markValue = this.markSelectedNext(
+                boardData, markData.point, markData.value);
             display.intersections().addMarkPt(
-                markData.point, marks.VARIATION_MARKER, markData.value);
+                markData.point, marks.VARIATION_MARKER, markValue);
             delete variationMap[markPtString];
           } else {
             display.intersections().addMarkPt(
@@ -8989,10 +8999,11 @@ glift.bridge = {
         glift.bridge.variationMapping(boardData.correctNextMoves);
     for (var ptstring in variationMap) {
       var pt = variationMap[ptstring];
+      var markValue = this.markSelectedNext(boardData, pt, i);
       if (pt in correctNextMap) {
-        display.intersections().addMarkPt(pt, marks.CORRECT_VARIATION, i);
+        display.intersections().addMarkPt(pt, marks.CORRECT_VARIATION, markValue);
       } else {
-        display.intersections().addMarkPt(pt, marks.VARIATION_MARKER, i);
+        display.intersections().addMarkPt(pt, marks.VARIATION_MARKER, markValue);
       }
       i += 1;
     }
@@ -9004,6 +9015,22 @@ glift.bridge = {
     }
     glift.util.majorPerfLog('Finish display state');
     // display.flush();
+  },
+
+  /** Mark the selected next move */
+  markSelectedNext: function(boardData, pt, markValue) {
+    if (boardData.selectedNextMove &&
+        pt.equals(boardData.selectedNextMove.point)) {
+      // Mark the 'selected' variation as active.
+      markValue += '\u02D9';
+      // -- some options
+      // '\u02C8' => ˈ simple
+      // '\u02D1' => ˑ kinda cool
+      // '\u02D9' => ˙ dot above (actually goes to the right)
+      // '\u00B4' => ´
+      // '\u0332' => underline
+    }
+    return markValue;
   },
 
   /**
@@ -9165,8 +9192,9 @@ glift.bridge.intersections = {
    *  }
    */
   // TODO(kashomon): Make this a proper object constructor with accessors and
-  // methods and whatnot.  It's getting far too complicated.
-  basePropertyData: function(movetree, problemConditions) {
+  // methods and whatnot.  It's getting far too complicated. Alternatively,
+  // switch over to the flattener model.
+  basePropertyData: function(movetree, problemConditions, nextVarNumber) {
     var out = {
       stones: {
         WHITE: [],
@@ -9177,6 +9205,7 @@ glift.bridge.intersections = {
       comment: null,
       lastMove: null,
       nextMoves: [],
+      selectedNextMove: null,
       correctNextMoves: [],
       captures: [],
       displayDataType: glift.enums.displayDataTypes.PARTIAL
@@ -9185,6 +9214,7 @@ glift.bridge.intersections = {
     out.lastMove = movetree.getLastMove();
     out.marks = glift.bridge.intersections.getCurrentMarks(movetree);
     out.nextMoves = movetree.nextMoves();
+    out.selectedNextMove = out.nextMoves[nextVarNumber] || null;
     out.correctNextMoves = problemConditions !== undefined
         ? glift.rules.problems.correctNextMoves(movetree, problemConditions)
         : [];
@@ -9194,9 +9224,9 @@ glift.bridge.intersections = {
   /**
    * Extends the basePropertyData with stone data.
    */
-  getFullBoardData: function(movetree, goban, problemConditions) {
+  getFullBoardData: function(movetree, goban, problemConditions, nextVarNumber) {
     var baseData = glift.bridge.intersections.basePropertyData(
-        movetree, problemConditions);
+        movetree, problemConditions, nextVarNumber);
     baseData.displayDataType = glift.enums.displayDataTypes.FULL;
     var gobanStones = goban.getAllPlacedStones();
     for (var i = 0; i < gobanStones.length; i++) {
@@ -9214,9 +9244,10 @@ glift.bridge.intersections = {
    *    WHITE: [..pts..]
    * }
    */
-  nextBoardData: function(movetree, currentCaptures, problemConditions) {
+  nextBoardData: function(
+      movetree, currentCaptures, problemConditions, nextVarNumber) {
     var baseData = glift.bridge.intersections.basePropertyData(
-        movetree, problemConditions);
+        movetree, problemConditions, nextVarNumber);
     baseData.stones = movetree.properties().getAllStones();
     baseData.stones.EMPTY = [];
     for (var color in currentCaptures) {
@@ -9233,9 +9264,9 @@ glift.bridge.intersections = {
    */
   // TODO(kashomon): Reduce duplication with nextBoardData.
   previousBoardData: function(movetree, stones, captures,
-      problemConditions) {
+      problemConditions, nextVarNumber) {
     var baseData = glift.bridge.intersections.basePropertyData(
-        movetree, problemConditions);
+        movetree, problemConditions, nextVarNumber);
     baseData.stones = captures;
     baseData.stones.EMPTY = [];
     for (var color in stones) {
@@ -9347,6 +9378,12 @@ glift.flattener = {
     // in conjunction with next moves paths, we can just look at the next moves
     // path array.
     var endingMoveNum = startingMoveNum + nmtp.length - 1;
+    if (endingMoveNum < startingMoveNum) {
+      // This can occur if we haven't move anywhere. In that case, we won't be
+      // using the starting / ending move numbers for labeling the next moves,
+      // but it's nice to keep the starting/ending moves coherent.
+      endingMoveNum = startingMoveNum;
+    }
 
     // Get the marks at the current position
     var mksOut = glift.flattener._markMap(mt);
@@ -11756,7 +11793,21 @@ glift.widgets.options.GAME_VIEWER = {
 
   keyMappings: {
     ARROW_LEFT: 'iconActions.arrowleft.click',
-    ARROW_RIGHT: 'iconActions.arrowright.click'
+    ARROW_RIGHT: 'iconActions.arrowright.click',
+    ',': 'iconActions.arrowleft.click',
+    '.': 'iconActions.arrowright.click',
+    '<': 'iconActions.jump-left-arrow.click',
+    '>': 'iconActions.jump-right-arrow.click',
+    /** Toggle the selected variation. */
+    '[': function(widget) {
+      widget.controller.moveUpVariations();
+      widget.applyBoardData(widget.controller.getNextBoardState())
+    },
+    /** Toggle the selected variation. */
+    ']': function(widget) {
+      widget.controller.moveDownVariations();
+      widget.applyBoardData(widget.controller.getNextBoardState())
+    }
   },
 
   icons: ['jump-left-arrow', 'jump-right-arrow', 'arrowleft', 'arrowright'],

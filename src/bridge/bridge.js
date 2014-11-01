@@ -44,9 +44,13 @@ glift.bridge = {
         markPtString = markPt.toString();
         marksMap[markPtString] = true;
         if (markType === marks.LABEL) {
-          if (variationMap[markPtString] !== undefined) {
+          if (variationMap[markPtString] &&
+              this.shouldShowNextMoves(boardData, showVariations)) {
+            // This is a variation label && we should show it
+            var markValue = this.markSelectedNext(
+                boardData, markData.point, markData.value);
             display.intersections().addMarkPt(
-                markData.point, marks.VARIATION_MARKER, markData.value);
+                markData.point, marks.VARIATION_MARKER, markValue);
             delete variationMap[markPtString];
           } else {
             display.intersections().addMarkPt(
@@ -63,10 +67,11 @@ glift.bridge = {
         glift.bridge.variationMapping(boardData.correctNextMoves);
     for (var ptstring in variationMap) {
       var pt = variationMap[ptstring];
+      var markValue = this.markSelectedNext(boardData, pt, i);
       if (pt in correctNextMap) {
-        display.intersections().addMarkPt(pt, marks.CORRECT_VARIATION, i);
+        display.intersections().addMarkPt(pt, marks.CORRECT_VARIATION, markValue);
       } else {
-        display.intersections().addMarkPt(pt, marks.VARIATION_MARKER, i);
+        display.intersections().addMarkPt(pt, marks.VARIATION_MARKER, markValue);
       }
       i += 1;
     }
@@ -78,6 +83,22 @@ glift.bridge = {
     }
     glift.util.majorPerfLog('Finish display state');
     // display.flush();
+  },
+
+  /** Mark the selected next move */
+  markSelectedNext: function(boardData, pt, markValue) {
+    if (boardData.selectedNextMove &&
+        pt.equals(boardData.selectedNextMove.point)) {
+      // Mark the 'selected' variation as active.
+      markValue += '\u02D9';
+      // -- some options
+      // '\u02C8' => ˈ simple
+      // '\u02D1' => ˑ kinda cool
+      // '\u02D9' => ˙ dot above (actually goes to the right)
+      // '\u00B4' => ´
+      // '\u0332' => underline
+    }
+    return markValue;
   },
 
   /**

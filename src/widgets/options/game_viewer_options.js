@@ -10,7 +10,21 @@ glift.widgets.options.GAME_VIEWER = {
 
   keyMappings: {
     ARROW_LEFT: 'iconActions.arrowleft.click',
-    ARROW_RIGHT: 'iconActions.arrowright.click'
+    ARROW_RIGHT: 'iconActions.arrowright.click',
+    ',': 'iconActions.arrowleft.click',
+    '.': 'iconActions.arrowright.click',
+    '<': 'iconActions.jump-left-arrow.click',
+    '>': 'iconActions.jump-right-arrow.click',
+    /** Toggle the selected variation. */
+    '[': function(widget) {
+      widget.controller.moveUpVariations();
+      widget.applyBoardData(widget.controller.getNextBoardState())
+    },
+    /** Toggle the selected variation. */
+    ']': function(widget) {
+      widget.controller.moveDownVariations();
+      widget.applyBoardData(widget.controller.getNextBoardState())
+    }
   },
 
   icons: ['jump-left-arrow', 'jump-right-arrow', 'arrowleft', 'arrowright'],

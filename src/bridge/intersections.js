@@ -52,8 +52,9 @@ glift.bridge.intersections = {
    *  }
    */
   // TODO(kashomon): Make this a proper object constructor with accessors and
-  // methods and whatnot.  It's getting far too complicated.
-  basePropertyData: function(movetree, problemConditions) {
+  // methods and whatnot.  It's getting far too complicated. Alternatively,
+  // switch over to the flattener model.
+  basePropertyData: function(movetree, problemConditions, nextVarNumber) {
     var out = {
       stones: {
         WHITE: [],
@@ -64,6 +65,7 @@ glift.bridge.intersections = {
       comment: null,
       lastMove: null,
       nextMoves: [],
+      selectedNextMove: null,
       correctNextMoves: [],
       captures: [],
       displayDataType: glift.enums.displayDataTypes.PARTIAL
@@ -72,6 +74,7 @@ glift.bridge.intersections = {
     out.lastMove = movetree.getLastMove();
     out.marks = glift.bridge.intersections.getCurrentMarks(movetree);
     out.nextMoves = movetree.nextMoves();
+    out.selectedNextMove = out.nextMoves[nextVarNumber] || null;
     out.correctNextMoves = problemConditions !== undefined
         ? glift.rules.problems.correctNextMoves(movetree, problemConditions)
         : [];
@@ -81,9 +84,9 @@ glift.bridge.intersections = {
   /**
    * Extends the basePropertyData with stone data.
    */
-  getFullBoardData: function(movetree, goban, problemConditions) {
+  getFullBoardData: function(movetree, goban, problemConditions, nextVarNumber) {
     var baseData = glift.bridge.intersections.basePropertyData(
-        movetree, problemConditions);
+        movetree, problemConditions, nextVarNumber);
     baseData.displayDataType = glift.enums.displayDataTypes.FULL;
     var gobanStones = goban.getAllPlacedStones();
     for (var i = 0; i < gobanStones.length; i++) {
@@ -101,9 +104,10 @@ glift.bridge.intersections = {
    *    WHITE: [..pts..]
    * }
    */
-  nextBoardData: function(movetree, currentCaptures, problemConditions) {
+  nextBoardData: function(
+      movetree, currentCaptures, problemConditions, nextVarNumber) {
     var baseData = glift.bridge.intersections.basePropertyData(
-        movetree, problemConditions);
+        movetree, problemConditions, nextVarNumber);
     baseData.stones = movetree.properties().getAllStones();
     baseData.stones.EMPTY = [];
     for (var color in currentCaptures) {
@@ -120,9 +124,9 @@ glift.bridge.intersections = {
    */
   // TODO(kashomon): Reduce duplication with nextBoardData.
   previousBoardData: function(movetree, stones, captures,
-      problemConditions) {
+      problemConditions, nextVarNumber) {
     var baseData = glift.bridge.intersections.basePropertyData(
-        movetree, problemConditions);
+        movetree, problemConditions, nextVarNumber);
     baseData.stones = captures;
     baseData.stones.EMPTY = [];
     for (var color in stones) {

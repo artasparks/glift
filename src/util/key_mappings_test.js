@@ -21,9 +21,13 @@ glift.keyMappingsTest = function() {
     var iconPath = 'zed';
     var keyName = 'ARROW_DOWN';
 
-    glift.keyMappings.registerKeyAction(id, 'garg', iconPath);
-    deepEqual(keyMappings.getFuncOrIcon(id, 'garg'), null, 
-        'shouldn\'t be registered -- bad icon name');
+    var exception = null;
+    try {
+      glift.keyMappings.registerKeyAction(id, 'garg', iconPath);
+    } catch (err) {
+      exception = err;
+    }
+    ok(exception.toString().indexOf('Unknown key') > -1)
 
     glift.keyMappings.registerKeyAction(id, keyName, iconPath);
     deepEqual(keyMappings.getFuncOrIcon(id, keyName), iconPath, 
