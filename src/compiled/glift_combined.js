@@ -9022,7 +9022,8 @@ glift.bridge = {
     if (boardData.selectedNextMove &&
         pt.equals(boardData.selectedNextMove.point)) {
       // Mark the 'selected' variation as active.
-      markValue += '\u02D9';
+      markValue += '.';
+      //'\u02D9';
       // -- some options
       // '\u02C8' => ˈ simple
       // '\u02D1' => ˑ kinda cool
@@ -11799,12 +11800,12 @@ glift.widgets.options.GAME_VIEWER = {
     '<': 'iconActions.jump-left-arrow.click',
     '>': 'iconActions.jump-right-arrow.click',
     /** Toggle the selected variation. */
-    '[': function(widget) {
+    ']': function(widget) {
       widget.controller.moveUpVariations();
       widget.applyBoardData(widget.controller.getNextBoardState())
     },
     /** Toggle the selected variation. */
-    ']': function(widget) {
+    '[': function(widget) {
       widget.controller.moveDownVariations();
       widget.applyBoardData(widget.controller.getNextBoardState())
     }

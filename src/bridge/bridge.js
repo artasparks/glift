@@ -90,7 +90,8 @@ glift.bridge = {
     if (boardData.selectedNextMove &&
         pt.equals(boardData.selectedNextMove.point)) {
       // Mark the 'selected' variation as active.
-      markValue += '\u02D9';
+      markValue += '.';
+      //'\u02D9';
       // -- some options
       // '\u02C8' => ˈ simple
       // '\u02D1' => ˑ kinda cool

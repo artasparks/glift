@@ -16,12 +16,12 @@ glift.widgets.options.GAME_VIEWER = {
     '<': 'iconActions.jump-left-arrow.click',
     '>': 'iconActions.jump-right-arrow.click',
     /** Toggle the selected variation. */
-    '[': function(widget) {
+    ']': function(widget) {
       widget.controller.moveUpVariations();
       widget.applyBoardData(widget.controller.getNextBoardState())
     },
     /** Toggle the selected variation. */
-    ']': function(widget) {
+    '[': function(widget) {
       widget.controller.moveDownVariations();
       widget.applyBoardData(widget.controller.getNextBoardState())
     }
