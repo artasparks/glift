@@ -17,7 +17,7 @@ glift.keyMappings = {
   /** Convert a key name (see above) to a standard key code. */
   nameToCode: function(name) {
     if (name.length !== 1) {
-      if (/[A-Z](_[A-Z]+)+/.test(name)) {
+      if (/[A-Z](_[A-Z]*)+/.test(name)) {
         return glift.keyMappings._nameToCodeKeyDown[name] || null
       } else {
         return null
