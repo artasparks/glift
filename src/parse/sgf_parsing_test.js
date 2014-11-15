@@ -1,8 +1,8 @@
-glift.sgf.newParserTest = function() {
-  module('glift.sgf.newParserTest');
+glift.parse.sgfTest = function() {
+  module('glift.parse.sgfTest');
 
   test('Parse simple, real problem', function() {
-    var mt = glift.sgf.parse(testdata.sgfs.realproblem);
+    var mt = glift.parse.sgf(testdata.sgfs.realproblem);
     ok(mt !== undefined, 'must not be undefined');
     var rp = mt.properties();
     ok(rp.getAllValues('GM') !== null, 'must find prop: GM');
@@ -10,14 +10,14 @@ glift.sgf.newParserTest = function() {
   });
 
   test('Parse problem with lots of properties, escaped bracket', function() {
-    var mt = glift.sgf.parse(testdata.sgfs.marktest);
+    var mt = glift.parse.sgf(testdata.sgfs.marktest);
     var props = mt.properties();
     deepEqual(props.getOneValue('C'), '[Mark Test]');
   });
 
   test('Parse pass', function() {
     var sgf = '(;GM[1]C[It begins];B[]C[pass])';
-    var mt = glift.sgf.parse(sgf);
+    var mt = glift.parse.sgf(sgf);
     ok(mt !== undefined);
     var rp = mt.properties();
     deepEqual(rp.getAllValues('GM'), ['1']);
@@ -38,7 +38,7 @@ glift.sgf.newParserTest = function() {
     glift.util.logz = testLogger;
 
     var sgf = '(;GM[1]C[It begins]ZZ[zz]Z[1];B[]C[pass])';
-    var mt = glift.sgf.parse(sgf);
+    var mt = glift.parse.sgf(sgf);
     deepEqual(parseErrors.length, 4);
     ok(parseErrors[0].indexOf('Parsing Warning') !== -1,
         'Actual msg: ' + parseErrors[0]);
@@ -63,7 +63,7 @@ glift.sgf.newParserTest = function() {
     };
     glift.util.logz = testLogger;
 
-    var mt = glift.sgf.parse(sgf);
+    var mt = glift.parse.sgf(sgf);
     deepEqual(parseErrors.length, 7);
     ok(parseErrors[0].indexOf('Garbage after finishing the SGF.') !== -1);
 
@@ -80,7 +80,7 @@ glift.sgf.newParserTest = function() {
     };
     glift.util.logz = testLogger;
 
-    var mt = glift.sgf.parse(sgf);
+    var mt = glift.parse.sgf(sgf);
     deepEqual(parseErrors.length, 2);
     ok(parseErrors[0].indexOf('Unknown property: MULTIGOGM') !== -1);
     ok(parseErrors[1].indexOf('[MULTIGOGM] is not valid') !== -1);
@@ -90,7 +90,7 @@ glift.sgf.newParserTest = function() {
   test('Throw errors on bad syntax: no first paren', function() {
     var sgf = ';GM[1]'
     try {
-      var mt = glift.sgf.parse(sgf);
+      var mt = glift.parse.sgf(sgf);
     } catch (err) {
       ok(err.message.indexOf('Expected first non-whitespace char') !== -1);
     }
@@ -99,7 +99,7 @@ glift.sgf.newParserTest = function() {
   test('Throw errors on bad syntax: no first semicolon', function() {
     var sgf = '(GM[1])'
     try {
-      var mt = glift.sgf.parse(sgf);
+      var mt = glift.parse.sgf(sgf);
     } catch (err) {
       ok(err.message.indexOf('Expected char to be [;]') !== -1);
     }
@@ -108,7 +108,7 @@ glift.sgf.newParserTest = function() {
   test('Throw errors on bad syntax: whitespace in prop', function() {
     var sgf = '(;G M[1])'
     try {
-      var mt = glift.sgf.parse(sgf);
+      var mt = glift.parse.sgf(sgf);
     } catch (err) {
       ok(err.message.indexOf('Unexpected whitespace in property') !== -1);
     }
@@ -117,7 +117,7 @@ glift.sgf.newParserTest = function() {
   test('Throw errors on bad syntax: whitespace in prop', function() {
     var sgf = '(;G_[1])'
     try {
-      var mt = glift.sgf.parse(sgf);
+      var mt = glift.parse.sgf(sgf);
     } catch (err) {
       ok(err.message.indexOf('Unexpected character in property') !== -1);
     }

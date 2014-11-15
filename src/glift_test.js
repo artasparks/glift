@@ -1,5 +1,5 @@
 glift.gliftTest = function() {
-module('glift.gliftTest');
+  module('glift.gliftTest');
   var testUtil = glift.testUtil,
       boardRegions = glift.enums.boardRegions;
 

@@ -26,6 +26,7 @@ var BaseController = function() {
 
   // State variables that are defined on initialize and that could are
   // necessarily mutable.
+  this.parseType = undefined;
   this.treepath = undefined;
   this.movetree = undefined;
   this.goban = undefined;
@@ -43,6 +44,7 @@ BaseController.prototype = {
     if (sgfOptions === undefined) {
       throw 'Options is undefined!  Can\'t create controller'
     }
+    this.parseType = sgfOptions.parseType || glift.parse.parseType.SGF;
     this.sgfString = sgfOptions.sgfString || '';
     this.initialPosition = sgfOptions.initialPosition || [];
     this.problemConditions = sgfOptions.problemConditions || undefined;
@@ -77,7 +79,8 @@ BaseController.prototype = {
           rules.treepath.parseFragment(this.nextMovesPath));
     }
 
-    this.movetree = rules.movetree.getFromSgf(this.sgfString, this.treepath);
+    this.movetree = rules.movetree.getFromSgf(
+        this.sgfString, this.treepath, this.parseType);
     var gobanData = rules.goban.getFromMoveTree(this.movetree, this.treepath);
     this.goban = gobanData.goban;
     this.captureHistory = gobanData.captures;

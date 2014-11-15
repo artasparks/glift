@@ -29,6 +29,7 @@ FILES_TO_AUTOGEN = {
     'htmltests/ProblemTester.html': False,
     'htmltests/QunitTest.html': True,
     'htmltests/ThemeTester.html': False,
+    'htmltests/TygemGameTester.html': False,
     }
 
 # The desired directory order.  Shouldn't be necessary any more except for the
@@ -54,7 +55,7 @@ DIR_ORDER = [
 
     # Tertiary packages
     'sgf',
-    'gib',
+    'parse',
     'controllers',
     'bridge',
     'flattener',

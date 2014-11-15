@@ -5,7 +5,7 @@
  * Note: Because SGFs have notoriously bad data / properties, we log warnings
  * for unknown properties rather than throwing errors.
  */
-glift.sgf.parse = function(sgfString) {
+glift.parse.sgf = function(sgfString) {
   var states = {
     BEGINNING_BEFORE_PAREN: 0,
     BEGINNING: 1,
@@ -47,11 +47,11 @@ glift.sgf.parse = function(sgfString) {
   var parenDepth = 0;
 
   var perror = function(msg) {
-    glift.sgf.parseError(lineNum, colNum, curchar, msg, false /* iswarn */);
+    glift.parse.sgfParseError(lineNum, colNum, curchar, msg, false /* iswarn */);
   };
 
   var pwarn = function(msg) {
-    glift.sgf.parseError(lineNum, colNum, curchar, msg, true /* iswarn */);
+    glift.parse.sgfParseError(lineNum, colNum, curchar, msg, true /* iswarn */);
   };
 
   var flushCharBuffer = function() {
@@ -196,7 +196,7 @@ glift.sgf.parse = function(sgfString) {
 /**
  * Throw a parser error or log a parse warning.  The message is optional.
  */
-glift.sgf.parseError = function(lineNum, colNum, curchar, message, isWarning) {
+glift.parse.sgfParseError = function(lineNum, colNum, curchar, message, isWarning) {
   var header = 'SGF Parsing ' + (isWarning ? 'Warning' : 'Error');
   var err = header + ': At line [' + lineNum + '], column [' + colNum
       + '], char [' + curchar + '], ' + message;

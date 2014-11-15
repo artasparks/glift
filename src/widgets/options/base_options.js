@@ -75,6 +75,15 @@ glift.widgets.options.baseOptions = {
     alias: undefined,
 
     /**
+     * Parsing type.  Defaults to SGF. Supports:
+     *  SGF
+     *  TYGEM
+     *  PANDANET
+     * @api(beta)
+     */
+    parseType: glift.parse.parseType.SGF,
+
+    /**
      * The default widget type. Specifies what type of widget to create.
      * @api(1.0)
      */

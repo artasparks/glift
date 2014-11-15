@@ -4,16 +4,16 @@
  *
  * Also, it's a horrible format.
  */
-glift.gib.parse = function(gibString) {
+glift.parse.tygem = function(gibString) {
   var states = {
     HEADER: 1,
     BODY: 2
   };
   var colorToToken = { 1: 'B', 2: 'W' };
 
-  var WHITE_NAME = 'GAMEWHITENAME'
-  var BLACK_NAME = 'GAMEBLACKNAME'
-  var KOMI = 'GAMECONDITION'
+  var WHITE_NAME = 'GAMEWHITENAME';
+  var BLACK_NAME = 'GAMEBLACKNAME';
+  var KOMI = 'GAMECONDITION';
 
   var movetree = glift.rules.movetree.getInstance();
   var lines = gibString.split('\n');
@@ -52,8 +52,8 @@ glift.gib.parse = function(gibString) {
       var colorToken = colorToToken[splat[3]];
       var x = parseInt(splat[4]);
       var y = 18 - parseInt(splat[5]);
-      movetree.addNode().properties().add(colorToken,
-          glift.util.point(x, y).toSgfCoord());
+      movetree.addNode().properties().add(
+          colorToken, glift.util.point(x, y).toSgfCoord());
     }
   }
   return movetree.getTreeFromRoot();
