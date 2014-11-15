@@ -9,6 +9,21 @@ glift.parse = {
     PANDANET: 'PANDANET'
   },
 
+  fromFileName: function(str, filename) {
+    var parseType = glift.parse.parseType;
+    var ttype = parseType.SGF;
+    if (filename.indexOf('.sgf') > -1) {
+      if (str.indexOf('PANDANET') > -1) {
+        ttype = parseType.PANDANET;
+      } else {
+        ttype = parseType.SGF;
+      }
+    } else if (filename.indexOf('.gib') > -1) {
+      ttype = parseType.TYGEM;
+    }
+    return glift.parse.fromString(str, ttype);
+  },
+
   /**
    * Transforms a stringified game-file into a movetree.
    */
