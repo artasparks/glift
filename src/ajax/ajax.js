@@ -1,3 +1,6 @@
+/**
+ * Ajax/XHR wrapper.
+ */
 glift.ajax = {
   get: function(url, callback) {
     var request = new XMLHttpRequest();
