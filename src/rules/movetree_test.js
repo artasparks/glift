@@ -3,9 +3,25 @@ glift.rules.movetreeTest = function() {
   var movetree = glift.rules.movetree;
   var sgfs = testdata.sgfs;
   var util = glift.util;
+
   test('that parsing works', function() {
     movetree.getFromSgf(sgfs.veryeasy)
     ok(true, 'should not throw an exception (a significant test!)');
+  });
+
+  test('Init basic properties works', function() {
+    var m = movetree.getFromSgf('(;C[zed])')
+    var p = m.properties();
+    deepEqual(p.getOneValue('C'), 'zed');
+    deepEqual(p.getOneValue('GM'), '1');
+    deepEqual(p.getOneValue('FF'), '4');
+    deepEqual(p.getOneValue('CA'), 'UTF-8');
+    deepEqual(p.getOneValue('AP'), 'Glift:' + glift.global.version);
+    deepEqual(p.getOneValue('KM'), '0.00');
+    deepEqual(p.getOneValue('RU'), 'Japanese');
+    deepEqual(p.getOneValue('SZ'), '19');
+    deepEqual(p.getOneValue('PW'), 'White');
+    deepEqual(p.getOneValue('PB'), 'Black');
   });
 
   test('that property retrieval works', function() {

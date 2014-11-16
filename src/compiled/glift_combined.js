@@ -3,7 +3,7 @@
  *
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
- * @version 1.0.2
+ * @version 1.0.3
  * --------------------------------------
  */
 (function(w) {
@@ -22,7 +22,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '1.0.2',
+  version: '1.0.3',
 
   /** Indicates whether or not to store debug data. */
   // TODO(kashomon): Remove this hack.
@@ -1351,6 +1351,9 @@ glift.dom.ux = {
     });
   }
 };
+/**
+ * Ajax/XHR wrapper.
+ */
 glift.ajax = {
   get: function(url, callback) {
     var request = new XMLHttpRequest();
@@ -6477,7 +6480,8 @@ glift.rules.movetree = {
   },
 
   /** Create a MoveTree from an SGF. */
-  getFromSgf: function(sgfString, initPosition) {
+  getFromSgf: function(sgfString, initPosition, parseType) {
+    var parseType = parseType || glift.parse.parseType.SGF;
     initPosition = initPosition || []; // treepath.
     if (glift.util.typeOf(initPosition) === 'string' ||
         glift.util.typeOf(initPosition) === 'number') {
@@ -6487,7 +6491,7 @@ glift.rules.movetree = {
       return glift.rules.movetree.getInstance(19);
     }
     glift.util.majorPerfLog('Before SGF parsing in movetree');
-    var mt = glift.sgf.parse(sgfString);
+    var mt = glift.parse.fromString(sgfString, parseType);
 
     glift.util.majorPerfLog('After SGF parsing in movetree');
     for (var i = 0; i < initPosition.length; i++) {
@@ -6511,6 +6515,42 @@ glift.rules.movetree = {
       var mtz = moveTree.newTreeRef();
       glift.rules.movetree.searchMoveTreeDFS(mtz.moveDown(i), func);
     }
+  },
+
+  /** Convenience method for setting the root properties in a standard way */
+  initRootProperties: function(mt) {
+    var root = mt.getTreeFromRoot();
+    var props = root.properties();
+    if (!props.contains('GM')) {
+      props.add('GM', '1');
+    }
+    if (!props.contains('FF')) {
+      props.add('FF', '4');
+    }
+    if (!props.contains('CA')) {
+      props.add('CA', 'UTF-8');
+    }
+    if (!props.contains('AP')) {
+      props.add('AP', 'Glift:' + glift.global.version);
+    }
+    if (!props.contains('KM')) {
+      props.add('KM', '0.00');
+    }
+    if (!props.contains('RU')) {
+      props.add('RU', 'Japanese');
+    }
+    if (!props.contains('SZ')) {
+      props.add('SZ', '19');
+    }
+    if (!props.contains('PB')) {
+      props.add('PB', 'Black');
+    }
+    if (!props.contains('PW')) {
+      props.add('PW', 'White');
+    }
+    // Note: we don't set ST because it's a dumb option. (Style of
+    // variation-showing).
+    return mt;
   }
 };
 
@@ -7785,6 +7825,69 @@ glift.sgf = {
     return out;
   }
 };
+// The allProperties object is used to check to make sure that a given property is
+// actually a real property
+// MU (???)
+glift.sgf.allProperties = {
+AB: "AB", AE: "AE", AN: "AN", AP: "AP", AR: "AR", AS: "AS", AW: "AW", B: "B",
+BL: "BL", BM: "BM", BR: "BR", BS: "BS", BT: "BT", C: "C", CA: "CA", CH: "CH",
+CP: "CP", CR: "CR", DD: "DD", DM: "DM", DO: "DO", DT: "DT", EL: "EL", EV: "EV",
+EX: "EX", FF: "FF", FG: "FG", GB: "GB", GC: "GC", GM: "GM", GN: "GN", GW: "GW",
+HA: "HA", HO: "HO", ID: "ID", IP: "IP", IT: "IT", IY: "IY", KM: "KM", KO: "KO",
+L: "L", LB: "LB", LN: "LN", LT: "LT", M: "M", MA: "MA", MN: "MN", N: "N", OB:
+"OB", OH: "OH", OM: "OM", ON: "ON", OP: "OP", OT: "OT", OV: "OV", OW: "OW", PB:
+"PB", PC: "PC", PL: "PL", PM: "PM", PW: "PW", RE: "RE", RG: "RG", RO: "RO", RU:
+"RU", SC: "SC", SE: "SE", SI: "SI", SL: "SL", SO: "SO", SQ: "SQ", ST: "ST", SU:
+"SU", SZ: "SZ", TB: "TB", TC: "TC", TE: "TE", TM: "TM", TR: "TR", TW: "TW", UC:
+"UC", US: "US", V: "V", VW: "VW", W: "W", WL: "WL", WR: "WR", WS: "WS", WT: "WT",
+MU: "MU"
+};
+/**
+ * Glift parsing
+ */
+glift.parse = {
+  /** Parse types */
+  parseType: {
+    SGF: 'SGF',
+    TYGEM: 'TYGEM',
+    PANDANET: 'PANDANET'
+  },
+
+  fromFileName: function(str, filename) {
+    var parseType = glift.parse.parseType;
+    var ttype = parseType.SGF;
+    if (filename.indexOf('.sgf') > -1) {
+      if (str.indexOf('PANDANET') > -1) {
+        ttype = parseType.PANDANET;
+      } else {
+        ttype = parseType.SGF;
+      }
+    } else if (filename.indexOf('.gib') > -1) {
+      ttype = parseType.TYGEM;
+    }
+    return glift.parse.fromString(str, ttype);
+  },
+
+  /**
+   * Transforms a stringified game-file into a movetree.
+   */
+  fromString: function(str, ttype) {
+    var ttype = ttype || glift.transform.transformType.SGF;
+    var methodName = glift.enums.toCamelCase(ttype);
+    var func = glift.parse[methodName];
+    var movetree = func(str);
+    return glift.rules.movetree.initRootProperties(movetree);
+  }
+};
+/**
+ * Parse a pandanet SGF.  Pandanet SGFs, are the same as normal SGFs except that
+ * they contain invalid SGF properties.
+ */
+glift.parse.pandanet = function(string) {
+  var replaceRegex = /CoPyright\[[^\]]*\]/;
+  var repl = string.replace(replaceRegex, '');
+  return glift.parse.sgf(repl);
+};
 /**
  * The new Glift SGF parser!
  * Takes a string, returns a movetree.  Easy =).
@@ -7792,7 +7895,7 @@ glift.sgf = {
  * Note: Because SGFs have notoriously bad data / properties, we log warnings
  * for unknown properties rather than throwing errors.
  */
-glift.sgf.parse = function(sgfString) {
+glift.parse.sgf = function(sgfString) {
   var states = {
     BEGINNING_BEFORE_PAREN: 0,
     BEGINNING: 1,
@@ -7834,11 +7937,11 @@ glift.sgf.parse = function(sgfString) {
   var parenDepth = 0;
 
   var perror = function(msg) {
-    glift.sgf.parseError(lineNum, colNum, curchar, msg, false /* iswarn */);
+    glift.parse.sgfParseError(lineNum, colNum, curchar, msg, false /* iswarn */);
   };
 
   var pwarn = function(msg) {
-    glift.sgf.parseError(lineNum, colNum, curchar, msg, true /* iswarn */);
+    glift.parse.sgfParseError(lineNum, colNum, curchar, msg, true /* iswarn */);
   };
 
   var flushCharBuffer = function() {
@@ -7983,7 +8086,7 @@ glift.sgf.parse = function(sgfString) {
 /**
  * Throw a parser error or log a parse warning.  The message is optional.
  */
-glift.sgf.parseError = function(lineNum, colNum, curchar, message, isWarning) {
+glift.parse.sgfParseError = function(lineNum, colNum, curchar, message, isWarning) {
   var header = 'SGF Parsing ' + (isWarning ? 'Warning' : 'Error');
   var err = header + ': At line [' + lineNum + '], column [' + colNum
       + '], char [' + curchar + '], ' + message;
@@ -7993,43 +8096,22 @@ glift.sgf.parseError = function(lineNum, colNum, curchar, message, isWarning) {
     throw new Error(err);
   }
 };
-// The allProperties object is used to check to make sure that a given property is
-// actually a real property
-// MU (???)
-glift.sgf.allProperties = {
-AB: "AB", AE: "AE", AN: "AN", AP: "AP", AR: "AR", AS: "AS", AW: "AW", B: "B",
-BL: "BL", BM: "BM", BR: "BR", BS: "BS", BT: "BT", C: "C", CA: "CA", CH: "CH",
-CP: "CP", CR: "CR", DD: "DD", DM: "DM", DO: "DO", DT: "DT", EL: "EL", EV: "EV",
-EX: "EX", FF: "FF", FG: "FG", GB: "GB", GC: "GC", GM: "GM", GN: "GN", GW: "GW",
-HA: "HA", HO: "HO", ID: "ID", IP: "IP", IT: "IT", IY: "IY", KM: "KM", KO: "KO",
-L: "L", LB: "LB", LN: "LN", LT: "LT", M: "M", MA: "MA", MN: "MN", N: "N", OB:
-"OB", OH: "OH", OM: "OM", ON: "ON", OP: "OP", OT: "OT", OV: "OV", OW: "OW", PB:
-"PB", PC: "PC", PL: "PL", PM: "PM", PW: "PW", RE: "RE", RG: "RG", RO: "RO", RU:
-"RU", SC: "SC", SE: "SE", SI: "SI", SL: "SL", SO: "SO", SQ: "SQ", ST: "ST", SU:
-"SU", SZ: "SZ", TB: "TB", TC: "TC", TE: "TE", TM: "TM", TR: "TR", TW: "TW", UC:
-"UC", US: "US", V: "V", VW: "VW", W: "W", WL: "WL", WR: "WR", WS: "WS", WT: "WT",
-MU: "MU"
-};
-/**
- * Parsing and utilities related to Tygem .gib files.
- */
-glift.gib = {};
 /**
  * The GIB format (i.e., Tygem's file format) is not public, so it's rather
  * difficult to know if this is truly an accurate parser. Oh well.
  *
  * Also, it's a horrible format.
  */
-glift.gib.parse = function(gibString) {
+glift.parse.tygem = function(gibString) {
   var states = {
     HEADER: 1,
     BODY: 2
   };
   var colorToToken = { 1: 'B', 2: 'W' };
 
-  var WHITE_NAME = 'GAMEWHITENAME'
-  var BLACK_NAME = 'GAMEBLACKNAME'
-  var KOMI = 'GAMECONDITION'
+  var WHITE_NAME = 'GAMEWHITENAME';
+  var BLACK_NAME = 'GAMEBLACKNAME';
+  var KOMI = 'GAMECONDITION';
 
   var movetree = glift.rules.movetree.getInstance();
   var lines = gibString.split('\n');
@@ -8068,8 +8150,8 @@ glift.gib.parse = function(gibString) {
       var colorToken = colorToToken[splat[3]];
       var x = parseInt(splat[4]);
       var y = 18 - parseInt(splat[5]);
-      movetree.addNode().properties().add(colorToken,
-          glift.util.point(x, y).toSgfCoord());
+      movetree.addNode().properties().add(
+          colorToken, glift.util.point(x, y).toSgfCoord());
     }
   }
   return movetree.getTreeFromRoot();
@@ -8109,6 +8191,7 @@ var BaseController = function() {
 
   // State variables that are defined on initialize and that could are
   // necessarily mutable.
+  this.parseType = undefined;
   this.treepath = undefined;
   this.movetree = undefined;
   this.goban = undefined;
@@ -8126,6 +8209,7 @@ BaseController.prototype = {
     if (sgfOptions === undefined) {
       throw 'Options is undefined!  Can\'t create controller'
     }
+    this.parseType = sgfOptions.parseType || glift.parse.parseType.SGF;
     this.sgfString = sgfOptions.sgfString || '';
     this.initialPosition = sgfOptions.initialPosition || [];
     this.problemConditions = sgfOptions.problemConditions || undefined;
@@ -8160,7 +8244,8 @@ BaseController.prototype = {
           rules.treepath.parseFragment(this.nextMovesPath));
     }
 
-    this.movetree = rules.movetree.getFromSgf(this.sgfString, this.treepath);
+    this.movetree = rules.movetree.getFromSgf(
+        this.sgfString, this.treepath, this.parseType);
     var gobanData = rules.goban.getFromMoveTree(this.movetree, this.treepath);
     this.goban = gobanData.goban;
     this.captureHistory = gobanData.captures;
@@ -11005,6 +11090,15 @@ glift.widgets.options.baseOptions = {
      * @api(experimental)
      */
     alias: undefined,
+
+    /**
+     * Parsing type.  Defaults to SGF. Supports:
+     *  SGF
+     *  TYGEM
+     *  PANDANET
+     * @api(beta)
+     */
+    parseType: glift.parse.parseType.SGF,
 
     /**
      * The default widget type. Specifies what type of widget to create.

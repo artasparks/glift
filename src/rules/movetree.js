@@ -76,6 +76,42 @@ glift.rules.movetree = {
       var mtz = moveTree.newTreeRef();
       glift.rules.movetree.searchMoveTreeDFS(mtz.moveDown(i), func);
     }
+  },
+
+  /** Convenience method for setting the root properties in a standard way */
+  initRootProperties: function(mt) {
+    var root = mt.getTreeFromRoot();
+    var props = root.properties();
+    if (!props.contains('GM')) {
+      props.add('GM', '1');
+    }
+    if (!props.contains('FF')) {
+      props.add('FF', '4');
+    }
+    if (!props.contains('CA')) {
+      props.add('CA', 'UTF-8');
+    }
+    if (!props.contains('AP')) {
+      props.add('AP', 'Glift:' + glift.global.version);
+    }
+    if (!props.contains('KM')) {
+      props.add('KM', '0.00');
+    }
+    if (!props.contains('RU')) {
+      props.add('RU', 'Japanese');
+    }
+    if (!props.contains('SZ')) {
+      props.add('SZ', '19');
+    }
+    if (!props.contains('PB')) {
+      props.add('PB', 'Black');
+    }
+    if (!props.contains('PW')) {
+      props.add('PW', 'White');
+    }
+    // Note: we don't set ST because it's a dumb option. (Style of
+    // variation-showing).
+    return mt;
   }
 };
 

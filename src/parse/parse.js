@@ -31,6 +31,7 @@ glift.parse = {
     var ttype = ttype || glift.transform.transformType.SGF;
     var methodName = glift.enums.toCamelCase(ttype);
     var func = glift.parse[methodName];
-    return func(str);
+    var movetree = func(str);
+    return glift.rules.movetree.initRootProperties(movetree);
   }
 };
