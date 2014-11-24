@@ -28,7 +28,7 @@ glift.parse = {
    * Transforms a stringified game-file into a movetree.
    */
   fromString: function(str, ttype) {
-    var ttype = ttype || glift.transform.transformType.SGF;
+    var ttype = ttype || glift.parse.parseType.SGF;
     var methodName = glift.enums.toCamelCase(ttype);
     var func = glift.parse[methodName];
     var movetree = func(str);

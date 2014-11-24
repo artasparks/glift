@@ -7872,7 +7872,7 @@ glift.parse = {
    * Transforms a stringified game-file into a movetree.
    */
   fromString: function(str, ttype) {
-    var ttype = ttype || glift.transform.transformType.SGF;
+    var ttype = ttype || glift.parse.parseType.SGF;
     var methodName = glift.enums.toCamelCase(ttype);
     var func = glift.parse[methodName];
     var movetree = func(str);
@@ -8145,11 +8145,11 @@ glift.parse.tygem = function(gibString) {
       // STO 0 2          2               15 15
       //
       // Note that the board is indexed from the bottom left rather than from
-      // the upper right, as with SGFs. Also, the intersections are 0-indexed.
+      // the upper left, as with SGFs. Also, the intersections are 0-indexed.
       var splat = str.split(" ");
       var colorToken = colorToToken[splat[3]];
       var x = parseInt(splat[4]);
-      var y = 18 - parseInt(splat[5]);
+      var y = parseInt(splat[5]);
       movetree.addNode().properties().add(
           colorToken, glift.util.point(x, y).toSgfCoord());
     }
