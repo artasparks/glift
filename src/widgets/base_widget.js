@@ -61,7 +61,7 @@ glift.widgets.BaseWidget.prototype = {
         parentDivBbox,
         this.displayOptions.boardRegion,
         this.displayOptions.intersections,
-        this.sgfOptions.uiComponents,
+        this._getUiComponents(this.sgfOptions),
         this.displayOptions.oneColumnSplits,
         this.displayOptions.twoColumnSplits).calcWidgetPositioning();
 
@@ -141,6 +141,23 @@ glift.widgets.BaseWidget.prototype = {
     this._initProblemData();
     this.applyBoardData(this.controller.getEntireBoardState());
     return this;
+  },
+
+  /** Gets the UI icons to use */
+  _getUiComponents: function(sgfOptions) {
+    var base = sgfOptions.uiComponents;
+    base = base.slice(0, base.length); // make a shallow copy.
+    var rmItem = function(arr, key) {
+      var idx = arr.indexOf(key);
+      if (idx > -1) {
+        arr.shift(idx);
+      }
+    }
+    sgfOptions.disableStatusBar && rmItem(base, 'STATUS_BAR');
+    sgfOptions.disableBoard && rmItem(base, 'BOARD');
+    sgfOptions.disableCommentBox && rmItem(base, 'COMMENT_BOX');
+    sgfOptions.disableIonBar && rmItem(base, 'ICONBAR');
+    return base;
   },
 
   /**

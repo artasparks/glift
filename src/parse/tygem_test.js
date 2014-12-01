@@ -13,8 +13,8 @@ glift.parse.tygemTest = function() {
     deepEqual(mt.properties().getOneValue('PB'), 'go48 (2K)');
 
     mt.moveDown();
-    deepEqual(mt.properties().getAsPoint('B'), point(15, 3));
+    deepEqual(mt.properties().getAsPoint('B').toString(), point(15, 15).toString());
     mt.moveDown();
-    deepEqual(mt.properties().getAsPoint('W'), point(3, 16));
+    deepEqual(mt.properties().getAsPoint('W').toString(), point(3, 2).toString());
   });
 };

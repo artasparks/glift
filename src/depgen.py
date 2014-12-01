@@ -28,6 +28,7 @@ FILES_TO_AUTOGEN = {
     'htmltests/PositionTester.html': False,
     'htmltests/ProblemTester.html': False,
     'htmltests/QunitTest.html': True,
+    'htmltests/TextOnlyTester.html': False,
     'htmltests/ThemeTester.html': False,
     'htmltests/TygemGameTester.html': False,
     }

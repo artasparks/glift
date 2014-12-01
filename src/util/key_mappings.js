@@ -148,8 +148,12 @@ glift.keyMappings = {
 
     if (argType === 'function') {
       funcOrIcon(widget);
-      if (event.preventDefault) event.preventDefault();
-      else  event.returnValue = false; // IE
+      if (manager.isFullscreen()) {
+        // We don't want the widget interacting with anything else while
+        // full-screen.
+        if (event.preventDefault) event.preventDefault();
+        else  event.returnValue = false; // IE
+      }
     } else if (argType === 'string') {
       // Assume it's an icon-action-path
       // icon namespaces look like: icons.arrowleft.mouseup
@@ -159,8 +163,12 @@ glift.keyMappings = {
         action = action[actionNamespace[i]];
       }
       action(keyEvent, widget);
-      if (event.preventDefault) event.preventDefault();
-      else  event.returnValue = false; // IE
+      if (manager.isFullscreen()) {
+        // We don't want the widget interacting with anything else while
+        // full-screen.
+        if (event.preventDefault) event.preventDefault();
+        else  event.returnValue = false; // IE
+      }
     }
   }
 };

@@ -320,6 +320,11 @@ glift.widgets.WidgetManager.prototype = {
     loader(this.sgfColIndex + 1);
   },
 
+  /** Whether or not the widget is currently fullscreened. */
+  isFullscreen: function() {
+    return !!this.fullscreenDivId;
+  },
+
   /** Enable auto-resizing of the glift instance. */
   enableFullscreenAutoResize: function() {
     if (window.onresize) { this.oldWindowResize = window.onresize; }

@@ -191,6 +191,15 @@ glift.widgets.options.baseOptions = {
     ],
 
     /**
+     * Convenience variables for disabling ui components.
+     * @api(experimental)
+     */
+    disableStatusBar: false,
+    disableBoard: false,
+    disableCommentBox: false,
+    disableIconBar: false,
+
+    /**
      * Icons to use in the status bar.
      * @api(1.0)
      */
@@ -200,7 +209,6 @@ glift.widgets.options.baseOptions = {
       'game-info',
       'move-indicator',
       'fullscreen'
-      // TODO(kashomon): Add a settings icon.
       // 'settings-wrench'
     ],
 

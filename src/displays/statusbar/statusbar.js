@@ -81,11 +81,24 @@ glift.displays.statusbar._StatusBar.prototype = {
       }, gameInfoTheme.textDiv);
 
     textDiv.css(textDivCss);
+
+    var exitScreen = function() {
+      newDiv.remove();
+    };
     if (glift.platform.isMobile()) {
-      textDiv.on('touchend', function() { newDiv.remove(); });
+      textDiv.on('touchend', exitScreen);
     } else {
-      textDiv.on('click', function() { newDiv.remove(); });
+      textDiv.on('click', exitScreen);
     }
+
+    var instanceId = this.widget.manager.id;
+    var oldEscAction = glift.keyMappings.getFuncOrIcon(instanceId, 'ESCAPE');
+    glift.keyMappings.registerKeyAction(instanceId, 'ESCAPE', function() {
+      exitScreen();
+      if (oldEscAction) {
+        glift.keyMappings.registerKeyAction(instanceId, 'ESCAPE', oldEscAction);
+      }
+    });
 
     // This is a hack until a better solution for captures can be crafted.
     var captureArr = [
@@ -117,6 +130,7 @@ glift.displays.statusbar._StatusBar.prototype = {
    * Note: Key bindings are set in the base_widget.
    */
   fullscreen: function() {
+    // TODO(kashomon): Support true fullscreen: issues/69
     var widget = this.widget,
         wrapperDivId = widget.wrapperDivId,
         newDivId = wrapperDivId + '_fullscreen',
@@ -135,8 +149,6 @@ glift.displays.statusbar._StatusBar.prototype = {
       }, this.theme.statusBar.fullscreen);
     newDiv.css(cssObj);
 
-    // TODO(kashomon): Support true fullscreen: issues/69
-
     // Prevent scrolling outside the div
     body.addClass('glift-fullscreen-no-scroll').append(newDiv);
     manager.prevScrollTop =
@@ -154,8 +166,8 @@ glift.displays.statusbar._StatusBar.prototype = {
 
   /** Returns Glift to non-fullscreen */
   unfullscreen: function() {
-    if (!this.widget.manager.fullscreenDivId) {
-      return; // We're not fullscreened
+    if (!this.widget.manager.isFullscreen()) {
+      return;
     }
     var widget = this.widget,
         wrapperDivEl = glift.dom.elem(widget.wrapperDivId),
