@@ -631,8 +631,12 @@ glift.keyMappings = {
 
     if (argType === 'function') {
       funcOrIcon(widget);
-      if (event.preventDefault) event.preventDefault();
-      else  event.returnValue = false; // IE
+      if (manager.isFullscreen()) {
+        // We don't want the widget interacting with anything else while
+        // full-screen.
+        if (event.preventDefault) event.preventDefault();
+        else  event.returnValue = false; // IE
+      }
     } else if (argType === 'string') {
       // Assume it's an icon-action-path
       // icon namespaces look like: icons.arrowleft.mouseup
@@ -642,8 +646,12 @@ glift.keyMappings = {
         action = action[actionNamespace[i]];
       }
       action(keyEvent, widget);
-      if (event.preventDefault) event.preventDefault();
-      else  event.returnValue = false; // IE
+      if (manager.isFullscreen()) {
+        // We don't want the widget interacting with anything else while
+        // full-screen.
+        if (event.preventDefault) event.preventDefault();
+        else  event.returnValue = false; // IE
+      }
     }
   }
 };
@@ -5239,11 +5247,24 @@ glift.displays.statusbar._StatusBar.prototype = {
       }, gameInfoTheme.textDiv);
 
     textDiv.css(textDivCss);
+
+    var exitScreen = function() {
+      newDiv.remove();
+    };
     if (glift.platform.isMobile()) {
-      textDiv.on('touchend', function() { newDiv.remove(); });
+      textDiv.on('touchend', exitScreen);
     } else {
-      textDiv.on('click', function() { newDiv.remove(); });
+      textDiv.on('click', exitScreen);
     }
+
+    var instanceId = this.widget.manager.id;
+    var oldEscAction = glift.keyMappings.getFuncOrIcon(instanceId, 'ESCAPE');
+    glift.keyMappings.registerKeyAction(instanceId, 'ESCAPE', function() {
+      exitScreen();
+      if (oldEscAction) {
+        glift.keyMappings.registerKeyAction(instanceId, 'ESCAPE', oldEscAction);
+      }
+    });
 
     // This is a hack until a better solution for captures can be crafted.
     var captureArr = [
@@ -5275,6 +5296,7 @@ glift.displays.statusbar._StatusBar.prototype = {
    * Note: Key bindings are set in the base_widget.
    */
   fullscreen: function() {
+    // TODO(kashomon): Support true fullscreen: issues/69
     var widget = this.widget,
         wrapperDivId = widget.wrapperDivId,
         newDivId = wrapperDivId + '_fullscreen',
@@ -5293,8 +5315,6 @@ glift.displays.statusbar._StatusBar.prototype = {
       }, this.theme.statusBar.fullscreen);
     newDiv.css(cssObj);
 
-    // TODO(kashomon): Support true fullscreen: issues/69
-
     // Prevent scrolling outside the div
     body.addClass('glift-fullscreen-no-scroll').append(newDiv);
     manager.prevScrollTop =
@@ -5312,8 +5332,8 @@ glift.displays.statusbar._StatusBar.prototype = {
 
   /** Returns Glift to non-fullscreen */
   unfullscreen: function() {
-    if (!this.widget.manager.fullscreenDivId) {
-      return; // We're not fullscreened
+    if (!this.widget.manager.isFullscreen()) {
+      return;
     }
     var widget = this.widget,
         wrapperDivEl = glift.dom.elem(widget.wrapperDivId),
@@ -10271,7 +10291,7 @@ glift.widgets.BaseWidget.prototype = {
         parentDivBbox,
         this.displayOptions.boardRegion,
         this.displayOptions.intersections,
-        this.sgfOptions.uiComponents,
+        this._getUiComponents(this.sgfOptions),
         this.displayOptions.oneColumnSplits,
         this.displayOptions.twoColumnSplits).calcWidgetPositioning();
 
@@ -10351,6 +10371,23 @@ glift.widgets.BaseWidget.prototype = {
     this._initProblemData();
     this.applyBoardData(this.controller.getEntireBoardState());
     return this;
+  },
+
+  /** Gets the UI icons to use */
+  _getUiComponents: function(sgfOptions) {
+    var base = sgfOptions.uiComponents;
+    base = base.slice(0, base.length); // make a shallow copy.
+    var rmItem = function(arr, key) {
+      var idx = arr.indexOf(key);
+      if (idx > -1) {
+        arr.shift(idx);
+      }
+    }
+    sgfOptions.disableStatusBar && rmItem(base, 'STATUS_BAR');
+    sgfOptions.disableBoard && rmItem(base, 'BOARD');
+    sgfOptions.disableCommentBox && rmItem(base, 'COMMENT_BOX');
+    sgfOptions.disableIonBar && rmItem(base, 'ICONBAR');
+    return base;
   },
 
   /**
@@ -10877,6 +10914,11 @@ glift.widgets.WidgetManager.prototype = {
     loader(this.sgfColIndex + 1);
   },
 
+  /** Whether or not the widget is currently fullscreened. */
+  isFullscreen: function() {
+    return !!this.fullscreenDivId;
+  },
+
   /** Enable auto-resizing of the glift instance. */
   enableFullscreenAutoResize: function() {
     if (window.onresize) { this.oldWindowResize = window.onresize; }
@@ -11208,6 +11250,15 @@ glift.widgets.options.baseOptions = {
     ],
 
     /**
+     * Convenience variables for disabling ui components.
+     * @api(experimental)
+     */
+    disableStatusBar: false,
+    disableBoard: false,
+    disableCommentBox: false,
+    disableIconBar: false,
+
+    /**
      * Icons to use in the status bar.
      * @api(1.0)
      */
@@ -11217,7 +11268,6 @@ glift.widgets.options.baseOptions = {
       'game-info',
       'move-indicator',
       'fullscreen'
-      // TODO(kashomon): Add a settings icon.
       // 'settings-wrench'
     ],
 
