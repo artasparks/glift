@@ -72,8 +72,10 @@ HEADER = '<!-- AUTO-GEN-DEPS -->'
 FOOTER = '<!-- END-AUTO-GEN-DEPS -->'
 
 # Need a closure alias, e.g.,: export CLOSURE="java -jar ~/closure.jar"
-# --compilation_level ADVANCED_OPTIMIZATIONS"
+# --compilation_level ADVANCED_OPTIMIZATIONS" -- If advanced optimizations are
+# desired.
 CLOSURE = ("${CLOSURE} --js " + COMBINED_LOC + " --js_output_file " + COMPILED_LOC)
+     # + " --compilation_level ADVANCED_OPTIMIZATIONS")
 
 def CreateImport(name):
   return '<script type="text/javascript" src="../' + name + '"></script>'
