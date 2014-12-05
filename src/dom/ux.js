@@ -16,6 +16,7 @@ glift.dom.ux = {
    * It's not totally clear that this is the right UX experience.  For boards
    * that don't over flow, it's actually kind of obnoxious.
    */
+  // TODO(kashomon): This isn't used currently.  Probably should be removed.
   onlyInnerVertScroll: function(elem, bbox) {
     var preventScroll = function(ev) {
         ev.stopPropagation();
