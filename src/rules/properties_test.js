@@ -67,8 +67,8 @@ glift.rules.propertiesTest = function() {
     props.add('C', '[8k] Zed');
     deepEqual(props.getOneValue('C'), '[8k] Zed')
 
-    props.set('C', '[8k\\] Zod');
-    deepEqual(props.getOneValue('C'), '[8k] Zod')
+    props.set('C', '[8k\\] Zod [9k\\] bod');
+    deepEqual(props.getOneValue('C'), '[8k] Zod [9k] bod')
 
     props.set('C', '[8k] Zod');
     deepEqual(props.getOneValue('C'), '[8k] Zod')

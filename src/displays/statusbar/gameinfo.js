@@ -9,23 +9,11 @@ glift.displays.statusbar._StatusBar.prototype.gameInfo =
       suffix = '_gameinfo',
       newDivId = wrapperDivId + suffix + '_wrapper',
       wrapperDivEl = glift.dom.elem(wrapperDivId),
-      newDiv = glift.dom.newDiv(newDivId),
       gameInfoTheme = this.theme.statusBar.gameInfo,
-      fullBox = this.positioning.fullWidgetBbox(),
-      // This CSS shouldn't be modified.
-      cssObj = {
-        position: 'absolute',
-        margin: '0px',
-        padding: '0px',
-        top: fullBox.top() + 'px',
-        left: fullBox.left() + 'px',
-        width: fullBox.width() + 'px',
-        height: fullBox.height() + 'px',
-        'z-index': 100,
-        MozBoxSizing: 'border-box',
-        boxSizing: 'border-box'
-      };
-  newDiv.css(cssObj);
+      fullBox = this.positioning.fullWidgetBbox();
+
+  var newDiv = glift.dom.absBboxDiv(fullBox, newDivId);
+  newDiv.css({'z-index': 100}); //
 
   var textDiv = glift.dom.newDiv(wrapperDivId + suffix + '_textdiv');
   var textDivCss = glift.obj.flatMerge({

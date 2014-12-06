@@ -34,15 +34,15 @@ Properties.prototype = {
     if (valueType !== 'string' && valueType !== 'array') {
       // The value has to be either a string or an array.  Maybe we should throw
       // an error?
-      value = [ value.toString().replace('\\]', ']') ];
+      value = [ this.unescape(value) ];
     } else if (valueType === 'array') {
       // Force all array values to be of type string.
       for (var i = 0, len = value.length; i < len; i++) {
         // Ensure properties are strings
-        value[i] = value[i].toString().replace('\\]', ']');
+        value[i] = this.unescape(value[i]);
       }
     } else if (valueType === 'string') {
-      value = [ value.replace('\\]', ']') ];
+      value = [ this.unescape(value) ];
     } else {
       throw new Error('Unexpected type ' +
           glift.util.typeOf(value) + ' for item ' + item);
@@ -171,7 +171,7 @@ Properties.prototype = {
   set: function(prop, value) {
     if (prop !== undefined && value !== undefined) {
       if (glift.util.typeOf(value) === 'string') {
-        this.propMap[prop] = [ value.replace('\\]', ']') ];
+        this.propMap[prop] = [ this.unescape(value) ];
       } else if (glift.util.typeOf(value) === 'array') {
         for (var i = 0; i < value.length; i++) {
           if (glift.util.typeOf(value[i]) !== 'string') {
@@ -179,7 +179,7 @@ Properties.prototype = {
               'must be strings. was [' + glift.util.typeOf(value[i]) +
               '], for value ' + value[i]);
           }
-          value[i] = value[i].replace('\\]', ']');
+          value[i] = this.unescape(value[i]);
         }
         this.propMap[prop] = value
       }
@@ -362,6 +362,16 @@ Properties.prototype = {
       }
     }
     return gameInfoArr;
+  },
+
+  /** Escapes some text by converting ] to \\] */
+  escape: function(text) {
+    return text.toString().replace(/]/g, '\\]');
+  },
+
+  /** Unescapes some text by converting \\] to ] */
+  unescape: function(text) {
+    return text.toString().replace(/\\]/g, ']');
   }
 };
 

@@ -258,8 +258,8 @@ glift.rules.movetreeTest = function() {
 
   test('Convert to SGF - escaped bracket', function() {
     var mt = glift.rules.movetree.getInstance();
-    mt.properties().add('C', '[8k] Foo');
-    deepEqual(mt.toSgf(), '(;C[[8k\\] Foo])');
+    mt.properties().add('C', '[8k]] Foo');
+    deepEqual(mt.toSgf(), '(;C[[8k\\]\\] Foo])');
   });
 
   test('getCurrentPlayer -- complex problem', function() {

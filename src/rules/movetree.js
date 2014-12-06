@@ -479,7 +479,7 @@ glift.rules._MoveTree.prototype = {
       if (values.length > 0) {
         for (var i = 0; i < values.length; i++) {
           // Ensure a string and escape right brackets.
-          var val = values[i].toString().replace(']', '\\]')
+          var val = node.properties().escape(values[i]);
           out += '[' + val + ']'
         }
       } else {

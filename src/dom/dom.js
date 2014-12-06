@@ -50,6 +50,26 @@ glift.dom = {
     return wrapper;
   },
 
+  /**
+   * Produces an absolutely positioned div from a bounding box.
+   */
+  absBboxDiv: function(bbox, id) {
+    var newDiv  = this.newDiv(id);
+    var cssObj = {
+      position: 'absolute',
+      margin: '0px',
+      padding: '0px',
+      top: bbox.top() + 'px',
+      left: bbox.left() + 'px',
+      width: bbox.width() + 'px',
+      height: bbox.height() + 'px',
+      MozBoxSizing: 'border-box',
+      boxSizing: 'border-box'
+    };
+    newDiv.css(cssObj);
+    return newDiv;
+  },
+
   /** Convert a string. */
   newElem: function(type) {
     return type ? glift.dom.elem(document.createElement(type + '')) : null;
