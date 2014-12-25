@@ -16,11 +16,12 @@ It was built from the beginning to support:
 
 Here's a simple example, to create a game viewer for a game in div.
 
+```javascript
       glift.create({
         divId: 'myId',
         sgf: 'mysgfs/lee_sedol_vs_gu_li.sgf'
       });
-
+```
 See [GliftGo.com](http://www.gliftgo.com) if you want to see Glift in action and
 lots of code samples!
 
