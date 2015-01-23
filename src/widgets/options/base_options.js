@@ -203,14 +203,14 @@ glift.widgets.options.baseOptions = {
      * Icons to use in the status bar.
      * @api(1.0)
      */
-    // TODO(kashomon): Make per widget type (mv num not necessary for problems?)
     // TODO(kashomon): Enable settings when ready
-    statusBarIcons: [
-      'game-info',
-      'move-indicator',
-      'fullscreen'
+    statusBarIcons: undefined,
+    // [
+      // 'game-info',
+      // 'move-indicator',
+      // 'fullscreen'
       // 'settings-wrench'
-    ],
+    // ],
 
     /**
      * Metadata for this SGF.  Like the global metadata, this option is not

@@ -33,5 +33,11 @@ glift.widgets.options.GAME_VIEWER = {
 
   problemConditions: {},
 
-  controllerFunc: glift.controllers.gameViewer
+  controllerFunc: glift.controllers.gameViewer,
+
+  statusBarIcons: [
+    'game-info',
+    'move-indicator',
+    'fullscreen'
+  ]
 };

@@ -3,7 +3,7 @@
  *
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
- * @version 1.0.3
+ * @version 1.0.4
  * --------------------------------------
  */
 (function(w) {
@@ -22,7 +22,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '1.0.3',
+  version: '1.0.4',
 
   /** Indicates whether or not to store debug data. */
   // TODO(kashomon): Remove this hack.
@@ -1048,6 +1048,26 @@ glift.dom = {
     return wrapper;
   },
 
+  /**
+   * Produces an absolutely positioned div from a bounding box.
+   */
+  absBboxDiv: function(bbox, id) {
+    var newDiv  = this.newDiv(id);
+    var cssObj = {
+      position: 'absolute',
+      margin: '0px',
+      padding: '0px',
+      top: bbox.top() + 'px',
+      left: bbox.left() + 'px',
+      width: bbox.width() + 'px',
+      height: bbox.height() + 'px',
+      MozBoxSizing: 'border-box',
+      boxSizing: 'border-box'
+    };
+    newDiv.css(cssObj);
+    return newDiv;
+  },
+
   /** Convert a string. */
   newElem: function(type) {
     return type ? glift.dom.elem(document.createElement(type + '')) : null;
@@ -1313,6 +1333,7 @@ glift.dom.ux = {
    * It's not totally clear that this is the right UX experience.  For boards
    * that don't over flow, it's actually kind of obnoxious.
    */
+  // TODO(kashomon): This isn't used currently.  Probably should be removed.
   onlyInnerVertScroll: function(elem, bbox) {
     var preventScroll = function(ev) {
         ev.stopPropagation();
@@ -4444,28 +4465,42 @@ glift.displays.icons.svg = {
     // bbox: {"x":5.5,"y":5.318,"x2":24.316,"y2":25.682,"width":18.816,"height":20.364}
   // },
 
+  // http://raphaeljs.com/icons/#arrowup
+  arrowup: {
+    string: "M23.963,20.834L17.5,9.64c-0.825-1.429-2.175-1.429-3,0L8.037,20.834c-0.825,1.429-0.15,2.598,1.5,2.598h12.926C24.113,23.432,24.788,22.263,23.963,20.834z",
+    bbox: {"x":7.684895,"y":8.56825,"x2":24.315105,"y2":23.432,"width":16.630209,"height":14.86375}
+  },
+
+  // Next Move
+  // http://raphaeljs.com/icons/#arrowright
+  arrowright: {
+    string: "M11.166,23.963L22.359,17.5c1.43-0.824,1.43-2.175,0-3L11.166,8.037c-1.429-0.826-2.598-0.15-2.598,1.5v12.926C8.568,24.113,9.737,24.789,11.166,23.963z",
+    bbox: {"x":8.568,"y":7.684457,"x2":23.4315,"y2":24.315543,"width":14.8635,"height":16.631086}
+  },
+
+  // Previous Move
   // http://raphaeljs.com/icons/#arrowleft
   arrowleft: {
     string: "M20.834,8.037L9.641,14.5c-1.43,0.824-1.43,2.175,0,3l11.193,6.463c1.429,0.826,2.598,0.15,2.598-1.5V9.537C23.432,7.887,22.263,7.211,20.834,8.037z",
     bbox: {"x":8.5685,"y":7.684457,"x2":23.432,"y2":24.315543,"width":14.8635,"height":16.631086}
   },
 
+  // Hypothetically for passing
   // http://raphaeljs.com/icons/#detour
-  // Unused -- hypothetically for passing
-  // detour: {
-    // string: "M29.342,15.5l-7.556-4.363v2.614H18.75c-1.441-0.004-2.423,1.002-2.875,1.784c-0.735,1.222-1.056,2.561-1.441,3.522c-0.135,0.361-0.278,0.655-0.376,0.817c-1.626,0-0.998,0-2.768,0c-0.213-0.398-0.571-1.557-0.923-2.692c-0.237-0.676-0.5-1.381-1.013-2.071C8.878,14.43,7.89,13.726,6.75,13.75H2.812v3.499c0,0,0.358,0,1.031,0h2.741c0.008,0.013,0.018,0.028,0.029,0.046c0.291,0.401,0.634,1.663,1.031,2.888c0.218,0.623,0.455,1.262,0.92,1.897c0.417,0.614,1.319,1.293,2.383,1.293H11c2.25,0,1.249,0,3.374,0c0.696,0.01,1.371-0.286,1.809-0.657c1.439-1.338,1.608-2.886,2.13-4.127c0.218-0.608,0.453-1.115,0.605-1.314c0.006-0.01,0.012-0.018,0.018-0.025h2.85v2.614L29.342,15.5zM10.173,14.539c0.568,0.76,0.874,1.559,1.137,2.311c0.04,0.128,0.082,0.264,0.125,0.399h2.58c0.246-0.697,0.553-1.479,1.005-2.228c0.252-0.438,0.621-0.887,1.08-1.272H9.43C9.735,14.003,9.99,14.277,10.173,14.539z",
-    // bbox: {"x":2.812,"y":11.137,"x2":29.342,"y2":23.37325,"width":26.53,"height":12.23625}
-  // },
+  detour: {
+    string: "M29.342,15.5l-7.556-4.363v2.614H18.75c-1.441-0.004-2.423,1.002-2.875,1.784c-0.735,1.222-1.056,2.561-1.441,3.522c-0.135,0.361-0.278,0.655-0.376,0.817c-1.626,0-0.998,0-2.768,0c-0.213-0.398-0.571-1.557-0.923-2.692c-0.237-0.676-0.5-1.381-1.013-2.071C8.878,14.43,7.89,13.726,6.75,13.75H2.812v3.499c0,0,0.358,0,1.031,0h2.741c0.008,0.013,0.018,0.028,0.029,0.046c0.291,0.401,0.634,1.663,1.031,2.888c0.218,0.623,0.455,1.262,0.92,1.897c0.417,0.614,1.319,1.293,2.383,1.293H11c2.25,0,1.249,0,3.374,0c0.696,0.01,1.371-0.286,1.809-0.657c1.439-1.338,1.608-2.886,2.13-4.127c0.218-0.608,0.453-1.115,0.605-1.314c0.006-0.01,0.012-0.018,0.018-0.025h2.85v2.614L29.342,15.5zM10.173,14.539c0.568,0.76,0.874,1.559,1.137,2.311c0.04,0.128,0.082,0.264,0.125,0.399h2.58c0.246-0.697,0.553-1.479,1.005-2.228c0.252-0.438,0.621-0.887,1.08-1.272H9.43C9.735,14.003,9.99,14.277,10.173,14.539z",
+    bbox: {"x":2.812,"y":11.137,"x2":29.342,"y2":23.37325,"width":26.53,"height":12.23625}
+  },
 
   checkbox: {
     string: "M26,27.5H6c-0.829,0-1.5-0.672-1.5-1.5V6c0-0.829,0.671-1.5,1.5-1.5h20c0.828,0,1.5,0.671,1.5,1.5v20C27.5,26.828,26.828,27.5,26,27.5zM7.5,24.5h17v-17h-17V24.5z",
     bbox: {"x":4.5,"y":4.5,"x2":27.5,"y2":27.5,"width":23,"height":23}
   },
 
-  // edit: {
-    // string: "M27.87,7.863L23.024,4.82l-7.889,12.566l4.842,3.04L27.87,7.863zM14.395,21.25l-0.107,2.855l2.527-1.337l2.349-1.24l-4.672-2.936L14.395,21.25zM29.163,3.239l-2.532-1.591c-0.638-0.401-1.479-0.208-1.882,0.43l-0.998,1.588l4.842,3.042l0.999-1.586C29.992,4.481,29.802,3.639,29.163,3.239zM25.198,27.062c0,0.275-0.225,0.5-0.5,0.5h-19c-0.276,0-0.5-0.225-0.5-0.5v-19c0-0.276,0.224-0.5,0.5-0.5h13.244l1.884-3H5.698c-1.93,0-3.5,1.57-3.5,3.5v19c0,1.93,1.57,3.5,3.5,3.5h19c1.93,0,3.5-1.57,3.5-3.5V11.097l-3,4.776V27.062z",
-    // bbox: {"x":2.198,"y":1.4388,"x2":29.80125,"y2":30.562,"width":27.60325,"height":29.12316}
-  // },
+  edit: {
+    string: "M27.87,7.863L23.024,4.82l-7.889,12.566l4.842,3.04L27.87,7.863zM14.395,21.25l-0.107,2.855l2.527-1.337l2.349-1.24l-4.672-2.936L14.395,21.25zM29.163,3.239l-2.532-1.591c-0.638-0.401-1.479-0.208-1.882,0.43l-0.998,1.588l4.842,3.042l0.999-1.586C29.992,4.481,29.802,3.639,29.163,3.239zM25.198,27.062c0,0.275-0.225,0.5-0.5,0.5h-19c-0.276,0-0.5-0.225-0.5-0.5v-19c0-0.276,0.224-0.5,0.5-0.5h13.244l1.884-3H5.698c-1.93,0-3.5,1.57-3.5,3.5v19c0,1.93,1.57,3.5,3.5,3.5h19c1.93,0,3.5-1.57,3.5-3.5V11.097l-3,4.776V27.062z",
+    bbox: {"x":2.198,"y":1.4388,"x2":29.80125,"y2":30.562,"width":27.60325,"height":29.12316}
+  },
 
   // From iconmonstr
   // http://iconmonstr.com/arrow-17-icon/
@@ -4510,6 +4545,9 @@ glift.displays.icons.svg = {
   // Fullscreen Glift!
   // http://raphaeljs.com/icons/#expand
   fullscreen: {
+    // http://iconmonstr.com/fullscreen-icon/
+    // string: "M157.943,426.942L192.94,462H50V319.062l35.058,34.997l57.253-57.254l72.884,72.886L157.943,426.942z M319.062,50l34.997,35.058l-56.08,56.079l72.885,72.885l56.08-56.08L462,192.938V50H319.062z M85.058,157.943L50,192.94V50h142.938 L157.94,85.058l57.254,57.253l-72.886,72.884L85.058,157.943z M462,319.062l-35.058,34.997l-56.079-56.08l-72.885,72.885 l56.08,56.08L319.062,462H462V319.062z",
+    // string: "M363.68,288.439h-76.24v76.238h-58.877v-76.238h-76.24v-58.877h76.24v-76.24h58.877v76.24h76.24V288.439z M462,256c0,113.771-92.229,206-206,206S50,369.771,50,256S142.229,50,256,50S462,142.229,462,256z M422,256 c0-91.755-74.258-166-166-166c-91.755,0-166,74.259-166,166c0,91.755,74.258,166,166,166C347.755,422,422,347.741,422,256z",
     string: "M25.545,23.328,17.918,15.623,25.534,8.007,27.391,9.864,29.649,1.436,21.222,3.694,23.058,5.53,15.455,13.134,7.942,5.543,9.809,3.696,1.393,1.394,3.608,9.833,5.456,8.005,12.98,15.608,5.465,23.123,3.609,21.268,1.351,29.695,9.779,27.438,7.941,25.6,15.443,18.098,23.057,25.791,21.19,27.638,29.606,29.939,27.393,21.5z",
     bbox: {"x":1.351,"y":1.394,"x2":29.649,"y2":29.939,"width":28.298,"height":28.545}
   },
@@ -5188,158 +5226,6 @@ glift.displays.statusbar._StatusBar.prototype = {
     return this;
   },
 
-  /**
-   * Create a game info object. Takes a array of game info data.
-   *
-   * Note: Key bindings are set in the base_widget.
-   */
-  gameInfo: function(gameInfoArr, captureCount) {
-    var wrapperDivId = this.widget.wrapperDivId,
-        suffix = '_gameinfo',
-        newDivId = wrapperDivId + suffix + '_wrapper',
-        wrapperDivEl = glift.dom.elem(wrapperDivId),
-        newDiv = glift.dom.newDiv(newDivId),
-        gameInfoTheme = this.theme.statusBar.gameInfo,
-        fullBox = this.positioning.fullWidgetBbox(),
-        // This CSS shouldn't be modified.
-        cssObj = {
-          position: 'absolute',
-          margin: '0px',
-          padding: '0px',
-          top: fullBox.top() + 'px',
-          left: fullBox.left() + 'px',
-          width: fullBox.width() + 'px',
-          height: fullBox.height() + 'px',
-          'z-index': 100,
-          MozBoxSizing: 'border-box',
-          boxSizing: 'border-box'
-        };
-    newDiv.css(cssObj);
-
-    var textDiv = glift.dom.newDiv(wrapperDivId + suffix + '_textdiv');
-    var textDivCss = glift.obj.flatMerge({
-        position: 'relative',
-        margin: '0px',
-        padding: '0px',
-        'overflow-y': 'auto',
-        height: fullBox.height() + 'px',
-        width: fullBox.width() + 'px',
-        MozBoxSizing: 'border-box',
-        boxSizing: 'border-box'
-      }, gameInfoTheme.textDiv);
-
-    textDiv.css(textDivCss);
-
-    var exitScreen = function() {
-      newDiv.remove();
-    };
-    if (glift.platform.isMobile()) {
-      textDiv.on('touchend', exitScreen);
-    } else {
-      textDiv.on('click', exitScreen);
-    }
-
-    var instanceId = this.widget.manager.id;
-    var oldEscAction = glift.keyMappings.getFuncOrIcon(instanceId, 'ESCAPE');
-    glift.keyMappings.registerKeyAction(instanceId, 'ESCAPE', function() {
-      exitScreen();
-      if (oldEscAction) {
-        glift.keyMappings.registerKeyAction(instanceId, 'ESCAPE', oldEscAction);
-      }
-    });
-
-    // This is a hack until a better solution for captures can be crafted.
-    var captureArr = [
-      {displayName: 'Captured White Stones', value: captureCount.WHITE},
-      {displayName: 'Captured Black Stones', value: captureCount.BLACK}
-    ];
-    gameInfoArr = captureArr.concat(gameInfoArr);
-
-    var textArray = [];
-    for (var i = 0; i < gameInfoArr.length; i++) {
-      var obj = gameInfoArr[i];
-      textArray.push('<strong>' + obj.displayName + ': </strong>' + obj.value);
-    }
-
-    textDiv
-      .append(glift.dom.newElem('h3')
-        .appendText('Game Info')
-        .css(glift.obj.flatMerge(gameInfoTheme.textTitle, gameInfoTheme.text)))
-      .append(glift.dom.convertText(textArray.join('\n'),
-            glift.obj.flatMerge(gameInfoTheme.textBody, gameInfoTheme.text)))
-      .css({ padding: '10px'})
-    newDiv.append(textDiv);
-    wrapperDivEl.prepend(newDiv);
-  },
-
-  /**
-   * Make Glift full-screen.
-   *
-   * Note: Key bindings are set in the base_widget.
-   */
-  fullscreen: function() {
-    // TODO(kashomon): Support true fullscreen: issues/69
-    var widget = this.widget,
-        wrapperDivId = widget.wrapperDivId,
-        newDivId = wrapperDivId + '_fullscreen',
-        newDiv = glift.dom.newDiv(newDivId),
-        body = glift.dom.elem(document.body),
-        state = widget.getCurrentState(),
-        manager = widget.manager;
-
-    var cssObj = glift.obj.flatMerge({
-        position: 'absolute',
-        top: '0px', bottom: '0px', left: '0px', right: '0px',
-        margin: '0px', padding: '0px',
-        // Some sites set the z-index obnoxiously high (looking at you bootstrap).
-        // So, to make it really fullscreen, we need to set the z-index higher.
-        'z-index': 110000
-      }, this.theme.statusBar.fullscreen);
-    newDiv.css(cssObj);
-
-    // Prevent scrolling outside the div
-    body.addClass('glift-fullscreen-no-scroll').append(newDiv);
-    manager.prevScrollTop =
-        window.pageYOffset ||
-        document.body.scrollTop ||
-        document.documentElement.scrollTop || null;
-    window.scrollTo(0, 0); // Scroll to the top.
-    manager.fullscreenDivId = newDivId;
-    widget.destroy();
-    widget.wrapperDivId = newDivId;
-    widget.draw();
-    widget.applyState(state);
-    manager.enableFullscreenAutoResize();
-  },
-
-  /** Returns Glift to non-fullscreen */
-  unfullscreen: function() {
-    if (!this.widget.manager.isFullscreen()) {
-      return;
-    }
-    var widget = this.widget,
-        wrapperDivEl = glift.dom.elem(widget.wrapperDivId),
-        state = widget.getCurrentState(),
-        manager = widget.manager,
-        prevScrollTop = manager.prevScrollTop,
-        body = glift.dom.elem(document.body),
-        state = widget.getCurrentState();
-    widget.destroy();
-    wrapperDivEl.remove(); // remove the fullscreen div completely
-    widget.wrapperDivId = widget.manager.divId;
-    window.scrollTo(0, manager.prevScrollTop || 0);
-
-    // Re-enable scrolling now that we're done with fullscreen.
-    body.removeClass('glift-fullscreen-no-scroll');
-
-    manager.fullscreenDivId = null;
-    manager.prevScrollTop = null;
-
-    widget.draw();
-    widget.applyState(state);
-    widget.manager.disableFullscreenAutoResize();
-  },
-
   /** Sets the move number for the current move */
   setMoveNumber: function(number) {
     if (!this.iconBar.hasIcon('move-indicator')) { return; }
@@ -5366,6 +5252,188 @@ glift.displays.statusbar._StatusBar.prototype = {
         0.85);
   }
 };
+/**
+ * Makes Glift full-screen. Sort of. True fullscreen isn't supported yet.
+ *
+ * Note: Key bindings are set in the base_widget.
+ */
+glift.displays.statusbar._StatusBar.prototype.fullscreen = function() {
+  // TODO(kashomon): Support true fullscreen: issues/69
+  var widget = this.widget,
+      wrapperDivId = widget.wrapperDivId,
+      newDivId = wrapperDivId + '_fullscreen',
+      newDiv = glift.dom.newDiv(newDivId),
+      body = glift.dom.elem(document.body),
+      state = widget.getCurrentState(),
+      manager = widget.manager;
+
+  var cssObj = glift.obj.flatMerge({
+      position: 'absolute',
+      top: '0px', bottom: '0px', left: '0px', right: '0px',
+      margin: '0px', padding: '0px',
+      // Some sites set the z-index obnoxiously high (looking at you bootstrap).
+      // So, to make it really fullscreen, we need to set the z-index higher.
+      'z-index': 110000
+    }, this.theme.statusBar.fullscreen);
+  newDiv.css(cssObj);
+
+  // Prevent scrolling outside the div
+  body.addClass('glift-fullscreen-no-scroll').append(newDiv);
+  manager.prevScrollTop =
+      window.pageYOffset ||
+      document.body.scrollTop ||
+      document.documentElement.scrollTop || null;
+  window.scrollTo(0, 0); // Scroll to the top.
+  manager.fullscreenDivId = newDivId;
+  widget.destroy();
+  widget.wrapperDivId = newDivId;
+  widget.draw();
+  widget.applyState(state);
+  manager.enableFullscreenAutoResize();
+};
+
+/** Returns Glift to non-fullscreen */
+glift.displays.statusbar._StatusBar.prototype.unfullscreen = function() {
+  if (!this.widget.manager.isFullscreen()) {
+    return;
+  }
+  var widget = this.widget,
+      wrapperDivEl = glift.dom.elem(widget.wrapperDivId),
+      state = widget.getCurrentState(),
+      manager = widget.manager,
+      prevScrollTop = manager.prevScrollTop,
+      body = glift.dom.elem(document.body),
+      state = widget.getCurrentState();
+  widget.destroy();
+  wrapperDivEl.remove(); // remove the fullscreen div completely
+  widget.wrapperDivId = widget.manager.divId;
+  window.scrollTo(0, manager.prevScrollTop || 0);
+
+  // Re-enable scrolling now that we're done with fullscreen.
+  body.removeClass('glift-fullscreen-no-scroll');
+
+  manager.fullscreenDivId = null;
+  manager.prevScrollTop = null;
+
+  widget.draw();
+  widget.applyState(state);
+  widget.manager.disableFullscreenAutoResize();
+};
+/**
+ * Create a game info object. Takes a array of game info data.
+ *
+ * Note: Key bindings are set in the base_widget.
+ */
+glift.displays.statusbar._StatusBar.prototype.gameInfo =
+    function(gameInfoArr, captureCount) {
+  var infoWindow = glift.displays.statusbar.infoWindow(
+      this.widget.wrapperDivId,
+      this.positioning.fullWidgetBbox(),
+      this.theme.statusBar.gameInfo,
+      this.widget.manager.id);
+
+  // This is a hack until a better solution for captures can be crafted for
+  // displaying captured stones.
+  var captureArr = [
+    {displayName: 'Captured White Stones', value: captureCount.WHITE},
+    {displayName: 'Captured Black Stones', value: captureCount.BLACK}
+  ];
+
+  gameInfoArr = captureArr.concat(gameInfoArr);
+
+  var textArray = [];
+  for (var i = 0; i < gameInfoArr.length; i++) {
+    var obj = gameInfoArr[i];
+    textArray.push('<strong>' + obj.displayName + ': </strong>' + obj.value);
+  }
+
+  var gameInfoTheme = this.theme.statusBar.gameInfo;
+  infoWindow.textDiv
+    .append(glift.dom.newElem('h3')
+      .appendText('Game Info')
+      .css(glift.obj.flatMerge(gameInfoTheme.textTitle, gameInfoTheme.text)))
+    .append(glift.dom.convertText(textArray.join('\n'),
+          glift.obj.flatMerge(gameInfoTheme.textBody, gameInfoTheme.text)))
+    .css({ padding: '10px'})
+  infoWindow.finish()
+};
+/**
+ * Creates an info window.  This isn't super useful on its own -- it's meant to
+ * be populated with data.
+ */
+glift.displays.statusbar.infoWindow = function(
+    wrapperDivId, bbox, theme, instanceId) {
+  var suffix = '_info_window',
+      newDivId = wrapperDivId + suffix + '_wrapper',
+      wrapperDivEl = glift.dom.elem(wrapperDivId),
+      fullBox = bbox;
+
+  var newDiv = glift.dom.absBboxDiv(fullBox, newDivId);
+  newDiv.css({'z-index': 100}); // ensure on top.
+
+  var textDiv = glift.dom.newDiv(wrapperDivId + suffix + '_textdiv');
+  var textDivCss = glift.obj.flatMerge({
+      position: 'relative',
+      margin: '0px',
+      padding: '0px',
+      'overflow-y': 'auto',
+      height: fullBox.height() + 'px',
+      width: fullBox.width() + 'px',
+      MozBoxSizing: 'border-box',
+      boxSizing: 'border-box'
+    }, theme.textDiv);
+  textDiv.css(textDivCss);
+
+  var exitScreen = function() {
+    newDiv.remove();
+  };
+
+  if (glift.platform.isMobile()) {
+    textDiv.on('touchend', exitScreen);
+  } else {
+    textDiv.on('click', exitScreen);
+  }
+
+  var oldEscAction = glift.keyMappings.getFuncOrIcon(instanceId, 'ESCAPE');
+  glift.keyMappings.registerKeyAction(instanceId, 'ESCAPE', function() {
+    exitScreen();
+    if (oldEscAction) {
+      glift.keyMappings.registerKeyAction(instanceId, 'ESCAPE', oldEscAction);
+    }
+  });
+  return new glift.displays.statusbar._InfoWindow(wrapperDivEl, newDiv, textDiv);
+};
+
+/**
+ * Info Window wrapper class.
+ */
+glift.displays.statusbar._InfoWindow = function(
+    wrapperDiv, baseStatusDiv, textDiv) {
+  /**
+   * Div that wraps both the baseDiv and the Text Div
+   */
+  this.wrapperDiv_ = wrapperDiv;
+
+  /**
+   * Div that defines all the dimensions and z-index
+   */
+  this.baseStatusDiv_ = baseStatusDiv;
+
+  /**
+   * Div where users are expected to put centent.
+   */
+  this.textDiv = textDiv;
+};
+
+glift.displays.statusbar._InfoWindow.prototype = {
+  /** Finishes the Info Window by attaching all the elements. */
+  finish: function() {
+    this.baseStatusDiv_.append(this.textDiv);
+    this.wrapperDiv_.prepend(this.baseStatusDiv_);
+  }
+};
+
+
 glift.displays.position = {};
 /**
  * Container for the widget boxes. Everything starts undefined,
@@ -6920,7 +6988,7 @@ glift.rules._MoveTree.prototype = {
       if (values.length > 0) {
         for (var i = 0; i < values.length; i++) {
           // Ensure a string and escape right brackets.
-          var val = values[i].toString().replace(']', '\\]')
+          var val = node.properties().escape(values[i]);
           out += '[' + val + ']'
         }
       } else {
@@ -7068,15 +7136,15 @@ Properties.prototype = {
     if (valueType !== 'string' && valueType !== 'array') {
       // The value has to be either a string or an array.  Maybe we should throw
       // an error?
-      value = [ value.toString().replace('\\]', ']') ];
+      value = [ this.unescape(value) ];
     } else if (valueType === 'array') {
       // Force all array values to be of type string.
       for (var i = 0, len = value.length; i < len; i++) {
         // Ensure properties are strings
-        value[i] = value[i].toString().replace('\\]', ']');
+        value[i] = this.unescape(value[i]);
       }
     } else if (valueType === 'string') {
-      value = [ value.replace('\\]', ']') ];
+      value = [ this.unescape(value) ];
     } else {
       throw new Error('Unexpected type ' +
           glift.util.typeOf(value) + ' for item ' + item);
@@ -7205,7 +7273,7 @@ Properties.prototype = {
   set: function(prop, value) {
     if (prop !== undefined && value !== undefined) {
       if (glift.util.typeOf(value) === 'string') {
-        this.propMap[prop] = [ value.replace('\\]', ']') ];
+        this.propMap[prop] = [ this.unescape(value) ];
       } else if (glift.util.typeOf(value) === 'array') {
         for (var i = 0; i < value.length; i++) {
           if (glift.util.typeOf(value[i]) !== 'string') {
@@ -7213,7 +7281,7 @@ Properties.prototype = {
               'must be strings. was [' + glift.util.typeOf(value[i]) +
               '], for value ' + value[i]);
           }
-          value[i] = value[i].replace('\\]', ']');
+          value[i] = this.unescape(value[i]);
         }
         this.propMap[prop] = value
       }
@@ -7396,6 +7464,16 @@ Properties.prototype = {
       }
     }
     return gameInfoArr;
+  },
+
+  /** Escapes some text by converting ] to \\] */
+  escape: function(text) {
+    return text.toString().replace(/]/g, '\\]');
+  },
+
+  /** Unescapes some text by converting \\] to ] */
+  unescape: function(text) {
+    return text.toString().replace(/\\]/g, ']');
   }
 };
 
@@ -10734,6 +10812,7 @@ glift.widgets.WidgetManager.prototype = {
    * array is a string, then we try to figure out whether we're looking at an
    * SGF or a URL and then we manufacture a simple sgf object.
    */
+  // TODO(kashomon): Move to options
   getSgfObj: function(index) {
     if (index < 0 || index > this.sgfCollection.length) {
       throw new Error("Index [" + index +  " ] out of bounds."
@@ -11244,14 +11323,14 @@ glift.widgets.options.baseOptions = {
      * Icons to use in the status bar.
      * @api(1.0)
      */
-    // TODO(kashomon): Make per widget type (mv num not necessary for problems?)
     // TODO(kashomon): Enable settings when ready
-    statusBarIcons: [
-      'game-info',
-      'move-indicator',
-      'fullscreen'
+    statusBarIcons: undefined,
+    // [
+      // 'game-info',
+      // 'move-indicator',
+      // 'fullscreen'
       // 'settings-wrench'
-    ],
+    // ],
 
     /**
      * Metadata for this SGF.  Like the global metadata, this option is not
@@ -11906,7 +11985,12 @@ glift.widgets.options.EXAMPLE = {
   // We disable mouseover and mouseout to make it clear you can't interact with
   // the example widget.
   stoneMouseover: function() {},
-  stoneMouseout: function() {}
+  stoneMouseout: function() {},
+
+  statusBarIcons: [
+    // 'game-info',
+    'fullscreen'
+  ]
 };
 /**
  * Additional Options for the GameViewers
@@ -11943,7 +12027,13 @@ glift.widgets.options.GAME_VIEWER = {
 
   problemConditions: {},
 
-  controllerFunc: glift.controllers.gameViewer
+  controllerFunc: glift.controllers.gameViewer,
+
+  statusBarIcons: [
+    'game-info',
+    'move-indicator',
+    'fullscreen'
+  ]
 };
 /**
  * Game Viewer options for when used as part of a widget
@@ -11961,7 +12051,13 @@ glift.widgets.options.REDUCED_GAME_VIEWER = {
 
   showVariations: glift.enums.showVariations.MORE_THAN_ONE,
 
-  controllerFunc: glift.controllers.gameViewer
+  controllerFunc: glift.controllers.gameViewer,
+
+  statusBarIcons: [
+    'game-info',
+    'move-indicator',
+    'fullscreen'
+  ]
 };
 /**
  * Additional Options for the GameViewers
@@ -11993,7 +12089,15 @@ glift.widgets.options.STANDARD_PROBLEM = {
   showVariations: glift.enums.showVariations.NEVER,
 
   // TODO(kashomon): Consider using multiopen-boxonly instead of checkbox
-  icons: ['undo-problem-move', 'problem-explanation', 'multiopen-boxonly'],
+  icons: [
+    'undo-problem-move',
+    'problem-explanation',
+    'multiopen-boxonly'
+  ],
 
-  controllerFunc: glift.controllers.staticProblem
+  controllerFunc: glift.controllers.staticProblem,
+
+  statusBarIcons: [
+    'fullscreen'
+  ]
 };

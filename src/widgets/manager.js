@@ -158,6 +158,7 @@ glift.widgets.WidgetManager.prototype = {
    * array is a string, then we try to figure out whether we're looking at an
    * SGF or a URL and then we manufacture a simple sgf object.
    */
+  // TODO(kashomon): Move to options
   getSgfObj: function(index) {
     if (index < 0 || index > this.sgfCollection.length) {
       throw new Error("Index [" + index +  " ] out of bounds."

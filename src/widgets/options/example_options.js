@@ -15,5 +15,10 @@ glift.widgets.options.EXAMPLE = {
   // We disable mouseover and mouseout to make it clear you can't interact with
   // the example widget.
   stoneMouseover: function() {},
-  stoneMouseout: function() {}
+  stoneMouseout: function() {},
+
+  statusBarIcons: [
+    // 'game-info',
+    'fullscreen'
+  ]
 };

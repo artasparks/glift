@@ -14,5 +14,11 @@ glift.widgets.options.REDUCED_GAME_VIEWER = {
 
   showVariations: glift.enums.showVariations.MORE_THAN_ONE,
 
-  controllerFunc: glift.controllers.gameViewer
+  controllerFunc: glift.controllers.gameViewer,
+
+  statusBarIcons: [
+    'game-info',
+    'move-indicator',
+    'fullscreen'
+  ]
 };
