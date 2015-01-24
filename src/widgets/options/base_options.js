@@ -433,6 +433,7 @@ glift.widgets.options.baseOptions = {
     /**
      * Use Markdown for the comment box.  This requires that markdown.js be
      * installed in the global scope. (github.com/evilstreak/markdown-js)
+     * <Not currently support>
      * @api(experimental)
      */
     useMarkdown: false
