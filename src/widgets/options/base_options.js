@@ -203,7 +203,7 @@ glift.widgets.options.baseOptions = {
      * Icons to use in the status bar.
      * @api(1.0)
      */
-    // TODO(kashomon): Enable settings when ready
+    // TODO(kashomon): Enable settings when ready (?? what does this mean).
     statusBarIcons: undefined,
     // [
       // 'game-info',
@@ -426,9 +426,16 @@ glift.widgets.options.baseOptions = {
     /**
      * Whether or not to enable keyboard shortcuts. This currently binds
      * keypress events to document.body, so it's not unlikely this could
-     * conflict with other applications
+     * conflict with other applications' keybindings.
      */
-    enableKeyboardShortcuts: true
+    enableKeyboardShortcuts: true,
+
+    /**
+     * Use Markdown for the comment box.  This requires that markdown.js be
+     * installed in the global scope. (github.com/evilstreak/markdown-js)
+     * @api(experimental)
+     */
+    useMarkdown: false
   },
 
   /**
