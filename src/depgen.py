@@ -41,6 +41,7 @@ DIR_ORDER = [
     'dom',
     'ajax',
     'themes',
+    # 'markdown',
     'displays',
     'displays/board',
     'displays/commentbox',
