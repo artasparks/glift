@@ -64,6 +64,9 @@
 <script type="text/javascript" src="../themes/moody.js"></script>
 <script type="text/javascript" src="../themes/textbook.js"></script>
 <script type="text/javascript" src="../themes/transparent.js"></script>
+<!-- Markdown -->
+<script type="text/javascript" src="../markdown/markdown.js"></script>
+<script type="text/javascript" src="../markdown/markdownjs-uncompiled.js"></script>
 <!-- Displays -->
 <script type="text/javascript" src="../displays/displays.js"></script>
 <script type="text/javascript" src="../displays/bbox.js"></script>
@@ -168,6 +171,8 @@
 <script type="text/javascript" src="../dom/sanitize_test.js"></script>
 <!-- Themes Tests -->
 <script type="text/javascript" src="../themes/themes_test.js"></script>
+<!-- Markdown Tests -->
+<script type="text/javascript" src="../markdown/markdown_test.js"></script>
 <!-- Displays Tests -->
 <script type="text/javascript" src="../displays/bbox_test.js"></script>
 <script type="text/javascript" src="../displays/board_points_test.js"></script>
@@ -235,7 +240,7 @@ $(document).ready(function() {
 
   glift.themes.themesTest();
 
-  //glift.markdown.parseTest();
+  glift.markdownTest();
 
   glift.displays.bboxTest();
   glift.displays.cropboxTest();
