@@ -1,19 +1,16 @@
-/** Markdown JS is dumped into this namespace. */
-glift.markdownjs = {};
+/** Marked  is dumped into this namespace. */
+// glift.marked = {};
 
 glift.markdown = {
-  elemType: {
-    /** p */
-    para: 'para',
-
-    /** header */
-    header: 'header',
-  },
-
   /** Render the AST from some text. */
   renderAst: function(text) {
     // We expect the markdown extern to be exposed.
-    return new glift.markdown.Ast(glift.markdownjs.parse(text));
+    var lex = glift.marked.lexer(text);
+    return lex;
+  },
+
+  render: function(text) {
+    return glift.marked(text);
   }
 };
 
