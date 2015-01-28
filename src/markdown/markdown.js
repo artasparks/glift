@@ -1,4 +1,7 @@
-/** Marked  is dumped into this namespace. */
+/**
+ * Marked is dumped into this namespace. Just for reference
+ * https://github.com/chjj/marked
+ */
 // glift.marked = {};
 
 glift.markdown = {
@@ -6,7 +9,7 @@ glift.markdown = {
   renderAst: function(text) {
     // We expect the markdown extern to be exposed.
     var lex = glift.marked.lexer(text);
-    return lex;
+    return new glift.markdown.Ast(lex);
   },
 
   render: function(text) {
@@ -17,28 +20,22 @@ glift.markdown = {
 
 /** Wrapper object for the abstract syntax tree. */
 glift.markdown.Ast = function(tree) {
+  /** From marked, this is an  */
   this.tree = tree;
 };
 
 glift.markdown.Ast.prototype = {
-  /** Returns the headers. */
-  getHeaders: function() {
+  /**
+   * Returns the headers. We assume no nested headers.
+   */
+  headers: function() {
     var out = [];
-    for (var i = 1; i < this.tree.length; i++) {
+    for (var i = 0; i < this.tree.length; i++) {
       var elem = this.tree[i];
-      if (elem[0] ===  glift.markdown.elemType.header) {
-        out.push(new glift.markdown.Elem(
-            elem[0],
-            elem[elem.length - 1],
-            elem));
+      if (elem.type === 'heading') {
+        out.push(elem);
       }
     }
     return out;
   }
-};
-
-glift.markdown.Elem = function(type, content, fullData) {
-  this.type = type;
-  this.content = content;
-  this.fullData = fullData;
 };
