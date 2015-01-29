@@ -431,12 +431,11 @@ glift.widgets.options.baseOptions = {
     enableKeyboardShortcuts: true,
 
     /**
-     * Use Markdown for the comment box.  This requires that markdown.js be
-     * installed in the global scope. (github.com/evilstreak/markdown-js)
-     * <Not currently support>
+     * Use Markdown for the comment box.  This requires that marked.js be
+     * installed in the global scope. (https://github.com/chjj/marked)
      * @api(experimental)
      */
-    useMarkdown: false
+    useMarkdown: true
   },
 
   /**

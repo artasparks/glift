@@ -5,19 +5,24 @@
  * posBbox: The bounding box of the div (expensive to recompute)
  * theme: The theme object.
  */
-glift.displays.commentbox.create = function(divId, posBbox, theme) {
+glift.displays.commentbox.create = function(
+    divId, posBbox, theme, useMarkdown) {
+  var useMarkdown = useMarkdown || false;
   if (!theme) {
     throw new Error('Theme must be defined. was: ' + theme);
   }
-  return new glift.displays.commentbox._CommentBox(divId, posBbox, theme).draw();
+  return new glift.displays.commentbox._CommentBox(
+      divId, posBbox, theme, useMarkdown).draw();
 };
 
-glift.displays.commentbox._CommentBox = function(divId, positioningBbox, theme) {
+glift.displays.commentbox._CommentBox = function(
+    divId, positioningBbox, theme, useMarkdown) {
   this.divId = divId;
   this.bbox = glift.displays.bbox.fromPts(
       glift.util.point(0,0),
       glift.util.point(positioningBbox.width(), positioningBbox.height()));
   this.theme = theme;
+  this.useMarkdown = useMarkdown;
   this.el = undefined;
 };
 
