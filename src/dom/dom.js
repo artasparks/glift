@@ -31,21 +31,30 @@ glift.dom = {
    * text: The input raw text
    * optCss: optional CSS object to apply to the lines.
    */
-  convertText: function(text, optCss) {
+  convertText: function(text, useMarkdown, optCss) {
     text = glift.dom.sanitize(text);
+    if (useMarkdown) {
+      text = glift.markdown.render(text);
+    }
     var wrapper = glift.dom.newElem('div');
-    var textSegments = text.split('\n');
-    for (var i = 0; i < textSegments.length; i++) {
-      var seg = textSegments[i];
-      var baseCss = { margin: 0, padding: 0, 'min-height': '1em' };
-      if (optCss) {
-        for (var key in optCss) {
-          baseCss[key] = optCss[key];
+    wrapper.attr('class', glift.dom.classes.commentBox);
+
+    if (useMarkdown) {
+      wrapper.html(text);
+    } else {
+      var textSegments = text.split('\n');
+      for (var i = 0; i < textSegments.length; i++) {
+        var seg = textSegments[i];
+        var baseCss = { margin: 0, padding: 0, 'min-height': '1em' };
+        if (optCss) {
+          for (var key in optCss) {
+            baseCss[key] = optCss[key];
+          }
         }
+        var pNode = glift.dom.newElem('p').css(baseCss);
+        pNode.html(seg);
+        wrapper.append(pNode);
       }
-      var pNode = glift.dom.newElem('p').css(baseCss);
-      pNode.html(seg);
-      wrapper.append(pNode);
     }
     return wrapper;
   },
@@ -117,7 +126,7 @@ glift.dom.Element.prototype = {
   },
 
   /**
-   * Gets or set an attribute on the HTML.
+   * Gets or set an attribute on the HTML, JQuery Style.
    */
   attr: function(key, value) {
     if (key == null) { return null; }

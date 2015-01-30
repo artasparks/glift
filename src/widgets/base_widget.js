@@ -85,7 +85,8 @@ glift.widgets.BaseWidget.prototype = {
       this.commentBox = glift.displays.commentbox.create(
           divIds.COMMENT_BOX,
           positioning.getBbox(glift.enums.boardComponents.COMMENT_BOX),
-          theme);
+          theme,
+          this.displayOptions.useMarkdown);
     }
     glift.util.majorPerfLog('CommentBox');
 

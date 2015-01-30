@@ -1,7 +1,9 @@
 testdata.gogameguru_commentary =
 "(;GM[1]FF[4]CA[UTF-8]AP[CGoban:3]ST[2]\n" +
 "RU[Japanese]SZ[19]KM[0.00]\n" +
-"GN[Fujisawa-Hosai-vs-Go-Seigen-19430225]PW[Go Seigen]PB[Fujisawa Hosai]WR[8d]BR[6d]DT[1943-02-25]SO[http://gogameguru.com/]AN[An Younggil 8p]C[This was the second game in a ten game match between Fujisawa Hosai 9p and Go Seigen 9p. It was played on February 25 and 26, 1943.\n" +
+"GN[Fujisawa-Hosai-vs-Go-Seigen-19430225]PW[Go Seigen]PB[Fujisawa Hosai]WR[8d]BR[6d]DT[1943-02-25]SO[http://gogameguru.com/]AN[An Younggil 8p]C[#Hosai v. Go\n" +
+"\n" +
+"This was the second game in a ten game match between Fujisawa Hosai 9p and Go Seigen 9p. It was played on February 25 and 26, 1943.\n" +
 "\n" +
 "Go Seigen is regarded as the greatest Go player in the history of Go. We refer to him as a 'living legend' in Korea. \n" +
 "\n" +

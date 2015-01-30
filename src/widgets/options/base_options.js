@@ -435,7 +435,7 @@ glift.widgets.options.baseOptions = {
      * installed in the global scope. (https://github.com/chjj/marked)
      * @api(experimental)
      */
-    useMarkdown: true
+    useMarkdown: false
   },
 
   /**

@@ -29,6 +29,7 @@
 <script type="text/javascript" src="../util/test_util.js"></script>
 <!-- Dom -->
 <script type="text/javascript" src="../dom/dom.js"></script>
+<script type="text/javascript" src="../dom/classes.js"></script>
 <script type="text/javascript" src="../dom/sanitize.js"></script>
 <script type="text/javascript" src="../dom/ux.js"></script>
 <!-- Ajax -->
@@ -166,13 +167,16 @@
             divId: 'glift_display1',
             sgf: {
               //sgfString: testdata.treppen,
-              sgfString: testdata.sgfs.leeGuGame6,
+              // sgfString: testdata.sgfs.leeGuGame6,
+              // sgfString: testdata.sgfs.leeGuGame6,
+              sgfString: testdata.gogameguru_commentary,
               rotation: 'CLOCKWISE_270'
             },
             display: {
               theme: 'DEPTH',
               goBoardBackground: '../themes/assets/bambootile_warm.jpg',
               drawBoardCoords: true,
+              useMarkdown: true,
               disableZoomForMobile: true
             }
           });

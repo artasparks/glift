@@ -50,7 +50,7 @@ glift.displays.commentbox._CommentBox.prototype = {
    */
   setText: function(text) {
     this.el.empty();
-    this.el.append(glift.dom.convertText(text));
+    this.el.append(glift.dom.convertText(text, this.useMarkdown));
   },
 
   /** Clear the text from the comment box. */

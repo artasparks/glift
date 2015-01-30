@@ -7110,6 +7110,7 @@ glift.displays.statusbar._StatusBar.prototype.gameInfo =
       .appendText('Game Info')
       .css(glift.obj.flatMerge(gameInfoTheme.textTitle, gameInfoTheme.text)))
     .append(glift.dom.convertText(textArray.join('\n'),
+          false, /* useMarkdown */
           glift.obj.flatMerge(gameInfoTheme.textBody, gameInfoTheme.text)))
     .css({ padding: '10px'})
   infoWindow.finish()
