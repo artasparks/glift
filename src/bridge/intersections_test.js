@@ -14,7 +14,7 @@ glift.bridge.intersectionsTest = function() {
         cirpts = glift.sgf.allSgfCoordsToPoints(['rb', 'rc', 're']),
         labels = glift.sgf.convertFromLabelArray([
             'pb:3', 'qb:2', 'pc:B', 'qc:1', 'pd:A']),
-        squpts = glift.sgf.allSgfCoordsToPoints(['rd']),
+        squpts = glift.sgf.allSgfCoordsToPoints(['rd', 're']),
         tripts = glift.sgf.allSgfCoordsToPoints(['qd', 'qe']),
         testmap = {
           CIRCLE : cirpts,

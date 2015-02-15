@@ -36,7 +36,7 @@ testdata.sgfs = {
     "(;GM[1]FF[4]CA[UTF-8]AP[CGoban:3]ST[2]\n" +
     "RU[Japanese]SZ[19]KM[0.00]\n" +
     "PW[White]PB[Black]CR[rb][rc][re]AB[pc][qd][pe]" +
-    "[re]LB[pb:3][qb:2][pc:B][qc:1][pd:A]TR[qd][qe]SQ[rd]\n" +
+    "[re]LB[pb:3][qb:2][pc:B][qc:1][pd:A]TR[qd][qe]SQ[rd:re]\n" +
     ";B[sa]TR[qa]C[bar]\n" +
     ";W[fi]SQ[ab]C[foo])",
 

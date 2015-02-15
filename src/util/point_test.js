@@ -1,28 +1,26 @@
 glift.util.pointTest = function() {
   module('glift.util.pointTest');
   var rules = glift.rules,
-      util = glift.util,
-      logz = glift.util.logz;
+      point = glift.util.point;
 
   test('Create, basic methods', function() {
-    var pt = util.point(1, 5);
-    var pt2 = util.point(1, 5);
+    var pt = point(1, 5);
+    var pt2 = point(1, 5);
     deepEqual(pt.x(), 1, 'x val');
     deepEqual(pt.y(), 5, 'y val');
-    deepEqual(util.coordToString(1, 5), '1,5', 'coord to string');;
+    deepEqual(glift.util.coordToString(1, 5), '1,5', 'coord to string');;
     ok(pt.equals(pt2), 'equals');
   });
 
   test('hash and unhash', function() {
-    var pt = util.point(1, 12);
+    var pt = point(1, 12);
     deepEqual(pt.toString(), '1,12', 'to string must be a comma-sep pair');
     deepEqual(pt.hash(), pt.toString(), 'hash and string must be equal');
-    var newPt = util.pointFromHash(pt.hash());
+    var newPt = glift.util.pointFromHash(pt.hash());
     ok(newPt.equals(pt), 'pts must be equal')
   });
 
   test('rotation', function() {
-    var point = glift.util.point;
     var rotations = glift.enums.rotations;
 
     var pt = point(2, 3);
@@ -36,14 +34,38 @@ glift.util.pointTest = function() {
     deepEqual(pt.rotate(19, rotations.CLOCKWISE_90), point(17, 9));
   });
 
-  // TODO(kashomon): Add back in now that we no longer cache points.
-  // test("Test immutability", function() {
-    // var pt = util.uncachedPoint(1, 3);
-    // var pt2 = util.uncachedPoint(1, 3);
-    // ok(pt.equals(pt2), "pts must be equal");
-    // deepEqual(pt.toString(), pt2.toString());
-    // deepEqual(pt.toString(), pt2.toString(), "must have same string" +
-        // "representation");
-    // ok(pt.equals(pt2), "must still be equal");
-  // });
+  test('pointArrFromSgfProp: single point', function() {
+    var o = glift.util.pointArrFromSgfProp('ab');
+    deepEqual(o, [point(0, 1)]);
+
+    o = glift.util.pointArrFromSgfProp('cc');
+    deepEqual(o, [point(2, 2)]);
+  });
+
+  test('pointArrFromSgfProp: rectangle', function() {
+    var o = glift.util.pointArrFromSgfProp('aa:cc');
+    var expected = [
+       point(0,0), point(1,0), point(2,0),
+       point(0,1), point(1,1), point(2,1),
+       point(0,2), point(1,2), point(2,2)];
+
+    deepEqual(o[1].toString(), expected[1].toString());
+    deepEqual(o, expected, 'square pt rectangle');
+
+    o = glift.util.pointArrFromSgfProp('bb:bf');
+    expected = [
+      point(1, 1),
+      point(1, 2),
+      point(1, 3),
+      point(1, 4),
+      point(1, 5),
+    ]
+    deepEqual(o, expected, 'vertical pt rectangle');
+
+    o = glift.util.pointArrFromSgfProp('bb:fb');
+    expected = [
+      point(1, 1), point(2, 1), point(3, 1), point(4, 1), point(5, 1),
+    ]
+    deepEqual(o, expected, 'vertical pt rectangle');
+  });
 };

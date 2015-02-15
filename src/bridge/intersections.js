@@ -155,8 +155,14 @@ glift.bridge.intersections = {
             // Labels have the form { point: pt, value: 'A' }
             marksToAdd.push(glift.sgf.convertFromLabelData(data[i]));
           } else {
-            // A single point
-            marksToAdd.push(glift.util.pointFromSgfCoord(data[i]));
+            // A single point or a point rectangle.
+            var newPts = glift.util.pointArrFromSgfProp(data[i])
+            if (newPts.length === 1) {
+              // This is handled specially since it's the normal case.
+              marksToAdd.push(newPts[0]);
+            } else {
+              marksToAdd = marksToAdd.concat(newPts);
+            }
           }
         }
         outMarks[mark] = marksToAdd;

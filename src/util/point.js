@@ -22,6 +22,42 @@ glift.util.pointFromString = function(str) {
 };
 
 /**
+ * Convert SGF data from SGF data.
+ *
+ * Returns an array of points. This exists to handle point-rectangle data sets
+ * and point data sets uniformly.
+ *
+ * Example: TR[aa][ab]... vs TR[aa:cc]
+ */
+glift.util.pointArrFromSgfProp = function(str) {
+  if (str.length === 2) {
+    // Assume the properties have the form [ab].
+    return [glift.util.pointFromSgfCoord(str)];
+  } else if (str.length > 2) {
+    // Assume a point rectangle. This a weirdness of the SGF spec and the reason
+    // why this function exists. See http://www.red-bean.com/sgf/sgf4.html#3.5.1
+    var splat = str.split(':');
+    if (splat.length !== 2) {
+      throw new Error('Expected two points: TopLeft and BottomRight for ' +
+        'point rectangle. Instead found: ' + str);
+    }
+    var out = [];
+    var tl = glift.util.pointFromSgfCoord(splat[0]);
+    var br = glift.util.pointFromSgfCoord(splat[1]);
+    var delta = br.translate(-tl.x(), -tl.y());
+    for (var i = 0; i <= delta.y(); i++) {
+      for (var j = 0; j <= delta.x(); j++) {
+        var newX = tl.x() + j, newY = tl.y() + i;
+        out.push(glift.util.point(newX, newY));
+      }
+    }
+    return out;
+  } else {
+    throw new Error('Unknown pointformat for property data: ' + str);
+  }
+};
+
+/**
  * Take an SGF point (e.g., 'mc') and return a GliftPoint.
  * SGFs are indexed from the Upper Left:
  *    _  _  _
@@ -33,7 +69,8 @@ glift.util.pointFromString = function(str) {
  */
 glift.util.pointFromSgfCoord = function(str) {
   if (str.length != 2) {
-    throw "Unknown SGF Coord length: " + str.length;
+    throw 'Unknown SGF Coord length: ' + str.length +
+        'for property ' + str;
   }
   var a = 'a'.charCodeAt(0)
   return glift.util.point(str.charCodeAt(0) - a, str.charCodeAt(1) - a);
