@@ -44,6 +44,10 @@ glift.util.pointArrFromSgfProp = function(str) {
     var out = [];
     var tl = glift.util.pointFromSgfCoord(splat[0]);
     var br = glift.util.pointFromSgfCoord(splat[1]);
+    if (br.x() < tl.x() || br.y() < br.y()) {
+      throw new Error('Invalid point rectangle: tl: ' + tl.toString() +
+          ', br: ' + br.toString());
+    }
     var delta = br.translate(-tl.x(), -tl.y());
     for (var i = 0; i <= delta.y(); i++) {
       for (var j = 0; j <= delta.x(); j++) {
