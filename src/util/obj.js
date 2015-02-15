@@ -1,7 +1,7 @@
 glift.obj = {
   /**
    * A helper for merging obj information (typically CSS or SVG rules).  This
-   * method is non-recursive and.
+   * method is non-recursive and performs only shallow copy.
    */
   flatMerge: function(base, varargs) {
     var newObj = {};
