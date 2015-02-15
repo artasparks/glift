@@ -673,7 +673,7 @@ glift.math = {
 glift.obj = {
   /**
    * A helper for merging obj information (typically CSS or SVG rules).  This
-   * method is non-recursive and.
+   * method is non-recursive and performs only shallow copy.
    */
   flatMerge: function(base, varargs) {
     var newObj = {};
@@ -807,6 +807,42 @@ glift.util.pointFromString = function(str) {
 };
 
 /**
+ * Convert SGF data from SGF data.
+ *
+ * Returns an array of points. This exists to handle point-rectangle data sets
+ * and point data sets uniformly.
+ *
+ * Example: TR[aa][ab]... vs TR[aa:cc]
+ */
+glift.util.pointArrFromSgfProp = function(str) {
+  if (str.length === 2) {
+    // Assume the properties have the form [ab].
+    return [glift.util.pointFromSgfCoord(str)];
+  } else if (str.length > 2) {
+    // Assume a point rectangle. This a weirdness of the SGF spec and the reason
+    // why this function exists. See http://www.red-bean.com/sgf/sgf4.html#3.5.1
+    var splat = str.split(':');
+    if (splat.length !== 2) {
+      throw new Error('Expected two points: TopLeft and BottomRight for ' +
+        'point rectangle. Instead found: ' + str);
+    }
+    var out = [];
+    var tl = glift.util.pointFromSgfCoord(splat[0]);
+    var br = glift.util.pointFromSgfCoord(splat[1]);
+    var delta = br.translate(-tl.x(), -tl.y());
+    for (var i = 0; i <= delta.y(); i++) {
+      for (var j = 0; j <= delta.x(); j++) {
+        var newX = tl.x() + j, newY = tl.y() + i;
+        out.push(glift.util.point(newX, newY));
+      }
+    }
+    return out;
+  } else {
+    throw new Error('Unknown pointformat for property data: ' + str);
+  }
+};
+
+/**
  * Take an SGF point (e.g., 'mc') and return a GliftPoint.
  * SGFs are indexed from the Upper Left:
  *    _  _  _
@@ -818,7 +854,8 @@ glift.util.pointFromString = function(str) {
  */
 glift.util.pointFromSgfCoord = function(str) {
   if (str.length != 2) {
-    throw "Unknown SGF Coord length: " + str.length;
+    throw 'Unknown SGF Coord length: ' + str.length +
+        'for property ' + str;
   }
   var a = 'a'.charCodeAt(0)
   return glift.util.point(str.charCodeAt(0) - a, str.charCodeAt(1) - a);
@@ -1029,21 +1066,30 @@ glift.dom = {
    * text: The input raw text
    * optCss: optional CSS object to apply to the lines.
    */
-  convertText: function(text, optCss) {
+  convertText: function(text, useMarkdown, optCss) {
     text = glift.dom.sanitize(text);
+    if (useMarkdown) {
+      text = glift.markdown.render(text);
+    }
     var wrapper = glift.dom.newElem('div');
-    var textSegments = text.split('\n');
-    for (var i = 0; i < textSegments.length; i++) {
-      var seg = textSegments[i];
-      var baseCss = { margin: 0, padding: 0, 'min-height': '1em' };
-      if (optCss) {
-        for (var key in optCss) {
-          baseCss[key] = optCss[key];
+    wrapper.attr('class', glift.dom.classes.commentBox);
+
+    if (useMarkdown) {
+      wrapper.html(text);
+    } else {
+      var textSegments = text.split('\n');
+      for (var i = 0; i < textSegments.length; i++) {
+        var seg = textSegments[i];
+        var baseCss = { margin: 0, padding: 0, 'min-height': '1em' };
+        if (optCss) {
+          for (var key in optCss) {
+            baseCss[key] = optCss[key];
+          }
         }
+        var pNode = glift.dom.newElem('p').css(baseCss);
+        pNode.html(seg);
+        wrapper.append(pNode);
       }
-      var pNode = glift.dom.newElem('p').css(baseCss);
-      pNode.html(seg);
-      wrapper.append(pNode);
     }
     return wrapper;
   },
@@ -1115,7 +1161,7 @@ glift.dom.Element.prototype = {
   },
 
   /**
-   * Gets or set an attribute on the HTML.
+   * Gets or set an attribute on the HTML, JQuery Style.
    */
   attr: function(key, value) {
     if (key == null) { return null; }
@@ -1239,6 +1285,12 @@ glift.dom.Element.prototype = {
   boundingClientRect: function() {
     return this.el.getBoundingClientRect();
   }
+};
+/**
+ * Built-in clases used to style Glift.
+ */
+glift.dom.classes = {
+  COMMENT_BOX: 'glfit-comment-box'
 };
 /** Tags currently allowed. */
 glift.dom._sanitizeWhitelist = {
@@ -1775,1763 +1827,1319 @@ glift.themes.registered.TRANSPARENT = {
     }
   }
 };
-/** Markdown JS is dumped into this namespace. */
-glift.markdownjs = {};
+/**
+ * Marked is dumped into this namespace. Just for reference
+ * https://github.com/chjj/marked
+ */
+// glift.marked = {};
 
 glift.markdown = {
   /** Render the AST from some text. */
   renderAst: function(text) {
-    /** We expect the markdown extern to be exposed. */
-    return new glift.markdown.Ast(glift.markdownjs.parse(text));
+    // We expect the markdown extern to be exposed.
+    var lex = glift.marked.lexer(text);
+    return new glift.markdown.Ast(lex);
+  },
+
+  render: function(text) {
+    return glift.marked(text);
   }
 };
 
 
 /** Wrapper object for the abstract syntax tree. */
 glift.markdown.Ast = function(tree) {
-  this.mdtree = tree;
+  /** From marked, this is an  */
+  this.tree = tree;
 };
 
 glift.markdown.Ast.prototype = {
-
+  /**
+   * Returns the headers. We assume no nested headers.
+   */
+  headers: function() {
+    var out = [];
+    for (var i = 0; i < this.tree.length; i++) {
+      var elem = this.tree[i];
+      if (elem.type === 'heading') {
+        out.push(elem);
+      }
+    }
+    return out;
+  }
 };
-// Released under MIT license
-// Copyright (c) 2009-2010 Dominic Baggott
-// Copyright (c) 2009-2010 Ash Berlin
-// Copyright (c) 2011 Christoph Dorn <christoph@christophdorn.com> (http://www.christophdorn.com)
-// Date: 2013-09-15T16:12Z
+/**
+ * marked - a markdown parser
+ * Copyright (c) 2011-2014, Christopher Jeffrey. (MIT Licensed)
+ * https://github.com/chjj/marked
+ */
 
-(function(expose) {
+;(function() {
 
+/**
+ * Block-Level Grammar
+ */
 
+var block = {
+  newline: /^\n+/,
+  code: /^( {4}[^\n]+\n*)+/,
+  fences: noop,
+  hr: /^( *[-*_]){3,} *(?:\n+|$)/,
+  heading: /^ *(#{1,6}) *([^\n]+?) *#* *(?:\n+|$)/,
+  nptable: noop,
+  lheading: /^([^\n]+)\n *(=|-){2,} *(?:\n+|$)/,
+  blockquote: /^( *>[^\n]+(\n(?!def)[^\n]+)*\n*)+/,
+  list: /^( *)(bull) [\s\S]+?(?:hr|def|\n{2,}(?! )(?!\1bull )\n*|\s*$)/,
+  html: /^ *(?:comment *(?:\n|\s*$)|closed *(?:\n{2,}|\s*$)|closing *(?:\n{2,}|\s*$))/,
+  def: /^ *\[([^\]]+)\]: *<?([^\s>]+)>?(?: +["(]([^\n]+)[")])? *(?:\n+|$)/,
+  table: noop,
+  paragraph: /^((?:[^\n]+\n?(?!hr|heading|lheading|blockquote|tag|def))+)\n*/,
+  text: /^[^\n]+/
+};
 
+block.bullet = /(?:[*+-]|\d+\.)/;
+block.item = /^( *)(bull) [^\n]*(?:\n(?!\1bull )[^\n]*)*/;
+block.item = replace(block.item, 'gm')
+  (/bull/g, block.bullet)
+  ();
 
-  var MarkdownHelpers = {};
+block.list = replace(block.list)
+  (/bull/g, block.bullet)
+  ('hr', '\\n+(?=\\1?(?:[-*_] *){3,}(?:\\n+|$))')
+  ('def', '\\n+(?=' + block.def.source + ')')
+  ();
 
-  // For Spidermonkey based engines
-  function mk_block_toSource() {
-    return "Markdown.mk_block( " +
-            uneval(this.toString()) +
-            ", " +
-            uneval(this.trailing) +
-            ", " +
-            uneval(this.lineNumber) +
-            " )";
-  }
+block.blockquote = replace(block.blockquote)
+  ('def', block.def)
+  ();
 
-  // node
-  function mk_block_inspect() {
-    var util = require("util");
-    return "Markdown.mk_block( " +
-            util.inspect(this.toString()) +
-            ", " +
-            util.inspect(this.trailing) +
-            ", " +
-            util.inspect(this.lineNumber) +
-            " )";
+block._tag = '(?!(?:'
+  + 'a|em|strong|small|s|cite|q|dfn|abbr|data|time|code'
+  + '|var|samp|kbd|sub|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo'
+  + '|span|br|wbr|ins|del|img)\\b)\\w+(?!:/|[^\\w\\s@]*@)\\b';
 
-  }
+block.html = replace(block.html)
+  ('comment', /<!--[\s\S]*?-->/)
+  ('closed', /<(tag)[\s\S]+?<\/\1>/)
+  ('closing', /<tag(?:"[^"]*"|'[^']*'|[^'">])*?>/)
+  (/tag/g, block._tag)
+  ();
 
-  MarkdownHelpers.mk_block = function(block, trail, line) {
-    // Be helpful for default case in tests.
-    if ( arguments.length === 1 )
-      trail = "\n\n";
+block.paragraph = replace(block.paragraph)
+  ('hr', block.hr)
+  ('heading', block.heading)
+  ('lheading', block.lheading)
+  ('blockquote', block.blockquote)
+  ('tag', '<' + block._tag)
+  ('def', block.def)
+  ();
 
-    // We actually need a String object, not a string primitive
-    /* jshint -W053 */
-    var s = new String(block);
-    s.trailing = trail;
-    // To make it clear its not just a string
-    s.inspect = mk_block_inspect;
-    s.toSource = mk_block_toSource;
+/**
+ * Normal Block Grammar
+ */
 
-    if ( line !== undefined )
-      s.lineNumber = line;
+block.normal = merge({}, block);
 
-    return s;
-  };
+/**
+ * GFM Block Grammar
+ */
 
+block.gfm = merge({}, block.normal, {
+  fences: /^ *(`{3,}|~{3,}) *(\S+)? *\n([\s\S]+?)\s*\1 *(?:\n+|$)/,
+  paragraph: /^/
+});
 
-  var isArray = MarkdownHelpers.isArray = Array.isArray || function(obj) {
-    return Object.prototype.toString.call(obj) === "[object Array]";
-  };
+block.gfm.paragraph = replace(block.paragraph)
+  ('(?!', '(?!'
+    + block.gfm.fences.source.replace('\\1', '\\2') + '|'
+    + block.list.source.replace('\\1', '\\3') + '|')
+  ();
 
-  // Don't mess with Array.prototype. Its not friendly
-  if ( Array.prototype.forEach ) {
-    MarkdownHelpers.forEach = function forEach( arr, cb, thisp ) {
-      return arr.forEach( cb, thisp );
-    };
-  }
-  else {
-    MarkdownHelpers.forEach = function forEach(arr, cb, thisp) {
-      for (var i = 0; i < arr.length; i++)
-        cb.call(thisp || arr, arr[i], i, arr);
-    };
-  }
+/**
+ * GFM + Tables Block Grammar
+ */
 
-  MarkdownHelpers.isEmpty = function isEmpty( obj ) {
-    for ( var key in obj ) {
-      if ( hasOwnProperty.call( obj, key ) )
-        return false;
+block.tables = merge({}, block.gfm, {
+  nptable: /^ *(\S.*\|.*)\n *([-:]+ *\|[-| :]*)\n((?:.*\|.*(?:\n|$))*)\n*/,
+  table: /^ *\|(.+)\n *\|( *[-:]+[-| :]*)\n((?: *\|.*(?:\n|$))*)\n*/
+});
+
+/**
+ * Block Lexer
+ */
+
+function Lexer(options) {
+  this.tokens = [];
+  this.tokens.links = {};
+  this.options = options || marked.defaults;
+  this.rules = block.normal;
+
+  if (this.options.gfm) {
+    if (this.options.tables) {
+      this.rules = block.tables;
+    } else {
+      this.rules = block.gfm;
     }
-    return true;
-  };
-
-  MarkdownHelpers.extract_attr = function extract_attr( jsonml ) {
-    return isArray(jsonml)
-        && jsonml.length > 1
-        && typeof jsonml[ 1 ] === "object"
-        && !( isArray(jsonml[ 1 ]) )
-        ? jsonml[ 1 ]
-        : undefined;
-  };
-
-
-
-
- /**
-   *  class Markdown
-   *
-   *  Markdown processing in Javascript done right. We have very particular views
-   *  on what constitutes 'right' which include:
-   *
-   *  - produces well-formed HTML (this means that em and strong nesting is
-   *    important)
-   *
-   *  - has an intermediate representation to allow processing of parsed data (We
-   *    in fact have two, both as [JsonML]: a markdown tree and an HTML tree).
-   *
-   *  - is easily extensible to add new dialects without having to rewrite the
-   *    entire parsing mechanics
-   *
-   *  - has a good test suite
-   *
-   *  This implementation fulfills all of these (except that the test suite could
-   *  do with expanding to automatically run all the fixtures from other Markdown
-   *  implementations.)
-   *
-   *  ##### Intermediate Representation
-   *
-   *  *TODO* Talk about this :) Its JsonML, but document the node names we use.
-   *
-   *  [JsonML]: http://jsonml.org/ "JSON Markup Language"
-   **/
-  var Markdown = function(dialect) {
-    switch (typeof dialect) {
-    case "undefined":
-      this.dialect = Markdown.dialects.Gruber;
-      break;
-    case "object":
-      this.dialect = dialect;
-      break;
-    default:
-      if ( dialect in Markdown.dialects )
-        this.dialect = Markdown.dialects[dialect];
-      else
-        throw new Error("Unknown Markdown dialect '" + String(dialect) + "'");
-      break;
-    }
-    this.em_state = [];
-    this.strong_state = [];
-    this.debug_indent = "";
-  };
-
-  /**
-   * Markdown.dialects
-   *
-   * Namespace of built-in dialects.
-   **/
-  Markdown.dialects = {};
-
-
-
-
-  // Imported functions
-  var mk_block = Markdown.mk_block = MarkdownHelpers.mk_block,
-      isArray = MarkdownHelpers.isArray;
-
-  /**
-   *  parse( markdown, [dialect] ) -> JsonML
-   *  - markdown (String): markdown string to parse
-   *  - dialect (String | Dialect): the dialect to use, defaults to gruber
-   *
-   *  Parse `markdown` and return a markdown document as a Markdown.JsonML tree.
-   **/
-  Markdown.parse = function( source, dialect ) {
-    // dialect will default if undefined
-    var md = new Markdown( dialect );
-    return md.toTree( source );
-  };
-
-  function count_lines( str ) {
-    var n = 0,
-        i = -1;
-    while ( ( i = str.indexOf("\n", i + 1) ) !== -1 )
-      n++;
-    return n;
   }
+}
 
-  // Internal - split source into rough blocks
-  Markdown.prototype.split_blocks = function splitBlocks( input ) {
-    input = input.replace(/(\r\n|\n|\r)/g, "\n");
-    // [\s\S] matches _anything_ (newline or space)
-    // [^] is equivalent but doesn't work in IEs.
-    var re = /([\s\S]+?)($|\n#|\n(?:\s*\n|$)+)/g,
-        blocks = [],
-        m;
+/**
+ * Expose Block Rules
+ */
 
-    var line_no = 1;
+Lexer.rules = block;
 
-    if ( ( m = /^(\s*\n)/.exec(input) ) !== null ) {
-      // skip (but count) leading blank lines
-      line_no += count_lines( m[0] );
-      re.lastIndex = m[0].length;
-    }
+/**
+ * Static Lex Method
+ */
 
-    while ( ( m = re.exec(input) ) !== null ) {
-      if (m[2] === "\n#") {
-        m[2] = "\n";
-        re.lastIndex--;
-      }
-      blocks.push( mk_block( m[1], m[2], line_no ) );
-      line_no += count_lines( m[0] );
-    }
+Lexer.lex = function(src, options) {
+  var lexer = new Lexer(options);
+  return lexer.lex(src);
+};
 
-    return blocks;
-  };
+/**
+ * Preprocessing
+ */
 
-  /**
-   *  Markdown#processBlock( block, next ) -> undefined | [ JsonML, ... ]
-   *  - block (String): the block to process
-   *  - next (Array): the following blocks
-   *
-   * Process `block` and return an array of JsonML nodes representing `block`.
-   *
-   * It does this by asking each block level function in the dialect to process
-   * the block until one can. Succesful handling is indicated by returning an
-   * array (with zero or more JsonML nodes), failure by a false value.
-   *
-   * Blocks handlers are responsible for calling [[Markdown#processInline]]
-   * themselves as appropriate.
-   *
-   * If the blocks were split incorrectly or adjacent blocks need collapsing you
-   * can adjust `next` in place using shift/splice etc.
-   *
-   * If any of this default behaviour is not right for the dialect, you can
-   * define a `__call__` method on the dialect that will get invoked to handle
-   * the block processing.
-   */
-  Markdown.prototype.processBlock = function processBlock( block, next ) {
-    var cbs = this.dialect.block,
-        ord = cbs.__order__;
+Lexer.prototype.lex = function(src) {
+  src = src
+    .replace(/\r\n|\r/g, '\n')
+    .replace(/\t/g, '    ')
+    .replace(/\u00a0/g, ' ')
+    .replace(/\u2424/g, '\n');
 
-    if ( "__call__" in cbs )
-      return cbs.__call__.call(this, block, next);
+  return this.token(src, true);
+};
 
-    for ( var i = 0; i < ord.length; i++ ) {
-      //D:this.debug( "Testing", ord[i] );
-      var res = cbs[ ord[i] ].call( this, block, next );
-      if ( res ) {
-        //D:this.debug("  matched");
-        if ( !isArray(res) || ( res.length > 0 && !( isArray(res[0]) ) ) )
-          this.debug(ord[i], "didn't return a proper array");
-        //D:this.debug( "" );
-        return res;
+/**
+ * Lexing
+ */
+
+Lexer.prototype.token = function(src, top, bq) {
+  var src = src.replace(/^ +$/gm, '')
+    , next
+    , loose
+    , cap
+    , bull
+    , b
+    , item
+    , space
+    , i
+    , l;
+
+  while (src) {
+    // newline
+    if (cap = this.rules.newline.exec(src)) {
+      src = src.substring(cap[0].length);
+      if (cap[0].length > 1) {
+        this.tokens.push({
+          type: 'space'
+        });
       }
     }
 
-    // Uhoh! no match! Should we throw an error?
-    return [];
-  };
+    // code
+    if (cap = this.rules.code.exec(src)) {
+      src = src.substring(cap[0].length);
+      cap = cap[0].replace(/^ {4}/gm, '');
+      this.tokens.push({
+        type: 'code',
+        text: !this.options.pedantic
+          ? cap.replace(/\n+$/, '')
+          : cap
+      });
+      continue;
+    }
 
-  Markdown.prototype.processInline = function processInline( block ) {
-    return this.dialect.inline.__call__.call( this, String( block ) );
-  };
+    // fences (gfm)
+    if (cap = this.rules.fences.exec(src)) {
+      src = src.substring(cap[0].length);
+      this.tokens.push({
+        type: 'code',
+        lang: cap[2],
+        text: cap[3]
+      });
+      continue;
+    }
 
-  /**
-   *  Markdown#toTree( source ) -> JsonML
-   *  - source (String): markdown source to parse
-   *
-   *  Parse `source` into a JsonML tree representing the markdown document.
-   **/
-  // custom_tree means set this.tree to `custom_tree` and restore old value on return
-  Markdown.prototype.toTree = function toTree( source, custom_root ) {
-    var blocks = source instanceof Array ? source : this.split_blocks( source );
+    // heading
+    if (cap = this.rules.heading.exec(src)) {
+      src = src.substring(cap[0].length);
+      this.tokens.push({
+        type: 'heading',
+        depth: cap[1].length,
+        text: cap[2]
+      });
+      continue;
+    }
 
-    // Make tree a member variable so its easier to mess with in extensions
-    var old_tree = this.tree;
+    // table no leading pipe (gfm)
+    if (top && (cap = this.rules.nptable.exec(src))) {
+      src = src.substring(cap[0].length);
+
+      item = {
+        type: 'table',
+        header: cap[1].replace(/^ *| *\| *$/g, '').split(/ *\| */),
+        align: cap[2].replace(/^ *|\| *$/g, '').split(/ *\| */),
+        cells: cap[3].replace(/\n$/, '').split('\n')
+      };
+
+      for (i = 0; i < item.align.length; i++) {
+        if (/^ *-+: *$/.test(item.align[i])) {
+          item.align[i] = 'right';
+        } else if (/^ *:-+: *$/.test(item.align[i])) {
+          item.align[i] = 'center';
+        } else if (/^ *:-+ *$/.test(item.align[i])) {
+          item.align[i] = 'left';
+        } else {
+          item.align[i] = null;
+        }
+      }
+
+      for (i = 0; i < item.cells.length; i++) {
+        item.cells[i] = item.cells[i].split(/ *\| */);
+      }
+
+      this.tokens.push(item);
+
+      continue;
+    }
+
+    // lheading
+    if (cap = this.rules.lheading.exec(src)) {
+      src = src.substring(cap[0].length);
+      this.tokens.push({
+        type: 'heading',
+        depth: cap[2] === '=' ? 1 : 2,
+        text: cap[1]
+      });
+      continue;
+    }
+
+    // hr
+    if (cap = this.rules.hr.exec(src)) {
+      src = src.substring(cap[0].length);
+      this.tokens.push({
+        type: 'hr'
+      });
+      continue;
+    }
+
+    // blockquote
+    if (cap = this.rules.blockquote.exec(src)) {
+      src = src.substring(cap[0].length);
+
+      this.tokens.push({
+        type: 'blockquote_start'
+      });
+
+      cap = cap[0].replace(/^ *> ?/gm, '');
+
+      // Pass `top` to keep the current
+      // "toplevel" state. This is exactly
+      // how markdown.pl works.
+      this.token(cap, top, true);
+
+      this.tokens.push({
+        type: 'blockquote_end'
+      });
+
+      continue;
+    }
+
+    // list
+    if (cap = this.rules.list.exec(src)) {
+      src = src.substring(cap[0].length);
+      bull = cap[2];
+
+      this.tokens.push({
+        type: 'list_start',
+        ordered: bull.length > 1
+      });
+
+      // Get each top-level item.
+      cap = cap[0].match(this.rules.item);
+
+      next = false;
+      l = cap.length;
+      i = 0;
+
+      for (; i < l; i++) {
+        item = cap[i];
+
+        // Remove the list item's bullet
+        // so it is seen as the next token.
+        space = item.length;
+        item = item.replace(/^ *([*+-]|\d+\.) +/, '');
+
+        // Outdent whatever the
+        // list item contains. Hacky.
+        if (~item.indexOf('\n ')) {
+          space -= item.length;
+          item = !this.options.pedantic
+            ? item.replace(new RegExp('^ {1,' + space + '}', 'gm'), '')
+            : item.replace(/^ {1,4}/gm, '');
+        }
+
+        // Determine whether the next list item belongs here.
+        // Backpedal if it does not belong in this list.
+        if (this.options.smartLists && i !== l - 1) {
+          b = block.bullet.exec(cap[i + 1])[0];
+          if (bull !== b && !(bull.length > 1 && b.length > 1)) {
+            src = cap.slice(i + 1).join('\n') + src;
+            i = l - 1;
+          }
+        }
+
+        // Determine whether item is loose or not.
+        // Use: /(^|\n)(?! )[^\n]+\n\n(?!\s*$)/
+        // for discount behavior.
+        loose = next || /\n\n(?!\s*$)/.test(item);
+        if (i !== l - 1) {
+          next = item.charAt(item.length - 1) === '\n';
+          if (!loose) loose = next;
+        }
+
+        this.tokens.push({
+          type: loose
+            ? 'loose_item_start'
+            : 'list_item_start'
+        });
+
+        // Recurse.
+        this.token(item, false, bq);
+
+        this.tokens.push({
+          type: 'list_item_end'
+        });
+      }
+
+      this.tokens.push({
+        type: 'list_end'
+      });
+
+      continue;
+    }
+
+    // html
+    if (cap = this.rules.html.exec(src)) {
+      src = src.substring(cap[0].length);
+      this.tokens.push({
+        type: this.options.sanitize
+          ? 'paragraph'
+          : 'html',
+        pre: cap[1] === 'pre' || cap[1] === 'script' || cap[1] === 'style',
+        text: cap[0]
+      });
+      continue;
+    }
+
+    // def
+    if ((!bq && top) && (cap = this.rules.def.exec(src))) {
+      src = src.substring(cap[0].length);
+      this.tokens.links[cap[1].toLowerCase()] = {
+        href: cap[2],
+        title: cap[3]
+      };
+      continue;
+    }
+
+    // table (gfm)
+    if (top && (cap = this.rules.table.exec(src))) {
+      src = src.substring(cap[0].length);
+
+      item = {
+        type: 'table',
+        header: cap[1].replace(/^ *| *\| *$/g, '').split(/ *\| */),
+        align: cap[2].replace(/^ *|\| *$/g, '').split(/ *\| */),
+        cells: cap[3].replace(/(?: *\| *)?\n$/, '').split('\n')
+      };
+
+      for (i = 0; i < item.align.length; i++) {
+        if (/^ *-+: *$/.test(item.align[i])) {
+          item.align[i] = 'right';
+        } else if (/^ *:-+: *$/.test(item.align[i])) {
+          item.align[i] = 'center';
+        } else if (/^ *:-+ *$/.test(item.align[i])) {
+          item.align[i] = 'left';
+        } else {
+          item.align[i] = null;
+        }
+      }
+
+      for (i = 0; i < item.cells.length; i++) {
+        item.cells[i] = item.cells[i]
+          .replace(/^ *\| *| *\| *$/g, '')
+          .split(/ *\| */);
+      }
+
+      this.tokens.push(item);
+
+      continue;
+    }
+
+    // top-level paragraph
+    if (top && (cap = this.rules.paragraph.exec(src))) {
+      src = src.substring(cap[0].length);
+      this.tokens.push({
+        type: 'paragraph',
+        text: cap[1].charAt(cap[1].length - 1) === '\n'
+          ? cap[1].slice(0, -1)
+          : cap[1]
+      });
+      continue;
+    }
+
+    // text
+    if (cap = this.rules.text.exec(src)) {
+      // Top-level should never reach here.
+      src = src.substring(cap[0].length);
+      this.tokens.push({
+        type: 'text',
+        text: cap[0]
+      });
+      continue;
+    }
+
+    if (src) {
+      throw new
+        Error('Infinite loop on byte: ' + src.charCodeAt(0));
+    }
+  }
+
+  return this.tokens;
+};
+
+/**
+ * Inline-Level Grammar
+ */
+
+var inline = {
+  escape: /^\\([\\`*{}\[\]()#+\-.!_>])/,
+  autolink: /^<([^ >]+(@|:\/)[^ >]+)>/,
+  url: noop,
+  tag: /^<!--[\s\S]*?-->|^<\/?\w+(?:"[^"]*"|'[^']*'|[^'">])*?>/,
+  link: /^!?\[(inside)\]\(href\)/,
+  reflink: /^!?\[(inside)\]\s*\[([^\]]*)\]/,
+  nolink: /^!?\[((?:\[[^\]]*\]|[^\[\]])*)\]/,
+  strong: /^__([\s\S]+?)__(?!_)|^\*\*([\s\S]+?)\*\*(?!\*)/,
+  em: /^\b_((?:__|[\s\S])+?)_\b|^\*((?:\*\*|[\s\S])+?)\*(?!\*)/,
+  code: /^(`+)\s*([\s\S]*?[^`])\s*\1(?!`)/,
+  br: /^ {2,}\n(?!\s*$)/,
+  del: noop,
+  text: /^[\s\S]+?(?=[\\<!\[_*`]| {2,}\n|$)/
+};
+
+inline._inside = /(?:\[[^\]]*\]|[^\[\]]|\](?=[^\[]*\]))*/;
+inline._href = /\s*<?([\s\S]*?)>?(?:\s+['"]([\s\S]*?)['"])?\s*/;
+
+inline.link = replace(inline.link)
+  ('inside', inline._inside)
+  ('href', inline._href)
+  ();
+
+inline.reflink = replace(inline.reflink)
+  ('inside', inline._inside)
+  ();
+
+/**
+ * Normal Inline Grammar
+ */
+
+inline.normal = merge({}, inline);
+
+/**
+ * Pedantic Inline Grammar
+ */
+
+inline.pedantic = merge({}, inline.normal, {
+  strong: /^__(?=\S)([\s\S]*?\S)__(?!_)|^\*\*(?=\S)([\s\S]*?\S)\*\*(?!\*)/,
+  em: /^_(?=\S)([\s\S]*?\S)_(?!_)|^\*(?=\S)([\s\S]*?\S)\*(?!\*)/
+});
+
+/**
+ * GFM Inline Grammar
+ */
+
+inline.gfm = merge({}, inline.normal, {
+  escape: replace(inline.escape)('])', '~|])')(),
+  url: /^(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/,
+  del: /^~~(?=\S)([\s\S]*?\S)~~/,
+  text: replace(inline.text)
+    (']|', '~]|')
+    ('|', '|https?://|')
+    ()
+});
+
+/**
+ * GFM + Line Breaks Inline Grammar
+ */
+
+inline.breaks = merge({}, inline.gfm, {
+  br: replace(inline.br)('{2,}', '*')(),
+  text: replace(inline.gfm.text)('{2,}', '*')()
+});
+
+/**
+ * Inline Lexer & Compiler
+ */
+
+function InlineLexer(links, options) {
+  this.options = options || marked.defaults;
+  this.links = links;
+  this.rules = inline.normal;
+  this.renderer = this.options.renderer || new Renderer;
+  this.renderer.options = this.options;
+
+  if (!this.links) {
+    throw new
+      Error('Tokens array requires a `links` property.');
+  }
+
+  if (this.options.gfm) {
+    if (this.options.breaks) {
+      this.rules = inline.breaks;
+    } else {
+      this.rules = inline.gfm;
+    }
+  } else if (this.options.pedantic) {
+    this.rules = inline.pedantic;
+  }
+}
+
+/**
+ * Expose Inline Rules
+ */
+
+InlineLexer.rules = inline;
+
+/**
+ * Static Lexing/Compiling Method
+ */
+
+InlineLexer.output = function(src, links, options) {
+  var inline = new InlineLexer(links, options);
+  return inline.output(src);
+};
+
+/**
+ * Lexing/Compiling
+ */
+
+InlineLexer.prototype.output = function(src) {
+  var out = ''
+    , link
+    , text
+    , href
+    , cap;
+
+  while (src) {
+    // escape
+    if (cap = this.rules.escape.exec(src)) {
+      src = src.substring(cap[0].length);
+      out += cap[1];
+      continue;
+    }
+
+    // autolink
+    if (cap = this.rules.autolink.exec(src)) {
+      src = src.substring(cap[0].length);
+      if (cap[2] === '@') {
+        text = cap[1].charAt(6) === ':'
+          ? this.mangle(cap[1].substring(7))
+          : this.mangle(cap[1]);
+        href = this.mangle('mailto:') + text;
+      } else {
+        text = escape(cap[1]);
+        href = text;
+      }
+      out += this.renderer.link(href, null, text);
+      continue;
+    }
+
+    // url (gfm)
+    if (!this.inLink && (cap = this.rules.url.exec(src))) {
+      src = src.substring(cap[0].length);
+      text = escape(cap[1]);
+      href = text;
+      out += this.renderer.link(href, null, text);
+      continue;
+    }
+
+    // tag
+    if (cap = this.rules.tag.exec(src)) {
+      if (!this.inLink && /^<a /i.test(cap[0])) {
+        this.inLink = true;
+      } else if (this.inLink && /^<\/a>/i.test(cap[0])) {
+        this.inLink = false;
+      }
+      src = src.substring(cap[0].length);
+      out += this.options.sanitize
+        ? escape(cap[0])
+        : cap[0];
+      continue;
+    }
+
+    // link
+    if (cap = this.rules.link.exec(src)) {
+      src = src.substring(cap[0].length);
+      this.inLink = true;
+      out += this.outputLink(cap, {
+        href: cap[2],
+        title: cap[3]
+      });
+      this.inLink = false;
+      continue;
+    }
+
+    // reflink, nolink
+    if ((cap = this.rules.reflink.exec(src))
+        || (cap = this.rules.nolink.exec(src))) {
+      src = src.substring(cap[0].length);
+      link = (cap[2] || cap[1]).replace(/\s+/g, ' ');
+      link = this.links[link.toLowerCase()];
+      if (!link || !link.href) {
+        out += cap[0].charAt(0);
+        src = cap[0].substring(1) + src;
+        continue;
+      }
+      this.inLink = true;
+      out += this.outputLink(cap, link);
+      this.inLink = false;
+      continue;
+    }
+
+    // strong
+    if (cap = this.rules.strong.exec(src)) {
+      src = src.substring(cap[0].length);
+      out += this.renderer.strong(this.output(cap[2] || cap[1]));
+      continue;
+    }
+
+    // em
+    if (cap = this.rules.em.exec(src)) {
+      src = src.substring(cap[0].length);
+      out += this.renderer.em(this.output(cap[2] || cap[1]));
+      continue;
+    }
+
+    // code
+    if (cap = this.rules.code.exec(src)) {
+      src = src.substring(cap[0].length);
+      out += this.renderer.codespan(escape(cap[2], true));
+      continue;
+    }
+
+    // br
+    if (cap = this.rules.br.exec(src)) {
+      src = src.substring(cap[0].length);
+      out += this.renderer.br();
+      continue;
+    }
+
+    // del (gfm)
+    if (cap = this.rules.del.exec(src)) {
+      src = src.substring(cap[0].length);
+      out += this.renderer.del(this.output(cap[1]));
+      continue;
+    }
+
+    // text
+    if (cap = this.rules.text.exec(src)) {
+      src = src.substring(cap[0].length);
+      out += escape(this.smartypants(cap[0]));
+      continue;
+    }
+
+    if (src) {
+      throw new
+        Error('Infinite loop on byte: ' + src.charCodeAt(0));
+    }
+  }
+
+  return out;
+};
+
+/**
+ * Compile Link
+ */
+
+InlineLexer.prototype.outputLink = function(cap, link) {
+  var href = escape(link.href)
+    , title = link.title ? escape(link.title) : null;
+
+  return cap[0].charAt(0) !== '!'
+    ? this.renderer.link(href, title, this.output(cap[1]))
+    : this.renderer.image(href, title, escape(cap[1]));
+};
+
+/**
+ * Smartypants Transformations
+ */
+
+InlineLexer.prototype.smartypants = function(text) {
+  if (!this.options.smartypants) return text;
+  return text
+    // em-dashes
+    .replace(/--/g, '\u2014')
+    // opening singles
+    .replace(/(^|[-\u2014/(\[{"\s])'/g, '$1\u2018')
+    // closing singles & apostrophes
+    .replace(/'/g, '\u2019')
+    // opening doubles
+    .replace(/(^|[-\u2014/(\[{\u2018\s])"/g, '$1\u201c')
+    // closing doubles
+    .replace(/"/g, '\u201d')
+    // ellipses
+    .replace(/\.{3}/g, '\u2026');
+};
+
+/**
+ * Mangle Links
+ */
+
+InlineLexer.prototype.mangle = function(text) {
+  var out = ''
+    , l = text.length
+    , i = 0
+    , ch;
+
+  for (; i < l; i++) {
+    ch = text.charCodeAt(i);
+    if (Math.random() > 0.5) {
+      ch = 'x' + ch.toString(16);
+    }
+    out += '&#' + ch + ';';
+  }
+
+  return out;
+};
+
+/**
+ * Renderer
+ */
+
+function Renderer(options) {
+  this.options = options || {};
+}
+
+Renderer.prototype.code = function(code, lang, escaped) {
+  if (this.options.highlight) {
+    var out = this.options.highlight(code, lang);
+    if (out != null && out !== code) {
+      escaped = true;
+      code = out;
+    }
+  }
+
+  if (!lang) {
+    return '<pre><code>'
+      + (escaped ? code : escape(code, true))
+      + '\n</code></pre>';
+  }
+
+  return '<pre><code class="'
+    + this.options.langPrefix
+    + escape(lang, true)
+    + '">'
+    + (escaped ? code : escape(code, true))
+    + '\n</code></pre>\n';
+};
+
+Renderer.prototype.blockquote = function(quote) {
+  return '<blockquote>\n' + quote + '</blockquote>\n';
+};
+
+Renderer.prototype.html = function(html) {
+  return html;
+};
+
+Renderer.prototype.heading = function(text, level, raw) {
+  return '<h'
+    + level
+    + ' id="'
+    + this.options.headerPrefix
+    + raw.toLowerCase().replace(/[^\w]+/g, '-')
+    + '">'
+    + text
+    + '</h'
+    + level
+    + '>\n';
+};
+
+Renderer.prototype.hr = function() {
+  return this.options.xhtml ? '<hr/>\n' : '<hr>\n';
+};
+
+Renderer.prototype.list = function(body, ordered) {
+  var type = ordered ? 'ol' : 'ul';
+  return '<' + type + '>\n' + body + '</' + type + '>\n';
+};
+
+Renderer.prototype.listitem = function(text) {
+  return '<li>' + text + '</li>\n';
+};
+
+Renderer.prototype.paragraph = function(text) {
+  return '<p>' + text + '</p>\n';
+};
+
+Renderer.prototype.table = function(header, body) {
+  return '<table>\n'
+    + '<thead>\n'
+    + header
+    + '</thead>\n'
+    + '<tbody>\n'
+    + body
+    + '</tbody>\n'
+    + '</table>\n';
+};
+
+Renderer.prototype.tablerow = function(content) {
+  return '<tr>\n' + content + '</tr>\n';
+};
+
+Renderer.prototype.tablecell = function(content, flags) {
+  var type = flags.header ? 'th' : 'td';
+  var tag = flags.align
+    ? '<' + type + ' style="text-align:' + flags.align + '">'
+    : '<' + type + '>';
+  return tag + content + '</' + type + '>\n';
+};
+
+// span level renderer
+Renderer.prototype.strong = function(text) {
+  return '<strong>' + text + '</strong>';
+};
+
+Renderer.prototype.em = function(text) {
+  return '<em>' + text + '</em>';
+};
+
+Renderer.prototype.codespan = function(text) {
+  return '<code>' + text + '</code>';
+};
+
+Renderer.prototype.br = function() {
+  return this.options.xhtml ? '<br/>' : '<br>';
+};
+
+Renderer.prototype.del = function(text) {
+  return '<del>' + text + '</del>';
+};
+
+Renderer.prototype.link = function(href, title, text) {
+  if (this.options.sanitize) {
     try {
-      this.tree = custom_root || this.tree || [ "markdown" ];
-
-      blocks_loop:
-      while ( blocks.length ) {
-        var b = this.processBlock( blocks.shift(), blocks );
-
-        // Reference blocks and the like won't return any content
-        if ( !b.length )
-          continue blocks_loop;
-
-        this.tree.push.apply( this.tree, b );
-      }
-      return this.tree;
+      var prot = decodeURIComponent(unescape(href))
+        .replace(/[^\w:]/g, '')
+        .toLowerCase();
+    } catch (e) {
+      return '';
     }
-    finally {
-      if ( custom_root )
-        this.tree = old_tree;
+    if (prot.indexOf('javascript:') === 0 || prot.indexOf('vbscript:') === 0) {
+      return '';
     }
-  };
+  }
+  var out = '<a href="' + href + '"';
+  if (title) {
+    out += ' title="' + title + '"';
+  }
+  out += '>' + text + '</a>';
+  return out;
+};
 
-  // Noop by default
-  Markdown.prototype.debug = function () {
-    var args = Array.prototype.slice.call( arguments);
-    args.unshift(this.debug_indent);
-    if ( typeof print !== "undefined" )
-      print.apply( print, args );
-    if ( typeof console !== "undefined" && typeof console.log !== "undefined" )
-      console.log.apply( null, args );
-  };
+Renderer.prototype.image = function(href, title, text) {
+  var out = '<img src="' + href + '" alt="' + text + '"';
+  if (title) {
+    out += ' title="' + title + '"';
+  }
+  out += this.options.xhtml ? '/>' : '>';
+  return out;
+};
 
-  Markdown.prototype.loop_re_over_block = function( re, block, cb ) {
-    // Dont use /g regexps with this
-    var m,
-        b = block.valueOf();
+/**
+ * Parsing & Compiling
+ */
 
-    while ( b.length && (m = re.exec(b) ) !== null ) {
-      b = b.substr( m[0].length );
-      cb.call(this, m);
-    }
-    return b;
-  };
+function Parser(options) {
+  this.tokens = [];
+  this.token = null;
+  this.options = options || marked.defaults;
+  this.options.renderer = this.options.renderer || new Renderer;
+  this.renderer = this.options.renderer;
+  this.renderer.options = this.options;
+}
 
-  // Build default order from insertion order.
-  Markdown.buildBlockOrder = function(d) {
-    var ord = [];
-    for ( var i in d ) {
-      if ( i === "__order__" || i === "__call__" )
-        continue;
-      ord.push( i );
-    }
-    d.__order__ = ord;
-  };
+/**
+ * Static Parse Method
+ */
 
-  // Build patterns for inline matcher
-  Markdown.buildInlinePatterns = function(d) {
-    var patterns = [];
+Parser.parse = function(src, options, renderer) {
+  var parser = new Parser(options, renderer);
+  return parser.parse(src);
+};
 
-    for ( var i in d ) {
-      // __foo__ is reserved and not a pattern
-      if ( i.match( /^__.*__$/) )
-        continue;
-      var l = i.replace( /([\\.*+?|()\[\]{}])/g, "\\$1" )
-               .replace( /\n/, "\\n" );
-      patterns.push( i.length === 1 ? l : "(?:" + l + ")" );
-    }
+/**
+ * Parse Loop
+ */
 
-    patterns = patterns.join("|");
-    d.__patterns__ = patterns;
-    //print("patterns:", uneval( patterns ) );
+Parser.prototype.parse = function(src) {
+  this.inline = new InlineLexer(src.links, this.options, this.renderer);
+  this.tokens = src.reverse();
 
-    var fn = d.__call__;
-    d.__call__ = function(text, pattern) {
-      if ( pattern !== undefined )
-        return fn.call(this, text, pattern);
-      else
-        return fn.call(this, text, patterns);
-    };
-  };
-
-
-
-
-  var extract_attr = MarkdownHelpers.extract_attr;
-
-  /**
-   *  renderJsonML( jsonml[, options] ) -> String
-   *  - jsonml (Array): JsonML array to render to XML
-   *  - options (Object): options
-   *
-   *  Converts the given JsonML into well-formed XML.
-   *
-   *  The options currently understood are:
-   *
-   *  - root (Boolean): wether or not the root node should be included in the
-   *    output, or just its children. The default `false` is to not include the
-   *    root itself.
-   */
-  Markdown.renderJsonML = function( jsonml, options ) {
-    options = options || {};
-    // include the root element in the rendered output?
-    options.root = options.root || false;
-
-    var content = [];
-
-    if ( options.root ) {
-      content.push( render_tree( jsonml ) );
-    }
-    else {
-      jsonml.shift(); // get rid of the tag
-      if ( jsonml.length && typeof jsonml[ 0 ] === "object" && !( jsonml[ 0 ] instanceof Array ) )
-        jsonml.shift(); // get rid of the attributes
-
-      while ( jsonml.length )
-        content.push( render_tree( jsonml.shift() ) );
-    }
-
-    return content.join( "\n\n" );
-  };
-
-
-  /**
-   *  toHTMLTree( markdown, [dialect] ) -> JsonML
-   *  toHTMLTree( md_tree ) -> JsonML
-   *  - markdown (String): markdown string to parse
-   *  - dialect (String | Dialect): the dialect to use, defaults to gruber
-   *  - md_tree (Markdown.JsonML): parsed markdown tree
-   *
-   *  Turn markdown into HTML, represented as a JsonML tree. If a string is given
-   *  to this function, it is first parsed into a markdown tree by calling
-   *  [[parse]].
-   **/
-  Markdown.toHTMLTree = function toHTMLTree( input, dialect , options ) {
-
-    // convert string input to an MD tree
-    if ( typeof input === "string" )
-      input = this.parse( input, dialect );
-
-    // Now convert the MD tree to an HTML tree
-
-    // remove references from the tree
-    var attrs = extract_attr( input ),
-        refs = {};
-
-    if ( attrs && attrs.references )
-      refs = attrs.references;
-
-    var html = convert_tree_to_html( input, refs , options );
-    merge_text_nodes( html );
-    return html;
-  };
-
-  /**
-   *  toHTML( markdown, [dialect]  ) -> String
-   *  toHTML( md_tree ) -> String
-   *  - markdown (String): markdown string to parse
-   *  - md_tree (Markdown.JsonML): parsed markdown tree
-   *
-   *  Take markdown (either as a string or as a JsonML tree) and run it through
-   *  [[toHTMLTree]] then turn it into a well-formated HTML fragment.
-   **/
-  Markdown.toHTML = function toHTML( source , dialect , options ) {
-    var input = this.toHTMLTree( source , dialect , options );
-
-    return this.renderJsonML( input );
-  };
-
-
-  function escapeHTML( text ) {
-    return text.replace( /&/g, "&amp;" )
-               .replace( /</g, "&lt;" )
-               .replace( />/g, "&gt;" )
-               .replace( /"/g, "&quot;" )
-               .replace( /'/g, "&#39;" );
+  var out = '';
+  while (this.next()) {
+    out += this.tok();
   }
 
-  function render_tree( jsonml ) {
-    // basic case
-    if ( typeof jsonml === "string" )
-      return escapeHTML( jsonml );
+  return out;
+};
 
-    var tag = jsonml.shift(),
-        attributes = {},
-        content = [];
+/**
+ * Next Token
+ */
 
-    if ( jsonml.length && typeof jsonml[ 0 ] === "object" && !( jsonml[ 0 ] instanceof Array ) )
-      attributes = jsonml.shift();
+Parser.prototype.next = function() {
+  return this.token = this.tokens.pop();
+};
 
-    while ( jsonml.length )
-      content.push( render_tree( jsonml.shift() ) );
+/**
+ * Preview Next Token
+ */
 
-    var tag_attrs = "";
-    for ( var a in attributes )
-      tag_attrs += " " + a + '="' + escapeHTML( attributes[ a ] ) + '"';
+Parser.prototype.peek = function() {
+  return this.tokens[this.tokens.length - 1] || 0;
+};
 
-    // be careful about adding whitespace here for inline elements
-    if ( tag === "img" || tag === "br" || tag === "hr" )
-      return "<"+ tag + tag_attrs + "/>";
-    else
-      return "<"+ tag + tag_attrs + ">" + content.join( "" ) + "</" + tag + ">";
+/**
+ * Parse Text Tokens
+ */
+
+Parser.prototype.parseText = function() {
+  var body = this.token.text;
+
+  while (this.peek().type === 'text') {
+    body += '\n' + this.next().text;
   }
 
-  function convert_tree_to_html( tree, references, options ) {
-    var i;
-    options = options || {};
+  return this.inline.output(body);
+};
 
-    // shallow clone
-    var jsonml = tree.slice( 0 );
+/**
+ * Parse Current Token
+ */
 
-    if ( typeof options.preprocessTreeNode === "function" )
-      jsonml = options.preprocessTreeNode(jsonml, references);
-
-    // Clone attributes if they exist
-    var attrs = extract_attr( jsonml );
-    if ( attrs ) {
-      jsonml[ 1 ] = {};
-      for ( i in attrs ) {
-        jsonml[ 1 ][ i ] = attrs[ i ];
-      }
-      attrs = jsonml[ 1 ];
+Parser.prototype.tok = function() {
+  switch (this.token.type) {
+    case 'space': {
+      return '';
     }
-
-    // basic case
-    if ( typeof jsonml === "string" )
-      return jsonml;
-
-    // convert this node
-    switch ( jsonml[ 0 ] ) {
-    case "header":
-      jsonml[ 0 ] = "h" + jsonml[ 1 ].level;
-      delete jsonml[ 1 ].level;
-      break;
-    case "bulletlist":
-      jsonml[ 0 ] = "ul";
-      break;
-    case "numberlist":
-      jsonml[ 0 ] = "ol";
-      break;
-    case "listitem":
-      jsonml[ 0 ] = "li";
-      break;
-    case "para":
-      jsonml[ 0 ] = "p";
-      break;
-    case "markdown":
-      jsonml[ 0 ] = "html";
-      if ( attrs )
-        delete attrs.references;
-      break;
-    case "code_block":
-      jsonml[ 0 ] = "pre";
-      i = attrs ? 2 : 1;
-      var code = [ "code" ];
-      code.push.apply( code, jsonml.splice( i, jsonml.length - i ) );
-      jsonml[ i ] = code;
-      break;
-    case "inlinecode":
-      jsonml[ 0 ] = "code";
-      break;
-    case "img":
-      jsonml[ 1 ].src = jsonml[ 1 ].href;
-      delete jsonml[ 1 ].href;
-      break;
-    case "linebreak":
-      jsonml[ 0 ] = "br";
-      break;
-    case "link":
-      jsonml[ 0 ] = "a";
-      break;
-    case "link_ref":
-      jsonml[ 0 ] = "a";
-
-      // grab this ref and clean up the attribute node
-      var ref = references[ attrs.ref ];
-
-      // if the reference exists, make the link
-      if ( ref ) {
-        delete attrs.ref;
-
-        // add in the href and title, if present
-        attrs.href = ref.href;
-        if ( ref.title )
-          attrs.title = ref.title;
-
-        // get rid of the unneeded original text
-        delete attrs.original;
-      }
-      // the reference doesn't exist, so revert to plain text
-      else {
-        return attrs.original;
-      }
-      break;
-    case "img_ref":
-      jsonml[ 0 ] = "img";
-
-      // grab this ref and clean up the attribute node
-      var ref = references[ attrs.ref ];
-
-      // if the reference exists, make the link
-      if ( ref ) {
-        delete attrs.ref;
-
-        // add in the href and title, if present
-        attrs.src = ref.href;
-        if ( ref.title )
-          attrs.title = ref.title;
-
-        // get rid of the unneeded original text
-        delete attrs.original;
-      }
-      // the reference doesn't exist, so revert to plain text
-      else {
-        return attrs.original;
-      }
-      break;
+    case 'hr': {
+      return this.renderer.hr();
     }
-
-    // convert all the children
-    i = 1;
-
-    // deal with the attribute node, if it exists
-    if ( attrs ) {
-      // if there are keys, skip over it
-      for ( var key in jsonml[ 1 ] ) {
-        i = 2;
-        break;
-      }
-      // if there aren't, remove it
-      if ( i === 1 )
-        jsonml.splice( i, 1 );
+    case 'heading': {
+      return this.renderer.heading(
+        this.inline.output(this.token.text),
+        this.token.depth,
+        this.token.text);
     }
-
-    for ( ; i < jsonml.length; ++i ) {
-      jsonml[ i ] = convert_tree_to_html( jsonml[ i ], references, options );
+    case 'code': {
+      return this.renderer.code(this.token.text,
+        this.token.lang,
+        this.token.escaped);
     }
+    case 'table': {
+      var header = ''
+        , body = ''
+        , i
+        , row
+        , cell
+        , flags
+        , j;
 
-    return jsonml;
-  }
-
-
-  // merges adjacent text nodes into a single node
-  function merge_text_nodes( jsonml ) {
-    // skip the tag name and attribute hash
-    var i = extract_attr( jsonml ) ? 2 : 1;
-
-    while ( i < jsonml.length ) {
-      // if it's a string check the next item too
-      if ( typeof jsonml[ i ] === "string" ) {
-        if ( i + 1 < jsonml.length && typeof jsonml[ i + 1 ] === "string" ) {
-          // merge the second string into the first and remove it
-          jsonml[ i ] += jsonml.splice( i + 1, 1 )[ 0 ];
-        }
-        else {
-          ++i;
-        }
+      // header
+      cell = '';
+      for (i = 0; i < this.token.header.length; i++) {
+        flags = { header: true, align: this.token.align[i] };
+        cell += this.renderer.tablecell(
+          this.inline.output(this.token.header[i]),
+          { header: true, align: this.token.align[i] }
+        );
       }
-      // if it's not a string recurse
-      else {
-        merge_text_nodes( jsonml[ i ] );
-        ++i;
-      }
-    }
-  };
+      header += this.renderer.tablerow(cell);
 
+      for (i = 0; i < this.token.cells.length; i++) {
+        row = this.token.cells[i];
 
-
-  var DialectHelpers = {};
-  DialectHelpers.inline_until_char = function( text, want ) {
-    var consumed = 0,
-        nodes = [];
-
-    while ( true ) {
-      if ( text.charAt( consumed ) === want ) {
-        // Found the character we were looking for
-        consumed++;
-        return [ consumed, nodes ];
-      }
-
-      if ( consumed >= text.length ) {
-        // No closing char found. Abort.
-        return null;
-      }
-
-      var res = this.dialect.inline.__oneElement__.call(this, text.substr( consumed ) );
-      consumed += res[ 0 ];
-      // Add any returned nodes.
-      nodes.push.apply( nodes, res.slice( 1 ) );
-    }
-  };
-
-  // Helper function to make sub-classing a dialect easier
-  DialectHelpers.subclassDialect = function( d ) {
-    function Block() {}
-    Block.prototype = d.block;
-    function Inline() {}
-    Inline.prototype = d.inline;
-
-    return { block: new Block(), inline: new Inline() };
-  };
-
-
-
-
-  var forEach = MarkdownHelpers.forEach,
-      extract_attr = MarkdownHelpers.extract_attr,
-      mk_block = MarkdownHelpers.mk_block,
-      isEmpty = MarkdownHelpers.isEmpty,
-      inline_until_char = DialectHelpers.inline_until_char;
-
-  /**
-   * Gruber dialect
-   *
-   * The default dialect that follows the rules set out by John Gruber's
-   * markdown.pl as closely as possible. Well actually we follow the behaviour of
-   * that script which in some places is not exactly what the syntax web page
-   * says.
-   **/
-  var Gruber = {
-    block: {
-      atxHeader: function atxHeader( block, next ) {
-        var m = block.match( /^(#{1,6})\s*(.*?)\s*#*\s*(?:\n|$)/ );
-
-        if ( !m )
-          return undefined;
-
-        var header = [ "header", { level: m[ 1 ].length } ];
-        Array.prototype.push.apply(header, this.processInline(m[ 2 ]));
-
-        if ( m[0].length < block.length )
-          next.unshift( mk_block( block.substr( m[0].length ), block.trailing, block.lineNumber + 2 ) );
-
-        return [ header ];
-      },
-
-      setextHeader: function setextHeader( block, next ) {
-        var m = block.match( /^(.*)\n([-=])\2\2+(?:\n|$)/ );
-
-        if ( !m )
-          return undefined;
-
-        var level = ( m[ 2 ] === "=" ) ? 1 : 2,
-            header = [ "header", { level : level }, m[ 1 ] ];
-
-        if ( m[0].length < block.length )
-          next.unshift( mk_block( block.substr( m[0].length ), block.trailing, block.lineNumber + 2 ) );
-
-        return [ header ];
-      },
-
-      code: function code( block, next ) {
-        // |    Foo
-        // |bar
-        // should be a code block followed by a paragraph. Fun
-        //
-        // There might also be adjacent code block to merge.
-
-        var ret = [],
-            re = /^(?: {0,3}\t| {4})(.*)\n?/;
-
-        // 4 spaces + content
-        if ( !block.match( re ) )
-          return undefined;
-
-        block_search:
-        do {
-          // Now pull out the rest of the lines
-          var b = this.loop_re_over_block(
-                    re, block.valueOf(), function( m ) { ret.push( m[1] ); } );
-
-          if ( b.length ) {
-            // Case alluded to in first comment. push it back on as a new block
-            next.unshift( mk_block(b, block.trailing) );
-            break block_search;
-          }
-          else if ( next.length ) {
-            // Check the next block - it might be code too
-            if ( !next[0].match( re ) )
-              break block_search;
-
-            // Pull how how many blanks lines follow - minus two to account for .join
-            ret.push ( block.trailing.replace(/[^\n]/g, "").substring(2) );
-
-            block = next.shift();
-          }
-          else {
-            break block_search;
-          }
-        } while ( true );
-
-        return [ [ "code_block", ret.join("\n") ] ];
-      },
-
-      horizRule: function horizRule( block, next ) {
-        // this needs to find any hr in the block to handle abutting blocks
-        var m = block.match( /^(?:([\s\S]*?)\n)?[ \t]*([-_*])(?:[ \t]*\2){2,}[ \t]*(?:\n([\s\S]*))?$/ );
-
-        if ( !m )
-          return undefined;
-
-        var jsonml = [ [ "hr" ] ];
-
-        // if there's a leading abutting block, process it
-        if ( m[ 1 ] ) {
-          var contained = mk_block( m[ 1 ], "", block.lineNumber );
-          jsonml.unshift.apply( jsonml, this.toTree( contained, [] ) );
-        }
-
-        // if there's a trailing abutting block, stick it into next
-        if ( m[ 3 ] )
-          next.unshift( mk_block( m[ 3 ], block.trailing, block.lineNumber + 1 ) );
-
-        return jsonml;
-      },
-
-      // There are two types of lists. Tight and loose. Tight lists have no whitespace
-      // between the items (and result in text just in the <li>) and loose lists,
-      // which have an empty line between list items, resulting in (one or more)
-      // paragraphs inside the <li>.
-      //
-      // There are all sorts weird edge cases about the original markdown.pl's
-      // handling of lists:
-      //
-      // * Nested lists are supposed to be indented by four chars per level. But
-      //   if they aren't, you can get a nested list by indenting by less than
-      //   four so long as the indent doesn't match an indent of an existing list
-      //   item in the 'nest stack'.
-      //
-      // * The type of the list (bullet or number) is controlled just by the
-      //    first item at the indent. Subsequent changes are ignored unless they
-      //    are for nested lists
-      //
-      lists: (function( ) {
-        // Use a closure to hide a few variables.
-        var any_list = "[*+-]|\\d+\\.",
-            bullet_list = /[*+-]/,
-            // Capture leading indent as it matters for determining nested lists.
-            is_list_re = new RegExp( "^( {0,3})(" + any_list + ")[ \t]+" ),
-            indent_re = "(?: {0,3}\\t| {4})";
-
-        // TODO: Cache this regexp for certain depths.
-        // Create a regexp suitable for matching an li for a given stack depth
-        function regex_for_depth( depth ) {
-
-          return new RegExp(
-            // m[1] = indent, m[2] = list_type
-            "(?:^(" + indent_re + "{0," + depth + "} {0,3})(" + any_list + ")\\s+)|" +
-            // m[3] = cont
-            "(^" + indent_re + "{0," + (depth-1) + "}[ ]{0,4})"
+        cell = '';
+        for (j = 0; j < row.length; j++) {
+          cell += this.renderer.tablecell(
+            this.inline.output(row[j]),
+            { header: false, align: this.token.align[j] }
           );
         }
-        function expand_tab( input ) {
-          return input.replace( / {0,3}\t/g, "    " );
-        }
 
-        // Add inline content `inline` to `li`. inline comes from processInline
-        // so is an array of content
-        function add(li, loose, inline, nl) {
-          if ( loose ) {
-            li.push( [ "para" ].concat(inline) );
-            return;
-          }
-          // Hmmm, should this be any block level element or just paras?
-          var add_to = li[li.length -1] instanceof Array && li[li.length - 1][0] === "para"
-                     ? li[li.length -1]
-                     : li;
-
-          // If there is already some content in this list, add the new line in
-          if ( nl && li.length > 1 )
-            inline.unshift(nl);
-
-          for ( var i = 0; i < inline.length; i++ ) {
-            var what = inline[i],
-                is_str = typeof what === "string";
-            if ( is_str && add_to.length > 1 && typeof add_to[add_to.length-1] === "string" )
-              add_to[ add_to.length-1 ] += what;
-            else
-              add_to.push( what );
-          }
-        }
-
-        // contained means have an indent greater than the current one. On
-        // *every* line in the block
-        function get_contained_blocks( depth, blocks ) {
-
-          var re = new RegExp( "^(" + indent_re + "{" + depth + "}.*?\\n?)*$" ),
-              replace = new RegExp("^" + indent_re + "{" + depth + "}", "gm"),
-              ret = [];
-
-          while ( blocks.length > 0 ) {
-            if ( re.exec( blocks[0] ) ) {
-              var b = blocks.shift(),
-                  // Now remove that indent
-                  x = b.replace( replace, "");
-
-              ret.push( mk_block( x, b.trailing, b.lineNumber ) );
-            }
-            else
-              break;
-          }
-          return ret;
-        }
-
-        // passed to stack.forEach to turn list items up the stack into paras
-        function paragraphify(s, i, stack) {
-          var list = s.list;
-          var last_li = list[list.length-1];
-
-          if ( last_li[1] instanceof Array && last_li[1][0] === "para" )
-            return;
-          if ( i + 1 === stack.length ) {
-            // Last stack frame
-            // Keep the same array, but replace the contents
-            last_li.push( ["para"].concat( last_li.splice(1, last_li.length - 1) ) );
-          }
-          else {
-            var sublist = last_li.pop();
-            last_li.push( ["para"].concat( last_li.splice(1, last_li.length - 1) ), sublist );
-          }
-        }
-
-        // The matcher function
-        return function( block, next ) {
-          var m = block.match( is_list_re );
-          if ( !m )
-            return undefined;
-
-          function make_list( m ) {
-            var list = bullet_list.exec( m[2] )
-                     ? ["bulletlist"]
-                     : ["numberlist"];
-
-            stack.push( { list: list, indent: m[1] } );
-            return list;
-          }
-
-
-          var stack = [], // Stack of lists for nesting.
-              list = make_list( m ),
-              last_li,
-              loose = false,
-              ret = [ stack[0].list ],
-              i;
-
-          // Loop to search over block looking for inner block elements and loose lists
-          loose_search:
-          while ( true ) {
-            // Split into lines preserving new lines at end of line
-            var lines = block.split( /(?=\n)/ );
-
-            // We have to grab all lines for a li and call processInline on them
-            // once as there are some inline things that can span lines.
-            var li_accumulate = "", nl = "";
-
-            // Loop over the lines in this block looking for tight lists.
-            tight_search:
-            for ( var line_no = 0; line_no < lines.length; line_no++ ) {
-              nl = "";
-              var l = lines[line_no].replace(/^\n/, function(n) { nl = n; return ""; });
-
-
-              // TODO: really should cache this
-              var line_re = regex_for_depth( stack.length );
-
-              m = l.match( line_re );
-              //print( "line:", uneval(l), "\nline match:", uneval(m) );
-
-              // We have a list item
-              if ( m[1] !== undefined ) {
-                // Process the previous list item, if any
-                if ( li_accumulate.length ) {
-                  add( last_li, loose, this.processInline( li_accumulate ), nl );
-                  // Loose mode will have been dealt with. Reset it
-                  loose = false;
-                  li_accumulate = "";
-                }
-
-                m[1] = expand_tab( m[1] );
-                var wanted_depth = Math.floor(m[1].length/4)+1;
-                //print( "want:", wanted_depth, "stack:", stack.length);
-                if ( wanted_depth > stack.length ) {
-                  // Deep enough for a nested list outright
-                  //print ( "new nested list" );
-                  list = make_list( m );
-                  last_li.push( list );
-                  last_li = list[1] = [ "listitem" ];
-                }
-                else {
-                  // We aren't deep enough to be strictly a new level. This is
-                  // where Md.pl goes nuts. If the indent matches a level in the
-                  // stack, put it there, else put it one deeper then the
-                  // wanted_depth deserves.
-                  var found = false;
-                  for ( i = 0; i < stack.length; i++ ) {
-                    if ( stack[ i ].indent !== m[1] )
-                      continue;
-
-                    list = stack[ i ].list;
-                    stack.splice( i+1, stack.length - (i+1) );
-                    found = true;
-                    break;
-                  }
-
-                  if (!found) {
-                    //print("not found. l:", uneval(l));
-                    wanted_depth++;
-                    if ( wanted_depth <= stack.length ) {
-                      stack.splice(wanted_depth, stack.length - wanted_depth);
-                      //print("Desired depth now", wanted_depth, "stack:", stack.length);
-                      list = stack[wanted_depth-1].list;
-                      //print("list:", uneval(list) );
-                    }
-                    else {
-                      //print ("made new stack for messy indent");
-                      list = make_list(m);
-                      last_li.push(list);
-                    }
-                  }
-
-                  //print( uneval(list), "last", list === stack[stack.length-1].list );
-                  last_li = [ "listitem" ];
-                  list.push(last_li);
-                } // end depth of shenegains
-                nl = "";
-              }
-
-              // Add content
-              if ( l.length > m[0].length )
-                li_accumulate += nl + l.substr( m[0].length );
-            } // tight_search
-
-            if ( li_accumulate.length ) {
-              add( last_li, loose, this.processInline( li_accumulate ), nl );
-              // Loose mode will have been dealt with. Reset it
-              loose = false;
-              li_accumulate = "";
-            }
-
-            // Look at the next block - we might have a loose list. Or an extra
-            // paragraph for the current li
-            var contained = get_contained_blocks( stack.length, next );
-
-            // Deal with code blocks or properly nested lists
-            if ( contained.length > 0 ) {
-              // Make sure all listitems up the stack are paragraphs
-              forEach( stack, paragraphify, this);
-
-              last_li.push.apply( last_li, this.toTree( contained, [] ) );
-            }
-
-            var next_block = next[0] && next[0].valueOf() || "";
-
-            if ( next_block.match(is_list_re) || next_block.match( /^ / ) ) {
-              block = next.shift();
-
-              // Check for an HR following a list: features/lists/hr_abutting
-              var hr = this.dialect.block.horizRule( block, next );
-
-              if ( hr ) {
-                ret.push.apply(ret, hr);
-                break;
-              }
-
-              // Make sure all listitems up the stack are paragraphs
-              forEach( stack, paragraphify, this);
-
-              loose = true;
-              continue loose_search;
-            }
-            break;
-          } // loose_search
-
-          return ret;
-        };
-      })(),
-
-      blockquote: function blockquote( block, next ) {
-        if ( !block.match( /^>/m ) )
-          return undefined;
-
-        var jsonml = [];
-
-        // separate out the leading abutting block, if any. I.e. in this case:
-        //
-        //  a
-        //  > b
-        //
-        if ( block[ 0 ] !== ">" ) {
-          var lines = block.split( /\n/ ),
-              prev = [],
-              line_no = block.lineNumber;
-
-          // keep shifting lines until you find a crotchet
-          while ( lines.length && lines[ 0 ][ 0 ] !== ">" ) {
-            prev.push( lines.shift() );
-            line_no++;
-          }
-
-          var abutting = mk_block( prev.join( "\n" ), "\n", block.lineNumber );
-          jsonml.push.apply( jsonml, this.processBlock( abutting, [] ) );
-          // reassemble new block of just block quotes!
-          block = mk_block( lines.join( "\n" ), block.trailing, line_no );
-        }
-
-
-        // if the next block is also a blockquote merge it in
-        while ( next.length && next[ 0 ][ 0 ] === ">" ) {
-          var b = next.shift();
-          block = mk_block( block + block.trailing + b, b.trailing, block.lineNumber );
-        }
-
-        // Strip off the leading "> " and re-process as a block.
-        var input = block.replace( /^> ?/gm, "" ),
-            old_tree = this.tree,
-            processedBlock = this.toTree( input, [ "blockquote" ] ),
-            attr = extract_attr( processedBlock );
-
-        // If any link references were found get rid of them
-        if ( attr && attr.references ) {
-          delete attr.references;
-          // And then remove the attribute object if it's empty
-          if ( isEmpty( attr ) )
-            processedBlock.splice( 1, 1 );
-        }
-
-        jsonml.push( processedBlock );
-        return jsonml;
-      },
-
-      referenceDefn: function referenceDefn( block, next) {
-        var re = /^\s*\[(.*?)\]:\s*(\S+)(?:\s+(?:(['"])(.*?)\3|\((.*?)\)))?\n?/;
-        // interesting matches are [ , ref_id, url, , title, title ]
-
-        if ( !block.match(re) )
-          return undefined;
-
-        // make an attribute node if it doesn't exist
-        if ( !extract_attr( this.tree ) )
-          this.tree.splice( 1, 0, {} );
-
-        var attrs = extract_attr( this.tree );
-
-        // make a references hash if it doesn't exist
-        if ( attrs.references === undefined )
-          attrs.references = {};
-
-        var b = this.loop_re_over_block(re, block, function( m ) {
-
-          if ( m[2] && m[2][0] === "<" && m[2][m[2].length-1] === ">" )
-            m[2] = m[2].substring( 1, m[2].length - 1 );
-
-          var ref = attrs.references[ m[1].toLowerCase() ] = {
-            href: m[2]
-          };
-
-          if ( m[4] !== undefined )
-            ref.title = m[4];
-          else if ( m[5] !== undefined )
-            ref.title = m[5];
-
-        } );
-
-        if ( b.length )
-          next.unshift( mk_block( b, block.trailing ) );
-
-        return [];
-      },
-
-      para: function para( block ) {
-        // everything's a para!
-        return [ ["para"].concat( this.processInline( block ) ) ];
+        body += this.renderer.tablerow(cell);
       }
-    },
-
-    inline: {
-
-      __oneElement__: function oneElement( text, patterns_or_re, previous_nodes ) {
-        var m,
-            res;
-
-        patterns_or_re = patterns_or_re || this.dialect.inline.__patterns__;
-        var re = new RegExp( "([\\s\\S]*?)(" + (patterns_or_re.source || patterns_or_re) + ")" );
-
-        m = re.exec( text );
-        if (!m) {
-          // Just boring text
-          return [ text.length, text ];
-        }
-        else if ( m[1] ) {
-          // Some un-interesting text matched. Return that first
-          return [ m[1].length, m[1] ];
-        }
-
-        var res;
-        if ( m[2] in this.dialect.inline ) {
-          res = this.dialect.inline[ m[2] ].call(
-                    this,
-                    text.substr( m.index ), m, previous_nodes || [] );
-        }
-        // Default for now to make dev easier. just slurp special and output it.
-        res = res || [ m[2].length, m[2] ];
-        return res;
-      },
-
-      __call__: function inline( text, patterns ) {
-
-        var out = [],
-            res;
-
-        function add(x) {
-          //D:self.debug("  adding output", uneval(x));
-          if ( typeof x === "string" && typeof out[out.length-1] === "string" )
-            out[ out.length-1 ] += x;
-          else
-            out.push(x);
-        }
-
-        while ( text.length > 0 ) {
-          res = this.dialect.inline.__oneElement__.call(this, text, patterns, out );
-          text = text.substr( res.shift() );
-          forEach(res, add );
-        }
-
-        return out;
-      },
-
-      // These characters are intersting elsewhere, so have rules for them so that
-      // chunks of plain text blocks don't include them
-      "]": function () {},
-      "}": function () {},
-
-      __escape__ : /^\\[\\`\*_{}\[\]()#\+.!\-]/,
-
-      "\\": function escaped( text ) {
-        // [ length of input processed, node/children to add... ]
-        // Only esacape: \ ` * _ { } [ ] ( ) # * + - . !
-        if ( this.dialect.inline.__escape__.exec( text ) )
-          return [ 2, text.charAt( 1 ) ];
-        else
-          // Not an esacpe
-          return [ 1, "\\" ];
-      },
-
-      "![": function image( text ) {
-
-        // Unlike images, alt text is plain text only. no other elements are
-        // allowed in there
-
-        // ![Alt text](/path/to/img.jpg "Optional title")
-        //      1          2            3       4         <--- captures
-        var m = text.match( /^!\[(.*?)\][ \t]*\([ \t]*([^")]*?)(?:[ \t]+(["'])(.*?)\3)?[ \t]*\)/ );
-
-        if ( m ) {
-          if ( m[2] && m[2][0] === "<" && m[2][m[2].length-1] === ">" )
-            m[2] = m[2].substring( 1, m[2].length - 1 );
-
-          m[2] = this.dialect.inline.__call__.call( this, m[2], /\\/ )[0];
-
-          var attrs = { alt: m[1], href: m[2] || "" };
-          if ( m[4] !== undefined)
-            attrs.title = m[4];
-
-          return [ m[0].length, [ "img", attrs ] ];
-        }
-
-        // ![Alt text][id]
-        m = text.match( /^!\[(.*?)\][ \t]*\[(.*?)\]/ );
-
-        if ( m ) {
-          // We can't check if the reference is known here as it likely wont be
-          // found till after. Check it in md tree->hmtl tree conversion
-          return [ m[0].length, [ "img_ref", { alt: m[1], ref: m[2].toLowerCase(), original: m[0] } ] ];
-        }
-
-        // Just consume the '!['
-        return [ 2, "![" ];
-      },
-
-      "[": function link( text ) {
-
-        var orig = String(text);
-        // Inline content is possible inside `link text`
-        var res = inline_until_char.call( this, text.substr(1), "]" );
-
-        // No closing ']' found. Just consume the [
-        if ( !res )
-          return [ 1, "[" ];
-
-        var consumed = 1 + res[ 0 ],
-            children = res[ 1 ],
-            link,
-            attrs;
-
-        // At this point the first [...] has been parsed. See what follows to find
-        // out which kind of link we are (reference or direct url)
-        text = text.substr( consumed );
-
-        // [link text](/path/to/img.jpg "Optional title")
-        //                 1            2       3         <--- captures
-        // This will capture up to the last paren in the block. We then pull
-        // back based on if there a matching ones in the url
-        //    ([here](/url/(test))
-        // The parens have to be balanced
-        var m = text.match( /^\s*\([ \t]*([^"']*)(?:[ \t]+(["'])(.*?)\2)?[ \t]*\)/ );
-        if ( m ) {
-          var url = m[1];
-          consumed += m[0].length;
-
-          if ( url && url[0] === "<" && url[url.length-1] === ">" )
-            url = url.substring( 1, url.length - 1 );
-
-          // If there is a title we don't have to worry about parens in the url
-          if ( !m[3] ) {
-            var open_parens = 1; // One open that isn't in the capture
-            for ( var len = 0; len < url.length; len++ ) {
-              switch ( url[len] ) {
-              case "(":
-                open_parens++;
-                break;
-              case ")":
-                if ( --open_parens === 0) {
-                  consumed -= url.length - len;
-                  url = url.substring(0, len);
-                }
-                break;
-              }
-            }
-          }
-
-          // Process escapes only
-          url = this.dialect.inline.__call__.call( this, url, /\\/ )[0];
-
-          attrs = { href: url || "" };
-          if ( m[3] !== undefined)
-            attrs.title = m[3];
-
-          link = [ "link", attrs ].concat( children );
-          return [ consumed, link ];
-        }
-
-        // [Alt text][id]
-        // [Alt text] [id]
-        m = text.match( /^\s*\[(.*?)\]/ );
-
-        if ( m ) {
-
-          consumed += m[ 0 ].length;
-
-          // [links][] uses links as its reference
-          attrs = { ref: ( m[ 1 ] || String(children) ).toLowerCase(),  original: orig.substr( 0, consumed ) };
-
-          link = [ "link_ref", attrs ].concat( children );
-
-          // We can't check if the reference is known here as it likely wont be
-          // found till after. Check it in md tree->hmtl tree conversion.
-          // Store the original so that conversion can revert if the ref isn't found.
-          return [ consumed, link ];
-        }
-
-        // [id]
-        // Only if id is plain (no formatting.)
-        if ( children.length === 1 && typeof children[0] === "string" ) {
-
-          attrs = { ref: children[0].toLowerCase(),  original: orig.substr( 0, consumed ) };
-          link = [ "link_ref", attrs, children[0] ];
-          return [ consumed, link ];
-        }
-
-        // Just consume the "["
-        return [ 1, "[" ];
-      },
-
-
-      "<": function autoLink( text ) {
-        var m;
-
-        if ( ( m = text.match( /^<(?:((https?|ftp|mailto):[^>]+)|(.*?@.*?\.[a-zA-Z]+))>/ ) ) !== null ) {
-          if ( m[3] )
-            return [ m[0].length, [ "link", { href: "mailto:" + m[3] }, m[3] ] ];
-          else if ( m[2] === "mailto" )
-            return [ m[0].length, [ "link", { href: m[1] }, m[1].substr("mailto:".length ) ] ];
-          else
-            return [ m[0].length, [ "link", { href: m[1] }, m[1] ] ];
-        }
-
-        return [ 1, "<" ];
-      },
-
-      "`": function inlineCode( text ) {
-        // Inline code block. as many backticks as you like to start it
-        // Always skip over the opening ticks.
-        var m = text.match( /(`+)(([\s\S]*?)\1)/ );
-
-        if ( m && m[2] )
-          return [ m[1].length + m[2].length, [ "inlinecode", m[3] ] ];
-        else {
-          // TODO: No matching end code found - warn!
-          return [ 1, "`" ];
-        }
-      },
-
-      "  \n": function lineBreak() {
-        return [ 3, [ "linebreak" ] ];
-      }
-
+      return this.renderer.table(header, body);
     }
+    case 'blockquote_start': {
+      var body = '';
+
+      while (this.next().type !== 'blockquote_end') {
+        body += this.tok();
+      }
+
+      return this.renderer.blockquote(body);
+    }
+    case 'list_start': {
+      var body = ''
+        , ordered = this.token.ordered;
+
+      while (this.next().type !== 'list_end') {
+        body += this.tok();
+      }
+
+      return this.renderer.list(body, ordered);
+    }
+    case 'list_item_start': {
+      var body = '';
+
+      while (this.next().type !== 'list_item_end') {
+        body += this.token.type === 'text'
+          ? this.parseText()
+          : this.tok();
+      }
+
+      return this.renderer.listitem(body);
+    }
+    case 'loose_item_start': {
+      var body = '';
+
+      while (this.next().type !== 'list_item_end') {
+        body += this.tok();
+      }
+
+      return this.renderer.listitem(body);
+    }
+    case 'html': {
+      var html = !this.token.pre && !this.options.pedantic
+        ? this.inline.output(this.token.text)
+        : this.token.text;
+      return this.renderer.html(html);
+    }
+    case 'paragraph': {
+      return this.renderer.paragraph(this.inline.output(this.token.text));
+    }
+    case 'text': {
+      return this.renderer.paragraph(this.parseText());
+    }
+  }
+};
+
+/**
+ * Helpers
+ */
+
+function escape(html, encode) {
+  return html
+    .replace(!encode ? /&(?!#?\w+;)/g : /&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function unescape(html) {
+  return html.replace(/&([#\w]+);/g, function(_, n) {
+    n = n.toLowerCase();
+    if (n === 'colon') return ':';
+    if (n.charAt(0) === '#') {
+      return n.charAt(1) === 'x'
+        ? String.fromCharCode(parseInt(n.substring(2), 16))
+        : String.fromCharCode(+n.substring(1));
+    }
+    return '';
+  });
+}
+
+function replace(regex, opt) {
+  regex = regex.source;
+  opt = opt || '';
+  return function self(name, val) {
+    if (!name) return new RegExp(regex, opt);
+    val = val.source || val;
+    val = val.replace(/(^|[^\[])\^/g, '$1');
+    regex = regex.replace(name, val);
+    return self;
   };
+}
 
-  // Meta Helper/generator method for em and strong handling
-  function strong_em( tag, md ) {
+function noop() {}
+noop.exec = noop;
 
-    var state_slot = tag + "_state",
-        other_slot = tag === "strong" ? "em_state" : "strong_state";
+function merge(obj) {
+  var i = 1
+    , target
+    , key;
 
-    function CloseTag(len) {
-      this.len_after = len;
-      this.name = "close_" + md;
+  for (; i < arguments.length; i++) {
+    target = arguments[i];
+    for (key in target) {
+      if (Object.prototype.hasOwnProperty.call(target, key)) {
+        obj[key] = target[key];
+      }
     }
-
-    return function ( text ) {
-
-      if ( this[state_slot][0] === md ) {
-        // Most recent em is of this type
-        //D:this.debug("closing", md);
-        this[state_slot].shift();
-
-        // "Consume" everything to go back to the recrusion in the else-block below
-        return[ text.length, new CloseTag(text.length-md.length) ];
-      }
-      else {
-        // Store a clone of the em/strong states
-        var other = this[other_slot].slice(),
-            state = this[state_slot].slice();
-
-        this[state_slot].unshift(md);
-
-        //D:this.debug_indent += "  ";
-
-        // Recurse
-        var res = this.processInline( text.substr( md.length ) );
-        //D:this.debug_indent = this.debug_indent.substr(2);
-
-        var last = res[res.length - 1];
-
-        //D:this.debug("processInline from", tag + ": ", uneval( res ) );
-
-        var check = this[state_slot].shift();
-        if ( last instanceof CloseTag ) {
-          res.pop();
-          // We matched! Huzzah.
-          var consumed = text.length - last.len_after;
-          return [ consumed, [ tag ].concat(res) ];
-        }
-        else {
-          // Restore the state of the other kind. We might have mistakenly closed it.
-          this[other_slot] = other;
-          this[state_slot] = state;
-
-          // We can't reuse the processed result as it could have wrong parsing contexts in it.
-          return [ md.length, md ];
-        }
-      }
-    }; // End returned function
   }
 
-  Gruber.inline["**"] = strong_em("strong", "**");
-  Gruber.inline["__"] = strong_em("strong", "__");
-  Gruber.inline["*"]  = strong_em("em", "*");
-  Gruber.inline["_"]  = strong_em("em", "_");
-
-  Markdown.dialects.Gruber = Gruber;
-  Markdown.buildBlockOrder ( Markdown.dialects.Gruber.block );
-  Markdown.buildInlinePatterns( Markdown.dialects.Gruber.inline );
+  return obj;
+}
 
 
+/**
+ * Marked
+ */
 
-  var Maruku = DialectHelpers.subclassDialect( Gruber ),
-      extract_attr = MarkdownHelpers.extract_attr,
-      forEach = MarkdownHelpers.forEach;
-
-  Maruku.processMetaHash = function processMetaHash( meta_string ) {
-    var meta = split_meta_hash( meta_string ),
-        attr = {};
-
-    for ( var i = 0; i < meta.length; ++i ) {
-      // id: #foo
-      if ( /^#/.test( meta[ i ] ) )
-        attr.id = meta[ i ].substring( 1 );
-      // class: .foo
-      else if ( /^\./.test( meta[ i ] ) ) {
-        // if class already exists, append the new one
-        if ( attr["class"] )
-          attr["class"] = attr["class"] + meta[ i ].replace( /./, " " );
-        else
-          attr["class"] = meta[ i ].substring( 1 );
-      }
-      // attribute: foo=bar
-      else if ( /\=/.test( meta[ i ] ) ) {
-        var s = meta[ i ].split( /\=/ );
-        attr[ s[ 0 ] ] = s[ 1 ];
-      }
+function marked(src, opt, callback) {
+  if (callback || typeof opt === 'function') {
+    if (!callback) {
+      callback = opt;
+      opt = null;
     }
 
-    return attr;
-  };
+    opt = merge({}, marked.defaults, opt || {});
 
-  function split_meta_hash( meta_string ) {
-    var meta = meta_string.split( "" ),
-        parts = [ "" ],
-        in_quotes = false;
+    var highlight = opt.highlight
+      , tokens
+      , pending
+      , i = 0;
 
-    while ( meta.length ) {
-      var letter = meta.shift();
-      switch ( letter ) {
-      case " " :
-        // if we're in a quoted section, keep it
-        if ( in_quotes )
-          parts[ parts.length - 1 ] += letter;
-        // otherwise make a new part
-        else
-          parts.push( "" );
-        break;
-      case "'" :
-      case '"' :
-        // reverse the quotes and move straight on
-        in_quotes = !in_quotes;
-        break;
-      case "\\" :
-        // shift off the next letter to be used straight away.
-        // it was escaped so we'll keep it whatever it is
-        letter = meta.shift();
-        /* falls through */
-      default :
-        parts[ parts.length - 1 ] += letter;
-        break;
-      }
+    try {
+      tokens = Lexer.lex(src, opt)
+    } catch (e) {
+      return callback(e);
     }
 
-    return parts;
-  }
+    pending = tokens.length;
 
-  Maruku.block.document_meta = function document_meta( block ) {
-    // we're only interested in the first block
-    if ( block.lineNumber > 1 )
-      return undefined;
-
-    // document_meta blocks consist of one or more lines of `Key: Value\n`
-    if ( ! block.match( /^(?:\w+:.*\n)*\w+:.*$/ ) )
-      return undefined;
-
-    // make an attribute node if it doesn't exist
-    if ( !extract_attr( this.tree ) )
-      this.tree.splice( 1, 0, {} );
-
-    var pairs = block.split( /\n/ );
-    for ( var p in pairs ) {
-      var m = pairs[ p ].match( /(\w+):\s*(.*)$/ ),
-          key = m[ 1 ].toLowerCase(),
-          value = m[ 2 ];
-
-      this.tree[ 1 ][ key ] = value;
-    }
-
-    // document_meta produces no content!
-    return [];
-  };
-
-  Maruku.block.block_meta = function block_meta( block ) {
-    // check if the last line of the block is an meta hash
-    var m = block.match( /(^|\n) {0,3}\{:\s*((?:\\\}|[^\}])*)\s*\}$/ );
-    if ( !m )
-      return undefined;
-
-    // process the meta hash
-    var attr = this.dialect.processMetaHash( m[ 2 ] ),
-        hash;
-
-    // if we matched ^ then we need to apply meta to the previous block
-    if ( m[ 1 ] === "" ) {
-      var node = this.tree[ this.tree.length - 1 ];
-      hash = extract_attr( node );
-
-      // if the node is a string (rather than JsonML), bail
-      if ( typeof node === "string" )
-        return undefined;
-
-      // create the attribute hash if it doesn't exist
-      if ( !hash ) {
-        hash = {};
-        node.splice( 1, 0, hash );
+    var done = function(err) {
+      if (err) {
+        opt.highlight = highlight;
+        return callback(err);
       }
 
-      // add the attributes in
-      for ( var a in attr )
-        hash[ a ] = attr[ a ];
+      var out;
 
-      // return nothing so the meta hash is removed
-      return [];
-    }
-
-    // pull the meta hash off the block and process what's left
-    var b = block.replace( /\n.*$/, "" ),
-        result = this.processBlock( b, [] );
-
-    // get or make the attributes hash
-    hash = extract_attr( result[ 0 ] );
-    if ( !hash ) {
-      hash = {};
-      result[ 0 ].splice( 1, 0, hash );
-    }
-
-    // attach the attributes to the block
-    for ( var a in attr )
-      hash[ a ] = attr[ a ];
-
-    return result;
-  };
-
-  Maruku.block.definition_list = function definition_list( block, next ) {
-    // one or more terms followed by one or more definitions, in a single block
-    var tight = /^((?:[^\s:].*\n)+):\s+([\s\S]+)$/,
-        list = [ "dl" ],
-        i, m;
-
-    // see if we're dealing with a tight or loose block
-    if ( ( m = block.match( tight ) ) ) {
-      // pull subsequent tight DL blocks out of `next`
-      var blocks = [ block ];
-      while ( next.length && tight.exec( next[ 0 ] ) )
-        blocks.push( next.shift() );
-
-      for ( var b = 0; b < blocks.length; ++b ) {
-        var m = blocks[ b ].match( tight ),
-            terms = m[ 1 ].replace( /\n$/, "" ).split( /\n/ ),
-            defns = m[ 2 ].split( /\n:\s+/ );
-
-        // print( uneval( m ) );
-
-        for ( i = 0; i < terms.length; ++i )
-          list.push( [ "dt", terms[ i ] ] );
-
-        for ( i = 0; i < defns.length; ++i ) {
-          // run inline processing over the definition
-          list.push( [ "dd" ].concat( this.processInline( defns[ i ].replace( /(\n)\s+/, "$1" ) ) ) );
-        }
+      try {
+        out = Parser.parse(tokens, opt);
+      } catch (e) {
+        err = e;
       }
-    }
-    else {
-      return undefined;
-    }
 
-    return [ list ];
-  };
+      opt.highlight = highlight;
 
-  // splits on unescaped instances of @ch. If @ch is not a character the result
-  // can be unpredictable
-
-  Maruku.block.table = function table ( block ) {
-
-    var _split_on_unescaped = function( s, ch ) {
-      ch = ch || '\\s';
-      if ( ch.match(/^[\\|\[\]{}?*.+^$]$/) )
-        ch = '\\' + ch;
-      var res = [ ],
-          r = new RegExp('^((?:\\\\.|[^\\\\' + ch + '])*)' + ch + '(.*)'),
-          m;
-      while ( ( m = s.match( r ) ) ) {
-        res.push( m[1] );
-        s = m[2];
-      }
-      res.push(s);
-      return res;
+      return err
+        ? callback(err)
+        : callback(null, out);
     };
 
-    var leading_pipe = /^ {0,3}\|(.+)\n {0,3}\|\s*([\-:]+[\-| :]*)\n((?:\s*\|.*(?:\n|$))*)(?=\n|$)/,
-        // find at least an unescaped pipe in each line
-        no_leading_pipe = /^ {0,3}(\S(?:\\.|[^\\|])*\|.*)\n {0,3}([\-:]+\s*\|[\-| :]*)\n((?:(?:\\.|[^\\|])*\|.*(?:\n|$))*)(?=\n|$)/,
-        i,
-        m;
-    if ( ( m = block.match( leading_pipe ) ) ) {
-      // remove leading pipes in contents
-      // (header and horizontal rule already have the leading pipe left out)
-      m[3] = m[3].replace(/^\s*\|/gm, '');
-    } else if ( ! ( m = block.match( no_leading_pipe ) ) ) {
-      return undefined;
+    if (!highlight || highlight.length < 3) {
+      return done();
     }
 
-    var table = [ "table", [ "thead", [ "tr" ] ], [ "tbody" ] ];
+    delete opt.highlight;
 
-    // remove trailing pipes, then split on pipes
-    // (no escaped pipes are allowed in horizontal rule)
-    m[2] = m[2].replace(/\|\s*$/, '').split('|');
+    if (!pending) return done();
 
-    // process alignment
-    var html_attrs = [ ];
-    forEach (m[2], function (s) {
-      if (s.match(/^\s*-+:\s*$/))
-        html_attrs.push({align: "right"});
-      else if (s.match(/^\s*:-+\s*$/))
-        html_attrs.push({align: "left"});
-      else if (s.match(/^\s*:-+:\s*$/))
-        html_attrs.push({align: "center"});
-      else
-        html_attrs.push({});
-    });
-
-    // now for the header, avoid escaped pipes
-    m[1] = _split_on_unescaped(m[1].replace(/\|\s*$/, ''), '|');
-    for (i = 0; i < m[1].length; i++) {
-      table[1][1].push(['th', html_attrs[i] || {}].concat(
-        this.processInline(m[1][i].trim())));
+    for (; i < tokens.length; i++) {
+      (function(token) {
+        if (token.type !== 'code') {
+          return --pending || done();
+        }
+        return highlight(token.text, token.lang, function(err, code) {
+          if (err) return done(err);
+          if (code == null || code === token.text) {
+            return --pending || done();
+          }
+          token.text = code;
+          token.escaped = true;
+          --pending || done();
+        });
+      })(tokens[i]);
     }
 
-    // now for body contents
-    forEach (m[3].replace(/\|\s*$/mg, '').split('\n'), function (row) {
-      var html_row = ['tr'];
-      row = _split_on_unescaped(row, '|');
-      for (i = 0; i < row.length; i++)
-        html_row.push(['td', html_attrs[i] || {}].concat(this.processInline(row[i].trim())));
-      table[2].push(html_row);
-    }, this);
-
-    return [table];
-  };
-
-  Maruku.inline[ "{:" ] = function inline_meta( text, matches, out ) {
-    if ( !out.length )
-      return [ 2, "{:" ];
-
-    // get the preceeding element
-    var before = out[ out.length - 1 ];
-
-    if ( typeof before === "string" )
-      return [ 2, "{:" ];
-
-    // match a meta hash
-    var m = text.match( /^\{:\s*((?:\\\}|[^\}])*)\s*\}/ );
-
-    // no match, false alarm
-    if ( !m )
-      return [ 2, "{:" ];
-
-    // attach the attributes to the preceeding element
-    var meta = this.dialect.processMetaHash( m[ 1 ] ),
-        attr = extract_attr( before );
-
-    if ( !attr ) {
-      attr = {};
-      before.splice( 1, 0, attr );
+    return;
+  }
+  try {
+    if (opt) opt = merge({}, marked.defaults, opt);
+    return Parser.parse(Lexer.lex(src, opt), opt);
+  } catch (e) {
+    e.message += '\nPlease report this to https://github.com/chjj/marked.';
+    if ((opt || marked.defaults).silent) {
+      return '<p>An error occured:</p><pre>'
+        + escape(e.message + '', true)
+        + '</pre>';
     }
+    throw e;
+  }
+}
 
-    for ( var k in meta )
-      attr[ k ] = meta[ k ];
+/**
+ * Options
+ */
 
-    // cut out the string and replace it with nothing
-    return [ m[ 0 ].length, "" ];
-  };
+marked.options =
+marked.setOptions = function(opt) {
+  merge(marked.defaults, opt);
+  return marked;
+};
 
+marked.defaults = {
+  gfm: true,
+  tables: true,
+  breaks: false,
+  pedantic: false,
+  sanitize: false,
+  smartLists: false,
+  silent: false,
+  highlight: null,
+  langPrefix: 'lang-',
+  smartypants: false,
+  headerPrefix: '',
+  renderer: new Renderer,
+  xhtml: false
+};
 
-  Markdown.dialects.Maruku = Maruku;
-  Markdown.dialects.Maruku.inline.__escape__ = /^\\[\\`\*_{}\[\]()#\+.!\-|:]/;
-  Markdown.buildBlockOrder ( Markdown.dialects.Maruku.block );
-  Markdown.buildInlinePatterns( Markdown.dialects.Maruku.inline );
+/**
+ * Expose
+ */
 
+marked.Parser = Parser;
+marked.parser = Parser.parse;
 
-// Include all our depndencies and;
-  expose.Markdown = Markdown;
-  expose.parse = Markdown.parse;
-  expose.toHTML = Markdown.toHTML;
-  expose.toHTMLTree = Markdown.toHTMLTree;
-  expose.renderJsonML = Markdown.renderJsonML;
+marked.Renderer = Renderer;
 
-})(glift.markdownjs);
+marked.Lexer = Lexer;
+marked.lexer = Lexer.lex;
+
+marked.InlineLexer = InlineLexer;
+marked.inlineLexer = InlineLexer.output;
+
+marked.parse = marked;
+
+if (typeof module !== 'undefined' && typeof exports === 'object') {
+  module.exports = marked;
+} else if (typeof define === 'function' && define.amd) {
+  define(function() { return marked; });
+} else {
+  this.marked = marked;
+}
+
+}).call(function() {
+  return glift;
+}());
 glift.displays = {
   /**
    * Create the display.  Delegates to board.create(...), which creates an SVG
@@ -5257,19 +4865,24 @@ glift.displays.commentbox = {};
  * posBbox: The bounding box of the div (expensive to recompute)
  * theme: The theme object.
  */
-glift.displays.commentbox.create = function(divId, posBbox, theme) {
+glift.displays.commentbox.create = function(
+    divId, posBbox, theme, useMarkdown) {
+  var useMarkdown = useMarkdown || false;
   if (!theme) {
     throw new Error('Theme must be defined. was: ' + theme);
   }
-  return new glift.displays.commentbox._CommentBox(divId, posBbox, theme).draw();
+  return new glift.displays.commentbox._CommentBox(
+      divId, posBbox, theme, useMarkdown).draw();
 };
 
-glift.displays.commentbox._CommentBox = function(divId, positioningBbox, theme) {
+glift.displays.commentbox._CommentBox = function(
+    divId, positioningBbox, theme, useMarkdown) {
   this.divId = divId;
   this.bbox = glift.displays.bbox.fromPts(
       glift.util.point(0,0),
       glift.util.point(positioningBbox.width(), positioningBbox.height()));
   this.theme = theme;
+  this.useMarkdown = useMarkdown;
   this.el = undefined;
 };
 
@@ -5297,7 +4910,7 @@ glift.displays.commentbox._CommentBox.prototype = {
    */
   setText: function(text) {
     this.el.empty();
-    this.el.append(glift.dom.convertText(text));
+    this.el.append(glift.dom.convertText(text, this.useMarkdown));
   },
 
   /** Clear the text from the comment box. */
@@ -11219,8 +10832,14 @@ glift.bridge.intersections = {
             // Labels have the form { point: pt, value: 'A' }
             marksToAdd.push(glift.sgf.convertFromLabelData(data[i]));
           } else {
-            // A single point
-            marksToAdd.push(glift.util.pointFromSgfCoord(data[i]));
+            // A single point or a point rectangle.
+            var newPts = glift.util.pointArrFromSgfProp(data[i])
+            if (newPts.length === 1) {
+              // This is handled specially since it's the normal case.
+              marksToAdd.push(newPts[0]);
+            } else {
+              marksToAdd = marksToAdd.concat(newPts);
+            }
           }
         }
         outMarks[mark] = marksToAdd;
@@ -12133,7 +11752,8 @@ glift.widgets.BaseWidget.prototype = {
       this.commentBox = glift.displays.commentbox.create(
           divIds.COMMENT_BOX,
           positioning.getBbox(glift.enums.boardComponents.COMMENT_BOX),
-          theme);
+          theme,
+          this.displayOptions.useMarkdown);
     }
     glift.util.majorPerfLog('CommentBox');
 
@@ -13309,9 +12929,8 @@ glift.widgets.options.baseOptions = {
     enableKeyboardShortcuts: true,
 
     /**
-     * Use Markdown for the comment box.  This requires that markdown.js be
-     * installed in the global scope. (github.com/evilstreak/markdown-js)
-     * <Not currently support>
+     * Use Markdown for the comment box.  This requires that marked.js be
+     * installed in the global scope. (https://github.com/chjj/marked)
      * @api(experimental)
      */
     useMarkdown: false
