@@ -7,7 +7,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '1.0.4',
+  version: '1.0.5',
 
   /** Indicates whether or not to store debug data. */
   // TODO(kashomon): Remove this hack.
@@ -27,14 +27,14 @@ glift.global = {
   /**
    * The registry.  Used to determine who has 'ownership' of key-presses.
    * The problem is that key presses have to be captured in a global scope (or
-   * at least at the <body> level.  Unfortunate.
+   * at least at the <body> level.
    */
   instanceRegistry: {
     // Map of manager ID (some-div-id-glift-1) to object instance.
   },
 
   /**
-   * Id of the active instance.
+   * Id of the active Glift. instance.
    */
   activeInstanceId: null,
 
