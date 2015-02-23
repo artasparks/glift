@@ -3,7 +3,7 @@
  *
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
- * @version 1.0.4
+ * @version 1.0.5
  * --------------------------------------
  */
 (function(w) {
@@ -22,7 +22,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently in alpha.
    */
-  version: '1.0.4',
+  version: '1.0.5',
 
   /** Indicates whether or not to store debug data. */
   // TODO(kashomon): Remove this hack.
@@ -42,14 +42,14 @@ glift.global = {
   /**
    * The registry.  Used to determine who has 'ownership' of key-presses.
    * The problem is that key presses have to be captured in a global scope (or
-   * at least at the <body> level.  Unfortunate.
+   * at least at the <body> level.
    */
   instanceRegistry: {
     // Map of manager ID (some-div-id-glift-1) to object instance.
   },
 
   /**
-   * Id of the active instance.
+   * Id of the active Glift. instance.
    */
   activeInstanceId: null,
 
@@ -829,6 +829,10 @@ glift.util.pointArrFromSgfProp = function(str) {
     var out = [];
     var tl = glift.util.pointFromSgfCoord(splat[0]);
     var br = glift.util.pointFromSgfCoord(splat[1]);
+    if (br.x() < tl.x() || br.y() < br.y()) {
+      throw new Error('Invalid point rectangle: tl: ' + tl.toString() +
+          ', br: ' + br.toString());
+    }
     var delta = br.translate(-tl.x(), -tl.y());
     for (var i = 0; i <= delta.y(); i++) {
       for (var j = 0; j <= delta.x(); j++) {
@@ -11022,8 +11026,10 @@ glift.flattener = {
             out.marks[key] = symbol;
             out.labels[key] = lblPt.value;
           } else {
-            var pt = glift.util.pointFromSgfCoord(data[i]);
-            out.marks[pt.toString()] = symbol;
+            var newPts = glift.util.pointArrFromSgfProp(data[i])
+            for (var i = 0; i < newPts.length; i++) {
+              out.marks[newPts[i].toString()] = symbol;
+            }
           }
         }
       }
