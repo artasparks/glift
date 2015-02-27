@@ -127,6 +127,15 @@ glift.rules._MoveTree = function(rootNode, currentNode) {
   this._rootNode = rootNode;
   this._currentNode = currentNode || rootNode;
   this._markedMainline = false;
+
+  /**
+   * Metadata is arbitrary data attached to the node.
+   *
+   * As a side note, Metadata extraction in Glift happens in the parser and so
+   * will not show up in comments.  See the metadataProperty option in
+   * options.baseOptions.
+   */
+  this.metadata = null;
 };
 
 glift.rules._MoveTree.prototype = {

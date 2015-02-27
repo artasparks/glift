@@ -229,17 +229,16 @@ glift.widgets.options.baseOptions = {
      * will by other editors, of course). It's primary use is as an API for
      * embedding tertiary data.
      *
-     * @api(experimental)
+     * Some other notes:
+     *  - Metadata extraction happens in the parser.
+     *  - If the metadataProperty field is set, it will grab all the data from
+     *  the relevant property and try to convert it to JSON.
      *
-     * Example
-     * <metadata>
-     * {
-     *  "series":"zed"
-     * }
-     * </metadat>
+     * To disable this behavior, set metadataProperty to null.
+     *
+     * @api(experimental)
      */
-    metadataStartTag: '<metadata>',
-    metadataEndTag: '</metadata>',
+    metadataProperty: 'GC',
 
     /**
      * For all correct, there are multiple correct answers that a user must get.
