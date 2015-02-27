@@ -216,9 +216,30 @@ glift.widgets.options.baseOptions = {
      * Metadata for this SGF.  Like the global metadata, this option is not
      * meant to be used directly by Glift but by other programs utilizing Glift
      * and so the metadata has no expected structure.
+     *
+     * If data is provided as JSON between the metadataStartTag and the
+     * metadataEndTag, then it will end up here.
      * @api(experimental)
      */
     metadata: undefined,
+
+    /**
+     * Metadata Start and End tags allow us to insert metadata directly, as
+     * JSON, into SGF comments.  It will not be display by glift (although it
+     * will by other editors, of course). It's primary use is as an API for
+     * embedding tertiary data.
+     *
+     * @api(experimental)
+     *
+     * Example
+     * <metadata>
+     * {
+     *  "series":"zed"
+     * }
+     * </metadat>
+     */
+    metadataStartTag: '<metadata>',
+    metadataEndTag: '</metadata>',
 
     /**
      * For all correct, there are multiple correct answers that a user must get.
