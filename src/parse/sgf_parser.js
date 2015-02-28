@@ -1,4 +1,24 @@
 /**
+ * Metadata Start and End tags allow us to insert metadata directly, as
+ * JSON, into SGF comments.  It will not be display by glift (although it
+ * will by other editors, of course). It's primary use is as an API for
+ * embedding tertiary data.
+ *
+ * It is currently expected that this property is attached to the root node.
+ *
+ * Some other notes:
+ *  - Metadata extraction happens in the parser.
+ *  - If the metadataProperty field is set, it will grab all the data from
+ *  the relevant property and try to convert it to JSON.
+ *
+ * To disable this behavior, set metadataProperty to null.
+ *
+ * @api(experimental)
+ */
+glift.parse.sgfMetadataProperty = 'GC';
+
+
+/**
  * The new Glift SGF parser!
  * Takes a string, returns a movetree.  Easy =).
  *
@@ -62,6 +82,17 @@ glift.parse.sgf = function(sgfString) {
 
   var flushPropDataIfNecessary = function() {
     if (curProp.length > 0) {
+      if (glift.parse.sgfMetadataProperty &&
+          curProp === glift.parse.sgfMetadataProperty &&
+          !movetree.node().getParent()) {
+        try {
+          var mdata = JSON.parse(propData);
+          movetree.metadata = mdata;
+        } catch (e) {
+          glift.util.logz('For property: ' + curProp + ' unable to parse ' +
+              ': ' + propData + ' as JSON for SGF metadata');
+        }
+      }
       movetree.properties().add(curProp, propData);
       propData = [];
       curProp = '';

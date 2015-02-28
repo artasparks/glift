@@ -217,28 +217,9 @@ glift.widgets.options.baseOptions = {
      * meant to be used directly by Glift but by other programs utilizing Glift
      * and so the metadata has no expected structure.
      *
-     * If data is provided as JSON between the metadataStartTag and the
-     * metadataEndTag, then it will end up here.
      * @api(experimental)
      */
     metadata: undefined,
-
-    /**
-     * Metadata Start and End tags allow us to insert metadata directly, as
-     * JSON, into SGF comments.  It will not be display by glift (although it
-     * will by other editors, of course). It's primary use is as an API for
-     * embedding tertiary data.
-     *
-     * Some other notes:
-     *  - Metadata extraction happens in the parser.
-     *  - If the metadataProperty field is set, it will grab all the data from
-     *  the relevant property and try to convert it to JSON.
-     *
-     * To disable this behavior, set metadataProperty to null.
-     *
-     * @api(experimental)
-     */
-    metadataProperty: 'GC',
 
     /**
      * For all correct, there are multiple correct answers that a user must get.

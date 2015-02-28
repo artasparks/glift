@@ -114,12 +114,80 @@ glift.parse.sgfTest = function() {
     }
   });
 
-  test('Throw errors on bad syntax: whitespace in prop', function() {
+  test('Throw errors on bad syntax: underscore in prop', function() {
     var sgf = '(;G_[1])'
     try {
       var mt = glift.parse.sgf(sgf);
     } catch (err) {
       ok(err.message.indexOf('Unexpected character in property') !== -1);
     }
+  });
+
+  test('Process Metadata at root', function() {
+    var oldval = glift.parse.sgfMetadataProperty;
+    glift.parse.sgfMetadataProperty = 'GC';
+
+    var expected = {foo: 'bar'};
+
+    var sgf = '(;GM[1]' +
+        glift.parse.sgfMetadataProperty +
+        '[' + JSON.stringify(expected) + '])';
+
+    var mt = glift.parse.sgf(sgf);
+    deepEqual(mt.metadata, expected);
+
+    glift.parse.sgfMetadataProperty = oldval;
+  });
+
+  test('Process Metadata at root', function() {
+    var oldval = glift.parse.sgfMetadataProperty;
+    glift.parse.sgfMetadataProperty = 'GC';
+
+    var expected = {foo: 'bar'};
+
+    var sgf = '(;GM[1]' +
+        glift.parse.sgfMetadataProperty +
+        '[' + JSON.stringify(expected) + '])';
+
+    var mt = glift.parse.sgf(sgf);
+    deepEqual(mt.metadata, expected);
+    glift.parse.sgfMetadataProperty = oldval;
+  });
+
+  test('Fail to process Metadata at root: bad JSON', function() {
+    var oldval = glift.parse.sgfMetadataProperty;
+    glift.parse.sgfMetadataProperty = 'GC';
+
+    var oldLog = glift.util.logz;
+    var parseErrors = [];
+    var testLogger = function(msg) {
+      parseErrors.push(msg);
+    };
+
+    // Patch in a testing logger.
+    glift.util.logz = testLogger;
+    var sgf = '(;GM[1]' + glift.parse.sgfMetadataProperty + '[foo: bar])';
+    var mt = glift.parse.sgf(sgf);
+
+    deepEqual(parseErrors.length, 1);
+    ok(/For property: GC unable to parse/.test(parseErrors[0]), 
+        'Regex does not match: ' + parseErrors[0]);
+
+    deepEqual(mt.properties().getOneValue('GC'), 'foo: bar',
+        'Should still record value in prop data.');
+
+    glift.parse.sgfMetadataProperty = oldval;
+    glift.util.logz = oldLog;
+  });
+
+  test('Ignore metadata: not at root', function() {
+    var oldval = glift.parse.sgfMetadataProperty;
+    glift.parse.sgfMetadataProperty = 'GC';
+
+    var sgf = '(;GM[1];' + glift.parse.sgfMetadataProperty + '[foo: bar])';
+    var mt = glift.parse.sgf(sgf);
+    deepEqual(mt.metadata, null);
+
+    glift.parse.sgfMetadataProperty = oldval;
   });
 };
