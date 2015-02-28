@@ -1,4 +1,4 @@
-glift.displays.svg.svgObjTest = function() {
+(function() {
   module('glift.displays.svg.svgObjTest');
   var svg = glift.displays.svg;
 
@@ -36,4 +36,4 @@ glift.displays.svg.svgObjTest = function() {
     var group = svg.group().appendNew('circle', {'r': 30});
     deepEqual(group.render(), '<g>\n<circle r="30"></circle>\n</g>');
   });
-};
+})();

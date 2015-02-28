@@ -1,4 +1,4 @@
-glift.widgets.options.optionsTest = function() {
+(function() {
   module('glift.widgets.options.optionsTest');
   var optLib = glift.widgets.options;
   var template = glift.widgets.options.baseOptions;
@@ -20,4 +20,4 @@ glift.widgets.options.optionsTest = function() {
     ok(out.display.theme);
     deepEqual(inOpts.display.theme, out.display.theme);
   });
-};
+})();

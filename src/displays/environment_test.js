@@ -1,4 +1,4 @@
-glift.displays.environmentTest = function() {
+(function() {
   module('glift.displays.environmentTest');
   var util = glift.util,
       displays = glift.displays,
@@ -70,4 +70,4 @@ glift.displays.environmentTest = function() {
     deepEqual(env1.divBox.width(), 400);
     deepEqual(env1.divBox.height(), 400);
   });
-};
+})();

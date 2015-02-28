@@ -1,4 +1,4 @@
-glift.flattener.flattenTest = function() {
+(function() {
   module('glift.flattener.flattenTest');
   var symb = glift.flattener.symbols;
   var boardRegions = glift.enums.boardRegions;
@@ -171,4 +171,4 @@ glift.flattener.flattenTest = function() {
     deepEqual(f.startingMoveNum(), 1);
     deepEqual(f.endingMoveNum(), 4);
   });
-};
+})();

@@ -1,4 +1,4 @@
-glift.flattener.boardTest = function() {
+(function() {
   module('glift.flattener.boardTest');
   var pt = glift.util.point;
   var ints = 19
@@ -103,4 +103,4 @@ glift.flattener.boardTest = function() {
     deepEqual(newBoard.getIntBoardPt(pt(14, 1)), 'SQUARE');
     deepEqual(newBoard.getIntBoardPt(pt(13, 3)), 'BSTONE');
   });
-};
+})();

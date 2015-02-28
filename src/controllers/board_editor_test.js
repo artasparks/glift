@@ -1,4 +1,4 @@
-glift.controllers.boardEditorTest = function() {
+(function() {
   module('glift.controllers.boardEditorTest');
   var sgfs = testdata.sgfs;
   var boardEditor = glift.controllers.boardEditor;
@@ -88,4 +88,4 @@ glift.controllers.boardEditorTest = function() {
     deepEqual(be.movetree.properties().getAllValues('AW'), ['ab', 'bc', 'ad']);
     deepEqual(be.movetree.properties().getAllValues('AB'), []);
   });
-};
+})();

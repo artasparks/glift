@@ -1,4 +1,4 @@
-glift.util.pointTest = function() {
+(function() {
   module('glift.util.pointTest');
   var rules = glift.rules,
       point = glift.util.point;
@@ -68,4 +68,4 @@ glift.util.pointTest = function() {
     ]
     deepEqual(o, expected, 'vertical pt rectangle');
   });
-};
+})();

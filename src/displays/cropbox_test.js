@@ -1,4 +1,4 @@
-glift.displays.cropboxTest = function() {
+(function() {
 module('glift.displays.cropboxTest');
   var displays = glift.displays,
       boardRegions = glift.enums.boardRegions,
@@ -64,4 +64,4 @@ module('glift.displays.cropboxTest');
     deepEqual(brbox.widthMod(), 11.5 + overf, 'width for BOTTOM RIGHT');
     deepEqual(brbox.heightMod(), 10.5 + overf, 'height for BOTTOP RIGHT');
   });
-};
+})();

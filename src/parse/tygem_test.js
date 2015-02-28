@@ -1,4 +1,4 @@
-glift.parse.tygemTest = function() {
+(function() {
   module('glift.parse.tygemTest');
   var point = glift.util.point;
 
@@ -17,4 +17,4 @@ glift.parse.tygemTest = function() {
     mt.moveDown();
     deepEqual(mt.properties().getAsPoint('W').toString(), point(3, 2).toString());
   });
-};
+})();

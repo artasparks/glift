@@ -1,4 +1,4 @@
-glift.parse.pandanetTest = function() {
+(function() {
   module('glift.parse.pandanetTest');
 
   var testfile = [
@@ -61,4 +61,4 @@ glift.parse.pandanetTest = function() {
     // reset the logger
     glift.util.logz = oldLog;
   });
-};
+})();

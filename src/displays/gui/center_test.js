@@ -1,4 +1,4 @@
-glift.displays.gui.centerTest = function() {
+(function() {
   module('glift.displays.gui.centerTest');
   var point = glift.util.point,
       rowCenter = glift.displays.gui.rowCenterSimple,
@@ -100,4 +100,4 @@ glift.displays.gui.centerTest = function() {
     deepEqual(transTwo.xMove, 0, 'xMove');
     deepEqual(transTwo.yMove, 150, 'yMove');
   });
-};
+})();

@@ -1,4 +1,4 @@
-glift.markdownTest = function() {
+(function() {
   module('glift.markdown');
 
   test('Testing RenderingAst: ok', function() {
@@ -29,4 +29,4 @@ glift.markdownTest = function() {
     deepEqual(h.length, 4);
     deepEqual(h[0].text, 'bar');
   });
-};
+})();

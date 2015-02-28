@@ -1,4 +1,4 @@
-glift.objTest = function() {
+(function() {
   module('glift.objTest');
   test('Flat merge: basic', function() {
     var base = { a: 1, b: 2, c: 3, d: 4, e: 5 };
@@ -14,4 +14,4 @@ glift.objTest = function() {
     deepEqual(glift.obj.flatMerge(base), base);
     ok(glift.obj.flatMerge(base) !== base, 'should have different reference');
   });
-};
+})();

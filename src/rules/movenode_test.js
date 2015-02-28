@@ -1,4 +1,4 @@
-glift.rules.movenodeTest = function() {
+(function() {
   module('glift.rules.movenodeTest');
   test('Basic Creation Test', function() {
     var node = glift.rules.movenode();
@@ -19,4 +19,4 @@ glift.rules.movenodeTest = function() {
     deepEqual(child.getNodeNum(), 1, 'Child NodeNum');
     deepEqual(child.getVarNum(), 1, 'Child VarNum');
   });
-};
+})();

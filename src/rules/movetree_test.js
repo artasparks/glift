@@ -1,4 +1,4 @@
-glift.rules.movetreeTest = function() {
+(function() {
   module('glift.rules.movetreeTest');
   var movetree = glift.rules.movetree;
   var sgfs = testdata.sgfs;
@@ -360,4 +360,4 @@ glift.rules.movetreeTest = function() {
     mt = mt.rebase();
     deepEqual(mt.getCurrentPlayer(), 'WHITE');
   });
-};
+})();

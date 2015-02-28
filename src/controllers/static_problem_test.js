@@ -1,4 +1,4 @@
-glift.controllers.staticProblemTest = function() {
+(function() {
   module('glift.controllers.staticProblemTest');
   var cont = glift.controllers,
       util = glift.util,
@@ -143,4 +143,4 @@ glift.controllers.staticProblemTest = function() {
     deepEqual(c.movetree.node().getNodeNum(), 1,
         'Must have moved down one move: no variation');
   });
-};
+})();

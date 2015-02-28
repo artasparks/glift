@@ -1,4 +1,4 @@
-glift.widgets.widgetsTest = function() {
+(function() {
   module('glift.widgets.widgetsTest');
   var testUtil = glift.testUtil;
 
@@ -49,4 +49,4 @@ glift.widgets.widgetsTest = function() {
     // with after the tests run for manual verification.
     // manager.destroy();
   });
-};
+})();

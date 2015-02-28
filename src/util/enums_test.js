@@ -1,4 +1,4 @@
-glift.enumsTest = function() {
+(function() {
   module('glift.enumsTest');
 
   test('toCamelCase', function() {
@@ -8,4 +8,4 @@ glift.enumsTest = function() {
     deepEqual(toCamelCase('FOO_BAR_BIFF'), 'fooBarBiff');
     deepEqual(toCamelCase('FOO_BAR_BIFF_'), 'fooBarBiff');
   });
-};
+})();

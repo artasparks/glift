@@ -1,4 +1,4 @@
-glift.sgf.sgfTest = function() {
+(function() {
   module('glift.sgf.sgfTest');
   var sgf = glift.sgf;
 
@@ -27,4 +27,4 @@ glift.sgf.sgfTest = function() {
     deepEqual(sgf.allSgfCoordsToPoints([]), []);
     deepEqual(sgf.allSgfCoordsToPoints(null), []);
   });
-};
+})();

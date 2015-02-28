@@ -1,4 +1,4 @@
-glift.parse.parseTest = function() {
+(function() {
   module('glift.parse.parseTest');
   var fromFileName = glift.parse.fromFileName;
   var parseType = glift.parse.parseType;
@@ -17,4 +17,4 @@ glift.parse.parseTest = function() {
 
     glift.parse.fromString = oldFromString;
   });
-};
+})();

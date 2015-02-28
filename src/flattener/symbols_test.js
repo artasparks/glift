@@ -1,4 +1,4 @@
-glift.flattener.symbolsTest = function() {
+(function() {
   module('glift.flattener.symbolsTest');
 
   test('Test get symbol', function() {
@@ -16,4 +16,4 @@ glift.flattener.symbolsTest = function() {
         'failure at idx ' + idx + ' for key ' + key);
     }
   });
-};
+})();

@@ -1,4 +1,4 @@
-glift.arrayTest = function() {
+(function() {
   module('glift.arrayTest');
   test('Remove Elem', function() {
     var arr = ['foo', 'bar', 'biff'];
@@ -13,4 +13,4 @@ glift.arrayTest = function() {
     arr = ['foo', 'bar', 'biff'];
     deepEqual(glift.array.replace(arr, 'zed', 'zod'), ['foo', 'bar', 'biff']);
   });
-};
+})();

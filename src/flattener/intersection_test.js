@@ -1,4 +1,4 @@
-glift.flattener.intersectionTest = function() {
+(function() {
   module('glift.flattener.intersectionTest');
   var pt = glift.util.point;
   var BLACK = glift.enums.states.BLACK;
@@ -99,4 +99,4 @@ glift.flattener.intersectionTest = function() {
     deepEqual(int1.mark(), sym.NEXTVARIATION);
   });
 
-};
+})();

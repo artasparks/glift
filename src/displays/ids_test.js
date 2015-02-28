@@ -1,4 +1,4 @@
-glift.displays.idsTest = function() {
+(function() {
   module('glift.displays.idsTest');
   var idGen = glift.displays.ids.generator('foo');
   var pt = glift.util.point(0, 1);
@@ -26,4 +26,4 @@ glift.displays.idsTest = function() {
     deepEqual(idGen.tempIcon(name), 'foo_temp_icon_start', 'tmp icon');
     deepEqual(idGen.tempIconText(name), 'foo_temp_text_start', 'tmp text');
   });
-};
+})();

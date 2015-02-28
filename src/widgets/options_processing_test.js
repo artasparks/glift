@@ -1,4 +1,4 @@
-glift.widgets.optionsProcessingTest = function() {
+(function() {
   module('glift.widgets.optionsProcessingTest');
   var createNoDraw = glift.widgets.createNoDraw;
 
@@ -83,4 +83,4 @@ glift.widgets.optionsProcessingTest = function() {
     var obj = mgr.getSgfObj(0);
     deepEqual(obj.nextMovesPath, '0.0.0');
   });
-};
+})();

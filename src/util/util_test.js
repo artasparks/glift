@@ -1,4 +1,4 @@
-glift.utilTest = function() {
+(function() {
   module('glift.utilTest');
   var util = glift.util;
   test('typeOf test', function() {
@@ -35,4 +35,4 @@ glift.utilTest = function() {
     ok(testObj !== clone);
     deepEqual(clone, testObj);
   });
-};
+})();

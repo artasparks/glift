@@ -1,4 +1,4 @@
-glift.gliftTest = function() {
+(function() {
   module('glift.gliftTest');
   var testUtil = glift.testUtil,
       boardRegions = glift.enums.boardRegions;
@@ -28,4 +28,4 @@ glift.gliftTest = function() {
     display.destroy();
     testUtil.assertEmptyDiv('glift_display')
   });
-};
+})();

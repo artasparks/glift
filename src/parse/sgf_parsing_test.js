@@ -1,4 +1,4 @@
-glift.parse.sgfTest = function() {
+(function() {
   module('glift.parse.sgfTest');
 
   test('Parse simple, real problem', function() {
@@ -190,4 +190,4 @@ glift.parse.sgfTest = function() {
 
     glift.parse.sgfMetadataProperty = oldval;
   });
-};
+})();

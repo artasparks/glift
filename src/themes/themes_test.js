@@ -1,4 +1,4 @@
-glift.themes.themesTest = function() {
+(function() {
   module('glift.themes.themesTest');
   var themes = glift.themes;
 
@@ -22,4 +22,4 @@ glift.themes.themesTest = function() {
     ok(depth.stones.shadows !== undefined, 'must not be undefined');
     // deepEqual(depth.stones.shadows.fill, '#555', 'background');
   });
-};
+})();

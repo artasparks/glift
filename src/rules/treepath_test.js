@@ -1,4 +1,4 @@
-glift.rules.treepathTest = function() {
+(function() {
   module('glift.rules.treepathTest');
   var parse = glift.rules.treepath.parsePath;
   var flatten = glift.rules.treepath.flattenMoveTree;
@@ -85,4 +85,4 @@ glift.rules.treepathTest = function() {
     var out2 = flatten(mt);
     deepEqual(out2, [[0,0,0], [1,0]], 'Must flatten correctly after moveDown');
   });
-};
+})();

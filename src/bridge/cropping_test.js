@@ -1,4 +1,4 @@
-glift.bridge.croppingTest = function() {
+;(function() {
   module('glift.bridge.croppingTest');
   var boardRegions = glift.enums.boardRegions;
   var getCropRegion = glift.bridge.getQuadCropFromMovetree;
@@ -60,4 +60,4 @@ glift.bridge.croppingTest = function() {
     mt.properties().add('AB', point(0,0));
     deepEqual(getCropRegion(mt), boardRegions.ALL, '9x9 => ALL');
   });
-};
+})();

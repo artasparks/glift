@@ -1,4 +1,4 @@
-glift.displays.position.widgetPositionerTest = function() {
+(function() {
   module('glift.displays.position.widgetPositionerTest');
   var point = glift.util.point;
   var components = glift.enums.boardComponents;
@@ -241,4 +241,4 @@ glift.displays.position.widgetPositionerTest = function() {
     });
     deepEqual(boxList, ['BOARD', 'STATUS_BAR', 'COMMENT_BOX', 'ICONBAR'])
   });
-};
+})();

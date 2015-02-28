@@ -1,4 +1,4 @@
-glift.displays.icons.wrappedIconTest = function() {
+(function() {
   module('glift.displays.icons.wrappedIconTest');
   var oneDec = function(val) {
     return Math.round(val * 10) / 10;
@@ -68,4 +68,4 @@ glift.displays.icons.wrappedIconTest = function() {
       oneDec(wrapped.bbox.botRight().y() - centered.bbox.botRight().y()),
       "Boxes should be y-centered");
   });
-};
+})();

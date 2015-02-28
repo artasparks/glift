@@ -1,4 +1,4 @@
-glift.controllers.controllersTest = function() {
+(function() {
   module('glift.controllers.controllersTest');
 
   test("Must be able te create a controller", function() {
@@ -14,4 +14,4 @@ glift.controllers.controllersTest = function() {
     ok(controller.sgfString !== undefined, "Must not be undefined");
     ok(controller.sgfString !== "", "Must not be empty");
   });
-};
+})();

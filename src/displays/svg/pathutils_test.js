@@ -1,4 +1,4 @@
-glift.displays.svg.pathUtilsTest = function() {
+(function() {
   module("glift.displays.svg.pathUtilsTest");
   var path = glift.displays.svg.pathutils;
   var pt = glift.util.point(3, 5);
@@ -26,4 +26,4 @@ glift.displays.svg.pathUtilsTest = function() {
   test("Test path lineAbsPt", function() {
     deepEqual(path.lineAbsPt(pt), "L3 5");
   });
-};
+})();

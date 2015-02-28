@@ -1,4 +1,4 @@
-glift.displays.bboxTest = function() {
+(function() {
   module('glift.displays.bboxTest');
   var point = glift.util.point,
       bboxFromPts = glift.displays.bbox.fromPts;
@@ -127,4 +127,4 @@ glift.displays.bboxTest = function() {
     expected3 = bboxFromPts(point(190,200), point(200, 300));
     deepEqual(bboxes, [expected1, expected2, expected3], 'hSplits');
   });
-};
+})();

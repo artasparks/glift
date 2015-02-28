@@ -1,4 +1,4 @@
-glift.rules.autonumberTest = function() {
+(function() {
   module('glift.rules.autonumberTest');
   var autonumber = glift.rules.autonumber;
 
@@ -69,4 +69,4 @@ glift.rules.autonumberTest = function() {
     deepEqual(mt.properties().getOneValue('W'), 'ab');
     deepEqual(mt.properties().getOneValue('LB'), 'ab:A');
   });
-};
+})();

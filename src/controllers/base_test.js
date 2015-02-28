@@ -1,4 +1,4 @@
-glift.controllers.baseTest = function() {
+;(function() {
   module('glift.controllers.baseTest');
   var capturetest = testdata.sgfs.capturetest;
   var complexProblem = testdata.sgfs.complexproblem;
@@ -86,4 +86,4 @@ glift.controllers.baseTest = function() {
     deepEqual(base.currentMoveNumber(), 2);
     deepEqual(base.treepath, [0,0]);
   });
-};
+})();

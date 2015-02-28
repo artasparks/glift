@@ -1,4 +1,4 @@
-glift.rules.problemsTest = function() {
+(function() {
   module('glift.rules.problemsTest');
   test('IsCorrectPosition: trivial correctness', function() {
     var movt = glift.rules.movetree.getFromSgf(testdata.sgfs.trivialproblem),
@@ -97,4 +97,4 @@ glift.rules.problemsTest = function() {
         problemResults.CORRECT,
         'Should be also correct');
   });
-};
+})();

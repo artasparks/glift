@@ -1,4 +1,4 @@
-glift.displays.position.widgetBoxesTest = function() {
+(function() {
   module('glift.displays.position.widgetBoxesTest');
   var defaultBbox1 = glift.displays.bbox.fromPts(
       glift.util.point(0, 0),
@@ -78,4 +78,4 @@ glift.displays.position.widgetBoxesTest = function() {
     deepEqual(wboxes.fullWidgetBbox(),
         glift.displays.bbox.fromPts(pt(0, 0), pt(200, 300)));
   });
-};
+})();

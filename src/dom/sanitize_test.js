@@ -1,4 +1,4 @@
-glift.dom.sanitizeTest = function() {
+(function() {
   module('glift.dom.sanitizeTest');
   var sanitize = glift.dom.sanitize;
 
@@ -30,4 +30,4 @@ glift.dom.sanitizeTest = function() {
     var str = '&\'"/';
     deepEqual(sanitize(str), '&amp;&#x27;&quot;&#x2F;');
   });
-};
+})();

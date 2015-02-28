@@ -1,4 +1,4 @@
-glift.rules.treepathNextmovesTest = function() {
+(function() {
   module('glift.rules.treepathNextmovesTest');
   var findNextMoves = glift.rules.treepath.findNextMovesPath;
   var applyNextMoves = glift.rules.treepath.applyNextMoves;
@@ -141,4 +141,4 @@ glift.rules.treepathNextmovesTest = function() {
         { point: sgfpoint('bc'), color: 'BLACK'},
         { point: sgfpoint('ac'), color: 'WHITE', collision: 0}]);
   });
-};
+})();

@@ -1,4 +1,4 @@
-glift.keyMappingsTest = function() {
+(function() {
   module('glift.keyMappingsTest');
   var keyMappings = glift.keyMappings;
 
@@ -37,4 +37,4 @@ glift.keyMappingsTest = function() {
     deepEqual(keyMappings.getFuncOrIcon(id, keyName), null, 
         'iconPath should be unregistered now');
   });
-};
+})();

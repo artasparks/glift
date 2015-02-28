@@ -1,4 +1,4 @@
-glift.rules.propertiesTest = function() {
+(function() {
   module('glift.rules.propertiesTest');
   var properties = glift.rules.properties,
       point = glift.util.point;
@@ -107,4 +107,4 @@ glift.rules.propertiesTest = function() {
     props.set('KM', '3.25');
     deepEqual(props.getGameInfo()[0].value, '3.25');
   });
-};
+})();

@@ -1,4 +1,4 @@
-glift.displays.boardPointsTest = function() {
+(function() {
   module('glift.displays.boardPointsTest');
   var maxInts = 19;
   var cropboxAll = glift.displays.cropbox.getFromRegion(
@@ -12,4 +12,4 @@ glift.displays.boardPointsTest = function() {
     var bpz = glift.displays.boardPoints(fakeLineBox, maxInts, false);
     ok(bpz !== null);
   });
-};
+})();

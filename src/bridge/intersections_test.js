@@ -1,4 +1,4 @@
-glift.bridge.intersectionsTest = function() {
+;(function() {
   module("glift.bridge.intersectionsTest");
   var sgfs = testdata.sgfs,
       mtm = glift.rules.movetree,
@@ -92,4 +92,4 @@ glift.bridge.intersectionsTest = function() {
     var data = glift.bridge.intersections.nextBoardData(mt, captures);
     deepEqual(data.stones.BLACK, [conv('bb')]);
   });
-};
+})();

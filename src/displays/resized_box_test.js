@@ -1,4 +1,4 @@
-glift.displays.resizedBoxTest = function() {
+(function() {
   module('glift.displays.resizedBoxTest');
   var util = glift.util,
       displays = glift.displays,
@@ -92,4 +92,4 @@ glift.displays.resizedBoxTest = function() {
     deepEqual(resized.center().y(), 150, 'y center');
     glift.global.debugMode = false;
   });
-};
+})();

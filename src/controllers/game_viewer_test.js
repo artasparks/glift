@@ -1,4 +1,4 @@
-glift.controllers.gameViewerTest = function() {
+(function() {
   module('glift.controllers.gameViewerTest');
   var problem = testdata.sgfs.complexproblem;
   var states = glift.enums.states;
@@ -120,4 +120,4 @@ glift.controllers.gameViewerTest = function() {
     gameViewer.previousCommentOrBranch(20);
     deepEqual(gameViewer.movetree.node().getNodeNum(), 20);
   });
-};
+})();

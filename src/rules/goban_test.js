@@ -1,4 +1,4 @@
-glift.rules.gobanTest = function() {
+(function() {
   module('glift.rules.gobanTest');
   var rules = glift.rules,
       util = glift.util,
@@ -95,4 +95,4 @@ glift.rules.gobanTest = function() {
     deepEqual(goban.getStone(glift.util.point(6,6)), glift.enums.states.EMPTY,
         'Must get EMPTY');
   });
-};
+})();
