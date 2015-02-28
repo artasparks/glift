@@ -44,7 +44,7 @@ glift.flattener = {
 
     // Calculate the board region.
     if (boardRegion === glift.enums.boardRegions.AUTO) {
-      boardRegion = glift.bridge.getCropFromMovetree(mt);
+      boardRegion = glift.bridge.getQuadCropFromMovetree(mt);
     }
     var cropping = glift.displays.cropbox.getFromRegion(
         boardRegion, mt.getIntersections());

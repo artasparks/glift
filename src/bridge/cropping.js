@@ -1,9 +1,14 @@
 /**
- * Takes a movetree and returns the optimal BoardRegion for cropping purposes.
+ * Takes a movetree and returns the optimal BoardRegion-Quad for cropping purposes.
  *
- * Optionally, take a treepath
+ * Note: This isn't a minimal cropping: we split the board into 4 quadrants.
+ * Then, we use the quad as part of the final quad-output. Note that we only
+ * allow convex shapes.  Thus, these aren't allowed (where the X's are
+ * quad-regions)
+ * .X     X.
+ * X. and XX
  */
-glift.bridge.getCropFromMovetree = function(movetree, treepath) {
+glift.bridge.getQuadCropFromMovetree = function(movetree) {
   var bbox = glift.displays.bbox.fromPts;
   var pt = glift.util.point;
   var boardRegions = glift.enums.boardRegions;

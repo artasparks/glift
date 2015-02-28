@@ -336,7 +336,8 @@ glift.enums = {
     ALL: 'ALL',
     // Automatically determine the board region.
     AUTO: 'AUTO',
-    // Minimal cropbox, modulo some heuristics.
+    // Minimal cropbox, modulo some heuristics. To do this, you usually need a
+    // movetree, and usually, you need next-path information.
     MINIMAL: 'MINIMAL'
   },
 
@@ -10647,11 +10648,16 @@ glift.bridge = {
 };
 
 /**
- * Takes a movetree and returns the optimal BoardRegion for cropping purposes.
+ * Takes a movetree and returns the optimal BoardRegion-Quad for cropping purposes.
  *
- * Optionally, take a treepath
+ * Note: This isn't a minimal cropping: we split the board into 4 quadrants.
+ * Then, we use the quad as part of the final quad-output. Note that we only
+ * allow convex shapes.  Thus, these aren't allowed (where the X's are
+ * quad-regions)
+ * .X     X.
+ * X. and XX
  */
-glift.bridge.getCropFromMovetree = function(movetree, treepath) {
+glift.bridge.getQuadCropFromMovetree = function(movetree) {
   var bbox = glift.displays.bbox.fromPts;
   var pt = glift.util.point;
   var boardRegions = glift.enums.boardRegions;
@@ -10938,7 +10944,7 @@ glift.flattener = {
 
     // Calculate the board region.
     if (boardRegion === glift.enums.boardRegions.AUTO) {
-      boardRegion = glift.bridge.getCropFromMovetree(mt);
+      boardRegion = glift.bridge.getQuadCropFromMovetree(mt);
     }
     var cropping = glift.displays.cropbox.getFromRegion(
         boardRegion, mt.getIntersections());
@@ -11755,7 +11761,7 @@ glift.widgets.BaseWidget.prototype = {
 
     this.displayOptions.boardRegion =
         this.sgfOptions.boardRegion === glift.enums.boardRegions.AUTO
-        ? glift.bridge.getCropFromMovetree(this.controller.movetree)
+        ? glift.bridge.getQuadCropFromMovetree(this.controller.movetree)
         : this.sgfOptions.boardRegion;
 
     this.displayOptions.rotation = this.sgfOptions.rotation;
@@ -12555,7 +12561,7 @@ glift.widgets.options = {
  * Terminology:
  *  - I use SGF through this file and in Glift to refer to a go-data-file.  This
  *    is largely due to myopia early in the dev process. With the @api(1.X) in
- *    full sway, it's not possible to change this distinction. Regardless, it is
+ *    full sway, it's not easy to change this distinction. Regardless, it is
  *    possible that in the future, SGF strings and SGF URLs will grow to
  *    encompass other types go-data, like the Tygem .gib filetypes.
  *

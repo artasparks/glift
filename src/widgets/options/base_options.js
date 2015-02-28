@@ -11,7 +11,7 @@
  * Terminology:
  *  - I use SGF through this file and in Glift to refer to a go-data-file.  This
  *    is largely due to myopia early in the dev process. With the @api(1.X) in
- *    full sway, it's not possible to change this distinction. Regardless, it is
+ *    full sway, it's not easy to change this distinction. Regardless, it is
  *    possible that in the future, SGF strings and SGF URLs will grow to
  *    encompass other types go-data, like the Tygem .gib filetypes.
  *

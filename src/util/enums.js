@@ -44,7 +44,8 @@ glift.enums = {
     ALL: 'ALL',
     // Automatically determine the board region.
     AUTO: 'AUTO',
-    // Minimal cropbox, modulo some heuristics.
+    // Minimal cropbox, modulo some heuristics. To do this, you usually need a
+    // movetree, and usually, you need next-path information.
     MINIMAL: 'MINIMAL'
   },
 

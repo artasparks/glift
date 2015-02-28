@@ -1,12 +1,12 @@
 glift.bridge.croppingTest = function() {
   module('glift.bridge.croppingTest');
   var boardRegions = glift.enums.boardRegions;
+  var getCropRegion = glift.bridge.getQuadCropFromMovetree;
 
   // a = 0; i = 9; s = 18
   test('GetCropRegion: TOP_LEFT', function() {
     var mt = glift.rules.movetree.getInstance(19),
-        point = glift.util.point,
-        getCropRegion = glift.bridge.getCropFromMovetree;
+        point = glift.util.point;
     mt.properties().add('B', point(0,0).toSgfCoord());
     deepEqual(getCropRegion(mt), boardRegions.TOP_LEFT, 'Must be TOP_LEFT');
   });
@@ -14,7 +14,6 @@ glift.bridge.croppingTest = function() {
   test('GetCropRegion: TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT', function() {
     var mt = glift.rules.movetree.getInstance(19),
         point = glift.util.point,
-        getCropRegion = glift.bridge.getCropFromMovetree,
         props = mt.properties();
     props.add('AB', point(17, 0).toSgfCoord());
     deepEqual(getCropRegion(mt), boardRegions.TOP_RIGHT, 'Must be TOP_RIGHT');
@@ -31,7 +30,6 @@ glift.bridge.croppingTest = function() {
   test('GetCropRegion: TOP, BOTTOM, LEFT, RIGHT', function() {
     var mt = glift.rules.movetree.getInstance(19),
         point = glift.util.point,
-        getCropRegion = glift.bridge.getCropFromMovetree,
         props = mt.properties();
     props.add('AB', point(0, 0).toSgfCoord())
         .add('AB', point(18, 0).toSgfCoord());
@@ -51,7 +49,6 @@ glift.bridge.croppingTest = function() {
   });
 
   test('Get Crop Region: 9x9, 13x13', function() {
-    var getCropRegion = glift.bridge.getCropFromMovetree;
     var point = glift.util.point;
     var mt = glift.rules.movetree.getInstance(13);
     // 0,0 Normally causes the board to be top left

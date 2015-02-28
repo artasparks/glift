@@ -42,7 +42,7 @@ glift.widgets.BaseWidget.prototype = {
 
     this.displayOptions.boardRegion =
         this.sgfOptions.boardRegion === glift.enums.boardRegions.AUTO
-        ? glift.bridge.getCropFromMovetree(this.controller.movetree)
+        ? glift.bridge.getQuadCropFromMovetree(this.controller.movetree)
         : this.sgfOptions.boardRegion;
 
     this.displayOptions.rotation = this.sgfOptions.rotation;
