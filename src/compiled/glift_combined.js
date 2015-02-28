@@ -8011,6 +8011,15 @@ glift.rules._MoveTree = function(rootNode, currentNode) {
   this._rootNode = rootNode;
   this._currentNode = currentNode || rootNode;
   this._markedMainline = false;
+
+  /**
+   * Metadata is arbitrary data attached to the node.
+   *
+   * As a side note, Metadata extraction in Glift happens in the parser and so
+   * will not show up in comments.  See the metadataProperty option in
+   * options.baseOptions.
+   */
+  this.metadata = null;
 };
 
 glift.rules._MoveTree.prototype = {
@@ -9344,6 +9353,26 @@ glift.parse.pandanet = function(string) {
   return glift.parse.sgf(repl);
 };
 /**
+ * Metadata Start and End tags allow us to insert metadata directly, as
+ * JSON, into SGF comments.  It will not be display by glift (although it
+ * will by other editors, of course). It's primary use is as an API for
+ * embedding tertiary data.
+ *
+ * It is currently expected that this property is attached to the root node.
+ *
+ * Some other notes:
+ *  - Metadata extraction happens in the parser.
+ *  - If the metadataProperty field is set, it will grab all the data from
+ *  the relevant property and try to convert it to JSON.
+ *
+ * To disable this behavior, set metadataProperty to null.
+ *
+ * @api(experimental)
+ */
+glift.parse.sgfMetadataProperty = 'GC';
+
+
+/**
  * The new Glift SGF parser!
  * Takes a string, returns a movetree.  Easy =).
  *
@@ -9407,6 +9436,17 @@ glift.parse.sgf = function(sgfString) {
 
   var flushPropDataIfNecessary = function() {
     if (curProp.length > 0) {
+      if (glift.parse.sgfMetadataProperty &&
+          curProp === glift.parse.sgfMetadataProperty &&
+          !movetree.node().getParent()) {
+        try {
+          var mdata = JSON.parse(propData);
+          movetree.metadata = mdata;
+        } catch (e) {
+          glift.util.logz('For property: ' + curProp + ' unable to parse ' +
+              ': ' + propData + ' as JSON for SGF metadata');
+        }
+      }
       movetree.properties().add(curProp, propData);
       propData = [];
       curProp = '';
@@ -12720,6 +12760,7 @@ glift.widgets.options.baseOptions = {
      * Metadata for this SGF.  Like the global metadata, this option is not
      * meant to be used directly by Glift but by other programs utilizing Glift
      * and so the metadata has no expected structure.
+     *
      * @api(experimental)
      */
     metadata: undefined,
