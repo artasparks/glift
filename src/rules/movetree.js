@@ -42,8 +42,9 @@ glift.rules.movetree = {
 
   /** Create a MoveTree from an SGF. */
   getFromSgf: function(sgfString, initPosition, parseType) {
-    var parseType = parseType || glift.parse.parseType.SGF;
     initPosition = initPosition || []; // treepath.
+    parseType = parseType || glift.parse.parseType.SGF;
+
     if (glift.util.typeOf(initPosition) === 'string' ||
         glift.util.typeOf(initPosition) === 'number') {
       initPosition = glift.rules.treepath.parsePath(initPosition);
@@ -51,13 +52,13 @@ glift.rules.movetree = {
     if (sgfString === undefined || sgfString === '') {
       return glift.rules.movetree.getInstance(19);
     }
+
     glift.util.majorPerfLog('Before SGF parsing in movetree');
     var mt = glift.parse.fromString(sgfString, parseType);
 
+    mt = mt.getTreeFromRoot(initPosition);
     glift.util.majorPerfLog('After SGF parsing in movetree');
-    for (var i = 0; i < initPosition.length; i++) {
-      mt.moveDown(initPosition[i]);
-    }
+
     return mt;
   },
 

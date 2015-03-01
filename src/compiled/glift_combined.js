@@ -1294,8 +1294,9 @@ glift.dom.Element.prototype = {
 /**
  * Built-in clases used to style Glift.
  */
+// TODO(kashomon): Move to a more appropriate API location.
 glift.dom.classes = {
-  COMMENT_BOX: 'glfit-comment-box'
+  COMMENT_BOX: 'glift-comment-box'
 };
 /** Tags currently allowed. */
 glift.dom._sanitizeWhitelist = {
