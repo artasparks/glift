@@ -37,7 +37,7 @@ glift.rules.problems = {
       var successTracker = {};
       for (var i = 0; i < flatPaths.length; i++) {
         var path = flatPaths[i];
-        var newmt = glift.rules.movetree.getFromNode(movetree.node());
+        var newmt = movetree.getFromNode(movetree.node());
         var pathCorrect = false
         for (var j = 0; j < path.length; j++) {
           newmt.moveDown(path[j]);

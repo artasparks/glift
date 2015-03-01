@@ -134,7 +134,7 @@
         '[' + JSON.stringify(expected) + '])';
 
     var mt = glift.parse.sgf(sgf);
-    deepEqual(mt.metadata, expected);
+    deepEqual(mt.metadata(), expected);
 
     glift.parse.sgfMetadataProperty = oldval;
   });
@@ -150,7 +150,7 @@
         '[' + JSON.stringify(expected) + '])';
 
     var mt = glift.parse.sgf(sgf);
-    deepEqual(mt.metadata, expected);
+    deepEqual(mt.metadata(), expected);
     glift.parse.sgfMetadataProperty = oldval;
   });
 
@@ -186,7 +186,7 @@
 
     var sgf = '(;GM[1];' + glift.parse.sgfMetadataProperty + '[foo: bar])';
     var mt = glift.parse.sgf(sgf);
-    deepEqual(mt.metadata, null);
+    deepEqual(mt.metadata(), null);
 
     glift.parse.sgfMetadataProperty = oldval;
   });

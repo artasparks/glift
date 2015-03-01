@@ -62,17 +62,6 @@ glift.rules.movetree = {
     return mt;
   },
 
-  /**
-   * Creates a new Movetree reference from a particular node. The underlying
-   * node-graph remains the same, but we don't
-   *
-   * Since a MoveTree is a tree of connected nodes, we can create a sub-tree
-   * from any position in the tree.  This can be useful for recursion.
-   */
-  getFromNode: function(node) {
-    return new glift.rules._MoveTree(node);
-  },
-
   /** Seach nodes with a Depth First Search. */
   searchMoveTreeDFS: function(moveTree, func) {
     func(moveTree);
@@ -127,7 +116,7 @@ glift.rules.movetree = {
  * problem, demonstration, or example.  Thus, this is the place where such moves
  * as currentPlayer or lastMove.
  */
-glift.rules._MoveTree = function(rootNode, currentNode) {
+glift.rules._MoveTree = function(rootNode, currentNode, metadata) {
   this._rootNode = rootNode;
   this._currentNode = currentNode || rootNode;
   this._markedMainline = false;
@@ -139,7 +128,7 @@ glift.rules._MoveTree = function(rootNode, currentNode) {
    * will not show up in comments.  See the metadataProperty option in
    * options.baseOptions.
    */
-  this.metadata = null;
+  this._metadata = metadata || null;
 };
 
 glift.rules._MoveTree.prototype = {
@@ -155,6 +144,16 @@ glift.rules._MoveTree.prototype = {
   /** Get the properties object on the current node. */
   properties: function() {
     return this.node().properties();
+  },
+
+  /** Gets global movetree metadata. */
+  metadata: function() {
+    return this._metadata;
+  },
+
+  /** Set the metadata for this Movetree. */
+  setMetdata: function(data) {
+    this._metadata = data;
   },
 
   /**
@@ -217,7 +216,19 @@ glift.rules._MoveTree.prototype = {
    * changed.
    */
   newTreeRef: function() {
-    return new glift.rules._MoveTree(this._rootNode, this._currentNode);
+    return new glift.rules._MoveTree(
+        this._rootNode, this._currentNode, this._metadata);
+  },
+
+  /**
+   * Creates a new Movetree reference from a particular node. The underlying
+   * node-tree remains the same.
+   *
+   * Since a MoveTree is a tree of connected nodes, we can create a sub-tree
+   * from any position in the tree.  This can be useful for recursion.
+   */
+  getFromNode: function(node) {
+    return new glift.rules._MoveTree(node, node, this._metadata);
   },
 
   /**
@@ -228,7 +239,7 @@ glift.rules._MoveTree.prototype = {
    * treepath: optionally also apply a treepath to the tree
    */
   getTreeFromRoot: function(treepath) {
-    var mt = glift.rules.movetree.getFromNode(this._rootNode);
+    var mt = this.getFromNode(this._rootNode);
     if (treepath && glift.util.typeOf(treepath) === 'array') {
       for (var i = 0, len = treepath.length;
            i < len && mt.node().numChildren() > 0; i++) {
