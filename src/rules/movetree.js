@@ -63,6 +63,9 @@ glift.rules.movetree = {
   },
 
   /**
+   * Creates a new Movetree reference from a particular node. The underlying
+   * node-graph remains the same, but we don't
+   *
    * Since a MoveTree is a tree of connected nodes, we can create a sub-tree
    * from any position in the tree.  This can be useful for recursion.
    */
@@ -218,7 +221,9 @@ glift.rules._MoveTree.prototype = {
   },
 
   /**
-   * Get a new move tree instance from the root node.
+   * Gets a new move tree instance from the root node. Important note: this
+   * creates a new tree reference. Thus, if you don't assign to a var, nothing
+   * will happen.
    *
    * treepath: optionally also apply a treepath to the tree
    */
