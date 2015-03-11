@@ -7928,8 +7928,9 @@ glift.rules.movetree = {
 
   /** Create a MoveTree from an SGF. */
   getFromSgf: function(sgfString, initPosition, parseType) {
-    var parseType = parseType || glift.parse.parseType.SGF;
     initPosition = initPosition || []; // treepath.
+    parseType = parseType || glift.parse.parseType.SGF;
+
     if (glift.util.typeOf(initPosition) === 'string' ||
         glift.util.typeOf(initPosition) === 'number') {
       initPosition = glift.rules.treepath.parsePath(initPosition);
@@ -7937,22 +7938,14 @@ glift.rules.movetree = {
     if (sgfString === undefined || sgfString === '') {
       return glift.rules.movetree.getInstance(19);
     }
+
     glift.util.majorPerfLog('Before SGF parsing in movetree');
     var mt = glift.parse.fromString(sgfString, parseType);
 
+    mt = mt.getTreeFromRoot(initPosition);
     glift.util.majorPerfLog('After SGF parsing in movetree');
-    for (var i = 0; i < initPosition.length; i++) {
-      mt.moveDown(initPosition[i]);
-    }
-    return mt;
-  },
 
-  /**
-   * Since a MoveTree is a tree of connected nodes, we can create a sub-tree
-   * from any position in the tree.  This can be useful for recursion.
-   */
-  getFromNode: function(node) {
-    return new glift.rules._MoveTree(node);
+    return mt;
   },
 
   /** Seach nodes with a Depth First Search. */
@@ -8009,7 +8002,7 @@ glift.rules.movetree = {
  * problem, demonstration, or example.  Thus, this is the place where such moves
  * as currentPlayer or lastMove.
  */
-glift.rules._MoveTree = function(rootNode, currentNode) {
+glift.rules._MoveTree = function(rootNode, currentNode, metadata) {
   this._rootNode = rootNode;
   this._currentNode = currentNode || rootNode;
   this._markedMainline = false;
@@ -8021,7 +8014,7 @@ glift.rules._MoveTree = function(rootNode, currentNode) {
    * will not show up in comments.  See the metadataProperty option in
    * options.baseOptions.
    */
-  this.metadata = null;
+  this._metadata = metadata || null;
 };
 
 glift.rules._MoveTree.prototype = {
@@ -8037,6 +8030,16 @@ glift.rules._MoveTree.prototype = {
   /** Get the properties object on the current node. */
   properties: function() {
     return this.node().properties();
+  },
+
+  /** Gets global movetree metadata. */
+  metadata: function() {
+    return this._metadata;
+  },
+
+  /** Set the metadata for this Movetree. */
+  setMetdata: function(data) {
+    this._metadata = data;
   },
 
   /**
@@ -8099,16 +8102,30 @@ glift.rules._MoveTree.prototype = {
    * changed.
    */
   newTreeRef: function() {
-    return new glift.rules._MoveTree(this._rootNode, this._currentNode);
+    return new glift.rules._MoveTree(
+        this._rootNode, this._currentNode, this._metadata);
   },
 
   /**
-   * Get a new move tree instance from the root node.
+   * Creates a new Movetree reference from a particular node. The underlying
+   * node-tree remains the same.
+   *
+   * Since a MoveTree is a tree of connected nodes, we can create a sub-tree
+   * from any position in the tree.  This can be useful for recursion.
+   */
+  getFromNode: function(node) {
+    return new glift.rules._MoveTree(node, node, this._metadata);
+  },
+
+  /**
+   * Gets a new move tree instance from the root node. Important note: this
+   * creates a new tree reference. Thus, if you don't assign to a var, nothing
+   * will happen.
    *
    * treepath: optionally also apply a treepath to the tree
    */
   getTreeFromRoot: function(treepath) {
-    var mt = glift.rules.movetree.getFromNode(this._rootNode);
+    var mt = this.getFromNode(this._rootNode);
     if (treepath && glift.util.typeOf(treepath) === 'array') {
       for (var i = 0, len = treepath.length;
            i < len && mt.node().numChildren() > 0; i++) {
@@ -8432,7 +8449,7 @@ glift.rules.problems = {
       var successTracker = {};
       for (var i = 0; i < flatPaths.length; i++) {
         var path = flatPaths[i];
-        var newmt = glift.rules.movetree.getFromNode(movetree.node());
+        var newmt = movetree.getFromNode(movetree.node());
         var pathCorrect = false
         for (var j = 0; j < path.length; j++) {
           newmt.moveDown(path[j]);
@@ -9443,7 +9460,7 @@ glift.parse.sgf = function(sgfString) {
           !movetree.node().getParent()) {
         try {
           var mdata = JSON.parse(propData);
-          movetree.metadata = mdata;
+          movetree.setMetdata(mdata);
         } catch (e) {
           glift.util.logz('For property: ' + curProp + ' unable to parse ' +
               ': ' + propData + ' as JSON for SGF metadata');
