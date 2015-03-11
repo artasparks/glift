@@ -11091,8 +11091,8 @@ glift.flattener = {
             out.labels[key] = lblPt.value;
           } else {
             var newPts = glift.util.pointArrFromSgfProp(data[i])
-            for (var i = 0; i < newPts.length; i++) {
-              out.marks[newPts[i].toString()] = symbol;
+            for (var j = 0; j < newPts.length; j++) {
+              out.marks[newPts[j].toString()] = symbol;
             }
           }
         }
