@@ -3,7 +3,7 @@
  */
 glift.flattener.Flattened = function(
     board, collisions, comment, boardRegion, cropping, isOnMainPath,
-    startMoveNum, endMoveNum) {
+    startMoveNum, endMoveNum, stoneMap) {
   /**
    * Board wrapper. Essentially a double array of intersection objects.
    */
@@ -36,6 +36,14 @@ glift.flattener.Flattened = function(
    */
   this._startMoveNum = startMoveNum;
   this._endMoveNum = endMoveNum;
+
+  /**
+   * All the stones!
+   *
+   * A map from the point string to a stone object:
+   *    {point: <point>, color: <color>}
+   */
+  this._stoneMap = stoneMap;
 };
 
 glift.flattener.Flattened.prototype = {
@@ -59,5 +67,8 @@ glift.flattener.Flattened.prototype = {
   startingMoveNum: function() { return this._startMoveNum; },
 
   /** Returns the ending move number. */
-  endingMoveNum: function() { return this._endMoveNum; }
+  endingMoveNum: function() { return this._endMoveNum; },
+
+  /** Returns the stone map. */
+  stoneMap: function() { return this._stoneMap; }
 };

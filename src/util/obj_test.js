@@ -14,4 +14,9 @@
     deepEqual(glift.obj.flatMerge(base), base);
     ok(glift.obj.flatMerge(base) !== base, 'should have different reference');
   });
+
+  test('Is empty', function() {
+    ok(glift.obj.isEmpty({}));
+    ok(!glift.obj.isEmpty({a: 'b'}));
+  });
 })();

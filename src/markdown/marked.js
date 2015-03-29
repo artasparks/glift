@@ -564,6 +564,10 @@ InlineLexer.prototype.output = function(src) {
     , href
     , cap;
 
+  var escape = function(text) {
+    return text;
+  }
+
   while (src) {
     // escape
     if (cap = this.rules.escape.exec(src)) {

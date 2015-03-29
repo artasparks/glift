@@ -20,5 +20,13 @@ glift.obj = {
       }
     }
     return newObj;
+  },
+
+  /** Returns true if an object is empty. False otherwise. */
+  isEmpty: function(obj) {
+    for (var key in obj) {
+      return false;
+    }
+    return true;
   }
 };

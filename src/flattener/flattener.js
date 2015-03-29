@@ -102,10 +102,12 @@ glift.flattener = {
     var comment = mt.properties().getComment() || '';
     return new glift.flattener.Flattened(
         board, collisions, comment, boardRegion, cropping, mt.onMainline(),
-        startingMoveNum, endingMoveNum);
+        startingMoveNum, endingMoveNum, stoneMap);
   },
 
   /**
+   * Note: This contains ALL stones for a given position.
+   *
    * Get map from pt string to stone {point: <point>, color: <color>}.
    * goban: a glift.rules.goban instance.
    * nextStones: array of stone objects -- {point: <pt>, color: <color>}
