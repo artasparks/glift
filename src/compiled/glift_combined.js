@@ -9465,7 +9465,8 @@ glift.parse.sgf = function(sgfString) {
           curProp === glift.parse.sgfMetadataProperty &&
           !movetree.node().getParent()) {
         try {
-          var mdata = JSON.parse(propData);
+          var pdata = propData[0].replace(/\\]/g, ']');
+          var mdata = JSON.parse(pdata);
           movetree.setMetdata(mdata);
         } catch (e) {
           glift.util.logz('For property: ' + curProp + ' unable to parse ' +
