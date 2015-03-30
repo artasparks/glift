@@ -74,5 +74,5 @@ glift.bridge._getRegionFromTracker = function(tracker, numstones) {
   for (var key in newset) {
     return key;
   }
-  return glift.boardRegions.ALL;
+  return glift.enums.boardRegions.ALL;
 };

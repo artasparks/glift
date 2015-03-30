@@ -7932,7 +7932,10 @@ glift.rules.movetree = {
     return mt;
   },
 
-  /** Create a MoveTree from an SGF. */
+  /**
+   * Create a MoveTree from an SGF.
+   * Note: initPosition and parseType are both optional.
+   */
   getFromSgf: function(sgfString, initPosition, parseType) {
     initPosition = initPosition || []; // treepath.
     parseType = parseType || glift.parse.parseType.SGF;
@@ -10748,7 +10751,7 @@ glift.bridge._getRegionFromTracker = function(tracker, numstones) {
   for (var key in newset) {
     return key;
   }
-  return glift.boardRegions.ALL;
+  return glift.enums.boardRegions.ALL;
 };
 /*
  * Intersection Data is the precise set of information necessary to display the

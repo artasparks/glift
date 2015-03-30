@@ -60,4 +60,9 @@
     mt.properties().add('AB', point(0,0));
     deepEqual(getCropRegion(mt), boardRegions.ALL, '9x9 => ALL');
   });
+
+  test('Cropping on out-of-bounds stone', function() {
+    var mt = glift.rules.movetree.getFromSgf('(;AB[rr];W[cc])');
+    deepEqual(getCropRegion(mt), boardRegions.ALL);
+  });
 })();
