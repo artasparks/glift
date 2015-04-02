@@ -80,6 +80,8 @@ glift.parse.sgf = function(sgfString) {
     return strOut;
   };
 
+
+  /** Flush the property data to the movetree's properties. */
   var flushPropDataIfNecessary = function() {
     if (curProp.length > 0) {
       if (glift.parse.sgfMetadataProperty &&

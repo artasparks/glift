@@ -48,11 +48,26 @@ Properties.prototype = {
           glift.util.typeOf(value) + ' for item ' + item);
     }
 
+    // Convert any point rectangles...
+    var pointRectangleRegex = /^[a-z][a-z]:[a-z][a-z]$/;
+    var finished = [];
+    for (var i = 0; i < value.length; i++) {
+      if (pointRectangleRegex.test(value[i])) {
+        // This is a rectangle of points. Sigh.
+        var pts = glift.util.pointArrFromSgfProp(value[i]);
+        for (var j = 0; j < pts.length; j++) {
+          finished.push(pts[j].toSgfCoord());
+        }
+      } else {
+        finished.push(value[i]);
+      }
+    }
+
     // If the type is a string, make into an array or concat.
     if (this.contains(prop)) {
-      this.propMap[prop] = this.getAllValues(prop).concat(value);
+      this.propMap[prop] = this.getAllValues(prop).concat(finished);
     } else {
-      this.propMap[prop] = value;
+      this.propMap[prop] = finished;
     }
     return this;
   },

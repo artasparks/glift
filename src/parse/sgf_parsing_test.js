@@ -190,4 +190,17 @@
 
     glift.parse.sgfMetadataProperty = oldval;
   });
+
+  test('Rectangles of stones', function() {
+    var sgf = '(;GM[1]AB[pb:sb][oc][sc][nd][oe:pe]AW[pa:qa]' +
+        '[nb:ob][mc:me][qc:rc][re][nf][pf:pg][rg];B[rd]GB[])'
+    var mt = glift.parse.sgf(sgf);
+    var wstones = mt.properties().getAllValues('AW');
+    var smap = {};
+    for (var i = 0; i < wstones.length; i++) {
+      smap[wstones[i]] = true;
+    }
+    ok(smap['nb'], 'nb stone');
+    ok(smap['ob'], 'ob stone');
+  });
 })();
