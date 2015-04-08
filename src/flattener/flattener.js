@@ -54,6 +54,9 @@ glift.flattener = {
       startingMoveNum = glift.flattener._findStartingMoveNum(mt, nmtp);
     }
 
+    // The move number of the first mainline move in the parent-chain.
+    var mainlineMoveNum = mt.getMainlineMoveNum();
+
     // Initial move number -- used to calculate the ending move number.
     var initNodeNumber = mt.node().getNodeNum();
 
@@ -102,7 +105,7 @@ glift.flattener = {
     var comment = mt.properties().getComment() || '';
     return new glift.flattener.Flattened(
         board, collisions, comment, boardRegion, cropping, mt.onMainline(),
-        startingMoveNum, endingMoveNum, stoneMap);
+        startingMoveNum, endingMoveNum, mainlineMoveNum, stoneMap);
   },
 
   /**

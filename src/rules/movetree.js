@@ -336,6 +336,18 @@ glift.rules._MoveTree.prototype = {
   },
 
   /**
+   * Gets the move number (node number) from the first node in the parent
+   * chain that is on the mainline.
+   */
+  getMainlineMoveNum: function() {
+    var mt = this.newTreeRef();
+    while (!mt.onMainline()) {
+      mt.moveUp();
+    }
+    return mt.node().getNodeNum();
+  },
+
+  /**
    * Get the next moves (i.e., nodes with either B or W properties);
    *
    * returns: an array of dicts with the moves, e.g.,
@@ -359,7 +371,6 @@ glift.rules._MoveTree.prototype = {
 
   /** Returns true if the tree is currently on a mainline variation. */
   onMainline: function() {
-    // TODO(kashomon): Make this simpler
     if (!this._markedMainline) {
       var mt = this.getTreeFromRoot();
       mt.node()._mainline = true;

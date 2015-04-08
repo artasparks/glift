@@ -360,4 +360,26 @@
     mt = mt.rebase();
     deepEqual(mt.getCurrentPlayer(), 'WHITE');
   });
+
+  test('Mainline Move Number', function() {
+    var sgf = '(;GM[1];B[aa];W[bb](;B[cc];W[dd])(;B[cd];W[de]))'
+    var mt = glift.rules.movetree.getFromSgf(sgf, '2');
+    deepEqual(mt.properties().getOneValue('W'), 'bb');
+    deepEqual(mt.getMainlineMoveNum(), 2)
+
+    var mt = glift.rules.movetree.getFromSgf(sgf, [0,0,1,0]);
+    deepEqual(mt.properties().getOneValue('W'), 'de');
+    deepEqual(mt.getMainlineMoveNum(), 2)
+
+    var mt = glift.rules.movetree.getFromSgf(sgf, [0,0,0]);
+    deepEqual(mt.getMainlineMoveNum(), 3)
+
+    // more examples....
+    var simpleSgf = '(;GB[1];B[aa];W[bb])';
+    mt = glift.rules.movetree.getFromSgf(sgf, '2');
+    deepEqual(mt.getMainlineMoveNum(), 2);
+
+    var mainpathSgf = '(;GB[1];B[aa];W[bb];B[cc];W[dd];B[ee];W[ff])';
+    mt = glift.rules.movetree.getFromSgf(mainpathSgf, '1');
+  });
 })();

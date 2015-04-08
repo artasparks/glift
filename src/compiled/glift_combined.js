@@ -8228,6 +8228,18 @@ glift.rules._MoveTree.prototype = {
   },
 
   /**
+   * Gets the move number (node number) from the first node in the parent
+   * chain that is on the mainline.
+   */
+  getMainlineMoveNum: function() {
+    var mt = this.newTreeRef();
+    while (!mt.onMainline()) {
+      mt.moveUp();
+    }
+    return mt.node().getNodeNum();
+  },
+
+  /**
    * Get the next moves (i.e., nodes with either B or W properties);
    *
    * returns: an array of dicts with the moves, e.g.,
@@ -8251,7 +8263,6 @@ glift.rules._MoveTree.prototype = {
 
   /** Returns true if the tree is currently on a mainline variation. */
   onMainline: function() {
-    // TODO(kashomon): Make this simpler
     if (!this._markedMainline) {
       var mt = this.getTreeFromRoot();
       mt.node()._mainline = true;
@@ -8562,11 +8573,26 @@ Properties.prototype = {
           glift.util.typeOf(value) + ' for item ' + item);
     }
 
+    // Convert any point rectangles...
+    var pointRectangleRegex = /^[a-z][a-z]:[a-z][a-z]$/;
+    var finished = [];
+    for (var i = 0; i < value.length; i++) {
+      if (pointRectangleRegex.test(value[i])) {
+        // This is a rectangle of points. Sigh.
+        var pts = glift.util.pointArrFromSgfProp(value[i]);
+        for (var j = 0; j < pts.length; j++) {
+          finished.push(pts[j].toSgfCoord());
+        }
+      } else {
+        finished.push(value[i]);
+      }
+    }
+
     // If the type is a string, make into an array or concat.
     if (this.contains(prop)) {
-      this.propMap[prop] = this.getAllValues(prop).concat(value);
+      this.propMap[prop] = this.getAllValues(prop).concat(finished);
     } else {
-      this.propMap[prop] = value;
+      this.propMap[prop] = finished;
     }
     return this;
   },
@@ -9462,6 +9488,8 @@ glift.parse.sgf = function(sgfString) {
     return strOut;
   };
 
+
+  /** Flush the property data to the movetree's properties. */
   var flushPropDataIfNecessary = function() {
     if (curProp.length > 0) {
       if (glift.parse.sgfMetadataProperty &&
@@ -10982,6 +11010,9 @@ glift.flattener = {
       startingMoveNum = glift.flattener._findStartingMoveNum(mt, nmtp);
     }
 
+    // The move number of the first mainline move in the parent-chain.
+    var mainlineMoveNum = mt.getMainlineMoveNum();
+
     // Initial move number -- used to calculate the ending move number.
     var initNodeNumber = mt.node().getNodeNum();
 
@@ -11030,7 +11061,7 @@ glift.flattener = {
     var comment = mt.properties().getComment() || '';
     return new glift.flattener.Flattened(
         board, collisions, comment, boardRegion, cropping, mt.onMainline(),
-        startingMoveNum, endingMoveNum, stoneMap);
+        startingMoveNum, endingMoveNum, mainlineMoveNum, stoneMap);
   },
 
   /**
@@ -11389,7 +11420,7 @@ glift.flattener._Board.prototype = {
  */
 glift.flattener.Flattened = function(
     board, collisions, comment, boardRegion, cropping, isOnMainPath,
-    startMoveNum, endMoveNum, stoneMap) {
+    startMoveNum, endMoveNum, mainlineMoveNum, stoneMap) {
   /**
    * Board wrapper. Essentially a double array of intersection objects.
    */
@@ -11422,6 +11453,7 @@ glift.flattener.Flattened = function(
    */
   this._startMoveNum = startMoveNum;
   this._endMoveNum = endMoveNum;
+  this._mainlineMoveNum = mainlineMoveNum;
 
   /**
    * All the stones!
@@ -11454,6 +11486,12 @@ glift.flattener.Flattened.prototype = {
 
   /** Returns the ending move number. */
   endingMoveNum: function() { return this._endMoveNum; },
+
+  /**
+   * Returns the first mainline move number in the parent-chain. This will be
+   * equal to the startingMoveNum if isOnMainPath = true.
+   */
+  mainlineMoveNum: function() { return this._mainlineMoveNum; },
 
   /** Returns the stone map. */
   stoneMap: function() { return this._stoneMap; }

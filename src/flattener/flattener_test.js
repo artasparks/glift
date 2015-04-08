@@ -144,7 +144,7 @@
     deepEqual(findNum(mt, [1]), 2, 'next move, variation, next on variation');
   });
 
-  test('startingMoveNumber', function() {
+  test('Move numbers', function() {
     var simpleSgf = '(;GB[1];B[aa];W[bb])';
     var mt = glift.rules.movetree.getFromSgf(simpleSgf, '2');
     deepEqual(mt.node().getNodeNum(), 2);
@@ -154,6 +154,7 @@
     // for auto-labeling of next-move-paths.
     deepEqual(f.startingMoveNum(), 3, 'no next path, start');
     deepEqual(f.endingMoveNum(), 3, 'no next path, end');
+    deepEqual(f.mainlineMoveNum(), 2, 'mainline move num');
 
     var mainpathSgf = '(;GB[1];B[aa];W[bb];B[cc];W[dd];B[ee];W[ff])';
     mt = glift.rules.movetree.getFromSgf(mainpathSgf, '1');
@@ -162,6 +163,8 @@
     });
     deepEqual(f.startingMoveNum(), 2, 'next path on main line');
     deepEqual(f.endingMoveNum(), 5, 'next path on main line');
+    deepEqual(f.mainlineMoveNum(), 1, 'mainline move num');
+    deepEqual(f.isOnMainPath(), true);
 
     var variationSgf = '(;GB[1];B[aa];W[bb](;B[kk])(;B[cc];W[dd];B[ee];W[ff]))';
     mt = glift.rules.movetree.getFromSgf(variationSgf, '2');
@@ -170,5 +173,7 @@
     });
     deepEqual(f.startingMoveNum(), 1);
     deepEqual(f.endingMoveNum(), 4);
+    deepEqual(f.mainlineMoveNum(), 2, 'mainline move num');
+    deepEqual(f.isOnMainPath(), false);
   });
 })();

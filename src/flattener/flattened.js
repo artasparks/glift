@@ -3,7 +3,7 @@
  */
 glift.flattener.Flattened = function(
     board, collisions, comment, boardRegion, cropping, isOnMainPath,
-    startMoveNum, endMoveNum, stoneMap) {
+    startMoveNum, endMoveNum, mainlineMoveNum, stoneMap) {
   /**
    * Board wrapper. Essentially a double array of intersection objects.
    */
@@ -36,6 +36,7 @@ glift.flattener.Flattened = function(
    */
   this._startMoveNum = startMoveNum;
   this._endMoveNum = endMoveNum;
+  this._mainlineMoveNum = mainlineMoveNum;
 
   /**
    * All the stones!
@@ -68,6 +69,12 @@ glift.flattener.Flattened.prototype = {
 
   /** Returns the ending move number. */
   endingMoveNum: function() { return this._endMoveNum; },
+
+  /**
+   * Returns the first mainline move number in the parent-chain. This will be
+   * equal to the startingMoveNum if isOnMainPath = true.
+   */
+  mainlineMoveNum: function() { return this._mainlineMoveNum; },
 
   /** Returns the stone map. */
   stoneMap: function() { return this._stoneMap; }
