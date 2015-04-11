@@ -336,15 +336,14 @@ glift.rules._MoveTree.prototype = {
   },
 
   /**
-   * Gets the move number (node number) from the first node in the parent
-   * chain that is on the mainline.
+   * Gets the the first node in the parent chain that is on the mainline.
    */
-  getMainlineMoveNum: function() {
+  getMainlineNode: function() {
     var mt = this.newTreeRef();
     while (!mt.onMainline()) {
       mt.moveUp();
     }
-    return mt.node().getNodeNum();
+    return mt.node();
   },
 
   /**

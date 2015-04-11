@@ -8228,15 +8228,14 @@ glift.rules._MoveTree.prototype = {
   },
 
   /**
-   * Gets the move number (node number) from the first node in the parent
-   * chain that is on the mainline.
+   * Gets the the first node in the parent chain that is on the mainline.
    */
-  getMainlineMoveNum: function() {
+  getMainlineNode: function() {
     var mt = this.newTreeRef();
     while (!mt.onMainline()) {
       mt.moveUp();
     }
-    return mt.node().getNodeNum();
+    return mt.node();
   },
 
   /**
@@ -11011,7 +11010,11 @@ glift.flattener = {
     }
 
     // The move number of the first mainline move in the parent-chain.
-    var mainlineMoveNum = mt.getMainlineMoveNum();
+    var mainlineMoveNum = mt.getMainlineNode().getNodeNum();
+
+    // Like the above, except in stone format (Black 10). null if at the root
+    // (or due to weirdness like placements).
+    var mainlineMove = mt.getMainlineNode().properties().getMove();
 
     // Initial move number -- used to calculate the ending move number.
     var initNodeNumber = mt.node().getNodeNum();
@@ -11061,7 +11064,8 @@ glift.flattener = {
     var comment = mt.properties().getComment() || '';
     return new glift.flattener.Flattened(
         board, collisions, comment, boardRegion, cropping, mt.onMainline(),
-        startingMoveNum, endingMoveNum, mainlineMoveNum, stoneMap);
+        startingMoveNum, endingMoveNum, mainlineMoveNum, mainlineMove,
+        stoneMap);
   },
 
   /**
@@ -11420,7 +11424,7 @@ glift.flattener._Board.prototype = {
  */
 glift.flattener.Flattened = function(
     board, collisions, comment, boardRegion, cropping, isOnMainPath,
-    startMoveNum, endMoveNum, mainlineMoveNum, stoneMap) {
+    startMoveNum, endMoveNum, mainlineMoveNum, mainlineMove, stoneMap) {
   /**
    * Board wrapper. Essentially a double array of intersection objects.
    */
@@ -11454,6 +11458,12 @@ glift.flattener.Flattened = function(
   this._startMoveNum = startMoveNum;
   this._endMoveNum = endMoveNum;
   this._mainlineMoveNum = mainlineMoveNum;
+
+  /**
+   * The move -- {color: <color>, point: <pt> at the first mainline move in the
+   * parent tree. Can be null if no move exists at the node.
+   */
+  this._mainlineMove = mainlineMove;
 
   /**
    * All the stones!
@@ -11492,6 +11502,12 @@ glift.flattener.Flattened.prototype = {
    * equal to the startingMoveNum if isOnMainPath = true.
    */
   mainlineMoveNum: function() { return this._mainlineMoveNum; },
+
+  /**
+   * Returns the first mainline move in the parent-chain. Can be null if no move
+   * exists and has the form {color: <color>, pt: <pt>} otherwise.
+   */
+  mainlineMove: function() { return this._mainlineMove; },
 
   /** Returns the stone map. */
   stoneMap: function() { return this._stoneMap; }
