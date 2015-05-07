@@ -76,3 +76,10 @@ glift.bridge._getRegionFromTracker = function(tracker, numstones) {
   }
   return glift.enums.boardRegions.ALL;
 };
+
+/**
+ * Rotates a movetree so that it's canonical, given some cropbox
+ */
+glift.bridge.canonicalRotate = function(movetree, regionOrdering) {
+  // TODO(kashomon): Fill this in
+};
