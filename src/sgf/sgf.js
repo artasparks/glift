@@ -34,7 +34,7 @@ glift.sgf = {
    *          FOO => null
    */
   markToProperty: function(mark)  {
-    var allProps = glift.sgf.allProperties;
+    var allProps = glift.rules.allProperties;
     var markToPropertyMap = {
       LABEL_ALPHA: allProps.LB,
       LABEL_NUMERIC: allProps.LB,

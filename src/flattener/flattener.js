@@ -176,7 +176,7 @@ glift.flattener = {
       if (movetree.properties().contains(prop)) {
         var data = movetree.properties().getAllValues(prop);
         for (var i = 0; i < data.length; i++) {
-          if (prop === glift.sgf.allProperties.LB) {
+          if (prop === glift.rules.allProperties.LB) {
             var lblPt = glift.sgf.convertFromLabelData(data[i]);
             var key = lblPt.point.toString();
             out.marks[key] = symbol;

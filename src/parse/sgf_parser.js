@@ -146,7 +146,7 @@ glift.parse.sgf = function(sgfString) {
             // lengths, even though all standard SGF properties are 1-2 chars.
           } else if (curchar === syn.LBRACE) {
             curProp = flushCharBuffer();
-            if (glift.sgf.allProperties[curProp] === undefined) {
+            if (glift.rules.allProperties[curProp] === undefined) {
               pwarn('Unknown property: ' + curProp);
             }
             curstate = states.PROP_DATA;

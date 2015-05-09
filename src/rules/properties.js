@@ -3,6 +3,35 @@ glift.rules.properties = function(map) {
   return new Properties(map);
 };
 
+/** Properties that accept point values */
+glift.rules.propertiesWithPts = {
+  // Marks
+  CR: true, LB: true, MA: true, SQ: true, TR: true,
+  // Stones
+  B: true, W: true, AW: true, AB: true,
+  // Misc
+  AE: true, // clear stones
+  AR: true, // arrow
+  DD: true, // gray area
+  LN: true, // line
+};
+
+/** All the SGF Properties plus some things than */
+glift.rules.allProperties = {
+AB: "AB", AE: "AE", AN: "AN", AP: "AP", AR: "AR", AS: "AS", AW: "AW", B: "B",
+BL: "BL", BM: "BM", BR: "BR", BS: "BS", BT: "BT", C: "C", CA: "CA", CH: "CH",
+CP: "CP", CR: "CR", DD: "DD", DM: "DM", DO: "DO", DT: "DT", EL: "EL", EV: "EV",
+EX: "EX", FF: "FF", FG: "FG", GB: "GB", GC: "GC", GM: "GM", GN: "GN", GW: "GW",
+HA: "HA", HO: "HO", ID: "ID", IP: "IP", IT: "IT", IY: "IY", KM: "KM", KO: "KO",
+L: "L", LB: "LB", LN: "LN", LT: "LT", M: "M", MA: "MA", MN: "MN", N: "N", OB:
+"OB", OH: "OH", OM: "OM", ON: "ON", OP: "OP", OT: "OT", OV: "OV", OW: "OW", PB:
+"PB", PC: "PC", PL: "PL", PM: "PM", PW: "PW", RE: "RE", RG: "RG", RO: "RO", RU:
+"RU", SC: "SC", SE: "SE", SI: "SI", SL: "SL", SO: "SO", SQ: "SQ", ST: "ST", SU:
+"SU", SZ: "SZ", TB: "TB", TC: "TC", TE: "TE", TM: "TM", TR: "TR", TW: "TW", UC:
+"UC", US: "US", V: "V", VW: "VW", W: "W", WL: "WL", WR: "WR", WS: "WS", WT: "WT",
+MU: "MU"
+};
+
 var Properties = function(map) {
   this.propMap = map || {};
 };
@@ -25,7 +54,7 @@ Properties.prototype = {
    */
   add: function(prop, value) {
     // Return if the property is not string or a real property
-    if (!glift.sgf.allProperties[prop]) {
+    if (!glift.rules.allProperties[prop]) {
       glift.util.logz('Warning! The property [' + prop + ']' +
           ' is not valid and is not recognized in the SGF spec.');
     }
@@ -79,7 +108,7 @@ Properties.prototype = {
    * If the property doesn't exist, returns null.
    */
   getAllValues: function(strProp) {
-    if (glift.sgf.allProperties[strProp] === undefined) {
+    if (glift.rules.allProperties[strProp] === undefined) {
       return null; // Not a valid Property
     } else if (this.propMap[strProp]) {
       return this.propMap[strProp].slice(); // Return a shallow copy.
@@ -210,9 +239,9 @@ Properties.prototype = {
   getPlacementsAsPoints: function(color) {
     var prop = '';
     if (color === glift.enums.states.BLACK) {
-      prop = glift.sgf.allProperties.AB;
+      prop = glift.rules.allProperties.AB;
     } else if (color === glift.enums.states.WHITE) {
-      prop = glift.sgf.allProperties.AW;
+      prop = glift.rules.allProperties.AW;
     }
     if (prop === '' || !this.contains(prop)) {
       return [];

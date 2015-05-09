@@ -1,7 +1,7 @@
 /**
  * Rotates a movetree so that it's canonical, given some cropbox
  */
-glift.bridge.canonicalOrientation = function(movetree, regionOrdering) {
+glift.bridge.autorotateMovetree = function(movetree, regionOrdering) {
   var rotation = glift.bridge.calculateRotation_(movetree, regionOrdering);
 };
 

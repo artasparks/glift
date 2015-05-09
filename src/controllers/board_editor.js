@@ -34,7 +34,7 @@ glift.controllers.BoardEditorMethods = {
    * this._ptTolabelMap: A map from pt (string) to {label + optional data}.
    */
   _initLabelTrackers: function() {
-    var allProps = glift.sgf.allProperties;
+    var allProps = glift.rules.allProperties;
     var marks = glift.enums.marks;
     var numericLabelMap = {}; // number-string to 'true'
     var alphaLabelMap = {}; // alphabetic label to 'true'

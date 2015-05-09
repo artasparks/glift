@@ -297,7 +297,7 @@ glift.rules._MoveTree.prototype = {
   /** Get the intersections number of the go board, by looking at the props. */
   getIntersections: function() {
     var mt = this.getTreeFromRoot(),
-        allProperties = glift.sgf.allProperties;
+        allProperties = glift.rules.allProperties;
     if (mt.properties().contains(allProperties.SZ)) {
       var ints = parseInt(mt.properties().getAllValues(allProperties.SZ));
       return ints;
@@ -491,7 +491,7 @@ glift.rules._MoveTree.prototype = {
    */
   _setIntersections: function(intersections) {
     var mt = this.getTreeFromRoot(),
-        allProperties = glift.sgf.allProperties;
+        allProperties = glift.rules.allProperties;
     if (!mt.properties().contains(allProperties.SZ)) {
       this.properties().add(allProperties.SZ, intersections + "");
     }
