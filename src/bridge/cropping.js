@@ -77,34 +77,3 @@ glift.bridge._getRegionFromTracker = function(tracker, numstones) {
   return glift.enums.boardRegions.ALL;
 };
 
-/**
- * Rotates a movetree so that it's canonical, given some cropbox
- */
-glift.bridge.canonicalRotate = function(movetree, regionOrdering) {
-  var boardRegions = glift.enums.boardRegions;
-  var cornerRegions = {
-    TOP_LEFT: true,
-    TOP_RIGHT: true,
-    BOTTOM_RIGHT: true,
-    BOTTOM_LEFT: true
-  };
-  var sideRegions = {
-    TOP: true,
-    BOTTOM: true,
-    LEFT: true,
-    RIGHT: true
-  };
-
-  if (!regionOrdering) {
-    regionOrdering = {
-      corner: boardRegions.TOP_RIGHT,
-      side: boardRegions.TOP
-    };
-  }
-  var region = glift.bridge.getQuadCropFromMovetree(movetree);
-  if (cornerRegions[region]) {
-  }
-
-  if (sideRegions[region]) {
-  }
-};
