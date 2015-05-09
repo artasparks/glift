@@ -145,7 +145,7 @@ GliftPoint.prototype = {
    * boardsize: Typically 19, but 9 and 13 are possible.  Note that points are
    * typically 0-indexed.
    *
-   * Note: This is an immutable on points.
+   * Note: This is an immutable transformation on the point.
    */
   rotate: function(maxIntersections, rotation) {
     var rotations = glift.enums.rotations;

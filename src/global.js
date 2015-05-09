@@ -5,7 +5,7 @@ glift.global = {
   /**
    * Semantic versioning is used to determine API behavior.
    * See: http://semver.org/
-   * Currently in alpha.
+   * Currently on stable.
    */
   version: '1.0.5',
 

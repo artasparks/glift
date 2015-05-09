@@ -3,17 +3,32 @@ glift.rules.properties = function(map) {
   return new Properties(map);
 };
 
-/** Properties that accept point values. */
+/**
+ * Properties that accept point values. This is here mostly for full-board
+ * modifications (e.g., rotations). It may also be useful for identifying boards
+ *
+ * Notes: There are several ways to represent points in SGFs.
+ *  [ab] - Simple point at 0,1 (origin=upper left. oriented down-right)
+ *  [aa:cc] - Point Rectangle (all points from 0,0 to 2,2 in a rect)
+ *
+ * Additionally Labels (LB) have the format
+ *  [lbl
+ *
+ */
 glift.rules.propertiesWithPts = {
   // Marks
   CR: true, LB: true, MA: true, SQ: true, TR: true,
   // Stones
   B: true, W: true, AW: true, AB: true,
-  // Misc
-  AE: true, // clear stones
+  // Clear Stones
+  AE: true,
+  // Misc. These properties are very rare, and usually can be ignored.
+  // Still, they're here for completeness.
   AR: true, // arrow
   DD: true, // gray area
-  LN: true // line
+  LN: true, // line
+  TB: true, // black area/territory
+  TW: true // white area
 };
 
 /** All the SGF Properties plus some things. */
@@ -78,7 +93,8 @@ Properties.prototype = {
           glift.util.typeOf(value) + ' for item ' + item);
     }
 
-    // Convert any point rectangles...
+    // Convert any point rectangles. We do not allow point rectangles in our
+    // SGF property data, since it makes everything much more complex.
     var pointRectangleRegex = /^[a-z][a-z]:[a-z][a-z]$/;
     var finished = [];
     for (var i = 0; i < value.length; i++) {
@@ -151,6 +167,37 @@ Properties.prototype = {
     } else {
       return out;
     }
+  },
+
+  /**
+   * Rotates an SGF Property. Note: This only applies to stone-properties.
+   *
+   * Recall that in the SGF, we should have already converted any point
+   * rectangles, so there shouldn't be any issues here with converting point
+   * rectangles.
+   */
+  rotate: function(strProp, size, rotation) {
+    if (!glift.rules.propertiesWithPts.hasOwnProperty(strProp)) {
+      return null;
+    }
+    if (!glift.enums.rotations[rotation] ||
+        rotation === glift.enums.rotations.NO_ROTATION) {
+      return null;
+    }
+    var regex = /([a-z][a-z])/g;
+    if (strProp === glift.rules.allProperties.LB) {
+      // We handle labels specially since labels have a unqiue format
+      regex = /([a-z][a-z])(?=:)/g;
+    }
+    var vals = this.getAllValues(strProp);
+    for (var i = 0; i < vals.length; i++) {
+      vals[i] = vals[i].replace(regex, function(sgfPoint) {
+        return glift.util.pointFromSgfCoord(sgfPoint)
+            .rotate(size, rotation)
+            .toSgfCoord();
+      });
+    }
+    this.propMap[strProp] = vals;
   },
 
   /**

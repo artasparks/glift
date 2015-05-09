@@ -2,11 +2,16 @@
  * Rotates a movetree so that it's canonical, given some cropbox
  */
 glift.bridge.autorotateMovetree = function(movetree, regionOrdering) {
-  var rotation = glift.bridge.calculateRotation_(movetree, regionOrdering);
+  var rotation = glift.bridge.findCanonicalRotation(movetree, regionOrdering);
+  movetree.recurse(function(mt) {
+    for (var key in mt.properties().propMap) {
+    }
+  });
 };
 
 /**
- * Calculates the desired rotation. As Degrees: Either 90, 180, 270.
+ * Calculates the desired rotation. Returns one of
+ * glift.enums.rotations.
  */
 glift.bridge.findCanonicalRotation = function(movetree, regionOrdering) {
   var boardRegions = glift.enums.boardRegions;

@@ -107,4 +107,54 @@
     props.set('KM', '3.25');
     deepEqual(props.getGameInfo()[0].value, '3.25');
   });
+
+  test('Test rotation: basic', function() {
+    var rotations = glift.enums.rotations;
+    var pt = glift.util.point;
+    var props = properties().add('B', 'cb');
+    deepEqual(props.getAsPoint('B'),  pt(2, 1));
+
+    props.rotate('B', 19, rotations.NO_ROTATION);
+    deepEqual(props.getAsPoint('B'),  pt(2, 1));
+
+    props.rotate('B', 19, rotations.CLOCKWISE_90);
+    deepEqual(props.getAsPoint('B'),  pt(17, 2));
+
+    props.set('B', 'cb');
+    props.rotate('B', 19, rotations.CLOCKWISE_180);
+    deepEqual(props.getAsPoint('B'),  pt(16, 17));
+
+    props.set('B', 'cb');
+    props.rotate('B', 19, rotations.CLOCKWISE_270);
+    deepEqual(props.getAsPoint('B'),  pt(1, 16));
+
+    props.add('C', 'Some Comment');
+    props.rotate('C', 19, rotations.CLOCKWISE_270);
+    deepEqual(props.getOneValue('C'), 'Some Comment');
+  });
+
+  test('Test rotation: labels', function() {
+    var rotations = glift.enums.rotations;
+    var pt = glift.util.point;
+    var props = properties().add('LB', 'cb:Z');
+
+    props.rotate('LB', 19, rotations.NO_ROTATION);
+    deepEqual(props.getOneValue('LB'),  pt(2, 1).toSgfCoord() + ':Z');
+
+    props.rotate('LB', 19, rotations.CLOCKWISE_90);
+    deepEqual(props.getOneValue('LB'),  pt(17, 2).toSgfCoord() + ':Z');
+
+    props.set('LB', 'cb:Z');
+    props.rotate('LB', 19, rotations.CLOCKWISE_180);
+    deepEqual(props.getOneValue('LB'),  pt(16, 17).toSgfCoord() + ':Z');
+
+    props.set('LB', 'cb:Z');
+    props.rotate('LB', 19, rotations.CLOCKWISE_270);
+    deepEqual(props.getOneValue('LB'),  pt(1, 16).toSgfCoord() + ':Z');
+
+    props.set('LB', 'cb:ab');
+    props.rotate('LB', 19, rotations.CLOCKWISE_90);
+    deepEqual(props.getOneValue('LB'),  pt(17, 2).toSgfCoord() + ':ab');
+
+  });
 })();
