@@ -15,7 +15,7 @@ glift.bridge.findCanonicalRotation = function(movetree, regionOrdering) {
     TOP_LEFT: 0,
     BOTTOM_LEFT: 90,
     BOTTOM_RIGHT: 180,
-    TOP_RIGHT: 270,
+    TOP_RIGHT: 270
   };
   var sideRegions = {
     TOP: 0,
