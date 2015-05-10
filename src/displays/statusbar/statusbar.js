@@ -42,15 +42,16 @@ glift.displays.statusbar._StatusBar.prototype = {
 
   /** Sets the move number for the current move */
   setMoveNumber: function(number) {
+    // TODO(kashomon): Note: This hardcodes the move-indicator name.
     if (!this.iconBar.hasIcon('move-indicator')) { return; }
     var num = (number || '0') + ''; // Force to be a string.
     var color = this.theme.statusBar.icons.DEFAULT.fill
-    var mod = num.length > 2 ? 0.35 : null;
+    // var mod = num.length > 2 ? 0.35 : null;
     this.iconBar.addTempText(
         'move-indicator',
         num,
         { fill: color, stroke: color },
-        mod);
+        null /* size modifier, as float */);
   },
 
   /** Sets the page number for the current move */

@@ -20,7 +20,7 @@ glift.global = {
   /**
    * Semantic versioning is used to determine API behavior.
    * See: http://semver.org/
-   * Currently in alpha.
+   * Currently on stable.
    */
   version: '1.0.5',
 
@@ -939,7 +939,7 @@ GliftPoint.prototype = {
    * boardsize: Typically 19, but 9 and 13 are possible.  Note that points are
    * typically 0-indexed.
    *
-   * Note: This is an immutable on points.
+   * Note: This is an immutable transformation on the point.
    */
   rotate: function(maxIntersections, rotation) {
     var rotations = glift.enums.rotations;
@@ -5919,9 +5919,14 @@ glift.displays.icons.svg = {
 
   // From Iconmonstr: http://iconmonstr.com/loading-14-icon/
   // Show current move number.  Part of the status bar.
-  'move-indicator': {
+  'old-move-indicator': {
     string: "M256,50C142.23,50,50,142.23,50,256s92.23,206,206,206s206-92.23,206-206S369.77,50,256,50z M256.001,124.6c72.568,0,131.399,58.829,131.399,131.401c0,72.568-58.831,131.398-131.399,131.398 c-72.572,0-131.401-58.83-131.401-131.398C124.6,183.429,183.429,124.6,256.001,124.6z M70,256 c0-49.682,19.348-96.391,54.479-131.521S206.318,70,256,70v34.6c-83.482,0.001-151.4,67.918-151.4,151.401 c0,41.807,17.035,79.709,44.526,107.134l-24.269,24.757c-0.125-0.125-0.254-0.245-0.379-0.37C89.348,352.391,70,305.682,70,256z",
     bbox: {"x":50,"y":50,"x2":462,"y2":462,"width":412,"height":412}
+  },
+
+  'move-indicator': {
+    string: "M 121.40625 65.5625 C 120.45721 65.5625 119.6875 66.18524 119.6875 66.96875 L 119.6875 68.0625 C 119.6875 68.846 120.45721 69.46875 121.40625 69.46875 L 178.5625 69.46875 C 179.51154 69.46875 180.28125 68.846 180.28125 68.0625 L 180.28125 66.96875 C 180.28125 66.18524 179.51154 65.5625 178.5625 65.5625 L 121.40625 65.5625 z M 121.40625 103.4375 C 120.45721 103.4375 119.6875 104.06024 119.6875 104.84375 L 119.6875 105.9375 C 119.6875 106.721 120.45721 107.375 121.40625 107.375 L 178.5625 107.375 C 179.51154 107.375 180.28125 106.721 180.28125 105.9375 L 180.28125 104.84375 C 180.28125 104.06024 179.51154 103.4375 178.5625 103.4375 L 121.40625 103.4375 z",
+    bbox: {"x":119.6875,"y":65.5625,"x2":180.28125,"y2":107.375,"width":60.59375,"height":41.8125}
   },
 
   // Fullscreen Glift!
@@ -6610,15 +6615,16 @@ glift.displays.statusbar._StatusBar.prototype = {
 
   /** Sets the move number for the current move */
   setMoveNumber: function(number) {
+    // TODO(kashomon): Note: This hardcodes the move-indicator name.
     if (!this.iconBar.hasIcon('move-indicator')) { return; }
     var num = (number || '0') + ''; // Force to be a string.
     var color = this.theme.statusBar.icons.DEFAULT.fill
-    var mod = num.length > 2 ? 0.35 : null;
+    // var mod = num.length > 2 ? 0.35 : null;
     this.iconBar.addTempText(
         'move-indicator',
         num,
         { fill: color, stroke: color },
-        mod);
+        null /* size modifier, as float */);
   },
 
   /** Sets the page number for the current move */
@@ -8527,20 +8533,36 @@ glift.rules.properties = function(map) {
   return new Properties(map);
 };
 
-/** Properties that accept point values */
+/**
+ * Properties that accept point values. This is here mostly for full-board
+ * modifications (e.g., rotations). It may also be useful for identifying boards
+ *
+ * Notes: There are several ways to represent points in SGFs.
+ *  [ab] - Simple point at 0,1 (origin=upper left. oriented down-right)
+ *  [aa:cc] - Point Rectangle (all points from 0,0 to 2,2 in a rect)
+ *
+ * Additionally Labels (LB) have the format
+ *  [lbl
+ *
+ */
 glift.rules.propertiesWithPts = {
   // Marks
   CR: true, LB: true, MA: true, SQ: true, TR: true,
   // Stones
   B: true, W: true, AW: true, AB: true,
-  // Misc
-  AE: true, // clear stones
+  // Clear Stones
+  AE: true,
+  // Misc. These properties are very rare, and usually can be ignored.
+  // Still, they're here for completeness.
   AR: true, // arrow
   DD: true, // gray area
-  LN: true,// line
+  LN: true, // line
+  TB: true, // black area/territory
+  TW: true // white area
 };
 
 /** All the SGF Properties plus some things. */
+//  TODO(kashomon): Comment these.
 glift.rules.allProperties = {
 AB: 'AB', AE: 'AE', AN: 'AN', AP: 'AP', AR: 'AR', AS: 'AS', AW: 'AW', B: 'B',
 BL: 'BL', BM: 'BM', BR: 'BR', BS: 'BS', BT: 'BT', C: 'C', CA: 'CA', CH: 'CH',
@@ -8601,7 +8623,8 @@ Properties.prototype = {
           glift.util.typeOf(value) + ' for item ' + item);
     }
 
-    // Convert any point rectangles...
+    // Convert any point rectangles. We do not allow point rectangles in our
+    // SGF property data, since it makes everything much more complex.
     var pointRectangleRegex = /^[a-z][a-z]:[a-z][a-z]$/;
     var finished = [];
     for (var i = 0; i < value.length; i++) {
@@ -8674,6 +8697,37 @@ Properties.prototype = {
     } else {
       return out;
     }
+  },
+
+  /**
+   * Rotates an SGF Property. Note: This only applies to stone-properties.
+   *
+   * Recall that in the SGF, we should have already converted any point
+   * rectangles, so there shouldn't be any issues here with converting point
+   * rectangles.
+   */
+  rotate: function(strProp, size, rotation) {
+    if (!glift.rules.propertiesWithPts.hasOwnProperty(strProp)) {
+      return null;
+    }
+    if (!glift.enums.rotations[rotation] ||
+        rotation === glift.enums.rotations.NO_ROTATION) {
+      return null;
+    }
+    var regex = /([a-z][a-z])/g;
+    if (strProp === glift.rules.allProperties.LB) {
+      // We handle labels specially since labels have a unqiue format
+      regex = /([a-z][a-z])(?=:)/g;
+    }
+    var vals = this.getAllValues(strProp);
+    for (var i = 0; i < vals.length; i++) {
+      vals[i] = vals[i].replace(regex, function(sgfPoint) {
+        return glift.util.pointFromSgfCoord(sgfPoint)
+            .rotate(size, rotation)
+            .toSgfCoord();
+      });
+    }
+    this.propMap[strProp] = vals;
   },
 
   /**
@@ -10970,11 +11024,16 @@ glift.bridge.intersections = {
  * Rotates a movetree so that it's canonical, given some cropbox
  */
 glift.bridge.autorotateMovetree = function(movetree, regionOrdering) {
-  var rotation = glift.bridge.calculateRotation_(movetree, regionOrdering);
+  var rotation = glift.bridge.findCanonicalRotation(movetree, regionOrdering);
+  movetree.recurse(function(mt) {
+    for (var key in mt.properties().propMap) {
+    }
+  });
 };
 
 /**
- * Calculates the desired rotation. As Degrees: Either 90, 180, 270.
+ * Calculates the desired rotation. Returns one of
+ * glift.enums.rotations.
  */
 glift.bridge.findCanonicalRotation = function(movetree, regionOrdering) {
   var boardRegions = glift.enums.boardRegions;
@@ -13373,6 +13432,8 @@ glift.widgets.options.baseOptions = {
       tooltip: 'Show the game info'
     },
 
+    // TODO(kashomon): The 'move-indicator' is harded somewhere and needs to be
+    // fixed.
     'move-indicator': {
       click: function() {},
       mouseover: function() {},

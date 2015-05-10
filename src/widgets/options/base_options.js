@@ -658,6 +658,8 @@ glift.widgets.options.baseOptions = {
       tooltip: 'Show the game info'
     },
 
+    // TODO(kashomon): The 'move-indicator' is harded somewhere and needs to be
+    // fixed.
     'move-indicator': {
       click: function() {},
       mouseover: function() {},
