@@ -3,7 +3,7 @@
  *
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
- * @version 1.0.5
+ * @version 1.0.6
  * --------------------------------------
  */
 (function(w) {
@@ -22,7 +22,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently on stable.
    */
-  version: '1.0.5',
+  version: '1.0.6',
 
   /** Indicates whether or not to store debug data. */
   // TODO(kashomon): Remove this hack.
@@ -9717,7 +9717,7 @@ glift.parse.sgfParseError = function(lineNum, colNum, curchar, message, isWarnin
  * The GIB format (i.e., Tygem's file format) is not public, so it's rather
  * difficult to know if this is truly an accurate parser. Oh well.
  *
- * Also, it's a horrible format.
+ * Also, it's a horrible format. Also, this is a pretty hacky parser.
  */
 glift.parse.tygem = function(gibString) {
   var states = {
@@ -9734,8 +9734,13 @@ glift.parse.tygem = function(gibString) {
   var lines = gibString.split('\n');
 
   var grabHeaderProp = function(name, line, prop, mt) {
-    mt.properties().add(prop, line.substring(
-        line.indexOf(name) + name.length + 1, line.length - 2));
+    var line = line.substring(
+        line.indexOf(name) + name.length + 1, line.length - 2);
+    if (/\\$/.test(line)) {
+      // This is a horrible hack. Sometimes \ appears as the last character
+      line = line.substring(0, line.length - 1);
+    }
+    mt.properties().add(prop, line);
   };
 
   var curstate = states.HEADER;

@@ -203,4 +203,10 @@
     ok(smap['nb'], 'nb stone');
     ok(smap['ob'], 'ob stone');
   });
+
+  test('Parse Tygem', function() {
+    var mt = glift.parse.fromString(testdata.gib.tygemExampleNewer, 'TYGEM');
+    deepEqual(mt.properties().getOneValue('PW'), 'Zellnox (2D)');
+    deepEqual(mt.properties().getOneValue('PB'), 'pdy1800 (1D)');
+  });
 })();

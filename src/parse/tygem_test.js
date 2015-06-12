@@ -17,4 +17,14 @@
     mt.moveDown();
     deepEqual(mt.properties().getAsPoint('W').toString(), point(3, 2).toString());
   });
+
+  test('Parse real gib: Round Trip', function() {
+    var mt = glift.parse.tygem(testdata.gib.tygemExampleNewer);
+    deepEqual(mt.properties().getOneValue('PW'), 'Zellnox (2D)');
+    deepEqual(mt.properties().getOneValue('PB'), 'pdy1800 (1D)');
+
+    var str = mt.toSgf();
+    ok(/PW\[Zellnox \(2D\)\]/.test(str));
+    ok(/PB\[pdy1800 \(1D\)\]/.test(str));
+  });
 })();
