@@ -20,4 +20,18 @@
     ok(out.display.theme);
     deepEqual(inOpts.display.theme, out.display.theme);
   });
+
+  test('Test: hook option templating', function() {
+    var inOpts = {
+      hooks: {
+        problemCorrect: function() {
+        }
+      }
+    };
+    var out = optLib.setOptionDefaults(inOpts);
+    ok(typeof out.hooks.problemCorrect === 'function', 'not a function');
+    ok(typeof out.hooks.problemIncorrect === 'function', 'not a function');
+    ok(out.hooks.problemCorrect === inOpts.hooks.problemCorrect);
+    ok(out.hooks.problemCorrect !== inOpts.hooks.problemIncorrect);
+  });
 })();

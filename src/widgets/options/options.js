@@ -33,6 +33,7 @@ glift.widgets.options = {
     var templateKeys = [
         'sgfDefaults',
         'display',
+        'hooks',
         'iconActions',
         'stoneActions'];
     for (var i = 0; i < templateKeys.length; i++) {

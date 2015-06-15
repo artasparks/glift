@@ -354,6 +354,19 @@ glift.widgets.options.baseOptions = {
   metadata: undefined,
 
   /**
+   * Hooks are places where users can provide custom functions to 'hook' into
+   * Glift behavior.
+   * @api(experimental)
+   */
+  hooks: {
+    // Fires when user gets a problem correct
+    problemCorrect: function() {},
+
+    // Fires when user gets a problem wrong.
+    problemIncorrect: function() {}
+  },
+
+  /**
    * Miscellaneous options for display.
    * @api(1.0)
    */
