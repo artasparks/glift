@@ -21,7 +21,6 @@
     ok(sgfObj !== undefined);
     deepEqual(sgfObj.sgfString, testdata.sgfs.complexproblem);
     deepEqual(sgfObj.initialPosition, '');
-    deepEqual(glift.util.typeOf(sgfObj.problemCallback), 'function');
     deepEqual(sgfObj.widgetType, glift.enums.widgetTypes.GAME_VIEWER);
     manager.destroy();
   });

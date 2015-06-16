@@ -270,6 +270,11 @@ glift.widgets.BaseWidget.prototype = {
     }
   },
 
+  /** Gets the initialized hooks or set them */
+  hooks: function() {
+    return this.sgfOptions.hooks;
+  },
+
   /**
    * Apply the BoardData to both the comments box and the board. Uses
    * glift.bridge to communicate with the display.

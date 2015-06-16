@@ -2,7 +2,7 @@
  * Additional Options for the GameViewers
  */
 glift.widgets.options.STANDARD_PROBLEM = {
-  stoneClick: function(event, widget, pt) {
+  stoneClick: function(event, widget, pt, hooks) {
     var currentPlayer = widget.controller.getCurrentPlayer();
     var data = widget.controller.addStone(pt, currentPlayer);
     var problemResults = glift.enums.problemResults;
@@ -12,16 +12,15 @@ glift.widgets.options.STANDARD_PROBLEM = {
       return;
     }
     widget.applyBoardData(data);
-    var callback = widget.sgfOptions.problemCallback;
     if (data.result === problemResults.CORRECT) {
         widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'check', '#0CC');
         widget.correctness = problemResults.CORRECT;
-        callback(problemResults.CORRECT);
+        widget.hooks().problemCorrect();
     } else if (data.result === problemResults.INCORRECT) {
       widget.iconBar.destroyTempIcons();
       widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
       widget.correctness = problemResults.INCORRECT;
-      callback(problemResults.INCORRECT);
+      widget.hooks().problemIncorrect();
     }
   },
 

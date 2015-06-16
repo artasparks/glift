@@ -148,12 +148,6 @@ glift.widgets.options.baseOptions = {
     rotation: glift.enums.rotations.NO_ROTATION,
 
     /**
-     * Callback to perform once a problem is considered correct / incorrect.
-     * @api(beta)
-     */
-    problemCallback: function() {},
-
-    /**
      * Conditions for determing whether a branch of a movetree is correct.  A
      * map from property-keys, to an array of substring values.  If the array is
      * empty, then we only test to see if the property exists at the current
