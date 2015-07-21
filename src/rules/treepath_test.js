@@ -3,8 +3,6 @@
   var parse = glift.rules.treepath.parsePath;
   var flatten = glift.rules.treepath.flattenMoveTree;
 
-  test('--------Init Position Test--------', function() { ok(true); });
-
   test('Test undefined', function() {
     deepEqual(parse(undefined), [], 'Should return empty array for undefined');
   });
@@ -19,6 +17,20 @@
 
   test('Test root case', function() {
     deepEqual(parse('0'), [], 'Should produce empty array for root init');
+  });
+
+  test('Test to end case', function() {
+    deepEqual(parse('1+'), [0].concat(glift.rules.treepath.toEnd()), 
+        'Should go to the end');
+  });
+
+  test('Test to end case: error', function() {
+    try {
+      parse('1+.2');
+      ok(false, 'Shouldn\'t get here');
+    } catch (e) {
+      ok(/The \+ character/.test(e.message), 'exception message');
+    }
   });
 
   test('Test simple cases', function() {

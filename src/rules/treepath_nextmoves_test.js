@@ -84,6 +84,15 @@
     deepEqual(out.nextMoves, [0,0]);
   });
 
+
+  test('Apply next moves -- No limit', function() {
+    var mt = glift.rules.movetree.getFromSgf(
+        testdata.sgfs.yearbookExample, '1+');
+    deepEqual(mt.properties().getOneValue('W'), 'sd');
+    var out = findNextMoves(mt);
+    deepEqual(out.nextMoves.length, 228)
+  });
+
   ////////////////////////////////
   /////// Apply Next Moves ///////
   ////////////////////////////////

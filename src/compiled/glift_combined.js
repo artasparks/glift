@@ -9466,6 +9466,8 @@ glift.parse = {
  * Parse a pandanet SGF.  Pandanet SGFs, are the same as normal SGFs except that
  * they contain invalid SGF properties.
  */
+// TODO(kashomon): Delete and fold into SGF parsing. this is really a special
+// case of FF3, which should be supported by Glift.
 glift.parse.pandanet = function(string) {
   var replaceRegex = /CoPyright\[[^\]]*\]/;
   var repl = string.replace(replaceRegex, '');
@@ -12218,6 +12220,11 @@ glift.widgets.BaseWidget.prototype = {
     }
   },
 
+  /** Gets the initialized hooks or set them */
+  hooks: function() {
+    return this.sgfOptions.hooks;
+  },
+
   /**
    * Apply the BoardData to both the comments box and the board. Uses
    * glift.bridge to communicate with the display.
@@ -12695,6 +12702,7 @@ glift.widgets.options = {
     var templateKeys = [
         'sgfDefaults',
         'display',
+        'hooks',
         'iconActions',
         'stoneActions'];
     for (var i = 0; i < templateKeys.length; i++) {
@@ -12927,12 +12935,6 @@ glift.widgets.options.baseOptions = {
     rotation: glift.enums.rotations.NO_ROTATION,
 
     /**
-     * Callback to perform once a problem is considered correct / incorrect.
-     * @api(beta)
-     */
-    problemCallback: function() {},
-
-    /**
      * Conditions for determing whether a branch of a movetree is correct.  A
      * map from property-keys, to an array of substring values.  If the array is
      * empty, then we only test to see if the property exists at the current
@@ -13131,6 +13133,19 @@ glift.widgets.options.baseOptions = {
    * @api(experimental)
    */
   metadata: undefined,
+
+  /**
+   * Hooks are places where users can provide custom functions to 'hook' into
+   * Glift behavior.
+   * @api(experimental)
+   */
+  hooks: {
+    // Fires when user gets a problem correct
+    problemCorrect: function() {},
+
+    // Fires when user gets a problem wrong.
+    problemIncorrect: function() {}
+  },
 
   /**
    * Miscellaneous options for display.
@@ -13736,7 +13751,7 @@ glift.widgets.options.REDUCED_GAME_VIEWER = {
  * Additional Options for the GameViewers
  */
 glift.widgets.options.STANDARD_PROBLEM = {
-  stoneClick: function(event, widget, pt) {
+  stoneClick: function(event, widget, pt, hooks) {
     var currentPlayer = widget.controller.getCurrentPlayer();
     var data = widget.controller.addStone(pt, currentPlayer);
     var problemResults = glift.enums.problemResults;
@@ -13746,16 +13761,15 @@ glift.widgets.options.STANDARD_PROBLEM = {
       return;
     }
     widget.applyBoardData(data);
-    var callback = widget.sgfOptions.problemCallback;
     if (data.result === problemResults.CORRECT) {
         widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'check', '#0CC');
         widget.correctness = problemResults.CORRECT;
-        callback(problemResults.CORRECT);
+        widget.hooks().problemCorrect();
     } else if (data.result === problemResults.INCORRECT) {
       widget.iconBar.destroyTempIcons();
       widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
       widget.correctness = problemResults.INCORRECT;
-      callback(problemResults.INCORRECT);
+      widget.hooks().problemIncorrect();
     }
   },
 
