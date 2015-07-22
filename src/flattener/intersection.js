@@ -1,5 +1,4 @@
 glift.flattener.intersection = {
-
   /**
    * Creates an intersection obj.
    *

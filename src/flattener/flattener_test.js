@@ -191,4 +191,37 @@
       deepEqual(intpt.textLabel(), i + 100 + '');
     }
   });
+
+  test('Auto-truncation for labels', function() {
+    var mt = glift.rules.movetree.getFromSgf(sgfs.yearbookExample, '121');
+    deepEqual(mt.node().getNodeNum(), 121);
+    var f = flattener.flatten(mt);
+    deepEqual(f.autoTruncateLabel('a'), 'a');
+    deepEqual(f.autoTruncateLabel(10), '10');
+    deepEqual(f.autoTruncateLabel('10'), '10');
+    deepEqual(f.autoTruncateLabel('100'), '100');
+    deepEqual(f.autoTruncateLabel('101'), '1');
+    deepEqual(f.autoTruncateLabel('222'), '22');
+    deepEqual(f.autoTruncateLabel(222), '22');
+  });
+
+  test('Auto-truncation for labels: Long Branch', function() {
+    var mt = glift.rules.movetree.getFromSgf(sgfs.yearbookExample, '90');
+    deepEqual(mt.node().getNodeNum(), 90);
+    var f = flattener.flatten(mt, {
+      nextMovesTreepath: [
+          0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+          0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+          0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+          0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+      ]
+    });
+    deepEqual(f.autoTruncateLabel('a'), 'a');
+    deepEqual(f.autoTruncateLabel(10), '10');
+    deepEqual(f.autoTruncateLabel('10'), '10');
+    deepEqual(f.autoTruncateLabel('100'), '100');
+    deepEqual(f.autoTruncateLabel('101'), '101');
+    deepEqual(f.autoTruncateLabel('222'), '222');
+    deepEqual(f.autoTruncateLabel(222), '222');
+  });
 })();

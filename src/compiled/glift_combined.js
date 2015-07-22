@@ -11651,10 +11651,39 @@ glift.flattener.Flattened.prototype = {
   mainlineMove: function() { return this._mainlineMove; },
 
   /** Returns the stone map. */
-  stoneMap: function() { return this._stoneMap; }
+  stoneMap: function() { return this._stoneMap; },
+
+  /**
+   * Helper for truncating labels if the labels are numbers > 100, which
+   * is typically helpful for diagram-display. A no-op for all other labels
+   * This used to be done automatically, but there are cases where users may
+   * wish to preserve full 3 digit labels.
+   *
+   * Note: This helper only truncates when branchLength = endNum - startNum <
+   * 100.
+   *
+   * numOrString: The number represented either as a string or a number
+   *    (probably the former, but who are we to judge?).
+   * return: The processed string label.
+   */
+  autoTruncateLabel: function(numOrString) {
+    var num = numOrString;
+    if (typeof numOrString === 'number') {
+      // noop
+    } else if (typeof numOrString === 'string' && /\d+/.test(numOrString)) {
+      num = parseInt(numOrString);
+    } else {
+      return numOrString;
+    }
+    var branchLength = this.endingMoveNum() - this.startingMoveNum();
+    if (num > 100 && branchLength < 100 && num % 100 !== 0) {
+      // Truncation time!
+      num = num % 100;
+    }
+    return num + '';
+  }
 };
 glift.flattener.intersection = {
-
   /**
    * Creates an intersection obj.
    *
