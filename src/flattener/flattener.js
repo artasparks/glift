@@ -280,11 +280,6 @@ glift.flattener = {
       var stone = stones[i];
       var ptStr = stone.point.toString();
       var nextMoveNum = i + startingMoveNum;
-      if (nextMoveNum % 100 !== 0) {
-        // We don't truncate the 100 moves, e.g., 100, 200, etc.,
-        // but otherwise, 3 digit labels are awkward.
-        nextMoveNum = nextMoveNum % 100;
-      }
 
       // This is a collision stone. Perform collision labeling.
       if (stone.hasOwnProperty('collision')) {
@@ -297,9 +292,6 @@ glift.flattener = {
           col.label = labels[ptStr];
         } else if (glift.util.typeOf(stone.collision) === 'number') {
           var collisionNum = stone.collision + startingMoveNum;
-          if (collisionNum % 100 !== 0) {
-            collisionNum = collisionNum % 100;
-          }
           col.label = (collisionNum) + ''; // label is idx.
         } else { // should be null
           var lbl = extraLabs.charAt(labsIdx);

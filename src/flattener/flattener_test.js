@@ -176,4 +176,19 @@
     deepEqual(f.mainlineMoveNum(), 2, 'mainline move num');
     deepEqual(f.isOnMainPath(), false);
   });
+
+  test('Move numbers > 100', function() {
+    var mt = glift.rules.movetree.getFromSgf(sgfs.yearbookExample, '99');
+    deepEqual(mt.node().getNodeNum(), 99);
+    var f = flattener.flatten(mt, {
+      nextMovesTreepath: [0,0,0,0,0,0,0,0]
+    });
+    var stones = ['go', 'fo', 'ho', 'il', 'ej', 'jn', 'jm', 'in'];
+    for (var i = 0; i < stones.length; i++) {
+      var s = stones[i];
+      var pt = glift.util.pointFromSgfCoord(s);
+      var intpt  = f.board().getIntBoardPt(pt);
+      deepEqual(intpt.textLabel(), i + 100 + '');
+    }
+  });
 })();

@@ -9078,15 +9078,28 @@ glift.rules.treepath = {
     for (var i = 0; i < sect.length; i++) {
       // 4.1 => [4,1+]
       var v = sect[i].split('\.');
-      // Handle the first number (e.g., 4);
-      for (var j = 0; j < v[0] - lastNum; j++) {
+      // Handle the first number (e.g., 4); We necessitate this to be a move
+      // number, so we push 0s until we get to the move number.
+      var firstNum = parseInt(v[0])
+      for (var j = 0; j < firstNum - lastNum; j++) {
         out.push(0);
       }
-      var lastNum = v[0];
-      // Handle the rest of the numbers (e.g., 1+)
+
+      // If there's only one number, we add 500 those zeroes and break.
+      if (/\+/.test(v[0])) {
+        if (v.length !== 1 || i !== sect.length - 1) {
+          throw new Error('Improper use of + at ' + v[0] + 
+              ':  The + character can only occur at the end.');
+        }
+        out = out.concat(glift.rules.treepath.toEnd());
+        return out;
+      }
+
+      var lastNum = firstNum;
+      // Handle the rest of the numbers. These must be variations.
       for (var j = 1; j < v.length; j++) {
-        // Handle the last number. 1+
         var testNum = v[j];
+        // Handle the last number. 1+
         if (testNum.charAt(testNum.length - 1) === '+') {
           testNum = testNum.slice(0, testNum.length - 1);
           out.push(parseInt(testNum));
@@ -9207,7 +9220,7 @@ glift.rules.treepath = {
    *        variation.  Defaults to true
    *
    * returns: on object with three keys
-   *    movetree: an update movetree
+   *    movetree: an updated movetree
    *    treepath: a new treepath that says how to get to this position
    *    nextMoves: A nextMovesTreepath, used to apply for the purpose of
    *        crafting moveNumbers.
@@ -9217,7 +9230,7 @@ glift.rules.treepath = {
     var initTreepath = initTreepath || movetree.treepathToHere();
     var breakOnComment = breakOnComment === false ? false : true;
     var mt = movetree.getTreeFromRoot(initTreepath);
-    var minusMoves = minusMovesOverride || 40;
+    var minusMoves = minusMovesOverride || 1000;
     var nextMovesTreepath = [];
     var startMainline = mt.onMainline();
     for (var i = 0; mt.node().getParent() && i < minusMoves; i++) {
@@ -11371,11 +11384,6 @@ glift.flattener = {
       var stone = stones[i];
       var ptStr = stone.point.toString();
       var nextMoveNum = i + startingMoveNum;
-      if (nextMoveNum % 100 !== 0) {
-        // We don't truncate the 100 moves, e.g., 100, 200, etc.,
-        // but otherwise, 3 digit labels are awkward.
-        nextMoveNum = nextMoveNum % 100;
-      }
 
       // This is a collision stone. Perform collision labeling.
       if (stone.hasOwnProperty('collision')) {
@@ -11388,9 +11396,6 @@ glift.flattener = {
           col.label = labels[ptStr];
         } else if (glift.util.typeOf(stone.collision) === 'number') {
           var collisionNum = stone.collision + startingMoveNum;
-          if (collisionNum % 100 !== 0) {
-            collisionNum = collisionNum % 100;
-          }
           col.label = (collisionNum) + ''; // label is idx.
         } else { // should be null
           var lbl = extraLabs.charAt(labsIdx);
