@@ -60,6 +60,7 @@ DIR_ORDER = [
     'parse',
     'controllers',
     'bridge',
+    'orientation',
     'flattener',
     'widgets',
     'widgets/options',

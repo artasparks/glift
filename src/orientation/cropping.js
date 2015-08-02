@@ -2,13 +2,14 @@
  * Takes a movetree and returns the optimal BoardRegion-Quad for cropping purposes.
  *
  * Note: This isn't a minimal cropping: we split the board into 4 quadrants.
- * Then, we use the quad as part of the final quad-output. Note that we only
- * allow convex shapes.  Thus, these aren't allowed (where the X's are
- * quad-regions)
+ * Then, we use the quad as part of the final quad-output. 
+ *
+ * Note: that we only allow convex shapes for obvious reasons.  Thus, these
+ * aren't allowed (where the X's are quad-regions)
  * .X     X.
  * X. and XX
  */
-glift.bridge.getQuadCropFromMovetree = function(movetree) {
+glift.orientation.getQuadCropFromMovetree = function(movetree) {
   var bbox = glift.displays.bbox.fromPts;
   var pt = glift.util.point;
   var boardRegions = glift.enums.boardRegions;
@@ -52,10 +53,10 @@ glift.bridge.getQuadCropFromMovetree = function(movetree) {
       }
     }
   });
-  return glift.bridge._getRegionFromTracker(tracker, numstones);
+  return glift.orientation._getRegionFromTracker(tracker, numstones);
 };
 
-glift.bridge._getRegionFromTracker = function(tracker, numstones) {
+glift.orientation._getRegionFromTracker = function(tracker, numstones) {
   var regions = [], br = glift.enums.boardRegions;
   for (var quadkey in tracker) {
     var quadlist = tracker[quadkey];

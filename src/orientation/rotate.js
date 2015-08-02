@@ -1,10 +1,11 @@
 /**
  * Rotates a movetree so that it's canonical, given some cropbox
  */
-glift.bridge.autorotateMovetree = function(movetree, regionOrdering) {
-  var rotation = glift.bridge.findCanonicalRotation(movetree, regionOrdering);
+glift.orientation.autorotateMovetree = function(movetree, regionOrdering) {
+  var rotation = glift.orientation.findCanonicalRotation(movetree, regionOrdering);
   movetree.recurse(function(mt) {
     for (var key in mt.properties().propMap) {
+      // TODO(kashomon): Finish?
     }
   });
 };
@@ -12,8 +13,16 @@ glift.bridge.autorotateMovetree = function(movetree, regionOrdering) {
 /**
  * Calculates the desired rotation. Returns one of
  * glift.enums.rotations.
+ *
+ * Region ordering should specify what regions the rotation algorithm should
+ * target. It has the format:
+ * {
+ *  corner: <boardregions>
+ *  side: <boardregions>
+ * }
+ *
  */
-glift.bridge.findCanonicalRotation = function(movetree, regionOrdering) {
+glift.orientation.findCanonicalRotation = function(movetree, regionOrdering) {
   var boardRegions = glift.enums.boardRegions;
   var rotations = glift.enums.rotations;
   var cornerRegions = {
@@ -36,7 +45,7 @@ glift.bridge.findCanonicalRotation = function(movetree, regionOrdering) {
     };
   }
 
-  var region = glift.bridge.getQuadCropFromMovetree(movetree);
+  var region = glift.orientation.getQuadCropFromMovetree(movetree);
 
   if (cornerRegions[region] !== undefined ||
       sideRegions[region] !== undefined) {

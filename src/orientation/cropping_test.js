@@ -1,7 +1,7 @@
 ;(function() {
-  module('glift.bridge.croppingTest');
+  module('glift.orientation.croppingTest');
   var boardRegions = glift.enums.boardRegions;
-  var getCropRegion = glift.bridge.getQuadCropFromMovetree;
+  var getCropRegion = glift.orientation.getQuadCropFromMovetree;
 
   // a = 0; i = 9; s = 18
   test('GetCropRegion: TOP_LEFT', function() {
