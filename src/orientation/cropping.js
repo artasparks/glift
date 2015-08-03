@@ -1,21 +1,26 @@
 /**
  * Takes a movetree and returns the optimal BoardRegion-Quad for cropping purposes.
  *
- * Note: This isn't a minimal cropping: we split the board into 4 quadrants.
+ * This isn't a minimal cropping: we split the board into 4 quadrants.
  * Then, we use the quad as part of the final quad-output. 
+ *
+ * Optionally, we allow a nextMovesPath so that we can optimally crop.
  *
  * Note: that we only allow convex shapes for obvious reasons.  Thus, these
  * aren't allowed (where the X's are quad-regions)
  * .X     X.
  * X. and XX
  */
-glift.orientation.getQuadCropFromMovetree = function(movetree) {
+glift.orientation.getQuadCropFromMovetree = function(movetree, nextMovesPath) {
   var bbox = glift.displays.bbox.fromPts;
   var pt = glift.util.point;
   var boardRegions = glift.enums.boardRegions;
   // Intersections need to be 0 rather than 1 indexed for this method.
   var ints = movetree.getIntersections() - 1;
   var middle = Math.ceil(ints / 2);
+
+  // Ensure we aren't changing the parent movetree's state.
+  var movetree = movetree.newTreeRef();
 
   // Tracker is a map from quad-key to array of points.
   var tracker = {};
@@ -33,7 +38,12 @@ glift.orientation.getQuadCropFromMovetree = function(movetree) {
   quads[boardRegions.BOTTOM_LEFT] = bbox(pt(0, middle), pt(middle, ints));
   quads[boardRegions.BOTTOM_RIGHT] = bbox(pt(middle, middle), pt(ints, ints));
 
-  movetree.recurseFromRoot(function(mt) {
+  if (nextMovesPath && glift.util.typeOf(nextMovesPath) === 'string') {
+    nextMovesPath = glift.rules.treepath.parseFragment(nextMovesPath);
+  }
+
+  // Tracker uses the movetree that's passed in to add items to the tracker.
+  var tracker = function(mt) {
     var stones = mt.properties().getAllStones();
     for (var color in stones) {
       var points = stones[color];
@@ -52,7 +62,19 @@ glift.orientation.getQuadCropFromMovetree = function(movetree) {
         }
       }
     }
-  });
+  };
+
+  if (nextMovesPath && nextMovesPath.length) {
+    // About boundaries -- the movetree should be right before the variation.
+    // I.e., it the first move we want to consider is when the movetree + the
+    // first variation in the nextMovesPath.
+    for (var i = 0; i < nextMovesPath.length; i++) {
+      movetree.moveDown(nextMovesPath[i]);
+      tracker(movetree);
+    }
+  } else {
+    movetree.recurseFromRoot(tracker);
+  }
   return glift.orientation._getRegionFromTracker(tracker, numstones);
 };
 

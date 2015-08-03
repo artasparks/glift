@@ -210,20 +210,34 @@ glift.rules.treepath = {
    * Use some heuristics to find a nextMovesTreepath.  This is used for
    * automatically adding move numbers.
    *
+   * Note: The movetree should be in _final position_. The algorithm below works
+   * backwards, continually updating a next-moves path as it goes. It finally
+   * terminates when it reaches one of three conditions
+   *  - There's a comment.
+   *  - We go from variation to main branch.
+   *  - We exceed minus-moves-override.
+   *
+   * Params:
    * movetree: a movetree, of course.
    * initTreepath [optional]: the initial treepath. If not specified or
    *    undefined, use the current location in the movetree.
    * minusMovesOverride: force findNextMoves to to return a nextMovesTreepath of
    *    this length, starting from the init treepath.  The actually
-   *    nextMovesTreepath can be shorter
-   *    breakOnComment: Whether or not to break on comments on the main
-   *        variation.  Defaults to true
+   *    nextMovesTreepath can be shorter. (Note: This option should be deleted).
+   * breakOnComment: Whether or not to break on comments on the main
+   *    variation.  Defaults to true
    *
-   * returns: on object with three keys
+   * returns: on object with three keys:
    *    movetree: an updated movetree
    *    treepath: a new treepath that says how to get to this position
    *    nextMoves: A nextMovesTreepath, used to apply for the purpose of
    *        crafting moveNumbers.
+   *
+   * _Important Note_ on starting moves: the resulting movetree has the
+   * property that the initial position of the movetree should not be considered
+   * for diagram purposes. I.e., the first move to be diagramed should be the
+   * first element of the nextMoves path. So movetree+nextMoves[0] should be
+   * the first move.
    */
   findNextMovesPath: function(
       movetree, initTreepath, minusMovesOverride, breakOnComment) {

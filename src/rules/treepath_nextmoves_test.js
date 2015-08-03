@@ -1,6 +1,6 @@
 (function() {
   module('glift.rules.treepathNextmovesTest');
-  var findNextMoves = glift.rules.treepath.findNextMovesPath;
+  var findNextMovesPath = glift.rules.treepath.findNextMovesPath;
   var applyNextMoves = glift.rules.treepath.applyNextMoves;
   var point = glift.util.point;
   var sgfpoint = glift.util.pointFromSgfCoord;
@@ -15,7 +15,7 @@
 
   test('Test init setup', function() {
     var mt = glift.rules.movetree.getFromSgf(simpleGame);
-    var out = findNextMoves(mt, []);
+    var out = findNextMovesPath(mt, []);
     deepEqual(out.treepath, []);
     deepEqual(out.nextMoves, []);
   });
@@ -23,42 +23,50 @@
   test('Test simplecase', function() {
     var mt = glift.rules.movetree.getFromSgf(
         '(;GM[1]AW[aa];B[ab];W[bbr])', [0]);
-    var out = findNextMoves(mt);
+    var out = findNextMovesPath(mt);
     deepEqual(out.treepath, []);
     deepEqual(out.nextMoves, [0]);
   });
 
   test('Test basic nextmoves', function() {
     var mt = glift.rules.movetree.getFromSgf(simpleGame);
-    var out = findNextMoves(mt, [0,0,0]); // 3 moves in.
+    var out = findNextMovesPath(mt, [0,0,0]); // 3 moves in.
     deepEqual(out.treepath, []);
     deepEqual(out.nextMoves, [0,0,0]);
   });
 
   test('Test nextmoves with override', function() {
     var mt = glift.rules.movetree.getFromSgf(simpleGame);
-    var out = findNextMoves(mt, [0,0,0], 1);
+    var out = findNextMovesPath(mt, [0,0,0], 1);
     deepEqual(out.treepath, [0, 0]);
     deepEqual(out.nextMoves, [0]);
   });
 
   test('Test nextmoves. Variation -- mainline', function() {
     var mt = glift.rules.movetree.getFromSgf(gameVariation);
-    var out = findNextMoves(mt, [0,0,0,0,0,0,0]);
+    var out = findNextMovesPath(mt, [0,0,0,0,0,0,0]);
     deepEqual(out.treepath, []);
     deepEqual(out.nextMoves, [0,0,0,0,0,0,0]);
   });
 
   test('Test nextmoves. Variation -- sideline', function() {
     var mt = glift.rules.movetree.getFromSgf(gameVariation);
-    var out = findNextMoves(mt, [0,0,0,0,0,0,1,0]);
+    var out = findNextMovesPath(mt, [0,0,0,0,0,0,1,0]);
     deepEqual(out.treepath, [0,0,0,0,0,0]);
     deepEqual(out.nextMoves, [1,0]);
   });
 
-  test('Test nextmoves. Variation -- sideline + minusMoves', function() {
+  test('Test nextmoves. Variation -- another example on variation', function() {
     var mt = glift.rules.movetree.getFromSgf(gameVariation);
-    var out = findNextMoves(mt, [0,0,0,0,0,0,1,0], 20);
+    var out = findNextMovesPath(mt, [0,0,0,0,0,0,1,0,0,0]);
+    deepEqual(out.treepath, [0,0,0,0,0,0]);
+    deepEqual(out.nextMoves, [1,0,0,0]);
+  });
+
+  test('Test nextmoves. Variation -- sideline + minusMoves', function() {
+    // TODO(kashomon): I'm not sure why this test is passing.
+    var mt = glift.rules.movetree.getFromSgf(gameVariation);
+    var out = findNextMovesPath(mt, [0,0,0,0,0,0,1,0], 20);
     deepEqual(out.treepath, []);
     deepEqual(out.nextMoves, [0,0,0,0,0,0,1,0]);
   });
@@ -66,7 +74,7 @@
   test('Test nextmoves. Variation -- sideline.  No initPos', function() {
     var initPos = [0,0,0,0,0,0,1,0];
     var mt = glift.rules.movetree.getFromSgf(gameVariation, initPos);
-    var out = findNextMoves(mt);
+    var out = findNextMovesPath(mt);
     deepEqual(out.treepath, [0,0,0,0,0,0]);
     deepEqual(out.nextMoves, [1,0]);
   });
@@ -79,7 +87,7 @@
   test('Test nextmoves. Comments', function() {
     var initPos = [0,0,0,0,0,0,1,0,0];
     var mt = glift.rules.movetree.getFromSgf(gameVariation2, initPos);
-    var out = findNextMoves(mt);
+    var out = findNextMovesPath(mt);
     deepEqual(out.treepath, [0,0,0,0,0,0,1]);
     deepEqual(out.nextMoves, [0,0]);
   });
@@ -89,7 +97,7 @@
     var mt = glift.rules.movetree.getFromSgf(
         testdata.sgfs.yearbookExample, '1+');
     deepEqual(mt.properties().getOneValue('W'), 'sd');
-    var out = findNextMoves(mt);
+    var out = findNextMovesPath(mt);
     deepEqual(out.nextMoves.length, 228)
   });
 
