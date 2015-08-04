@@ -2,13 +2,14 @@
  * The base web UI widget.
  */
 glift.widgets.BaseWidget = function(
-    divId, sgfOptions, displayOptions, actions, manager) {
+    divId, sgfOptions, displayOptions, actions, manager, hooks) {
   this.wrapperDivId = divId; // We split the wrapper div.
   this.type = sgfOptions.type;
   this.sgfOptions = glift.util.simpleClone(sgfOptions);
   this.displayOptions = glift.util.simpleClone(displayOptions);
   this.actions = actions; // deeply nested -- not worth cloning.
   this.manager = manager;
+  this.externalHooks = hooks;
 
   // These variables are initialized by draw
   this.controller = undefined;
@@ -272,7 +273,7 @@ glift.widgets.BaseWidget.prototype = {
 
   /** Gets the initialized hooks or set them */
   hooks: function() {
-    return this.sgfOptions.hooks;
+    return this.externalHooks;
   },
 
   /**

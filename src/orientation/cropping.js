@@ -4,7 +4,8 @@
  * This isn't a minimal cropping: we split the board into 4 quadrants.
  * Then, we use the quad as part of the final quad-output. 
  *
- * Optionally, we allow a nextMovesPath so that we can optimally crop.
+ * Optionally, we allow a nextMovesPath so that we can 'optimally' crop just a
+ * variation.
  *
  * Note: that we only allow convex shapes for obvious reasons.  Thus, these
  * aren't allowed (where the X's are quad-regions)
@@ -24,7 +25,6 @@ glift.orientation.getQuadCropFromMovetree = function(movetree, nextMovesPath) {
 
   // Tracker is a map from quad-key to array of points.
   var tracker = {};
-  var numstones = 0;
 
   // It's not clear to me if we should be cropping boards smaller than 19.  It
   // usually looks pretty weird, so hence this override.
@@ -49,7 +49,6 @@ glift.orientation.getQuadCropFromMovetree = function(movetree, nextMovesPath) {
       var points = stones[color];
       for (var i = 0; i < points.length; i++) {
         var pt = points[i];
-        numstones += 1
         for (var quadkey in quads) {
           var box = quads[quadkey];
           if (middle === pt.x() || middle === pt.y()) {
@@ -65,9 +64,9 @@ glift.orientation.getQuadCropFromMovetree = function(movetree, nextMovesPath) {
   };
 
   if (nextMovesPath && nextMovesPath.length) {
-    // About boundaries -- the movetree should be right before the variation.
-    // I.e., it the first move we want to consider is when the movetree + the
-    // first variation in the nextMovesPath.
+    // About next-moves-path boundaries -- the movetree should be right before
+    // the variation.  I.e., it the first move we want to consider is when the
+    // movetree + the first variation in the nextMovesPath.
     for (var i = 0; i < nextMovesPath.length; i++) {
       movetree.moveDown(nextMovesPath[i]);
       tracker(movetree);
@@ -75,10 +74,10 @@ glift.orientation.getQuadCropFromMovetree = function(movetree, nextMovesPath) {
   } else {
     movetree.recurseFromRoot(tracker);
   }
-  return glift.orientation._getRegionFromTracker(tracker, numstones);
+  return glift.orientation._getRegionFromTracker(tracker);
 };
 
-glift.orientation._getRegionFromTracker = function(tracker, numstones) {
+glift.orientation._getRegionFromTracker = function(tracker) {
   var regions = [], br = glift.enums.boardRegions;
   for (var quadkey in tracker) {
     var quadlist = tracker[quadkey];

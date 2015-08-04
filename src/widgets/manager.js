@@ -19,7 +19,7 @@
  */
 glift.widgets.WidgetManager = function(divId, sgfCollection, sgfMapping,
     sgfColIndex, allowWrapAround, loadColInBack, sgfDefaults, displayOptions,
-    actions, metadata) {
+    actions, metadata, hooks) {
   // Globally unique ID, at least across all glift instances in the current
   // page. In theory, the divId should be globally unique, but might as well be
   // absolutely sure.
@@ -81,6 +81,9 @@ glift.widgets.WidgetManager = function(divId, sgfCollection, sgfMapping,
    * Global metadata for this manager instance.
    */
   this.metadata = metadata || undefined;
+
+  /** External hooks provided by users. */
+  this.hooks = hooks;
 };
 
 glift.widgets.WidgetManager.prototype = {
@@ -247,7 +250,8 @@ glift.widgets.WidgetManager.prototype = {
   /** Create a Sgf Widget. */
   createWidget: function(sgfObj) {
     return new glift.widgets.BaseWidget(
-        this.getDivId(), sgfObj, this.displayOptions, this.actions, this);
+        this.getDivId(), sgfObj, this.displayOptions, this.actions, this,
+        this.hooks);
   },
 
   /**

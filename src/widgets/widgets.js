@@ -41,7 +41,8 @@ glift.widgets = {
         options.sgfDefaults,
         options.display,
         actions,
-        options.metadata);
+        options.metadata,
+        options.hooks);
   }
 };
 

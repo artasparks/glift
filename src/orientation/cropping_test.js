@@ -65,4 +65,48 @@
     var mt = glift.rules.movetree.getFromSgf('(;AB[rr];W[cc])');
     deepEqual(getCropRegion(mt), boardRegions.ALL);
   });
+
+  //////////////////////////////
+  // Next Moves Path cropping //
+  //////////////////////////////
+  //
+  // Notes:
+  // - for SGF cords, a: 1, s: 19. ss: 19,19
+
+  test('Next moves path cropping: TL', function() {
+    var mt = glift.rules.movetree.getFromSgf(
+        '(;GM[1]AB[aa][as][sa][ss]' +
+        ';B[bb];W[cc];B[dd];W[ee])',
+        [0,0]);
+    deepEqual(mt.node().getNodeNum(), 2);
+    deepEqual(getCropRegion(mt, [0,0]), boardRegions.TOP_LEFT);
+  });
+
+  test('Next moves path cropping: Top', function() {
+    var mt = glift.rules.movetree.getFromSgf(
+        '(;GM[1]AB[aa][as][sa][ss]' +
+        ';B[rr];W[cc];B[re];W[ee])',
+        [0,0]);
+    deepEqual(mt.node().getNodeNum(), 2);
+    deepEqual(getCropRegion(mt, [0,0]), boardRegions.TOP);
+  });
+
+  test('Next moves path cropping: All', function() {
+    var mt = glift.rules.movetree.getFromSgf(
+        '(;GM[1]AB[aa][as][sa][ss]' +
+        ';B[rr];W[cc];B[rr];W[ee])',
+        [0,0]);
+    deepEqual(mt.node().getNodeNum(), 2);
+    deepEqual(getCropRegion(mt, [0,0]), boardRegions.ALL);
+  });
+
+  // TODO(kashomon): Support edges better
+  // test('Next moves path: Edge', function() {
+    // var mt = glift.rules.movetree.getFromSgf(
+        // '(;GM[1]AB[aa][as][sa][ss]' +
+        // ';B[rr];W[cc];B[je];W[jf])',
+        // [0,0]);
+    // deepEqual(mt.node().getNodeNum(), 2);
+    // deepEqual(getCropRegion(mt, [0,0]), boardRegions.TOP);
+  // });
 })();

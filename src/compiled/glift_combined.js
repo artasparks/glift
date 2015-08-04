@@ -9210,20 +9210,34 @@ glift.rules.treepath = {
    * Use some heuristics to find a nextMovesTreepath.  This is used for
    * automatically adding move numbers.
    *
+   * Note: The movetree should be in _final position_. The algorithm below works
+   * backwards, continually updating a next-moves path as it goes. It finally
+   * terminates when it reaches one of three conditions
+   *  - There's a comment.
+   *  - We go from variation to main branch.
+   *  - We exceed minus-moves-override.
+   *
+   * Params:
    * movetree: a movetree, of course.
    * initTreepath [optional]: the initial treepath. If not specified or
    *    undefined, use the current location in the movetree.
    * minusMovesOverride: force findNextMoves to to return a nextMovesTreepath of
    *    this length, starting from the init treepath.  The actually
-   *    nextMovesTreepath can be shorter
-   *    breakOnComment: Whether or not to break on comments on the main
-   *        variation.  Defaults to true
+   *    nextMovesTreepath can be shorter. (Note: This option should be deleted).
+   * breakOnComment: Whether or not to break on comments on the main
+   *    variation.  Defaults to true
    *
-   * returns: on object with three keys
+   * returns: on object with three keys:
    *    movetree: an updated movetree
    *    treepath: a new treepath that says how to get to this position
    *    nextMoves: A nextMovesTreepath, used to apply for the purpose of
    *        crafting moveNumbers.
+   *
+   * _Important Note_ on starting moves: the resulting movetree has the
+   * property that the initial position of the movetree should not be considered
+   * for diagram purposes. I.e., the first move to be diagramed should be the
+   * first element of the nextMoves path. So movetree+nextMoves[0] should be
+   * the first move.
    */
   findNextMovesPath: function(
       movetree, initTreepath, minusMovesOverride, breakOnComment) {
@@ -10965,15 +10979,18 @@ glift.orientation = {};
 /**
  * Takes a movetree and returns the optimal BoardRegion-Quad for cropping purposes.
  *
- * Note: This isn't a minimal cropping: we split the board into 4 quadrants.
+ * This isn't a minimal cropping: we split the board into 4 quadrants.
  * Then, we use the quad as part of the final quad-output. 
+ *
+ * Optionally, we allow a nextMovesPath so that we can 'optimally' crop just a
+ * variation.
  *
  * Note: that we only allow convex shapes for obvious reasons.  Thus, these
  * aren't allowed (where the X's are quad-regions)
  * .X     X.
  * X. and XX
  */
-glift.orientation.getQuadCropFromMovetree = function(movetree) {
+glift.orientation.getQuadCropFromMovetree = function(movetree, nextMovesPath) {
   var bbox = glift.displays.bbox.fromPts;
   var pt = glift.util.point;
   var boardRegions = glift.enums.boardRegions;
@@ -10981,9 +10998,11 @@ glift.orientation.getQuadCropFromMovetree = function(movetree) {
   var ints = movetree.getIntersections() - 1;
   var middle = Math.ceil(ints / 2);
 
+  // Ensure we aren't changing the parent movetree's state.
+  var movetree = movetree.newTreeRef();
+
   // Tracker is a map from quad-key to array of points.
   var tracker = {};
-  var numstones = 0;
 
   // It's not clear to me if we should be cropping boards smaller than 19.  It
   // usually looks pretty weird, so hence this override.
@@ -10997,13 +11016,17 @@ glift.orientation.getQuadCropFromMovetree = function(movetree) {
   quads[boardRegions.BOTTOM_LEFT] = bbox(pt(0, middle), pt(middle, ints));
   quads[boardRegions.BOTTOM_RIGHT] = bbox(pt(middle, middle), pt(ints, ints));
 
-  movetree.recurseFromRoot(function(mt) {
+  if (nextMovesPath && glift.util.typeOf(nextMovesPath) === 'string') {
+    nextMovesPath = glift.rules.treepath.parseFragment(nextMovesPath);
+  }
+
+  // Tracker uses the movetree that's passed in to add items to the tracker.
+  var tracker = function(mt) {
     var stones = mt.properties().getAllStones();
     for (var color in stones) {
       var points = stones[color];
       for (var i = 0; i < points.length; i++) {
         var pt = points[i];
-        numstones += 1
         for (var quadkey in quads) {
           var box = quads[quadkey];
           if (middle === pt.x() || middle === pt.y()) {
@@ -11016,11 +11039,23 @@ glift.orientation.getQuadCropFromMovetree = function(movetree) {
         }
       }
     }
-  });
-  return glift.orientation._getRegionFromTracker(tracker, numstones);
+  };
+
+  if (nextMovesPath && nextMovesPath.length) {
+    // About next-moves-path boundaries -- the movetree should be right before
+    // the variation.  I.e., it the first move we want to consider is when the
+    // movetree + the first variation in the nextMovesPath.
+    for (var i = 0; i < nextMovesPath.length; i++) {
+      movetree.moveDown(nextMovesPath[i]);
+      tracker(movetree);
+    }
+  } else {
+    movetree.recurseFromRoot(tracker);
+  }
+  return glift.orientation._getRegionFromTracker(tracker);
 };
 
-glift.orientation._getRegionFromTracker = function(tracker, numstones) {
+glift.orientation._getRegionFromTracker = function(tracker) {
   var regions = [], br = glift.enums.boardRegions;
   for (var quadkey in tracker) {
     var quadlist = tracker[quadkey];
@@ -11982,7 +12017,8 @@ glift.widgets = {
         options.sgfDefaults,
         options.display,
         actions,
-        options.metadata);
+        options.metadata,
+        options.hooks);
   }
 };
 
@@ -11997,13 +12033,14 @@ glift.create = glift.widgets.create;
  * The base web UI widget.
  */
 glift.widgets.BaseWidget = function(
-    divId, sgfOptions, displayOptions, actions, manager) {
+    divId, sgfOptions, displayOptions, actions, manager, hooks) {
   this.wrapperDivId = divId; // We split the wrapper div.
   this.type = sgfOptions.type;
   this.sgfOptions = glift.util.simpleClone(sgfOptions);
   this.displayOptions = glift.util.simpleClone(displayOptions);
   this.actions = actions; // deeply nested -- not worth cloning.
   this.manager = manager;
+  this.externalHooks = hooks;
 
   // These variables are initialized by draw
   this.controller = undefined;
@@ -12267,7 +12304,7 @@ glift.widgets.BaseWidget.prototype = {
 
   /** Gets the initialized hooks or set them */
   hooks: function() {
-    return this.sgfOptions.hooks;
+    return this.externalHooks;
   },
 
   /**
@@ -12384,7 +12421,7 @@ glift.widgets.BaseWidget.prototype = {
  */
 glift.widgets.WidgetManager = function(divId, sgfCollection, sgfMapping,
     sgfColIndex, allowWrapAround, loadColInBack, sgfDefaults, displayOptions,
-    actions, metadata) {
+    actions, metadata, hooks) {
   // Globally unique ID, at least across all glift instances in the current
   // page. In theory, the divId should be globally unique, but might as well be
   // absolutely sure.
@@ -12446,6 +12483,9 @@ glift.widgets.WidgetManager = function(divId, sgfCollection, sgfMapping,
    * Global metadata for this manager instance.
    */
   this.metadata = metadata || undefined;
+
+  /** External hooks provided by users. */
+  this.hooks = hooks;
 };
 
 glift.widgets.WidgetManager.prototype = {
@@ -12612,7 +12652,8 @@ glift.widgets.WidgetManager.prototype = {
   /** Create a Sgf Widget. */
   createWidget: function(sgfObj) {
     return new glift.widgets.BaseWidget(
-        this.getDivId(), sgfObj, this.displayOptions, this.actions, this);
+        this.getDivId(), sgfObj, this.displayOptions, this.actions, this,
+        this.hooks);
   },
 
   /**
@@ -13796,7 +13837,8 @@ glift.widgets.options.REDUCED_GAME_VIEWER = {
  * Additional Options for the GameViewers
  */
 glift.widgets.options.STANDARD_PROBLEM = {
-  stoneClick: function(event, widget, pt, hooks) {
+  stoneClick: function(event, widget, pt) {
+    var hooks = widget.hooks();
     var currentPlayer = widget.controller.getCurrentPlayer();
     var data = widget.controller.addStone(pt, currentPlayer);
     var problemResults = glift.enums.problemResults;
@@ -13809,12 +13851,12 @@ glift.widgets.options.STANDARD_PROBLEM = {
     if (data.result === problemResults.CORRECT) {
         widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'check', '#0CC');
         widget.correctness = problemResults.CORRECT;
-        widget.hooks().problemCorrect();
+        hooks.problemCorrect();
     } else if (data.result === problemResults.INCORRECT) {
       widget.iconBar.destroyTempIcons();
       widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
       widget.correctness = problemResults.INCORRECT;
-      widget.hooks().problemIncorrect();
+      hooks.problemIncorrect();
     }
   },
 
