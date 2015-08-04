@@ -24,6 +24,8 @@ glift.flattener = {
    *  - startingMoveNum.  Optionally override the move number. If not set, it's
    *    automatically determined based on whether the position is on the
    *    mainpath or a variation.
+   *  - autoBoxCropOnNextMoves. If set, will automatically crop based on the
+   *    nextmoves path.
    */
   flatten: function(movetreeInitial, options) {
     // Create a new ref to avoid changing original tree ref.
@@ -40,9 +42,14 @@ glift.flattener = {
         options.showNextVariationsType  || glift.enums.showVariations.NEVER;
     var nmtp = glift.rules.treepath.parseFragment(options.nextMovesTreepath);
 
+
     var startingMoveNum = options.startingMoveNum || null;
 
     // Calculate the board region.
+    var autoBoxCropOnNextMoves = options.autoBoxCropOnNextMoves || false;
+    if (autoBoxCropOnNextMoves) {
+      boardRegion = glift.orientation.getQuadCropFromMovetree(mt, nmtp);
+    }
     if (boardRegion === glift.enums.boardRegions.AUTO) {
       boardRegion = glift.orientation.getQuadCropFromMovetree(mt);
     }

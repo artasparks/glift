@@ -99,6 +99,17 @@ glift.flattener._Board.prototype = {
     return this._maxBoardSize;
   },
 
+  /** Returns the height of the Go board. */
+  height: function() {
+    return this._boardArray.length;
+  },
+
+  /** Returns the width of the Go board. */
+  width: function() {
+    // Here we assume that the Go board is rectangular.
+    return this._boardArray[0].length;
+  },
+
   /**
    * Transforms the intersections into a board instance based on the
    * transformation function.

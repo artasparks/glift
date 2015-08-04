@@ -100,7 +100,10 @@
     deepEqual(getCropRegion(mt, [0,0]), boardRegions.ALL);
   });
 
-  // TODO(kashomon): Support edges better
+  // TODO(kashomon): Support edges better. Currently the providing a stone on
+  // the edge crops to the whole board. Generally, this is fine, but it would be
+  // more accurate to crop to the top region. Undoubtedly, this edge case will
+  // get hit eventually in some legitimate way.
   // test('Next moves path: Edge', function() {
     // var mt = glift.rules.movetree.getFromSgf(
         // '(;GM[1]AB[aa][as][sa][ss]' +

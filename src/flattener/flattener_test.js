@@ -27,6 +27,9 @@
     deepEqual(i.base(), symb.LEFT_EDGE);
     deepEqual(i.stone(), symb.BSTONE);
     deepEqual(i.mark(), symb.TEXTLABEL);
+
+    deepEqual(f.board().width(), 19);
+    deepEqual(f.board().height(), 19);
   });
 
   test('Goban auto-recalculation', function() {
@@ -223,5 +226,19 @@
     deepEqual(f.autoTruncateLabel('101'), '101');
     deepEqual(f.autoTruncateLabel('222'), '222');
     deepEqual(f.autoTruncateLabel(222), '222');
+  });
+
+  test('Test autocrop on next moves: Top', function() {
+    var mt = glift.rules.movetree.getFromSgf(
+        '(;GM[1]AB[aa][as][sa][ss]' +
+        ';B[rr];W[cc];B[re];W[ee])',
+        [0,0]);
+    deepEqual(mt.node().getNodeNum(), 2, 'sanity check');
+    var f = flattener.flatten(mt, {
+      nextMovesTreepath: [0,0],
+      autoBoxCropOnNextMoves: true,
+    });
+    deepEqual(f.board().width(), 19);
+    deepEqual(f.board().height(), 11);
   });
 })();
