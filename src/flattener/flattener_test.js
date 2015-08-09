@@ -241,4 +241,32 @@
     deepEqual(f.board().width(), 19);
     deepEqual(f.board().height(), 11);
   });
+
+  test('Test crop restriction + crop on next moves: Top', function() {
+    var mt = glift.rules.movetree.getFromSgf(
+        '(;GM[1]AB[aa][as][sa][ss]' +
+        ';B[rr];W[cc];B[re];W[ee])',
+        [0,0]);
+    deepEqual(mt.node().getNodeNum(), 2, 'sanity check');
+    var f = flattener.flatten(mt, {
+      nextMovesTreepath: [0,0],
+      autoBoxCropOnNextMoves: true,
+      regionRestrictions: [
+        glift.enums.boardRegions.TOP,
+        glift.enums.boardRegions.LEFT,
+      ]
+    });
+    deepEqual(f.board().width(), 19);
+    deepEqual(f.board().height(), 11);
+
+    var f = flattener.flatten(mt, {
+      nextMovesTreepath: [0,0],
+      autoBoxCropOnNextMoves: true,
+      regionRestrictions: [
+        glift.enums.boardRegions.LEFT,
+      ]
+    });
+    deepEqual(f.board().width(), 19);
+    deepEqual(f.board().height(), 19);
+  });
 })();

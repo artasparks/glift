@@ -11168,14 +11168,18 @@ glift.flattener = {
    *
    * Optional parameters:
    *  - goban: used for extracting all the inital stones.
-   *  - boardRegion: indicates what region to crop on.
    *  - nextMovesTreepath.  Defaults to [].  This is typically only used for
    *    printed diagrams.
    *  - startingMoveNum.  Optionally override the move number. If not set, it's
    *    automatically determined based on whether the position is on the
    *    mainpath or a variation.
+   *
+   *  // Optional cropping params.
+   *  - boardRegion: indicates what region to crop on.
    *  - autoBoxCropOnNextMoves. If set, will automatically crop based on the
    *    nextmoves path.
+   *  - regionRestrictions. Array of allowed boardRegions. If the calculated
+   *    region is not an member of this set, default to using 'ALL'.
    */
   flatten: function(movetreeInitial, options) {
     // Create a new ref to avoid changing original tree ref.
@@ -11186,23 +11190,13 @@ glift.flattener = {
     // so it's recommended that the goban be provided.
     var goban = options.goban || glift.rules.goban.getFromMoveTree(
         mt.getTreeFromRoot(), mt.treepathToHere()).goban;
-    var boardRegion =
-        options.boardRegion || glift.enums.boardRegions.ALL;
     var showVars =
         options.showNextVariationsType  || glift.enums.showVariations.NEVER;
     var nmtp = glift.rules.treepath.parseFragment(options.nextMovesTreepath);
 
-
     var startingMoveNum = options.startingMoveNum || null;
 
-    // Calculate the board region.
-    var autoBoxCropOnNextMoves = options.autoBoxCropOnNextMoves || false;
-    if (autoBoxCropOnNextMoves) {
-      boardRegion = glift.orientation.getQuadCropFromMovetree(mt, nmtp);
-    }
-    if (boardRegion === glift.enums.boardRegions.AUTO) {
-      boardRegion = glift.orientation.getQuadCropFromMovetree(mt);
-    }
+    var boardRegion = glift.flattener._getBoardRegion(mt, nmtp, options);
     var cropping = glift.displays.cropbox.getFromRegion(
         boardRegion, mt.getIntersections());
 
@@ -11268,6 +11262,47 @@ glift.flattener = {
         board, collisions, comment, boardRegion, cropping, mt.onMainline(),
         startingMoveNum, endingMoveNum, mainlineMoveNum, mainlineMove,
         stoneMap);
+  },
+
+  /**
+   * Returns the board region for a movetree. Relevant configurability:
+   *
+   * mt: The movetree at the relevant position.
+   * nmtp: The next moves treepath.
+   *
+   * options vars:
+   * options.autoBoxCropOnNextMoves: auto-crop based on the just the nextmoves
+   *    rather than the whole tree.
+   * options.regionRestrictions: AN array
+   *
+   * This is probably too configurable at the moment.
+   */
+  _getBoardRegion: function(mt, nmtp, options) {
+    var boardRegion =
+        options.boardRegion || glift.enums.boardRegions.ALL;
+    var autoBoxCropOnNextMoves = options.autoBoxCropOnNextMoves || false;
+    if (autoBoxCropOnNextMoves) {
+      boardRegion = glift.orientation.getQuadCropFromMovetree(mt, nmtp);
+    }
+    if (boardRegion === glift.enums.boardRegions.AUTO) {
+      boardRegion = glift.orientation.getQuadCropFromMovetree(mt);
+    }
+    var regionRestrictions = options.regionRestrictions || null;
+
+    if (regionRestrictions) {
+      if (glift.util.typeOf(regionRestrictions) !== 'array') {
+        throw new Error('Invalid type for options.regionRestrictions: ' +
+            'Must be array; was: ' + glift.util.typeOf(regionRestrictions));
+      }
+      // The user has decided to manuall specify a set of region restrictions.
+      for (var i = 0; i < regionRestrictions.length; i++) {
+        if (regionRestrictions[i] === boardRegion) {
+          return boardRegion;
+        }
+      }
+      return glift.enums.boardRegions.ALL;
+    }
+    return boardRegion;
   },
 
   /**
