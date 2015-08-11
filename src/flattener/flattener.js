@@ -146,8 +146,10 @@ glift.flattener = {
       }
       // The user has decided to manuall specify a set of region restrictions.
       for (var i = 0; i < regionRestrictions.length; i++) {
-        if (regionRestrictions[i] === boardRegion) {
-          return boardRegion;
+        // We return the first region that matches. The order of the array
+        // should give the preference of regions.
+        if (boardRegion.indexOf(regionRestrictions[i]) > -1) {
+          return regionRestrictions[i];
         }
       }
       return glift.enums.boardRegions.ALL;

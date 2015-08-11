@@ -242,7 +242,8 @@
     deepEqual(f.board().height(), 11);
   });
 
-  test('Test crop restriction + crop on next moves: Top', function() {
+  test('Test crop restriction + crop on next moves', function() {
+    // top crop
     var mt = glift.rules.movetree.getFromSgf(
         '(;GM[1]AB[aa][as][sa][ss]' +
         ';B[rr];W[cc];B[re];W[ee])',
@@ -259,7 +260,8 @@
     deepEqual(f.board().width(), 19);
     deepEqual(f.board().height(), 11);
 
-    var f = flattener.flatten(mt, {
+    // Region isn't correct
+    f = flattener.flatten(mt, {
       nextMovesTreepath: [0,0],
       autoBoxCropOnNextMoves: true,
       regionRestrictions: [
@@ -268,5 +270,22 @@
     });
     deepEqual(f.board().width(), 19);
     deepEqual(f.board().height(), 19);
+
+    // top-left crop
+    var mt = glift.rules.movetree.getFromSgf(
+        '(;GM[1]AB[aa][as][sa][ss]' + // full board base
+        ';B[bb];W[cc];B[dd];W[ee])',
+        [0,0]);
+    // Region is super-set
+    f = flattener.flatten(mt, {
+      nextMovesTreepath: [0,0],
+      autoBoxCropOnNextMoves: true,
+      regionRestrictions: [
+        glift.enums.boardRegions.TOP,
+        glift.enums.boardRegions.LEFT,
+      ]
+    });
+    deepEqual(f.board().width(), 19);
+    deepEqual(f.board().height(), 11);
   });
 })();
