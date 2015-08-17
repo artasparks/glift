@@ -11,6 +11,15 @@
     deepEqual(gameViewer.treepath, [], 'Gamepath set to beginning');
   });
 
+  test('Test Create: 1+ initial position', function() {
+    var gameViewer = glift.controllers.gameViewer({ 
+        sgfString: problem,
+        initialPosition: '1+'
+    });
+    deepEqual(gameViewer.currentMoveNumber(), 2);
+    ok(gameViewer);
+  });
+
   test('Test NextMove / PrevMove', function() {
     var gameViewer = glift.controllers.gameViewer({ sgfString: problem });
     var displayData = gameViewer.nextMove();

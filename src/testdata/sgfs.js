@@ -8,6 +8,8 @@ testdata.sgfs = {
     "RU[Japanese]SZ[19]KM[0.00]\n" +
     "PW[White]PB[Black])",
 
+  escapedComment: "(;GM[1]FF[4]C[Josh[1k\\]: Go is Awesome!])",
+
   veryeasy:
     "(;GM[1]FF[4]CA[UTF-8]AP[CGoban:3]ST[2]\n" +
     "C[Here's a basic example problem]" +
@@ -215,5 +217,5 @@ testdata.sgfs = {
     "" +
     "Black 125 was the losing move. Black should have played Black 125 at Black 145 instead." +
     "" +
-    "**228 moves: White won by resignation.**])"
+    "**228 moves: White won by resignation.**])",
 };

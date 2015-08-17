@@ -7457,7 +7457,9 @@ glift.rules.goban = {
         movetree = mt.getTreeFromRoot(),
         captures = []; // array of captures.
     goban.loadStonesFromMovetree(movetree); // Load root placements.
-    for (var i = 0; i < treepath.length; i++) {
+    for (var i = 0; 
+        i < treepath.length && movetree.node().numChildren() > 0;
+        i++) {
       movetree.moveDown(treepath[i]);
       captures.push(goban.loadStonesFromMovetree(movetree));
     }
@@ -13751,8 +13753,8 @@ glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
       // an illegal move.
       return;
     }
+    var hooks = widget.hooks();
     widget.applyBoardData(data);
-    var callback = widget.sgfOptions.problemCallback;
     if (widget.correctness === undefined) {
       if (data.result === problemResults.CORRECT) {
         widget.iconBar.destroyTempIcons();
@@ -13765,7 +13767,7 @@ glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
                 'multiopen-boxonly',
                 widget.numCorrectAnswers + '/' + widget.totalCorrectAnswers,
                 { fill: '#0CC', stroke: '#0CC'});
-            callback(problemResults.CORRECT);
+            hooks.problemCorrect();
           } else {
             widget.iconBar.addTempText(
                 'multiopen-boxonly',
@@ -13782,7 +13784,7 @@ glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
         widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
         widget.iconBar.clearTempText('multiopen-boxonly');
         widget.correctness = problemResults.INCORRECT;
-        callback(problemResults.INCORRECT);
+        hooks.problemIncorrect();
       }
     }
   },

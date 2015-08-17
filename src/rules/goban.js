@@ -31,7 +31,9 @@ glift.rules.goban = {
         movetree = mt.getTreeFromRoot(),
         captures = []; // array of captures.
     goban.loadStonesFromMovetree(movetree); // Load root placements.
-    for (var i = 0; i < treepath.length; i++) {
+    for (var i = 0; 
+        i < treepath.length && movetree.node().numChildren() > 0;
+        i++) {
       movetree.moveDown(treepath[i]);
       captures.push(goban.loadStonesFromMovetree(movetree));
     }
