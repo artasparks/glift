@@ -11,8 +11,8 @@ glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
       // an illegal move.
       return;
     }
+    var hooks = widget.hooks();
     widget.applyBoardData(data);
-    var callback = widget.sgfOptions.problemCallback;
     if (widget.correctness === undefined) {
       if (data.result === problemResults.CORRECT) {
         widget.iconBar.destroyTempIcons();
@@ -25,7 +25,7 @@ glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
                 'multiopen-boxonly',
                 widget.numCorrectAnswers + '/' + widget.totalCorrectAnswers,
                 { fill: '#0CC', stroke: '#0CC'});
-            callback(problemResults.CORRECT);
+            hooks.problemCorrect();
           } else {
             widget.iconBar.addTempText(
                 'multiopen-boxonly',
@@ -42,7 +42,7 @@ glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
         widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
         widget.iconBar.clearTempText('multiopen-boxonly');
         widget.correctness = problemResults.INCORRECT;
-        callback(problemResults.INCORRECT);
+        hooks.problemIncorrect();
       }
     }
   },
