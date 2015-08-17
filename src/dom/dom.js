@@ -215,7 +215,8 @@ glift.dom.Element.prototype = {
 
   /** Remove the current element from the dom. */
   remove: function() {
-    this.el.parentElement && this.el.parentElement.removeChild(this.el);
+    var parent = this.el.parentNode;
+    if (parent) parent.removeChild(this.el);
   },
 
   /** Empty out the children. */

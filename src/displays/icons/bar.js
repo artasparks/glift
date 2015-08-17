@@ -220,8 +220,9 @@ glift.displays.icons._IconBar.prototype = {
   },
 
   clearTempText: function(iconName) {
-    this.svg.rmChild(this.idGen.tempIconText(iconName));
-    var el = glift.dom.elem(this.idGen.tempIconText(iconName));
+    var iconId = this.idGen.tempIconText(iconName);
+    this.svg.rmChild(iconId);
+    var el = glift.dom.elem(iconId);
     el && el.remove();
   },
 

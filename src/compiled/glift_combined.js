@@ -1263,7 +1263,8 @@ glift.dom.Element.prototype = {
 
   /** Remove the current element from the dom. */
   remove: function() {
-    this.el.parentElement && this.el.parentElement.removeChild(this.el);
+    var parent = this.el.parentNode;
+    if (parent) parent.removeChild(this.el);
   },
 
   /** Empty out the children. */
@@ -5325,8 +5326,9 @@ glift.displays.icons._IconBar.prototype = {
   },
 
   clearTempText: function(iconName) {
-    this.svg.rmChild(this.idGen.tempIconText(iconName));
-    var el = glift.dom.elem(this.idGen.tempIconText(iconName));
+    var iconId = this.idGen.tempIconText(iconName);
+    this.svg.rmChild(iconId);
+    var el = glift.dom.elem(iconId);
     el && el.remove();
   },
 
