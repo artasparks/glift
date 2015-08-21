@@ -162,8 +162,12 @@ glift.rules.treepath = {
 
   /**
    * Converts a treepath back to an initial path string. This is like the
-   * toFragmentString, except that long strings of zeroes are converted to move
-   * numbers.  I.e, 0,0,0,0 => 3
+   * toFragmentString, except that long strings of -initial- zeroes are
+   * converted to move numbers.
+   *
+   * I.e,
+   *   0,0,0 => 3
+   *   0,0,0.1 => 3.1
    *
    * Note: Once we're on a variation, we don't collapse the path
    */
@@ -180,11 +184,13 @@ glift.rules.treepath = {
         }
         // ignore otherwise
       } else if (elem > 0) {
-        out.push(i);
-        out.push(elem);
+        // Since elem is non-zero, it's a variation indicator.
         if (onMainLine) {
           onMainLine = false;
+          // Note: We only want to push the initial-move-number part *once*
+          out.push(i);
         }
+        out.push(elem);
       }
     }
     return out.join('.');

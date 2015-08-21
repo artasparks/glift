@@ -59,6 +59,7 @@
     deepEqual(convert([0,0,0,1]), '3.1')
     deepEqual(convert([0,0,0,1,0]), '3.1.0')
     deepEqual(convert([0,0,0,1,0,0]), '3.1.0.0')
+    deepEqual(convert([0,0,0,1,0,0,12,0,5]), '3.1.0.0.12.0.5')
   });
 
   test('Parse a fragment', function() {
