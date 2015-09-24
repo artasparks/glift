@@ -7,11 +7,11 @@ glift.displays.board = {
 /**
  * The core Display object returned to the user.
  */
-glift.displays.board.Display = function(inEnvironment, theme, rotation) {
+glift.displays.board.Display = function(environment, theme, rotation) {
   // Due layering issues, we need to keep track of the order in which we
   // created the objects.
   this._objectHistory = [];
-  this._environment = inEnvironment;
+  this._environment = environment;
   this._theme = theme;
 
   // Rotation indicates whether we should rotate by stones/marks in the display

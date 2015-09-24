@@ -272,7 +272,7 @@
     deepEqual(f.board().height(), 19);
 
     // top-left crop
-    var mt = glift.rules.movetree.getFromSgf(
+    mt = glift.rules.movetree.getFromSgf(
         '(;GM[1]AB[aa][as][sa][ss]' + // full board base
         ';B[bb];W[cc];B[dd];W[ee])',
         [0,0]);
@@ -287,5 +287,33 @@
     });
     deepEqual(f.board().width(), 19);
     deepEqual(f.board().height(), 11);
+  });
+
+  test('Getting moves', function() {
+    var initPos = [0,0,0,0,1];
+    var sgf =
+        '(;GM[1]AB[aa][as][sa][ss]' +
+        ';B[bb];W[cc];B[dd];W[ee](;B[fa];W[fb])(;B[fb];W[fc]))';
+    var mt = glift.rules.movetree.getFromSgf(sgf, initPos);
+    var f = flattener.flatten(mt, {});
+    ok(f);
+    deepEqual(f.mainlineMove().point, toPt('ee'));
+    deepEqual(f.nextMainlineMove().point, toPt('fa'));
+
+    initPos = [];
+    mt = glift.rules.movetree.getFromSgf(sgf, initPos);
+    f = flattener.flatten(mt, {});
+    deepEqual(f.mainlineMove(), null, 'mainline');
+    deepEqual(f.mainlineMoveNum(), 0, 'mainline num');
+    deepEqual(f.nextMainlineMove().point, toPt('bb'), 'next mainline pt');
+    deepEqual(f.nextMainlineMoveNum(), 1, 'mainline num');
+
+    initPos = [0,0,0,0,0,0,0];
+    mt = glift.rules.movetree.getFromSgf(sgf, initPos);
+    f = flattener.flatten(mt, {});
+    deepEqual(f.mainlineMove().point, toPt('fb'), 'mainline end');
+    deepEqual(f.mainlineMoveNum(), 6, 'mainline num end');
+    deepEqual(f.nextMainlineMove(), null, 'next mainline pt end');
+    deepEqual(f.nextMainlineMoveNum(), 7, 'mainline num end');
   });
 })();

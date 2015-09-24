@@ -3,7 +3,8 @@
  */
 glift.flattener.Flattened = function(
     board, collisions, comment, boardRegion, cropping, isOnMainPath,
-    startMoveNum, endMoveNum, mainlineMoveNum, mainlineMove, stoneMap) {
+    startMoveNum, endMoveNum, mainlineMoveNum, mainlineMove,
+    nextMainlineMove, stoneMap) {
   /**
    * Board wrapper. Essentially a double array of intersection objects.
    */
@@ -39,10 +40,16 @@ glift.flattener.Flattened = function(
   this._mainlineMoveNum = mainlineMoveNum;
 
   /**
-   * The move -- {color: <color>, point: <pt> at the first mainline move in the
+   * The move -- {color: <color>, point: <pt>} at the first mainline move in the
    * parent tree. Can be null if no move exists at the node.
    */
   this._mainlineMove = mainlineMove;
+  /**
+   * The next mainline move after the mainline move above.. Usually variations
+   * are variations on the _next_ move, so it's usually useful to reference the
+   * next move.
+   */
+  this._nextMainlineMove = nextMainlineMove;
 
   /**
    * All the stones!
@@ -83,10 +90,23 @@ glift.flattener.Flattened.prototype = {
   mainlineMoveNum: function() { return this._mainlineMoveNum; },
 
   /**
+   * Returns the move number of the nextMainlineMove (regardless of whether or
+   * not it exists.
+   */
+  nextMainlineMoveNum: function() { return this.mainlineMoveNum() + 1; },
+
+  /**
    * Returns the first mainline move in the parent-chain. Can be null if no move
-   * exists and has the form {color: <color>, pt: <pt>} otherwise.
+   * exists and has the form {color: <color>, pt: <pt>} if defined.
    */
   mainlineMove: function() { return this._mainlineMove; },
+
+  /**
+   * Returns the next mainline move after the mainline move in the parent-chain.
+   * Can be null if no move exists and has the form {color: <color>, pt: <pt>}
+   * if defined.
+   */
+  nextMainlineMove: function() { return this._nextMainlineMove; },
 
   /** Returns the stone map. */
   stoneMap: function() { return this._stoneMap; },

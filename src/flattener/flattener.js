@@ -58,9 +58,18 @@ glift.flattener = {
     // The move number of the first mainline move in the parent-chain.
     var mainlineMoveNum = mt.getMainlineNode().getNodeNum();
 
-    // Like the above, except in stone format (Black 10). null if at the root
-    // (or due to weirdness like placements).
+    // Like the above, except in stne format. In other words: {color: <color>,
+    // point: <pt>}. null if at the root (or due to weirdness like placements).
     var mainlineMove = mt.getMainlineNode().properties().getMove();
+
+    // We also grab the next mainline move. For variations (for display), we
+    // usually want to reference the _next_ move rather than the parent mainline
+    // move. As with the mainline move above, the next move can be null.
+    var nextMainlineMove = null;
+    var nextMainlineNode = mt.getMainlineNode().getChild(0);
+    if (nextMainlineNode) {
+      nextMainlineMove = nextMainlineNode.properties().getMove();
+    }
 
     // Initial move number -- used to calculate the ending move number.
     var initNodeNumber = mt.node().getNodeNum();
@@ -111,7 +120,7 @@ glift.flattener = {
     return new glift.flattener.Flattened(
         board, collisions, comment, boardRegion, cropping, mt.onMainline(),
         startingMoveNum, endingMoveNum, mainlineMoveNum, mainlineMove,
-        stoneMap);
+        nextMainlineMove, stoneMap);
   },
 
   /**

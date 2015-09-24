@@ -4055,11 +4055,11 @@ glift.displays.board = {
 /**
  * The core Display object returned to the user.
  */
-glift.displays.board.Display = function(inEnvironment, theme, rotation) {
+glift.displays.board.Display = function(environment, theme, rotation) {
   // Due layering issues, we need to keep track of the order in which we
   // created the objects.
   this._objectHistory = [];
-  this._environment = inEnvironment;
+  this._environment = environment;
   this._theme = theme;
 
   // Rotation indicates whether we should rotate by stones/marks in the display
@@ -11218,9 +11218,18 @@ glift.flattener = {
     // The move number of the first mainline move in the parent-chain.
     var mainlineMoveNum = mt.getMainlineNode().getNodeNum();
 
-    // Like the above, except in stone format (Black 10). null if at the root
-    // (or due to weirdness like placements).
+    // Like the above, except in stne format. In other words: {color: <color>,
+    // point: <pt>}. null if at the root (or due to weirdness like placements).
     var mainlineMove = mt.getMainlineNode().properties().getMove();
+
+    // We also grab the next mainline move. For variations (for display), we
+    // usually want to reference the _next_ move rather than the parent mainline
+    // move. As with the mainline move above, the next move can be null.
+    var nextMainlineMove = null;
+    var nextMainlineNode = mt.getMainlineNode().getChild(0);
+    if (nextMainlineNode) {
+      nextMainlineMove = nextMainlineNode.properties().getMove();
+    }
 
     // Initial move number -- used to calculate the ending move number.
     var initNodeNumber = mt.node().getNodeNum();
@@ -11271,7 +11280,7 @@ glift.flattener = {
     return new glift.flattener.Flattened(
         board, collisions, comment, boardRegion, cropping, mt.onMainline(),
         startingMoveNum, endingMoveNum, mainlineMoveNum, mainlineMove,
-        stoneMap);
+        nextMainlineMove, stoneMap);
   },
 
   /**
@@ -11676,7 +11685,8 @@ glift.flattener._Board.prototype = {
  */
 glift.flattener.Flattened = function(
     board, collisions, comment, boardRegion, cropping, isOnMainPath,
-    startMoveNum, endMoveNum, mainlineMoveNum, mainlineMove, stoneMap) {
+    startMoveNum, endMoveNum, mainlineMoveNum, mainlineMove,
+    nextMainlineMove, stoneMap) {
   /**
    * Board wrapper. Essentially a double array of intersection objects.
    */
@@ -11712,10 +11722,16 @@ glift.flattener.Flattened = function(
   this._mainlineMoveNum = mainlineMoveNum;
 
   /**
-   * The move -- {color: <color>, point: <pt> at the first mainline move in the
+   * The move -- {color: <color>, point: <pt>} at the first mainline move in the
    * parent tree. Can be null if no move exists at the node.
    */
   this._mainlineMove = mainlineMove;
+  /**
+   * The next mainline move after the mainline move above.. Usually variations
+   * are variations on the _next_ move, so it's usually useful to reference the
+   * next move.
+   */
+  this._nextMainlineMove = nextMainlineMove;
 
   /**
    * All the stones!
@@ -11756,10 +11772,23 @@ glift.flattener.Flattened.prototype = {
   mainlineMoveNum: function() { return this._mainlineMoveNum; },
 
   /**
+   * Returns the move number of the nextMainlineMove (regardless of whether or
+   * not it exists.
+   */
+  nextMainlineMoveNum: function() { return this.mainlineMoveNum() + 1; },
+
+  /**
    * Returns the first mainline move in the parent-chain. Can be null if no move
-   * exists and has the form {color: <color>, pt: <pt>} otherwise.
+   * exists and has the form {color: <color>, pt: <pt>} if defined.
    */
   mainlineMove: function() { return this._mainlineMove; },
+
+  /**
+   * Returns the next mainline move after the mainline move in the parent-chain.
+   * Can be null if no move exists and has the form {color: <color>, pt: <pt>}
+   * if defined.
+   */
+  nextMainlineMove: function() { return this._nextMainlineMove; },
 
   /** Returns the stone map. */
   stoneMap: function() { return this._stoneMap; },
