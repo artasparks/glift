@@ -85,18 +85,33 @@
   test('Next moves path cropping: Top', function() {
     var mt = glift.rules.movetree.getFromSgf(
         '(;GM[1]AB[aa][as][sa][ss]' +
-        ';B[rr];W[cc];B[re];W[ee])',
+        ';B[rr];W[cc]' + // where we start
+        ';B[re];W[ee])', // where we end
         [0,0]);
     deepEqual(mt.node().getNodeNum(), 2);
+    deepEqual(mt.properties().getOneValue('W'), 'cc');
     deepEqual(getCropRegion(mt, [0,0]), boardRegions.TOP);
+  });
+
+  test('Next moves path cropping: Top, Labels', function() {
+    var mt = glift.rules.movetree.getFromSgf(
+        '(;GM[1]AB[aa][as][sa][ss]' +
+        ';B[rr];W[cc]' + // where we start
+        ';B[re]SQ[ee])', // where we end
+        [0,0]);
+    deepEqual(mt.node().getNodeNum(), 2);
+    deepEqual(mt.properties().getOneValue('W'), 'cc');
+    deepEqual(getCropRegion(mt, [0]), boardRegions.TOP);
   });
 
   test('Next moves path cropping: All', function() {
     var mt = glift.rules.movetree.getFromSgf(
         '(;GM[1]AB[aa][as][sa][ss]' +
-        ';B[rr];W[cc];B[rr];W[ee])',
+        ';B[rr];W[cc]' + // where we start (cc)
+        ';B[rs];W[ee])', // where we end. note different from above: rs vs re
         [0,0]);
     deepEqual(mt.node().getNodeNum(), 2);
+    deepEqual(mt.properties().getOneValue('W'), 'cc');
     deepEqual(getCropRegion(mt, [0,0]), boardRegions.ALL);
   });
 

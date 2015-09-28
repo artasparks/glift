@@ -32,7 +32,7 @@ glift.rules.propertiesWithPts = {
 };
 
 /** All the SGF Properties plus some things. */
-//  TODO(kashomon): Comment these.
+//  TODO(kashomon): Comment these and delete the invalid ones.
 glift.rules.allProperties = {
 AB: 'AB', AE: 'AE', AN: 'AN', AP: 'AP', AR: 'AR', AS: 'AS', AW: 'AW', B: 'B',
 BL: 'BL', BM: 'BM', BR: 'BR', BS: 'BS', BT: 'BT', C: 'C', CA: 'CA', CH: 'CH',
@@ -386,8 +386,14 @@ Properties.prototype = {
    *
    * returns:
    *  {
-   *    BLACK: <pts>
-   *    WHITE: <pts>
+   *    BLACK: [<move>, <move>, ...]
+   *    WHITE: [...]
+   *  }
+   *
+   *  where move is:
+   *  {
+   *    point: pt,
+   *    color: color
    *  }
    */
   getAllStones: function() {
@@ -395,11 +401,96 @@ Properties.prototype = {
         out = {},
         BLACK = states.BLACK,
         WHITE = states.WHITE;
-    out[BLACK] = this.getPlacementsAsPoints(states.BLACK);
-    out[WHITE] = this.getPlacementsAsPoints(states.WHITE);
+    out.WHITE = [];
+    out.BLACK = [];
+
+    var bplace = this.getPlacementsAsPoints(states.BLACK);
+    var wplace = this.getPlacementsAsPoints(states.WHITE);
+    for (var i = 0; i < bplace.length; i++) {
+      out.BLACK.push({point: bplace[i], color: BLACK});
+    }
+    for (var i = 0; i < wplace.length; i++) {
+      out.WHITE.push({point: wplace[i], color: WHITE});
+    }
     var move = this.getMove();
     if (move && move.point) {
-      out[move.color].push(move.point);
+      out[move.color].push(move);
+    }
+    return out;
+  },
+
+
+  /**
+   * Gets all the marks, where the output is a map from glift mark enum to array
+   * of points. In the case of labels, a value key is supplied as well to
+   * indicate the label. Note that the board must contain at least one mark for
+   * a key to exist in the output map
+   *
+   * The return has the format:
+   *  {
+   *    LABEL: [{value: lb, point: pt}, ...],
+   *    : [{point: pt}, ...]
+   *  }
+   */
+  getAllMarks: function() {
+    var propertiesToMarks = {
+      CR: glift.enums.marks.CIRCLE,
+      LB: glift.enums.marks.LABEL,
+      MA: glift.enums.marks.XMARK,
+      SQ: glift.enums.marks.SQUARE,
+      TR: glift.enums.marks.TRIANGLE
+    };
+    var outMarks = {};
+    for (var prop in propertiesToMarks) {
+      var mark = propertiesToMarks[prop];
+      if (this.contains(prop)) {
+        var data = this.getAllValues(prop);
+        var marksToAdd = [];
+        for (var i = 0; i < data.length; i++) {
+          if (prop === glift.rules.allProperties.LB) {
+            // Labels have the form { point: pt, value: 'A' }
+            marksToAdd.push(glift.sgf.convertFromLabelData(data[i]));
+          } else {
+            // A single point or a point rectangle (which is why the return-type
+            // is an array.
+            var newPts = glift.util.pointArrFromSgfProp(data[i])
+            for (var j = 0; j < newPts.length; j++) {
+              marksToAdd.push({
+                point: newPts[j]
+              });
+            }
+          }
+        }
+        outMarks[mark] = marksToAdd;
+      }
+    }
+    return outMarks;
+  },
+
+  /**
+   * Get all display intersections. Equivalent to calling getAllStones and
+   * getAllMarks and merging the result. Note that the points are segregated by
+   * category:
+   *
+   * {
+   *  BLACK: [...],
+   *  WHITE: [...],
+   *  LABEL: [...],
+   *  SQUARE: [...],
+   * }
+   *
+   * Note that the marks could (and usually will) overlap with the stones, so
+   * duplicate points need to be accounted for.
+   */
+  getAllDisplayPts: function() {
+    var marks = this.getAllMarks();
+    var stones = this.getAllStones();
+    var out = {};
+    for (var key in marks) {
+      out[key] = marks[key];
+    }
+    for (var key in stones) {
+      out[key] = stones[key];
     }
     return out;
   },

@@ -13,7 +13,6 @@
  *     ],
  *     comment: "This is a good move",
  *   }
-rules *
  * In the points array, each must object contain a point, and each should contain a
  * mark or a stone.  There can only be a maximum of one stone and one mark
  * (glift.enums.marks).
@@ -108,7 +107,19 @@ glift.bridge.intersections = {
       movetree, currentCaptures, problemConditions, nextVarNumber) {
     var baseData = glift.bridge.intersections.basePropertyData(
         movetree, problemConditions, nextVarNumber);
-    baseData.stones = movetree.properties().getAllStones();
+    var allStones = movetree.properties().getAllStones();
+    baseData.stones = {};
+
+    // The properties returns moves rather than a list of points. However, the
+    // intersections still expect an array of points =(. Thus we need to
+    // transform into an array of points here.
+    for (var color in allStones) {
+      var moves = allStones[color];
+      baseData.stones[color] = [];
+      for (var i = 0; i < moves.length; i++) {
+        baseData.stones[color].push(moves[i].point);
+      }
+    }
     baseData.stones.EMPTY = [];
     for (var color in currentCaptures) {
       for (var i = 0; i < currentCaptures[color].length; i++) {
@@ -131,7 +142,7 @@ glift.bridge.intersections = {
     baseData.stones.EMPTY = [];
     for (var color in stones) {
       for (var i = 0; i < stones[color].length; i++) {
-        baseData.stones.EMPTY.push(stones[color][i]);
+        baseData.stones.EMPTY.push(stones[color][i].point);
       }
     }
     return baseData;
@@ -141,8 +152,9 @@ glift.bridge.intersections = {
    * Create an object with the current marks at the current position in the
    * movetree.
    *
-   * returns: map from
+   * returns: map from label to array of points
    */
+  // TODO(kashomon): Use the getAllMarks directly from the properties code.
   getCurrentMarks: function(movetree) {
     var outMarks = {};
     for (var prop in glift.bridge.intersections.propertiesToMarks) {

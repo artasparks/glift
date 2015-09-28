@@ -44,16 +44,18 @@ glift.orientation.getQuadCropFromMovetree = function(movetree, nextMovesPath) {
 
   // Tracker uses the movetree that's passed in to add items to the tracker.
   var tracker = function(mt) {
-    var stones = mt.properties().getAllStones();
-    for (var color in stones) {
-      var points = stones[color];
+    var displayPoints = mt.properties().getAllDisplayPts();
+    for (var key in displayPoints) {
+      var points = displayPoints[key];
       for (var i = 0; i < points.length; i++) {
-        var pt = points[i];
+        var pt = points[i].point;
         for (var quadkey in quads) {
           var box = quads[quadkey];
           if (middle === pt.x() || middle === pt.y()) {
             // Ignore points right on the middle.  It shouldn't make a different
             // for cropping, anyway.
+            // TODO(kashomon): After thinking about it more, I think it may make
+            // a difference. Needs to be considered more carefully.
           } else if (box.contains(pt)) {
             if (tracker[quadkey] === undefined) tracker[quadkey] = [];
             tracker[quadkey].push(pt);

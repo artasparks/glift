@@ -11,8 +11,8 @@
     ok(props.contains('AB'))
     deepEqual(props.getAllValues('AB').length, 2, 'Must have 2 elems');
     var allStones = props.getAllStones();
-    deepEqual(allStones.BLACK[0].toString(), '0,0');
-    deepEqual(allStones.BLACK[1].toString(), '18,18');
+    deepEqual(allStones.BLACK[0].point.toString(), '0,0');
+    deepEqual(allStones.BLACK[1].point.toString(), '18,18');
   })
 
   test('Matches and not Matches', function() {
@@ -157,4 +157,30 @@
     deepEqual(props.getOneValue('LB'),  pt(17, 2).toSgfCoord() + ':ab');
 
   });
+
+  test('getAllMarks', function() {
+    var pt = glift.util.pointFromSgfCoord;
+    var defaultProps = properties()
+    deepEqual(defaultProps.getAllMarks(), {});
+
+    var props = properties()
+        .add('LB', 'cb:Z')
+        .add('LB', 'cf:A')
+        .add('SQ', 'da')
+        .add('SQ', 'db')
+        .add('SQ', 'dc:dd'); // point rectangle
+    var marks = props.getAllMarks();
+    deepEqual(marks.SQUARE.length, 4);
+    deepEqual(marks.LABEL.length, 2);
+    deepEqual(marks.SQUARE, [
+      {point: pt('da')},
+      {point: pt('db')},
+      {point: pt('dc')},
+      {point: pt('dd')}
+    ]);
+    deepEqual(marks.LABEL, [
+      {point: pt('cb'), value: 'Z'},
+      {point: pt('cf'), value: 'A'}
+    ]);
+  })
 })();

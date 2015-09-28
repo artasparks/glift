@@ -400,7 +400,7 @@ glift.rules._MoveTree.prototype = {
         var moves = stones[color];
         var prop = propMap[color];
         for (var j = 0; j < moves.length; j++) {
-          var point = moves[j];
+          var point = moves[j].point;
           if (point && prop) {
             mt.properties().add(prop, point.toSgfCoord());
           }

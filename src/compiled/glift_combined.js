@@ -7707,7 +7707,7 @@ Goban.prototype = {
       var result = this.addStone(mv.point, mv.color);
       if (result.successful) {
         var oppositeColor = glift.util.colors.oppositeColor(mv.color);
-        for (var k = 0, len = result.captures.length; k < len; k++) {
+        for (var k = 0; k < result.captures.length; k++) {
           captures[oppositeColor].push(result.captures[k]);
         }
       }
@@ -7718,14 +7718,17 @@ Goban.prototype = {
    * Back out a movetree addition (used for going back a move).
    *
    * Recall that stones and captures both have the form:
-   *  { BLACK: [..pts..], WHITE: [..pts..] };
+   *  { BLACK: [..move..], WHITE: [..move..] };
+   *
+   * where move looks like:
+   *  { point: pt, color: color }
    */
   // TODO(kashomon): Add testing for this in goban_test
   unloadStones: function(stones, captures) {
     var colors = [ glift.enums.states.BLACK, glift.enums.states.WHITE ];
     for (var color in stones) {
       for (var j = 0; j < stones[color].length; j++) {
-        this.clearStone(stones[color][j]);
+        this.clearStone(stones[color][j].point);
       }
     }
     for (var color in captures) {
@@ -8302,7 +8305,7 @@ glift.rules._MoveTree.prototype = {
         var moves = stones[color];
         var prop = propMap[color];
         for (var j = 0; j < moves.length; j++) {
-          var point = moves[j];
+          var point = moves[j].point;
           if (point && prop) {
             mt.properties().add(prop, point.toSgfCoord());
           }
@@ -8566,7 +8569,7 @@ glift.rules.propertiesWithPts = {
 };
 
 /** All the SGF Properties plus some things. */
-//  TODO(kashomon): Comment these.
+//  TODO(kashomon): Comment these and delete the invalid ones.
 glift.rules.allProperties = {
 AB: 'AB', AE: 'AE', AN: 'AN', AP: 'AP', AR: 'AR', AS: 'AS', AW: 'AW', B: 'B',
 BL: 'BL', BM: 'BM', BR: 'BR', BS: 'BS', BT: 'BT', C: 'C', CA: 'CA', CH: 'CH',
@@ -8920,8 +8923,14 @@ Properties.prototype = {
    *
    * returns:
    *  {
-   *    BLACK: <pts>
-   *    WHITE: <pts>
+   *    BLACK: [<move>, <move>, ...]
+   *    WHITE: [...]
+   *  }
+   *
+   *  where move is:
+   *  {
+   *    point: pt,
+   *    color: color
    *  }
    */
   getAllStones: function() {
@@ -8929,11 +8938,96 @@ Properties.prototype = {
         out = {},
         BLACK = states.BLACK,
         WHITE = states.WHITE;
-    out[BLACK] = this.getPlacementsAsPoints(states.BLACK);
-    out[WHITE] = this.getPlacementsAsPoints(states.WHITE);
+    out.WHITE = [];
+    out.BLACK = [];
+
+    var bplace = this.getPlacementsAsPoints(states.BLACK);
+    var wplace = this.getPlacementsAsPoints(states.WHITE);
+    for (var i = 0; i < bplace.length; i++) {
+      out.BLACK.push({point: bplace[i], color: BLACK});
+    }
+    for (var i = 0; i < wplace.length; i++) {
+      out.WHITE.push({point: wplace[i], color: WHITE});
+    }
     var move = this.getMove();
     if (move && move.point) {
-      out[move.color].push(move.point);
+      out[move.color].push(move);
+    }
+    return out;
+  },
+
+
+  /**
+   * Gets all the marks, where the output is a map from glift mark enum to array
+   * of points. In the case of labels, a value key is supplied as well to
+   * indicate the label. Note that the board must contain at least one mark for
+   * a key to exist in the output map
+   *
+   * The return has the format:
+   *  {
+   *    LABEL: [{value: lb, point: pt}, ...],
+   *    : [{point: pt}, ...]
+   *  }
+   */
+  getAllMarks: function() {
+    var propertiesToMarks = {
+      CR: glift.enums.marks.CIRCLE,
+      LB: glift.enums.marks.LABEL,
+      MA: glift.enums.marks.XMARK,
+      SQ: glift.enums.marks.SQUARE,
+      TR: glift.enums.marks.TRIANGLE
+    };
+    var outMarks = {};
+    for (var prop in propertiesToMarks) {
+      var mark = propertiesToMarks[prop];
+      if (this.contains(prop)) {
+        var data = this.getAllValues(prop);
+        var marksToAdd = [];
+        for (var i = 0; i < data.length; i++) {
+          if (prop === glift.rules.allProperties.LB) {
+            // Labels have the form { point: pt, value: 'A' }
+            marksToAdd.push(glift.sgf.convertFromLabelData(data[i]));
+          } else {
+            // A single point or a point rectangle (which is why the return-type
+            // is an array.
+            var newPts = glift.util.pointArrFromSgfProp(data[i])
+            for (var j = 0; j < newPts.length; j++) {
+              marksToAdd.push({
+                point: newPts[j]
+              });
+            }
+          }
+        }
+        outMarks[mark] = marksToAdd;
+      }
+    }
+    return outMarks;
+  },
+
+  /**
+   * Get all display intersections. Equivalent to calling getAllStones and
+   * getAllMarks and merging the result. Note that the points are segregated by
+   * category:
+   *
+   * {
+   *  BLACK: [...],
+   *  WHITE: [...],
+   *  LABEL: [...],
+   *  SQUARE: [...],
+   * }
+   *
+   * Note that the marks could (and usually will) overlap with the stones, so
+   * duplicate points need to be accounted for.
+   */
+  getAllDisplayPts: function() {
+    var marks = this.getAllMarks();
+    var stones = this.getAllStones();
+    var out = {};
+    for (var key in marks) {
+      out[key] = marks[key];
+    }
+    for (var key in stones) {
+      out[key] = stones[key];
     }
     return out;
   },
@@ -10827,7 +10921,6 @@ glift.bridge = {
  *     ],
  *     comment: "This is a good move",
  *   }
-rules *
  * In the points array, each must object contain a point, and each should contain a
  * mark or a stone.  There can only be a maximum of one stone and one mark
  * (glift.enums.marks).
@@ -10922,7 +11015,19 @@ glift.bridge.intersections = {
       movetree, currentCaptures, problemConditions, nextVarNumber) {
     var baseData = glift.bridge.intersections.basePropertyData(
         movetree, problemConditions, nextVarNumber);
-    baseData.stones = movetree.properties().getAllStones();
+    var allStones = movetree.properties().getAllStones();
+    baseData.stones = {};
+
+    // The properties returns moves rather than a list of points. However, the
+    // intersections still expect an array of points =(. Thus we need to
+    // transform into an array of points here.
+    for (var color in allStones) {
+      var moves = allStones[color];
+      baseData.stones[color] = [];
+      for (var i = 0; i < moves.length; i++) {
+        baseData.stones[color].push(moves[i].point);
+      }
+    }
     baseData.stones.EMPTY = [];
     for (var color in currentCaptures) {
       for (var i = 0; i < currentCaptures[color].length; i++) {
@@ -10945,7 +11050,7 @@ glift.bridge.intersections = {
     baseData.stones.EMPTY = [];
     for (var color in stones) {
       for (var i = 0; i < stones[color].length; i++) {
-        baseData.stones.EMPTY.push(stones[color][i]);
+        baseData.stones.EMPTY.push(stones[color][i].point);
       }
     }
     return baseData;
@@ -10955,8 +11060,9 @@ glift.bridge.intersections = {
    * Create an object with the current marks at the current position in the
    * movetree.
    *
-   * returns: map from
+   * returns: map from label to array of points
    */
+  // TODO(kashomon): Use the getAllMarks directly from the properties code.
   getCurrentMarks: function(movetree) {
     var outMarks = {};
     for (var prop in glift.bridge.intersections.propertiesToMarks) {
@@ -11032,16 +11138,18 @@ glift.orientation.getQuadCropFromMovetree = function(movetree, nextMovesPath) {
 
   // Tracker uses the movetree that's passed in to add items to the tracker.
   var tracker = function(mt) {
-    var stones = mt.properties().getAllStones();
-    for (var color in stones) {
-      var points = stones[color];
+    var displayPoints = mt.properties().getAllDisplayPts();
+    for (var key in displayPoints) {
+      var points = displayPoints[key];
       for (var i = 0; i < points.length; i++) {
-        var pt = points[i];
+        var pt = points[i].point;
         for (var quadkey in quads) {
           var box = quads[quadkey];
           if (middle === pt.x() || middle === pt.y()) {
             // Ignore points right on the middle.  It shouldn't make a different
             // for cropping, anyway.
+            // TODO(kashomon): After thinking about it more, I think it may make
+            // a difference. Needs to be considered more carefully.
           } else if (box.contains(pt)) {
             if (tracker[quadkey] === undefined) tracker[quadkey] = [];
             tracker[quadkey].push(pt);

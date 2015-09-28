@@ -281,7 +281,7 @@ Goban.prototype = {
       var result = this.addStone(mv.point, mv.color);
       if (result.successful) {
         var oppositeColor = glift.util.colors.oppositeColor(mv.color);
-        for (var k = 0, len = result.captures.length; k < len; k++) {
+        for (var k = 0; k < result.captures.length; k++) {
           captures[oppositeColor].push(result.captures[k]);
         }
       }
@@ -292,14 +292,17 @@ Goban.prototype = {
    * Back out a movetree addition (used for going back a move).
    *
    * Recall that stones and captures both have the form:
-   *  { BLACK: [..pts..], WHITE: [..pts..] };
+   *  { BLACK: [..move..], WHITE: [..move..] };
+   *
+   * where move looks like:
+   *  { point: pt, color: color }
    */
   // TODO(kashomon): Add testing for this in goban_test
   unloadStones: function(stones, captures) {
     var colors = [ glift.enums.states.BLACK, glift.enums.states.WHITE ];
     for (var color in stones) {
       for (var j = 0; j < stones[color].length; j++) {
-        this.clearStone(stones[color][j]);
+        this.clearStone(stones[color][j].point);
       }
     }
     for (var color in captures) {
