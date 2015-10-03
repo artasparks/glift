@@ -15,7 +15,8 @@ import re
 import subprocess
 
 FILES_TO_AUTOGEN = {
-    # Name / Add Tests to Imports
+    # Name / Add Tests to Imports. 'True' indicates that test files should be
+    # added.
     'htmltests/AjaxProblemTester.html': False,
     'htmltests/BaseWidgetTest.html': False,
     'htmltests/BboxFinder.html': False,
@@ -27,6 +28,7 @@ FILES_TO_AUTOGEN = {
     'htmltests/MoveNumberCircleTester.html': False,
     'htmltests/PositionTester.html': False,
     'htmltests/ProblemTester.html': False,
+    'htmltests/ProblemServerTester.html': False,
     'htmltests/QunitTest.html': True,
     'htmltests/TextOnlyTester.html': False,
     'htmltests/ThemeTester.html': False,
