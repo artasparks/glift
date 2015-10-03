@@ -61,6 +61,34 @@ glift.displays._BoundingBox.prototype = {
   },
 
   /**
+   * Returns a new bounding box that has been expanded to contain the point.
+   */
+  expandToContain: function(point) {
+    // Note that for our purposes the top left is 0,0 and the bottom right is
+    // (+N,+N). Thus, by this definition, the top left is the minimum and the
+    // bottom right is the maximum (true for both x and y).
+    var tlx = this.topLeft().x();
+    var tly = this.topLeft().y();
+    var brx = this.botRight().x();
+    var bry = this.botRight().y();
+    if (point.x() < tlx) {
+      tlx = point.x();
+    }
+    if (point.y() < tly) {
+      tly = point.y();
+    }
+    if (point.x() > brx) {
+      brx = point.x();
+    }
+    if (point.y() > bry) {
+      bry = point.y();
+    }
+    return glift.displays.bbox.fromPts(
+        glift.util.point(tlx, tly),
+        glift.util.point(brx, bry));
+  },
+
+  /**
    * Test to see if two bboxes are equal by comparing whether their points.
    */
   equals: function(other) {
@@ -117,7 +145,7 @@ glift.displays._BoundingBox.prototype = {
    * X ->  X X
    *
    * Note: There is always one less split decimal specified, so that we don't
-   * have rounding errors.In other words: [0.7] uses 0.7 and 0.3 for splits and
+   * have rounding errors. In other words: [0.7] uses 0.7 and 0.3 for splits and
    * [0.7, 0.2] uses 0.7, 0.2, and 0.1 for splits.
    */
   vSplit: function(bboxSplits) {

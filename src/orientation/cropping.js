@@ -1,4 +1,23 @@
 /**
+ * Get the minimal bounding box for set of stones and marks for the movetree.
+ *
+ * There are there ccases to consider:
+ * 1. nextMovesPath is not defined. Recurse over the entire tree. Don't use
+ *    marks for cropping consideration.
+ * 2. nextMovesPath is an empty array. Calculate for the current position. Use
+ *    marks for cropping consideration
+ * 3. nextMovesPath is a non empty array. Treat the nextMovesPath as a
+ *    variations tree path and traverse just the path.
+ *
+ * To calculate the minimalBoundingBox for just the current position
+ */
+glift.orientation.minimalBoundingBox  = function(movetree, nextMovesPath) {
+  // Ensure we aren't changing the parent movetree's state.
+  var movetree = movetree.newTreeRef();
+
+};
+
+/**
  * Takes a movetree and returns the optimal BoardRegion-Quad for cropping purposes.
  *
  * This isn't a minimal cropping: we split the board into 4 quadrants.
@@ -43,8 +62,11 @@ glift.orientation.getQuadCropFromMovetree = function(movetree, nextMovesPath) {
   }
 
   // Tracker uses the movetree that's passed in to add items to the tracker.
-  var tracker = function(mt) {
+  // It's goal is to create a box that contains all the points. Then, we use the
+  // quad regions to fine a minimal covering.
+  var trackerFn = function(mt) {
     var displayPoints = mt.properties().getAllDisplayPts();
+    var middlePoints = [];
     for (var key in displayPoints) {
       var points = displayPoints[key];
       for (var i = 0; i < points.length; i++) {
@@ -52,13 +74,15 @@ glift.orientation.getQuadCropFromMovetree = function(movetree, nextMovesPath) {
         for (var quadkey in quads) {
           var box = quads[quadkey];
           if (middle === pt.x() || middle === pt.y()) {
-            // Ignore points right on the middle.  It shouldn't make a different
-            // for cropping, anyway.
-            // TODO(kashomon): After thinking about it more, I think it may make
-            // a difference. Needs to be considered more carefully.
+            // This is a trick situation.  The point is right on the middle.
+            // Look at all the other points first; Then, we'll come back and
+            // address these points.
+            middlePoints.push(pt);
           } else if (box.contains(pt)) {
             if (tracker[quadkey] === undefined) tracker[quadkey] = [];
             tracker[quadkey].push(pt);
+          } else {
+            // Not sure what's going on here. Maybe the point is out of bounds.
           }
         }
       }
@@ -71,10 +95,10 @@ glift.orientation.getQuadCropFromMovetree = function(movetree, nextMovesPath) {
     // movetree + the first variation in the nextMovesPath.
     for (var i = 0; i < nextMovesPath.length; i++) {
       movetree.moveDown(nextMovesPath[i]);
-      tracker(movetree);
+      trackerFn(movetree);
     }
   } else {
-    movetree.recurseFromRoot(tracker);
+    movetree.recurseFromRoot(trackerFn);
   }
   return glift.orientation._getRegionFromTracker(tracker);
 };

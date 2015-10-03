@@ -127,4 +127,19 @@
     expected3 = bboxFromPts(point(190,200), point(200, 300));
     deepEqual(bboxes, [expected1, expected2, expected3], 'hSplits');
   });
+
+  test('Expand a bounding box to contain a new point', function() {
+    var base = bboxFromPts(point(100, 200), point(200, 300));
+
+    var newBbox = base.expandToContain(point(90, 180));
+    var expected = bboxFromPts(point(90, 180), point(200, 300));
+    ok(newBbox.equals(expected), 'Expand to TL');
+
+    newBbox = base.expandToContain(point(210, 320));
+    expected = bboxFromPts(point(100, 200), point(210, 320));
+    ok(newBbox.equals(expected), 'Expand to BR');
+
+    newBbox = base.expandToContain(point(150, 250));
+    ok(newBbox.equals(base), 'Don\'t expand for inside point');
+  });
 })();
