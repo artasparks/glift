@@ -109,10 +109,9 @@ glift.displays.cropbox = {
 
     var cbox = glift.displays.bbox.fromPts(
         util.point(left, top), util.point(right, bot));
-    var extBox = glift.displays.bbox.fromPts(
-        util.point(leftExtension, topExtension),
-        util.point(rightExtension, botExtension));
-    return new glift.displays._CropBox(cbox, extBox, intersects);
+    var tlExt = util.point(leftExtension, topExtension);
+    var brExt = util.point(rightExtension, botExtension);
+    return new glift.displays._CropBox(cbox, tlExt, brExt, intersects);
   }
 };
 
@@ -120,9 +119,10 @@ glift.displays.cropbox = {
  * A cropbox is similar to a bounding box, but instead of a box based on pixels,
  * it's a box based on points.
  */
-glift.displays._CropBox = function(cbox, extBox, maxIntersects) {
+glift.displays._CropBox = function(cbox, tlExt, brExt, maxIntersects) {
   this._cbox = cbox;
-  this._extBox = extBox;
+  this._tlExt = tlExt;
+  this._brExt = brExt;
   this._maxInts = maxIntersects;
 };
 
@@ -141,12 +141,15 @@ glift.displays._CropBox.prototype = {
   maxBoardSize: function() { return this._maxInts; },
 
   /**
-   * The extension box is a special bounding box for cropped boards.  Due to
+   * The extension points are a special bounding box for cropped boards.  Due to
    * some quirks of the way the board is drawn, it's convenient to add this here
    * to indicate an extra amount around the edge necessary for the overflow
    * lines (the ragged crop-edge).
+   *
+   * Note: the x and y coordinates for these points will either be 0 or 0.5.
    */
-  extBox: function() { return this._extBox; },
+  tlExtPt: function() { return this._tlExt; },
+  brExtPt: function() { return this._brExt; },
 
   /**
    * Number of x points (or columns) for the cropped go board.
@@ -162,17 +165,16 @@ glift.displays._CropBox.prototype = {
    * Returns the number of 'intersections' we need to allocate for the height.
    * In otherwords:
    *    - The base intersections (e.g., 19x19).
-   *    -
    */
   widthMod: function() {
     var OVERFLOW = glift.displays.cropbox.OVERFLOW;
-    return this.cbox().width() + this.extBox().topLeft().x()
-        + this.extBox().botRight().x() + OVERFLOW;
+    return this.cbox().width() + this.tlExtPt().x()
+        + this.brExtPt().x() + OVERFLOW;
   },
 
   heightMod: function() {
     var OVERFLOW = glift.displays.cropbox.OVERFLOW;
-    return this.cbox().height() + this.extBox().topLeft().y()
-        + this.extBox().botRight().y() + OVERFLOW;
+    return this.cbox().height() + this.tlExtPt().y()
+        + this.brExtPt().y() + OVERFLOW;
   }
 };

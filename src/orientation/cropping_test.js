@@ -1,7 +1,9 @@
-;(function() {
+(function() {
   module('glift.orientation.croppingTest');
   var boardRegions = glift.enums.boardRegions;
   var getCropRegion = glift.orientation.getQuadCropFromMovetree;
+  var pt = glift.util.point;
+  var bbox = glift.displays.bbox.fromPts;
 
   // a = 0; i = 9; s = 18
   test('GetCropRegion: TOP_LEFT', function() {
@@ -115,16 +117,21 @@
     deepEqual(getCropRegion(mt, [0,0]), boardRegions.ALL);
   });
 
-  // TODO(kashomon): Support edges better. Currently the providing a stone on
-  // the edge crops to the whole board. Generally, this is fine, but it would be
-  // more accurate to crop to the top region. Undoubtedly, this edge case will
-  // get hit eventually in some legitimate way.
-  // test('Next moves path: Edge', function() {
-    // var mt = glift.rules.movetree.getFromSgf(
-        // '(;GM[1]AB[aa][as][sa][ss]' +
-        // ';B[rr];W[cc];B[je];W[jf])',
-        // [0,0]);
-    // deepEqual(mt.node().getNodeNum(), 2);
-    // deepEqual(getCropRegion(mt, [0,0]), boardRegions.TOP);
-  // });
+  test('Next moves path: Edge (overlap)', function() {
+    var mt = glift.rules.movetree.getFromSgf(
+        '(;GM[1]AB[aa][as][sa][ss]' +
+        ';B[rr];W[cc];B[je];W[jf])',
+        [0,0]);
+    deepEqual(mt.node().getNodeNum(), 2);
+    deepEqual(getCropRegion(mt, [0,0]), boardRegions.TOP);
+  });
+
+  test('Next moves path: Very middle (overlap)', function() {
+    var mt = glift.rules.movetree.getFromSgf(
+        '(;GM[1]AB[aa][as][sa][ss]' +
+        ';B[rr];W[cc];B[ii];W[jj])',
+        [0,0]);
+    deepEqual(mt.node().getNodeNum(), 2);
+    deepEqual(getCropRegion(mt, [0,0]), boardRegions.ALL);
+  });
 })();

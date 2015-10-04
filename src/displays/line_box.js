@@ -21,10 +21,13 @@ glift.displays.getLineBox = function(boardBox, cropbox) {
   return out;
 };
 
+// TODO(kashomon): This is a bad abstraction and needs to be rethought. It's
+// basically a container of global-ish state.
 glift.displays._LineBox = function(boundingBox, spacing, cropbox) {
   this.bbox = boundingBox;
   this.spacing = spacing;
-  this.extensionBox = cropbox.extBox();
+  this.tlExtPt = cropbox.tlExtPt();
+  this.brExtPt = cropbox.brExtPt();
   this.pointTopLeft = cropbox.cbox().topLeft();
   this.xPoints = cropbox.xPoints();
   this.yPoints = cropbox.yPoints();

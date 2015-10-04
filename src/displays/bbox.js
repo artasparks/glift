@@ -24,6 +24,12 @@ glift.displays.bbox = {
  * for widgets.
  */
 glift.displays._BoundingBox = function(topLeftPtIn, botRightPtIn) {
+  if (topLeftPtIn.x() > botRightPtIn.x() ||
+      topLeftPtIn.y() > botRightPtIn.y()) {
+    throw new Error('Topleft point must be less than the ' +
+        'bottom right point. tl:' + topLeftPtIn.toString() +
+        '; br:' + botRightPtIn.toString());
+  }
   this._topLeftPt = topLeftPtIn;
   this._botRightPt = botRightPtIn;
 };
@@ -31,6 +37,13 @@ glift.displays._BoundingBox = function(topLeftPtIn, botRightPtIn) {
 glift.displays._BoundingBox.prototype = {
   topLeft: function() { return this._topLeftPt; },
   botRight: function() { return this._botRightPt; },
+  /** TopRight and BotLeft are constructed */
+  topRight: function() {
+    return glift.util.point(this.right(), this.top());
+  },
+  botLeft: function() {
+    return glift.util.point(this.left(), this.bottom());
+  },
   width: function() { return this.botRight().x() - this.topLeft().x(); },
   height: function() { return this.botRight().y() - this.topLeft().y(); },
   top: function() { return this.topLeft().y(); },
@@ -52,12 +65,54 @@ glift.displays._BoundingBox.prototype = {
   /**
    * Test to see if a point is contained in the bounding box.  Points on the
    * edge count as being contained.
+   *
+   * We assume a canonical orientation of the top left being the minimum and the
+   * bottom right being the maximum.
    */
   contains: function(point) {
    return point.x() >= this.topLeft().x()
       && point.x() <= this.botRight().x()
       && point.y() >= this.topLeft().y()
       && point.y() <= this.botRight().y();
+  },
+
+  /**
+   * Test whether this bbox completely covers another bbox.
+   */
+  covers: function(bbox) {
+    return this.contains(bbox.topLeft()) &&
+        this.contains(bbox.botRight());
+  },
+
+  /**
+   * Intersect this bbox with another bbox and return a new bbox that represents
+   * the intersection.
+   *
+   * Returns null if the intersection is the emptyset.
+   */
+  intersect: function(bbox) {
+    // Note: Boxes overlap iff one of the boxes contains at least one of
+    // the corners.
+    var bboxOverlaps =
+        bbox.contains(this.topLeft()) ||
+        bbox.contains(this.topRight()) ||
+        bbox.contains(this.botLeft()) ||
+        bbox.contains(this.botRight()) ||
+        this.contains(bbox.topLeft()) ||
+        this.contains(bbox.topRight()) ||
+        this.contains(bbox.botLeft()) ||
+        this.contains(bbox.botRight());
+    if (!bboxOverlaps) {
+      return null;
+    }
+
+    var top = Math.max(this.top(), bbox.top());
+    var left = Math.max(this.left(), bbox.left());
+    var bottom = Math.min(this.bottom(), bbox.bottom());
+    var right = Math.min(this.right(), bbox.right());
+    return glift.displays.bbox.fromPts(
+        glift.util.point(left, top),
+        glift.util.point(right, bottom));
   },
 
   /**
@@ -109,7 +164,8 @@ glift.displays._BoundingBox.prototype = {
   },
 
   toString: function() {
-    return this.topLeft().toString() + ',' +  this.botRight().toString();
+    return '(' + this.topLeft().toString() + '),(' +  
+        this.botRight().toString() + ')';
   },
 
   translate: function(dx, dy) {
@@ -117,6 +173,8 @@ glift.displays._BoundingBox.prototype = {
         glift.util.point(this.topLeft().x() + dx, this.topLeft().y() + dy),
         glift.util.point(this.botRight().x() + dx, this.botRight().y() + dy));
   },
+
+  // TODO(kashomon): Move this splitting methods out of the base class.
 
   /**
    * Split this bbox into two or more divs across a horizontal axis.  The

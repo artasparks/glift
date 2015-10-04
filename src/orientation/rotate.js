@@ -1,16 +1,4 @@
 /**
- * Rotates a movetree so that it's canonical, given some cropbox
- */
-glift.orientation.autorotateMovetree = function(movetree, regionOrdering) {
-  var rotation = glift.orientation.findCanonicalRotation(movetree, regionOrdering);
-  movetree.recurse(function(mt) {
-    for (var key in mt.properties().propMap) {
-      // TODO(kashomon): Finish?
-    }
-  });
-};
-
-/**
  * Calculates the desired rotation. Returns one of
  * glift.enums.rotations.
  *

@@ -22,7 +22,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently on stable.
    */
-  version: '1.0.6',
+  version: '1.1.0',
 
   /** Indicates whether or not to store debug data. */
   // TODO(kashomon): Remove this hack.
@@ -3193,6 +3193,12 @@ glift.displays.bbox = {
  * for widgets.
  */
 glift.displays._BoundingBox = function(topLeftPtIn, botRightPtIn) {
+  if (topLeftPtIn.x() > botRightPtIn.x() ||
+      topLeftPtIn.y() > botRightPtIn.y()) {
+    throw new Error('Topleft point must be less than the ' +
+        'bottom right point. tl:' + topLeftPtIn.toString() +
+        '; br:' + botRightPtIn.toString());
+  }
   this._topLeftPt = topLeftPtIn;
   this._botRightPt = botRightPtIn;
 };
@@ -3200,6 +3206,13 @@ glift.displays._BoundingBox = function(topLeftPtIn, botRightPtIn) {
 glift.displays._BoundingBox.prototype = {
   topLeft: function() { return this._topLeftPt; },
   botRight: function() { return this._botRightPt; },
+  /** TopRight and BotLeft are constructed */
+  topRight: function() {
+    return glift.util.point(this.right(), this.top());
+  },
+  botLeft: function() {
+    return glift.util.point(this.left(), this.bottom());
+  },
   width: function() { return this.botRight().x() - this.topLeft().x(); },
   height: function() { return this.botRight().y() - this.topLeft().y(); },
   top: function() { return this.topLeft().y(); },
@@ -3221,12 +3234,82 @@ glift.displays._BoundingBox.prototype = {
   /**
    * Test to see if a point is contained in the bounding box.  Points on the
    * edge count as being contained.
+   *
+   * We assume a canonical orientation of the top left being the minimum and the
+   * bottom right being the maximum.
    */
   contains: function(point) {
    return point.x() >= this.topLeft().x()
       && point.x() <= this.botRight().x()
       && point.y() >= this.topLeft().y()
       && point.y() <= this.botRight().y();
+  },
+
+  /**
+   * Test whether this bbox completely covers another bbox.
+   */
+  covers: function(bbox) {
+    return this.contains(bbox.topLeft()) &&
+        this.contains(bbox.botRight());
+  },
+
+  /**
+   * Intersect this bbox with another bbox and return a new bbox that represents
+   * the intersection.
+   *
+   * Returns null if the intersection is the emptyset.
+   */
+  intersect: function(bbox) {
+    // Note: Boxes overlap iff one of the boxes contains at least one of
+    // the corners.
+    var bboxOverlaps =
+        bbox.contains(this.topLeft()) ||
+        bbox.contains(this.topRight()) ||
+        bbox.contains(this.botLeft()) ||
+        bbox.contains(this.botRight()) ||
+        this.contains(bbox.topLeft()) ||
+        this.contains(bbox.topRight()) ||
+        this.contains(bbox.botLeft()) ||
+        this.contains(bbox.botRight());
+    if (!bboxOverlaps) {
+      return null;
+    }
+
+    var top = Math.max(this.top(), bbox.top());
+    var left = Math.max(this.left(), bbox.left());
+    var bottom = Math.min(this.bottom(), bbox.bottom());
+    var right = Math.min(this.right(), bbox.right());
+    return glift.displays.bbox.fromPts(
+        glift.util.point(left, top),
+        glift.util.point(right, bottom));
+  },
+
+  /**
+   * Returns a new bounding box that has been expanded to contain the point.
+   */
+  expandToContain: function(point) {
+    // Note that for our purposes the top left is 0,0 and the bottom right is
+    // (+N,+N). Thus, by this definition, the top left is the minimum and the
+    // bottom right is the maximum (true for both x and y).
+    var tlx = this.topLeft().x();
+    var tly = this.topLeft().y();
+    var brx = this.botRight().x();
+    var bry = this.botRight().y();
+    if (point.x() < tlx) {
+      tlx = point.x();
+    }
+    if (point.y() < tly) {
+      tly = point.y();
+    }
+    if (point.x() > brx) {
+      brx = point.x();
+    }
+    if (point.y() > bry) {
+      bry = point.y();
+    }
+    return glift.displays.bbox.fromPts(
+        glift.util.point(tlx, tly),
+        glift.util.point(brx, bry));
   },
 
   /**
@@ -3250,7 +3333,8 @@ glift.displays._BoundingBox.prototype = {
   },
 
   toString: function() {
-    return this.topLeft().toString() + ',' +  this.botRight().toString();
+    return '(' + this.topLeft().toString() + '),(' +  
+        this.botRight().toString() + ')';
   },
 
   translate: function(dx, dy) {
@@ -3258,6 +3342,8 @@ glift.displays._BoundingBox.prototype = {
         glift.util.point(this.topLeft().x() + dx, this.topLeft().y() + dy),
         glift.util.point(this.botRight().x() + dx, this.botRight().y() + dy));
   },
+
+  // TODO(kashomon): Move this splitting methods out of the base class.
 
   /**
    * Split this bbox into two or more divs across a horizontal axis.  The
@@ -3286,7 +3372,7 @@ glift.displays._BoundingBox.prototype = {
    * X ->  X X
    *
    * Note: There is always one less split decimal specified, so that we don't
-   * have rounding errors.In other words: [0.7] uses 0.7 and 0.3 for splits and
+   * have rounding errors. In other words: [0.7] uses 0.7 and 0.3 for splits and
    * [0.7, 0.2] uses 0.7, 0.2, and 0.1 for splits.
    */
   vSplit: function(bboxSplits) {
@@ -3360,12 +3446,12 @@ glift.displays.boardPoints = function(
   var spacing = linebox.spacing,
       radius = spacing / 2,
       linebbox = linebox.bbox,
-      leftExtAmt = linebox.extensionBox.left() * spacing,
-      rightExtAmt = linebox.extensionBox.right() * spacing,
+      leftExtAmt = linebox.tlExtPt.x() * spacing,
+      rightExtAmt = linebox.brExtPt.x() * spacing,
       left = linebbox.left() + leftExtAmt,
 
-      topExtAmt = linebox.extensionBox.top() * spacing,
-      botExtAmt = linebox.extensionBox.bottom() * spacing,
+      topExtAmt = linebox.tlExtPt.y() * spacing,
+      botExtAmt = linebox.brExtPt.y() * spacing,
       top = linebbox.top() + topExtAmt,
       leftPt = linebox.pointTopLeft.x(),
       topPt = linebox.pointTopLeft.y(),
@@ -3659,10 +3745,9 @@ glift.displays.cropbox = {
 
     var cbox = glift.displays.bbox.fromPts(
         util.point(left, top), util.point(right, bot));
-    var extBox = glift.displays.bbox.fromPts(
-        util.point(leftExtension, topExtension),
-        util.point(rightExtension, botExtension));
-    return new glift.displays._CropBox(cbox, extBox, intersects);
+    var tlExt = util.point(leftExtension, topExtension);
+    var brExt = util.point(rightExtension, botExtension);
+    return new glift.displays._CropBox(cbox, tlExt, brExt, intersects);
   }
 };
 
@@ -3670,9 +3755,10 @@ glift.displays.cropbox = {
  * A cropbox is similar to a bounding box, but instead of a box based on pixels,
  * it's a box based on points.
  */
-glift.displays._CropBox = function(cbox, extBox, maxIntersects) {
+glift.displays._CropBox = function(cbox, tlExt, brExt, maxIntersects) {
   this._cbox = cbox;
-  this._extBox = extBox;
+  this._tlExt = tlExt;
+  this._brExt = brExt;
   this._maxInts = maxIntersects;
 };
 
@@ -3691,12 +3777,15 @@ glift.displays._CropBox.prototype = {
   maxBoardSize: function() { return this._maxInts; },
 
   /**
-   * The extension box is a special bounding box for cropped boards.  Due to
+   * The extension points are a special bounding box for cropped boards.  Due to
    * some quirks of the way the board is drawn, it's convenient to add this here
    * to indicate an extra amount around the edge necessary for the overflow
    * lines (the ragged crop-edge).
+   *
+   * Note: the x and y coordinates for these points will either be 0 or 0.5.
    */
-  extBox: function() { return this._extBox; },
+  tlExtPt: function() { return this._tlExt; },
+  brExtPt: function() { return this._brExt; },
 
   /**
    * Number of x points (or columns) for the cropped go board.
@@ -3712,18 +3801,17 @@ glift.displays._CropBox.prototype = {
    * Returns the number of 'intersections' we need to allocate for the height.
    * In otherwords:
    *    - The base intersections (e.g., 19x19).
-   *    -
    */
   widthMod: function() {
     var OVERFLOW = glift.displays.cropbox.OVERFLOW;
-    return this.cbox().width() + this.extBox().topLeft().x()
-        + this.extBox().botRight().x() + OVERFLOW;
+    return this.cbox().width() + this.tlExtPt().x()
+        + this.brExtPt().x() + OVERFLOW;
   },
 
   heightMod: function() {
     var OVERFLOW = glift.displays.cropbox.OVERFLOW;
-    return this.cbox().height() + this.extBox().topLeft().y()
-        + this.extBox().botRight().y() + OVERFLOW;
+    return this.cbox().height() + this.tlExtPt().y()
+        + this.brExtPt().y() + OVERFLOW;
   }
 };
 (function() {
@@ -3978,10 +4066,13 @@ glift.displays.getLineBox = function(boardBox, cropbox) {
   return out;
 };
 
+// TODO(kashomon): This is a bad abstraction and needs to be rethought. It's
+// basically a container of global-ish state.
 glift.displays._LineBox = function(boundingBox, spacing, cropbox) {
   this.bbox = boundingBox;
   this.spacing = spacing;
-  this.extensionBox = cropbox.extBox();
+  this.tlExtPt = cropbox.tlExtPt();
+  this.brExtPt = cropbox.brExtPt();
   this.pointTopLeft = cropbox.cbox().topLeft();
   this.xPoints = cropbox.xPoints();
   this.yPoints = cropbox.yPoints();
@@ -11093,6 +11184,160 @@ glift.bridge.intersections = {
 };
 glift.orientation = {};
 /**
+ * Definition of the cropbox
+ */
+glift.orientation.Cropbox = function(bbox, size) {
+  /**
+   * Points in the bounding box are 0 indexed.
+   * ex. 0,8, 0,12, 0,18
+   */
+  this.bbox = bbox;
+
+  /**
+   * Size is 1 indexed (i.e., 19, 13, 9).
+   */
+  this.size = size;
+
+  if (this.bbox.width() > this.size - 1) {
+    throw new Error('BBox width cannot be bigger than the size');
+  }
+
+  if (this.bbox.height() > this.size - 1) {
+    throw new Error('BBox height cannot be bigger than the size');
+  }
+};
+
+glift.orientation.Cropbox.prototype = {
+  /** Whether or not the top is ragged. */
+  hasRaggedTop: function() {
+    return this.bbox.topLeft().y() > 0;
+  },
+  /** Whether or not the left is ragged. */
+  hasRaggedLeft: function() {
+    return this.bbox.topLeft().x() > 0;
+  },
+  /** Whether or not the bottom is ragged. */
+  hasRaggedBottom: function() {
+    return this.bbox.botRight().y() < this.size - 1;
+  },
+  /** Whether or not the rightis ragged. */
+  hasRaggedRight: function() {
+    return this.bbox.botRight().x() < this.size - 1;
+  },
+
+  // TODO(kashomon): This is confusing: these really be bbox.width() + 1.
+  // However, this is for backward compatibility until things settle down.
+
+  /** Number of x points (or columns) minus 1. */
+  xPoints: function() { return this.bbox.width(); },
+  /** Number of y points (or rows) minus 1. */
+  yPoints: function() { return this.bbox.height(); }
+};
+
+/**
+ * Bounding boxes associated with the corpbox regions.
+ */
+glift.orientation.cropbox = {
+  /**
+   * Return a bounding box that indicates the cropbox. The logic is somewhat
+   * nuanced:
+   *
+   * For corners:
+   *   - the ragged top/bottom are +/- 1
+   *   - the ragged right/left are +/- 2
+   *
+   * For edges:
+   *   - the ragged top/bottom/right/eft are +/- 1
+   *
+   * For board sizes < 19, the cropbox is the whole board.
+   */
+  get: function(region, intersects) {
+    var point = glift.util.point,
+        boardRegions = glift.enums.boardRegions,
+        region = region || boardRegions.ALL,
+        min = 0,
+        max = intersects - 1,
+        halfInts = Math.ceil(max / 2),
+        top = min,
+        left = min,
+        bot = max,
+        right = max;
+
+    if (intersects < 19) {
+      return glift.orientation.Cropbox(
+          bbox(pt(min, min), pt(max, max)), intersects);
+    }
+
+    switch(region) {
+      // X X
+      // X X
+      case boardRegions.ALL:
+          break;
+
+      // X -
+      // X -
+      case boardRegions.LEFT:
+          right = halfInts + 1;
+          break;
+
+      // - X
+      // - X
+      case boardRegions.RIGHT:
+          left = halfInts - 1;
+          break;
+
+      // X X
+      // - -
+      case boardRegions.TOP:
+          bot = halfInts + 1;
+          break;
+
+      // - -
+      // X X
+      case boardRegions.BOTTOM:
+          top = halfInts - 1;
+          break;
+
+      // X -
+      // - -
+      case boardRegions.TOP_LEFT:
+          bot = halfInts + 1;
+          right = halfInts + 2;
+          break;
+
+      // - X
+      // - -
+      case boardRegions.TOP_RIGHT:
+          bot = halfInts + 1;
+          left = halfInts - 2;
+          break;
+
+      // - -
+      // X -
+      case boardRegions.BOTTOM_LEFT:
+          top = halfInts - 1;
+          right = halfInts + 2;
+          break;
+
+      // - -
+      // - X
+      case boardRegions.BOTTOM_RIGHT:
+          top = halfInts - 1;
+          left = halfInts - 2;
+          break;
+
+      default:
+          // Note: this can happen if we've let AUTO or MINIMAL slip in here
+          // somehow.
+          throw new Error('Unknown board region: ' + region);
+    }
+    var bbox = glift.displays.bbox.fromPts;
+    var pt = glift.util.point;
+    return new glift.orientation.Cropbox(
+        bbox(pt(left, top), pt(right, bot)), intersects);
+  }
+};
+/**
  * Takes a movetree and returns the optimal BoardRegion-Quad for cropping purposes.
  *
  * This isn't a minimal cropping: we split the board into 4 quadrants.
@@ -11107,106 +11352,194 @@ glift.orientation = {};
  * X. and XX
  */
 glift.orientation.getQuadCropFromMovetree = function(movetree, nextMovesPath) {
-  var bbox = glift.displays.bbox.fromPts;
-  var pt = glift.util.point;
-  var boardRegions = glift.enums.boardRegions;
-  // Intersections need to be 0 rather than 1 indexed for this method.
-  var ints = movetree.getIntersections() - 1;
-  var middle = Math.ceil(ints / 2);
-
-  // Ensure we aren't changing the parent movetree's state.
-  var movetree = movetree.newTreeRef();
-
-  // Tracker is a map from quad-key to array of points.
-  var tracker = {};
-
+  var br = glift.enums.boardRegions;
+  var ints = movetree.getIntersections();
   // It's not clear to me if we should be cropping boards smaller than 19.  It
   // usually looks pretty weird, so hence this override.
-  if (movetree.getIntersections() !== 19) {
-    return boardRegions.ALL;
+  if (ints < 19) {
+    return br.ALL;
   }
 
-  var quads = {};
-  quads[boardRegions.TOP_LEFT] = bbox(pt(0, 0), pt(middle, middle));
-  quads[boardRegions.TOP_RIGHT] = bbox(pt(middle, 0), pt(ints, middle));
-  quads[boardRegions.BOTTOM_LEFT] = bbox(pt(0, middle), pt(middle, ints));
-  quads[boardRegions.BOTTOM_RIGHT] = bbox(pt(middle, middle), pt(ints, ints));
+  var minimalBox = glift.orientation.minimalBoundingBox(
+      movetree, nextMovesPath);
+  var boxMapping = glift.orientation._getCropboxMapping(ints);
+  for (var i = 0; i < boxMapping.length; i++) {
+    var obj = boxMapping[i];
+    if (obj.bbox.covers(minimalBox)) {
+      return obj.result;
+    }
+  }
 
+  throw new Error('None of the boxes cover the minimal bbox!! ' +
+      'This should never happen');
+};
+
+/**
+ * For 19x19, we cache the cropbox mappings. Has the form:
+ * [{
+ *  bbox: <bbox>
+ *  result: BOARD_REGION
+ * },{
+ *  ...
+ * }]
+ */
+glift.orientation._cropboxMappingCache = null;
+/** Gets the cropbox mapping. Only for 19x19 currently */
+glift.orientation._getCropboxMapping = function(size) {
+  if (size != 19) {
+    throw new Error('Only for 19x19');
+  }
+  var br = glift.enums.boardRegions;
+  // See glift.orientation.cropbox for more about how cropboxes are defined.
+  var cbox = function(bregion) {
+    return glift.orientation.cropbox.get(bregion, 19);
+  };
+
+  if (glift.orientation._cropboxMappingCache == null) {
+    // The heart of this method. We know the minimal bounding box for the stones.
+    // Then the question is: Which bbox best covers the minimal box? There are 4
+    // cases:
+    // -  The min-box is an 'in-between area'. First check the very middle of the
+    //    board. then, check the edge areas.
+    // -  The min-box lies within a corner
+    // -  The min-box lies within a side
+    // -  The min-box can only be covered by the entire board.
+    var boxRegions = [
+      // Check the overlap regions.
+      // First, we check the very middle of the board.
+      {
+        bbox: cbox(br.TOP_LEFT).bbox.intersect(cbox(br.BOTTOM_RIGHT).bbox),
+        result: br.ALL
+      // Now, check the side-overlaps.
+      }, {
+        bbox: cbox(br.TOP_LEFT).bbox.intersect(cbox(br.TOP_RIGHT).bbox),
+        result: br.TOP
+      }, {
+        bbox: cbox(br.TOP_LEFT).bbox.intersect(cbox(br.BOTTOM_LEFT).bbox),
+        result: br.LEFT
+      }, {
+        bbox: cbox(br.BOTTOM_RIGHT).bbox.intersect(cbox(br.TOP_RIGHT).bbox),
+        result: br.RIGHT
+      }, {
+        bbox: cbox(br.BOTTOM_RIGHT).bbox.intersect(cbox(br.BOTTOM_LEFT).bbox),
+        result: br.BOTTOM
+      }
+    ];
+
+    var toAdd = [
+      br.TOP_LEFT, br.TOP_RIGHT, br.BOTTOM_LEFT, br.BOTTOM_RIGHT,
+      br.TOP, br.BOTTOM, br.LEFT, br.RIGHT,
+      br.ALL
+    ];
+    for (var i = 0; i < toAdd.length; i++) {
+      var bri = toAdd[i];
+      boxRegions.push({
+        bbox: cbox(bri).bbox,
+        result: bri
+      });
+    }
+    glift.orientation._cropboxMappingCache = boxRegions;
+  }
+
+  return glift.orientation._cropboxMappingCache;
+};
+
+/**
+ * Get the minimal bounding box for set of stones and marks for the movetree.
+ *
+ * There are there cases;
+ * 1. nextMovesPath is not defined. Recurse over the entire tree. Don't use
+ *    marks for cropping consideration.
+ * 2. nextMovesPath is an empty array. Calculate for the current position. Use
+ *    marks for cropping consideration
+ * 3. nextMovesPath is a non empty array. Treat the nextMovesPath as a
+ *    variations tree path and traverse just the path. Really 2., is a special
+ *    case of 3.
+ *
+ * To calculate the minimalBoundingBox for just the current position
+ */
+glift.orientation.minimalBoundingBox = function(movetree, nextMovesPath) {
+  var point = glift.util.point;
+  var bbox = glift.displays.bbox.fromPts;
+  var pts = glift.orientation._getDisplayPts(movetree, nextMovesPath);
+
+  var ints = movetree.getIntersections() - 1;
   if (nextMovesPath && glift.util.typeOf(nextMovesPath) === 'string') {
     nextMovesPath = glift.rules.treepath.parseFragment(nextMovesPath);
   }
 
-  // Tracker uses the movetree that's passed in to add items to the tracker.
-  var tracker = function(mt) {
-    var displayPoints = mt.properties().getAllDisplayPts();
-    for (var key in displayPoints) {
-      var points = displayPoints[key];
-      for (var i = 0; i < points.length; i++) {
-        var pt = points[i].point;
-        for (var quadkey in quads) {
-          var box = quads[quadkey];
-          if (middle === pt.x() || middle === pt.y()) {
-            // Ignore points right on the middle.  It shouldn't make a different
-            // for cropping, anyway.
-            // TODO(kashomon): After thinking about it more, I think it may make
-            // a difference. Needs to be considered more carefully.
-          } else if (box.contains(pt)) {
-            if (tracker[quadkey] === undefined) tracker[quadkey] = [];
-            tracker[quadkey].push(pt);
-          }
+  // Return a full board when there are no points.
+  if (pts.length === 0) {
+    return bbox(point(0,0), point(ints, ints));
+  }
+
+  // Return a bbox with one point.
+  var bbox = bbox(pts[0], pts[0]);
+  for (var i = 1; i < pts.length; i++) {
+    var pt = pts[i];
+    if (!bbox.contains(pt)) {
+      bbox = bbox.expandToContain(pt);
+    }
+  }
+  return bbox;
+};
+
+/**
+ * Gets all the display points associated with a movetree:
+ *
+ * There are there cases;
+ * 1. nextMovesPath is not defined. Recurse over the entire tree. Don't use
+ *    marks for cropping consideration.
+ * 2. nextMovesPath is an empty array. Calculate for the current position. Use
+ *    marks for cropping consideration
+ * 3. nextMovesPath is a non empty array. Treat the nextMovesPath as a
+ *    variations tree path and traverse just the path. Really 2., is a special
+ *    case of 3.
+ */
+glift.orientation._getDisplayPts = function(movetree, nextMovesPath) {
+  // Ensure we aren't changing the parent movetree's state.
+  var movetree = movetree.newTreeRef();
+  var pts = [];
+  /**
+   * This hands objects that look like:
+   * { StringKey: Array of objs that contain pts }.
+   *
+   * Ex.
+   * {
+   *  BLACK: [{point: {10, 16}, color: 'BLACK'}]
+   *  TEXTLABEL: [{point: {13, 5}, value: '12'}]
+   * }
+   */
+  var capturePoints = function(ptsObj) {
+    for (var key in ptsObj) {
+      var moveArr = ptsObj[key];
+      for (var i = 0; i < moveArr.length; i++) {
+        var item = moveArr[i];
+        if (moveArr[i].point) {
+          pts.push(moveArr[i].point);
         }
       }
     }
   };
 
-  if (nextMovesPath && nextMovesPath.length) {
-    // About next-moves-path boundaries -- the movetree should be right before
-    // the variation.  I.e., it the first move we want to consider is when the
-    // movetree + the first variation in the nextMovesPath.
+  if (!nextMovesPath) {
+    movetree.recurseFromRoot(function(mt) {
+      capturePoints(mt.properties().getAllStones());
+    });
+  } else if (nextMovesPath) {
+    // Case 3. Traverse the next moves path.
     for (var i = 0; i < nextMovesPath.length; i++) {
       movetree.moveDown(nextMovesPath[i]);
-      tracker(movetree);
+      capturePoints(movetree.properties().getAllStones());
     }
-  } else {
-    movetree.recurseFromRoot(tracker);
-  }
-  return glift.orientation._getRegionFromTracker(tracker);
-};
-
-glift.orientation._getRegionFromTracker = function(tracker) {
-  var regions = [], br = glift.enums.boardRegions;
-  for (var quadkey in tracker) {
-    var quadlist = tracker[quadkey];
-    regions.push(quadkey);
-  }
-  if (regions.length === 1) {
-    return regions[0];
-  }
-  if (regions.length !== 2) {
-    return glift.enums.boardRegions.ALL;
-  }
-  var newset = glift.util.intersection(
-    glift.util.regions.getComponents(regions[0]),
-    glift.util.regions.getComponents(regions[1]));
-  // there should only be one element at this point or nothing
-  for (var key in newset) {
-    return key;
-  }
-  return glift.enums.boardRegions.ALL;
-};
-
-/**
- * Rotates a movetree so that it's canonical, given some cropbox
- */
-glift.orientation.autorotateMovetree = function(movetree, regionOrdering) {
-  var rotation = glift.orientation.findCanonicalRotation(movetree, regionOrdering);
-  movetree.recurse(function(mt) {
-    for (var key in mt.properties().propMap) {
-      // TODO(kashomon): Finish?
+    // Case 2. Traverse the next moves path.
+    if (nextMovesPath.length === 0) {
+      capturePoints(movetree.properties().getAllStones());
     }
-  });
+    capturePoints(movetree.properties().getAllMarks());
+  }
+  return pts;
 };
-
 /**
  * Calculates the desired rotation. Returns one of
  * glift.enums.rotations.

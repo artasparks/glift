@@ -14,9 +14,10 @@
     deepEqual(bbox.width(), 17, 'Width should be br.x() - tl.x()');
     deepEqual(bbox.height(), 11, 'Width should be br.y() - tl.y()');
 
-    var bbox = bboxFromPts(point(18, 20), point(1, 9));
-    deepEqual(bbox.width(), -17, 'Width should be br.x() - tl.x()');
-    deepEqual(bbox.height(), -11, 'Width should be br.y() - tl.y()');
+    // We don't support non-standard bboxes where the TL is > BR
+    // var bbox = bboxFromPts(point(18, 20), point(1, 9));
+    // deepEqual(bbox.width(), -17, 'Width should be br.x() - tl.x()');
+    // deepEqual(bbox.height(), -11, 'Width should be br.y() - tl.y()');
   });
 
   test('Equality test', function() {
@@ -141,5 +142,34 @@
 
     newBbox = base.expandToContain(point(150, 250));
     ok(newBbox.equals(base), 'Don\'t expand for inside point');
+  });
+
+  test('Expand a bounding box: starting with pt', function() {
+    var base = bboxFromPts(point(100, 200), point(100, 200));
+
+    var newBbox = base.expandToContain(point(90, 200));
+    var expected = bboxFromPts(point(90, 200), point(100, 200));
+    ok(newBbox.equals(expected), 'Expand to TL');
+  });
+
+  test('Intersecting bboxes', function() {
+    var bbox = bboxFromPts(point(10, 10), point(20, 20));
+    var obox = bboxFromPts(point(15, 12), point(35, 45));
+    var expected = bboxFromPts(point(15, 12), point(20, 20));
+    deepEqual(bbox.intersect(obox), expected);
+    ok(bbox.covers(expected));
+    ok(obox.covers(expected));
+
+    bbox = bboxFromPts(point(10, 10), point(20, 20));
+    obox = bboxFromPts(point(15, 12), point(17, 18));
+    expected = bboxFromPts(point(15, 12), point(17, 18));
+    deepEqual(bbox.intersect(obox), expected);
+    ok(bbox.covers(expected));
+    ok(obox.covers(expected));
+
+    bbox = bboxFromPts(point(10, 10), point(20, 20));
+    obox = bboxFromPts(point(25, 22), point(35, 35));
+    expected = null;
+    deepEqual(bbox.intersect(obox), expected);
   });
 })();

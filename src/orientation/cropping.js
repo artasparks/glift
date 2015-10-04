@@ -1,23 +1,4 @@
 /**
- * Get the minimal bounding box for set of stones and marks for the movetree.
- *
- * There are there ccases to consider:
- * 1. nextMovesPath is not defined. Recurse over the entire tree. Don't use
- *    marks for cropping consideration.
- * 2. nextMovesPath is an empty array. Calculate for the current position. Use
- *    marks for cropping consideration
- * 3. nextMovesPath is a non empty array. Treat the nextMovesPath as a
- *    variations tree path and traverse just the path.
- *
- * To calculate the minimalBoundingBox for just the current position
- */
-glift.orientation.minimalBoundingBox  = function(movetree, nextMovesPath) {
-  // Ensure we aren't changing the parent movetree's state.
-  var movetree = movetree.newTreeRef();
-
-};
-
-/**
  * Takes a movetree and returns the optimal BoardRegion-Quad for cropping purposes.
  *
  * This isn't a minimal cropping: we split the board into 4 quadrants.
@@ -32,96 +13,95 @@ glift.orientation.minimalBoundingBox  = function(movetree, nextMovesPath) {
  * X. and XX
  */
 glift.orientation.getQuadCropFromMovetree = function(movetree, nextMovesPath) {
-  var bbox = glift.displays.bbox.fromPts;
-  var pt = glift.util.point;
-  var boardRegions = glift.enums.boardRegions;
-  // Intersections need to be 0 rather than 1 indexed for this method.
-  var ints = movetree.getIntersections() - 1;
-  var middle = Math.ceil(ints / 2);
-
-  // Ensure we aren't changing the parent movetree's state.
-  var movetree = movetree.newTreeRef();
-
-  // Tracker is a map from quad-key to array of points.
-  var tracker = {};
-
+  var br = glift.enums.boardRegions;
+  var ints = movetree.getIntersections();
   // It's not clear to me if we should be cropping boards smaller than 19.  It
   // usually looks pretty weird, so hence this override.
-  if (movetree.getIntersections() !== 19) {
-    return boardRegions.ALL;
+  if (ints < 19) {
+    return br.ALL;
   }
 
-  var quads = {};
-  quads[boardRegions.TOP_LEFT] = bbox(pt(0, 0), pt(middle, middle));
-  quads[boardRegions.TOP_RIGHT] = bbox(pt(middle, 0), pt(ints, middle));
-  quads[boardRegions.BOTTOM_LEFT] = bbox(pt(0, middle), pt(middle, ints));
-  quads[boardRegions.BOTTOM_RIGHT] = bbox(pt(middle, middle), pt(ints, ints));
-
-  if (nextMovesPath && glift.util.typeOf(nextMovesPath) === 'string') {
-    nextMovesPath = glift.rules.treepath.parseFragment(nextMovesPath);
-  }
-
-  // Tracker uses the movetree that's passed in to add items to the tracker.
-  // It's goal is to create a box that contains all the points. Then, we use the
-  // quad regions to fine a minimal covering.
-  var trackerFn = function(mt) {
-    var displayPoints = mt.properties().getAllDisplayPts();
-    var middlePoints = [];
-    for (var key in displayPoints) {
-      var points = displayPoints[key];
-      for (var i = 0; i < points.length; i++) {
-        var pt = points[i].point;
-        for (var quadkey in quads) {
-          var box = quads[quadkey];
-          if (middle === pt.x() || middle === pt.y()) {
-            // This is a trick situation.  The point is right on the middle.
-            // Look at all the other points first; Then, we'll come back and
-            // address these points.
-            middlePoints.push(pt);
-          } else if (box.contains(pt)) {
-            if (tracker[quadkey] === undefined) tracker[quadkey] = [];
-            tracker[quadkey].push(pt);
-          } else {
-            // Not sure what's going on here. Maybe the point is out of bounds.
-          }
-        }
-      }
+  var minimalBox = glift.orientation.minimalBoundingBox(
+      movetree, nextMovesPath);
+  var boxMapping = glift.orientation._getCropboxMapping(ints);
+  for (var i = 0; i < boxMapping.length; i++) {
+    var obj = boxMapping[i];
+    if (obj.bbox.covers(minimalBox)) {
+      return obj.result;
     }
-  };
-
-  if (nextMovesPath && nextMovesPath.length) {
-    // About next-moves-path boundaries -- the movetree should be right before
-    // the variation.  I.e., it the first move we want to consider is when the
-    // movetree + the first variation in the nextMovesPath.
-    for (var i = 0; i < nextMovesPath.length; i++) {
-      movetree.moveDown(nextMovesPath[i]);
-      trackerFn(movetree);
-    }
-  } else {
-    movetree.recurseFromRoot(trackerFn);
   }
-  return glift.orientation._getRegionFromTracker(tracker);
+
+  throw new Error('None of the boxes cover the minimal bbox!! ' +
+      'This should never happen');
 };
 
-glift.orientation._getRegionFromTracker = function(tracker) {
-  var regions = [], br = glift.enums.boardRegions;
-  for (var quadkey in tracker) {
-    var quadlist = tracker[quadkey];
-    regions.push(quadkey);
+/**
+ * For 19x19, we cache the cropbox mappings. Has the form:
+ * [{
+ *  bbox: <bbox>
+ *  result: BOARD_REGION
+ * },{
+ *  ...
+ * }]
+ */
+glift.orientation._cropboxMappingCache = null;
+/** Gets the cropbox mapping. Only for 19x19 currently */
+glift.orientation._getCropboxMapping = function(size) {
+  if (size != 19) {
+    throw new Error('Only for 19x19');
   }
-  if (regions.length === 1) {
-    return regions[0];
+  var br = glift.enums.boardRegions;
+  // See glift.orientation.cropbox for more about how cropboxes are defined.
+  var cbox = function(bregion) {
+    return glift.orientation.cropbox.get(bregion, 19);
+  };
+
+  if (glift.orientation._cropboxMappingCache == null) {
+    // The heart of this method. We know the minimal bounding box for the stones.
+    // Then the question is: Which bbox best covers the minimal box? There are 4
+    // cases:
+    // -  The min-box is an 'in-between area'. First check the very middle of the
+    //    board. then, check the edge areas.
+    // -  The min-box lies within a corner
+    // -  The min-box lies within a side
+    // -  The min-box can only be covered by the entire board.
+    var boxRegions = [
+      // Check the overlap regions.
+      // First, we check the very middle of the board.
+      {
+        bbox: cbox(br.TOP_LEFT).bbox.intersect(cbox(br.BOTTOM_RIGHT).bbox),
+        result: br.ALL
+      // Now, check the side-overlaps.
+      }, {
+        bbox: cbox(br.TOP_LEFT).bbox.intersect(cbox(br.TOP_RIGHT).bbox),
+        result: br.TOP
+      }, {
+        bbox: cbox(br.TOP_LEFT).bbox.intersect(cbox(br.BOTTOM_LEFT).bbox),
+        result: br.LEFT
+      }, {
+        bbox: cbox(br.BOTTOM_RIGHT).bbox.intersect(cbox(br.TOP_RIGHT).bbox),
+        result: br.RIGHT
+      }, {
+        bbox: cbox(br.BOTTOM_RIGHT).bbox.intersect(cbox(br.BOTTOM_LEFT).bbox),
+        result: br.BOTTOM
+      }
+    ];
+
+    var toAdd = [
+      br.TOP_LEFT, br.TOP_RIGHT, br.BOTTOM_LEFT, br.BOTTOM_RIGHT,
+      br.TOP, br.BOTTOM, br.LEFT, br.RIGHT,
+      br.ALL
+    ];
+    for (var i = 0; i < toAdd.length; i++) {
+      var bri = toAdd[i];
+      boxRegions.push({
+        bbox: cbox(bri).bbox,
+        result: bri
+      });
+    }
+    glift.orientation._cropboxMappingCache = boxRegions;
   }
-  if (regions.length !== 2) {
-    return glift.enums.boardRegions.ALL;
-  }
-  var newset = glift.util.intersection(
-    glift.util.regions.getComponents(regions[0]),
-    glift.util.regions.getComponents(regions[1]));
-  // there should only be one element at this point or nothing
-  for (var key in newset) {
-    return key;
-  }
-  return glift.enums.boardRegions.ALL;
+
+  return glift.orientation._cropboxMappingCache;
 };
 
