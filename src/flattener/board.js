@@ -10,10 +10,10 @@ glift.flattener.board = {
   create: function(cropping, stoneMap, markMap, labelMap) {
     var point = glift.util.point;
     var board = [];
-    var cbox = cropping.cbox();
-    for (var y = cbox.top(); y <= cbox.bottom(); y++) {
+    var bbox = cropping.bbox;
+    for (var y = bbox.top(); y <= bbox.bottom(); y++) {
       var row = [];
-      for (var x = cbox.left(); x <= cbox.right(); x++) {
+      for (var x = bbox.left(); x <= bbox.right(); x++) {
         var pt = point(x, y);
         var ptStr = pt.toString();
         var stone = stoneMap[ptStr];
@@ -21,18 +21,18 @@ glift.flattener.board = {
         var mark = markMap[ptStr];
         var label = labelMap[ptStr]
         row.push(glift.flattener.intersection.create(
-            pt, stoneColor, mark, label, cropping.maxBoardSize()));
+            pt, stoneColor, mark, label, cropping.size));
       }
       board.push(row);
     }
-    return new glift.flattener._Board(board, cbox, cropping.maxBoardSize());
+    return new glift.flattener._Board(board, bbox, cropping.size);
   }
 };
 
 /**
  * Board object.  Meant to be created with the static constuctor method 'create'.
  */
-glift.flattener._Board = function(boardArray, cbox, maxBoardSize) {
+glift.flattener._Board = function(boardArray, bbox, maxBoardSize) {
   /**
    * 2D Array of intersections. Generally, this is an array of intersections,
    * but could be backed by a different underlying objects based on a
@@ -41,7 +41,7 @@ glift.flattener._Board = function(boardArray, cbox, maxBoardSize) {
   this._boardArray = boardArray;
 
   /** Bounding box for the crop box. */
-  this._cbox = cbox;
+  this._bbox = bbox;
 
   /** Maximum board size.  Generally 9, 13, or 19. */
   this._maxBoardSize = maxBoardSize;
@@ -81,12 +81,12 @@ glift.flattener._Board.prototype = {
 
   /** Turns a 0 indexed pt to a point that's board-indexed. */
   ptToBoardPt: function(pt) {
-    return pt.translate(this._cbox.left(), this._cbox.top());
+    return pt.translate(this._bbox.left(), this._bbox.top());
   },
 
   /** Turns a 0 indexed pt to a point that's board-indexed. */
   boardPtToPt: function(pt) {
-    return pt.translate(-this._cbox.left(), -this._cbox.top());
+    return pt.translate(-this._bbox.left(), -this._bbox.top());
   },
 
   /** Returns the board array. */
@@ -132,6 +132,6 @@ glift.flattener._Board.prototype = {
       }
       outArray.push(row);
     }
-    return new glift.flattener._Board(outArray, this._cbox, this._maxBoardSize);
+    return new glift.flattener._Board(outArray, this._bbox, this._maxBoardSize);
   }
 };

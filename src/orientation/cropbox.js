@@ -8,17 +8,17 @@ glift.orientation.Cropbox = function(bbox, size) {
    */
   this.bbox = bbox;
 
-  /**
-   * Size is 1 indexed (i.e., 19, 13, 9).
-   */
+  /** Size is 1 indexed (i.e., 19, 13, 9). */
   this.size = size;
 
   if (this.bbox.width() > this.size - 1) {
-    throw new Error('BBox width cannot be bigger than the size');
+    throw new Error('BBox width cannot be bigger than the size:' +
+        this.bbox.width() + ' -- ' + (this.size - 1));
   }
 
   if (this.bbox.height() > this.size - 1) {
-    throw new Error('BBox height cannot be bigger than the size');
+    throw new Error('BBox height cannot be bigger than the size:' +
+        this.bbox.height() + ' -- ' + (this.size - 1));
   }
 };
 
@@ -35,18 +35,10 @@ glift.orientation.Cropbox.prototype = {
   hasRaggedBottom: function() {
     return this.bbox.botRight().y() < this.size - 1;
   },
-  /** Whether or not the rightis ragged. */
+  /** Whether or not the right is ragged. */
   hasRaggedRight: function() {
     return this.bbox.botRight().x() < this.size - 1;
-  },
-
-  // TODO(kashomon): This is confusing: these really be bbox.width() + 1.
-  // However, this is for backward compatibility until things settle down.
-
-  /** Number of x points (or columns) minus 1. */
-  xPoints: function() { return this.bbox.width(); },
-  /** Number of y points (or rows) minus 1. */
-  yPoints: function() { return this.bbox.height(); }
+  }
 };
 
 /**
@@ -79,8 +71,10 @@ glift.orientation.cropbox = {
         right = max;
 
     if (intersects < 19) {
-      return glift.orientation.Cropbox(
-          bbox(pt(min, min), pt(max, max)), intersects);
+      return new glift.orientation.Cropbox(
+          glift.displays.bbox.fromPts(
+              point(min, min), point(max, max)),
+          intersects);
     }
 
     switch(region) {

@@ -3446,12 +3446,12 @@ glift.displays.boardPoints = function(
   var spacing = linebox.spacing,
       radius = spacing / 2,
       linebbox = linebox.bbox,
-      leftExtAmt = linebox.tlExtPt.x() * spacing,
-      rightExtAmt = linebox.brExtPt.x() * spacing,
+      leftExtAmt = linebox.leftExt * spacing,
+      rightExtAmt = linebox.rightExt * spacing,
       left = linebbox.left() + leftExtAmt,
 
-      topExtAmt = linebox.tlExtPt.y() * spacing,
-      botExtAmt = linebox.brExtPt.y() * spacing,
+      topExtAmt = linebox.topExt * spacing,
+      botExtAmt = linebox.botExt * spacing,
       top = linebbox.top() + topExtAmt,
       leftPt = linebox.pointTopLeft.x(),
       topPt = linebox.pointTopLeft.y(),
@@ -3635,7 +3635,7 @@ BoardPoints.prototype = {
 };
 })();
 glift.displays.cropbox = {
-  LINE_EXTENSION: .5,
+  EXT: .5, // Extension
   DEFAULT_EXTENSION: 0, // Wut.
   OVERFLOW: 1.5, // The line spacing that goes around the edge.
 
@@ -3644,110 +3644,32 @@ glift.displays.cropbox = {
    * true/false flag for drawing the board coordinates.
    */
   getFromRegion: function(region, intersects, drawBoardCoords) {
-    var util = glift.util,
-        boardRegions = glift.enums.boardRegions,
-        region = region || boardRegions.ALL,
-        drawBoardCoords = drawBoardCoords || false,
-        // We add an extra position around the edge for labels, so we need a
-        // label modifier. 1 or 0.
-        lblMod = drawBoardCoords ? 1 : 0,
-        // So that we can 0 index, we subtract one.
-        maxIntersects = drawBoardCoords ? intersects + 1 : intersects - 1,
-        minIntersects = 0,
-        defaultExtension = 0,
-        lineExtension = .5,
-        halfInts = Math.ceil(maxIntersects / 2),
+    var cropbox = glift.orientation.cropbox.get(region, intersects);
+    var drawBoardCoords = drawBoardCoords || false;
+    var maxIntersects = drawBoardCoords ? intersects + 2 : intersects;
+    var top = cropbox.bbox.top(),
+        bottom = cropbox.bbox.bottom(),
+        left = cropbox.bbox.left(),
+        right = cropbox.bbox.right();
+    if (cropbox.hasRaggedTop() && drawBoardCoords) {
+      top -= 1;
+    }
+    if (cropbox.hasRaggedBottom() && drawBoardCoords) {
+      bottom += 1;
+    }
+    if (cropbox.hasRaggedLeft() && drawBoardCoords) {
+      left -= 1;
+    }
+    if (cropbox.hasRaggedRight() && drawBoardCoords) {
+      right += 1;
+    }
 
-        // Assign Defualts
-        top = minIntersects,
-        left = minIntersects,
-        bot = maxIntersects,
-        right = maxIntersects,
-        topExtension = this.DEFAULT_EXTENSION,
-        leftExtension = this.DEFAULT_EXTENSION,
-        botExtension = this.DEFAULT_EXTENSION,
-        rightExtension = this.DEFAULT_EXTENSION;
-
-    switch(region) {
-      // X X
-      // X X
-      case boardRegions.ALL: break;
-
-      // X -
-      // X -
-      case boardRegions.LEFT:
-          right = halfInts + 1 + lblMod;
-          rightExtension = this.LINE_EXTENSION;
-          break;
-
-      // - X
-      // - X
-      case boardRegions.RIGHT:
-          left = halfInts - 1 - lblMod;
-          leftExtension = this.LINE_EXTENSION;
-          break;
-
-      // X X
-      // - -
-      case boardRegions.TOP:
-          bot = halfInts + 1 + lblMod;
-          botExtension = this.LINE_EXTENSION;
-          break;
-
-      // - -
-      // X X
-      case boardRegions.BOTTOM:
-          top = halfInts - 1 - lblMod;
-          topExtension = this.LINE_EXTENSION;
-          break;
-
-      // X -
-      // - -
-      case boardRegions.TOP_LEFT:
-          bot = halfInts + 1 + lblMod;
-          botExtension = this.LINE_EXTENSION;
-          right = halfInts + 2 + lblMod;
-          rightExtension = this.LINE_EXTENSION;
-          break;
-
-      // - X
-      // - -
-      case boardRegions.TOP_RIGHT:
-          bot = halfInts + 1 + lblMod;
-          botExtension = this.LINE_EXTENSION;
-          left = halfInts - 2 - lblMod;
-          leftExtension = this.LINE_EXTENSION;
-          break;
-
-      // - -
-      // X -
-      case boardRegions.BOTTOM_LEFT:
-          top = halfInts - 1 - lblMod;
-          topExtension = this.LINE_EXTENSION;
-          right = halfInts + 2 + lblMod;
-          rightExtension = this.LINE_EXTENSION;
-          break;
-
-      // - -
-      // - X
-      case boardRegions.BOTTOM_RIGHT:
-          top = halfInts - 1 - lblMod;
-          topExtension = this.LINE_EXTENSION;
-          left = halfInts - 2 - lblMod;
-          leftExtension = this.LINE_EXTENSION;
-          break;
-
-      default:
-          // Note: this can happen if we've let AUTO or MINIMAL slip in here
-          // somehow.
-          throw new Error('Unknown board region: ' + region);
-    };
-
-    var cbox = glift.displays.bbox.fromPts(
-        util.point(left, top), util.point(right, bot));
-    var tlExt = util.point(leftExtension, topExtension);
-    var brExt = util.point(rightExtension, botExtension);
-    return new glift.displays._CropBox(cbox, tlExt, brExt, intersects);
+    var cx = new glift.orientation.Cropbox(
+        glift.displays.bbox.fromPts(
+            glift.util.point(left, top),
+            glift.util.point(right, bottom)),
+        maxIntersects);
+    return new glift.displays._CropBox(cx);
   }
 };
 
@@ -3755,47 +3677,59 @@ glift.displays.cropbox = {
  * A cropbox is similar to a bounding box, but instead of a box based on pixels,
  * it's a box based on points.
  */
-glift.displays._CropBox = function(cbox, tlExt, brExt, maxIntersects) {
+glift.displays._CropBox = function(cbox) {
   this._cbox = cbox;
-  this._tlExt = tlExt;
-  this._brExt = brExt;
-  this._maxInts = maxIntersects;
 };
 
 glift.displays._CropBox.prototype = {
   /**
    * Returns the cbox. The cbox is a bounding box that describes what points on
    * the go board should be displayed. Generally, both the width and height of
-   * the cbox must be between 0 (exclusive) and maxIntersects (inclusive)
+   * the cbox must be between 0 (exclusive) and maxIntersects (inclusive).
    */
   cbox: function() { return this._cbox; },
+
+  /**
+   * Returns the bbox for the cropbox
+   */
+  bbox: function() { return this._cbox.bbox; },
 
   /**
    * Returns the maximum board size.  Often referred to as max intersections
    * elsewhere.  Typically 9, 13 or 19.
    */
-  maxBoardSize: function() { return this._maxInts; },
+  maxBoardSize: function() { return this._cbox.size; },
 
   /**
-   * The extension points are a special bounding box for cropped boards.  Due to
-   * some quirks of the way the board is drawn, it's convenient to add this here
-   * to indicate an extra amount around the edge necessary for the overflow
-   * lines (the ragged crop-edge).
+   * The extensions are a special modification for cropped boards.  Due to some
+   * quirks of the way the board is drawn, it's convenient to add this here to
+   * indicate an extra amount around the edge necessary for the overflow lines
+   * (the ragged crop-edge).
    *
    * Note: the x and y coordinates for these points will either be 0 or 0.5.
    */
-  tlExtPt: function() { return this._tlExt; },
-  brExtPt: function() { return this._brExt; },
+  topExt: function() { 
+    return this._cbox.hasRaggedTop() ? glift.displays.cropbox.EXT: 0;
+  },
+  botExt: function() { 
+    return this._cbox.hasRaggedBottom() ? glift.displays.cropbox.EXT : 0;
+  },
+  leftExt: function() {
+    return this._cbox.hasRaggedLeft() ? glift.displays.cropbox.EXT : 0;
+  },
+  rightExt: function() {
+    return this._cbox.hasRaggedRight() ? glift.displays.cropbox.EXT : 0;
+  },
 
   /**
    * Number of x points (or columns) for the cropped go board.
    */
-  xPoints: function() { return this.cbox().width(); },
+  xPoints: function() { return this.cbox().bbox.width(); },
 
   /**
    * Number of y points (or rows) for the cropped go board.
    */
-  yPoints: function() { return this.cbox().height(); },
+  yPoints: function() { return this.cbox().bbox.height(); },
 
   /**
    * Returns the number of 'intersections' we need to allocate for the height.
@@ -3804,14 +3738,14 @@ glift.displays._CropBox.prototype = {
    */
   widthMod: function() {
     var OVERFLOW = glift.displays.cropbox.OVERFLOW;
-    return this.cbox().width() + this.tlExtPt().x()
-        + this.brExtPt().x() + OVERFLOW;
+    return this.cbox().bbox.width() + this.leftExt() +
+        + this.rightExt() + OVERFLOW;
   },
 
   heightMod: function() {
     var OVERFLOW = glift.displays.cropbox.OVERFLOW;
-    return this.cbox().height() + this.tlExtPt().y()
-        + this.brExtPt().y() + OVERFLOW;
+    return this.cbox().bbox.height() + this.topExt() +
+        + this.botExt() + OVERFLOW;
   }
 };
 (function() {
@@ -4071,9 +4005,12 @@ glift.displays.getLineBox = function(boardBox, cropbox) {
 glift.displays._LineBox = function(boundingBox, spacing, cropbox) {
   this.bbox = boundingBox;
   this.spacing = spacing;
-  this.tlExtPt = cropbox.tlExtPt();
-  this.brExtPt = cropbox.brExtPt();
-  this.pointTopLeft = cropbox.cbox().topLeft();
+  this.topExt = cropbox.topExt();
+  this.botExt = cropbox.botExt();
+  this.leftExt = cropbox.leftExt();
+  this.rightExt = cropbox.rightExt();
+
+  this.pointTopLeft = cropbox.cbox().bbox.topLeft();
   this.xPoints = cropbox.xPoints();
   this.yPoints = cropbox.yPoints();
 };
@@ -11193,17 +11130,17 @@ glift.orientation.Cropbox = function(bbox, size) {
    */
   this.bbox = bbox;
 
-  /**
-   * Size is 1 indexed (i.e., 19, 13, 9).
-   */
+  /** Size is 1 indexed (i.e., 19, 13, 9). */
   this.size = size;
 
   if (this.bbox.width() > this.size - 1) {
-    throw new Error('BBox width cannot be bigger than the size');
+    throw new Error('BBox width cannot be bigger than the size:' +
+        this.bbox.width() + ' -- ' + (this.size - 1));
   }
 
   if (this.bbox.height() > this.size - 1) {
-    throw new Error('BBox height cannot be bigger than the size');
+    throw new Error('BBox height cannot be bigger than the size:' +
+        this.bbox.height() + ' -- ' + (this.size - 1));
   }
 };
 
@@ -11220,18 +11157,10 @@ glift.orientation.Cropbox.prototype = {
   hasRaggedBottom: function() {
     return this.bbox.botRight().y() < this.size - 1;
   },
-  /** Whether or not the rightis ragged. */
+  /** Whether or not the right is ragged. */
   hasRaggedRight: function() {
     return this.bbox.botRight().x() < this.size - 1;
-  },
-
-  // TODO(kashomon): This is confusing: these really be bbox.width() + 1.
-  // However, this is for backward compatibility until things settle down.
-
-  /** Number of x points (or columns) minus 1. */
-  xPoints: function() { return this.bbox.width(); },
-  /** Number of y points (or rows) minus 1. */
-  yPoints: function() { return this.bbox.height(); }
+  }
 };
 
 /**
@@ -11264,8 +11193,10 @@ glift.orientation.cropbox = {
         right = max;
 
     if (intersects < 19) {
-      return glift.orientation.Cropbox(
-          bbox(pt(min, min), pt(max, max)), intersects);
+      return new glift.orientation.Cropbox(
+          glift.displays.bbox.fromPts(
+              point(min, min), point(max, max)),
+          intersects);
     }
 
     switch(region) {
@@ -11648,7 +11579,7 @@ glift.flattener = {
     var startingMoveNum = options.startingMoveNum || null;
 
     var boardRegion = glift.flattener._getBoardRegion(mt, nmtp, options);
-    var cropping = glift.displays.cropbox.getFromRegion(
+    var cropping = glift.orientation.cropbox.get(
         boardRegion, mt.getIntersections());
 
     // Find the starting move number before applying the next move path.
@@ -11996,10 +11927,10 @@ glift.flattener.board = {
   create: function(cropping, stoneMap, markMap, labelMap) {
     var point = glift.util.point;
     var board = [];
-    var cbox = cropping.cbox();
-    for (var y = cbox.top(); y <= cbox.bottom(); y++) {
+    var bbox = cropping.bbox;
+    for (var y = bbox.top(); y <= bbox.bottom(); y++) {
       var row = [];
-      for (var x = cbox.left(); x <= cbox.right(); x++) {
+      for (var x = bbox.left(); x <= bbox.right(); x++) {
         var pt = point(x, y);
         var ptStr = pt.toString();
         var stone = stoneMap[ptStr];
@@ -12007,18 +11938,18 @@ glift.flattener.board = {
         var mark = markMap[ptStr];
         var label = labelMap[ptStr]
         row.push(glift.flattener.intersection.create(
-            pt, stoneColor, mark, label, cropping.maxBoardSize()));
+            pt, stoneColor, mark, label, cropping.size));
       }
       board.push(row);
     }
-    return new glift.flattener._Board(board, cbox, cropping.maxBoardSize());
+    return new glift.flattener._Board(board, bbox, cropping.size);
   }
 };
 
 /**
  * Board object.  Meant to be created with the static constuctor method 'create'.
  */
-glift.flattener._Board = function(boardArray, cbox, maxBoardSize) {
+glift.flattener._Board = function(boardArray, bbox, maxBoardSize) {
   /**
    * 2D Array of intersections. Generally, this is an array of intersections,
    * but could be backed by a different underlying objects based on a
@@ -12027,7 +11958,7 @@ glift.flattener._Board = function(boardArray, cbox, maxBoardSize) {
   this._boardArray = boardArray;
 
   /** Bounding box for the crop box. */
-  this._cbox = cbox;
+  this._bbox = bbox;
 
   /** Maximum board size.  Generally 9, 13, or 19. */
   this._maxBoardSize = maxBoardSize;
@@ -12067,12 +11998,12 @@ glift.flattener._Board.prototype = {
 
   /** Turns a 0 indexed pt to a point that's board-indexed. */
   ptToBoardPt: function(pt) {
-    return pt.translate(this._cbox.left(), this._cbox.top());
+    return pt.translate(this._bbox.left(), this._bbox.top());
   },
 
   /** Turns a 0 indexed pt to a point that's board-indexed. */
   boardPtToPt: function(pt) {
-    return pt.translate(-this._cbox.left(), -this._cbox.top());
+    return pt.translate(-this._bbox.left(), -this._bbox.top());
   },
 
   /** Returns the board array. */
@@ -12118,7 +12049,7 @@ glift.flattener._Board.prototype = {
       }
       outArray.push(row);
     }
-    return new glift.flattener._Board(outArray, this._cbox, this._maxBoardSize);
+    return new glift.flattener._Board(outArray, this._bbox, this._maxBoardSize);
   }
 };
 /**

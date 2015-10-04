@@ -103,7 +103,7 @@
     var mt = glift.rules.movetree.getFromSgf(sgf);
     var f = flattener.flatten(mt, { boardRegion: 'TOP_LEFT' });
     deepEqual(glift.util.typeOf(f._cropping), 'object');
-    deepEqual(f._cropping, glift.displays.cropbox.getFromRegion('TOP_LEFT', 19));
+    deepEqual(f._cropping, glift.orientation.cropbox.get('TOP_LEFT', 19));
   });
 
   test('isOnMainPath', function() {

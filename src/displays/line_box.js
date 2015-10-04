@@ -26,9 +26,12 @@ glift.displays.getLineBox = function(boardBox, cropbox) {
 glift.displays._LineBox = function(boundingBox, spacing, cropbox) {
   this.bbox = boundingBox;
   this.spacing = spacing;
-  this.tlExtPt = cropbox.tlExtPt();
-  this.brExtPt = cropbox.brExtPt();
-  this.pointTopLeft = cropbox.cbox().topLeft();
+  this.topExt = cropbox.topExt();
+  this.botExt = cropbox.botExt();
+  this.leftExt = cropbox.leftExt();
+  this.rightExt = cropbox.rightExt();
+
+  this.pointTopLeft = cropbox.cbox().bbox.topLeft();
   this.xPoints = cropbox.xPoints();
   this.yPoints = cropbox.yPoints();
 };

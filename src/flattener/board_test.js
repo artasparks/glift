@@ -7,10 +7,9 @@
   markMap[pt(2,2).toString()] = glift.flattener.symbols.TRIANGLE;
   markMap[pt(14,1).toString()] = glift.flattener.symbols.SQUARE;
 
-  var cropbox = glift.displays.cropbox.getFromRegion(
+  var cropbox = glift.orientation.cropbox.get(
       glift.enums.boardRegions.TOP_RIGHT,
-      19,
-      false /* drawBoardCoords */);
+      19);
 
   var stoneMap = {};
   stoneMap[pt(1,1).toString()] = {

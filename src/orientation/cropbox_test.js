@@ -7,8 +7,8 @@
 
   test('Construct cropbox', function() {
     var cp = getCbox(br.ALL, 19);
-    deepEqual(cp.xPoints(), 18);
-    deepEqual(cp.yPoints(), 18);
+    deepEqual(cp.bbox.width(), 18);
+    deepEqual(cp.bbox.height(), 18);
 
     ok(!cp.hasRaggedTop());
     ok(!cp.hasRaggedLeft());
@@ -18,32 +18,32 @@
 
   test('Corner cropboxes', function() {
     var cp = getCbox(br.TOP_LEFT, 19);
-    deepEqual(cp.xPoints(), 11);
-    deepEqual(cp.yPoints(), 10);
+    deepEqual(cp.bbox.width(), 11);
+    deepEqual(cp.bbox.height(), 10);
     ok(!cp.hasRaggedTop());
     ok(!cp.hasRaggedLeft());
     ok(cp.hasRaggedBottom());
     ok(cp.hasRaggedRight());
 
     cp = getCbox(br.TOP_RIGHT, 19);
-    deepEqual(cp.xPoints(), 11);
-    deepEqual(cp.yPoints(), 10);
+    deepEqual(cp.bbox.width(), 11);
+    deepEqual(cp.bbox.height(), 10);
     ok(!cp.hasRaggedTop());
     ok(cp.hasRaggedLeft());
     ok(cp.hasRaggedBottom());
     ok(!cp.hasRaggedRight());
 
     cp = getCbox(br.BOTTOM_LEFT, 19);
-    deepEqual(cp.xPoints(), 11);
-    deepEqual(cp.yPoints(), 10);
+    deepEqual(cp.bbox.width(), 11);
+    deepEqual(cp.bbox.height(), 10);
     ok(cp.hasRaggedTop());
     ok(!cp.hasRaggedLeft());
     ok(!cp.hasRaggedBottom());
     ok(cp.hasRaggedRight());
 
     cp = getCbox(br.BOTTOM_RIGHT, 19);
-    deepEqual(cp.xPoints(), 11);
-    deepEqual(cp.yPoints(), 10);
+    deepEqual(cp.bbox.width(), 11);
+    deepEqual(cp.bbox.height(), 10);
     ok(cp.hasRaggedTop());
     ok(cp.hasRaggedLeft());
     ok(!cp.hasRaggedBottom());
@@ -52,32 +52,32 @@
 
   test('half cropboxes', function() {
     var cp = getCbox(br.TOP, 19);
-    deepEqual(cp.xPoints(), 18);
-    deepEqual(cp.yPoints(), 10);
+    deepEqual(cp.bbox.width(), 18);
+    deepEqual(cp.bbox.height(), 10);
     ok(!cp.hasRaggedTop());
     ok(!cp.hasRaggedLeft());
     ok(cp.hasRaggedBottom());
     ok(!cp.hasRaggedRight());
 
     cp = getCbox(br.BOTTOM, 19);
-    deepEqual(cp.xPoints(), 18);
-    deepEqual(cp.yPoints(), 10);
+    deepEqual(cp.bbox.width(), 18);
+    deepEqual(cp.bbox.height(), 10);
     ok(cp.hasRaggedTop());
     ok(!cp.hasRaggedLeft());
     ok(!cp.hasRaggedBottom());
     ok(!cp.hasRaggedRight());
 
     cp = getCbox(br.LEFT, 19);
-    deepEqual(cp.xPoints(), 10);
-    deepEqual(cp.yPoints(), 18);
+    deepEqual(cp.bbox.width(), 10);
+    deepEqual(cp.bbox.height(), 18);
     ok(!cp.hasRaggedTop());
     ok(!cp.hasRaggedLeft());
     ok(!cp.hasRaggedBottom());
     ok(cp.hasRaggedRight());
 
     cp = getCbox(br.RIGHT, 19);
-    deepEqual(cp.xPoints(), 10);
-    deepEqual(cp.yPoints(), 18);
+    deepEqual(cp.bbox.width(), 10);
+    deepEqual(cp.bbox.height(), 18);
     ok(!cp.hasRaggedTop());
     ok(cp.hasRaggedLeft());
     ok(!cp.hasRaggedBottom());

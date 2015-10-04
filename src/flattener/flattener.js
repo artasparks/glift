@@ -47,7 +47,7 @@ glift.flattener = {
     var startingMoveNum = options.startingMoveNum || null;
 
     var boardRegion = glift.flattener._getBoardRegion(mt, nmtp, options);
-    var cropping = glift.displays.cropbox.getFromRegion(
+    var cropping = glift.orientation.cropbox.get(
         boardRegion, mt.getIntersections());
 
     // Find the starting move number before applying the next move path.
