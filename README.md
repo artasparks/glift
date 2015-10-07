@@ -82,10 +82,7 @@ diagram](https://docs.google.com/drawings/d/1MQK8xWe7djaSJtXPffinfRcwdsA859S_uVI
 Although Glift was built for all major browsers, Glift was built on OSX, so
 these development docs assume a POSIX toolchain.
 
-For depgen.py to work, you'll need to export a CLOSURE variable pointing to the
-closure compiler. Ex:
-
-   * `export CLOSURE="java -jar /path/to/closure_compiler.jar"`
+For depgen.py to work, you'll need to have java and python installed.
 
 To update the HTML tests for development, run:
 
