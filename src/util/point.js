@@ -13,8 +13,8 @@ glift.util.coordToString = function(x, y) {
 glift.util.pointFromString = function(str) {
   try {
     var split = str.split(",");
-    var x = parseInt(split[0]);
-    var y = parseInt(split[1]);
+    var x = parseInt(split[0], 10);
+    var y = parseInt(split[1], 10);
     return glift.util.point(x, y);
   } catch(e) {
     throw "Parsing Error! Couldn't parse a point from: " + str;

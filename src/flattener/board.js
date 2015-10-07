@@ -99,12 +99,18 @@ glift.flattener._Board.prototype = {
     return this._maxBoardSize;
   },
 
-  /** Returns the height of the Go board. */
+  /**
+   * Returns the height of the Go board. Note that this won't necessarily be the
+   * length of the board - 1 due to cropping.
+   */
   height: function() {
     return this._boardArray.length;
   },
 
-  /** Returns the width of the Go board. */
+  /**
+   * Returns the width of the Go board. Note that this won't necessarily be the
+   * length of the board - 1 due to cropping.
+   */
   width: function() {
     // Here we assume that the Go board is rectangular.
     return this._boardArray[0].length;
