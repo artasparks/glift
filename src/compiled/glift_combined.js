@@ -11643,7 +11643,7 @@ glift.flattener = {
     // Calculate the collision stones and update the marks / labels maps if
     // necessary.
     var collisions = glift.flattener._createStoneLabels(
-        applied.stones, marks, labels, startingMoveNum);
+        applied.stones, stoneMap, marks, labels, startingMoveNum);
 
     // Finally! Generate the intersections double-array.
     var board = glift.flattener.board.create(cropping, stoneMap, marks, labels);
@@ -11814,11 +11814,11 @@ glift.flattener = {
   },
 
   /**
-   * Create or apply labels to identify collisions that occurred during apply
+   * Create or apply labels to identify collisions that occurred during apply.
    *
-   * stones: stones
+   * stones: stones that exist on the next moves path.
    * marks: map from ptstring to Mark symbol int.
-   *    see -- glift.bridg.flattener.symbols.
+   *    see -- glift.lattener.symbols.
    * labels: map from ptstring to label string.
    * startingMoveNum: The number at which to start creating labels
    *
@@ -11827,26 +11827,27 @@ glift.flattener = {
    *  {
    *    color: <color of the move to be played>,
    *    mvnum: <move number>,
-   *    label: <label>
+   *    label: <label>,
+        collisionStoneColor: <color of the stone under the label>
    *  }
    *
    * This data is meant to be used like the following:
-   *    '<color> <mvnum> at <label>'
+   *    '<color> <mvnum> at <collisionStoneColor> <label>'
    * as in this example:
-   *    'Black 13 at 2'
+   *    'Black 13 at White 2'
    *
    * Sadly, this has has the side effect of altering the marks / labels maps.
    */
   // TODO(kashomon): Guard this with a autoLabelMoves flag.
-  _createStoneLabels: function(stones, marks, labels, startingMoveNum) {
-    if (!stones || stones.length === 0) {
+  _createStoneLabels: function(
+      appliedStones, stoneMap, marks, labels, startingMoveNum) {
+    if (!appliedStones || appliedStones.length === 0) {
       return []; // Don't perform relabeling if no stones are found.
     }
     // Collision labels, for when stone.collision = null.
     var extraLabs = 'abcdefghijklmnopqrstuvwxyz';
-    var labsIdx = 0; // index into extra labels string above.
+    var labsIdx = 0; // Index into extra labels string above.
     var symb = glift.flattener.symbols;
-    // TODO(kashomon): Make the collisions first class.
     var collisions = []; // {color: <color>, mvnum: <number>, label: <lbl>}
 
     // Remove any number labels currently existing in the marks map.  This
@@ -11859,19 +11860,27 @@ glift.flattener = {
       }
     }
 
-    // Create labels for each stone in the 'next-stones'. Note -- we only add
-    // labels in the case when there's a next moves path.
-    for (var i = 0; i < stones.length; i++) {
-      var stone = stones[i];
+    // Create labels for each stone in the next moves treepath.  Note -- we only
+    // add labels in the case when there's a next moves path.
+    for (var i = 0; i < appliedStones.length; i++) {
+      var stone = appliedStones[i];
       var ptStr = stone.point.toString();
       var nextMoveNum = i + startingMoveNum;
+      var colStone = stoneMap[ptStr];
+      // If there's a stone in the stone map (which there _should_ be since
+      // there's a collision), then we store that in the collision object
+      var colStoneColor = undefined;
+      if (colStone && colStone.color) {
+        colStoneColor = colStone.color;
+      }
 
       // This is a collision stone. Perform collision labeling.
       if (stone.hasOwnProperty('collision')) {
         var col = {
           color: stone.color,
           mvnum: (nextMoveNum) + '',
-          label: undefined
+          label: undefined,
+          collisionStoneColor: colStoneColor
         };
         if (labels[ptStr]) { // First see if there are any available labels.
           col.label = labels[ptStr];
