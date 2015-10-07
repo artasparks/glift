@@ -3,14 +3,26 @@
  *
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
- * @version 1.0.6
+ * @version 1.1.0
  * --------------------------------------
  */
 (function(w) {
 var glift = glift || w.glift || {};
+
+// Define some closure primitives for backwards compatibility. Closure compiler
+// works off of regular expressions, so this shouldn't be an issue.
+var g = w.goog || {};
+if (!g.provide) {
+  g.provide = function(){};
+}
+if (!g.require) {
+  g.require = function(){};
+}
+
 if (w) {
   // expose Glift as a global.
   w.glift = glift;
+  w.goog = g;
 }
 })(window);
 /**
@@ -807,8 +819,8 @@ glift.util.coordToString = function(x, y) {
 glift.util.pointFromString = function(str) {
   try {
     var split = str.split(",");
-    var x = parseInt(split[0]);
-    var y = parseInt(split[1]);
+    var x = parseInt(split[0], 10);
+    var y = parseInt(split[1], 10);
     return glift.util.point(x, y);
   } catch(e) {
     throw "Parsing Error! Couldn't parse a point from: " + str;
@@ -12025,12 +12037,18 @@ glift.flattener._Board.prototype = {
     return this._maxBoardSize;
   },
 
-  /** Returns the height of the Go board. */
+  /**
+   * Returns the height of the Go board. Note that this won't necessarily be the
+   * length of the board - 1 due to cropping.
+   */
   height: function() {
     return this._boardArray.length;
   },
 
-  /** Returns the width of the Go board. */
+  /**
+   * Returns the width of the Go board. Note that this won't necessarily be the
+   * length of the board - 1 due to cropping.
+   */
   width: function() {
     // Here we assume that the Go board is rectangular.
     return this._boardArray[0].length;
@@ -13702,10 +13720,10 @@ glift.widgets.options.baseOptions = {
    */
   hooks: {
     // Fires when user gets a problem correct
-    problemCorrect: function() {},
+    problemCorrect: null,
 
     // Fires when user gets a problem wrong.
-    problemIncorrect: function() {}
+    problemIncorrect: null
   },
 
   /**
@@ -14183,7 +14201,7 @@ glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
                 'multiopen-boxonly',
                 widget.numCorrectAnswers + '/' + widget.totalCorrectAnswers,
                 { fill: '#0CC', stroke: '#0CC'});
-            hooks.problemCorrect();
+            hooks.problemCorrect && hooks.problemCorrect();
           } else {
             widget.iconBar.addTempText(
                 'multiopen-boxonly',
@@ -14200,7 +14218,7 @@ glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
         widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
         widget.iconBar.clearTempText('multiopen-boxonly');
         widget.correctness = problemResults.INCORRECT;
-        hooks.problemIncorrect();
+        hooks.problemIncorrect && problemIncorrect();
       }
     }
   },

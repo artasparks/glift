@@ -354,10 +354,10 @@ glift.widgets.options.baseOptions = {
    */
   hooks: {
     // Fires when user gets a problem correct
-    problemCorrect: function() {},
+    problemCorrect: null,
 
     // Fires when user gets a problem wrong.
-    problemIncorrect: function() {}
+    problemIncorrect: null
   },
 
   /**

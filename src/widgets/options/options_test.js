@@ -1,4 +1,4 @@
-(function() {
+;(function() {
   module('glift.widgets.options.optionsTest');
   var optLib = glift.widgets.options;
   var template = glift.widgets.options.baseOptions;
@@ -30,19 +30,8 @@
     };
     var out = optLib.setOptionDefaults(inOpts);
     ok(typeof out.hooks.problemCorrect === 'function', 'not a function');
-    ok(typeof out.hooks.problemIncorrect === 'function', 'not a function');
+    ok(out.hooks.problemIncorrect === null, 'not a function');
     ok(out.hooks.problemCorrect === inOpts.hooks.problemCorrect);
     ok(out.hooks.problemCorrect !== inOpts.hooks.problemIncorrect);
-  });
-
-  test('Test: hooks available when not specified', function() {
-    var inOpts = {
-    };
-    var out = optLib.setOptionDefaults(inOpts);
-    ok(typeof out.hooks.problemCorrect === 'function', 'not a function');
-    ok(typeof out.hooks.problemIncorrect === 'function', 'not a function');
-    var f = function () {};
-    ok(out.hooks.problemCorrect.toString() === f.toString());
-    ok(out.hooks.problemIncorrect.toString() === f.toString());
   });
 })();

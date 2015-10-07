@@ -40,6 +40,8 @@ FILES_TO_AUTOGEN = {
 DIR_ORDER = [
     '.',
     'util',
+    'gcore/util',
+
     'dom',
     'ajax',
     'themes',
@@ -75,11 +77,27 @@ GZIPPED_LOC = 'compiled/glift.js.gz'
 HEADER = '<!-- AUTO-GEN-DEPS -->'
 FOOTER = '<!-- END-AUTO-GEN-DEPS -->'
 
-# Need a closure alias, e.g.,: export CLOSURE="java -jar ~/closure.jar"
+# Note: User must have installed Java.
+#
+# To turn on type checking, see:
+# https://github.com/google/closure-compiler/wiki/Warnings
+# --warning_level=VERBOSE
+#
 # --compilation_level ADVANCED_OPTIMIZATIONS" -- If advanced optimizations are
 # desired.
-CLOSURE = ("${CLOSURE} --js " + COMBINED_LOC + " --js_output_file " + COMPILED_LOC)
-     # + " --compilation_level ADVANCED_OPTIMIZATIONS")
+CLOSURE = (
+    'if which java 1>/dev/null; then \n'
+      '  java -jar ../compiler-latest/compiler.jar --js '
+      + COMBINED_LOC
+      + ' --js_output_file ' + COMPILED_LOC 
+      + '; \n'
+    'else \n'
+      '  echo "Java is required for closure compiler. '
+      'Please install"; \n'
+    'fi')
+
+# TODO(kashomon): Write an HTML 5 cache.
+# Cache manifest in HTML5: https://en.wikipedia.org/wiki/Cache_manifest_in_HTML5
 
 def CreateImport(name):
   return '<script type="text/javascript" src="../' + name + '"></script>'
@@ -108,11 +126,10 @@ def AddImports(src, tests):
     fd.write(contents)
     fd.close
 
-def GetFileList(scriptPath):
+def GetFileList(curdir):
   """ Gets list of files to be used in import/binary import creation.
 
   """
-  curdir = os.path.realpath(os.path.dirname(scriptPath))
   os.chdir(curdir)
   out = []
   for direct in DIR_ORDER:
@@ -200,10 +217,15 @@ def main(argv=None):
   """
   print ' '.join(sys.argv)
   flags = set(sys.argv[1:])
-  flist = GetFileList(sys.argv[0])
 
+  # Make sure the current directory is the directory of this script.
+  scriptPath = sys.argv[0]
+  curdir = os.path.realpath(os.path.dirname(scriptPath))
+
+  flist = GetFileList(curdir)
   srcs, tests = SeparateFiles(flist)
 
+  os.chdir(curdir)
   if '--debug_full' in flags or '--full' in flags:
     combined = CombineSourceFiles(srcs)
     fd = open(COMBINED_LOC, 'w')
@@ -211,19 +233,10 @@ def main(argv=None):
     fd.close()
 
     if '--full' in flags:
-      print CLOSURE
       out, err = subprocess.Popen(CLOSURE, shell=True).communicate()
       if err != None:
         print err
         return -1
-      # TODO(kashomon): either make gzipping work, or remove this:
-      # -----------------
-      #if os.path.exists(GZIPPED_LOC):
-      #  os.remove(GZIPPED_LOC)
-      #gzip = 'gzip ' + COMPILED_LOC
-      #print gzip
-      #out, err = subprocess.Popen(gzip, shell=True).communicate()
-      #------------------
       srcs = [['compiled', COMPILED_LOC.replace('compiled/', '')]]
     else:
       srcs = [['compiled', COMBINED_LOC.replace('compiled/', '')]]
