@@ -1,5 +1,5 @@
 /**
- * Initialization function to be run on glift creation.  Things performed:
+ * Initialization function to be run on glift-ui creation.  Things performed:
  *  - (Compatibility) Whether or not the page supports Glift (SVG)
  *  - (Mobile-Zoom) Disable zoom for mobile, if option specified.
  */
