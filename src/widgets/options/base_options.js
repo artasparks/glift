@@ -1,5 +1,6 @@
 /**
- * Option defaults.
+ * Option defaults. Sometimes I will refer to the a subset of these options as a
+ * Glift Spec.
  *
  * Generally, there are three classes of options:
  *
@@ -195,16 +196,21 @@ glift.widgets.options.baseOptions = {
 
     /**
      * Icons to use in the status bar.
+     *
+     * Note: These should be defined by the type-specific options.
+     *
+     * An example of what this looks like in practice:
+     *
+     * [
+     *   'game-info',
+     *   'move-indicator',
+     *   'fullscreen'
+     *   'settings-wrench'
+     * ],
+     *
      * @api(1.0)
      */
-    // TODO(kashomon): Enable settings when ready (?? what does this mean).
     statusBarIcons: undefined,
-    // [
-      // 'game-info',
-      // 'move-indicator',
-      // 'fullscreen'
-      // 'settings-wrench'
-    // ],
 
     /**
      * Metadata for this SGF.  Like the global metadata, this option is not
@@ -343,6 +349,8 @@ glift.widgets.options.baseOptions = {
    * Global metadata for this set of options or SGF collection.  These is not
    * meant to be used directly by Glift but by other programs utilizing Glift
    * and so the metadata has no expected structure.
+   *
+   * Thus is currently (sometimes) used by GPub.
    * @api(experimental)
    */
   metadata: undefined,
@@ -350,13 +358,32 @@ glift.widgets.options.baseOptions = {
   /**
    * Hooks are places where users can provide custom functions to 'hook' into
    * Glift behavior.
+   *
    * @api(experimental)
    */
   hooks: {
-    // Fires when user gets a problem correct
+    /**
+     * Instead of an SGF collection, users can provide a getNextSgf function.
+     * This means that the SGFs in a are stored external to Glift (e.g., on a
+     * problem-server).
+     *
+     * Has the format: function(callback)
+     *
+     * The call back always expects an sgf object, which has the form:
+     *  {
+     *    sgfString: <string-sgf contents>
+     *    alias: <string for cache-hits>
+     *  }
+     */
+    getNextSgf: null,
+
+    /**
+     * Fires when user gets a problem correct. This is a notification function
+     * only.
+     */
     problemCorrect: null,
 
-    // Fires when user gets a problem wrong.
+    /** Fires when user gets a problem wrong. */
     problemIncorrect: null
   },
 

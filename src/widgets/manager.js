@@ -16,6 +16,7 @@
  * displayOptions: filled-in display options. See ./options/base_options.js
  * actions: combination of stone actions and icon actions.
  * metadata: metadata about the this instance of glift.
+ * hooks: user-provided functions.
  */
 glift.widgets.WidgetManager = function(divId, sgfCollection, sgfMapping,
     sgfColIndex, allowWrapAround, loadColInBack, sgfDefaults, displayOptions,
@@ -51,6 +52,7 @@ glift.widgets.WidgetManager = function(divId, sgfCollection, sgfMapping,
   this.sgfCollection = [];
 
   // Cache of SGFs.  Useful for reducing the number AJAX calls.
+  //
   // Map from SGF name to String contents.
   this.sgfCache = sgfMapping || {};
 
@@ -82,11 +84,18 @@ glift.widgets.WidgetManager = function(divId, sgfCollection, sgfMapping,
    */
   this.metadata = metadata || undefined;
 
-  /** External hooks provided by users. */
+  /**
+   * External hooks provided by users.
+   *
+   * A map of hook-name to hook-function.
+   */
   this.hooks = hooks;
 };
 
 glift.widgets.WidgetManager.prototype = {
+  /**
+   * Creates a BaseWidget instance, and calls draw on the base widget.
+   */
   draw: function() {
     var that = this;
     var afterCollectionLoad = function() {
@@ -125,11 +134,11 @@ glift.widgets.WidgetManager.prototype = {
   setActive: function() { glift.global.activeInstanceId = this.id; },
 
   /** Gets the current widget object. */
-  getCurrentWidget: function() { 
+  getCurrentWidget: function() {
     if (this.temporaryWidget) {
       return this.temporaryWidget;
     } else {
-      return this.currentWidget; 
+      return this.currentWidget;
     }
   },
 
@@ -161,7 +170,6 @@ glift.widgets.WidgetManager.prototype = {
    * array is a string, then we try to figure out whether we're looking at an
    * SGF or a URL and then we manufacture a simple sgf object.
    */
-  // TODO(kashomon): Move to options
   getSgfObj: function(index) {
     if (index < 0 || index > this.sgfCollection.length) {
       throw new Error("Index [" + index +  " ] out of bounds."
@@ -171,10 +179,10 @@ glift.widgets.WidgetManager.prototype = {
     if (glift.util.typeOf(curSgfObj) === 'string') {
       var out = {};
       if (/^\s*\(;/.test(curSgfObj)) {
-        // This is a standard SGF String.
+        // We assume that this is a standard SGF String.
         out.sgfString = curSgfObj;
       } else {
-        // assume a URL.
+        // Assume a URL.
         out.url = curSgfObj
       }
       curSgfObj = out;

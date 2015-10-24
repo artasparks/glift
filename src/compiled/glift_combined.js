@@ -72,7 +72,7 @@ glift.global = {
   addedCssClasses: false
 };
 /**
- * Initialization function to be run on glift creation.  Things performed:
+ * Initialization function to be run on glift-ui creation.  Things performed:
  *  - (Compatibility) Whether or not the page supports Glift (SVG)
  *  - (Mobile-Zoom) Disable zoom for mobile, if option specified.
  */
@@ -12911,6 +12911,7 @@ glift.widgets.BaseWidget.prototype = {
  * displayOptions: filled-in display options. See ./options/base_options.js
  * actions: combination of stone actions and icon actions.
  * metadata: metadata about the this instance of glift.
+ * hooks: user-provided functions.
  */
 glift.widgets.WidgetManager = function(divId, sgfCollection, sgfMapping,
     sgfColIndex, allowWrapAround, loadColInBack, sgfDefaults, displayOptions,
@@ -12946,6 +12947,7 @@ glift.widgets.WidgetManager = function(divId, sgfCollection, sgfMapping,
   this.sgfCollection = [];
 
   // Cache of SGFs.  Useful for reducing the number AJAX calls.
+  //
   // Map from SGF name to String contents.
   this.sgfCache = sgfMapping || {};
 
@@ -12977,11 +12979,18 @@ glift.widgets.WidgetManager = function(divId, sgfCollection, sgfMapping,
    */
   this.metadata = metadata || undefined;
 
-  /** External hooks provided by users. */
+  /**
+   * External hooks provided by users.
+   *
+   * A map of hook-name to hook-function.
+   */
   this.hooks = hooks;
 };
 
 glift.widgets.WidgetManager.prototype = {
+  /**
+   * Creates a BaseWidget instance, and calls draw on the base widget.
+   */
   draw: function() {
     var that = this;
     var afterCollectionLoad = function() {
@@ -13020,11 +13029,11 @@ glift.widgets.WidgetManager.prototype = {
   setActive: function() { glift.global.activeInstanceId = this.id; },
 
   /** Gets the current widget object. */
-  getCurrentWidget: function() { 
+  getCurrentWidget: function() {
     if (this.temporaryWidget) {
       return this.temporaryWidget;
     } else {
-      return this.currentWidget; 
+      return this.currentWidget;
     }
   },
 
@@ -13056,7 +13065,6 @@ glift.widgets.WidgetManager.prototype = {
    * array is a string, then we try to figure out whether we're looking at an
    * SGF or a URL and then we manufacture a simple sgf object.
    */
-  // TODO(kashomon): Move to options
   getSgfObj: function(index) {
     if (index < 0 || index > this.sgfCollection.length) {
       throw new Error("Index [" + index +  " ] out of bounds."
@@ -13066,10 +13074,10 @@ glift.widgets.WidgetManager.prototype = {
     if (glift.util.typeOf(curSgfObj) === 'string') {
       var out = {};
       if (/^\s*\(;/.test(curSgfObj)) {
-        // This is a standard SGF String.
+        // We assume that this is a standard SGF String.
         out.sgfString = curSgfObj;
       } else {
-        // assume a URL.
+        // Assume a URL.
         out.url = curSgfObj
       }
       curSgfObj = out;
@@ -13365,7 +13373,8 @@ glift.widgets.options = {
   }
 };
 /**
- * Option defaults.
+ * Option defaults. Sometimes I will refer to the a subset of these options as a
+ * Glift Spec.
  *
  * Generally, there are three classes of options:
  *
@@ -13561,16 +13570,21 @@ glift.widgets.options.baseOptions = {
 
     /**
      * Icons to use in the status bar.
+     *
+     * Note: These should be defined by the type-specific options.
+     *
+     * An example of what this looks like in practice:
+     *
+     * [
+     *   'game-info',
+     *   'move-indicator',
+     *   'fullscreen'
+     *   'settings-wrench'
+     * ],
+     *
      * @api(1.0)
      */
-    // TODO(kashomon): Enable settings when ready (?? what does this mean).
     statusBarIcons: undefined,
-    // [
-      // 'game-info',
-      // 'move-indicator',
-      // 'fullscreen'
-      // 'settings-wrench'
-    // ],
 
     /**
      * Metadata for this SGF.  Like the global metadata, this option is not
@@ -13709,6 +13723,8 @@ glift.widgets.options.baseOptions = {
    * Global metadata for this set of options or SGF collection.  These is not
    * meant to be used directly by Glift but by other programs utilizing Glift
    * and so the metadata has no expected structure.
+   *
+   * Thus is currently (sometimes) used by GPub.
    * @api(experimental)
    */
   metadata: undefined,
@@ -13716,13 +13732,32 @@ glift.widgets.options.baseOptions = {
   /**
    * Hooks are places where users can provide custom functions to 'hook' into
    * Glift behavior.
+   *
    * @api(experimental)
    */
   hooks: {
-    // Fires when user gets a problem correct
+    /**
+     * Instead of an SGF collection, users can provide a getNextSgf function.
+     * This means that the SGFs in a are stored external to Glift (e.g., on a
+     * problem-server).
+     *
+     * Has the format: function(callback)
+     *
+     * The call back always expects an sgf object, which has the form:
+     *  {
+     *    sgfString: <string-sgf contents>
+     *    alias: <string for cache-hits>
+     *  }
+     */
+    getNextSgf: null,
+
+    /**
+     * Fires when user gets a problem correct. This is a notification function
+     * only.
+     */
     problemCorrect: null,
 
-    // Fires when user gets a problem wrong.
+    /** Fires when user gets a problem wrong. */
     problemIncorrect: null
   },
 
@@ -14344,12 +14379,12 @@ glift.widgets.options.STANDARD_PROBLEM = {
     if (data.result === problemResults.CORRECT) {
         widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'check', '#0CC');
         widget.correctness = problemResults.CORRECT;
-        hooks.problemCorrect();
+        hooks.problemCorrect(pt, currentPlayer);
     } else if (data.result === problemResults.INCORRECT) {
       widget.iconBar.destroyTempIcons();
       widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
       widget.correctness = problemResults.INCORRECT;
-      hooks.problemIncorrect();
+      hooks.problemIncorrect(pt, currentPlayer);
     }
   },
 
