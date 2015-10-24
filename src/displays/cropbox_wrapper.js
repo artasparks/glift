@@ -15,17 +15,9 @@ glift.displays.cropbox = {
         bottom = cropbox.bbox.bottom(),
         left = cropbox.bbox.left(),
         right = cropbox.bbox.right();
-    if (cropbox.hasRaggedTop() && drawBoardCoords) {
-      top -= 1;
-    }
-    if (cropbox.hasRaggedBottom() && drawBoardCoords) {
-      bottom += 1;
-    }
-    if (cropbox.hasRaggedLeft() && drawBoardCoords) {
-      left -= 1;
-    }
-    if (cropbox.hasRaggedRight() && drawBoardCoords) {
-      right += 1;
+    if (drawBoardCoords) {
+      bottom += 2;
+      right += 2;
     }
 
     var cx = new glift.orientation.Cropbox(
@@ -72,7 +64,7 @@ glift.displays._CropBox.prototype = {
    *
    * Note: the x and y coordinates for these points will either be 0 or 0.5.
    */
-  topExt: function() { 
+  topExt: function() {
     return this._cbox.hasRaggedTop() ? glift.displays.cropbox.EXT: 0;
   },
   botExt: function() { 
