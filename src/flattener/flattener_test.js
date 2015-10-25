@@ -8,7 +8,7 @@
   var point = glift.util.point;
 
   test('Basic Flattened', function() {
-    var basicSgf = '(;GB[1]C[foo]AW[aa]AB[ab]LB[ab:z])';
+    var basicSgf = '(;GB[1]C[foo]AW[aa]AB[ab]LB[ab:z]SQ[cc])';
     var movetree = glift.rules.movetree.getFromSgf(basicSgf);
     var f = flattener.flatten(movetree);
     deepEqual(f.comment(), 'foo');
@@ -30,6 +30,10 @@
 
     deepEqual(f.board().width(), 19);
     deepEqual(f.board().height(), 19);
+
+    deepEqual(f.markMap()[toPt('cc').toString()], symb.SQUARE);
+    deepEqual(f.markMap()[toPt('ab').toString()], symb.TEXTLABEL);
+    deepEqual(f.labelMap()[toPt('ab').toString()], 'z');
   });
 
   test('Goban auto-recalculation', function() {

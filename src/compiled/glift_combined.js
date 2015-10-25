@@ -11656,7 +11656,7 @@ glift.flattener = {
     return new glift.flattener.Flattened(
         board, collisions, comment, boardRegion, cropping, mt.onMainline(),
         startingMoveNum, endingMoveNum, mainlineMoveNum, mainlineMove,
-        nextMainlineMove, stoneMap, marks);
+        nextMainlineMove, stoneMap, marks, labels);
   },
 
   /**
@@ -12077,7 +12077,7 @@ glift.flattener._Board.prototype = {
 glift.flattener.Flattened = function(
     board, collisions, comment, boardRegion, cropping, isOnMainPath,
     startMoveNum, endMoveNum, mainlineMoveNum, mainlineMove,
-    nextMainlineMove, stoneMap, markMap) {
+    nextMainlineMove, stoneMap, markMap, labelMap) {
   /**
    * Board wrapper. Essentially a double array of intersection objects.
    */
@@ -12135,20 +12135,24 @@ glift.flattener.Flattened = function(
   /**
    * All the marks!
    *
-   * A map with top level keys being 'marks' and 'labels' pointing to objects
-   * with the following structure:
-   * {
-   *  marks: {
+   * A map with the following structure:
+   *  {
    *    "12,5": 13
    *    "12,3": 23
-   *  },
-   *  labels: {
-   *    "12,3": "A"
-   *    "12,4": "B"
    *  }
    * }
    */
   this._markMap = markMap;
+
+  /** 
+   * All the labels!
+   *
+   *  labels: {
+   *    "12,3": "A"
+   *    "12,4": "B"
+   *  }
+   */
+  this._labelMap = labelMap;
 };
 
 glift.flattener.Flattened.prototype = {
@@ -12214,8 +12218,8 @@ glift.flattener.Flattened.prototype = {
    *    "12,4": "B"
    *  }
    */
-  labelsMap: function() {
-    return this._markMap.labels || {};
+  labelMap: function() {
+    return this._labelMap;
   },
 
   /**
@@ -12226,9 +12230,12 @@ glift.flattener.Flattened.prototype = {
    *  }
    *
    * where the numbers correspond to an entry in glift.flattener.symbols.
+   *
+   * Note: This will include the TEXTLABEL symbol, even though the labels map
+   * duplicates this information to some degree.
    */
-  marksMap: function() {
-    return this._markMap.marks || {};
+  markMap: function() {
+    return this._markMap;
   },
 
   /**

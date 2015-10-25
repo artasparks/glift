@@ -120,7 +120,7 @@ glift.flattener = {
     return new glift.flattener.Flattened(
         board, collisions, comment, boardRegion, cropping, mt.onMainline(),
         startingMoveNum, endingMoveNum, mainlineMoveNum, mainlineMove,
-        nextMainlineMove, stoneMap, marks);
+        nextMainlineMove, stoneMap, marks, labels);
   },
 
   /**
