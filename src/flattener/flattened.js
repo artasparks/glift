@@ -4,7 +4,7 @@
 glift.flattener.Flattened = function(
     board, collisions, comment, boardRegion, cropping, isOnMainPath,
     startMoveNum, endMoveNum, mainlineMoveNum, mainlineMove,
-    nextMainlineMove, stoneMap) {
+    nextMainlineMove, stoneMap, markMap) {
   /**
    * Board wrapper. Essentially a double array of intersection objects.
    */
@@ -58,6 +58,24 @@ glift.flattener.Flattened = function(
    *    {point: <point>, color: <color>}
    */
   this._stoneMap = stoneMap;
+
+  /**
+   * All the marks!
+   *
+   * A map with top level keys being 'marks' and 'labels' pointing to objects
+   * with the following structure:
+   * {
+   *  marks: {
+   *    "12,5": 13
+   *    "12,3": 23
+   *  },
+   *  labels: {
+   *    "12,3": "A"
+   *    "12,4": "B"
+   *  }
+   * }
+   */
+  this._markMap = markMap;
 };
 
 glift.flattener.Flattened.prototype = {
@@ -108,8 +126,37 @@ glift.flattener.Flattened.prototype = {
    */
   nextMainlineMove: function() { return this._nextMainlineMove; },
 
-  /** Returns the stone map. */
+  /**
+   * Returns the stone map. An object with the following structure:
+   * {
+   *   '12,3': {point: <point>, color: <color>} (stone object)
+   * }
+   */
   stoneMap: function() { return this._stoneMap; },
+
+  /**
+   * Returns the labels map. An object with the following structure:
+   *  {
+   *    "12,3": "A"
+   *    "12,4": "B"
+   *  }
+   */
+  labelsMap: function() {
+    return this._markMap.labels || {};
+  },
+
+  /**
+   * Returns the marks map. An object with the following structure:
+   *  {
+   *    "12,5": 30
+   *    "12,3": 31
+   *  }
+   *
+   * where the numbers correspond to an entry in glift.flattener.symbols.
+   */
+  marksMap: function() {
+    return this._markMap.marks || {};
+  },
 
   /**
    * Helper for truncating labels if the labels are numbers > 100, which

@@ -120,7 +120,7 @@ glift.flattener = {
     return new glift.flattener.Flattened(
         board, collisions, comment, boardRegion, cropping, mt.onMainline(),
         startingMoveNum, endingMoveNum, mainlineMoveNum, mainlineMove,
-        nextMainlineMove, stoneMap);
+        nextMainlineMove, stoneMap, marks);
   },
 
   /**
@@ -205,8 +205,8 @@ glift.flattener = {
    * Example return value:
    * {
    *  marks: {
-   *    "12.5": 13
-   *    "12.3": 23
+   *    "12,5": 13
+   *    "12,3": 23
    *  },
    *  labels: {
    *    "12,3": "A"
