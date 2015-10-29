@@ -40,7 +40,7 @@ FILES_TO_AUTOGEN = {
 DIR_ORDER = [
     '.',
     'util',
-    'gcore/util',
+    # 'gcore/util', -- for closure migration
 
     'dom',
     'ajax',
