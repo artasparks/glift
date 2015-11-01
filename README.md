@@ -54,7 +54,7 @@ The currently supported methods support @api(1.0):
 
    * `glift.create({options})` - Create a Glift instance.
 
-And the following options (see src/widgets/options/base_options.js)
+And the following options (see [src/widgets/options/base_options.js](/src/widgets/options/base_options.js))
 
    * `divId` - ID of the container div.
    * `sgf` - String, url, or object, with options from sgfDefaults.
