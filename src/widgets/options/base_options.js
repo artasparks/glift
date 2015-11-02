@@ -4,7 +4,7 @@
  *
  * Generally, there are three classes of options:
  *
- * 1. Manager Options. Meta options hoving to do with managing widgets.  These
+ * 1. Manager Options. Meta options having to do with managing widgets.  These
  *    are generally at the top level.
  * 2. Display Options. Options having to do with how widgets are displayed
  * 3. SGF Options. Options having to do specifically with each SGF.
