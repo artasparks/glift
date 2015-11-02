@@ -107,18 +107,29 @@ glift.keyMappings = {
    * initialized once, but it's ok to call this function more than once -- it
    * will be idempotent.
    */
-  initKeybindingListener: function() {
+  initKeybindingListener: function(that) {
+
     if (glift.keyMappings._initializedListener) {
       return;
     }
-    var body = document.body;
+    var wrapper = document.getElementById(that.wrapperDivId);
 
     // Note: difference between keypress and keydown!
     //
     // We use keydown so we can capture the left/right arrow keys, but keypress
     // should be preferred since it's easier to get the char code.
-    body.addEventListener('keydown', glift.keyMappings._keyHandlerFunc);
-    body.addEventListener('keypress', glift.keyMappings._keyHandlerFunc);
+    wrapper.addEventListener('keydown', glift.keyMappings._keyHandlerFunc);
+    wrapper.addEventListener('keypress', glift.keyMappings._keyHandlerFunc);
+
+    wrapper.addEventListener('focus', function(event) {
+      that.statusBar.setKeyboardOpacity(1);
+    });
+    wrapper.addEventListener('blur', function(event) {
+      that.statusBar.setKeyboardOpacity(0.5);
+    });
+    wrapper.setAttribute('tabindex', '0'); // allows div to have focus
+    wrapper.focus();
+
     glift.keyMappings._initializedListener = true;
   },
 

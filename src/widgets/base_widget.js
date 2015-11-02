@@ -115,6 +115,9 @@ glift.widgets.BaseWidget.prototype = {
       if (this.manager.sgfCollection.length > 1) {
         statusBarIcons.splice(0, 0, 'widget-page');
       }
+      if (!this.displayOptions.enableKeyboardShortcuts) {
+        glift.array.remove(statusBarIcons, 'keyboard-indicator');
+      }
       var statusBarIconBar = glift.displays.icons.bar({
           divId: divIds.STATUS_BAR,
           positioning: positioning.getBbox(glift.enums.boardComponents.STATUS_BAR),
@@ -247,7 +250,7 @@ glift.widgets.BaseWidget.prototype = {
           iconPathOrFunc);
     }
     // Lazy initialize the key mappings. Only really runs once.
-    glift.keyMappings.initKeybindingListener();
+    glift.keyMappings.initKeybindingListener(this);
   },
 
   /** Initialize properties based on problem type. */

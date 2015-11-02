@@ -459,9 +459,8 @@ glift.widgets.options.baseOptions = {
     disableZoomForMobile: false,
 
     /**
-     * Whether or not to enable keyboard shortcuts. This currently binds
-     * keypress events to document.body, so it's not unlikely this could
-     * conflict with other applications' keybindings.
+     * Whether or not to enable keyboard shortcuts. This binds keypress
+     * events to the wrapping div.
      */
     enableKeyboardShortcuts: true,
 
@@ -699,6 +698,13 @@ glift.widgets.options.baseOptions = {
       mouseover: function() {},
       mouseout: function() {},
       tooltip: 'Shows the current move number'
+    },
+
+    'keyboard-indicator': {
+      click: function() {},
+      mouseover: function() {},
+      mouseout: function() {},
+      tooltip: 'Shows whether keyboard is active'
     },
 
     fullscreen: {

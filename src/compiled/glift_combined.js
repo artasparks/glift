@@ -603,18 +603,29 @@ glift.keyMappings = {
    * initialized once, but it's ok to call this function more than once -- it
    * will be idempotent.
    */
-  initKeybindingListener: function() {
+  initKeybindingListener: function(that) {
+
     if (glift.keyMappings._initializedListener) {
       return;
     }
-    var body = document.body;
+    var wrapper = document.getElementById(that.wrapperDivId);
 
     // Note: difference between keypress and keydown!
     //
     // We use keydown so we can capture the left/right arrow keys, but keypress
     // should be preferred since it's easier to get the char code.
-    body.addEventListener('keydown', glift.keyMappings._keyHandlerFunc);
-    body.addEventListener('keypress', glift.keyMappings._keyHandlerFunc);
+    wrapper.addEventListener('keydown', glift.keyMappings._keyHandlerFunc);
+    wrapper.addEventListener('keypress', glift.keyMappings._keyHandlerFunc);
+
+    wrapper.addEventListener('focus', function(event) {
+      that.statusBar.setKeyboardOpacity(1);
+    });
+    wrapper.addEventListener('blur', function(event) {
+      that.statusBar.setKeyboardOpacity(0.5);
+    });
+    wrapper.setAttribute('tabindex', '0'); // allows div to have focus
+    wrapper.focus();
+
     glift.keyMappings._initializedListener = true;
   },
 
@@ -5963,6 +5974,12 @@ glift.displays.icons.svg = {
     bbox: {"x":119.6875,"y":65.5625,"x2":180.28125,"y2":107.375,"width":60.59375,"height":41.8125}
   },
 
+  // from http://iconmonstr.com/keyboard-2-icon/
+  'keyboard-indicator': {
+    string: "M432,151.5v209H80v-209H432z M462,121.5H50v269h412V121.5z M318.228,168.549h37.54v31.631h-37.54 V168.549z M182.852,248.27v-31.631h37.54v31.631H182.852z M193.772,264.729v31.631h-37.54v-31.631H193.772z M210.231,264.729h37.539 v31.631h-37.539V264.729z M236.85,248.27v-31.631h37.539v31.631H236.85z M264.229,264.729h37.538v31.631h-37.538V264.729z M290.849,248.27v-31.631h37.538v31.631H290.849z M264.229,168.549h37.538v31.631h-37.538V168.549z M210.231,168.549h37.539v31.631 h-37.539V168.549z M156.232,168.549h37.54v31.631h-37.54V168.549z M102.234,168.549h37.539v31.631h-37.539V168.549z M102.234,216.639h64.158v31.631l-64.158,0.023V216.639z M139.773,296.359h-37.539v-31.631h37.539V296.359z M355.768,344.451 H156.232v-31.633h199.535V344.451z M355.768,296.359h-37.54v-31.631h37.54V296.359z M409.766,296.359h-37.54v-31.631h37.54V296.359z M409.766,248.27h-64.919v-31.631h64.919V248.27z M409.766,200.181h-37.54v-31.631h37.54V200.181z",
+    bbox: {"x":50,"y":121.5,"x2":462,"y2":390.5,"width":412,"height":269}
+  },
+
   // Fullscreen Glift!
   // http://raphaeljs.com/icons/#expand
   fullscreen: {
@@ -6672,6 +6689,15 @@ glift.displays.statusbar._StatusBar.prototype = {
         num,
         { fill: color, stroke: color },
         0.85);
+  },
+
+  setKeyboardOpacity: function(opacity) {
+    if (this.iconBar.hasIcon('keyboard-indicator')) {
+      var keyboardIcon = this.iconBar.getIcon('keyboard-indicator');
+      var keyboardElem = document.getElementById(keyboardIcon.elementId);
+      // set opacity
+      keyboardElem.setAttribute('opacity', opacity);
+    }
   }
 };
 /**
@@ -12685,6 +12711,9 @@ glift.widgets.BaseWidget.prototype = {
       if (this.manager.sgfCollection.length > 1) {
         statusBarIcons.splice(0, 0, 'widget-page');
       }
+      if (!this.displayOptions.enableKeyboardShortcuts) {
+        glift.array.remove(statusBarIcons, 'keyboard-indicator');
+      }
       var statusBarIconBar = glift.displays.icons.bar({
           divId: divIds.STATUS_BAR,
           positioning: positioning.getBbox(glift.enums.boardComponents.STATUS_BAR),
@@ -12817,7 +12846,7 @@ glift.widgets.BaseWidget.prototype = {
           iconPathOrFunc);
     }
     // Lazy initialize the key mappings. Only really runs once.
-    glift.keyMappings.initKeybindingListener();
+    glift.keyMappings.initKeybindingListener(this);
   },
 
   /** Initialize properties based on problem type. */
@@ -14121,6 +14150,13 @@ glift.widgets.options.baseOptions = {
       tooltip: 'Shows the current move number'
     },
 
+    'keyboard-indicator': {
+      click: function() {},
+      mouseover: function() {},
+      mouseout: function() {},
+      tooltip: 'Shows whether keyboard is active'
+    },
+
     fullscreen: {
       click: function(event, widget, icon, iconBar) {
         widget.statusBar && widget.statusBar.fullscreen();
@@ -14380,6 +14416,7 @@ glift.widgets.options.GAME_VIEWER = {
   statusBarIcons: [
     'game-info',
     'move-indicator',
+    'keyboard-indicator',
     'fullscreen'
   ]
 };
@@ -14404,6 +14441,7 @@ glift.widgets.options.REDUCED_GAME_VIEWER = {
   statusBarIcons: [
     'game-info',
     'move-indicator',
+    'keyboard-indicator',
     'fullscreen'
   ]
 };
