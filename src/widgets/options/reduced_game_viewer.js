@@ -19,6 +19,7 @@ glift.widgets.options.REDUCED_GAME_VIEWER = {
   statusBarIcons: [
     'game-info',
     'move-indicator',
+    'keyboard-indicator',
     'fullscreen'
   ]
 };

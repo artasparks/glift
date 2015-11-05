@@ -65,5 +65,14 @@ glift.displays.statusbar._StatusBar.prototype = {
         num,
         { fill: color, stroke: color },
         0.85);
+  },
+
+  setKeyboardOpacity: function(opacity) {
+    if (this.iconBar.hasIcon('keyboard-indicator')) {
+      var keyboardIcon = this.iconBar.getIcon('keyboard-indicator');
+      var keyboardElem = document.getElementById(keyboardIcon.elementId);
+      // set opacity
+      keyboardElem.setAttribute('opacity', opacity);
+    }
   }
 };
