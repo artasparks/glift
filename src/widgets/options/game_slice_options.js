@@ -32,6 +32,6 @@ glift.widgets.options.GAME_SLICE = {
 
   statusBarIcons: [
     'fullscreen'
-  ],
+  ]
 
 };

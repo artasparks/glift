@@ -48,6 +48,6 @@ glift.controllers.GameSliceMethods = {
     this.movetree.properties().add(allProperties.LB, labels);
 
     return this;
-  },
+  }
 
 };
