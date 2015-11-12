@@ -1,6 +1,6 @@
 /**
  * The treepath is specified by a String, which tells how to get to particular
- * position in a game / problem. This implies that the treeptahs discussed below
+ * position in a game / problem. This implies that the treepaths discussed below
  * are initial treepaths.
  *
  * Note: Both moves and and variations are 0 indexed.

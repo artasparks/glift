@@ -45,6 +45,16 @@ glift.rules._MoveNode.prototype = {
   /** Gets the number of children. */
   numChildren: function() { return this.children.length; },
 
+  getIntersection: function() {
+    var colors = ['B', 'W'];
+    for (var i in colors) {
+      var color = colors[i];
+      if(this._properties.propMap[color] != undefined) {
+        return this._properties.propMap[color];
+      }
+    }
+  },
+
   /** Add a new child node. */
   addChild: function() {
     this.children.push(glift.rules.movenode(

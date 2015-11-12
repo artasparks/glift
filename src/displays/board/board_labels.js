@@ -15,6 +15,6 @@ glift.displays.board.boardLabels = function(svg, idGen, boardPoints, theme) {
         .attr('x', lbl.coordPt.x()) // x and y are the anchor points.
         .attr('y', lbl.coordPt.y())
         .attr('font-family', theme.boardCoordLabels['font-family'])
-        .attr('font-size', boardPoints.spacing * 0.6));
+        .attr('font-size', boardPoints.spacing * theme.boardCoordLabels['font-size']));
   }
 };
