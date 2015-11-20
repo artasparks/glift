@@ -90,7 +90,9 @@ CLOSURE = (
     'if which java 1>/dev/null; then \n'
       '  java -jar ../compiler-latest/compiler.jar --js '
       + COMBINED_LOC
-      + ' --js_output_file ' + COMPILED_LOC 
+      + ' --js_output_file ' + COMPILED_LOC
+      ### Closure flags
+      + ' --language_in=ECMASCRIPT5 '
       + '; \n'
     'else \n'
       '  echo "Java is required for closure compiler. '
