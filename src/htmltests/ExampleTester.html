@@ -146,14 +146,12 @@
         margin: 0;
         padding: 0;
       }
-      #glift_display1 {
-        height:500px;
-        width:100%;
-        position:relative;
+      html, body, #wrap {
+        height: 100%;
       }
-      p {
-        margin: 10px;
-        padding: 10px;
+      #glift_display1 {
+        height:100%;
+        position:relative;
       }
     </style>
   </head>
@@ -172,6 +170,7 @@
               sgfString: testdata.gogameguru_commentary,
               widgetType: 'EXAMPLE',
               initialPosition: 50,
+              uiComponents: ['BOARD'],
               nextMovesPath: '0,0,0,0,0,0'
             },
             display: {
