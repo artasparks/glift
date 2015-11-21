@@ -2,9 +2,9 @@
 <html>
 <head>
 
-<title> BoardEditorTester </title>
+<title> GameSliceTester </title>
+<script type="text/javascript" src="../libs/jquery-1.10.2.min.js"></script>
 <script type="text/javascript" src="../testdata/sgfs.js"></script>
-<script type="text/javascript" src="../testdata/gogameguru_commentary.js"></script>
 
 <!-- AUTO-GEN-DEPS -->
 <!-- Otre -->
@@ -143,41 +143,44 @@
 <script type="text/javascript" src="../widgets/options/standard_problem_options.js"></script>
 
 <!-- END-AUTO-GEN-DEPS -->
+
     <style>
       * {
         margin: 0;
         padding: 0;
       }
-      body {
+      html, body, #wrap {
         height: 100%;
       }
       #glift_display1 {
-        height: 500px;
-        width: 100%;
+        height:100%;
         position:relative;
       }
     </style>
   </head>
 
   <body>
-    <div id="glift_display1"></div>
     <div id="wrap" style="position:relative;">
       <div id="gheader"></div>
+      <div id="glift_display1"></div>
       <div id="extra_info"></div>
+      <script type="text/javascript">
+        var exampleWidget = glift.create({
+          divId: "glift_display1",
+          sgf: {
+            sgfString: "(;FF[4]GM[1]SZ[19]CA[UTF-8]SO[Glift]EV[]PB[Chen Yaoye]BR[9p]PW[Tan Xiao]WR[7p]KM[7.5]DT[2013-11-18]RE[B+0.5];B[qd];W[dc];B[pq];W[dq];B[nc];W[co];B[qk];W[jp];B[de];W[cg];B[cc];W[gl];B[dd];W[db];B[fd];W[hc];B[cf];W[dh];B[cb];W[mp];B[po];W[kc];B[dk];W[bf];B[be];W[df];B[ce];W[dm];B[fk];W[gh];B[hk];W[gn];B[hq];W[jq];B[eq];W[dr];B[io];W[im];B[jo];W[ko];B[jm];W[jn];B[in];W[kn];B[hm];W[il];B[hl];W[od];B[jk];W[oc])",
+            widgetType: 'GAME_SLICE',
+            // widgetType: 'BOARD_EDITOR',
+            initialPosition: 10,
+            drawTo: 30, 
+            nextMovesPath: '0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0',
+            uiComponents: ['BOARD'],
+          },
+          display: {
+            disableZoomForMobile: true
+          }
+        });
+      </script>
     </div>
   </body>
-  <script type="text/javascript">
-    var boardEditor = glift.create({
-      sgf: {},
-      divId: 'glift_display1',
-      sgfDefaults: { widgetType: 'BOARD_EDITOR' },
-      display: {
-        theme: 'DEPTH',
-        goBoardBackground: '../themes/assets/bambootile_warm.jpg'
-      }
-    });
-    $(window).resize(function() {
-      boardEditor.destroy().draw();
-    });
-  </script>
 </html>

@@ -23,7 +23,8 @@ glift.themes.registered.DEFAULT = {
     fill: 'black',
     stroke: 'black',
     opacity: '0.6',
-    'font-family': 'sans-serif'
+    'font-family': 'sans-serif',
+    'font-size': '0.6'
   },
 
   stones: {
@@ -33,7 +34,8 @@ glift.themes.registered.DEFAULT = {
     },
 
     marks: {
-      'font-family' : 'sans-serif'
+      'font-family' : 'sans-serif',
+      'font-size': '0.7'
     },
 
     EMPTY : {

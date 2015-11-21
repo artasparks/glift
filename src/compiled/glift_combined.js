@@ -444,6 +444,7 @@ glift.enums = {
   widgetTypes: {
     CORRECT_VARIATIONS_PROBLEM: 'CORRECT_VARIATIONS_PROBLEM',
     EXAMPLE: 'EXAMPLE',
+    GAME_SLICE: 'GAME_SLICE',
     GAME_VIEWER: 'GAME_VIEWER',
     REDUCED_GAME_VIEWER: 'REDUCED_GAME_VIEWER',
     STANDARD_PROBLEM: 'STANDARD_PROBLEM',
@@ -1627,7 +1628,8 @@ glift.themes.registered.DEFAULT = {
     fill: 'black',
     stroke: 'black',
     opacity: '0.6',
-    'font-family': 'sans-serif'
+    'font-family': 'sans-serif',
+    'font-size': '0.6'
   },
 
   stones: {
@@ -1637,7 +1639,8 @@ glift.themes.registered.DEFAULT = {
     },
 
     marks: {
-      'font-family' : 'sans-serif'
+      'font-family' : 'sans-serif',
+      'font-size': '0.7'
     },
 
     EMPTY : {
@@ -4241,7 +4244,7 @@ glift.displays.board.boardLabels = function(svg, idGen, boardPoints, theme) {
         .attr('x', lbl.coordPt.x()) // x and y are the anchor points.
         .attr('y', lbl.coordPt.y())
         .attr('font-family', theme.boardCoordLabels['font-family'])
-        .attr('font-size', boardPoints.spacing * 0.6));
+        .attr('font-size', boardPoints.spacing * theme.boardCoordLabels['font-size']));
   }
 };
 /**
@@ -4749,7 +4752,7 @@ glift.displays.board.addMark = function(
         .attr('x', coordPt.x()) // x and y are the anchor points.
         .attr('y', coordPt.y())
         .attr('font-family', stonesTheme.marks['font-family'])
-        .attr('font-size', boardPoints.spacing * 0.7)
+        .attr('font-size', boardPoints.spacing * stonesTheme.marks['font-size'])
         .attr('id', markId));
 
   } else if (mark === marks.SQUARE) {
@@ -7890,6 +7893,16 @@ glift.rules._MoveNode.prototype = {
   /** Gets the number of children. */
   numChildren: function() { return this.children.length; },
 
+  getIntersection: function() {
+    var colors = ['B', 'W'];
+    for (var i in colors) {
+      var color = colors[i];
+      if(this._properties.propMap[color] != undefined) {
+        return this._properties.propMap[color];
+      }
+    }
+  },
+
   /** Add a new child node. */
   addChild: function() {
     this.children.push(glift.rules.movenode(
@@ -9130,7 +9143,7 @@ Properties.prototype = {
 })();
 /**
  * The treepath is specified by a String, which tells how to get to particular
- * position in a game / problem. This implies that the treeptahs discussed below
+ * position in a game / problem. This implies that the treepaths discussed below
  * are initial treepaths.
  *
  * Note: Both moves and and variations are 0 indexed.
@@ -10438,7 +10451,7 @@ glift.controllers.BoardEditorMethods = {
   },
 
   /**
-   * Use the current numeric mark (as a string). This removes the mark frome the
+   * Use the current numeric mark (as a string). This removes the mark from the
    * available numeric labels. Returns null if no mark is available.
    */
   _useCurrentNumericMark: function() {
@@ -10561,6 +10574,59 @@ glift.controllers.BoardEditorMethods = {
 
   pass: function() { throw new Error('Not implemented'); },
   clearStone: function() { throw new Error('Not implemented'); }
+};
+/**
+ * A GameViewer encapsulates the idea of traversing a read-only SGF.
+ */
+glift.controllers.gameSlice = function(sgfOptions) {
+  var ctrl = glift.controllers;
+  var baseController = glift.util.beget(ctrl.base());
+  var newController = glift.util.setMethods(baseController,
+      ctrl.GameSliceMethods);
+  newController.drawTo = sgfOptions.drawTo || [];
+  newController.initOptions(sgfOptions);
+  return newController;
+};
+
+glift.controllers.GameSliceMethods = {
+
+  initialize: function(treepath) {
+    var rules = glift.rules;
+    var initTreepath = treepath || this.initialPosition;
+    this.treepath = rules.treepath.parsePath(initTreepath);
+
+    var initialPosition = this.treepath.length; // used later
+    var nextTreepath = this.drawTo - this.treepath.length;
+    if (this.nextMovesPath.length > 0) {
+      nextTreepath = this.nextMovesPath;
+    }
+    nextTreepath = rules.treepath.parsePath(nextTreepath);
+    this.treepath = this.treepath.concat(nextTreepath);
+
+    this.movetree = rules.movetree.getFromSgf(
+        this.sgfString, 
+        this.treepath,
+        this.parseType);
+    var gobanData = rules.goban.getFromMoveTree(this.movetree, this.treepath);
+    this.goban = gobanData.goban;
+
+    this.captureHistory = gobanData.captures;
+
+    // calculate marks, by going backwards through the movetree
+    var curnode = this.movetree.node();
+    var labels = [];
+    for (var i = this.treepath.length; i > initialPosition; i--) {
+      labels.push(curnode.getIntersection() + ":" + i);
+      curnode = curnode.getParent();
+    }
+
+    // add marks
+    var allProperties = glift.rules.allProperties;
+    this.movetree.properties().add(allProperties.LB, labels);
+
+    return this;
+  }
+
 };
 /**
  * A GameViewer encapsulates the idea of traversing a read-only SGF.
@@ -14339,6 +14405,43 @@ glift.widgets.options.EXAMPLE = {
     // 'game-info',
     'fullscreen'
   ]
+};
+/**
+ * Additional Options for EXAMPLEs
+ */
+glift.widgets.options.GAME_SLICE = {
+  _markMap: {
+    bstone_a: glift.enums.marks.LABEL_ALPHA,
+    bstone_1: glift.enums.marks.LABEL_NUMERIC,
+    bstone_square: glift.enums.marks.SQUARE,
+    bstone_triangle: glift.enums.marks.TRIANGLE
+  },
+
+  // Map from icon name to color.
+  _placementMap: {
+    bstone: glift.enums.states.BLACK,
+    wstone: glift.enums.states.WHITE
+  },
+
+  stoneClick: function(event, widget, pt) {},
+
+  icons: [],
+
+  problemConditions: {},
+
+  showVariations: glift.enums.showVariations.NEVER,
+
+  controllerFunc: glift.controllers.gameSlice,
+
+  // We disable mouseover and mouseout to make it clear you can't interact with
+  // the example widget.
+  stoneMouseover: function() {},
+  stoneMouseout: function() {},
+
+  statusBarIcons: [
+    'fullscreen'
+  ]
+
 };
 /**
  * Additional Options for the GameViewers

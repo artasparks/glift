@@ -2,3 +2,5 @@
 *.swp
 *.swo
 README.md.html
+*.sublime-project
+*.sublime-workspace
