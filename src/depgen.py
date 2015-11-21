@@ -182,22 +182,10 @@ def CreateHtmlImports(srcs, suffix):
     if len(grouping) > 1:
       direct = grouping.pop(0)
       out.append('<!-- ' + direct.replace('/', ' ').replace(
-          '.', 'Otre').capitalize() + suffix + '-->')
+          '.', 'Glift').capitalize() + suffix + '-->')
       for fname in grouping:
         out.append(CreateImport(os.path.join(direct, fname)))
   return out
-
-def Replacer(filename, transform):
-  """
-  Utility method to take a function (transform) and apply that to the contents
-  """
-  in_file = open(filename, "r")
-  in_con = in_file.read()
-  in_file.close()
-  out_con = transform(in_con)
-  out_file = open(filename, "w")
-  out_file.write(out_con)
-  out_file.close()
 
 def CombineSourceFiles(srcs):
   """
