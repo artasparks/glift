@@ -1,3 +1,5 @@
+goog.provide('glift.util.point');
+
 (function() {
 /**
  * Create a point.  We no longer cache points

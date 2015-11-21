@@ -25,6 +25,7 @@ if (w) {
   w.goog = g;
 }
 })(window);
+
 /**
  * Useful global variables related to all glift instances on the page.
  */
@@ -71,6 +72,7 @@ glift.global = {
   /** Added CSS classes (we only want to do this once). */
   addedCssClasses: false
 };
+
 /**
  * Initialization function to be run on glift-ui creation.  Things performed:
  *  - (Compatibility) Whether or not the page supports Glift (SVG)
@@ -124,6 +126,7 @@ glift.init = function(disableZoomForMobile, divId) {
     glift.global.addedCssClasses = true;
   }
 };
+
 glift.util = {
   logz: function(msg) {
     console.log(msg);
@@ -269,6 +272,7 @@ glift.util.log = function(msg) {
     console.log(msg);
   }
 };
+
 /**
  * Collection of utility methods for arrays
  */
@@ -289,6 +293,7 @@ glift.array = {
     return arr;
   }
 };
+
 glift.util.colors = {
   isLegalColor: function(color) {
     return color === glift.enums.states.BLACK ||
@@ -302,6 +307,7 @@ glift.util.colors = {
     else return color;
   }
 };
+
 /**
  * Various constants used throughout glift.
  */
@@ -471,6 +477,7 @@ glift.enums = {
     CLOCKWISE_270: 'CLOCKWISE_270'
   }
 };
+
 (function() {
 glift.errors = {};
 
@@ -481,6 +488,7 @@ glift.errors.ParseError = function(message) {
 glift.errors.ParseError.prototype = new Error();
 
 })();
+
 glift.util._IdGenerator = function(seed) {
   this.seed  = seed || 0;
 };
@@ -494,6 +502,7 @@ glift.util._IdGenerator.prototype = {
 };
 
 glift.util.idGenerator = new glift.util._IdGenerator(0);
+
 glift.keyMappings = {
   /**
    * Some keys must be bound with 'keydown' rather than key code
@@ -668,6 +677,7 @@ glift.keyMappings = {
     }
   }
 };
+
 glift.math = {
   isEven: function(num1) {
     if ((num1 % 2) == 0) return true;
@@ -683,6 +693,7 @@ glift.math = {
     return Math.abs(v1 - v2) < epsilon
   }
 };
+
 glift.obj = {
   /**
    * A helper for merging obj information (typically CSS or SVG rules).  This
@@ -715,6 +726,7 @@ glift.obj = {
     return true;
   }
 };
+
 glift.util.perfLog = function(msg) {
   if (glift.global.performanceDebugLevel === undefined ||
       glift.global.performanceDebugLevel === 'NONE') {
@@ -764,6 +776,7 @@ glift.util.perfInit = function() {
 glift.util.perfTime = function() {
   return (new Date()).getTime();
 };
+
 glift.platform = {
   _isIOS:  null,
   isIOS: function() {
@@ -804,6 +817,9 @@ glift.platform = {
     return glift.platform._supportsSvg;
   }
 };
+
+goog.provide('glift.util.point');
+
 (function() {
 /**
  * Create a point.  We no longer cache points
@@ -1004,6 +1020,7 @@ GliftPoint.prototype = {
 };
 
 })();
+
 glift.util.regions = {
   getComponents: function(boardRegion) {
     var br = glift.enums.boardRegions,
@@ -1032,6 +1049,7 @@ glift.util.regions = {
     return out;
   }
 };
+
 glift.testUtil = {
   ptlistToMap: function(list) {
     var outMap = {};
@@ -1058,6 +1076,7 @@ glift.testUtil = {
         'Div should not contain contents. Instead was [' + contents + ']');
   }
 };
+
 glift.dom = {
   /**
    * Constructs a glift dom element. If arg is a string, assume an ID is being
@@ -1312,6 +1331,7 @@ glift.dom.Element.prototype = {
     return this.el.getBoundingClientRect();
   }
 };
+
 /**
  * Built-in clases used to style Glift.
  */
@@ -1319,6 +1339,7 @@ glift.dom.Element.prototype = {
 glift.dom.classes = {
   COMMENT_BOX: 'glift-comment-box'
 };
+
 /** Tags currently allowed. */
 glift.dom._sanitizeWhitelist = {
   'br': true,
@@ -1394,6 +1415,7 @@ glift.dom.sanitize = function(text) {
   }
   return outbuffer.join('');
 };
+
 // Note to self: common vendor property patterns:
 //
 // -webkit-property => webkitProperty
@@ -1459,6 +1481,7 @@ glift.dom.ux = {
     });
   }
 };
+
 /**
  * Ajax/XHR wrapper.
  */
@@ -1483,6 +1506,7 @@ glift.ajax = {
     request.send();
   }
 };
+
 glift.themes = {
   /**
    * Registered themes dict.
@@ -1579,6 +1603,7 @@ glift.themes = {
     }
   }
 };
+
 glift.themes.registered.COLORFUL = {
   board: {
     fill: "#f5be7e"
@@ -1602,6 +1627,7 @@ glift.themes.registered.COLORFUL = {
     }
   }
 };
+
 /**
  * The base theme.  All possible theme options must be specified here.
  */
@@ -1790,6 +1816,7 @@ glift.themes.registered.DEFAULT = {
     // TODO(kashomon): Support SVG Defs
   }
 };
+
 glift.themes.registered.DEPTH = {
   stones: {
     shadows: {
@@ -1807,6 +1834,7 @@ glift.themes.registered.DEPTH = {
     }
   }
 };
+
 glift.themes.registered.MOODY = {
   board: {
     fill: '#777'
@@ -1831,6 +1859,7 @@ glift.themes.registered.MOODY = {
     }
   }
 }
+
 glift.themes.registered.TEXTBOOK = {
   board: {
     fill: '#FFF'
@@ -1842,6 +1871,7 @@ glift.themes.registered.TEXTBOOK = {
     }
   }
 };
+
 glift.themes.registered.TRANSPARENT = {
   board: {
     fill: 'none'
@@ -1854,6 +1884,7 @@ glift.themes.registered.TRANSPARENT = {
     }
   }
 };
+
 /**
  * Marked is dumped into this namespace. Just for reference
  * https://github.com/chjj/marked
@@ -1895,6 +1926,7 @@ glift.markdown.Ast.prototype = {
     return out;
   }
 };
+
 /**
  * marked - a markdown parser
  * Copyright (c) 2011-2014, Christopher Jeffrey. (MIT Licensed)
@@ -3165,6 +3197,7 @@ this.marked = marked;
 }).call(function() {
   return glift;
 }());
+
 glift.displays = {
   /**
    * Create the display.  Delegates to board.create(...), which creates an SVG
@@ -3179,6 +3212,7 @@ glift.displays = {
     return glift.displays.board.create(env, theme, options.rotation);
   }
 };
+
 glift.displays.bbox = {
   /** Return a new bounding box with two points. */
   fromPts: function(topLeftPt, botRightPt) {
@@ -3448,6 +3482,7 @@ glift.displays._BoundingBox.prototype = {
     return outBboxes;
   }
 };
+
 (function() {
 /**
  * Construct the board points from a linebox.
@@ -3646,6 +3681,7 @@ BoardPoints.prototype = {
   }
 };
 })();
+
 glift.displays.cropbox = {
   EXT: .5, // Extension
   DEFAULT_EXTENSION: 0, // Wut.
@@ -3752,6 +3788,7 @@ glift.displays._CropBox.prototype = {
         + this.botExt() + OVERFLOW;
   }
 };
+
 (function() {
 /**
  * The Environment contains:
@@ -3833,6 +3870,7 @@ GuiEnvironment.prototype = {
   }
 };
 })();
+
 /**
  * Collection of ID utilities, mostly for SVG.
  */
@@ -3981,6 +4019,7 @@ glift.displays.ids._Generator.prototype = {
     return this._eid(this.divId, this._enum.TEMP_TEXT, name);
   }
 };
+
 glift.displays.getLineBox = function(boardBox, cropbox) {
   var totalOverflow = glift.displays.cropbox.OVERFLOW;
   var oneSidedOverflow = totalOverflow / 2;
@@ -4018,6 +4057,7 @@ glift.displays._LineBox = function(boundingBox, spacing, cropbox) {
   this.xPoints = cropbox.xPoints();
   this.yPoints = cropbox.yPoints();
 };
+
 /**
  * Resize the box optimally into the divBox (bounding box). Currently this finds
  * the minimum of height and width, makes a box out of this value, and centers
@@ -4078,6 +4118,7 @@ glift.displays.getCropDimensions = function(width, height, cropbox) {
     width: newWidth
   };
 };
+
 glift.displays.board = {
   create: function(env, theme, rotation) {
     return new glift.displays.board.Display(env, theme, rotation).draw();
@@ -4189,6 +4230,7 @@ glift.displays.board.Display.prototype = {
     return this;
   }
 };
+
 /**
  * Create the background GoBoard object.  Essentially just a rectangle with a
  * fill color and a border.
@@ -4224,6 +4266,7 @@ glift.displays.board.initBlurFilter = function(divId, svg) {
     // .append("svg:feGaussianBlur")
       // .attr("stdDeviation", 2);
 };
+
 glift.displays.board.boardLabels = function(svg, idGen, boardPoints, theme) {
   var svglib = glift.displays.svg;
   var container = svglib.group().attr('id', idGen.boardCoordLabelGroup());
@@ -4244,6 +4287,7 @@ glift.displays.board.boardLabels = function(svg, idGen, boardPoints, theme) {
         .attr('font-size', boardPoints.spacing * 0.6));
   }
 };
+
 /**
  * Create transparent buttons that overlay each intersection.
  */
@@ -4269,6 +4313,7 @@ glift.displays.board.buttons = function(svg, idGen, boardPoints) {
     .attr('stone_color', 'EMPTY')
     .attr('id', idGen.fullBoardButton()));
 };
+
 /**
  * The backing data for the display.
  */
@@ -4643,6 +4688,7 @@ glift.displays.board._Intersections.prototype = {
     return pt;
   }
 };
+
 /**
  * Create the background lines. These are create at each individual intersection
  * rather than as a whole so that we can clear theme out when we to draw marks
@@ -4696,6 +4742,7 @@ glift.displays.board.intersectionLine = function(
       + svgpath.lineAbs(right, coordinate.y());
   return line;
 };
+
 /**
  * Create the mark container.  For layering purposes (i.e., for the z-index), a
  * dummy mark container is once as a place holder. Unlike all other elements,
@@ -4830,6 +4877,7 @@ glift.displays.board.addMark = function(
   }
   return this;
 };
+
 /**
  * Create the star points.  See boardPoints.starPoints() for details about which
  * points are used
@@ -4854,6 +4902,7 @@ glift.displays.board.starpoints = function(
       .attr('id', idGen.starpoint(pt)));
   }
 };
+
 /**
  * Create the Go stones.  They are initially invisible to the user, but they
  * all exist at the time of GoBoard creation.
@@ -4902,7 +4951,9 @@ glift.displays.board.shadows = function(svg, idGen, boardPoints, theme) {
       .attr('id', idGen.stoneShadow(pt.intPt)));
   }
 };
+
 glift.displays.commentbox = {};
+
 /**
  * Create a comment box with:
  *
@@ -4968,10 +5019,12 @@ glift.displays.commentbox._CommentBox.prototype = {
     this.commentBoxObj.empty();
   }
 };
+
 /**
  * Extra GUI methods and data.  This also contains pieces used by widgets.
  */
 glift.displays.gui = {};
+
 /**
  * Centers a bunch of icons (really, bounding boxes) within another bounding
  * box.
@@ -5132,10 +5185,12 @@ glift.displays.gui.centerWithin = function(
   newBbox = newBbox.translate(transform.xMove, transform.yMove);
   return { transform: transform, bbox: newBbox};
 };
+
 /**
  * Objects and methods having to do with icons.
  */
 glift.displays.icons = {};
+
 /**
  * Options:
  *    - divId: the divId for this object
@@ -5558,6 +5613,7 @@ glift.displays.icons._IconBar.prototype = {
     return this;
   }
 };
+
 /**
  * Row-Center an array of wrapped icons.
  */
@@ -5608,6 +5664,7 @@ glift.displays.icons._centerWrapped = function(
   }
   return transforms;
 };
+
 glift.displays.icons.iconSelector = function(parentDivId, iconBarDivId, icon) {
   return new glift.displays.icons._IconSelector(parentDivId, iconBarDivId, icon)
       .draw();
@@ -5772,6 +5829,7 @@ glift.displays.icons._IconSelector.prototype = {
     return this;
   }
 };
+
 /**
  * The bounding boxes are precalculated by running BboxFinder.html
  */
@@ -6094,6 +6152,7 @@ glift.displays.icons.svg = {
     bbox:{"x":50,"y":77.599,"x2":462,"y2":434.4,"width":412,"height":356.801} 
   }
 };
+
 /**
  * Create a wrapper icon.
  */
@@ -6316,10 +6375,12 @@ glift.displays.icons._WrappedIcon.prototype = {
     return glift.displays.icons.wrappedIcon(this.iconName);
   }
 };
+
 /**
  * SVG utilities.
  */
 glift.displays.svg = {};
+
 glift.displays.svg.pathutils = {
   /**
    * Move the current position to X,Y.  Usually used in the context of creating a
@@ -6357,6 +6418,7 @@ glift.displays.svg.pathutils = {
     return glift.displays.svg.pathutils.lineAbs(pt.x(), pt.y());
   }
 };
+
 glift.displays.svg.createObj = function(type, attrObj) {
    return new glift.displays.svg.SvgObj(type, attrObj);
 };
@@ -6605,6 +6667,7 @@ glift.displays.svg.SvgObj.prototype = {
     return glift.displays.svg.createObj(this._type, newAttr);
   }
 };
+
 glift.displays.statusbar = {
   /**
    * Create a statusbar.  Also does option pre-preprocessing if necessary.
@@ -6674,6 +6737,7 @@ glift.displays.statusbar._StatusBar.prototype = {
         0.85);
   }
 };
+
 /**
  * Makes Glift full-screen. Sort of. True fullscreen isn't supported yet.
  *
@@ -6741,6 +6805,7 @@ glift.displays.statusbar._StatusBar.prototype.unfullscreen = function() {
   widget.applyState(state);
   widget.manager.disableFullscreenAutoResize();
 };
+
 /**
  * Create a game info object. Takes a array of game info data.
  *
@@ -6780,6 +6845,7 @@ glift.displays.statusbar._StatusBar.prototype.gameInfo =
     .css({ padding: '10px'})
   infoWindow.finish()
 };
+
 /**
  * Creates an info window.  This isn't super useful on its own -- it's meant to
  * be populated with data.
@@ -6857,7 +6923,9 @@ glift.displays.statusbar._InfoWindow.prototype = {
 };
 
 
+
 glift.displays.position = {};
+
 /**
  * Container for the widget boxes. Everything starts undefined,
  */
@@ -7011,6 +7079,7 @@ glift.displays.position.WidgetColumn.prototype = {
     }
   }
 };
+
 /**
  * Find the optimal positioning of the widget. Returns the calculated div
  * boxes.
@@ -7331,10 +7400,12 @@ glift.displays.position._WidgetPositioner.prototype = {
     return out;
   }
 };
+
 /**
  * Objects and methods that enforce the basic rules of Go.
  */
 glift.rules = {};
+
 /**
  * Autonumber the shit out of the movetree.
  *
@@ -7456,6 +7527,7 @@ glift.rules.clearnumbers = function(movetree) {
     }
   });
 };
+
 (function(){
 glift.rules.goban = {
   /**
@@ -7843,6 +7915,7 @@ var StoneResult = function(success, captures) {
 };
 
 })();
+
 glift.rules.movenode = function(properties, children, nodeId, parentNode) {
   return new glift.rules._MoveNode(properties, children, nodeId, parentNode);
 };
@@ -7935,6 +8008,7 @@ var numberMoves = function(move, nodeNum, varNum) {
   }
   return move;
 };
+
 /**
  * When an SGF is parsed by the parser, it is transformed into the following:
  *
@@ -8474,6 +8548,7 @@ glift.rules._MoveTree.prototype = {
     return builder
   }
 };
+
 glift.rules.problems = {
   /**
    * Determines if a 'move' is correct. Takes a movetree and a series of
@@ -8567,6 +8642,7 @@ glift.rules.problems = {
     return correctNextMoves;
   }
 };
+
 (function() {
 glift.rules.properties = function(map) {
   return new Properties(map);
@@ -9128,6 +9204,7 @@ Properties.prototype = {
 };
 
 })();
+
 /**
  * The treepath is specified by a String, which tells how to get to particular
  * position in a game / problem. This implies that the treeptahs discussed below
@@ -9487,6 +9564,7 @@ glift.rules.treepath = {
     return out;
   }
 };
+
 /**
  * The SGF library contains functions for dealing with SGFs.
  *
@@ -9588,6 +9666,7 @@ glift.sgf = {
     return out;
   }
 };
+
 /**
  * Glift parsing
  */
@@ -9625,6 +9704,7 @@ glift.parse = {
     return glift.rules.movetree.initRootProperties(movetree);
   }
 };
+
 /**
  * Parse a pandanet SGF.  Pandanet SGFs, are the same as normal SGFs except that
  * they contain invalid SGF properties.
@@ -9636,6 +9716,7 @@ glift.parse.pandanet = function(string) {
   var repl = string.replace(replaceRegex, '');
   return glift.parse.sgf(repl);
 };
+
 /**
  * Metadata Start and End tags allow us to insert metadata directly, as
  * JSON, into SGF comments.  It will not be display by glift (although it
@@ -9878,6 +9959,7 @@ glift.parse.sgfParseError = function(lineNum, colNum, curchar, message, isWarnin
     throw new Error(err);
   }
 };
+
 /**
  * The GIB format (i.e., Tygem's file format) is not public, so it's rather
  * difficult to know if this is truly an accurate parser. Oh well.
@@ -9943,6 +10025,7 @@ glift.parse.tygem = function(gibString) {
   }
   return movetree.getTreeFromRoot();
 };
+
 /*
  * The controllers logical parts (the Brains!) of a Go board widget.  You can
  * use the movetree and rules directly, but it's usually easier to use the
@@ -9950,6 +10033,7 @@ glift.parse.tygem = function(gibString) {
  * for testing logic as distinct from UI changes.
  */
 glift.controllers = {};
+
 (function() {
 glift.controllers.base = function() {
   return new BaseController();
@@ -10284,6 +10368,7 @@ BaseController.prototype = {
   }
 };
 })();
+
 glift.controllers.boardEditor = function(sgfOptions) {
   var ctrl = glift.controllers;
   var baseController = glift.util.beget(ctrl.base());
@@ -10562,6 +10647,7 @@ glift.controllers.BoardEditorMethods = {
   pass: function() { throw new Error('Not implemented'); },
   clearStone: function() { throw new Error('Not implemented'); }
 };
+
 /**
  * A GameViewer encapsulates the idea of traversing a read-only SGF.
  */
@@ -10690,6 +10776,7 @@ glift.controllers.GameViewerMethods = {
     return possibleMap;
   }
 };
+
 /**
  * The static problem controller encapsulates the idea of trying to solve a
  * problem.  Thus, when a player adds a stone, the controller checks to make
@@ -10802,6 +10889,7 @@ glift.controllers.StaticProblemMethods = {
         this.movetree, this.problemConditions);
   }
 };
+
 /**
  * The bridge is the only place where display and rules/widget code can
  * mingle.
@@ -10937,6 +11025,7 @@ glift.bridge = {
     return out;
   }
 };
+
 
 /*
  * Intersection Data is the precise set of information necessary to display the
@@ -11123,7 +11212,9 @@ glift.bridge.intersections = {
     return outMarks;
   }
 };
+
 glift.orientation = {};
+
 /**
  * Definition of the cropbox
  */
@@ -11272,6 +11363,7 @@ glift.orientation.cropbox = {
         bbox(pt(left, top), pt(right, bot)), intersects);
   }
 };
+
 /**
  * Takes a movetree and returns the optimal BoardRegion-Quad for cropping purposes.
  *
@@ -11379,6 +11471,7 @@ glift.orientation._getCropboxMapping = function(size) {
   return glift.orientation._cropboxMappingCache;
 };
 
+
 /**
  * Get the minimal bounding box for set of stones and marks for the movetree.
  *
@@ -11475,6 +11568,7 @@ glift.orientation._getDisplayPts = function(movetree, nextMovesPath) {
   }
   return pts;
 };
+
 /**
  * Calculates the desired rotation. Returns one of
  * glift.enums.rotations.
@@ -11534,6 +11628,7 @@ glift.orientation.findCanonicalRotation = function(movetree, regionOrdering) {
   // or a side.
   return rotations.NO_ROTATION;
 };
+
 /**
  * Helps flatten a go board into a diagram definition.
  */
@@ -11928,6 +12023,7 @@ glift.flattener = {
     }
   }
 };
+
 glift.flattener.board = {
   /**
    * Constructs a board object: a 2D array of intersections.
@@ -12071,6 +12167,7 @@ glift.flattener._Board.prototype = {
     return new glift.flattener._Board(outArray, this._bbox, this._maxBoardSize);
   }
 };
+
 /**
  * Data used to populate either a display or diagram.
  */
@@ -12268,6 +12365,7 @@ glift.flattener.Flattened.prototype = {
     return num + '';
   }
 };
+
 glift.flattener.intersection = {
   /**
    * Creates an intersection obj.
@@ -12449,6 +12547,7 @@ glift.flattener._Intersection.prototype = {
     return this;
   }
 };
+
 /**
  * Symbolic representation of a Go Board display.
  */
@@ -12513,6 +12612,7 @@ glift.flattener.symbolStr = function(num) {
   }
   return glift.flattener._reverseSymbol[num];
 };
+
 /**
  * Widgets are toplevel objects, which combine display and
  * controller/rules bits together.
@@ -12568,6 +12668,7 @@ glift.widgets = {
  * @api(1.0)
  */
 glift.create = glift.widgets.create;
+
 /**
  * The base web UI widget.
  */
@@ -12939,6 +13040,7 @@ glift.widgets.BaseWidget.prototype = {
     this.display = undefined;
   }
 };
+
 /**
  * The Widget Manager manages state across widgets.  When widgets are created,
  * they are always created in the context of a Widget Manager.
@@ -13300,6 +13402,7 @@ glift.widgets.WidgetManager.prototype = {
     return this;
   }
 };
+
 glift.widgets.options = {
   /**
    * Set the defaults on options.  Note: This makes a copy and so is (sort of)
@@ -13418,6 +13521,7 @@ glift.widgets.options = {
     return sgf;
   }
 };
+
 /**
  * Option defaults. Sometimes I will refer to the a subset of these options as a
  * Glift Spec.
@@ -14145,6 +14249,7 @@ glift.widgets.options.baseOptions = {
     }
   }
 };
+
 /**
  * Board Editor options.
  */
@@ -14255,6 +14360,7 @@ glift.widgets.options.BOARD_EDITOR = {
 
   controllerFunc: glift.controllers.boardEditor
 };
+
 /**
  * Additional Options for the GameViewers
  */
@@ -14316,6 +14422,7 @@ glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
     'fullscreen'
   ]
 };
+
 /**
  * Additional Options for EXAMPLEs
  */
@@ -14340,6 +14447,7 @@ glift.widgets.options.EXAMPLE = {
     'fullscreen'
   ]
 };
+
 /**
  * Additional Options for the GameViewers
  */
@@ -14383,6 +14491,7 @@ glift.widgets.options.GAME_VIEWER = {
     'fullscreen'
   ]
 };
+
 /**
  * Game Viewer options for when used as part of a widget
  */
@@ -14407,6 +14516,7 @@ glift.widgets.options.REDUCED_GAME_VIEWER = {
     'fullscreen'
   ]
 };
+
 /**
  * Additional Options for the GameViewers
  */
