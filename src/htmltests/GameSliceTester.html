@@ -2,9 +2,9 @@
 <html>
 <head>
 
-<title> AjaxTester </title>
-<script type="text/javascript" src="../testdata/sgfs.js"></script>
+<title> GameSliceTester </title>
 <script type="text/javascript" src="../libs/jquery-1.10.2.min.js"></script>
+<script type="text/javascript" src="../testdata/sgfs.js"></script>
 
 <!-- AUTO-GEN-DEPS -->
 <!-- Glift -->
@@ -149,8 +149,11 @@
         margin: 0;
         padding: 0;
       }
+      html, body, #wrap {
+        height: 100%;
+      }
       #glift_display1 {
-        height:95%;
+        height:100%;
         position:relative;
       }
     </style>
@@ -162,26 +165,20 @@
       <div id="glift_display1"></div>
       <div id="extra_info"></div>
       <script type="text/javascript">
-        //glift.global.performanceDebugLevel = 'info'
-        var basicProblem = glift.create({
-          divId: 'glift_display1',
-          sgfCollection: [
-            {
-              url: '../testdata/problem9.sgf',
-              initialPosition: '1'
-            },
-            '../testdata/problem10.sgf',
-            '../testdata/ajax3_13.sgf',
-            '../testdata/ajax_problem.sgf',
-            '../testdata/ajax_problem2.sgf',
-            '../testdata/9x9prob.sgf'
-          ],
-          sgfDefaults: {
-            widgetType: 'STANDARD_PROBLEM'
+        var exampleWidget = glift.create({
+          divId: "glift_display1",
+          sgf: {
+            sgfString: "(;FF[4]GM[1]SZ[19]CA[UTF-8]SO[Glift]EV[]PB[Chen Yaoye]BR[9p]PW[Tan Xiao]WR[7p]KM[7.5]DT[2013-11-18]RE[B+0.5];B[qd];W[dc];B[pq];W[dq];B[nc];W[co];B[qk];W[jp];B[de];W[cg];B[cc];W[gl];B[dd];W[db];B[fd];W[hc];B[cf];W[dh];B[cb];W[mp];B[po];W[kc];B[dk];W[bf];B[be];W[df];B[ce];W[dm];B[fk];W[gh];B[hk];W[gn];B[hq];W[jq];B[eq];W[dr];B[io];W[im];B[jo];W[ko];B[jm];W[jn];B[in];W[kn];B[hm];W[il];B[hl];W[od];B[jk];W[oc])",
+            widgetType: 'GAME_SLICE',
+            // widgetType: 'BOARD_EDITOR',
+            initialPosition: 10,
+            drawTo: 30, 
+            nextMovesPath: '0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0',
+            uiComponents: ['BOARD'],
+          },
+          display: {
+            disableZoomForMobile: true
           }
-        });
-        $(window).resize(function() {
-          basicProblem.destroy().draw();
         });
       </script>
     </div>

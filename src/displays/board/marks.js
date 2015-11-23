@@ -51,7 +51,7 @@ glift.displays.board.addMark = function(
         .attr('x', coordPt.x()) // x and y are the anchor points.
         .attr('y', coordPt.y())
         .attr('font-family', stonesTheme.marks['font-family'])
-        .attr('font-size', boardPoints.spacing * 0.7)
+        .attr('font-size', boardPoints.spacing * stonesTheme.marks['font-size'])
         .attr('id', markId));
 
   } else if (mark === marks.SQUARE) {

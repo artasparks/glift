@@ -152,7 +152,7 @@ glift.controllers.BoardEditorMethods = {
   },
 
   /**
-   * Use the current numeric mark (as a string). This removes the mark frome the
+   * Use the current numeric mark (as a string). This removes the mark from the
    * available numeric labels. Returns null if no mark is available.
    */
   _useCurrentNumericMark: function() {
