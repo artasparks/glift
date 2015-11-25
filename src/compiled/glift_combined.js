@@ -819,7 +819,7 @@ glift.platform = {
   }
 };
 
-goog.provide('glift.util.point');
+// goog.provide('glift.util.point');
 
 (function() {
 /**

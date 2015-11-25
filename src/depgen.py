@@ -308,7 +308,6 @@ class FileBeast(object):
       [self._concat_path()],
       self._compile_path(),
       flags)
-    print cmd
     return subprocess.Popen(cmd, shell=True).communicate()
 
   def _closure_cmd(self, jsfiles, output_file, flags):
