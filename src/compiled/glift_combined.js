@@ -10714,6 +10714,7 @@ glift.controllers.GameSliceMethods = {
   }
 
 };
+
 /**
  * A GameViewer encapsulates the idea of traversing a read-only SGF.
  */
@@ -14551,6 +14552,7 @@ glift.widgets.options.GAME_SLICE = {
   ]
 
 };
+
 /**
  * Additional Options for the GameViewers
  */

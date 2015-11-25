@@ -68,17 +68,9 @@ JS_DIRECTORIES = [
     'widgets/options',
     ]
 
-COMBINED_DIR = 'compiled'
-COMBINED_OUT = 'glift_combined.js'
-
-COMPILED_DIR = 'compiled'
+OUTPUT_DIRECTORY = 'compiled'
+CONCAT_OUT = 'glift_combined.js'
 COMPILED_OUT = 'glift.js'
-
-COMBINED_PATH = os.path.join(COMBINED_DIR, COMBINED_OUT)
-COMPILED_PATH = os.path.join(COMPILED_DIR, COMPILED_OUT)
-
-HEADER = '<!-- AUTO-GEN-DEPS -->'
-FOOTER = '<!-- END-AUTO-GEN-DEPS -->'
 
 # Note: User must have installed Java.
 #
@@ -88,20 +80,18 @@ FOOTER = '<!-- END-AUTO-GEN-DEPS -->'
 #
 # --compilation_level ADVANCED_OPTIMIZATIONS" -- If advanced optimizations are
 # desired.
-CLOSURE = (
-    'if which java 1>/dev/null; then \n'
-      '  java -jar ../compiler-latest/compiler.jar --js '
-      + COMBINED_PATH
-      + ' --js_output_file ' + COMPILED_PATH
-      ### Closure flags
-      + ' --language_in=ECMASCRIPT5'
-      + ' --warning_level=VERBOSE'
-      # + ' --compiler_flags="--jscomp_warning=checkTypes" ^'
-      + '; \n'
-    'else \n'
-      '  echo "Java is required for closure compiler. '
-      'Please install"; \n'
-    'fi')
+OLD_CLOSURE_FLAGS = [
+  '--language_in=ECMASCRIPT5',
+  '--compilation_level=SIMPLE_OPTIMIZATIONS',
+]
+CLOSURE_FLAGS = [
+  '--language_in=ECMASCRIPT5',
+  '--warning_level=VERBOSE',
+  '--compiler_flags="--jscomp_warning=checkTypes" ^',
+]
+
+HEADER = '<!-- AUTO-GEN-DEPS -->'
+FOOTER = '<!-- END-AUTO-GEN-DEPS -->'
 
 # TODO(kashomon): Write an HTML 5 cache.
 # Cache manifest in HTML5: https://en.wikipedia.org/wiki/Cache_manifest_in_HTML5
@@ -112,14 +102,18 @@ class FileBeast(object):
   Manages the JavaScript files use by the closure compiler.
   """
 
-  def __init__(self, scriptpath, js_dirs, exampleFilesToAutogen,
-      testFilesToAutogen, headerSentinel, footerSentinel):
+  def __init__(self, scriptpath, js_dirs, example_files_to_autogen,
+      test_files_to_autogen, header_sentinel, footer_sentinel, output_dir,
+      concat_out, compiled_out):
     self._scriptpath = os.path.realpath(os.path.dirname(scriptpath))
     self.js_dirs = js_dirs
-    self.exampleFilesToAutogen = exampleFilesToAutogen
-    self.testFilesToAutogen = testFilesToAutogen
-    self.headerSentinel = headerSentinel
-    self.footerSentinel = footerSentinel
+    self.example_files_to_autogen = example_files_to_autogen 
+    self.test_files_to_autogen = test_files_to_autogen
+    self.header_sentinel = header_sentinel
+    self.footer_sentinel = footer_sentinel
+    self.output_dir = output_dir
+    self.concat_out = concat_out
+    self.compiled_out = compiled_out
 
     # Vars that are initialized upon 'initialize'
     self.initialized = False
@@ -175,21 +169,65 @@ class FileBeast(object):
     if not self.initialized:
       raise Exception('You must first initialize the FileBeast')
 
-  def add_dev_imports_to_files(self):
-    """ Adds imports for dev for all the files specified """
-    self.check_initialized()
-    self._add_imports_to_files(self.js_srcs, self.exampleFilesToAutogen, False)
-    self._add_imports_to_files(self.js_srcs, self.testFilesToAutogen, True)
+  def chdir_to_scriptpath(self):
+    """ Finds the directory where this script was run. """
+    os.chdir(self._scriptpath_dir())
 
-  def add_js_src_imports_to_files(self, srcfile, jsdir):
+  def add_dev_imports(self):
     """ Adds imports for dev for all the files specified """
     self.check_initialized()
-    self._add_imports_to_files([[jsdir, srcfile]],
-        self.exampleFilesToAutogen, False)
-    self._add_imports_to_files([[jsdir, srcfile]],
-        self.testFilesToAutogen, True)
+    self._add_imports_to_files(self.js_srcs, self.example_files_to_autogen, False)
+    self._add_imports_to_files(self.js_srcs, self.test_files_to_autogen, True)
+
+  def add_concat_imports(self):
+    """ Adds imports for dev for all the files specified """
+    self.check_initialized()
+    self._add_imports_to_files([[self.output_dir, self.concat_out]],
+        self.example_files_to_autogen, False)
+    self._add_imports_to_files([[self.output_dir, self.concat_out]],
+        self.test_files_to_autogen, True)
+
+  def add_compile_imports(self):
+    """ Adds imports for dev for all the files specified """
+    self.check_initialized()
+    self._add_imports_to_files([[self.output_dir, self.compiled_out]],
+        self.example_files_to_autogen, False)
+    self._add_imports_to_files([[self.output_dir, self.compiled_out]],
+        self.test_files_to_autogen, True)
+
+  def combine_source_files(self):
+    """ Concatenate all the source files into one js target """
+    out = []
+    root_dir = self._scriptpath_dir()
+    self.chdir_to_scriptpath()
+    self.check_initialized()
+    for grouping in self.js_srcs:
+      component = grouping[0]
+      directory = self.component_to_directory[component]
+      for fname in grouping[1:]:
+        filepath = os.path.join(directory, fname)
+        fd = open(filepath)
+        out.append(fd.read())
+        fd.close()
+    content = '\n'.join(out)
+    self._write_file(content, self._concat_path())
+
+  def _write_file(self, content, path):
+    """ Writes a file to disk """
+    fd = open(path, 'w')
+    fd.write(content)
+    fd.close()
+
+  def _concat_path(self):
+    """ Returns the concat path """
+    return os.path.join(self.output_dir, self.concat_out)
+
+  def _compile_path(self):
+    """ Returns the concat path """
+    return os.path.join(self.output_dir, self.compiled_out)
 
   def _add_imports_to_files(self, srcs, files, add_tests):
+    """ Adds script tags to HTML files. """
     os.chdir(self._scriptpath_dir())
     for fname in files:
       fd = open(fname, 'r')
@@ -198,10 +236,10 @@ class FileBeast(object):
       imports = self._create_html_imports(srcs, False)
       if add_tests:
         imports = imports + self._js_tests_imports()
-      importstr = (self.headerSentinel + '\n' + '\n'.join(imports)
-          + '\n' + self.footerSentinel)
+      importstr = (self.header_sentinel + '\n' + '\n'.join(imports)
+          + '\n' + self.footer_sentinel)
       contents = re.sub(
-          self.headerSentinel + '((.|\n)*)' + self.footerSentinel,
+          self.header_sentinel + '((.|\n)*)' + self.footer_sentinel,
           importstr,
           contents)
       fd = open(fname, 'w')
@@ -209,9 +247,9 @@ class FileBeast(object):
       fd.close()
 
   def _get_namespace_js(self, full_dir_path, component):
-    """ Find the namespace file for a directory
+    """ Finds the namespace file for a directory
 
-    Grab the directory name (the last path component) for each directory and
+    Grabs the directory name (the last path component) for each directory and
     then find a namespace JS file in that name. We assume that the name of
     the namespace file is the same as the directory name, except in the case
     of '.': The '.' directory is special. We assume that this is a srcs
@@ -231,25 +269,6 @@ class FileBeast(object):
   def _scriptpath_dir(self):
     """ Finds the directory where this script was run. """
     return self._scriptpath 
-
-  def chdir_to_scriptpath(self):
-    """ Finds the directory where this script was run. """
-    os.chdir(self._scriptpath_dir())
-
-  def combine_source_files(self):
-    """ Concatenate all the source files into one js target """
-    out = []
-    root_dir = self._scriptpath_dir()
-    self.check_initialized()
-    for grouping in self.js_srcs:
-      component = grouping[0]
-      directory = self.component_to_directory[component]
-      for fname in grouping[1:]:
-        filepath = os.path.join(directory, fname)
-        fd = open(filepath)
-        out.append(fd.read())
-        fd.close()
-    return '\n'.join(out)
 
   def _js_srcs_imports(self):
     """ Creates HTML imports for just the JS sources """
@@ -284,30 +303,64 @@ class FileBeast(object):
     """ Creates an HTML import line for a Javascript file. """
     return '<script type="text/javascript" src="../%s"></script>' % name
 
+  def compile_srcs_nontyped(self, flags):
+    cmd = self._closure_cmd(
+      [self._concat_path()],
+      self._compile_path(),
+      flags)
+    print cmd
+    return subprocess.Popen(cmd, shell=True).communicate()
+
+  def _closure_cmd(self, jsfiles, output_file, flags):
+    """ Format the closure cmd with various inputs
+
+    jsfiles: array of files
+    output: name of the output file
+    flags: array of closure flags
+    """
+    if not isinstance(jsfiles, type([])):
+      raise Exception('jsfiles not of type array. Was:' + 
+          str(type(output_file)));
+    outjs = []
+    for f in jsfiles:
+      outjs.append('--js ' + f)
+    return (
+      'if which java 1>/dev/null; then'
+        + '  java -jar ../compiler-latest/compiler.jar'
+        + '  {}'
+        + '  --js_output_file {}'
+        + '  {};'
+      + 'else'
+      +  '  echo "Java is required for closure compiler, '
+      +  'but could not find a java command."; '
+      + 'fi').format(
+        ' '.join(outjs),
+        output_file,
+        ' '.join(flags))
 
 def print_help():
   print """
-    Depgen!
-    A silly tool I wrote to help manage dependencies for Glift and other tools.
-    Depgen doesn\'t have much functionality. It takes only one of a couple
-    arguments:
-    ---------------------------------------------------------------------------
-    -> [help]: Display the help text.
-    -> [devel]: Regenerate the test files with relevant src and test
-       Javascript.
-    -> [concat]: Concatenate the Javascript into one file and
-       regenerate the test files with the this concatenated target.
-    -> [compile]: Compile the Javascript with the closure compiler.
-    -> [typed-compile]: Compile the Javascript with the closure compiler and\
-       turn on type checking
-    """
+Depgen!
+A silly tool I wrote to help manage dependencies for Glift and other tools.
+Depgen doesn\'t have much functionality. It takes only one of a couple
+arguments:
+---------------------------------------------------------------------------
+-> [help]: Display the help text.
+-> [devel]: Regenerate the test files with relevant src and test
+   Javascript.
+-> [concat]: Concatenate the Javascript into one file and
+   regenerate the test files with the this concatenated target.
+-> [old-compile]: Compile the Javascript with the closure compiler, without
+   advanced type checking. The way things used to be done.
+-> [typed-compile]: Compile the Javascript with the closure compiler and
+   turn on type checking
+"""
 
 def main(argv=None):
   """
   Generate imports for the HTML test files and, optionally concatenate and
   compile the JavaScript.
   """
-  print ' '.join(sys.argv)
   flags = set(sys.argv[1:])
   spath = sys.argv[0]
 
@@ -323,30 +376,30 @@ def main(argv=None):
       EXAMPLE_FILES_TO_AUTOGEN,
       TEST_FILES_TO_AUTOGEN,
       HEADER,
-      FOOTER).initialize()
+      FOOTER,
+      OUTPUT_DIRECTORY,
+      CONCAT_OUT,
+      COMPILED_OUT).initialize()
 
   if 'devel' in flags:
     print 'depgen: Adding devel resources'
-    beast.add_dev_imports_to_files()
+    beast.add_dev_imports()
     return
-  elif 'concat' in flags or 'compile' in flags:
-    beast.chdir_to_scriptpath()
-    combined = beast.combine_source_files()
-    fd = open(COMBINED_PATH, 'w')
-    fd.write(combined)
-    fd.close()
-    if 'compile' in flags:
-      print 'depgen: Adding compile resources'
-      out, err = subprocess.Popen(CLOSURE, shell=True).communicate()
-      if err != None:
-        print err
-        return -1
-      beast.add_js_src_imports_to_files(COMPILED_OUT, COMPILED_DIR)
-    else:
-      print 'depgen: Adding concat resources'
-      beast.add_js_src_imports_to_files(COMBINED_OUT, COMPILED_DIR)
+  elif 'concat' in flags:
+    print 'depgen: Adding concat resources'
+    beast.combine_source_files()
+    beast.add_concat_imports()
+  elif 'compile' in flags:
+    print 'depgen: Adding non-typed compile resources'
+    beast.combine_source_files()
+    out, err = beast.compile_srcs_nontyped(OLD_CLOSURE_FLAGS)
+    if err != None:
+      print err
+      return -1
+    beast.add_compile_imports()
   elif 'typed-compile' in flags:
     print 'Typed compile not yet supported'
+    return -1
   else:
     print 'Unknown args: ' + ' '.join(sys.argv[1:])
     print_help()
