@@ -19,7 +19,7 @@ if (!window['goog']) {
 goog.provide('glift');
 
 (function(w) {
-var glift = glift || w.glift || {};
+var glift = w.glift || {};
 if (w) {
   // expose Glift as a global.
   w.glift = glift;

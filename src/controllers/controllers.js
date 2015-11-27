@@ -1,3 +1,5 @@
+goog.provide('glift.controllers');
+
 /*
  * The controllers logical parts (the Brains!) of a Go board widget.  You can
  * use the movetree and rules directly, but it's usually easier to use the

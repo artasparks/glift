@@ -1,6 +1,12 @@
-(function() {
+goog.provide('glift.controllers.BaseController');
+
+/**
+ * Creates a base controller implementation.
+ *
+ * @return {!glift.controllers.BaseController}
+ */
 glift.controllers.base = function() {
-  return new BaseController();
+  return new glift.controllers.BaseController();
 };
 
 /**
@@ -10,8 +16,10 @@ glift.controllers.base = function() {
  * extraOptions.
  *
  * The options are generall set either with initOptions or initialize;
+ *
+ * @constructor
  */
-var BaseController = function() {
+glift.controllers.BaseController = function() {
   // Options set with initOptions and intended to be immutable during the
   // lifetime of the controller.
   this.sgfString = '';
@@ -33,12 +41,13 @@ var BaseController = function() {
   this.captureHistory = [];
 };
 
-BaseController.prototype = {
+glift.controllers.BaseController.prototype = {
   /**
    * Initialize both the options and the controller's children data structures.
    *
    * Note that these options should be protected by the options parsing (see
    * options.js in this same directory).  Thus, no special checks are made here.
+   *
    */
   initOptions: function(sgfOptions) {
     if (sgfOptions === undefined) {
@@ -66,10 +75,12 @@ BaseController.prototype = {
    *
    * treepath: Optionally pass in the treepath from the beginning and use that
    * instead of the initialPosition treepath.
+   *
+   * @param {string=} opt_treepath
    */
-  initialize: function(treepath) {
+  initialize: function(opt_treepath) {
     var rules = glift.rules;
-    var initTreepath = treepath || this.initialPosition;
+    var initTreepath = opt_treepath || this.initialPosition;
     this.treepath = rules.treepath.parsePath(initTreepath);
 
     // TODO(kashomon): Appending the nextmoves path is hack until the UI
@@ -91,8 +102,9 @@ BaseController.prototype = {
   /**
    * It's expected that this will be implemented by those extending this base
    * class.  This is called during initOptions above.
+   * @param {Object=} opt_options
    */
-  extraOptions: function(opt) { /* Implemented by other controllers. */ },
+  extraOptions: function(opt_options) { /* Implemented by other controllers. */ },
 
   /**
    * Add a stone.  This is intended to be overwritten.
@@ -116,7 +128,7 @@ BaseController.prototype = {
   },
 
   /** Get the current move number. */
-  currentMoveNumber: function(treepath) {
+  currentMoveNumber: function() {
     return this.movetree.node().getNodeNum();
   },
 
@@ -270,14 +282,16 @@ BaseController.prototype = {
    *   - We need to update the Goban.
    *   - We need to store the captures.
    *   - We need to update the current move number.
+   *
+   * @param {number=} opt_varNum
    */
-  nextMove: function(varNum) {
+  nextMove: function(opt_varNum) {
     if (this.treepath[this.currentMoveNumber()] !== undefined &&
-        (varNum === undefined || this.nextVariationNumber() === varNum)) {
+        (opt_varNum === undefined || this.nextVariationNumber() === opt_varNum)) {
       // Don't mess with the treepath, if we're 'on variation'.
       this.movetree.moveDown(this.nextVariationNumber());
     } else {
-      varNum = varNum === undefined ? 0 : varNum;
+      var varNum = opt_varNum === undefined ? 0 : opt_varNum;
       if (varNum >= 0 &&
           varNum <= this.movetree.nextMoves().length - 1) {
         this.setNextVariation(varNum);
@@ -331,4 +345,3 @@ BaseController.prototype = {
     return this.getEntireBoardState();
   }
 };
-})();

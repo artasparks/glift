@@ -1,3 +1,5 @@
+goog.provide('glift.global');
+
 /**
  * Useful global variables related to all glift instances on the page.
  */

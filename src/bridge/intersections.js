@@ -49,11 +49,15 @@ glift.bridge.intersections = {
    *    correctNextMoves : [ {color: <color>, point: <point> }, ...]
    *    displayDataType : <Either PARTIAL or FULL>.  Defaults to partial.
    *  }
+   *
+   * @param {Object} movetree Glift movetree.
+   * @param {Object=} opt_problemConditions Optional problem conditions.
+   * @param {number=} opt_nextVarNumber Optional next variation number.
    */
   // TODO(kashomon): Make this a proper object constructor with accessors and
   // methods and whatnot.  It's getting far too complicated. Alternatively,
   // switch over to the flattener model.
-  basePropertyData: function(movetree, problemConditions, nextVarNumber) {
+  basePropertyData: function(movetree, opt_problemConditions, opt_nextVarNumber) {
     var out = {
       stones: {
         WHITE: [],
@@ -73,9 +77,9 @@ glift.bridge.intersections = {
     out.lastMove = movetree.getLastMove();
     out.marks = glift.bridge.intersections.getCurrentMarks(movetree);
     out.nextMoves = movetree.nextMoves();
-    out.selectedNextMove = out.nextMoves[nextVarNumber] || null;
-    out.correctNextMoves = problemConditions !== undefined
-        ? glift.rules.problems.correctNextMoves(movetree, problemConditions)
+    out.selectedNextMove = out.nextMoves[opt_nextVarNumber] || null;
+    out.correctNextMoves = opt_problemConditions !== undefined
+        ? glift.rules.problems.correctNextMoves(movetree, opt_problemConditions)
         : [];
     return out;
   },
@@ -102,11 +106,14 @@ glift.bridge.intersections = {
    *    BLACK: [..pts..],
    *    WHITE: [..pts..]
    * }
+   *
+   * @param {Object=} opt_problemConditions Optional problem conditions.
+   * @param {number=} opt_nextVarNumber Optional next var number.
    */
   nextBoardData: function(
-      movetree, currentCaptures, problemConditions, nextVarNumber) {
+      movetree, currentCaptures, opt_problemConditions, opt_nextVarNumber) {
     var baseData = glift.bridge.intersections.basePropertyData(
-        movetree, problemConditions, nextVarNumber);
+        movetree, opt_problemConditions, opt_nextVarNumber);
     var allStones = movetree.properties().getAllStones();
     baseData.stones = {};
 

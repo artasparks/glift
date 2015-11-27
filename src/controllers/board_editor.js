@@ -1,12 +1,30 @@
+goog.provide('glift.controllers.BoardEditor');
+
+goog.require('glift.controllers.BaseController');
+
+/**
+ * Creates a BoardEditor controller.
+ *
+ * @return {glift.controllers.BoardEditor}
+ */
 glift.controllers.boardEditor = function(sgfOptions) {
   var ctrl = glift.controllers;
   var baseController = glift.util.beget(ctrl.base());
-  glift.util.setMethods(baseController, ctrl.BoardEditorMethods);
+  glift.util.setMethods(baseController, ctrl.BoardEditor.prototype);
   baseController.initOptions(sgfOptions);
   return baseController;
 };
 
-glift.controllers.BoardEditorMethods = {
+/**
+ * Stub class to be used for inheritance.
+ *
+ * @extends {glift.controllers.BaseController}
+ * @constructor
+ */
+glift.controllers.BoardEditor = function() {
+};
+
+glift.controllers.BoardEditor.prototype = {
   /**
    * Called during initialization, after the goban/movetree have been
    * initializied.
@@ -67,12 +85,12 @@ glift.controllers.BoardEditorMethods = {
           var markData = { mark: curMark };
           var lbl = null;
           if (splat.length > 1) {
-            var lbl = splat[1];
+            lbl = splat[1];
             markData.data = lbl;
             if (alphaRegex.test(lbl)) {
               markData.mark = marks.LABEL_ALPHA;
             } else if (digitRegex.test(lbl)) {
-              lbl = parseInt(lbl);
+              lbl = parseInt(lbl, 10);
               markData.mark = marks.LABEL_NUMERIC;
             }
           }
@@ -98,7 +116,7 @@ glift.controllers.BoardEditorMethods = {
     var digitRegex = /^\d+$/;
     for (var key in map) {
       if (digitRegex.test(key)) {
-        base.push(parseInt(key));;
+        base.push(parseInt(key, 10));
       } else {
         base.push(key);
       }
@@ -215,7 +233,7 @@ glift.controllers.BoardEditorMethods = {
     delete this._ptTolabelMap[point.toString()];
     var sgfProp = glift.sgf.markToProperty(markData.mark);
     if (markData.mark === marks.LABEL_NUMERIC) {
-      this._numericLabels.push(parseInt(markData.data));
+      this._numericLabels.push(parseInt(markData.data, 10));
       this._numericLabels.sort(function(a, b) { return a - b }).reverse();
       this.movetree.properties()
           .removeOneValue(sgfProp, point.toSgfCoord() + ':' + markData.data);
@@ -268,7 +286,8 @@ glift.controllers.BoardEditorMethods = {
       }
       var captures = {};
       captures[oppColor] = result.captures;
-      return glift.bridge.intersections.nextBoardData(this.movetree, captures);
+      return glift.bridge.intersections.nextBoardData(
+          this.movetree, captures);
     }
     return null;
   },

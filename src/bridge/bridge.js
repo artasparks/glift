@@ -45,9 +45,9 @@ glift.bridge = {
         marksMap[markPtString] = true;
         if (markType === marks.LABEL) {
           if (variationMap[markPtString] &&
-              this.shouldShowNextMoves(boardData, showVariations)) {
+              glift.bridge.shouldShowNextMoves(boardData, showVariations)) {
             // This is a variation label && we should show it
-            var markValue = this.markSelectedNext(
+            var markValue = glift.bridge.markSelectedNext(
                 boardData, markData.point, markData.value);
             display.intersections().addMarkPt(
                 markData.point, marks.VARIATION_MARKER, markValue);
@@ -67,7 +67,7 @@ glift.bridge = {
         glift.bridge.variationMapping(boardData.correctNextMoves);
     for (var ptstring in variationMap) {
       var pt = variationMap[ptstring];
-      var markValue = this.markSelectedNext(boardData, pt, i);
+      var markValue = glift.bridge.markSelectedNext(boardData, pt, i);
       if (pt in correctNextMap) {
         display.intersections().addMarkPt(pt, marks.CORRECT_VARIATION, markValue);
       } else {
