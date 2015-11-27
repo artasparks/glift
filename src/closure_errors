@@ -1,82 +1,12 @@
-controllers/game_slice.js:18: WARNING - dangerous use of the global this object
-    var initTreepath = treepath || this.initialPosition;
-                                   ^
+controllers/game_figure.js:10: WARNING - Property GameSliceMethods never defined on ctrl
+      ctrl.GameSliceMethods);
+           ^
 
-controllers/game_slice.js:19: WARNING - dangerous use of the global this object
-    this.treepath = rules.treepath.parsePath(initTreepath);
-    ^
-
-controllers/game_slice.js:21: WARNING - dangerous use of the global this object
-    var initialPosition = this.treepath.length; // used later
-                          ^
-
-controllers/game_slice.js:22: WARNING - dangerous use of the global this object
-    var nextTreepath = this.drawTo - this.treepath.length;
-                       ^
-
-controllers/game_slice.js:22: WARNING - dangerous use of the global this object
-    var nextTreepath = this.drawTo - this.treepath.length;
-                                     ^
-
-controllers/game_slice.js:23: WARNING - dangerous use of the global this object
-    if (this.nextMovesPath.length > 0) {
-        ^
-
-controllers/game_slice.js:24: WARNING - dangerous use of the global this object
-      nextTreepath = this.nextMovesPath;
-                     ^
-
-controllers/game_slice.js:27: WARNING - dangerous use of the global this object
-    this.treepath = this.treepath.concat(nextTreepath);
-    ^
-
-controllers/game_slice.js:27: WARNING - dangerous use of the global this object
-    this.treepath = this.treepath.concat(nextTreepath);
-                    ^
-
-controllers/game_slice.js:29: WARNING - dangerous use of the global this object
-    this.movetree = rules.movetree.getFromSgf(
-    ^
-
-controllers/game_slice.js:30: WARNING - dangerous use of the global this object
-        this.sgfString, 
-        ^
-
-controllers/game_slice.js:31: WARNING - dangerous use of the global this object
-        this.treepath,
-        ^
-
-controllers/game_slice.js:32: WARNING - dangerous use of the global this object
-        this.parseType);
-        ^
-
-controllers/game_slice.js:33: WARNING - dangerous use of the global this object
-    var gobanData = rules.goban.getFromMoveTree(this.movetree, this.treepath);
-                                                ^
-
-controllers/game_slice.js:33: WARNING - dangerous use of the global this object
-    var gobanData = rules.goban.getFromMoveTree(this.movetree, this.treepath);
-                                                               ^
-
-controllers/game_slice.js:34: WARNING - dangerous use of the global this object
-    this.goban = gobanData.goban;
-    ^
-
-controllers/game_slice.js:36: WARNING - dangerous use of the global this object
-    this.captureHistory = gobanData.captures;
-    ^
-
-controllers/game_slice.js:39: WARNING - dangerous use of the global this object
-    var curnode = this.movetree.node();
-                  ^
-
-controllers/game_slice.js:41: WARNING - dangerous use of the global this object
-    for (var i = this.treepath.length; i > initialPosition; i--) {
-                 ^
-
-controllers/game_slice.js:48: WARNING - dangerous use of the global this object
-    this.movetree.properties().add(allProperties.LB, labels);
-    ^
+controllers/game_figure.js:65: WARNING - inconsistent return type
+found   : glift.controllers.GameFigure
+required: undefined
+    return this;
+           ^
 
 controllers/game_viewer.js:29: WARNING - dangerous use of the global this object
     var possibleMap = this._possibleNextMoves();
@@ -2160,6 +2090,10 @@ widgets/options/board_editor.js:84: WARNING - Redeclared variable: currentPlayer
       var currentPlayer = widget.controller.getCurrentPlayer();
           ^
 
+widgets/options/game_slice_options.js:26: WARNING - Property gameSlice never defined on glift.controllers
+  controllerFunc: glift.controllers.gameSlice,
+                                    ^
+
 widgets/options/options.js:13: WARNING - Redeclared variable: options
     var options = glift.util.simpleClone(options);
         ^
@@ -2176,4 +2110,4 @@ widgets/widgets.js:53: WARNING - Parse error. illegal use of unknown JSDoc tag "
  * @api(1.0)
    ^
 
-0 error(s), 544 warning(s), 61.4% typed
+0 error(s), 527 warning(s), 61.5% typed

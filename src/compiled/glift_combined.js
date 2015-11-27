@@ -19,12 +19,14 @@ if (!window['goog']) {
 goog.provide('glift');
 
 (function(w) {
-var glift = glift || w.glift || {};
+var glift = w.glift || {};
 if (w) {
   // expose Glift as a global.
   w.glift = glift;
 }
 })(window);
+
+goog.provide('glift.global');
 
 /**
  * Useful global variables related to all glift instances on the page.
@@ -657,8 +659,8 @@ glift.keyMappings = {
       if (manager.isFullscreen()) {
         // We don't want the widget interacting with anything else while
         // full-screen.
-        if (event.preventDefault) event.preventDefault();
-        else  event.returnValue = false; // IE
+        if (keyEvent.preventDefault) keyEvent.preventDefault();
+        else keyEvent.returnValue = false; // IE
       }
     } else if (argType === 'string') {
       // Assume it's an icon-action-path
@@ -672,8 +674,8 @@ glift.keyMappings = {
       if (manager.isFullscreen()) {
         // We don't want the widget interacting with anything else while
         // full-screen.
-        if (event.preventDefault) event.preventDefault();
-        else  event.returnValue = false; // IE
+        if (keyEvent.preventDefault) keyEvent.preventDefault();
+        else  keyEvent.returnValue = false; // IE
       }
     }
   }
@@ -1051,6 +1053,14 @@ glift.util.regions = {
   }
 };
 
+(function() {
+// Util functions for running QUnit Tests
+
+if (!ok) {
+  // To make the closure compiler happy.
+  var ok = function() {};
+}
+
 glift.testUtil = {
   ptlistToMap: function(list) {
     var outMap = {};
@@ -1077,6 +1087,7 @@ glift.testUtil = {
         'Div should not contain contents. Instead was [' + contents + ']');
   }
 };
+})();
 
 glift.dom = {
   /**
@@ -8748,7 +8759,7 @@ Properties.prototype = {
       value = [ this.unescape(value) ];
     } else {
       throw new Error('Unexpected type ' +
-          glift.util.typeOf(value) + ' for item ' + item);
+          glift.util.typeOf(value) + ' for prop ' + prop);
     }
 
     // Convert any point rectangles. We do not allow point rectangles in our
@@ -10039,6 +10050,8 @@ glift.parse.tygem = function(gibString) {
   return movetree.getTreeFromRoot();
 };
 
+goog.provide('glift.controllers');
+
 /*
  * The controllers logical parts (the Brains!) of a Go board widget.  You can
  * use the movetree and rules directly, but it's usually easier to use the
@@ -10047,9 +10060,15 @@ glift.parse.tygem = function(gibString) {
  */
 glift.controllers = {};
 
-(function() {
+goog.provide('glift.controllers.BaseController');
+
+/**
+ * Creates a base controller implementation.
+ *
+ * @return {!glift.controllers.BaseController}
+ */
 glift.controllers.base = function() {
-  return new BaseController();
+  return new glift.controllers.BaseController();
 };
 
 /**
@@ -10059,18 +10078,27 @@ glift.controllers.base = function() {
  * extraOptions.
  *
  * The options are generall set either with initOptions or initialize;
+ *
+ * @constructor
  */
-var BaseController = function() {
+glift.controllers.BaseController = function() {
   // Options set with initOptions and intended to be immutable during the
   // lifetime of the controller.
+  /** @package {string} */
   this.sgfString = '';
+  /** @package {!Array<number>} */
   this.initialPosition = [];
 
-  // These next two are widget specific, but are here, for convenience.
-
-  // Used only for examples.
+  /**
+   * Used only for examples (see the Game Figure). Indicates how to create
+   * numbers based on the 
+   * @package {!Array<number>}
+   */
   this.nextMovesPath = [];
-  // Used only for problem-types
+  /**
+   * Used only for problem-types.
+   * @package {!Object}
+   */
   this.problemConditions = {};
 
   // State variables that are defined on initialize and that could are
@@ -10082,12 +10110,14 @@ var BaseController = function() {
   this.captureHistory = [];
 };
 
-BaseController.prototype = {
+glift.controllers.BaseController.prototype = {
   /**
    * Initialize both the options and the controller's children data structures.
    *
    * Note that these options should be protected by the options parsing (see
    * options.js in this same directory).  Thus, no special checks are made here.
+   *
+   * @param {Object} sgfOptions Object containing SGF options.
    */
   initOptions: function(sgfOptions) {
     if (sgfOptions === undefined) {
@@ -10115,10 +10145,12 @@ BaseController.prototype = {
    *
    * treepath: Optionally pass in the treepath from the beginning and use that
    * instead of the initialPosition treepath.
+   *
+   * @param {string=} opt_treepath
    */
-  initialize: function(treepath) {
+  initialize: function(opt_treepath) {
     var rules = glift.rules;
-    var initTreepath = treepath || this.initialPosition;
+    var initTreepath = opt_treepath || this.initialPosition;
     this.treepath = rules.treepath.parsePath(initTreepath);
 
     // TODO(kashomon): Appending the nextmoves path is hack until the UI
@@ -10140,8 +10172,9 @@ BaseController.prototype = {
   /**
    * It's expected that this will be implemented by those extending this base
    * class.  This is called during initOptions above.
+   * @param {Object=} opt_options
    */
-  extraOptions: function(opt) { /* Implemented by other controllers. */ },
+  extraOptions: function(opt_options) { /* Implemented by other controllers. */ },
 
   /**
    * Add a stone.  This is intended to be overwritten.
@@ -10165,7 +10198,7 @@ BaseController.prototype = {
   },
 
   /** Get the current move number. */
-  currentMoveNumber: function(treepath) {
+  currentMoveNumber: function() {
     return this.movetree.node().getNodeNum();
   },
 
@@ -10319,14 +10352,16 @@ BaseController.prototype = {
    *   - We need to update the Goban.
    *   - We need to store the captures.
    *   - We need to update the current move number.
+   *
+   * @param {number=} opt_varNum
    */
-  nextMove: function(varNum) {
+  nextMove: function(opt_varNum) {
     if (this.treepath[this.currentMoveNumber()] !== undefined &&
-        (varNum === undefined || this.nextVariationNumber() === varNum)) {
+        (opt_varNum === undefined || this.nextVariationNumber() === opt_varNum)) {
       // Don't mess with the treepath, if we're 'on variation'.
       this.movetree.moveDown(this.nextVariationNumber());
     } else {
-      varNum = varNum === undefined ? 0 : varNum;
+      var varNum = opt_varNum === undefined ? 0 : opt_varNum;
       if (varNum >= 0 &&
           varNum <= this.movetree.nextMoves().length - 1) {
         this.setNextVariation(varNum);
@@ -10380,17 +10415,34 @@ BaseController.prototype = {
     return this.getEntireBoardState();
   }
 };
-})();
 
+goog.provide('glift.controllers.BoardEditor');
+
+goog.require('glift.controllers.BaseController');
+
+/**
+ * Creates a BoardEditor controller.
+ *
+ * @return {glift.controllers.BoardEditor}
+ */
 glift.controllers.boardEditor = function(sgfOptions) {
   var ctrl = glift.controllers;
   var baseController = glift.util.beget(ctrl.base());
-  glift.util.setMethods(baseController, ctrl.BoardEditorMethods);
+  glift.util.setMethods(baseController, ctrl.BoardEditor.prototype);
   baseController.initOptions(sgfOptions);
   return baseController;
 };
 
-glift.controllers.BoardEditorMethods = {
+/**
+ * Stub class to be used for inheritance.
+ *
+ * @extends {glift.controllers.BaseController}
+ * @constructor
+ */
+glift.controllers.BoardEditor = function() {
+};
+
+glift.controllers.BoardEditor.prototype = {
   /**
    * Called during initialization, after the goban/movetree have been
    * initializied.
@@ -10451,12 +10503,12 @@ glift.controllers.BoardEditorMethods = {
           var markData = { mark: curMark };
           var lbl = null;
           if (splat.length > 1) {
-            var lbl = splat[1];
+            lbl = splat[1];
             markData.data = lbl;
             if (alphaRegex.test(lbl)) {
               markData.mark = marks.LABEL_ALPHA;
             } else if (digitRegex.test(lbl)) {
-              lbl = parseInt(lbl);
+              lbl = parseInt(lbl, 10);
               markData.mark = marks.LABEL_NUMERIC;
             }
           }
@@ -10482,7 +10534,7 @@ glift.controllers.BoardEditorMethods = {
     var digitRegex = /^\d+$/;
     for (var key in map) {
       if (digitRegex.test(key)) {
-        base.push(parseInt(key));;
+        base.push(parseInt(key, 10));
       } else {
         base.push(key);
       }
@@ -10599,7 +10651,7 @@ glift.controllers.BoardEditorMethods = {
     delete this._ptTolabelMap[point.toString()];
     var sgfProp = glift.sgf.markToProperty(markData.mark);
     if (markData.mark === marks.LABEL_NUMERIC) {
-      this._numericLabels.push(parseInt(markData.data));
+      this._numericLabels.push(parseInt(markData.data, 10));
       this._numericLabels.sort(function(a, b) { return a - b }).reverse();
       this.movetree.properties()
           .removeOneValue(sgfProp, point.toSgfCoord() + ':' + markData.data);
@@ -10652,13 +10704,82 @@ glift.controllers.BoardEditorMethods = {
       }
       var captures = {};
       captures[oppColor] = result.captures;
-      return glift.bridge.intersections.nextBoardData(this.movetree, captures);
+      return glift.bridge.intersections.nextBoardData(
+          this.movetree, captures);
     }
     return null;
   },
 
   pass: function() { throw new Error('Not implemented'); },
   clearStone: function() { throw new Error('Not implemented'); }
+};
+
+/**
+ * A GameFigure encapsulates the idea of a read-only SGF.
+ *
+ * @return glift.controllers
+ */
+glift.controllers.gameFigure = function(sgfOptions) {
+  var baseController = glift.util.beget(
+      glift.controllers.base());
+  var newController = glift.util.setMethods(baseController,
+      glift.controllers.GameFigure.prototype);
+  newController.drawTo = sgfOptions.drawTo || [];
+  newController.initOptions(sgfOptions);
+  return newController;
+};
+
+/**
+ * Stub class to be used for inheritance.
+ *
+ * @extends {glift.controllers.BaseController}
+ * @constructor
+ */
+glift.controllers.GameFigure = function() {
+};
+
+glift.controllers.GameFigure.prototype = {
+  /**
+   * Additional setup for the gamefigure.
+   *
+   * @override
+   */
+  extraOptions: function(treepath) {
+    var rules = glift.rules;
+    var initTreepath = treepath || this.initialPosition;
+    this.treepath = rules.treepath.parsePath(initTreepath);
+
+    var initialPosition = this.treepath.length; // used later
+    var nextTreepath = this.drawTo - this.treepath.length;
+    if (this.nextMovesPath.length > 0) {
+      nextTreepath = this.nextMovesPath;
+    }
+    nextTreepath = rules.treepath.parsePath(nextTreepath);
+    this.treepath = this.treepath.concat(nextTreepath);
+
+    this.movetree = rules.movetree.getFromSgf(
+        this.sgfString,
+        this.treepath,
+        this.parseType);
+    var gobanData = rules.goban.getFromMoveTree(this.movetree, this.treepath);
+    this.goban = gobanData.goban;
+
+    this.captureHistory = gobanData.captures;
+
+    // calculate marks, by going backwards through the movetree
+    var curnode = this.movetree.node();
+    var labels = [];
+    for (var i = this.treepath.length; i > initialPosition; i--) {
+      labels.push(curnode.getIntersection() + ":" + i);
+      curnode = curnode.getParent();
+    }
+
+    // add marks
+    var allProperties = glift.rules.allProperties;
+    this.movetree.properties().add(allProperties.LB, labels);
+
+    return this;
+  }
 };
 
 /**
@@ -11000,13 +11121,13 @@ glift.bridge = {
       for (var i = 0; i < boardData.marks[markType].length; i++) {
         var markData = boardData.marks[markType][i];
         var markPt = markData.point ? markData.point : markData;
-        markPtString = markPt.toString();
+        var markPtString = markPt.toString();
         marksMap[markPtString] = true;
         if (markType === marks.LABEL) {
           if (variationMap[markPtString] &&
-              this.shouldShowNextMoves(boardData, showVariations)) {
+              glift.bridge.shouldShowNextMoves(boardData, showVariations)) {
             // This is a variation label && we should show it
-            var markValue = this.markSelectedNext(
+            var markValue = glift.bridge.markSelectedNext(
                 boardData, markData.point, markData.value);
             display.intersections().addMarkPt(
                 markData.point, marks.VARIATION_MARKER, markValue);
@@ -11026,7 +11147,7 @@ glift.bridge = {
         glift.bridge.variationMapping(boardData.correctNextMoves);
     for (var ptstring in variationMap) {
       var pt = variationMap[ptstring];
-      var markValue = this.markSelectedNext(boardData, pt, i);
+      var markValue = glift.bridge.markSelectedNext(boardData, pt, i);
       if (pt in correctNextMap) {
         display.intersections().addMarkPt(pt, marks.CORRECT_VARIATION, markValue);
       } else {
@@ -11145,11 +11266,15 @@ glift.bridge.intersections = {
    *    correctNextMoves : [ {color: <color>, point: <point> }, ...]
    *    displayDataType : <Either PARTIAL or FULL>.  Defaults to partial.
    *  }
+   *
+   * @param {Object} movetree Glift movetree.
+   * @param {Object=} opt_problemConditions Optional problem conditions.
+   * @param {number=} opt_nextVarNumber Optional next variation number.
    */
   // TODO(kashomon): Make this a proper object constructor with accessors and
   // methods and whatnot.  It's getting far too complicated. Alternatively,
   // switch over to the flattener model.
-  basePropertyData: function(movetree, problemConditions, nextVarNumber) {
+  basePropertyData: function(movetree, opt_problemConditions, opt_nextVarNumber) {
     var out = {
       stones: {
         WHITE: [],
@@ -11169,9 +11294,9 @@ glift.bridge.intersections = {
     out.lastMove = movetree.getLastMove();
     out.marks = glift.bridge.intersections.getCurrentMarks(movetree);
     out.nextMoves = movetree.nextMoves();
-    out.selectedNextMove = out.nextMoves[nextVarNumber] || null;
-    out.correctNextMoves = problemConditions !== undefined
-        ? glift.rules.problems.correctNextMoves(movetree, problemConditions)
+    out.selectedNextMove = out.nextMoves[opt_nextVarNumber] || null;
+    out.correctNextMoves = opt_problemConditions !== undefined
+        ? glift.rules.problems.correctNextMoves(movetree, opt_problemConditions)
         : [];
     return out;
   },
@@ -11198,11 +11323,14 @@ glift.bridge.intersections = {
    *    BLACK: [..pts..],
    *    WHITE: [..pts..]
    * }
+   *
+   * @param {Object=} opt_problemConditions Optional problem conditions.
+   * @param {number=} opt_nextVarNumber Optional next var number.
    */
   nextBoardData: function(
-      movetree, currentCaptures, problemConditions, nextVarNumber) {
+      movetree, currentCaptures, opt_problemConditions, opt_nextVarNumber) {
     var baseData = glift.bridge.intersections.basePropertyData(
-        movetree, problemConditions, nextVarNumber);
+        movetree, opt_problemConditions, opt_nextVarNumber);
     var allStones = movetree.properties().getAllStones();
     baseData.stones = {};
 
@@ -14472,7 +14600,7 @@ glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
         widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
         widget.iconBar.clearTempText('multiopen-boxonly');
         widget.correctness = problemResults.INCORRECT;
-        hooks.problemIncorrect && problemIncorrect();
+        hooks.problemIncorrect && hooks.problemIncorrect();
       }
     }
   },

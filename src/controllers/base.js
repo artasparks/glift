@@ -22,14 +22,21 @@ glift.controllers.base = function() {
 glift.controllers.BaseController = function() {
   // Options set with initOptions and intended to be immutable during the
   // lifetime of the controller.
+  /** @package {string} */
   this.sgfString = '';
+  /** @package {!Array<number>} */
   this.initialPosition = [];
 
-  // These next two are widget specific, but are here, for convenience.
-
-  // Used only for examples.
+  /**
+   * Used only for examples (see the Game Figure). Indicates how to create
+   * numbers based on the 
+   * @package {!Array<number>}
+   */
   this.nextMovesPath = [];
-  // Used only for problem-types
+  /**
+   * Used only for problem-types.
+   * @package {!Object}
+   */
   this.problemConditions = {};
 
   // State variables that are defined on initialize and that could are
@@ -48,6 +55,7 @@ glift.controllers.BaseController.prototype = {
    * Note that these options should be protected by the options parsing (see
    * options.js in this same directory).  Thus, no special checks are made here.
    *
+   * @param {Object} sgfOptions Object containing SGF options.
    */
   initOptions: function(sgfOptions) {
     if (sgfOptions === undefined) {
