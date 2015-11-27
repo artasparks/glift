@@ -86,8 +86,12 @@ For depgen.py to work, you'll need to have java and python installed.
 
 To update the HTML tests for development, run:
 
-   * `src/depgen.py`
+   * `src/depgen.py devel`
 
 To generate the compiled JS and update the HTML tests, run;
 
-   * `src/depgen.py  --full`
+   * `src/depgen.py compile`
+
+To generate the concatenated JS and update the HTML tests, run;
+
+   * `src/depgen.py concat`
