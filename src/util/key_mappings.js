@@ -151,8 +151,8 @@ glift.keyMappings = {
       if (manager.isFullscreen()) {
         // We don't want the widget interacting with anything else while
         // full-screen.
-        if (event.preventDefault) event.preventDefault();
-        else  event.returnValue = false; // IE
+        if (keyEvent.preventDefault) keyEvent.preventDefault();
+        else keyEvent.returnValue = false; // IE
       }
     } else if (argType === 'string') {
       // Assume it's an icon-action-path
@@ -166,8 +166,8 @@ glift.keyMappings = {
       if (manager.isFullscreen()) {
         // We don't want the widget interacting with anything else while
         // full-screen.
-        if (event.preventDefault) event.preventDefault();
-        else  event.returnValue = false; // IE
+        if (keyEvent.preventDefault) keyEvent.preventDefault();
+        else  keyEvent.returnValue = false; // IE
       }
     }
   }

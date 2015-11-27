@@ -90,7 +90,7 @@ Properties.prototype = {
       value = [ this.unescape(value) ];
     } else {
       throw new Error('Unexpected type ' +
-          glift.util.typeOf(value) + ' for item ' + item);
+          glift.util.typeOf(value) + ' for prop ' + prop);
     }
 
     // Convert any point rectangles. We do not allow point rectangles in our

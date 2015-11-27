@@ -41,7 +41,7 @@ glift.bridge = {
       for (var i = 0; i < boardData.marks[markType].length; i++) {
         var markData = boardData.marks[markType][i];
         var markPt = markData.point ? markData.point : markData;
-        markPtString = markPt.toString();
+        var markPtString = markPt.toString();
         marksMap[markPtString] = true;
         if (markType === marks.LABEL) {
           if (variationMap[markPtString] &&

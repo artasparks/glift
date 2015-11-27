@@ -42,7 +42,7 @@ glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
         widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
         widget.iconBar.clearTempText('multiopen-boxonly');
         widget.correctness = problemResults.INCORRECT;
-        hooks.problemIncorrect && problemIncorrect();
+        hooks.problemIncorrect && hooks.problemIncorrect();
       }
     }
   },

@@ -84,10 +84,10 @@ OLD_CLOSURE_FLAGS = [
   '--language_in=ECMASCRIPT5',
   '--compilation_level=SIMPLE_OPTIMIZATIONS',
 ]
-CLOSURE_FLAGS = [
+TYPED_CLOSURE_FLAGS = [
   '--language_in=ECMASCRIPT5',
   '--warning_level=VERBOSE',
-  '--compiler_flags="--jscomp_warning=checkTypes" ^',
+  # '--compiler_flags="--jscomp_warning=checkTypes" ^',
 ]
 
 HEADER = '<!-- AUTO-GEN-DEPS -->'
@@ -107,7 +107,7 @@ class FileBeast(object):
       concat_out, compiled_out):
     self._scriptpath = os.path.realpath(os.path.dirname(scriptpath))
     self.js_dirs = js_dirs
-    self.example_files_to_autogen = example_files_to_autogen 
+    self.example_files_to_autogen = example_files_to_autogen
     self.test_files_to_autogen = test_files_to_autogen
     self.header_sentinel = header_sentinel
     self.footer_sentinel = footer_sentinel
@@ -212,6 +212,26 @@ class FileBeast(object):
     content = '\n'.join(out)
     self._write_file(content, self._concat_path())
 
+  def compile_concat_srcs(self, flags):
+    """ Compiles the concatenated sources """
+    self.check_initialized()
+    self.chdir_to_scriptpath()
+    cmd = self._closure_cmd(
+      [self._concat_path()],
+      self._compile_path(),
+      flags)
+    return subprocess.Popen(cmd, shell=True).communicate()
+
+  def compile_all_srcs(self, flags):
+    """ Compiles all the concatenated sources """
+    self.check_initialized()
+    self.chdir_to_scriptpath()
+    cmd = self._closure_cmd(
+      self._flatten_srcs(),
+      self._compile_path(),
+      flags)
+    return subprocess.Popen(cmd, shell=True).communicate()
+
   def _write_file(self, content, path):
     """ Writes a file to disk """
     fd = open(path, 'w')
@@ -292,9 +312,8 @@ class FileBeast(object):
     if is_test:
       label = 'tests'
     for grouping in srcs:
-      component = grouping[0]
-      directory = component
-      out.append('<!-- %s %s -->' % (component, label))
+      directory = grouping[0]
+      out.append('<!-- %s %s -->' % (directory, label))
       for fname in grouping[1:]:
         out.append(self._create_import(os.path.join(directory, fname)))
     return out
@@ -303,12 +322,13 @@ class FileBeast(object):
     """ Creates an HTML import line for a Javascript file. """
     return '<script type="text/javascript" src="../%s"></script>' % name
 
-  def compile_srcs_nontyped(self, flags):
-    cmd = self._closure_cmd(
-      [self._concat_path()],
-      self._compile_path(),
-      flags)
-    return subprocess.Popen(cmd, shell=True).communicate()
+  def _flatten_srcs(self):
+    out = []
+    for grouping in self.js_srcs:
+      directory = grouping[0]
+      for fname in grouping[1:]:
+        out.append(os.path.join(directory, fname))
+    return out
 
   def _closure_cmd(self, jsfiles, output_file, flags):
     """ Format the closure cmd with various inputs
@@ -391,14 +411,18 @@ def main(argv=None):
   elif 'compile' in flags:
     print 'depgen: Adding non-typed compile resources'
     beast.combine_source_files()
-    out, err = beast.compile_srcs_nontyped(OLD_CLOSURE_FLAGS)
+    out, err = beast.compile_all_srcs(OLD_CLOSURE_FLAGS)
     if err != None:
       print err
       return -1
     beast.add_compile_imports()
   elif 'typed-compile' in flags:
-    print 'Typed compile not yet supported'
-    return -1
+    print 'depgen: Adding typed compile resources'
+    out, err = beast.compile_all_srcs(TYPED_CLOSURE_FLAGS)
+    if err != None:
+      print err
+      return -1
+    beast.add_compile_imports()
   else:
     print 'Unknown args: ' + ' '.join(sys.argv[1:])
     print_help()
