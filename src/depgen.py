@@ -114,7 +114,7 @@ TYPED_CLOSURE_FLAGS = [
   # '--jscomp_error=missingRequire',
   '--jscomp_error=checkVars',
   '--jscomp_error=duplicate',
-  # '--jscomp_error=undefinedVars',
+  '--jscomp_error=undefinedVars',
   # '--jscomp_error=checkTypes',
 
 # --jscomp_warning=checkTypes
