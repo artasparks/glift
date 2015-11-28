@@ -1,3 +1,5 @@
+goog.require('glift.displays.board');
+
 /**
  * Create the background GoBoard object.  Essentially just a rectangle with a
  * fill color and a border.

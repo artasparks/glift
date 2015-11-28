@@ -1,9 +1,12 @@
+goog.require('glift.displays.statusbar.StatusBar');
+
 /**
  * Create a game info object. Takes a array of game info data.
  *
  * Note: Key bindings are set in the base_widget.
  */
-glift.displays.statusbar._StatusBar.prototype.gameInfo =
+// TODO(kashomon): Make into a first-class class.
+glift.displays.statusbar.StatusBar.prototype.gameInfo =
     function(gameInfoArr, captureCount) {
   var infoWindow = glift.displays.statusbar.infoWindow(
       this.widget.wrapperDivId,

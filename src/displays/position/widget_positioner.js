@@ -1,3 +1,8 @@
+goog.provide('glift.displays.position.WidgetPositioner');
+
+goog.require('glift.displays.position.WidgetBoxes');
+goog.require('glift.displays.position.WidgetColumn');
+
 /**
  * Find the optimal positioning of the widget. Returns the calculated div
  * boxes.
@@ -8,6 +13,8 @@
  * compsToUse: The board components requseted by the user
  * oneColSplits: The split percentages for a one-column format
  * twoColSplits: The split percentages for a two-column format
+ *
+ * @return {!glift.displays.position.WidgetPositioner} The widget positioner
  */
 glift.displays.position.positioner = function(
     divBox,
@@ -31,13 +38,17 @@ glift.displays.position.positioner = function(
   if (!twoColSplits) {
     throw new Error('No two col splits. [' + twoColSplits + ']');
   }
-  return new glift.displays.position._WidgetPositioner(divBox, boardRegion,
+  return new glift.displays.position.WidgetPositioner(divBox, boardRegion,
       intersections, componentsToUse, oneColSplits, twoColSplits);
 };
 
 
-/** Internal widget positioner object */
-glift.displays.position._WidgetPositioner = function(
+/**
+ * Internal widget positioner object
+ *
+ * @constructor @final @struct
+ */
+glift.displays.position.WidgetPositioner = function(
     divBox, boardRegion, ints, compsToUse, oneColSplits, twoColSplits) {
   this.divBox = divBox;
   this.boardRegion = boardRegion;
@@ -52,7 +63,7 @@ glift.displays.position._WidgetPositioner = function(
 };
 
 /** Methods for the Widget Positioner */
-glift.displays.position._WidgetPositioner.prototype = {
+glift.displays.position.WidgetPositioner.prototype = {
   /**
    * Calculate the Widget Positioning.  This uses heuristics to determine if the
    * orientation should be horizontally oriented or vertically oriented.

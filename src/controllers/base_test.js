@@ -2,7 +2,7 @@
   module('glift.controllers.baseTest');
   var capturetest = testdata.sgfs.capturetest;
   var complexProblem = testdata.sgfs.complexproblem;
-  var ptlistToMap = glift.testUtil.ptlistToMap;
+  var ptlistToMap = testUtil.ptlistToMap;
   var conv = glift.util.pointFromSgfCoord;
 
   test('Successful build a Base Controller', function() {

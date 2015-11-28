@@ -1,7 +1,13 @@
+goog.provide('glift.displays.board.Intersections');
+
+goog.require('glift.displays.board');
+
 /**
  * The backing data for the display.
+ * @package
+ * @constructor
  */
-glift.displays.board._Intersections = function(
+glift.displays.board.Intersections = function(
     divId, svg, boardPoints, theme, rotation) {
   this.divId = divId;
   this.svg = svg;
@@ -32,7 +38,7 @@ glift.displays.board._Intersections = function(
   this.markPts = [];
 };
 
-glift.displays.board._Intersections.prototype = {
+glift.displays.board.Intersections.prototype = {
   /**
    * Sets the color of a stone.  Note: the 'color' is really a key into the
    * Theme, so it should always be BLACK or WHITE, which can then point to any
@@ -337,7 +343,7 @@ glift.displays.board._Intersections.prototype = {
     var left = data.tl.intPt.x();
     var pageOffsetX = e.pageX;
     if (e.changedTouches && e.changedTouches[0]) {
-      var pageOffsetX = e.changedTouches[0].pageX;
+      pageOffsetX = e.changedTouches[0].pageX;
     }
 
     var ptx = (pageOffsetX - offset.left) / data.spacing;
@@ -354,7 +360,7 @@ glift.displays.board._Intersections.prototype = {
     var top = data.tl.intPt.y();
     var pageOffsetY = e.pageY;
     if (e.changedTouches && e.changedTouches[0]) {
-      var pageOffsetY = e.changedTouches[0].pageY;
+      pageOffsetY = e.changedTouches[0].pageY;
     }
 
     var pty = (pageOffsetY - offset.top) / data.spacing;

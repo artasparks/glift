@@ -1,11 +1,11 @@
-// goog.provide('glift.util.point');
+goog.provide('glift.util.point');
+goog.provide('glift.Point');
 
-(function() {
 /**
  * Create a point.  We no longer cache points
  */
 glift.util.point = function(x, y) {
-  return new GliftPoint(x, y);
+  return new glift.Point(x, y);
 };
 
 glift.util.coordToString = function(x, y) {
@@ -93,13 +93,25 @@ glift.util.pointFromHash = function(str) {
  * As a historical note, this class has transformed more than any other class.
  * It was originally cached, with private variables and immutability.  However,
  * I found that all this protection was too tedious.
+ *
+ * @constructor
+ * @struct
+ * @final
  */
-var GliftPoint = function(xIn, yIn) {
+glift.Point = function(xIn, yIn) {
+  /**
+   * @private {number}
+   * @const
+   */
   this._x = xIn;
+  /**
+   * @private {number}
+   * @const
+   */
   this._y = yIn;
 };
 
-GliftPoint.prototype = {
+glift.Point.prototype = {
   x: function() { return this._x },
   y: function() { return this._y },
   equals: function(pt) {
@@ -198,5 +210,3 @@ GliftPoint.prototype = {
     glift.util.logz(this.toString());
   }
 };
-
-})();

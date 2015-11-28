@@ -1,9 +1,14 @@
+goog.provide('glift.displays.statusbar');
+goog.provide('glift.displays.statusbar.StatusBar');
+
 glift.displays.statusbar = {
   /**
    * Create a statusbar.  Also does option pre-preprocessing if necessary.
+   *
+   * @return {!glift.displays.statusbar.StatusBar} The status bar instance.
    */
   create: function(options) {
-    return new glift.displays.statusbar._StatusBar(
+    return new glift.displays.statusbar.StatusBar(
         options.iconBarPrototype,
         options.theme,
         options.widget,
@@ -15,8 +20,10 @@ glift.displays.statusbar = {
 /**
  * The status bar component. Displays at the top of Glift and is used to display
  * Game information like move number, settings, and game info.
+ *
+ * @constructor @final @struct
  */
-glift.displays.statusbar._StatusBar = function(
+glift.displays.statusbar.StatusBar = function(
     iconBarPrototype, theme, widget, positioning) {
   this.iconBar = iconBarPrototype;
   this.theme = theme;
@@ -32,8 +39,7 @@ glift.displays.statusbar._StatusBar = function(
   this.pageIndex = widget.manager.sgfColIndex + 1;
 };
 
-/** TitleBar methods. */
-glift.displays.statusbar._StatusBar.prototype = {
+glift.displays.statusbar.StatusBar.prototype = {
   draw: function() {
     this.iconBar.draw();
     this.setPageNumber(this.pageIndex, this.totalPages);

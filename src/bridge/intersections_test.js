@@ -3,8 +3,7 @@
   var sgfs = testdata.sgfs,
       mtm = glift.rules.movetree,
       mks = glift.enums.marks,
-      ptlistToMap = glift.testUtil.ptlistToMap;
-
+      ptlistToMap = testUtil.ptlistToMap;
 
   test("Add current marks to the intersection data", function() {
     var movetree = glift.rules.movetree.getFromSgf(sgfs.marky),

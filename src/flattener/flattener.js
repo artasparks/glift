@@ -1,5 +1,9 @@
+goog.provide('glift.flattener');
+
 /**
- * Helps flatten a go board into a diagram definition.
+ * Helps flatten a go board into a diagram definition. The flattened go board is
+ * useful for all sorts of go-board rendering, be it print-rendering or a
+ * dynamic UI.
  */
 glift.flattener = {
   /**
@@ -100,7 +104,6 @@ glift.flattener = {
     var labels = mksOut.labels; // map of ptstr to label str
     var marks = mksOut.marks; // map of ptstr to symbol
 
-
     // Optionally update the labels with labels used to indicate variations.
     var sv = glift.enums.showVariations
     if (showVars === sv.ALWAYS || (
@@ -116,6 +119,11 @@ glift.flattener = {
     // Finally! Generate the intersections double-array.
     var board = glift.flattener.board.create(cropping, stoneMap, marks, labels);
 
+    // TODO(kashomon): Support
+    // - lastMove
+    // - nextPossibleMoves
+    // - selectedNextMove
+    // - correctNextMoves
     var comment = mt.properties().getComment() || '';
     return new glift.flattener.Flattened(
         board, collisions, comment, boardRegion, cropping, mt.onMainline(),

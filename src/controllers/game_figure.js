@@ -1,3 +1,8 @@
+goog.provide('glift.controllers.GameFigure');
+goog.provide('glift.controllers.gameFigure');
+
+goog.require('glift.controllers.BaseController');
+
 /**
  * A GameFigure encapsulates the idea of a read-only SGF.
  *
@@ -18,6 +23,7 @@ glift.controllers.gameFigure = function(sgfOptions) {
  *
  * @extends {glift.controllers.BaseController}
  * @constructor
+ * @final
  */
 glift.controllers.GameFigure = function() {
 };

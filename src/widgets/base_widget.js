@@ -1,5 +1,9 @@
+goog.provide('glift.widgets.BaseWidget');
+
 /**
  * The base web UI widget.
+ *
+ * @constructor @final @struct
  */
 glift.widgets.BaseWidget = function(
     divId, sgfOptions, displayOptions, actions, manager, hooks) {
@@ -220,7 +224,7 @@ glift.widgets.BaseWidget.prototype = {
       var actionName = 'click';
       if (glift.platform.isMobile()) {
         // Kinda a hack, but necessary to avoid the 300ms delay.
-        var actionName = 'touchend';
+        actionName = 'touchend';
       }
       this.display.intersections().setEvent(
           actionName, wrapAction(actions.click));

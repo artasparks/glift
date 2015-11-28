@@ -2,7 +2,7 @@
   module('glift.controllers.gameViewerTest');
   var problem = testdata.sgfs.complexproblem;
   var states = glift.enums.states;
-  var ptlistToMap = glift.testUtil.ptlistToMap;
+  var ptlistToMap = testUtil.ptlistToMap;
 
   test('Test Create', function() {
     var gameViewer = glift.controllers.gameViewer({ sgfString: problem });

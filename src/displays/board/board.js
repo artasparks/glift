@@ -1,11 +1,25 @@
-glift.displays.board = {
-  create: function(env, theme, rotation) {
-    return new glift.displays.board.Display(env, theme, rotation).draw();
-  }
+goog.provide('glift.displays.board');
+goog.provide('glift.displays.board.Display');
+
+/** @namespace */
+glift.displays.board = {};
+
+/**
+ * Create a new display Board.
+ *
+ * @param {!Object} env Glift theme wrapper
+ * @param {!Object} theme Theme object.
+ * @param {string} rotation Rotation enum
+ */
+glift.displays.board.create = function(env, theme, rotation) {
+  return new glift.displays.board.Display(env, theme, rotation).draw();
 };
 
 /**
  * The core Display object returned to the user.
+ *
+ * @constructor
+ * @package
  */
 glift.displays.board.Display = function(environment, theme, rotation) {
   // Due layering issues, we need to keep track of the order in which we
@@ -83,7 +97,7 @@ glift.displays.board.Display.prototype = {
     board.markContainer(intGrp, idGen, boardPoints, theme);
     board.buttons(intGrp, idGen, boardPoints);
 
-    this._intersections = new glift.displays.board._Intersections(
+    this._intersections = new glift.displays.board.Intersections(
         divId, intGrp, boardPoints, theme, this.rotation());
     glift.util.majorPerfLog("After display object creation");
 

@@ -81,7 +81,7 @@ glift.widgets.options.BOARD_EDITOR = {
     if (iconName === 'twostones' ||
         iconName === 'bstone' ||
         iconName === 'wstone') {
-      var currentPlayer = widget.controller.getCurrentPlayer();
+      currentPlayer = widget.controller.getCurrentPlayer();
       if (widget.controller.canAddStone(pt, currentPlayer)) {
         intersections.setStoneColor(pt, 'EMPTY');
       }

@@ -1,3 +1,5 @@
+goog.provide('glift.rules.MoveTree');
+
 /**
  * When an SGF is parsed by the parser, it is transformed into the following:
  *
@@ -33,7 +35,7 @@
 glift.rules.movetree = {
   /** Create an empty MoveTree */
   getInstance: function(intersections) {
-    var mt = new glift.rules._MoveTree(glift.rules.movenode());
+    var mt = new glift.rules.MoveTree(glift.rules.movenode());
     if (intersections !== undefined) {
       mt._setIntersections(intersections);
     }
@@ -118,8 +120,10 @@ glift.rules.movetree = {
  * Semantically, a MoveTree can be thought of as a game, but could also be a
  * problem, demonstration, or example.  Thus, this is the place where such moves
  * as currentPlayer or lastMove.
+ *
+ * @constructor @final @struct
  */
-glift.rules._MoveTree = function(rootNode, currentNode, metadata) {
+glift.rules.MoveTree = function(rootNode, currentNode, metadata) {
   this._rootNode = rootNode;
   this._currentNode = currentNode || rootNode;
   this._markedMainline = false;
@@ -134,7 +138,7 @@ glift.rules._MoveTree = function(rootNode, currentNode, metadata) {
   this._metadata = metadata || null;
 };
 
-glift.rules._MoveTree.prototype = {
+glift.rules.MoveTree.prototype = {
   /////////////////////////
   // Most common methods //
   /////////////////////////
@@ -219,7 +223,7 @@ glift.rules._MoveTree.prototype = {
    * changed.
    */
   newTreeRef: function() {
-    return new glift.rules._MoveTree(
+    return new glift.rules.MoveTree(
         this._rootNode, this._currentNode, this._metadata);
   },
 
@@ -231,7 +235,7 @@ glift.rules._MoveTree.prototype = {
    * from any position in the tree.  This can be useful for recursion.
    */
   getFromNode: function(node) {
-    return new glift.rules._MoveTree(node, node, this._metadata);
+    return new glift.rules.MoveTree(node, node, this._metadata);
   },
 
   /**
@@ -466,22 +470,6 @@ glift.rules._MoveTree.prototype = {
       movetree.moveUp();
     }
     return newTreepath.reverse();
-  },
-
-  /////////////////////
-  // Private Methods //
-  /////////////////////
-  _debugLog: function(spaces) {
-    if (spaces === undefined) {
-      spaces = "  ";
-    }
-    glift.util.logz(spaces + this.node(i).getVarNum() + '-'
-        + this.node(i).getNodeNum());
-    for (var i = 0; i < this.node().numChildren(); i++) {
-      this.moveDown(i);
-      this._debugLog(spaces);
-      this.moveUp();
-    }
   },
 
   /**

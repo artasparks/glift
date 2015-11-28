@@ -9,7 +9,7 @@
       options = { sgfString: sgfs.realproblem, problemConditions: {GB: []} },
       msgs = glift.enums.controllerMessages,
       problemResults = glift.enums.problemResults,
-      ptlistToMap = glift.testUtil.ptlistToMap;
+      ptlistToMap = testUtil.ptlistToMap;
 
   test('Test create & initialize problem controller', function() {
     var c = cont.staticProblem(options),

@@ -1,3 +1,6 @@
+goog.provide('glift.displays.icons.bar');
+goog.provide('glift.displays.icons.IconBar');
+
 /**
  * Options:
  *    - divId: the divId for this object
@@ -22,11 +25,16 @@ glift.displays.icons.bar = function(options) {
   if (!divId) {
     throw new Error("Must define an options 'divId' as an option");
   }
-  return new glift.displays.icons._IconBar(
+  return new glift.displays.icons.IconBar(
       divId, position, icons, pbox, theme, allDivIds, allPositioning);
 };
 
-glift.displays.icons._IconBar = function(
+/**
+ * IconBar Object
+ *
+ * @constructor
+ */
+glift.displays.icons.IconBar = function(
     divId, position, iconsRaw, parentBbox, theme,
     allDivIds, allPositioning) {
   this.divId = divId;
@@ -62,7 +70,7 @@ glift.displays.icons._IconBar = function(
   this._initNameMapping(); // Init the name mapping.
 };
 
-glift.displays.icons._IconBar.prototype = {
+glift.displays.icons.IconBar.prototype = {
   _initNameMapping: function() {
     this.forEachIcon(function(icon) {
       this.nameMapping[icon.iconName] = icon;

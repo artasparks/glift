@@ -1,3 +1,8 @@
+goog.provide('glift.displays.LineBox');
+
+/**
+ * @return {!glift.displays.LineBox} The constructed LineBox.
+ */
 glift.displays.getLineBox = function(boardBox, cropbox) {
   var totalOverflow = glift.displays.cropbox.OVERFLOW;
   var oneSidedOverflow = totalOverflow / 2;
@@ -16,14 +21,19 @@ glift.displays.getLineBox = function(boardBox, cropbox) {
       glift.util.point(left + leftBase, top + topBase),
       glift.util.point(right + leftBase, bot + topBase));
 
-  var out = new glift.displays._LineBox(
+  var out = new glift.displays.LineBox(
       lineBoxBoundingBox, xSpacing, cropbox);
   return out;
 };
 
-// TODO(kashomon): This is a bad abstraction and needs to be rethought. It's
-// basically a container of global-ish state.
-glift.displays._LineBox = function(boundingBox, spacing, cropbox) {
+/**
+ * Container for information relating to line-boxes.
+ *
+ * @constructor
+ * @final
+ * @struct
+ */
+glift.displays.LineBox = function(boundingBox, spacing, cropbox) {
   this.bbox = boundingBox;
   this.spacing = spacing;
   this.topExt = cropbox.topExt();

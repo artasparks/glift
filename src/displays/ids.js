@@ -1,3 +1,6 @@
+goog.provide('glift.displays.ids');
+goog.provide('glift.displays.ids.Generator');
+
 /**
  * Collection of ID utilities, mostly for SVG.
  */
@@ -6,7 +9,7 @@ glift.displays.ids = {
    * Create an ID generator.
    */
   generator: function(divId) {
-    return new glift.displays.ids._Generator(divId);
+    return new glift.displays.ids.Generator(divId);
   },
 
   /**
@@ -25,33 +28,38 @@ glift.displays.ids = {
     } else {
       return base;
     }
-  },
-
-  _Generator: function(divId) {
-    this.divId = divId;
-    this._eid = glift.displays.ids.element;
-    this._enum = glift.enums.svgElements;
-
-    this._svg = this._eid(this.divId, this._enum.SVG);
-    this._board = this._eid(this.divId, this._enum.BOARD);
-    this._boardCoordLabelGroup =
-        this._eid(this.divId, this._enum.BOARD_COORD_LABELS);
-    this._stoneGroup = this._eid(this.divId, this._enum.STONE_CONTAINER);
-    this._stoneShadowGroup =
-        this._eid(this.divId, this._enum.STONE_SHADOW_CONTAINER);
-    this._starpointGroup = this._eid(this.divId, this._enum.STARPOINT_CONTAINER);
-    this._buttonGroup = this._eid(this.divId, this._enum.BUTTON_CONTAINER);
-    this._boardButton = this._eid(this.divId, this._enum.FULL_BOARD_BUTTON);
-    this._lineGroup = this._eid(this.divId, this._enum.BOARD_LINE_CONTAINER);
-    this._markGroup = this._eid(this.divId, this._enum.MARK_CONTAINER);
-    this._iconGroup = this._eid(this.divId, this._enum.ICON_CONTAINER);
-    this._intersectionsGroup = this._eid(this.divId, this._enum.BOARD);
-        this._eid(this.divId, this._enum.INTERSECTIONS_CONTAINER);
-    this._tempMarkGroup = this._eid(this.divId, this._enum.TEMP_MARK_CONTAINER);
   }
 };
 
-glift.displays.ids._Generator.prototype = {
+/**
+ * Id Generator constructor.
+ *
+ * @constructor @final @struct
+ */
+glift.displays.ids.Generator = function(divId) {
+  this.divId = divId;
+  this._eid = glift.displays.ids.element;
+  this._enum = glift.enums.svgElements;
+
+  this._svg = this._eid(this.divId, this._enum.SVG);
+  this._board = this._eid(this.divId, this._enum.BOARD);
+  this._boardCoordLabelGroup =
+      this._eid(this.divId, this._enum.BOARD_COORD_LABELS);
+  this._stoneGroup = this._eid(this.divId, this._enum.STONE_CONTAINER);
+  this._stoneShadowGroup =
+      this._eid(this.divId, this._enum.STONE_SHADOW_CONTAINER);
+  this._starpointGroup = this._eid(this.divId, this._enum.STARPOINT_CONTAINER);
+  this._buttonGroup = this._eid(this.divId, this._enum.BUTTON_CONTAINER);
+  this._boardButton = this._eid(this.divId, this._enum.FULL_BOARD_BUTTON);
+  this._lineGroup = this._eid(this.divId, this._enum.BOARD_LINE_CONTAINER);
+  this._markGroup = this._eid(this.divId, this._enum.MARK_CONTAINER);
+  this._iconGroup = this._eid(this.divId, this._enum.ICON_CONTAINER);
+  this._intersectionsGroup = this._eid(this.divId, this._enum.BOARD);
+      this._eid(this.divId, this._enum.INTERSECTIONS_CONTAINER);
+  this._tempMarkGroup = this._eid(this.divId, this._enum.TEMP_MARK_CONTAINER);
+};
+
+glift.displays.ids.Generator.prototype = {
   /** ID for the svg container. */
   svg: function() { return this._svg; },
 

@@ -1,21 +1,33 @@
+goog.provide('glift.displays.commentbox.CommentBox');
+
+goog.require('glift.displays.BoundingBox');
+
 /**
  * Create a comment box with:
  *
- * divId: The div in which the comment box should live
- * posBbox: The bounding box of the div (expensive to recompute)
- * theme: The theme object.
+ * @param {string} divId The div in which the comment box should live
+ * @param {!glift.displays.BoundingBox} posBbox The bounding box of the div
+ *    (expensive to recompute)
+ * @param {!Object} theme The theme object.
+ * @param {boolean} useMarkdown Whether or not to use markdown
  */
 glift.displays.commentbox.create = function(
     divId, posBbox, theme, useMarkdown) {
-  var useMarkdown = useMarkdown || false;
+  useMarkdown = useMarkdown || false;
   if (!theme) {
     throw new Error('Theme must be defined. was: ' + theme);
   }
-  return new glift.displays.commentbox._CommentBox(
+  return new glift.displays.commentbox.CommentBox(
       divId, posBbox, theme, useMarkdown).draw();
 };
 
-glift.displays.commentbox._CommentBox = function(
+/**
+ * Comment box object.
+ *
+ * @package
+ * @constructor
+ */
+glift.displays.commentbox.CommentBox = function(
     divId, positioningBbox, theme, useMarkdown) {
   this.divId = divId;
   this.bbox = glift.displays.bbox.fromPts(
@@ -26,7 +38,7 @@ glift.displays.commentbox._CommentBox = function(
   this.el = undefined;
 };
 
-glift.displays.commentbox._CommentBox.prototype = {
+glift.displays.commentbox.CommentBox.prototype = {
   /** Draw the comment box */
   draw: function() {
     this.el = glift.dom.elem(this.divId);

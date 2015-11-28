@@ -1,9 +1,12 @@
+goog.require('glift.displays.statusbar.StatusBar');
+
 /**
  * Makes Glift full-screen. Sort of. True fullscreen isn't supported yet.
  *
  * Note: Key bindings are set in the base_widget.
  */
-glift.displays.statusbar._StatusBar.prototype.fullscreen = function() {
+// TODO(kashomon): Make into a first-class class.
+glift.displays.statusbar.StatusBar.prototype.fullscreen = function() {
   // TODO(kashomon): Support true fullscreen: issues/69
   var widget = this.widget,
       wrapperDivId = widget.wrapperDivId,
@@ -39,7 +42,7 @@ glift.displays.statusbar._StatusBar.prototype.fullscreen = function() {
 };
 
 /** Returns Glift to non-fullscreen */
-glift.displays.statusbar._StatusBar.prototype.unfullscreen = function() {
+glift.displays.statusbar.StatusBar.prototype.unfullscreen = function() {
   if (!this.widget.manager.isFullscreen()) {
     return;
   }
@@ -48,8 +51,7 @@ glift.displays.statusbar._StatusBar.prototype.unfullscreen = function() {
       state = widget.getCurrentState(),
       manager = widget.manager,
       prevScrollTop = manager.prevScrollTop,
-      body = glift.dom.elem(document.body),
-      state = widget.getCurrentState();
+      body = glift.dom.elem(document.body);
   widget.destroy();
   wrapperDivEl.remove(); // remove the fullscreen div completely
   widget.wrapperDivId = widget.manager.divId;

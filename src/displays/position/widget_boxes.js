@@ -1,8 +1,15 @@
+goog.provide('glift.displays.position.WidgetBoxes');
+goog.provide('glift.displays.position.WidgetColumn');
+
 /**
  * Container for the widget boxes. Everything starts undefined,
+ *
+ * @constructor @final @struct
  */
 glift.displays.position.WidgetBoxes = function() {
+  /** @private */
   this._first = undefined;
+  /** @private */
   this._second = undefined;
 };
 
@@ -95,6 +102,8 @@ glift.displays.position.WidgetBoxes.prototype = {
 
 /**
  * Data container for information about how the widegt is positioned.
+ *
+ * @constructor @final @struct
  */
 glift.displays.position.WidgetColumn = function() {
   /** Mapping from component from map to box. */

@@ -1,3 +1,5 @@
+goog.provide('glift.bridge.intersections');
+
 /*
  * Intersection Data is the precise set of information necessary to display the
  * Go Board, which is to say, it is the set of stones and display information.

@@ -26,8 +26,8 @@ glift.rules.goban = {
    *  { White: [...], Black: [..] }
    */
   getFromMoveTree: function(mt, treepath) {
+    treepath = treepath || mt.treepathToHere();
     var goban = new Goban(mt.getIntersections()),
-        treepath = treepath || mt.treepathToHere(),
         movetree = mt.getTreeFromRoot(),
         captures = []; // array of captures.
     goban.loadStonesFromMovetree(movetree); // Load root placements.

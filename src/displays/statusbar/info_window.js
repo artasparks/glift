@@ -1,3 +1,5 @@
+goog.provide('glift.displays.statusbar.InfoWindow');
+
 /**
  * Creates an info window.  This isn't super useful on its own -- it's meant to
  * be populated with data.
@@ -42,13 +44,16 @@ glift.displays.statusbar.infoWindow = function(
       glift.keyMappings.registerKeyAction(instanceId, 'ESCAPE', oldEscAction);
     }
   });
-  return new glift.displays.statusbar._InfoWindow(wrapperDivEl, newDiv, textDiv);
+  return new glift.displays.statusbar.InfoWindow(wrapperDivEl, newDiv, textDiv);
 };
 
 /**
  * Info Window wrapper class.
+ *
+ * @package
+ * @constructor @final @struct
  */
-glift.displays.statusbar._InfoWindow = function(
+glift.displays.statusbar.InfoWindow = function(
     wrapperDiv, baseStatusDiv, textDiv) {
   /**
    * Div that wraps both the baseDiv and the Text Div
@@ -66,7 +71,7 @@ glift.displays.statusbar._InfoWindow = function(
   this.textDiv = textDiv;
 };
 
-glift.displays.statusbar._InfoWindow.prototype = {
+glift.displays.statusbar.InfoWindow.prototype = {
   /** Finishes the Info Window by attaching all the elements. */
   finish: function() {
     this.baseStatusDiv_.append(this.textDiv);

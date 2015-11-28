@@ -1,6 +1,7 @@
-(function() {
+goog.provide('glift.rules.Properties');
+
 glift.rules.properties = function(map) {
-  return new Properties(map);
+  return new glift.rules.Properties(map);
 };
 
 /**
@@ -48,11 +49,15 @@ L: 'L', LB: 'LB', LN: 'LN', LT: 'LT', M: 'M', MA: 'MA', MN: 'MN', N: 'N', OB:
 MU: 'MU'
 };
 
-var Properties = function(map) {
+/**
+ * @package
+ * @constructor @final @struct
+ */
+glift.rules.Properties = function(map) {
   this.propMap = map || {};
 };
 
-Properties.prototype = {
+glift.rules.Properties.prototype = {
   /**
    * Add an SGF Property to the current move.
    *
@@ -143,7 +148,7 @@ Properties.prototype = {
    * or value can't be found, null is returned.
    */
   getOneValue: function(strProp, index) {
-    var index = (index !== undefined
+    index = (index !== undefined
         && typeof index === 'number' && index >= 0) ? index : 0;
     var arr = this.getAllValues(strProp);
     if (arr && arr.length >= 1) {
@@ -557,5 +562,3 @@ Properties.prototype = {
     return text.toString().replace(/\\]/g, ']');
   }
 };
-
-})();

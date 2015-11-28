@@ -1,5 +1,9 @@
+goog.provide('glift.bridge');
+
 /**
- * The bridge is the only place where display and rules/widget code can
+ * A bridge between the UI code and the data/logic code living in rules/widget.
+ *
+ * The bridge is the only place where display and core rules/widget code can
  * mingle.
  */
 glift.bridge = {
@@ -9,7 +13,6 @@ glift.bridge = {
    * For a more detailed discussion of the objects, see intersections.js in
    * glift.bridge.
    */
-  // TODO(kashomon): move showVariations to intersections.
   setDisplayState: function(
       boardData, display, showVariations, markLastMove) {
     glift.util.majorPerfLog('Set display state');

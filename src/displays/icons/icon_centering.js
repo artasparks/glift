@@ -1,3 +1,5 @@
+goog.require('glift.displays.icons');
+
 /**
  * Row-Center an array of wrapped icons.
  */
@@ -29,7 +31,7 @@ glift.displays.icons._centerWrapped = function(
     bboxes.push(wrappedIcons[i].bbox);
   }
 
-  var minSpacing = minSpacing || 0;
+  minSpacing = minSpacing || 0;
 
   // Row center returns: { transforms: [...], bboxes: [...] }
   if (direction === 'h') {

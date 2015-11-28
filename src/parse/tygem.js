@@ -19,7 +19,7 @@ glift.parse.tygem = function(gibString) {
   var lines = gibString.split('\n');
 
   var grabHeaderProp = function(name, line, prop, mt) {
-    var line = line.substring(
+    line = line.substring(
         line.indexOf(name) + name.length + 1, line.length - 2);
     if (/\\$/.test(line)) {
       // This is a horrible hack. Sometimes \ appears as the last character

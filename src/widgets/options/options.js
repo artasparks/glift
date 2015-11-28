@@ -10,7 +10,7 @@ glift.widgets.options = {
   setOptionDefaults: function(options) {
     var optLib = glift.widgets.options;
     optLib._validateOptions(options);
-    var options = glift.util.simpleClone(options);
+    options = glift.util.simpleClone(options);
     var template = glift.util.simpleClone(optLib.baseOptions);
 
     var topLevelOptions = [
@@ -99,7 +99,7 @@ glift.widgets.options = {
       throw new Error('SGF must be of type object, was: '
           + glift.util.typeOf(sgf) + ', for ' + sgf);
     }
-    var sgf = glift.util.simpleClone(sgf);
+    sgf = glift.util.simpleClone(sgf);
     var widgetType = sgf.widgetType || sgfDefaults.widgetType;
     var widgetOverrides = glift.widgets.options[widgetType];
     for (var key in widgetOverrides) {

@@ -1,3 +1,5 @@
+goog.require('glift.orientation');
+
 /**
  * Get the minimal bounding box for set of stones and marks for the movetree.
  *
@@ -28,14 +30,14 @@ glift.orientation.minimalBoundingBox = function(movetree, nextMovesPath) {
   }
 
   // Return a bbox with one point.
-  var bbox = bbox(pts[0], pts[0]);
+  var bboxInstance = bbox(pts[0], pts[0]);
   for (var i = 1; i < pts.length; i++) {
     var pt = pts[i];
-    if (!bbox.contains(pt)) {
-      bbox = bbox.expandToContain(pt);
+    if (!bboxInstance.contains(pt)) {
+      bboxInstance = bboxInstance.expandToContain(pt);
     }
   }
-  return bbox;
+  return bboxInstance;
 };
 
 /**
@@ -52,7 +54,7 @@ glift.orientation.minimalBoundingBox = function(movetree, nextMovesPath) {
  */
 glift.orientation._getDisplayPts = function(movetree, nextMovesPath) {
   // Ensure we aren't changing the parent movetree's state.
-  var movetree = movetree.newTreeRef();
+  movetree = movetree.newTreeRef();
   var pts = [];
   /**
    * This hands objects that look like:

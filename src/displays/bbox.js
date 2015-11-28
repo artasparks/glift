@@ -1,12 +1,15 @@
+goog.provide('glift.displays.bbox');
+goog.provide('glift.displays.BoundingBox');
+
 glift.displays.bbox = {
   /** Return a new bounding box with two points. */
   fromPts: function(topLeftPt, botRightPt) {
-    return new glift.displays._BoundingBox(topLeftPt, botRightPt);
+    return new glift.displays.BoundingBox(topLeftPt, botRightPt);
   },
 
   /** Return a new bounding box with a top left point, a width, and a height. */
   fromSides: function(topLeft, width, height) {
-    return new glift.displays._BoundingBox(
+    return new glift.displays.BoundingBox(
         topLeft, glift.util.point(topLeft.x() + width, topLeft.y() + height));
   },
 
@@ -22,19 +25,23 @@ glift.displays.bbox = {
  * A bounding box, represented by a top left point and bottom right point.
  * This is how we represent space in glift, from GoBoards to sections allocated
  * for widgets.
+ *
+ * @param {!glift.Point} topLeftPt The top-left point of the bounding box.
+ * @param {!glift.Point} botRightPt The bottom right point of the bounding box.
+ * @constructor
  */
-glift.displays._BoundingBox = function(topLeftPtIn, botRightPtIn) {
-  if (topLeftPtIn.x() > botRightPtIn.x() ||
-      topLeftPtIn.y() > botRightPtIn.y()) {
+glift.displays.BoundingBox = function(topLeftPt, botRightPt) {
+  if (topLeftPt.x() > botRightPt.x() ||
+      topLeftPt.y() > botRightPt.y()) {
     throw new Error('Topleft point must be less than the ' +
-        'bottom right point. tl:' + topLeftPtIn.toString() +
-        '; br:' + botRightPtIn.toString());
+        'bottom right point. tl:' + topLeftPt.toString() +
+        '; br:' + botRightPt.toString());
   }
-  this._topLeftPt = topLeftPtIn;
-  this._botRightPt = botRightPtIn;
+  this._topLeftPt = topLeftPt;
+  this._botRightPt = botRightPt;
 };
 
-glift.displays._BoundingBox.prototype = {
+glift.displays.BoundingBox.prototype = {
   topLeft: function() { return this._topLeftPt; },
   botRight: function() { return this._botRightPt; },
   /** TopRight and BotLeft are constructed */

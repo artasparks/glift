@@ -1,3 +1,6 @@
+goog.provide('glift.flattener.board');
+goog.provide('glift.flattener.Board');
+
 glift.flattener.board = {
   /**
    * Constructs a board object: a 2D array of intersections.
@@ -25,14 +28,16 @@ glift.flattener.board = {
       }
       board.push(row);
     }
-    return new glift.flattener._Board(board, bbox, cropping.size);
+    return new glift.flattener.Board(board, bbox, cropping.size);
   }
 };
 
 /**
  * Board object.  Meant to be created with the static constuctor method 'create'.
+ *
+ * @constructor @final @struct
  */
-glift.flattener._Board = function(boardArray, bbox, maxBoardSize) {
+glift.flattener.Board = function(boardArray, bbox, maxBoardSize) {
   /**
    * 2D Array of intersections. Generally, this is an array of intersections,
    * but could be backed by a different underlying objects based on a
@@ -47,16 +52,19 @@ glift.flattener._Board = function(boardArray, bbox, maxBoardSize) {
   this._maxBoardSize = maxBoardSize;
 };
 
-glift.flattener._Board.prototype = {
+glift.flattener.Board.prototype = {
   /**
    * Provide a SGF Point (intersection-point) and retrieve the relevant
    * intersection.  Note, this uses the board indexing as opposed to the indexing
    * in the array.
+   *
+   * @param {!glift.Point|number} ptOrX a Point object or, optionaly, a number.
+   * @param {number=} opt_y If the first param is a number.
    */
-  getIntBoardPt: function(ptOrX, optionalY) {
+  getIntBoardPt: function(ptOrX, opt_y) {
     if (glift.util.typeOf(ptOrX) === 'number' &&
-        glift.util.typeOf(optionalY) === 'number') {
-      var pt = glift.util.point(ptOrX, optionalY);
+        glift.util.typeOf(opt_y) === 'number') {
+      var pt = glift.util.point(ptOrX, opt_y);
     } else {
       var pt = ptOrX;
     }
@@ -66,11 +74,14 @@ glift.flattener._Board.prototype = {
   /**
    * Get an intersection from a the intersection table. Uses the absolute array
    * positioning. Returns undefined if the pt doesn't exist on the board.
+   *
+   * @param {!glift.Point|number} ptOrX a Point object or, optionaly, a number.
+   * @param {number=} opt_y If the first param is a number.
    */
-  getInt: function(ptOrX, optionalY) {
+  getInt: function(ptOrX, opt_y) {
     if (glift.util.typeOf(ptOrX) === 'number' &&
-        glift.util.typeOf(optionalY) === 'number') {
-      var pt = glift.util.point(ptOrX, optionalY);
+        glift.util.typeOf(opt_y) === 'number') {
+      var pt = glift.util.point(ptOrX, opt_y);
     } else {
       var pt = ptOrX;
     }
@@ -138,6 +149,6 @@ glift.flattener._Board.prototype = {
       }
       outArray.push(row);
     }
-    return new glift.flattener._Board(outArray, this._bbox, this._maxBoardSize);
+    return new glift.flattener.Board(outArray, this._bbox, this._maxBoardSize);
   }
 };

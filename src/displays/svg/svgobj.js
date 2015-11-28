@@ -1,3 +1,5 @@
+goog.provide('glift.displays.svg.SvgObj');
+
 glift.displays.svg.createObj = function(type, attrObj) {
    return new glift.displays.svg.SvgObj(type, attrObj);
 };
@@ -32,6 +34,10 @@ glift.displays.svg.group = function() {
   return new glift.displays.svg.SvgObj('g');
 };
 
+/**
+ * SVG Wrapper object.
+ * @constructor @final @struct
+ */
 glift.displays.svg.SvgObj = function(type, attrObj) {
   this._type = type;
   this._attrMap =  attrObj || {};

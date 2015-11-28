@@ -34,14 +34,14 @@ glift.displays.gui._linearCentering = function(
   var outerWidth = outerBox.width(),
       innerWidth = outerWidth - 2 * horzMargin,
       outerHeight = outerBox.height(),
-      // TODO(kashomon): Min spacing is totally broken and has no tests.
-      // Probably should just remove it.
-      minSpacing = minSpacing || 0,
-      maxSpacing = maxSpacing || 0,
       innerHeight = outerHeight - 2 * vertMargin,
       transforms = [],
       newBboxes = [];
-  var dir = (dir === 'v' || dir === 'h') ? dir : 'h';
+  // TODO(kashomon): Min spacing is totally broken and has no tests.
+  // Probably should just remove it.
+  minSpacing = minSpacing || 0;
+  maxSpacing = maxSpacing || 0;
+  dir = (dir === 'v' || dir === 'h') ? dir : 'h';
   var getLongSide = function(bbox, dir) {
     return dir === 'h' ? bbox.width() : bbox.height();
   };

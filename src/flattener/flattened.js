@@ -1,3 +1,5 @@
+goog.provide('glift.flattener.Flattened');
+
 /**
  * Data used to populate either a display or diagram.
  */

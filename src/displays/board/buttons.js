@@ -1,3 +1,5 @@
+goog.require('glift.displays.board');
+
 /**
  * Create transparent buttons that overlay each intersection.
  */
@@ -10,7 +12,8 @@ glift.displays.board.buttons = function(svg, idGen, boardPoints) {
   var len = data.length
   var tl = data[0];
   var br = data[len - 1];
-  var data = { tl: tl, br: br, spacing: boardPoints.spacing };
+
+  data = { tl: tl, br: br, spacing: boardPoints.spacing };
   container.append(svglib.rect()
     .data(data)
     .attr("x", tl.coordPt.x() - boardPoints.radius)

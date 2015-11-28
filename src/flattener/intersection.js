@@ -1,3 +1,6 @@
+goog.provide('glift.flattener.intersection');
+goog.provide('glift.flattener.Intersection');
+
 glift.flattener.intersection = {
   /**
    * Creates an intersection obj.
@@ -13,7 +16,7 @@ glift.flattener.intersection = {
    */
   create: function(pt, stoneColor, mark, textLabel, maxInts) {
     var sym = glift.flattener.symbols;
-    var intsect = new glift.flattener._Intersection(pt);
+    var intsect = new glift.flattener.Intersection(pt);
 
     if (pt.x() < 0 || pt.y() < 0 ||
         pt.x() >= maxInts || pt.y() >= maxInts) {
@@ -92,8 +95,10 @@ glift.flattener.intersection = {
  *  - Mark layer (shapes, text labels, etc.)
  *
  * Shouldn't be constructed directly outside of this file.
+ *
+ * @constructor @final @struct
  */
-glift.flattener._Intersection = function(pt) {
+glift.flattener.Intersection = function(pt) {
   var EMPTY = glift.flattener.symbols.EMPTY;
   this._pt = pt;
   this._baseLayer = EMPTY;
@@ -105,7 +110,7 @@ glift.flattener._Intersection = function(pt) {
   this._textLabel = null;
 };
 
-glift.flattener._Intersection.prototype = {
+glift.flattener.Intersection.prototype = {
   _validateSymbol: function(s, layer) {
     var sym = glift.flattener.symbols;
     var layerMapping = {

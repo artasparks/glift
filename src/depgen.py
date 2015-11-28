@@ -68,6 +68,10 @@ JS_DIRECTORIES = [
     'widgets/options',
     ]
 
+EXCLUDE = set([
+  'util/test_util.js',
+])
+
 OUTPUT_DIRECTORY = 'compiled'
 CONCAT_OUT = 'glift_combined.js'
 COMPILED_OUT = 'glift.js'
@@ -84,9 +88,40 @@ OLD_CLOSURE_FLAGS = [
   '--language_in=ECMASCRIPT5',
   '--compilation_level=SIMPLE_OPTIMIZATIONS',
 ]
+
+# See:
+# https://github.com/google/closure-compiler/wiki/Warnings
+# Not ethat warning_level=VERBOSE corresponds to:
+#
+# --jscomp_warning=checkTypes
+# --jscomp_error=checkVars
+# --jscomp_warning=deprecated
+# --jscomp_error=duplicate
+# --jscomp_warning=globalThis
+# --jscomp_warning=missingProperties
+# --jscomp_warning=undefinedNames
+# --jscomp_error=undefinedVars
+#
 TYPED_CLOSURE_FLAGS = [
   '--language_in=ECMASCRIPT5',
-  '--warning_level=VERBOSE',
+  '--jscomp_error=accessControls',
+  '--jscomp_error=checkRegExp',
+  '--jscomp_error=constantProperty',
+  '--jscomp_error=const',
+  '--jscomp_error=missingProvide',
+  # We don't turn requires into Errors, because the closure compiler reorders
+  # the sources based on the requires.
+  # '--jscomp_error=missingRequire',
+  '--jscomp_error=checkVars',
+  '--jscomp_error=duplicate',
+  # '--jscomp_error=undefinedVars',
+  # '--jscomp_error=checkTypes',
+
+# --jscomp_warning=checkTypes
+# --jscomp_warning=deprecated
+# --jscomp_warning=globalThis
+# --jscomp_warning=missingProperties
+# --jscomp_warning=undefinedNames
   # '--compiler_flags="--jscomp_warning=checkTypes" ^',
 ]
 
@@ -104,7 +139,7 @@ class FileBeast(object):
 
   def __init__(self, scriptpath, js_dirs, example_files_to_autogen,
       test_files_to_autogen, header_sentinel, footer_sentinel, output_dir,
-      concat_out, compiled_out):
+      concat_out, compiled_out, excludeSet):
     self._scriptpath = os.path.realpath(os.path.dirname(scriptpath))
     self.js_dirs = js_dirs
     self.example_files_to_autogen = example_files_to_autogen
@@ -114,6 +149,7 @@ class FileBeast(object):
     self.output_dir = output_dir
     self.concat_out = concat_out
     self.compiled_out = compiled_out
+    self.excludeSet = excludeSet
 
     # Vars that are initialized upon 'initialize'
     self.initialized = False
@@ -124,10 +160,6 @@ class FileBeast(object):
     self.js_srcs = []
     self.js_tests = []
 
-    # We keep a mapping of component to directory so that we can create nice
-    # labels in the HTML files later and for general usefulness.
-    self.component_to_directory = {}
-
   def initialize(self):
     """ Initializes the FileBeast by using the directory listings """
     scriptpath = self._scriptpath_dir()
@@ -135,23 +167,26 @@ class FileBeast(object):
 
     srcs = []
     tests = []
-    for component in self.js_dirs:
-      full_dir_path = os.path.join(scriptpath, component)
-      if component == '.' or component == '':
+    for directory in self.js_dirs:
+      full_dir_path = os.path.join(scriptpath, directory)
+      if directory == '.' or directory == '':
         full_dir_path = scriptpath
       if not os.path.exists(full_dir_path):
         raise Exception('Not a directory! ' + full_dir_path)
-      self.component_to_directory[component] = component
 
-      namespace_js = self._get_namespace_js(full_dir_path, component)
+      namespace_js = self._get_namespace_js(full_dir_path, directory)
 
       os.chdir(full_dir_path)
       files = glob.glob('*.js')
-      dir_srcs = [component]
-      dir_tests = [component]
+      dir_srcs = [directory]
+      dir_tests = [directory]
       dir_srcs.append(namespace_js)
       for f in files:
-        if f == namespace_js:
+        path = os.path.join(directory, f);
+        if path in self.excludeSet:
+          # We don't do any processing for excluded files
+          pass
+        elif f == namespace_js:
           # Do nothing. We require that each directory has a JS file with the same
           # name as the directory, and must come first.
           pass
@@ -202,8 +237,7 @@ class FileBeast(object):
     self.chdir_to_scriptpath()
     self.check_initialized()
     for grouping in self.js_srcs:
-      component = grouping[0]
-      directory = self.component_to_directory[component]
+      directory = grouping[0]
       for fname in grouping[1:]:
         filepath = os.path.join(directory, fname)
         fd = open(filepath)
@@ -398,7 +432,9 @@ def main(argv=None):
       FOOTER,
       OUTPUT_DIRECTORY,
       CONCAT_OUT,
-      COMPILED_OUT).initialize()
+      COMPILED_OUT,
+      EXCLUDE
+      ).initialize()
 
   if 'devel' in flags:
     print 'depgen: Adding devel resources'

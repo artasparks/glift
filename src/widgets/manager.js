@@ -1,3 +1,5 @@
+goog.provide('glift.widgets.WidgetManager');
+
 /**
  * The Widget Manager manages state across widgets.  When widgets are created,
  * they are always created in the context of a Widget Manager.
@@ -17,6 +19,8 @@
  * actions: combination of stone actions and icon actions.
  * metadata: metadata about the this instance of glift.
  * hooks: user-provided functions.
+ *
+ * @constructor @final @struct
  */
 glift.widgets.WidgetManager = function(divId, sgfCollection, sgfMapping,
     sgfColIndex, allowWrapAround, loadColInBack, sgfDefaults, displayOptions,

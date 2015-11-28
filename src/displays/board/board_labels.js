@@ -1,3 +1,5 @@
+goog.require('glift.displays.board');
+
 glift.displays.board.boardLabels = function(svg, idGen, boardPoints, theme) {
   var svglib = glift.displays.svg;
   var container = svglib.group().attr('id', idGen.boardCoordLabelGroup());

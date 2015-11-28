@@ -1,3 +1,5 @@
+goog.provide('glift.ajax');
+
 /**
  * Ajax/XHR wrapper.
  */

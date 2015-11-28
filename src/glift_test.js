@@ -1,7 +1,6 @@
 (function() {
   module('glift.gliftTest');
-  var testUtil = glift.testUtil,
-      boardRegions = glift.enums.boardRegions;
+  var boardRegions = glift.enums.boardRegions;
 
   test('Assert exists', function() {
     ok(glift !== undefined);

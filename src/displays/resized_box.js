@@ -5,7 +5,6 @@
  */
 glift.displays.getResizedBox = function(divBox, cropbox, alignment) {
   var aligns = glift.enums.boardAlignments,
-      alignment = alignment || aligns.CENTER,
       util = glift.util,
       newDims = glift.displays.getCropDimensions(
           divBox.width(),
@@ -23,6 +22,7 @@ glift.displays.getResizedBox = function(divBox, cropbox, alignment) {
       newTop = divBox.topLeft().y() + yDelta,
       newBox = glift.displays.bbox.fromSides(
           util.point(newLeft, newTop), newWidth, newHeight);
+  alignment = alignment || aligns.CENTER;
   if (glift.global.debugMode) {
     newBox._debugInfo = function() {
       return {

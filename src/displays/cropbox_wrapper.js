@@ -1,3 +1,8 @@
+goog.provide('glift.displays.cropbox');
+goog.provide('glift.displays.DisplayCropBox');
+
+goog.require('glift.orientation.Cropbox');
+
 glift.displays.cropbox = {
   EXT: .5, // Extension
   DEFAULT_EXTENSION: 0, // Wut.
@@ -9,7 +14,7 @@ glift.displays.cropbox = {
    */
   getFromRegion: function(region, intersects, drawBoardCoords) {
     var cropbox = glift.orientation.cropbox.get(region, intersects);
-    var drawBoardCoords = drawBoardCoords || false;
+    drawBoardCoords = drawBoardCoords || false;
     var maxIntersects = drawBoardCoords ? intersects + 2 : intersects;
     var top = cropbox.bbox.top(),
         bottom = cropbox.bbox.bottom(),
@@ -25,19 +30,21 @@ glift.displays.cropbox = {
             glift.util.point(left, top),
             glift.util.point(right, bottom)),
         maxIntersects);
-    return new glift.displays._CropBox(cx);
+    return new glift.displays.DisplayCropBox(cx);
   }
 };
 
 /**
  * A cropbox is similar to a bounding box, but instead of a box based on pixels,
  * it's a box based on points.
+ *
+ * @constructor
  */
-glift.displays._CropBox = function(cbox) {
+glift.displays.DisplayCropBox = function(cbox) {
   this._cbox = cbox;
 };
 
-glift.displays._CropBox.prototype = {
+glift.displays.DisplayCropBox.prototype = {
   /**
    * Returns the cbox. The cbox is a bounding box that describes what points on
    * the go board should be displayed. Generally, both the width and height of

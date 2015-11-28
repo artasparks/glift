@@ -1,3 +1,5 @@
+goog.provide('glift.enums');
+
 /**
  * Various constants used throughout glift.
  */
@@ -5,6 +7,9 @@ glift.enums = {
   /**
    * Camel cases an enum. Can be useful for things that have functions or
    * packages named from enum names.
+   *
+   * @param {string} input The enum to input
+   * @return {string} transformed enum name.
    */
   toCamelCase: function(input) {
     return input.toLowerCase().replace(/_(.)?/g, function(match, group1) {
@@ -12,7 +17,9 @@ glift.enums = {
     });
   },
 
-  // Also sometimes referred to as colors. Might be good to change back
+  /**
+   * Also sometimes referred to as colors.
+   */
   states: {
     BLACK: 'BLACK',
     WHITE: 'WHITE',

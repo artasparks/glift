@@ -1,9 +1,20 @@
+goog.provide('glift.displays.icons.IconSelector');
+
+goog.require('glift.displays.icons');
+
 glift.displays.icons.iconSelector = function(parentDivId, iconBarDivId, icon) {
-  return new glift.displays.icons._IconSelector(parentDivId, iconBarDivId, icon)
+  return new glift.displays.icons.IconSelector(parentDivId, iconBarDivId, icon)
       .draw();
 };
 
-glift.displays.icons._IconSelector = function(parentDivId, iconBarId, icon) {
+/**
+ * Icon Selector class.
+ *
+ * @constructor
+ * @package
+ * @final
+ */
+glift.displays.icons.IconSelector = function(parentDivId, iconBarId, icon) {
   // The assumption is currently that there can only be one IconSelector.  This
   // may be incorrect, but it can easily be reevaluated later.
   this.iconBarId = iconBarId;
@@ -23,7 +34,7 @@ glift.displays.icons._IconSelector = function(parentDivId, iconBarId, icon) {
   this.iconList = [];
 };
 
-glift.displays.icons._IconSelector.prototype = {
+glift.displays.icons.IconSelector.prototype = {
   draw: function() {
     // TODO(kashomon): This needs to be cleaned up. It's currently quite the
     // mess.

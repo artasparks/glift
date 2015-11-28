@@ -1,8 +1,14 @@
+goog.provide('glift.displays.icons.WrappedIcon');
+
+goog.require('glift.displays.icons');
+
 /**
  * Create a wrapper icon.
+ *
+ * @param {string} iconName name of the relevant icon.
  */
 glift.displays.icons.wrappedIcon = function(iconName) {
-  return new glift.displays.icons._WrappedIcon(iconName);
+  return new glift.displays.icons.WrappedIcon(iconName);
 };
 
 /**
@@ -40,8 +46,11 @@ glift.displays.icons.validateIcon = function(iconName) {
 /**
  * Icon wrapper for convenience.  All you need is:
  *  - The name of the icon
+ *
+ * @constructor
+ * @final
  */
-glift.displays.icons._WrappedIcon = function(iconName) {
+glift.displays.icons.WrappedIcon = function(iconName) {
   this.iconName = glift.displays.icons.validateIcon(iconName);
   var iconData = glift.displays.icons.svg[iconName];
   this.iconStr = iconData.string;
@@ -62,7 +71,7 @@ glift.displays.icons._WrappedIcon = function(iconName) {
 /**
  * Wrapped icon methods.
  */
-glift.displays.icons._WrappedIcon.prototype = {
+glift.displays.icons.WrappedIcon.prototype = {
   /**
    * Add an associated icon and return the new icon.
    */
@@ -202,6 +211,8 @@ glift.displays.icons._WrappedIcon.prototype = {
 
   /**
    * Get the scaling string to be used as a SVG transform parameter.
+   *
+   * @return {string} the SVG transform string.
    */
   transformString: function() {
     if (this.transformObj != undefined) {

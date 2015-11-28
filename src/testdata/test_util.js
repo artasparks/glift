@@ -1,12 +1,5 @@
-(function() {
 // Util functions for running QUnit Tests
-
-if (!ok) {
-  // To make the closure compiler happy.
-  var ok = function() {};
-}
-
-glift.testUtil = {
+var testUtil = {
   ptlistToMap: function(list) {
     var outMap = {};
     for (var i = 0; i < list.length; i++) {
@@ -32,4 +25,3 @@ glift.testUtil = {
         'Div should not contain contents. Instead was [' + contents + ']');
   }
 };
-})();

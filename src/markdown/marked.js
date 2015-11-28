@@ -1,3 +1,5 @@
+goog.provide('glift.marked');
+
 /**
  * marked - a markdown parser
  * Copyright (c) 2011-2014, Christopher Jeffrey. (MIT Licensed)
@@ -147,8 +149,8 @@ Lexer.prototype.lex = function(src) {
  */
 
 Lexer.prototype.token = function(src, top, bq) {
-  var src = src.replace(/^ +$/gm, '')
-    , next
+  src = src.replace(/^ +$/gm, '')
+  var next
     , loose
     , cap
     , bull

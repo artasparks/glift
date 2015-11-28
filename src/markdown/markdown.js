@@ -1,9 +1,12 @@
+goog.provide('glift.markdown');
+goog.provide('glift.markdown.Ast');
+
+goog.require('glift.marked');
+
 /**
  * Marked is dumped into this namespace. Just for reference
  * https://github.com/chjj/marked
  */
-// glift.marked = {};
-
 glift.markdown = {
   /** Render the AST from some text. */
   renderAst: function(text) {
@@ -18,7 +21,11 @@ glift.markdown = {
 };
 
 
-/** Wrapper object for the abstract syntax tree. */
+/**
+ * Wrapper object for the abstract syntax tree.
+ *
+ * @constructor @final @struct
+ */
 glift.markdown.Ast = function(tree) {
   /** From marked, this is an  */
   this.tree = tree;

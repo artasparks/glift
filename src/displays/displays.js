@@ -1,3 +1,5 @@
+goog.provide('glift.displays');
+
 glift.displays = {
   /**
    * Create the display.  Delegates to board.create(...), which creates an SVG

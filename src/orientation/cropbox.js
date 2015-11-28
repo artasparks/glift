@@ -1,5 +1,9 @@
+goog.provide('glift.orientation.Cropbox');
+
 /**
  * Definition of the cropbox
+ *
+ * @constructor @final @struct
  */
 glift.orientation.Cropbox = function(bbox, size) {
   /**
@@ -61,7 +65,6 @@ glift.orientation.cropbox = {
   get: function(region, intersects) {
     var point = glift.util.point,
         boardRegions = glift.enums.boardRegions,
-        region = region || boardRegions.ALL,
         min = 0,
         max = intersects - 1,
         halfInts = Math.ceil(max / 2),
@@ -69,6 +72,8 @@ glift.orientation.cropbox = {
         left = min,
         bot = max,
         right = max;
+
+    region = region || boardRegions.ALL;
 
     if (intersects < 19) {
       return new glift.orientation.Cropbox(

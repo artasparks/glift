@@ -1,8 +1,16 @@
+goog.provide('glift.rules.MoveNode');
+
 glift.rules.movenode = function(properties, children, nodeId, parentNode) {
-  return new glift.rules._MoveNode(properties, children, nodeId, parentNode);
+  return new glift.rules.MoveNode(properties, children, nodeId, parentNode);
 };
 
-glift.rules._MoveNode = function(properties, children, nodeId, parentNode) {
+/**
+ * A Node in the MoveTree.
+ *
+ * @package
+ * @constructor @final @struct
+ */
+glift.rules.MoveNode = function(properties, children, nodeId, parentNode) {
   this._properties = properties || glift.rules.properties();
   this.children = children || [];
   this._nodeId = nodeId || { nodeNum: 0, varNum: 0 }; // this is a bad default.
@@ -15,7 +23,7 @@ glift.rules._MoveNode = function(properties, children, nodeId, parentNode) {
   this._mainline = false;
 };
 
-glift.rules._MoveNode.prototype = {
+glift.rules.MoveNode.prototype = {
   /** Get the properties */
   properties: function() { return this._properties; },
 
@@ -70,7 +78,7 @@ glift.rules._MoveNode.prototype = {
    * movetree.
    */
   getChild: function(variationNum) {
-    var variationNum = variationNum || 0;
+    variationNum = variationNum || 0;
     if (this.children.length > 0) {
       return this.children[variationNum];
     } else {

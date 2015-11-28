@@ -1,3 +1,5 @@
+goog.provide('glift.util.colors');
+
 glift.util.colors = {
   isLegalColor: function(color) {
     return color === glift.enums.states.BLACK ||

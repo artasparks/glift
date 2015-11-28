@@ -1,3 +1,6 @@
+goog.provide('glift.displays.svg.pathutils');
+
+/** @namespace */
 glift.displays.svg.pathutils = {
   /**
    * Move the current position to X,Y.  Usually used in the context of creating a

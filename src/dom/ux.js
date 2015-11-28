@@ -1,3 +1,5 @@
+goog.provide('glift.dom.ux');
+
 // Note to self: common vendor property patterns:
 //
 // -webkit-property => webkitProperty

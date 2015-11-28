@@ -1,3 +1,5 @@
+goog.require('glift.displays.board');
+
 /**
  * Create the background lines. These are create at each individual intersection
  * rather than as a whole so that we can clear theme out when we to draw marks

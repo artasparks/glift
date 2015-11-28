@@ -1,3 +1,5 @@
+goog.provide('glift.util');
+
 glift.util = {
   logz: function(msg) {
     console.log(msg);

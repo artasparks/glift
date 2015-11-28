@@ -95,7 +95,7 @@ glift.rules.treepath = {
         return out;
       }
 
-      var lastNum = firstNum;
+      lastNum = firstNum;
       // Handle the rest of the numbers. These must be variations.
       for (var j = 1; j < v.length; j++) {
         var testNum = v[j];
@@ -247,8 +247,8 @@ glift.rules.treepath = {
    */
   findNextMovesPath: function(
       movetree, initTreepath, minusMovesOverride, breakOnComment) {
-    var initTreepath = initTreepath || movetree.treepathToHere();
-    var breakOnComment = breakOnComment === false ? false : true;
+    initTreepath = initTreepath || movetree.treepathToHere();
+    breakOnComment = breakOnComment === false ? false : true;
     var mt = movetree.getTreeFromRoot(initTreepath);
     var minusMoves = minusMovesOverride || 1000;
     var nextMovesTreepath = [];

@@ -1,3 +1,7 @@
+goog.provide('glift.dom');
+goog.provide('glift.dom.Element');
+
+/** @namespace */
 glift.dom = {
   /**
    * Constructs a glift dom element. If arg is a string, assume an ID is being
@@ -82,17 +86,19 @@ glift.dom = {
   /** Convert a string. */
   newElem: function(type) {
     return type ? glift.dom.elem(document.createElement(type + '')) : null;
-  },
-
-  /**
-   * A simple wrapper for a plain old dom element. Note, id can be null if the
-   * Element is constructed directly from elem.
-   */
-  Element: function(el, id) {
-    this.el = el;
-    this.id = id || null;
   }
 };
+
+/**
+ * A simple wrapper for a plain old dom element. Note, id can be null if the
+ * Element is constructed directly from elem.
+ *
+ * @constructor @final @struct
+ */
+glift.dom.Element = function(el, id) {
+  this.el = el;
+  this.id = id || null;
+}
 
 glift.dom.Element.prototype = {
   /** Prepends an element, but only if it's a glift dom element. */

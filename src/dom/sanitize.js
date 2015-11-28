@@ -1,3 +1,5 @@
+goog.require('glift.dom');
+
 /** Tags currently allowed. */
 glift.dom._sanitizeWhitelist = {
   'br': true,

@@ -95,7 +95,7 @@ glift.controllers.StaticProblemMethods = {
       // We return the entire board state because we've just moved two moves.
       // In theory, we could combine the output of the next moves, but it's a
       // little tricky and it doesn't seem to be worth the effort at the moment.
-      var outData = this.getEntireBoardState();
+      outData = this.getEntireBoardState();
       outData.result = correctness;
       return outData;
     }

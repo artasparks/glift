@@ -6,7 +6,7 @@
   var fullBbox = glift.displays.bbox.fromPts(
       glift.util.point(0, 0),
       glift.util.point(300, 300));
-  var fakeLineBox = new glift.displays._LineBox(fullBbox, 20, cropboxAll);
+  var fakeLineBox = new glift.displays.LineBox(fullBbox, 20, cropboxAll);
 
   test('Should construct', function() {
     var bpz = glift.displays.boardPoints(fakeLineBox, maxInts, false);
