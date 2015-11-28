@@ -15006,12 +15006,12 @@ glift.widgets.options.STANDARD_PROBLEM = {
     if (data.result === problemResults.CORRECT) {
         widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'check', '#0CC');
         widget.correctness = problemResults.CORRECT;
-        hooks.problemCorrect(pt, currentPlayer);
+        hooks.problemCorrect && hooks.problemCorrect(pt, currentPlayer);
     } else if (data.result === problemResults.INCORRECT) {
       widget.iconBar.destroyTempIcons();
       widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
       widget.correctness = problemResults.INCORRECT;
-      hooks.problemIncorrect(pt, currentPlayer);
+      hooks.problemIncorrect && hooks.problemCorrect(pt, currentPlayer);
     }
   },
 

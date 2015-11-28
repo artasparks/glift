@@ -115,13 +115,13 @@ TYPED_CLOSURE_FLAGS = [
   '--jscomp_error=checkVars',
   '--jscomp_error=duplicate',
   '--jscomp_error=undefinedVars',
+  '--jscomp_error=undefinedNames',
   # '--jscomp_error=checkTypes',
 
-# --jscomp_warning=checkTypes
-# --jscomp_warning=deprecated
-# --jscomp_warning=globalThis
-# --jscomp_warning=missingProperties
-# --jscomp_warning=undefinedNames
+  # --jscomp_warning=checkTypes
+  # --jscomp_warning=deprecated
+  # --jscomp_warning=globalThis
+  # --jscomp_warning=missingProperties
   # '--compiler_flags="--jscomp_warning=checkTypes" ^',
 ]
 
@@ -405,7 +405,7 @@ arguments:
    regenerate the test files with the this concatenated target.
 -> [old-compile]: Compile the Javascript with the closure compiler, without
    advanced type checking. The way things used to be done.
--> [typed-compile]: Compile the Javascript with the closure compiler and
+-> [compile]: Compile the Javascript with the closure compiler and
    turn on type checking
 """
 
@@ -444,7 +444,7 @@ def main(argv=None):
     print 'depgen: Adding concat resources'
     beast.combine_source_files()
     beast.add_concat_imports()
-  elif 'compile' in flags:
+  elif 'old-compile' in flags:
     print 'depgen: Adding non-typed compile resources'
     beast.combine_source_files()
     out, err = beast.compile_all_srcs(OLD_CLOSURE_FLAGS)
@@ -452,7 +452,7 @@ def main(argv=None):
       print err
       return -1
     beast.add_compile_imports()
-  elif 'typed-compile' in flags:
+  elif 'compile' in flags:
     print 'depgen: Adding typed compile resources'
     out, err = beast.compile_all_srcs(TYPED_CLOSURE_FLAGS)
     if err != None:
