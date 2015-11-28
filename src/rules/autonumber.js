@@ -1,10 +1,12 @@
 /**
- * Autonumber the shit out of the movetree.
+ * Autonumber a movetree.
  *
  * NOTE! This removes all numeric labels and replaces them with the labels
  * constructed here, but that's sort of the point.
  *
- * Modifies the current movtree.
+ * Modifies the current movetree, so no tree is returned.
+ *
+ * @param {glift.rules.MoveTree} movetree The movetree to autonumber.
  */
 glift.rules.autonumber = function(movetree) {
   var digitregex = /\d+/;

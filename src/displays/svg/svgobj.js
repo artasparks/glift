@@ -1,35 +1,72 @@
 goog.provide('glift.displays.svg.SvgObj');
 
-glift.displays.svg.createObj = function(type, attrObj) {
-   return new glift.displays.svg.SvgObj(type, attrObj);
+/**
+ * Creats a SVG Wrapper object.
+ *
+ * @param {string} type Svg element type.
+ * @param {Object=} opt_attrObj optional attribute object.
+ */
+glift.displays.svg.createObj = function(type, opt_attrObj) {
+   return new glift.displays.svg.SvgObj(type, opt_attrObj);
 };
 
-glift.displays.svg.svg = function(attrObj) {
-  return new glift.displays.svg.SvgObj('svg', attrObj)
+/**
+ * Create a root SVG object.
+ *
+ * @param {Object=} opt_attrObj optional attribute object.
+ * @return {!glift.displays.svg.SvgObj}
+ */
+glift.displays.svg.svg = function(opt_attrObj) {
+  return new glift.displays.svg.SvgObj('svg', opt_attrObj)
       .attr('version', '1.1')
       .attr('xmlns', 'http://www.w3.org/2000/svg');
 };
 
-glift.displays.svg.circle = function(attrObj) {
-  return new glift.displays.svg.SvgObj('circle', attrObj);
+/**
+ * @param {Object=} opt_attrObj optional attribute object.
+ * @return {!glift.displays.svg.SvgObj}
+ */
+glift.displays.svg.circle = function(opt_attrObj) {
+  return new glift.displays.svg.SvgObj('circle', opt_attrObj);
 };
 
-glift.displays.svg.path = function(attrObj) {
-  return new glift.displays.svg.SvgObj('path', attrObj);
+/**
+ * @param {Object=} opt_attrObj optional attribute object.
+ * @return {!glift.displays.svg.SvgObj}
+ */
+glift.displays.svg.path = function(opt_attrObj) {
+  return new glift.displays.svg.SvgObj('path', opt_attrObj);
 };
 
-glift.displays.svg.rect = function(attrObj) {
-  return new glift.displays.svg.SvgObj('rect', attrObj);
+/**
+ * @param {Object=} opt_attrObj optional attribute object.
+ * @return {!glift.displays.svg.SvgObj}
+ */
+glift.displays.svg.rect = function(opt_attrObj) {
+  return new glift.displays.svg.SvgObj('rect', opt_attrObj);
 };
 
-glift.displays.svg.image = function(attrObj) {
-  return new glift.displays.svg.SvgObj('image', attrObj);
+/**
+ * @param {Object=} opt_attrObj optional attribute object.
+ * @return {!glift.displays.svg.SvgObj}
+ */
+glift.displays.svg.image = function(opt_attrObj) {
+  return new glift.displays.svg.SvgObj('image', opt_attrObj);
 };
 
-glift.displays.svg.text = function(attrObj) {
-  return new glift.displays.svg.SvgObj('text', attrObj);
+/**
+ * @param {Object=} opt_attrObj optional attribute object.
+ * @return {!glift.displays.svg.SvgObj}
+ */
+glift.displays.svg.text = function(opt_attrObj) {
+  return new glift.displays.svg.SvgObj('text', opt_attrObj);
 };
 
+/**
+ * Create a group object (without any attributes)
+ *
+ * @return {!glift.displays.svg.SvgObj}
+ */
 glift.displays.svg.group = function() {
   return new glift.displays.svg.SvgObj('g');
 };
@@ -37,10 +74,13 @@ glift.displays.svg.group = function() {
 /**
  * SVG Wrapper object.
  * @constructor @final @struct
+ *
+ * @param {string} type Svg element type.
+ * @param {Object=} opt_attrObj optional attribute object.
  */
-glift.displays.svg.SvgObj = function(type, attrObj) {
+glift.displays.svg.SvgObj = function(type, opt_attrObj) {
   this._type = type;
-  this._attrMap =  attrObj || {};
+  this._attrMap = opt_attrObj || {};
   this._children = [];
   this._idMap = {};
   this._text = '';

@@ -14,7 +14,7 @@ if (!window['goog']) {
   window['goog'] = {}
   window['goog']['provide'] = function(){};
   window['goog']['require'] = function(){};
-  window['goog']['scope'] = function() {};
+  window['goog']['scope'] = function(fn) { fn() };
 }
 
 goog.provide('glift');

@@ -1,8 +1,575 @@
-Traceback (most recent call last):
-  File "./depgen.py", line 473, in <module>
-    main()
-  File "./depgen.py", line 442, in main
-    EXCLUDE
-  File "./depgen.py", line 180, in initialize
-    self.directory_to_directory[component] = component
-NameError: global name 'component' is not defined
+displays/board/intersections.js:291: ERROR - Function glift.displays.board.Intersections.prototype.clearMarks: called with 0 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+    this.clearMarks().clearStones();
+    ^
+
+displays/board/lines.js:10: ERROR - Property elementId never defined on glift.displays.gui
+  var elementId = glift.displays.gui.elementId;
+                                     ^
+
+displays/board_points.js:83: ERROR - cannot instantiate non-constructor
+  return new glift.displays.BoardPoints(
+         ^
+
+displays/commentbox/create.js:65: ERROR - Function glift.dom.convertText: called with 2 argument(s). Function requires at least 3 argument(s) and no more than 3 argument(s).
+    this.el.append(glift.dom.convertText(text, this.useMarkdown));
+                   ^
+
+displays/commentbox/create.js:75: ERROR - Property commentBoxObj never defined on glift.displays.commentbox.CommentBox
+    this.commentBoxObj.empty();
+         ^
+
+displays/environment.js:30: ERROR - cannot instantiate non-constructor
+    return new glift.displays.GuiEnvironment(divId, boardBox, options);
+           ^
+
+displays/environment.js:66: ERROR - Function glift.displays.getResizedBox: called with 2 argument(s). Function requires at least 3 argument(s) and no more than 3 argument(s).
+        goBoardBox = glift.displays.getResizedBox(divBox, cropbox),
+                     ^
+
+displays/icons/bar.js:96: ERROR - Function glift.displays.icons.rowCenterWrapped: called with 4 argument(s). Function requires at least 5 argument(s) and no more than 5 argument(s).
+    glift.displays.icons.rowCenterWrapped(
+    ^
+
+displays/icons/bar.js:153: ERROR - Function glift.displays.icons.IconBar.prototype.setCenteredTempIcon: called with 3 argument(s). Function requires at least 5 argument(s) and no more than 5 argument(s).
+      this.setCenteredTempIcon('multiopen', multi.getActive(), 'black');
+      ^
+
+displays/icons/bar.js:252: ERROR - Property elementId never defined on glift.displays.gui
+    return glift.displays.gui.elementId(
+                              ^
+
+displays/icons/bar.js:380: ERROR - Property setEvent never defined on glift.displays.icons.IconBar
+    this.setEvent(name, 'mouseover', hoverin);
+         ^
+
+displays/icons/bar.js:381: ERROR - Property setEvent never defined on glift.displays.icons.IconBar
+    this.setEvent(name, 'mouseout', hoverout);
+         ^
+
+displays/icons/icon_selector.js:86: ERROR - Function glift.displays.icons.columnCenterWrapped: called with 4 argument(s). Function requires at least 5 argument(s) and no more than 5 argument(s).
+      var transforms = glift.displays.icons.columnCenterWrapped(
+                       ^
+
+displays/ids.js:44: ERROR - Function glift.displays.ids.Generator._eid: called with 2 argument(s). Function requires at least 3 argument(s) and no more than 3 argument(s).
+  this._svg = this._eid(this.divId, this._enum.SVG);
+              ^
+
+displays/ids.js:45: ERROR - Function glift.displays.ids.Generator._eid: called with 2 argument(s). Function requires at least 3 argument(s) and no more than 3 argument(s).
+  this._board = this._eid(this.divId, this._enum.BOARD);
+                ^
+
+displays/ids.js:47: ERROR - Function glift.displays.ids.Generator._eid: called with 2 argument(s). Function requires at least 3 argument(s) and no more than 3 argument(s).
+      this._eid(this.divId, this._enum.BOARD_COORD_LABELS);
+      ^
+
+displays/ids.js:48: ERROR - Function glift.displays.ids.Generator._eid: called with 2 argument(s). Function requires at least 3 argument(s) and no more than 3 argument(s).
+  this._stoneGroup = this._eid(this.divId, this._enum.STONE_CONTAINER);
+                     ^
+
+displays/ids.js:50: ERROR - Function glift.displays.ids.Generator._eid: called with 2 argument(s). Function requires at least 3 argument(s) and no more than 3 argument(s).
+      this._eid(this.divId, this._enum.STONE_SHADOW_CONTAINER);
+      ^
+
+displays/ids.js:51: ERROR - Function glift.displays.ids.Generator._eid: called with 2 argument(s). Function requires at least 3 argument(s) and no more than 3 argument(s).
+  this._starpointGroup = this._eid(this.divId, this._enum.STARPOINT_CONTAINER);
+                         ^
+
+displays/ids.js:52: ERROR - Function glift.displays.ids.Generator._eid: called with 2 argument(s). Function requires at least 3 argument(s) and no more than 3 argument(s).
+  this._buttonGroup = this._eid(this.divId, this._enum.BUTTON_CONTAINER);
+                      ^
+
+displays/ids.js:53: ERROR - Function glift.displays.ids.Generator._eid: called with 2 argument(s). Function requires at least 3 argument(s) and no more than 3 argument(s).
+  this._boardButton = this._eid(this.divId, this._enum.FULL_BOARD_BUTTON);
+                      ^
+
+displays/ids.js:54: ERROR - Function glift.displays.ids.Generator._eid: called with 2 argument(s). Function requires at least 3 argument(s) and no more than 3 argument(s).
+  this._lineGroup = this._eid(this.divId, this._enum.BOARD_LINE_CONTAINER);
+                    ^
+
+displays/ids.js:55: ERROR - Function glift.displays.ids.Generator._eid: called with 2 argument(s). Function requires at least 3 argument(s) and no more than 3 argument(s).
+  this._markGroup = this._eid(this.divId, this._enum.MARK_CONTAINER);
+                    ^
+
+displays/ids.js:56: ERROR - Function glift.displays.ids.Generator._eid: called with 2 argument(s). Function requires at least 3 argument(s) and no more than 3 argument(s).
+  this._iconGroup = this._eid(this.divId, this._enum.ICON_CONTAINER);
+                    ^
+
+displays/ids.js:57: ERROR - Function glift.displays.ids.Generator._eid: called with 2 argument(s). Function requires at least 3 argument(s) and no more than 3 argument(s).
+  this._intersectionsGroup = this._eid(this.divId, this._enum.BOARD);
+                             ^
+
+displays/ids.js:58: ERROR - Function glift.displays.ids.Generator._eid: called with 2 argument(s). Function requires at least 3 argument(s) and no more than 3 argument(s).
+      this._eid(this.divId, this._enum.INTERSECTIONS_CONTAINER);
+      ^
+
+displays/ids.js:59: ERROR - Function glift.displays.ids.Generator._eid: called with 2 argument(s). Function requires at least 3 argument(s) and no more than 3 argument(s).
+  this._tempMarkGroup = this._eid(this.divId, this._enum.TEMP_MARK_CONTAINER);
+                        ^
+
+displays/ids.js:59: ERROR - element TEMP_MARK_CONTAINER does not exist on this enum
+  this._tempMarkGroup = this._eid(this.divId, this._enum.TEMP_MARK_CONTAINER);
+                                              ^
+
+displays/ids.js:131: ERROR - Function glift.displays.ids.Generator._eid: called with 2 argument(s). Function requires at least 3 argument(s) and no more than 3 argument(s).
+    return this._eid(this.divId, this._enum.GUIDE_LINE);
+           ^
+
+displays/position/widget_boxes.js:60: ERROR - Cannot do '[]' access on a struct
+      var col = this[colKeys[i]];
+                     ^
+
+displays/position/widget_positioner.js:62: ERROR - Function glift.displays.cropbox.getFromRegion: called with 2 argument(s). Function requires at least 3 argument(s) and no more than 3 argument(s).
+  this.cropbox = glift.displays.cropbox.getFromRegion(boardRegion, ints);
+                 ^
+
+displays/position/widget_positioner.js:112: ERROR - Function glift.displays.position.WidgetPositioner.prototype.calculateColumn: called with 3 argument(s). Function requires at least 4 argument(s) and no more than 4 argument(s).
+    boxes.first(this.calculateColumn(
+                ^
+
+displays/position/widget_positioner.js:144: ERROR - Function glift.displays.position.WidgetBoxes.prototype.first: called with 0 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+        boxes.first().getBbox(boxes.first().ordering[0]).top()));
+        ^
+
+displays/position/widget_positioner.js:144: ERROR - Function glift.displays.position.WidgetBoxes.prototype.first: called with 0 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+        boxes.first().getBbox(boxes.first().ordering[0]).top()));
+                              ^
+
+displays/svg/svgobj.js:105: ERROR - Function glift.displays.svg.SvgObj.prototype.attr: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+    if (this.attr('id')) {
+        ^
+
+displays/svg/svgobj.js:106: ERROR - Function glift.displays.svg.SvgObj.prototype.attr: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+      var elem = document.getElementById(this.attr('id'));
+                                         ^
+
+displays/svg/svgobj.js:186: ERROR - Function glift.displays.svg.SvgObj.prototype.attr: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+    var elem = document.getElementById(this.attr('id'))
+                                       ^
+
+displays/svg/svgobj.js:187: ERROR - Function glift.displays.svg.SvgObj.prototype.attr: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+    if (elem && attr && this.attr(attr)) {
+                        ^
+
+displays/svg/svgobj.js:188: ERROR - Function glift.displays.svg.SvgObj.prototype.attr: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+      elem.setAttribute(attr, this.attr(attr));
+                              ^
+
+displays/svg/svgobj.js:249: ERROR - Function glift.displays.svg.SvgObj.prototype.attr: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+    var elem = document.getElementById(this.attr('id'))
+                                       ^
+
+displays/svg/svgobj.js:282: ERROR - Function glift.displays.svg.SvgObj.prototype.attr: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+    if (this.attr('id')) {
+        ^
+
+displays/svg/svgobj.js:283: ERROR - Function glift.displays.svg.SvgObj.prototype.attr: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+      obj.attachToParent(this.attr('id'))
+                         ^
+
+dom/dom.js:21: ERROR - Function glift.dom.Element: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+      return new glift.dom.Element(arg);
+             ^
+
+dom/dom.js:44: ERROR - Property commentBox never defined on glift.dom.classes
+    wrapper.attr('class', glift.dom.classes.commentBox);
+                                            ^
+
+flattener/flattened.js:188: ERROR - Function parseInt: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+      num = parseInt(numOrString);
+            ^
+
+flattener/flattener.js:128: ERROR - cannot instantiate non-constructor
+    return new glift.flattener.Flattened(
+           ^
+
+flattener/flattener.js:150: ERROR - Property autoBoxCropOnNextMoves never defined on options
+    var autoBoxCropOnNextMoves = options.autoBoxCropOnNextMoves || false;
+                                         ^
+
+flattener/flattener.js:155: ERROR - Function glift.orientation.getQuadCropFromMovetree: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+      boardRegion = glift.orientation.getQuadCropFromMovetree(mt);
+                    ^
+
+flattener/flattener.js:157: ERROR - Property regionRestrictions never defined on options
+    var regionRestrictions = options.regionRestrictions || null;
+                                     ^
+
+markdown/markdown.js:14: ERROR - Property lexer never defined on glift.marked
+    var lex = glift.marked.lexer(text);
+                           ^
+
+markdown/markdown.js:19: ERROR - {} expressions are not callable
+    return glift.marked(text);
+           ^
+
+markdown/marked.js:38: ERROR - Function replace: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+block.list = replace(block.list)
+             ^
+
+markdown/marked.js:44: ERROR - Function replace: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+block.blockquote = replace(block.blockquote)
+                   ^
+
+markdown/marked.js:53: ERROR - Function replace: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+block.html = replace(block.html)
+             ^
+
+markdown/marked.js:60: ERROR - Function replace: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+block.paragraph = replace(block.paragraph)
+                  ^
+
+markdown/marked.js:73: ERROR - Function merge: called with 2 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+block.normal = merge({}, block);
+               ^
+
+markdown/marked.js:79: ERROR - Function merge: called with 3 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+block.gfm = merge({}, block.normal, {
+            ^
+
+markdown/marked.js:84: ERROR - Function replace: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+block.gfm.paragraph = replace(block.paragraph)
+                      ^
+
+markdown/marked.js:94: ERROR - Function merge: called with 3 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+block.tables = merge({}, block.gfm, {
+               ^
+
+markdown/marked.js:129: ERROR - cannot instantiate non-constructor
+  var lexer = new Lexer(options);
+              ^
+
+markdown/marked.js:469: ERROR - Function replace: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+inline.link = replace(inline.link)
+              ^
+
+markdown/marked.js:474: ERROR - Function replace: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+inline.reflink = replace(inline.reflink)
+                 ^
+
+markdown/marked.js:482: ERROR - Function merge: called with 2 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+inline.normal = merge({}, inline);
+                ^
+
+markdown/marked.js:488: ERROR - Function merge: called with 3 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+inline.pedantic = merge({}, inline.normal, {
+                  ^
+
+markdown/marked.js:497: ERROR - Function merge: called with 3 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+inline.gfm = merge({}, inline.normal, {
+             ^
+
+markdown/marked.js:498: ERROR - Function replace: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+  escape: replace(inline.escape)('])', '~|])')(),
+          ^
+
+markdown/marked.js:501: ERROR - Function replace: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+  text: replace(inline.text)
+        ^
+
+markdown/marked.js:511: ERROR - Function merge: called with 3 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+inline.breaks = merge({}, inline.gfm, {
+                ^
+
+markdown/marked.js:512: ERROR - Function replace: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+  br: replace(inline.br)('{2,}', '*')(),
+      ^
+
+markdown/marked.js:513: ERROR - Function replace: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+  text: replace(inline.gfm.text)('{2,}', '*')()
+        ^
+
+markdown/marked.js:524: ERROR - cannot instantiate non-constructor
+  this.renderer = this.options.renderer || new Renderer;
+                                           ^
+
+markdown/marked.js:554: ERROR - cannot instantiate non-constructor
+  var inline = new InlineLexer(links, options);
+               ^
+
+markdown/marked.js:666: ERROR - Function escape: called with 2 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+      out += this.renderer.codespan(escape(cap[2], true));
+                                    ^
+
+markdown/marked.js:705: ERROR - Function escape: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+  var href = escape(link.href)
+             ^
+
+markdown/marked.js:706: ERROR - Function escape: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+    , title = link.title ? escape(link.title) : null;
+                           ^
+
+markdown/marked.js:710: ERROR - Function escape: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+    : this.renderer.image(href, title, escape(cap[1]));
+                                       ^
+
+markdown/marked.js:906: ERROR - cannot instantiate non-constructor
+  this.options.renderer = this.options.renderer || new Renderer;
+                                                   ^
+
+markdown/marked.js:916: ERROR - cannot instantiate non-constructor
+  var parser = new Parser(options, renderer);
+               ^
+
+markdown/marked.js:925: ERROR - cannot instantiate non-constructor
+  this.inline = new InlineLexer(src.links, this.options, this.renderer);
+                ^
+
+markdown/marked.js:1148: ERROR - Function merge: called with 3 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+    opt = merge({}, marked.defaults, opt || {});
+          ^
+
+markdown/marked.js:1172: ERROR - Function Parser.parse: called with 2 argument(s). Function requires at least 3 argument(s) and no more than 3 argument(s).
+        out = Parser.parse(tokens, opt);
+              ^
+
+markdown/marked.js:1185: ERROR - Function done: called with 0 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+      return done();
+             ^
+
+markdown/marked.js:1190: ERROR - Function done: called with 0 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+    if (!pending) return done();
+                         ^
+
+markdown/marked.js:1195: ERROR - Function done: called with 0 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+          return --pending || done();
+                              ^
+
+markdown/marked.js:1200: ERROR - Function done: called with 0 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+            return --pending || done();
+                                ^
+
+markdown/marked.js:1204: ERROR - Function done: called with 0 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+          --pending || done();
+                       ^
+
+markdown/marked.js:1212: ERROR - Function merge: called with 3 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+    if (opt) opt = merge({}, marked.defaults, opt);
+                   ^
+
+markdown/marked.js:1213: ERROR - Function Parser.parse: called with 2 argument(s). Function requires at least 3 argument(s) and no more than 3 argument(s).
+    return Parser.parse(Lexer.lex(src, opt), opt);
+           ^
+
+markdown/marked.js:1231: ERROR - Function merge: called with 2 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+  merge(marked.defaults, opt);
+  ^
+
+markdown/marked.js:1247: ERROR - cannot instantiate non-constructor
+  renderer: new Renderer,
+            ^
+
+orientation/cropping.js:61: ERROR - condition always evaluates to true
+left : null
+right: null
+  if (glift.orientation._cropboxMappingCache == null) {
+      ^
+
+orientation/rotate.js:38: ERROR - Function glift.orientation.getQuadCropFromMovetree: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+  var region = glift.orientation.getQuadCropFromMovetree(movetree);
+               ^
+
+parse/sgf_parser.js:57: ERROR - Function glift.rules.movetree.getInstance: called with 0 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+  var movetree = glift.rules.movetree.getInstance();
+                 ^
+
+parse/tygem.js:18: ERROR - Function glift.rules.movetree.getInstance: called with 0 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+  var movetree = glift.rules.movetree.getInstance();
+                 ^
+
+parse/tygem.js:58: ERROR - Function parseInt: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+      var x = parseInt(splat[4]);
+              ^
+
+parse/tygem.js:59: ERROR - Function parseInt: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+      var y = parseInt(splat[5]);
+              ^
+
+rules/autonumber.js:31: ERROR - Function glift.rules.treepath.findNextMovesPath: called with 1 argument(s). Function requires at least 4 argument(s) and no more than 4 argument(s).
+    var pathOut = glift.rules.treepath.findNextMovesPath(mt);
+                  ^
+
+rules/autonumber.js:33: ERROR - Function glift.rules.goban.getFromMoveTree: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+    var goban = glift.rules.goban.getFromMoveTree(newMt).goban;
+                ^
+
+rules/goban.js:10: ERROR - cannot instantiate non-constructor
+    return new glift.rules.Goban(ints);
+           ^
+
+rules/goban.js:32: ERROR - cannot instantiate non-constructor
+    var goban = new glift.rules.Goban(mt.getIntersections()),
+                ^
+
+rules/goban.js:187: ERROR - Function glift.rules.StoneResult_: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+      return new glift.rules.StoneResult_(false);
+             ^
+
+rules/goban.js:206: ERROR - Constructor function (new:glift.rules.StoneResult_, ?, ?): undefined should be called with the "new" keyword
+        return glift.rules.StoneResult_(false);
+               ^
+
+rules/goban.js:206: ERROR - Function glift.rules.StoneResult_: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+        return glift.rules.StoneResult_(false);
+               ^
+
+rules/goban.js:213: ERROR - Constructor function (new:glift.rules.StoneResult_, ?, ?): undefined should be called with the "new" keyword
+    return glift.rules.StoneResult_(true, actualCaptures);
+           ^
+
+rules/movenode.js:14: ERROR - Function glift.rules.properties: called with 0 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+  this._properties = properties || glift.rules.properties();
+                                   ^
+
+rules/movenode.js:69: ERROR - Function glift.rules.properties: called with 0 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+      glift.rules.properties(),
+      ^
+
+rules/movetree.js:38: ERROR - Function glift.rules.MoveTree: called with 1 argument(s). Function requires at least 3 argument(s) and no more than 3 argument(s).
+    var mt = new glift.rules.MoveTree(glift.rules.movenode());
+             ^
+
+rules/movetree.js:38: ERROR - Function glift.rules.movenode: called with 0 argument(s). Function requires at least 4 argument(s) and no more than 4 argument(s).
+    var mt = new glift.rules.MoveTree(glift.rules.movenode());
+                                      ^
+
+rules/movetree.js:303: ERROR - Function glift.rules.MoveTree.prototype.getTreeFromRoot: called with 0 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+    var mt = this.getTreeFromRoot(),
+             ^
+
+rules/movetree.js:306: ERROR - Function parseInt: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+      var ints = parseInt(mt.properties().getAllValues(allProperties.SZ));
+                 ^
+
+rules/movetree.js:378: ERROR - Function glift.rules.MoveTree.prototype.getTreeFromRoot: called with 0 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+      var mt = this.getTreeFromRoot();
+               ^
+
+rules/movetree.js:396: ERROR - Function glift.rules.MoveTree.prototype.getTreeFromRoot: called with 0 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+    var oldMt = this.getTreeFromRoot();
+                ^
+
+rules/movetree.js:399: ERROR - Function glift.rules.movetree.getInstance: called with 0 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+    var mt = glift.rules.movetree.getInstance();
+             ^
+
+rules/movetree.js:451: ERROR - Function glift.rules.MoveTree.prototype.getTreeFromRoot: called with 0 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+    glift.rules.movetree.searchMoveTreeDFS(this.getTreeFromRoot(), func);
+                                           ^
+
+rules/movetree.js:456: ERROR - Function glift.rules.MoveTree.prototype.getTreeFromRoot: called with 0 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+    return this._toSgfBuffer(this.getTreeFromRoot().node(), []).join("");
+                             ^
+
+rules/movetree.js:481: ERROR - Function glift.rules.MoveTree.prototype.getTreeFromRoot: called with 0 argument(s). Function requires at least 1 argument(s) and no more than 1 argument(s).
+    var mt = this.getTreeFromRoot(),
+             ^
+
+rules/properties.js:314: ERROR - Function glift.rules.Properties.prototype.getOneValue: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+      return this.getOneValue('C');
+             ^
+
+rules/properties.js:337: ERROR - Function glift.rules.Properties.prototype.getOneValue: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+      if (this.getOneValue('B') === "") {
+          ^
+
+rules/properties.js:340: ERROR - Function glift.rules.Properties.prototype.getAsPoint: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+        return { color: BLACK, point: this.getAsPoint('B') }
+                                      ^
+
+rules/properties.js:343: ERROR - Function glift.rules.Properties.prototype.getOneValue: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+      if (this.getOneValue('W') === "") {
+          ^
+
+rules/properties.js:346: ERROR - Function glift.rules.Properties.prototype.getAsPoint: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+        return { color: WHITE, point: this.getAsPoint('W') };
+                                      ^
+
+rules/properties.js:536: ERROR - Function glift.rules.Properties.prototype.getOneValue: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+          value: this.getOneValue(key)
+                 ^
+
+rules/properties.js:541: ERROR - Function glift.rules.Properties.prototype.getOneValue: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+          obj.value += ' [' + this.getOneValue('WR') + ']';
+                              ^
+
+rules/properties.js:543: ERROR - Function glift.rules.Properties.prototype.getOneValue: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+          obj.value += ' [' + this.getOneValue('BR') + ']';
+                              ^
+
+rules/properties.js:547: ERROR - Function glift.rules.Properties.prototype.getOneValue: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+          obj.value = parseFloat(this.getOneValue(key)) + '' || '0';
+                                 ^
+
+rules/treepath.js:83: ERROR - Function parseInt: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+      var firstNum = parseInt(v[0])
+                     ^
+
+rules/treepath.js:105: ERROR - Function parseInt: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+          out.push(parseInt(testNum));
+                   ^
+
+rules/treepath.js:110: ERROR - Function parseInt: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+          out.push(parseInt(testNum));
+                   ^
+
+rules/treepath.js:143: ERROR - Function parseInt: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+        out.push(parseInt(num))
+                 ^
+
+rules/treepath.js:146: ERROR - Function parseInt: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+        out.push(parseInt(num));
+                 ^
+
+util/performance.js:32: ERROR - Property first never defined on glift.global.perf
+  var first = glift.global.perf.first;
+                                ^
+
+util/util.js:86: ERROR - cannot instantiate non-constructor
+    return new F();
+           ^
+
+widgets/base_widget.js:50: ERROR - Function glift.orientation.getQuadCropFromMovetree: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+        ? glift.orientation.getQuadCropFromMovetree(this.controller.movetree)
+          ^
+
+widgets/base_widget.js:368: ERROR - Property keyHandlerFunc never defined on glift.widgets.BaseWidget
+    if (this.keyHandlerFunc !== undefined) {
+             ^
+
+widgets/base_widget.js:372: ERROR - Cannot add a property to a struct instance after it is constructed.
+    this.keyHandlerFunc = undefined;
+         ^
+
+widgets/base_widget.js:372: ERROR - Property keyHandlerFunc never defined on glift.widgets.BaseWidget
+    this.keyHandlerFunc = undefined;
+         ^
+
+widgets/manager.js:142: ERROR - Property temporaryWidget never defined on glift.widgets.WidgetManager
+    if (this.temporaryWidget) {
+             ^
+
+widgets/manager.js:276: ERROR - Cannot add a property to a struct instance after it is constructed.
+    this.temporaryWidget = this.createWidget(sgfObj).draw();
+         ^
+
+widgets/manager.js:276: ERROR - Property temporaryWidget never defined on glift.widgets.WidgetManager
+    this.temporaryWidget = this.createWidget(sgfObj).draw();
+         ^
+
+widgets/manager.js:280: ERROR - Property temporaryWidget never defined on glift.widgets.WidgetManager
+    this.temporaryWidget && this.temporaryWidget.destroy();
+         ^
+
+widgets/manager.js:281: ERROR - Cannot add a property to a struct instance after it is constructed.
+    this.temporaryWidget = undefined;
+         ^
+
+widgets/manager.js:361: ERROR - Property temporaryWidget never defined on glift.widgets.WidgetManager
+    this.temporaryWidget && this.temporaryWidget.destroy();
+         ^
+
+widgets/manager.js:362: ERROR - Cannot add a property to a struct instance after it is constructed.
+    this.temporaryWidget = undefined;
+         ^
+
+143 error(s), 0 warning(s), 67.5% typed

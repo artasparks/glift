@@ -1,4 +1,6 @@
-(function() {
+goog.provide('glift.displays.environment');
+goog.provide('glift.displays.GuiEnvironment');
+
 /**
  * The Environment contains:
  *  - The bounding box for the lines.
@@ -25,11 +27,11 @@ glift.displays.environment = {
     if (!boardBox) {
       throw new Error('No Bounding Box defined for display environment!')
     }
-    return new GuiEnvironment(divId, boardBox, options);
+    return new glift.displays.GuiEnvironment(divId, boardBox, options);
   }
 };
 
-var GuiEnvironment = function(divId, bbox, options) {
+glift.displays.GuiEnvironment = function(divId, bbox, options) {
   this.divId = divId;
   this.bbox = bbox; // required
   this.divHeight = bbox.height();
@@ -43,7 +45,7 @@ var GuiEnvironment = function(divId, bbox, options) {
       this.boardRegion, this.intersections, this.drawBoardCoords);
 };
 
-GuiEnvironment.prototype = {
+glift.displays.GuiEnvironment.prototype = {
   // Initialize the internal variables that tell where to place the go broard.
   init: function() {
     var displays = glift.displays,
@@ -78,4 +80,3 @@ GuiEnvironment.prototype = {
     return this;
   }
 };
-})();

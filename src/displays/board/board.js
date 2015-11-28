@@ -31,9 +31,9 @@ glift.displays.board.Display = function(environment, theme, rotation) {
   // Rotation indicates whether we should rotate by stones/marks in the display
   // by 90, 180, or 270 degrees,
   this._rotation = rotation || glift.enums.rotations.NO_ROTATION;
-  this._svgBase = undefined; // defined in draw.
-  this._svg = undefined; // defined in draw.
-  this._intersections = undefined // defined in draw;
+  this._svgBase = null; // defined in draw.
+  this._svg = null; // defined in draw.
+  this._intersections = null// defined in draw;
   this._buffer = []; // All objects are stuffed into the buffer and are only added
 };
 
@@ -53,7 +53,7 @@ glift.displays.board.Display.prototype = {
    * all the parts.
    */
   init: function() {
-    if (this._svg === undefined) {
+    if (this._svg == null) {
       this.destroy(); // make sure everything is cleared out of the div.
       this._svg = glift.displays.svg.svg({
         height: '100%',
@@ -94,7 +94,7 @@ glift.displays.board.Display.prototype = {
 
     board.shadows(intGrp, idGen, boardPoints, theme);
     board.stones(intGrp, idGen, boardPoints, theme);
-    board.markContainer(intGrp, idGen, boardPoints, theme);
+    board.markContainer(intGrp, idGen);
     board.buttons(intGrp, idGen, boardPoints);
 
     this._intersections = new glift.displays.board.Intersections(
@@ -117,9 +117,9 @@ glift.displays.board.Display.prototype = {
    */
   destroy: function() {
     glift.dom.elem(this.divId()).empty();
-    this._svg = undefined;
-    this._svgBase = undefined;
-    this._intersections = undefined;
+    this._svg = null;
+    this._svgBase = null;
+    this._intersections = null;
     return this;
   }
 };

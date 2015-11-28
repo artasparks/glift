@@ -3,11 +3,15 @@ goog.require('glift.displays.board');
 /**
  * Create the background GoBoard object.  Essentially just a rectangle with a
  * fill color and a border.
+ *
+ * @param {glift.displays.svg.SvgObj} svg Base svg obj
+ * @param {!glift.displays.ids.Generator} idGen The ID generator for SVG.
+ * @param {!glift.displays.BoardPoints} goBox The bounding box of the go board.
+ * @param {Object} theme The theme object
  */
 glift.displays.board.boardBase = function(svg, idGen, goBox, theme) {
-  var svglib = glift.displays.svg;
   if (theme.board.imagefill) {
-    svg.append(svglib.image()
+    svg.append(glift.displays.svg.image()
       .attr('x', goBox.topLeft().x())
       .attr('y', goBox.topLeft().y())
       .attr('width', goBox.width())
@@ -16,7 +20,7 @@ glift.displays.board.boardBase = function(svg, idGen, goBox, theme) {
       .attr('preserveAspectRatio', 'none'));
   }
 
-  svg.append(svglib.rect()
+  svg.append(glift.displays.svg.rect()
     .attr('x', goBox.topLeft().x() + 'px')
     .attr('y', goBox.topLeft().y() + 'px')
     .attr('width', goBox.width() + 'px')
@@ -28,6 +32,11 @@ glift.displays.board.boardBase = function(svg, idGen, goBox, theme) {
     .attr('id', idGen.board()));
 };
 
+/**
+ * @param {string} divId The element ID of the div in which the SVG board lives.
+ * @param {svglib.SvgObj} svg Base svg obj, in which the filters should be
+ *    placed.
+ */
 glift.displays.board.initBlurFilter = function(divId, svg) {
   // svg.append("svg:defs")
     // .append("svg:filter")

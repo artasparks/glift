@@ -13,7 +13,6 @@ glift.controllers.gameFigure = function(sgfOptions) {
       glift.controllers.base());
   var newController = glift.util.setMethods(baseController,
       glift.controllers.GameFigure.prototype);
-  newController.drawTo = sgfOptions.drawTo || [];
   newController.initOptions(sgfOptions);
   return newController;
 };
@@ -31,43 +30,43 @@ glift.controllers.GameFigure = function() {
 glift.controllers.GameFigure.prototype = {
   /**
    * Additional setup for the gamefigure.
-   *
    * @override
    */
-  extraOptions: function(treepath) {
-    var rules = glift.rules;
-    var initTreepath = treepath || this.initialPosition;
-    this.treepath = rules.treepath.parsePath(initTreepath);
+  extraOptions: function() {
+    // TODO(kashomon): Add this back in once the Flattener is the source of
+    // truth for the UI.
 
-    var initialPosition = this.treepath.length; // used later
-    var nextTreepath = this.drawTo - this.treepath.length;
-    if (this.nextMovesPath.length > 0) {
-      nextTreepath = this.nextMovesPath;
-    }
-    nextTreepath = rules.treepath.parsePath(nextTreepath);
-    this.treepath = this.treepath.concat(nextTreepath);
+    // var rules = glift.rules;
+    // var initTreepath = treepath || this.initialPosition;
+    // this.treepath = rules.treepath.parsePath(initTreepath);
 
-    this.movetree = rules.movetree.getFromSgf(
-        this.sgfString,
-        this.treepath,
-        this.parseType);
-    var gobanData = rules.goban.getFromMoveTree(this.movetree, this.treepath);
-    this.goban = gobanData.goban;
+    // var initialPosition = this.treepath.length; // used later
+    // var nextTreepath = this.drawTo - this.treepath.length;
+    // if (this.nextMovesPath.length > 0) {
+      // nextTreepath = this.nextMovesPath;
+    // }
+    // nextTreepath = rules.treepath.parsePath(nextTreepath);
+    // this.treepath = this.treepath.concat(nextTreepath);
 
-    this.captureHistory = gobanData.captures;
+    // this.movetree = rules.movetree.getFromSgf(
+        // this.sgfString,
+        // this.treepath,
+        // this.parseType);
+    // var gobanData = rules.goban.getFromMoveTree(this.movetree, this.treepath);
+    // this.goban = gobanData.goban;
 
-    // calculate marks, by going backwards through the movetree
-    var curnode = this.movetree.node();
-    var labels = [];
-    for (var i = this.treepath.length; i > initialPosition; i--) {
-      labels.push(curnode.getIntersection() + ":" + i);
-      curnode = curnode.getParent();
-    }
+    // this.captureHistory = gobanData.captures;
 
-    // add marks
-    var allProperties = glift.rules.allProperties;
-    this.movetree.properties().add(allProperties.LB, labels);
+    // // calculate marks, by going backwards through the movetree
+    // var curnode = this.movetree.node();
+    // var labels = [];
+    // for (var i = this.treepath.length; i > initialPosition; i--) {
+      // labels.push(curnode.getIntersection() + ":" + i);
+      // curnode = curnode.getParent();
+    // }
 
-    return this;
+    // // add marks
+    // var allProperties = glift.rules.allProperties;
+    // this.movetree.properties().add(allProperties.LB, labels);
   }
 };

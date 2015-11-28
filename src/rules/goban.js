@@ -1,11 +1,13 @@
-(function(){
+goog.provide('glift.rules.Goban');
+goog.provide('glift.rules.goban');
+
 glift.rules.goban = {
   /**
    * Creates a Goban instance, just with intersections.
    */
   getInstance: function(intersections) {
     var ints = intersections || 19;
-    return new Goban(ints);
+    return new glift.rules.Goban(ints);
   },
 
   /**
@@ -27,7 +29,7 @@ glift.rules.goban = {
    */
   getFromMoveTree: function(mt, treepath) {
     treepath = treepath || mt.treepathToHere();
-    var goban = new Goban(mt.getIntersections()),
+    var goban = new glift.rules.Goban(mt.getIntersections()),
         movetree = mt.getTreeFromRoot(),
         captures = []; // array of captures.
     goban.loadStonesFromMovetree(movetree); // Load root placements.
@@ -61,15 +63,17 @@ glift.rules.goban = {
  *
  * As a historical note, this is the oldest part of Glift.
  */
-var Goban = function(ints) {
+glift.rules.Goban = function(ints) {
   if (!ints || ints <= 0) {
     throw "Invalid Intersections. Was: " + ints
   }
+  /** @private {number} */
   this.ints = ints || 19;
-  this.stones = initStones(ints);
+  this.stones = glift.rules.initStones_(ints);
 };
 
-Goban.prototype = {
+glift.rules.Goban.prototype = {
+  /** @return 
   intersections: function() {
     return this.ints;
   },
@@ -180,10 +184,10 @@ Goban.prototype = {
 
     // Add stone fail.  Return a failed StoneResult.
     if (this.outBounds(pt) || !this.placeable(pt))
-      return new StoneResult(false);
+      return new glift.rules.StoneResult_(false);
 
     this._setColor(pt, color); // set stone as active
-    var captures = new CaptureTracker();
+    var captures = new glift.rules.CaptureTracker_();
     var oppColor = glift.util.colors.oppositeColor(color);
 
     this._getCaptures(captures, glift.util.point(pt.x() + 1, pt.y()), oppColor);
@@ -199,14 +203,14 @@ Goban.prototype = {
       if (captures.numCaptures > 0) {
         // Onos! The move is self capture.
         this.clearStone(pt);
-        return new StoneResult(false);
+        return new glift.rules.StoneResult_(false);
       }
     }
 
     var actualCaptures = captures.getCaptures();
     // Remove the captures from the board.
     this.clearSome(actualCaptures);
-    return new StoneResult(true, actualCaptures);
+    return new glift.rules.StoneResult_(true, actualCaptures);
   },
 
   // Get the captures.  We return nothing because state is stored in 'captures'
@@ -313,10 +317,14 @@ Goban.prototype = {
   }
 };
 
-// Utiity functions
-
-// Private function to initialize the stones.
-var initStones = function(ints) {
+/**
+ * Private function to initialize the stones.
+ * @private
+ *
+ * @param {number} ints The number of intersections.
+ * @return {Array<glift.enums.states>} The board.
+ */
+glift.rules.initStones_ = function(ints) {
   var stones = [];
   for (var i = 0; i < ints; i++) {
     var newRow = [];
@@ -329,9 +337,14 @@ var initStones = function(ints) {
 };
 
 
-// CaptureTracker is a utility object that assists in keeping track of captures.
-// As an optimization, we keep track of points we've seen for efficiency.
-var CaptureTracker = function() {
+/**
+ * CaptureTracker is a utility object that assists in keeping track of captures.
+ * As an optimization, we keep track of points we've seen for efficiency.
+ *
+ * @private
+ * @constructor @final @struct
+ */
+glift.rules.CaptureTracker_ = function() {
   this.toCapture = {}; // set of points to capture (mapping pt.hash() -> true)
   this.numCaptures = 0;
   this.considering = []; // list of points we're considering to capture
@@ -339,7 +352,7 @@ var CaptureTracker = function() {
   this.liberties = 0;
 };
 
-CaptureTracker.prototype = {
+glift.rules.CaptureTracker_.prototype = {
   clearExceptCaptures: function() {
     this.considering =[];
     this.seen = {};
@@ -373,9 +386,13 @@ CaptureTracker.prototype = {
   }
 };
 
-// The stone result keeps track of whether placing a stone was successful and what
-// stones (if any) were captured.
-var StoneResult = function(success, captures) {
+/**
+ * The stone result keeps track of whether placing a stone was successful and what
+ * stones (if any) were captured.
+ * @private
+ * @constructor @final @struct
+ */
+glift.rules.StoneResult_ = function(success, captures) {
   this.successful = success;
   if (success) {
     this.captures = captures;
@@ -383,5 +400,3 @@ var StoneResult = function(success, captures) {
     this.captures = [];
   }
 };
-
-})();

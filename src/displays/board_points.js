@@ -1,4 +1,6 @@
-(function() {
+goog.provide('glift.displays.boardPoints');
+goog.provide('glift.displays.BoardPoints');
+
 /**
  * Construct the board points from a linebox.
  */
@@ -78,14 +80,8 @@ glift.displays.boardPoints = function(
       }
     }
   }
-  return new BoardPoints(
+  return new glift.displays.BoardPoints(
       points, spacing, maxIntersects, edgeCoords);
-};
-
-/** An edge coordinate label (i.e., A-T, 1-19, depending on side). */
-var EdgeCoordinate = function(pt, label) {
-  this.point = pt;
-  this.label = label;
 };
 
 /**
@@ -104,7 +100,8 @@ var EdgeCoordinate = function(pt, label) {
  *
  *  Note: The integer points are 0 Indexed.
  */
-var BoardPoints = function(points, spacing, numIntersections, edgeLabels) {
+glift.displays.BoardPoints = function(
+    points, spacing, numIntersections, edgeLabels) {
   this.points = points; // int hash is 0 indexed, i.e., 0->18.
   this.spacing = spacing;
   this.radius = spacing / 2;
@@ -113,7 +110,7 @@ var BoardPoints = function(points, spacing, numIntersections, edgeLabels) {
   this.dataCache = undefined;
 };
 
-BoardPoints.prototype = {
+glift.displays.BoardPoints.prototype = {
   /**
    * Get the coordinate for a given integer point string.  Note: the integer
    * points are 0 indexed, i.e., 0->18 for a 19x19.  Recall that board points
@@ -195,4 +192,3 @@ BoardPoints.prototype = {
     return outStarPoints;
   }
 };
-})();

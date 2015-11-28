@@ -116,13 +116,10 @@ TYPED_CLOSURE_FLAGS = [
   '--jscomp_error=duplicate',
   '--jscomp_error=undefinedVars',
   '--jscomp_error=undefinedNames',
+  '--jscomp_error=deprecated',
   # '--jscomp_error=checkTypes',
-
-  # --jscomp_warning=checkTypes
-  # --jscomp_warning=deprecated
   # --jscomp_warning=globalThis
   # --jscomp_warning=missingProperties
-  # '--compiler_flags="--jscomp_warning=checkTypes" ^',
 ]
 
 HEADER = '<!-- AUTO-GEN-DEPS -->'
