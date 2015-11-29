@@ -92,7 +92,7 @@ glift.displays.position.WidgetBoxes.prototype = {
       if (bbox.right() > right) { right = bbox.right(); }
     });
     if (top !== null && left !== null && bottom !== null && right !== null) {
-      return glift.displays.bbox.fromPts(
+      return glift.orientation.bbox.fromPts(
           glift.util.point(left, top), glift.util.point(right, bottom));
     } else  {
       return null;

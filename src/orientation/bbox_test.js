@@ -1,7 +1,7 @@
 (function() {
-  module('glift.displays.bboxTest');
+  module('glift.orientation.bboxTest');
   var point = glift.util.point,
-      bboxFromPts = glift.displays.bbox.fromPts;
+      bboxFromPts = glift.orientation.bbox.fromPts;
 
   test('Test that the center is the shifted average', function() {
     var bbox = bboxFromPts(point(1, 1), point(19, 21));
@@ -22,8 +22,8 @@
 
   test('Equality test', function() {
     var bbox = bboxFromPts(point(1, 9), point(18, 20));
-    var bbox_v2 = glift.displays.bbox.fromSides(point(1, 9), 17, 11);
-    var bbox_v3 = glift.displays.bbox.fromSides(point(1, 10), 17, 11);
+    var bbox_v2 = glift.orientation.bbox.fromSides(point(1, 9), 17, 11);
+    var bbox_v3 = glift.orientation.bbox.fromSides(point(1, 10), 17, 11);
     ok(bbox.equals(bbox_v2), 'should be equal');
     ok(!bbox.equals(bbox_v3), 'shouldn\'t be equal');
     ok(!bbox_v2.equals(bbox_v3), 'shouldn\'t be equal');

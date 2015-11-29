@@ -4,7 +4,7 @@ goog.provide('glift.displays.commentbox.CommentBox');
  * Create a comment box with:
  *
  * @param {string} divId The div in which the comment box should live
- * @param {!glift.displays.BoundingBox} posBbox The bounding box of the div
+ * @param {!glift.orientation.BoundingBox} posBbox The bounding box of the div
  *    (expensive to recompute)
  * @param {!glift.themes.base} theme The theme object.
  * @param {boolean} useMarkdown Whether or not to use markdown
@@ -28,7 +28,7 @@ glift.displays.commentbox.create = function(
 glift.displays.commentbox.CommentBox = function(
     divId, positioningBbox, theme, useMarkdown) {
   this.divId = divId;
-  this.bbox = glift.displays.bbox.fromPts(
+  this.bbox = glift.orientation.bbox.fromPts(
       glift.util.point(0,0),
       glift.util.point(positioningBbox.width(), positioningBbox.height()));
   this.theme = theme;

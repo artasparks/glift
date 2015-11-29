@@ -1,7 +1,7 @@
 (function() {
   module('glift.orientation.minBboxTest');
   var pt = glift.util.point;
-  var bbox = glift.displays.bbox.fromPts;
+  var bbox = glift.orientation.bbox.fromPts;
   var minBbox = glift.orientation.minimalBoundingBox
 
   // a = 0; i = 9; s = 18

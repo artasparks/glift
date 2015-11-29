@@ -5,7 +5,7 @@ goog.provide('glift.displays.BoardPoints');
  * @typedef {{
  *  intPt: glift.Point,
  *  coordPt: glift.Point,
- *  bbox: glift.displays.BoundingBox
+ *  bbox: glift.orientation.BoundingBox
  * }}
  */
 glift.displays.BoardPt;
@@ -15,7 +15,6 @@ glift.displays.BoardPt;
  */
 glift.displays.boardPoints = function(
     linebox, maxIntersects, drawBoardCoords) {
-
   var spacing = linebox.spacing,
       radius = spacing / 2,
       linebbox = linebox.bbox,
@@ -72,7 +71,7 @@ glift.displays.boardPoints = function(
           points[intPt.hash()] = {
             intPt: intPt,
             coordPt: coordPt,
-            bbox: glift.displays.bbox.fromPts(
+            bbox: glift.orientation.bbox.fromPts(
                 glift.util.point(coordPt.x() - radius, coordPt.y() - radius),
                 glift.util.point(coordPt.x() + radius, coordPt.y() + radius))
           };
@@ -82,7 +81,7 @@ glift.displays.boardPoints = function(
         points[intPt.hash()] = {
           intPt: intPt,
           coordPt: coordPt,
-          bbox: glift.displays.bbox.fromPts(
+          bbox: glift.orientation.bbox.fromPts(
               glift.util.point(coordPt.x() - radius, coordPt.y() - radius),
               glift.util.point(coordPt.x() + radius, coordPt.y() + radius))
         };

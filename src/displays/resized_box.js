@@ -3,7 +3,7 @@
  * the minimum of height and width, makes a box out of this value, and centers
  * the box.
  *
- * @param {glift.displays.BoundingBox} divBox
+ * @param {glift.orientation.BoundingBox} divBox
  * @param {glift.displays.DisplayCropBox} cropbox
  * @param {glift.enums.boardAlignments=} opt_alignment
  */
@@ -25,7 +25,7 @@ glift.displays.getResizedBox = function(divBox, cropbox, opt_alignment) {
       yDelta = alignment === aligns.TOP ? 0 : yDiff / 2,
       newLeft = divBox.topLeft().x() + xDelta,
       newTop = divBox.topLeft().y() + yDelta,
-      newBox = glift.displays.bbox.fromSides(
+      newBox = glift.orientation.bbox.fromSides(
           util.point(newLeft, newTop), newWidth, newHeight);
   if (glift.global.debugMode) {
     newBox._debugInfo = function() {

@@ -3,7 +3,7 @@
   var boardRegions = glift.enums.boardRegions;
   var getCropRegion = glift.orientation.getQuadCropFromMovetree;
   var pt = glift.util.point;
-  var bbox = glift.displays.bbox.fromPts;
+  var bbox = glift.orientation.bbox.fromPts;
 
   // a = 0; i = 9; s = 18
   test('GetCropRegion: TOP_LEFT', function() {

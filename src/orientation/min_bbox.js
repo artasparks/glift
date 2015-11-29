@@ -16,7 +16,7 @@ goog.require('glift.orientation');
  */
 glift.orientation.minimalBoundingBox = function(movetree, nextMovesPath) {
   var point = glift.util.point;
-  var bbox = glift.displays.bbox.fromPts;
+  var bbox = glift.orientation.bbox.fromPts;
   var pts = glift.orientation._getDisplayPts(movetree, nextMovesPath);
 
   var ints = movetree.getIntersections() - 1;

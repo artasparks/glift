@@ -25,7 +25,7 @@
 
   test('Tall box: With resizing, should be square and centered', function() {
     glift.global.debugMode = true;
-    var divBox = displays.bbox.fromPts(
+    var divBox = glift.orientation.bbox.fromPts(
         util.point(0,0), util.point(300, 400));
     deepEqual(divBox.width(), 300, 'Width must be 300');
     deepEqual(divBox.height(), 400, 'Height must be 400');
@@ -60,7 +60,7 @@
 
   test('Wide box: With resizing, should be square and centered', function() {
     glift.global.debugMode = true;
-    var divBox = displays.bbox.fromPts(
+    var divBox = glift.orientation.bbox.fromPts(
         util.point(0,0), util.point(400, 300));
     deepEqual(divBox.width(), 400, 'Width must be 400');
     deepEqual(divBox.height(), 300, 'Height must be 300');

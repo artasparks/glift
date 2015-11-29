@@ -77,7 +77,7 @@ glift.orientation.cropbox = {
 
     if (intersects < 19) {
       return new glift.orientation.Cropbox(
-          glift.displays.bbox.fromPts(
+          glift.orientation.bbox.fromPts(
               point(min, min), point(max, max)),
           intersects);
     }
@@ -145,7 +145,7 @@ glift.orientation.cropbox = {
           // somehow.
           throw new Error('Unknown board region: ' + region);
     }
-    var bbox = glift.displays.bbox.fromPts;
+    var bbox = glift.orientation.bbox.fromPts;
     var pt = glift.util.point;
     return new glift.orientation.Cropbox(
         bbox(pt(left, top), pt(right, bot)), intersects);

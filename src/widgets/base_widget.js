@@ -55,7 +55,7 @@ glift.widgets.BaseWidget.prototype = {
 
     // This should be the only time we get the base width and height, until the
     // entire widget is re-drawn.
-    var parentDivBbox = glift.displays.bbox.fromDiv(this.wrapperDivId);
+    var parentDivBbox = glift.displays.bboxFromDiv(this.wrapperDivId);
     if (parentDivBbox.width() === 0 || parentDivBbox.height() === 0) {
       throw new Error('Div has has invalid dimensions. Bounding box had ' +
           'width: ' + parentDivBbox.width() +

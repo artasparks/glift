@@ -2,9 +2,9 @@
   module('glift.displays.position.widgetPositionerTest');
   var point = glift.util.point;
   var components = glift.enums.boardComponents;
-  var horzBbox = glift.displays.bbox.fromSides(point(100, 300), 300, 100);
-  var vertBbox = glift.displays.bbox.fromSides(point(100, 300), 100, 300);
-  var squareBbox = glift.displays.bbox.fromSides(point(100, 300), 200, 200);
+  var horzBbox = glift.orientation.bbox.fromSides(point(100, 300), 300, 100);
+  var vertBbox = glift.orientation.bbox.fromSides(point(100, 300), 100, 300);
+  var squareBbox = glift.orientation.bbox.fromSides(point(100, 300), 200, 200);
   var oneColSplits = {
     first: [
       {component: 'STATUS_BAR', ratio: 0.08},

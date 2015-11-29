@@ -8,7 +8,7 @@
       divId = 'zed',
       pt = glift.util.point,
       tl = pt(0,0),
-      bbox = glift.displays.bbox,
+      bbox = glift.orientation.bbox,
       opts = {},
       WIDTH = 300,
       HEIGHT = 400;

@@ -1,23 +1,16 @@
-goog.provide('glift.displays.bbox');
-goog.provide('glift.displays.BoundingBox');
+goog.provide('glift.orientation.bbox');
+goog.provide('glift.orientation.BoundingBox');
 
-glift.displays.bbox = {
+glift.orientation.bbox = {
   /** Return a new bounding box with two points. */
   fromPts: function(topLeftPt, botRightPt) {
-    return new glift.displays.BoundingBox(topLeftPt, botRightPt);
+    return new glift.orientation.BoundingBox(topLeftPt, botRightPt);
   },
 
   /** Return a new bounding box with a top left point, a width, and a height. */
   fromSides: function(topLeft, width, height) {
-    return new glift.displays.BoundingBox(
+    return new glift.orientation.BoundingBox(
         topLeft, glift.util.point(topLeft.x() + width, topLeft.y() + height));
-  },
-
-  /** Return the bounding box for a div. */
-  fromDiv: function(divId) {
-    var elem = glift.dom.elem(divId);
-    return glift.displays.bbox.fromSides(
-        glift.util.point(0,0), elem.width(), elem.height());
   }
 };
 
@@ -28,9 +21,9 @@ glift.displays.bbox = {
  *
  * @param {!glift.Point} topLeftPt The top-left point of the bounding box.
  * @param {!glift.Point} botRightPt The bottom right point of the bounding box.
- * @constructor
+ * @constructor @final @struct
  */
-glift.displays.BoundingBox = function(topLeftPt, botRightPt) {
+glift.orientation.BoundingBox = function(topLeftPt, botRightPt) {
   if (topLeftPt.x() > botRightPt.x() ||
       topLeftPt.y() > botRightPt.y()) {
     throw new Error('Topleft point must be less than the ' +
@@ -41,7 +34,7 @@ glift.displays.BoundingBox = function(topLeftPt, botRightPt) {
   this._botRightPt = botRightPt;
 };
 
-glift.displays.BoundingBox.prototype = {
+glift.orientation.BoundingBox.prototype = {
   topLeft: function() { return this._topLeftPt; },
   botRight: function() { return this._botRightPt; },
   /** TopRight and BotLeft are constructed */
@@ -117,7 +110,7 @@ glift.displays.BoundingBox.prototype = {
     var left = Math.max(this.left(), bbox.left());
     var bottom = Math.min(this.bottom(), bbox.bottom());
     var right = Math.min(this.right(), bbox.right());
-    return glift.displays.bbox.fromPts(
+    return glift.orientation.bbox.fromPts(
         glift.util.point(left, top),
         glift.util.point(right, bottom));
   },
@@ -145,7 +138,7 @@ glift.displays.BoundingBox.prototype = {
     if (point.y() > bry) {
       bry = point.y();
     }
-    return glift.displays.bbox.fromPts(
+    return glift.orientation.bbox.fromPts(
         glift.util.point(tlx, tly),
         glift.util.point(brx, bry));
   },
@@ -167,16 +160,25 @@ glift.displays.BoundingBox.prototype = {
         newWidth = this.width() * amount,
         newTopLeft = glift.util.point(
             this.topLeft().x() * amount, this.topLeft().y() * amount);
-    return glift.displays.bbox.fromSides(newTopLeft, newWidth, newHeight);
+    return glift.orientation.bbox.fromSides(newTopLeft, newWidth, newHeight);
   },
 
+  /**
+   * @returns {string} Stringified version of the bounding box.
+   */
   toString: function() {
-    return '(' + this.topLeft().toString() + '),(' +  
+    return '(' + this.topLeft().toString() + '),(' +
         this.botRight().toString() + ')';
   },
 
+  /**
+   * Move the bounding box by translating the box
+   * @param {number} dx
+   * @param {number} dy
+   * @return {glift.orientation.BoundingBox} A new bounding box.
+   */
   translate: function(dx, dy) {
-    return glift.displays.bbox.fromPts(
+    return glift.orientation.bbox.fromPts(
         glift.util.point(this.topLeft().x() + dx, this.topLeft().y() + dy),
         glift.util.point(this.botRight().x() + dx, this.botRight().y() + dy));
   },
@@ -262,7 +264,8 @@ glift.displays.BoundingBox.prototype = {
           this.topLeft().y() + this.height() * currentSplitPercentage :
           this.botRight().y();
       var nextBotRight = glift.util.point(nextBotRightX, nextBotRightY);
-      outBboxes.push(glift.displays.bbox.fromPts(currentTopLeft, nextBotRight));
+      outBboxes.push(glift.orientation.bbox.fromPts(
+          currentTopLeft, nextBotRight));
       var nextTopLeftX = d === 'h' ?
           currentTopLeft.x() :
           this.topLeft().x() + this.width() * currentSplitPercentage;

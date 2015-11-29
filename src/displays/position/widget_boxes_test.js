@@ -1,12 +1,12 @@
 (function() {
   module('glift.displays.position.widgetBoxesTest');
-  var defaultBbox1 = glift.displays.bbox.fromPts(
+  var defaultBbox1 = glift.orientation.bbox.fromPts(
       glift.util.point(0, 0),
       glift.util.point(100, 100));
-  var defaultBbox2 = glift.displays.bbox.fromPts(
+  var defaultBbox2 = glift.orientation.bbox.fromPts(
       glift.util.point(10, 10),
       glift.util.point(200, 200));
-  var defaultBbox3 = glift.displays.bbox.fromPts(
+  var defaultBbox3 = glift.orientation.bbox.fromPts(
       glift.util.point(10, 10),
       glift.util.point(150, 300));
   var comps = glift.enums.boardComponents;
@@ -76,6 +76,6 @@
 
     var pt = glift.util.point;
     deepEqual(wboxes.fullWidgetBbox(),
-        glift.displays.bbox.fromPts(pt(0, 0), pt(200, 300)));
+        glift.orientation.bbox.fromPts(pt(0, 0), pt(200, 300)));
   });
 })();

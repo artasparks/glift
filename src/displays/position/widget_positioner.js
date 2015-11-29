@@ -193,7 +193,7 @@ glift.displays.position.WidgetPositioner.prototype = {
         return;
       }
       var split = splitMap[comp];
-      var bbox = glift.displays.bbox.fromSides(
+      var bbox = glift.orientation.bbox.fromSides(
           glift.util.point(colLeft, top), colWidth, split.height());
       column.setComponent(comp, bbox);
       top += bbox.height();
@@ -294,7 +294,7 @@ glift.displays.position.WidgetPositioner.prototype = {
         splits[0], this.cropbox, glift.enums.boardAlignments.RIGHT);
 
     // Defer to the Go board height calculations.
-    var baseRightCol = glift.displays.bbox.fromPts(
+    var baseRightCol = glift.orientation.bbox.fromPts(
       glift.util.point(splits[1].topLeft().x(), resizedBox.topLeft().y()),
       glift.util.point(splits[1].botRight().x(), resizedBox.botRight().y()));
 

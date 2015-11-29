@@ -14,7 +14,7 @@ glift.displays.icons.CenterDir = {
 /**
  * Row-Center an array of wrapped icons.
  *
- * @param {!glift.displays.BoundingBox} divBbox
+ * @param {!glift.orientation.BoundingBox} divBbox
  * @param {!Array<!glift.displays.icons.WrappedIcon>} wrappedIcons
  * @param {number} vMargin
  * @param {number} hMargin
@@ -31,7 +31,7 @@ glift.displays.icons.rowCenterWrapped = function(
 /**
  * Column-Center an array of wrapped icons.
  *
- * @param {!glift.displays.BoundingBox} divBbox
+ * @param {!glift.orientation.BoundingBox} divBbox
  * @param {!Array<!glift.displays.icons.WrappedIcon>} wrappedIcons
  * @param {number} vMargin
  * @param {number} hMargin
@@ -50,7 +50,7 @@ glift.displays.icons.columnCenterWrapped = function(
  *
  * @private
  *
- * @param {!glift.displays.BoundingBox} divBbox
+ * @param {!glift.orientation.BoundingBox} divBbox
  * @param {!Array<!glift.displays.icons.WrappedIcon>} wrappedIcons
  * @param {number} vMargin
  * @param {number} hMargin

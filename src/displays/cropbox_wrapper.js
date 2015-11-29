@@ -24,7 +24,7 @@ glift.displays.cropbox = {
     }
 
     var cx = new glift.orientation.Cropbox(
-        glift.displays.bbox.fromPts(
+        glift.orientation.bbox.fromPts(
             glift.util.point(left, top),
             glift.util.point(right, bottom)),
         maxIntersects);
@@ -52,6 +52,7 @@ glift.displays.DisplayCropBox.prototype = {
 
   /**
    * Returns the bbox for the cropbox
+   * @return {!glift.orientation.BoundingBox}
    */
   bbox: function() { return this._cbox.bbox; },
 

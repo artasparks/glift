@@ -1,7 +1,7 @@
 (function() {
   module('glift.orientation.cropbox');
   var pt = glift.util.point;
-  var bbox = glift.displays.bbox.fromPts;
+  var bbox = glift.orientation.bbox.fromPts;
   var br = glift.enums.boardRegions;
   var getCbox = glift.orientation.cropbox.get;
 

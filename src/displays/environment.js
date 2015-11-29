@@ -21,7 +21,7 @@ glift.displays.environment = {
     // For speed and isolation purposes, it's preferred to define the boardBox
     // rather than to calculate the h/w by inspecting the div here.
     if (divId && !boardBox) {
-      boardBox = glift.displays.bbox.fromDiv(divId);
+      boardBox = glift.displays.bboxFromDiv(divId);
     }
 
     if (!boardBox) {
@@ -33,7 +33,7 @@ glift.displays.environment = {
 
 /**
  * @param {string} divId
- * @param {!glift.displays.BoundingBox} bbox
+ * @param {!glift.orientation.BoundingBox} bbox
  * @param {!Object} options SGF Options.
  *
  * @package
@@ -42,7 +42,7 @@ glift.displays.environment = {
 glift.displays.GuiEnvironment = function(divId, bbox, options) {
   /** @type {string} */
   this.divId = divId;
-  /** @type {!glift.displays.BoundingBox} */
+  /** @type {!glift.orientation.BoundingBox} */
   this.bbox = bbox; // required
   /** @type {number} */
   this.divHeight = bbox.height();
@@ -62,9 +62,9 @@ glift.displays.GuiEnvironment = function(divId, bbox, options) {
       this.boardRegion, this.intersections, this.drawBoardCoords);
 
   // ------- Defined during init ------- //
-  /** @type {glift.displays.BoundingBox} */
+  /** @type {glift.orientation.BoundingBox} */
   this.divBox = null;
-  /** @type {glift.displays.BoundingBox} */
+  /** @type {glift.orientation.BoundingBox} */
   this.goBoardBox = null;
   /** @type {glift.displays.LineBox} */
   this.goBoardLineBox = null;
@@ -88,7 +88,7 @@ glift.displays.GuiEnvironment.prototype = {
         // The box for the entire div.
         // TODO(kashomon): This is created twice, which is a little silly (but
         // not expensive) in _resetDimensions. Might want to replace.
-        divBox = displays.bbox.fromPts(
+        divBox = glift.orientation.bbox.fromPts(
             glift.util.point(0, 0), // top left point
             glift.util.point(divWidth, divHeight)), // bottom right point
 

@@ -3,7 +3,7 @@
   var maxInts = 19;
   var cropboxAll = glift.displays.cropbox.getFromRegion(
       glift.enums.boardRegions.ALL, maxInts);
-  var fullBbox = glift.displays.bbox.fromPts(
+  var fullBbox = glift.orientation.bbox.fromPts(
       glift.util.point(0, 0),
       glift.util.point(300, 300));
   var fakeLineBox = new glift.displays.LineBox(fullBbox, 20, cropboxAll);
