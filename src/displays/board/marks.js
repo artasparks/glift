@@ -5,8 +5,8 @@
  * container.
  */
 glift.displays.board.markContainer = function(svg, idGen) {
-  svg.append(glift.displays.svg.group().attr('id', idGen.markGroup()));
-  svg.append(glift.displays.svg.group().attr('id', idGen.tempMarkGroup()));
+  svg.append(glift.displays.svg.group().setAttr('id', idGen.markGroup()));
+  svg.append(glift.displays.svg.group().setAttr('id', idGen.tempMarkGroup()));
 };
 
 /**
@@ -42,17 +42,18 @@ glift.displays.board.addMark = function(
       marksTheme = marksTheme.CORRECT_VARIATION;
     }
     container.append(svglib.text()
-        .text(label)
-        .data(pt)
-        .attr('fill', marksTheme.fill)
-        .attr('stroke', marksTheme.stroke)
-        .attr('text-anchor', 'middle')
-        .attr('dy', '.33em') // for vertical centering
-        .attr('x', coordPt.x()) // x and y are the anchor points.
-        .attr('y', coordPt.y())
-        .attr('font-family', stonesTheme.marks['font-family'])
-        .attr('font-size', boardPoints.spacing * stonesTheme.marks['font-size'])
-        .attr('id', markId));
+        .setText(label)
+        .setData(pt)
+        .setAttr('fill', marksTheme.fill)
+        .setAttr('stroke', marksTheme.stroke)
+        .setAttr('text-anchor', 'middle')
+        .setAttr('dy', '.33em') // for vertical centering
+        .setAttr('x', coordPt.x()) // x and y are the anchor points.
+        .setAttr('y', coordPt.y())
+        .setAttr('font-family', stonesTheme.marks['font-family'])
+        .setAttr('font-size',
+            boardPoints.spacing * stonesTheme.marks['font-size'])
+        .setAttr('id', markId));
 
   } else if (mark === marks.SQUARE) {
     var baseDelta = boardPoints.radius / rootTwo;
@@ -60,15 +61,15 @@ glift.displays.board.addMark = function(
     // as if it's offset by a little bit.
     var halfWidth = baseDelta - fudge;
     container.append(svglib.rect()
-        .data(pt)
-        .attr('x', coordPt.x() - halfWidth)
-        .attr('y', coordPt.y() - halfWidth)
-        .attr('width', 2 * halfWidth)
-        .attr('height', 2 * halfWidth)
-        .attr('fill', 'none')
-        .attr('stroke-width', 2)
-        .attr('stroke', marksTheme.stroke)
-        .attr('id', markId));
+        .setData(pt)
+        .setAttr('x', coordPt.x() - halfWidth)
+        .setAttr('y', coordPt.y() - halfWidth)
+        .setAttr('width', 2 * halfWidth)
+        .setAttr('height', 2 * halfWidth)
+        .setAttr('fill', 'none')
+        .setAttr('stroke-width', 2)
+        .setAttr('stroke', marksTheme.stroke)
+        .setAttr('id', markId));
 
   } else if (mark === marks.XMARK) {
     var baseDelta = boardPoints.radius / rootTwo;
@@ -78,8 +79,8 @@ glift.displays.board.addMark = function(
     var botLeft = coordPt.translate(-1 * halfDelta, halfDelta);
     var botRight = coordPt.translate(halfDelta, halfDelta);
     container.append(svglib.path()
-        .data(pt)
-        .attr('d',
+        .setData(pt)
+        .setAttr('d',
             svgpath.movePt(coordPt) + ' ' +
             svgpath.lineAbsPt(topLeft) + ' ' +
             svgpath.movePt(coordPt) + ' ' +
@@ -88,45 +89,45 @@ glift.displays.board.addMark = function(
             svgpath.lineAbsPt(botLeft) + ' ' +
             svgpath.movePt(coordPt) + ' ' +
             svgpath.lineAbsPt(botRight))
-        .attr('stroke-width', 2)
-        .attr('stroke', marksTheme.stroke)
-        .attr('id', markId));
+        .setAttr('stroke-width', 2)
+        .setAttr('stroke', marksTheme.stroke)
+        .setAttr('id', markId));
   } else if (mark === marks.CIRCLE) {
     container.append(svglib.circle()
-        .data(pt)
-        .attr('cx', coordPt.x())
-        .attr('cy', coordPt.y())
-        .attr('r', boardPoints.radius / 2)
-        .attr('fill', 'none')
-        .attr('stroke-width', 2)
-        .attr('stroke', marksTheme.stroke)
-        .attr('id', markId));
+        .setData(pt)
+        .setAttr('cx', coordPt.x())
+        .setAttr('cy', coordPt.y())
+        .setAttr('r', boardPoints.radius / 2)
+        .setAttr('fill', 'none')
+        .setAttr('stroke-width', 2)
+        .setAttr('stroke', marksTheme.stroke)
+        .setAttr('id', markId));
   } else if (mark === marks.STONE_MARKER) {
     var stoneMarkerTheme = stonesTheme.marks['STONE_MARKER'];
     container.append(svglib.circle()
-        .data(pt)
-        .attr('cx', coordPt.x())
-        .attr('cy', coordPt.y())
-        .attr('r', boardPoints.radius / 3)
-        .attr('opacity', marksTheme.STONE_MARKER.opacity)
-        .attr('fill', marksTheme.STONE_MARKER.fill)
-        .attr('id', markId));
+        .setData(pt)
+        .setAttr('cx', coordPt.x())
+        .setAttr('cy', coordPt.y())
+        .setAttr('r', boardPoints.radius / 3)
+        .setAttr('opacity', marksTheme.STONE_MARKER.opacity)
+        .setAttr('fill', marksTheme.STONE_MARKER.fill)
+        .setAttr('id', markId));
   } else if (mark === marks.TRIANGLE) {
     var r = boardPoints.radius - boardPoints.radius / 5;
     var rightNode = coordPt.translate(r * (rootThree / 2), r * (1 / 2));
     var leftNode  = coordPt.translate(r * (-1 * rootThree / 2), r * (1 / 2));
     var topNode = coordPt.translate(0, -1 * r);
     container.append(svglib.path()
-        .data(pt)
-        .attr('fill', 'none')
-        .attr('d',
+        .setData(pt)
+        .setAttr('fill', 'none')
+        .setAttr('d',
             svgpath.movePt(topNode) + ' ' +
             svgpath.lineAbsPt(leftNode) + ' ' +
             svgpath.lineAbsPt(rightNode) + ' ' +
             svgpath.lineAbsPt(topNode))
-        .attr('stroke-width', 2)
-        .attr('stroke', marksTheme.stroke)
-        .attr('id', markId));
+        .setAttr('stroke-width', 2)
+        .setAttr('stroke', marksTheme.stroke)
+        .setAttr('id', markId));
   } else {
     // do nothing.  I suppose we could throw an exception here.
   }

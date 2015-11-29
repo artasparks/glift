@@ -4,20 +4,20 @@
  */
 glift.displays.board.stones = function(svg, idGen, boardPoints, theme) {
   var svglib = glift.displays.svg;
-  var container = svglib.group().attr('id', idGen.stoneGroup());
+  var container = svglib.group().setAttr('id', idGen.stoneGroup());
   svg.append(container);
   var data = boardPoints.data()
   for (var i = 0, ii = data.length; i < ii; i++) {
     var pt = data[i];
     container.append(svglib.circle()
-      .attr('cx', pt.coordPt.x())
-      .attr('cy', pt.coordPt.y())
-      .attr('r', boardPoints.radius - .4) // subtract for stroke
-      .attr('opacity', 0)
-      .attr('stone_color', 'EMPTY')
-      .attr('fill', 'blue') // dummy color
-      .attr('class', glift.enums.svgElements.STONE)
-      .attr('id', idGen.stone(pt.intPt)));
+      .setAttr('cx', pt.coordPt.x())
+      .setAttr('cy', pt.coordPt.y())
+      .setAttr('r', boardPoints.radius - .4) // subtract for stroke
+      .setAttr('opacity', 0)
+      .setAttr('stone_color', 'EMPTY')
+      .setAttr('fill', 'blue') // dummy color
+      .setAttr('class', glift.enums.svgElements.STONE)
+      .setAttr('id', idGen.stone(pt.intPt)));
   }
 };
 
@@ -29,20 +29,20 @@ glift.displays.board.stones = function(svg, idGen, boardPoints, theme) {
 glift.displays.board.shadows = function(svg, idGen, boardPoints, theme) {
   if (theme.stones.shadows === undefined) { return {}; }
   var svglib = glift.displays.svg;
-  var container = svglib.group().attr('id', idGen.stoneShadowGroup());
+  var container = svglib.group().setAttr('id', idGen.stoneShadowGroup());
   svg.append(container);
   var data = boardPoints.data();
   for (var i = 0, ii = data.length; i < ii; i++) {
     var pt = data[i];
     container.append(svglib.circle()
-      .attr('cx', pt.coordPt.x() + boardPoints.radius / 7)
-      .attr('cy', pt.coordPt.y() + boardPoints.radius / 7)
-      .attr('r', boardPoints.radius - 0.4)
-      .attr('opacity', 0)
-      .attr('fill', theme.stones.shadows.fill)
-      // .attr('stroke', theme.stones.shadows.stroke)
-      // .attr('filter', 'url(#' + divId + '_svg_blur)')
-      .attr('class', glift.enums.svgElements.STONE_SHADOW)
-      .attr('id', idGen.stoneShadow(pt.intPt)));
+      .setAttr('cx', pt.coordPt.x() + boardPoints.radius / 7)
+      .setAttr('cy', pt.coordPt.y() + boardPoints.radius / 7)
+      .setAttr('r', boardPoints.radius - 0.4)
+      .setAttr('opacity', 0)
+      .setAttr('fill', theme.stones.shadows.fill)
+      // .setAttr('stroke', theme.stones.shadows.stroke)
+      // .setAttr('filter', 'url(#' + divId + '_svg_blur)')
+      .setAttr('class', glift.enums.svgElements.STONE_SHADOW)
+      .setAttr('id', idGen.stoneShadow(pt.intPt)));
   }
 };

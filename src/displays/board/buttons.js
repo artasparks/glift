@@ -5,7 +5,7 @@ goog.require('glift.displays.board');
  */
 glift.displays.board.buttons = function(svg, idGen, boardPoints) {
   var svglib = glift.displays.svg;
-  var container = svglib.group().attr('id', idGen.buttonGroup());
+  var container = svglib.group().setAttr('id', idGen.buttonGroup());
   svg.append(container);
 
   var data = boardPoints.data();
@@ -15,14 +15,14 @@ glift.displays.board.buttons = function(svg, idGen, boardPoints) {
 
   data = { tl: tl, br: br, spacing: boardPoints.spacing };
   container.append(svglib.rect()
-    .data(data)
-    .attr("x", tl.coordPt.x() - boardPoints.radius)
-    .attr("y", tl.coordPt.y() - boardPoints.radius)
-    .attr("width", br.coordPt.x() - tl.coordPt.x() + boardPoints.spacing)
-    .attr("height", br.coordPt.y() - tl.coordPt.y() + boardPoints.spacing)
-    .attr('opacity', 0)
-    .attr('fill', 'red')
-    .attr('stroke', 'red')
-    .attr('stone_color', 'EMPTY')
-    .attr('id', idGen.fullBoardButton()));
+    .setData(data)
+    .setAttr("x", tl.coordPt.x() - boardPoints.radius)
+    .setAttr("y", tl.coordPt.y() - boardPoints.radius)
+    .setAttr("width", br.coordPt.x() - tl.coordPt.x() + boardPoints.spacing)
+    .setAttr("height", br.coordPt.y() - tl.coordPt.y() + boardPoints.spacing)
+    .setAttr('opacity', 0)
+    .setAttr('fill', 'red')
+    .setAttr('stroke', 'red')
+    .setAttr('stone_color', 'EMPTY')
+    .setAttr('id', idGen.fullBoardButton()));
 };

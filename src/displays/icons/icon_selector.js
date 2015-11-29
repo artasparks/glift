@@ -88,11 +88,11 @@ glift.displays.icons.IconSelector.prototype = {
 
       var svgId = columnId + '_svg';
       var svg = svglib.svg()
-          .attr('id', columnId + '_svg')
-          .attr('height', '100%')
-          .attr('width', '100%');
+          .setAttr('id', columnId + '_svg')
+          .setAttr('height', '100%')
+          .setAttr('width', '100%');
       var idGen = glift.displays.ids.generator(columnId);
-      var container = svglib.group().attr('id', idGen.iconGroup());
+      var container = svglib.group().setAttr('id', idGen.iconGroup());
       svg.append(container);
       for (var i = 0, len = transforms.length; i < len; i++) {
         var icon = rewrapped.shift();
@@ -100,10 +100,10 @@ glift.displays.icons.IconSelector.prototype = {
         icon.setElementId(id);
         this.iconList[columnIndex].push(icon);
         container.append(svglib.path()
-            .attr('d', icon.iconStr)
-            .attr('fill', 'black') // replace with theme
-            .attr('id', icon.elementId)
-            .attr('transform', icon.transformString()));
+            .setAttr('d', icon.iconStr)
+            .setAttr('fill', 'black') // replace with theme
+            .setAttr('id', icon.elementId)
+            .setAttr('transform', icon.transformString()));
       }
       this.svgColumnList.push(svg);
       columnIndex++;
@@ -123,19 +123,19 @@ glift.displays.icons.IconSelector.prototype = {
       var svg = this.svgColumnList[i];
       var idGen = glift.displays.ids.generator(this.columnIdList[i]);
       var iconColumn = this.iconList[i];
-      var container = svglib.group().attr('id', idGen.buttonGroup());
+      var container = svglib.group().setAttr('id', idGen.buttonGroup());
       svg.append(container);
       for (var j = 0; j < iconColumn.length; j++) {
         var icon = iconColumn[j]
         container.append(svglib.rect()
-          .data(icon.iconName)
-          .attr('x', icon.bbox.topLeft().x())
-          .attr('y', icon.bbox.topLeft().y())
-          .attr('width', icon.bbox.width())
-          .attr('height', icon.bbox.height())
-          .attr('fill', 'blue') // color doesn't matter, but need a fill
-          .attr('opacity', 0)
-          .attr('id', idGen.button(icon.iconName)));
+          .setData(icon.iconName)
+          .setAttr('x', icon.bbox.topLeft().x())
+          .setAttr('y', icon.bbox.topLeft().y())
+          .setAttr('width', icon.bbox.width())
+          .setAttr('height', icon.bbox.height())
+          .setAttr('fill', 'blue') // color doesn't matter, but need a fill
+          .setAttr('opacity', 0)
+          .setAttr('id', idGen.button(icon.iconName)));
       }
     }
   },

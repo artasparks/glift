@@ -29,7 +29,7 @@ glift.dom = {
    */
   newDiv: function(id) {
     var elem = glift.dom.elem(document.createElement('div'));
-    elem.attr('id', id);
+    elem.setAttr('id', id);
     return elem;
   },
 
@@ -45,7 +45,8 @@ glift.dom = {
       text = glift.markdown.render(text);
     }
     var wrapper = glift.dom.newElem('div');
-    wrapper.attr('class', glift.dom.classes.commentBox);
+    // TODO(kashomon): It's so hacky to use the comment box css here.
+    wrapper.setAttr('class', glift.dom.classes.commentBox);
 
     if (useMarkdown) {
       wrapper.html(text);
@@ -136,34 +137,40 @@ glift.dom.Element.prototype = {
   },
 
   /**
-   * Gets or set an attribute on the HTML, JQuery Style.
+   * Set an attribute on the element.
+   * @param {string} key
+   * @param {*} value
+   * @return {!glift.dom.Element}
    */
-  attr: function(key, value) {
-    if (key == null) { return null; }
-
-    var keyType = glift.util.typeOf(key);
-    if (keyType === 'object') {
-      var attrObj = key;
-      for (var attrObjKey in attrObj) {
-        var attrObjVal = attrObj[attrObjKey];
-        this.el.setAttribute(attrObjKey, attrObjVal);
-      }
+  setAttr: function(key, value) {
+    this.el.setAttribute(key, value);
+    if (key === 'id' && glift.util.typeOf(value) === 'string') {
+      // Also set the ID field if the key is 'id'.
+      this.id = value;
     }
-
-    if (keyType === 'string') {
-      if (value == null) {
-        return this.el.getAttribute(key);
-      } else {
-        this.el.setAttribute(key, value);
-        if (key === 'id' && glift.util.typeOf(value) === 'string') {
-          this.id = value;
-        }
-      }
-    }
-    return null;
+    return this;
   },
 
-  /** Gets all the attributes of the element, but as an object. */
+  /** @return {*} The attribute value */
+  attr: function(key) {
+    return this.el.getAttribute(key);
+  },
+
+  /**
+   * Set several attributes using an attribute object.
+   * @param {Object} elemAttrObj A object with multiple attributes.
+   */
+  setAttrObj: function(attrObj) {
+    for (var attrObjKey in attrObj) {
+      var attrObjVal = attrObj[attrObjKey];
+      this.el.setAttribute(attrObjKey, attrObjVal);
+    }
+  },
+
+  /**
+   * Gets all the attributes of the element, but as an object.
+   * @return {Object} Attribute object.
+   */
   attrs: function() {
     var out = {};
     for (var i = 0; i < this.el.attributes.length; i++) {

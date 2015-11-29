@@ -45,18 +45,18 @@
 
   test('Must construct Widget boxes', function() {
     var b = make({});
-    deepEqual(b._first, undefined);
-    deepEqual(b._second, undefined);
+    deepEqual(b._first, null);
+    deepEqual(b._second, null);
   });
 
   test('Widget Boxes: map', function() {
     var wboxes = new glift.displays.position.WidgetBoxes();
-    wboxes.first(new glift.displays.position.WidgetColumn()
+    wboxes.setFirst(new glift.displays.position.WidgetColumn()
       .setOrderingFromRatioArray([
         {component: 'BOARD', ratio: 1}
       ])
       .setComponent('BOARD', defaultBbox1));
-    wboxes.second(new glift.displays.position.WidgetColumn()
+    wboxes.setSecond(new glift.displays.position.WidgetColumn()
       .setOrderingFromRatioArray([
         {component: 'STATUS_BAR', ratio: 0.3},
         {component: 'COMMENT_BOX', ratio: 0.3},

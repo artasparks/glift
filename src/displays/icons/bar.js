@@ -100,8 +100,8 @@ glift.displays.icons.IconBar.prototype = {
         point = glift.util.point;
     this.bbox = divBbox;
     this.svg = svglib.svg()
-      .attr('width', '100%')
-      .attr('height', '100%');
+      .setAttr('width', '100%')
+      .setAttr('height', '100%');
     glift.displays.icons.rowCenterWrapped(
         divBbox, this.icons, this.vertMargin, this.horzMargin)
     this._createIcons();
@@ -115,17 +115,17 @@ glift.displays.icons.IconBar.prototype = {
    */
   _createIcons: function() {
     var svglib = glift.displays.svg;
-    var container = svglib.group().attr('id', this.idGen.iconGroup());
+    var container = svglib.group().setAttr('id', this.idGen.iconGroup());
     this.svg.append(container);
-    this.svg.append(svglib.group().attr('id', this.idGen.tempIconGroup()));
+    this.svg.append(svglib.group().setAttr('id', this.idGen.tempIconGroup()));
     for (var i = 0, ii = this.icons.length; i < ii; i++) {
       var icon = this.icons[i];
       var path = svglib.path()
-        .attr('d', icon.iconStr)
-        .attr('id', icon.elementId)
-        .attr('transform', icon.transformString());
+        .setAttr('d', icon.iconStr)
+        .setAttr('id', icon.elementId)
+        .setAttr('transform', icon.transformString());
       for (var key in this.theme.icons.DEFAULT) {
-        path.attr(key, this.theme.icons.DEFAULT[key]);
+        path.setAttr(key, this.theme.icons.DEFAULT[key]);
       }
       container.append(path);
     }
@@ -137,19 +137,19 @@ glift.displays.icons.IconBar.prototype = {
    */
   _createIconButtons: function() {
     var svglib = glift.displays.svg;
-    var container = svglib.group().attr('id', this.idGen.buttonGroup());
+    var container = svglib.group().setAttr('id', this.idGen.buttonGroup());
     this.svg.append(container);
     for (var i = 0, len = this.icons.length; i < len; i++) {
       var icon = this.icons[i];
       container.append(svglib.rect()
-        .data(icon.iconName)
-        .attr('x', icon.bbox.topLeft().x())
-        .attr('y', icon.bbox.topLeft().y())
-        .attr('width', icon.bbox.width())
-        .attr('height', icon.bbox.height())
-        .attr('fill', 'blue') // Color doesn't matter, but we need a fill.
-        .attr('opacity', 0)
-        .attr('id', this.idGen.button(icon.iconName)));
+        .setData(icon.iconName)
+        .setAttr('x', icon.bbox.topLeft().x())
+        .setAttr('y', icon.bbox.topLeft().y())
+        .setAttr('width', icon.bbox.width())
+        .setAttr('height', icon.bbox.height())
+        .setAttr('fill', 'blue') // Color doesn't matter, but we need a fill.
+        .setAttr('opacity', 0)
+        .setAttr('id', this.idGen.button(icon.iconName)));
     }
   },
 
@@ -171,10 +171,10 @@ glift.displays.icons.IconBar.prototype = {
    * If the tempIcon is specified as a string, it is wrapped first.
    *
    * @param {string} parentIconNameOrIndex Parent icon name.
-   * @param {!glift.displays.icons.WrappedIcon} tempIcon Temporary icon to display
+   * @param {string|!glift.displays.icons.WrappedIcon} tempIcon Temporary icon
+   *    to display.
    * @param {string} color Color string
    * @param {number=} opt_vMargin Optional v margin. Defaults to 2px.
-   * @param {number=} opt_hMargin Optional h margin. Defaults to 2px
    */
   setCenteredTempIcon: function(
       parentIconNameOrIndex, tempIcon, color, opt_vMargin, opt_hMargin) {
@@ -183,10 +183,13 @@ glift.displays.icons.IconBar.prototype = {
     var hm = opt_hMargin || 2,
         vm = opt_vMargin || 2;
     var parentIcon = this.getIcon(parentIconNameOrIndex);
+    /** @type {!glift.displays.icons.WrappedIcon} */
+    var wrappedTemp;
     if (glift.util.typeOf(tempIcon) === 'string') {
-      tempIcon = glift.displays.icons.wrappedIcon(tempIcon);
+      wrappedTemp = glift.displays.icons.wrappedIcon(
+        /** @type {string} */ (tempIcon));
     } else {
-      tempIcon = tempIcon.rewrapIcon();
+      wrappedTemp = tempIcon.rewrapIcon();
     }
     var tempIconId = this.idGen.tempIcon(parentIcon.iconName);
 
@@ -194,16 +197,16 @@ glift.displays.icons.IconBar.prototype = {
     glift.dom.elem(tempIconId) && glift.dom.elem(tempIconId).remove();
 
     if (parentIcon.subboxIcon !== undefined) {
-      tempIcon = parentIcon.centerWithinSubbox(tempIcon, vm, hm);
+      wrappedTemp = parentIcon.centerWithinSubbox(wrappedTemp, vm, hm);
     } else {
-      tempIcon = parentIcon.centerWithinIcon(tempIcon, vm, hm);
+      wrappedTemp = parentIcon.centerWithinIcon(wrappedTemp, vm, hm);
     }
 
     this.svg.child(this.idGen.tempIconGroup()).appendAndAttach(svglib.path()
-      .attr('d', tempIcon.iconStr)
-      .attr('fill', color) // theme.icons.DEFAULT.fill
-      .attr('id', tempIconId)
-      .attr('transform', tempIcon.transformString()));
+      .setAttr('d', wrappedTemp.iconStr)
+      .setAttr('fill', color) // theme.icons.DEFAULT.fill
+      .setAttr('id', tempIconId)
+      .setAttr('transform', wrappedTemp.transformString()));
     return this;
   },
 
@@ -225,18 +228,18 @@ glift.displays.icons.IconBar.prototype = {
     var boxStrokeWidth = 7
     this.clearTempText(iconName);
     var textObj = svglib.text()
-      .text(text)
-      .attr('class', 'tempIcon')
-      .attr('font-family', 'sans-serif') // TODO(kashomon): Put in themes.
-      .attr('font-size', fontSize + 'px')
-      .attr('x', bbox.center().x()) // + boxStrokeWidth + 'px')
-      .attr('y', bbox.center().y()) //+ fontSize)
-      .attr('dy', '.33em') // Move down, for centering purposes
-      .attr('style', 'text-anchor: middle; vertical-align: middle;')
-      .attr('id', this.idGen.tempIconText(iconName))
-      .attr('lengthAdjust', 'spacing'); // also an opt: spacingAndGlyphs
+      .setText(text)
+      .setAttr('class', 'tempIcon')
+      .setAttr('font-family', 'sans-serif') // TODO(kashomon): Put in themes.
+      .setAttr('font-size', fontSize + 'px')
+      .setAttr('x', bbox.center().x()) // + boxStrokeWidth + 'px')
+      .setAttr('y', bbox.center().y()) //+ fontSize)
+      .setAttr('dy', '.33em') // Move down, for centering purposes
+      .setAttr('style', 'text-anchor: middle; vertical-align: middle;')
+      .setAttr('id', this.idGen.tempIconText(iconName))
+      .setAttr('lengthAdjust', 'spacing'); // also an opt: spacingAndGlyphs
     for (var key in attrsObj) {
-      textObj.attr(key, attrsObj[key]);
+      textObj.setAttr(key, attrsObj[key]);
     }
     this.svg.child(this.idGen.tempIconGroup()).appendAndAttach(textObj);
     return this;
@@ -295,7 +298,7 @@ glift.displays.icons.IconBar.prototype = {
             var elem = glift.dom.elem(icon.elementId);
             var theme = widgetRef.iconBar.theme.icons;
             for (var key in theme.DEFAULT_HOVER) {
-              elem.attr(key, theme.DEFAULT_HOVER[key]);
+              elem.setAttr(key, theme.DEFAULT_HOVER[key]);
             }
           };
         actionsForIcon.mouseout = iconActions[iconName].mouseout ||
@@ -304,7 +307,7 @@ glift.displays.icons.IconBar.prototype = {
             if (elem) { // elem can be null during transitions.
               var theme = widgetRef.iconBar.theme.icons;
               for (var key in theme.DEFAULT) {
-                elem.attr(key, theme.DEFAULT[key]);
+                elem.setAttr(key, theme.DEFAULT[key]);
               }
             }
           };
@@ -383,16 +386,6 @@ glift.displays.icons.IconBar.prototype = {
       // Remove if it exists.
       glift.dom.elem(tooltipId) && glift.dom.elem(tooltipId).remove();
     }.bind(this));
-  },
-
-
-  /**
-   * Convenience mothod for adding hover events.  Equivalent to adding mouseover
-   * and mouseout.
-   */
-  setHover: function(name, hoverin, hoverout) {
-    this.setEvent(name, 'mouseover', hoverin);
-    this.setEvent(name, 'mouseout', hoverout);
   },
 
   /**

@@ -14,19 +14,19 @@ glift.displays.board.lines = function(svg, idGen, boardPoints, theme) {
   // Mapping from int point (e.g., 3,3) hash to id;
   var svglib = glift.displays.svg;
 
-  var container = svglib.group().attr('id', idGen.lineGroup());
+  var container = svglib.group().setAttr('id', idGen.lineGroup());
   svg.append(container);
 
   var data = boardPoints.data();
   for (var i = 0, ii = data.length; i < ii; i++) {
     var pt = data[i];
     container.append(svglib.path()
-      .attr('d', glift.displays.board.intersectionLine(
+      .setAttr('d', glift.displays.board.intersectionLine(
           pt, boardPoints.radius, boardPoints.numIntersections))
-      .attr('stroke', theme.lines.stroke)
-      .attr('stroke-width', theme.lines['stroke-width'])
-      .attr('stroke-linecap', 'round')
-      .attr('id', idGen.line(pt.intPt)));
+      .setAttr('stroke', theme.lines.stroke)
+      .setAttr('stroke-width', theme.lines['stroke-width'])
+      .setAttr('stroke-linecap', 'round')
+      .setAttr('id', idGen.line(pt.intPt)));
   }
 };
 

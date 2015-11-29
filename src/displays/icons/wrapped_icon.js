@@ -23,7 +23,8 @@ glift.displays.icons.wrapIcons = function(iconsRaw) {
   for (var i = 0; i < iconsRaw.length; i++) {
     var item = iconsRaw[i];
     if (glift.util.typeOf(item) === 'string') {
-      out.push(glift.displays.icons.wrappedIcon(item));
+      out.push(glift.displays.icons.wrappedIcon(
+          /** @type {string} */ (item)));
     } else if (glift.util.typeOf(item) === 'array') {
       var subIcons = item;
       // Looks like we only accept the multiopen icon for this category...

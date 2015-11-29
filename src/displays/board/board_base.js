@@ -13,24 +13,24 @@ goog.require('glift.displays.svg');
 glift.displays.board.boardBase = function(svg, idGen, goBox, theme) {
   if (theme.board.imagefill) {
     svg.append(glift.displays.svg.image()
-      .attr('x', goBox.topLeft().x())
-      .attr('y', goBox.topLeft().y())
-      .attr('width', goBox.width())
-      .attr('height', goBox.height())
-      .attr('xlink:href', theme.board.imagefill)
-      .attr('preserveAspectRatio', 'none'));
+      .setAttr('x', goBox.topLeft().x())
+      .setAttr('y', goBox.topLeft().y())
+      .setAttr('width', goBox.width())
+      .setAttr('height', goBox.height())
+      .setAttr('xlink:href', theme.board.imagefill)
+      .setAttr('preserveAspectRatio', 'none'));
   }
 
   svg.append(glift.displays.svg.rect()
-    .attr('x', goBox.topLeft().x() + 'px')
-    .attr('y', goBox.topLeft().y() + 'px')
-    .attr('width', goBox.width() + 'px')
-    .attr('height', goBox.height() + 'px')
-    .attr('height', goBox.height() + 'px')
-    .attr('fill', theme.board.imagefill ? 'none' : theme.board.fill)
-    .attr('stroke', theme.board.stroke)
-    .attr('stroke-width', theme.board['stroke-width'])
-    .attr('id', idGen.board()));
+    .setAttr('x', goBox.topLeft().x() + 'px')
+    .setAttr('y', goBox.topLeft().y() + 'px')
+    .setAttr('width', goBox.width() + 'px')
+    .setAttr('height', goBox.height() + 'px')
+    .setAttr('height', goBox.height() + 'px')
+    .setAttr('fill', theme.board.imagefill ? 'none' : theme.board.fill)
+    .setAttr('stroke', theme.board.stroke)
+    .setAttr('stroke-width', theme.board['stroke-width'])
+    .setAttr('id', idGen.board()));
 };
 
 /**
@@ -41,7 +41,7 @@ glift.displays.board.boardBase = function(svg, idGen, goBox, theme) {
 glift.displays.board.initBlurFilter = function(divId, svg) {
   // svg.append("svg:defs")
     // .append("svg:filter")
-      // .attr("id", divId + '_svg_blur')
+      // .setAttr("id", divId + '_svg_blur')
     // .append("svg:feGaussianBlur")
-      // .attr("stdDeviation", 2);
+      // .setAttr("stdDeviation", 2);
 };

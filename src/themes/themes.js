@@ -1,5 +1,4 @@
 goog.provide('glift.themes');
-goog.provide('glift.themes.registered');
 
 glift.themes = {
   /**

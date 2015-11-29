@@ -24,7 +24,7 @@
   });
 
   test('Test circle+attr creation', function() {
-    var circle = svg.circle().attr('r', 30).render();
+    var circle = svg.circle().setAttr('r', 30).render();
     deepEqual(circle, '<circle r="30"></circle>');
   });
 

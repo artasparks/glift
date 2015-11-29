@@ -3,8 +3,6 @@ goog.provide('glift.themes.base');
 /**
  * Base theme from which all others extend. All possible options should be
  * placed here.
- *
- * @abstract
  */
 glift.themes.base = {
   board: {

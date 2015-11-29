@@ -1,35 +1,117 @@
+goog.provide('glift.displays.gui.MultiCenter')
+goog.provide('glift.displays.gui.SingleCenter')
+goog.provide('glift.displays.gui.Transform')
+
+/**
+ * Transform object. Note that that the scale is set immediately, while the
+ * xMove and yMove are often set later.
+ *
+ * @param {number} scale Scaling factor. Not that 1 means that the object should
+ *    not be scaled.
+ * @param {number=} opt_xMove Defaults to zero if not set.
+ * @param {number=} opt_yMove Defaults to zero if not set
+ * @constructor @final @struct
+ */
+glift.displays.gui.Transform = function(scale, opt_xMove, opt_yMove) {
+  /**
+   * How much to scale the object by.
+   * @type {number}
+   */
+  this.scale = scale;
+  /**
+   * How much to translate the object along the x-axis.
+   * @type {number}
+   */
+  this.xMove = opt_xMove || 0;
+  /**
+   * How much to translate the object along the y-axis.
+   * @type {number}
+   */
+  this.yMove = opt_yMove || 0;
+};
+
+/**
+ * Result of either row-centering or column centering operation
+ *
+ * @param {!Array<!glift.displays.gui.Transform>} transforms The transformations
+ *    to perform.
+ * @param {!Array<!glift.orientation.BoundingBox>} bboxes The transformed bounding
+ *    boxes.
+ * @param {!Array<!glift.orientation.BoundingBox>} unfit Bounding boxes that
+ *    didn't fit given the parameters.
+ * @constructor @final @struct
+ */
+glift.displays.gui.MultiCenter = function(transforms, bboxes, unfit) {
+  this.transforms = transforms;
+  this.bboxes = bboxes;
+  this.unfit = unfit;
+};
+
+/**
+ * Result of either single-element centering.
+ *
+ * @param {!glift.displays.gui.Transform} transforms The transformations
+ *    to perform.
+ * @param {!glift.orientation.BoundingBox} bboxes The transformed bounding
+ *    boxes.
+ *
+ * @constructor @final @struct
+ */
+glift.displays.gui.SingleCenter = function(transform, bbox) {
+  this.transform = transform;
+  this.bbox = bbox;
+};
+
 /**
  * Centers a bunch of icons (really, bounding boxes) within another bounding
- * box.
+ * box. Note: The returned items are guaranteed to be in the order they
+ * appeared as inputs.
  *
- * Return pair of
- *  {
- *    transforms: [...]
- *    bboxes: [...]
- *    unfitTransforms: [...]
- *  }
+ * @param {!glift.orientation.BoundingBox} outerBox
+ * @param {!Array<!glift.orientation.BoundingBox>} inBboxes
+ * @param {number} vertMargin
+ * @param {number} horzMargin
+ * @param {number} minSpacing
  *
- * Note: The returned items are guaranteed to be in the order they appeared as
- * inputs.
+ * @return {!glift.displays.gui.MultiCenter}
  */
 glift.displays.gui.rowCenterSimple = function(
     outerBox, inBboxes, vertMargin, horzMargin, minSpacing) {
-  return glift.displays.gui._linearCentering(
+  return glift.displays.gui.linearCentering_(
       outerBox, inBboxes, vertMargin, horzMargin, minSpacing, 0, 'h');
 };
 
+/**
+ * @param {!glift.orientation.BoundingBox} outerBox
+ * @param {!Array<!glift.orientation.BoundingBox>} inBboxes
+ * @param {number} vertMargin
+ * @param {number} horzMargin
+ * @param {number} minSpacing
+ *
+ * @return {!glift.displays.gui.MultiCenter}
+ */
 glift.displays.gui.columnCenterSimple = function(
     outerBox, inBboxes, vertMargin, horzMargin, minSpacing) {
-  return glift.displays.gui._linearCentering(
+  return glift.displays.gui.linearCentering_(
       outerBox, inBboxes, vertMargin, horzMargin, minSpacing, 0, 'v');
 };
 
 /**
  * Perform linearCentering either vertically or horizontally.
+ *
+ * @private
+ *
+ * @param {!glift.orientation.BoundingBox} outerBox
+ * @param {!Array<!glift.orientation.BoundingBox>} inBboxes
+ * @param {number} vertMargin
+ * @param {number} horzMargin
+ * @param {number} minSpacing
+ * @param {number} maxSpacing Zero indicates no max spacing
+ * @param {string} dir Dir must be either 'v' or 'h'.
+ *
+ * @return {!glift.displays.gui.MultiCenter}
  */
-// TODO(kashomon): Rework this method. It's very complicated and hard to reason
-// about.
-glift.displays.gui._linearCentering = function(
+glift.displays.gui.linearCentering_ = function(
     outerBox, inBboxes, vertMargin, horzMargin, minSpacing, maxSpacing, dir) {
   var outerWidth = outerBox.width(),
       innerWidth = outerWidth - 2 * horzMargin,
@@ -59,7 +141,7 @@ glift.displays.gui._linearCentering = function(
     } else {
       var scale = innerHeight / inBboxes[i].height();
     }
-    var partialTransform = { scale: scale };
+    var partialTransform = new glift.displays.gui.Transform(scale);
     var newBbox = inBboxes[i].scale(scale);
     transforms.push(partialTransform);
     newBboxes.push(newBbox);
@@ -119,9 +201,21 @@ glift.displays.gui._linearCentering = function(
     }
   }
 
-  return { transforms: transforms, bboxes: finishedBoxes, unfit: unfitBoxes };
+  return new glift.displays.gui.MultiCenter(
+      transforms, finishedBoxes, unfitBoxes);
 };
 
+/**
+ * Center an bounding box within another bounding box.
+ *
+ * @param {!glift.orientation.BoundingBox} outerBox
+ * @param {!glift.orientation.BoundingBox} bbox The bbox to center within the
+ *    outerBbox.
+ * @param {number} vertMargin
+ * @param {number} horzMargin
+ *
+ * @return glif
+ */
 glift.displays.gui.centerWithin = function(
     outerBbox, bbox, vertMargin, horzMargin) {
   var outerWidth = outerBbox.width(),
@@ -150,11 +244,10 @@ glift.displays.gui.centerWithin = function(
   if (newBbox.height() < innerHeight) {
     top = top + (innerHeight -  newBbox.height()) / 2;
   }
-  var transform = {
-    xMove: left - newBbox.left(),
-    yMove: top - newBbox.top(),
-    scale: scale
-  };
+  var transform = new glift.displays.gui.Transform(
+    scale,
+    left - newBbox.left(),
+    top - newBbox.top());
   newBbox = newBbox.translate(transform.xMove, transform.yMove);
-  return { transform: transform, bbox: newBbox};
+  return new glift.displays.gui.SingleCenter(transform, newBbox);
 };

@@ -1170,7 +1170,7 @@ glift.dom = {
    */
   newDiv: function(id) {
     var elem = glift.dom.elem(document.createElement('div'));
-    elem.attr('id', id);
+    elem.setAttr('id', id);
     return elem;
   },
 
@@ -1186,7 +1186,8 @@ glift.dom = {
       text = glift.markdown.render(text);
     }
     var wrapper = glift.dom.newElem('div');
-    wrapper.attr('class', glift.dom.classes.commentBox);
+    // TODO(kashomon): It's so hacky to use the comment box css here.
+    wrapper.setAttr('class', glift.dom.classes.commentBox);
 
     if (useMarkdown) {
       wrapper.html(text);
@@ -1277,34 +1278,40 @@ glift.dom.Element.prototype = {
   },
 
   /**
-   * Gets or set an attribute on the HTML, JQuery Style.
+   * Set an attribute on the element.
+   * @param {string} key
+   * @param {*} value
+   * @return {!glift.dom.Element}
    */
-  attr: function(key, value) {
-    if (key == null) { return null; }
-
-    var keyType = glift.util.typeOf(key);
-    if (keyType === 'object') {
-      var attrObj = key;
-      for (var attrObjKey in attrObj) {
-        var attrObjVal = attrObj[attrObjKey];
-        this.el.setAttribute(attrObjKey, attrObjVal);
-      }
+  setAttr: function(key, value) {
+    this.el.setAttribute(key, value);
+    if (key === 'id' && glift.util.typeOf(value) === 'string') {
+      // Also set the ID field if the key is 'id'.
+      this.id = value;
     }
-
-    if (keyType === 'string') {
-      if (value == null) {
-        return this.el.getAttribute(key);
-      } else {
-        this.el.setAttribute(key, value);
-        if (key === 'id' && glift.util.typeOf(value) === 'string') {
-          this.id = value;
-        }
-      }
-    }
-    return null;
+    return this;
   },
 
-  /** Gets all the attributes of the element, but as an object. */
+  /** @return {*} The attribute value */
+  attr: function(key) {
+    return this.el.getAttribute(key);
+  },
+
+  /**
+   * Set several attributes using an attribute object.
+   * @param {Object} elemAttrObj A object with multiple attributes.
+   */
+  setAttrObj: function(attrObj) {
+    for (var attrObjKey in attrObj) {
+      var attrObjVal = attrObj[attrObjKey];
+      this.el.setAttribute(attrObjKey, attrObjVal);
+    }
+  },
+
+  /**
+   * Gets all the attributes of the element, but as an object.
+   * @return {Object} Attribute object.
+   */
   attrs: function() {
     var out = {};
     for (var i = 0; i < this.el.attributes.length; i++) {
@@ -1588,7 +1595,6 @@ glift.ajax = {
 };
 
 goog.provide('glift.themes');
-goog.provide('glift.themes.registered');
 
 glift.themes = {
   /**
@@ -1694,8 +1700,6 @@ goog.provide('glift.themes.base');
 /**
  * Base theme from which all others extend. All possible options should be
  * placed here.
- *
- * @abstract
  */
 glift.themes.base = {
   board: {
@@ -3566,17 +3570,25 @@ goog.provide('glift.displays.cropbox');
 goog.provide('glift.displays.DisplayCropBox');
 
 glift.displays.cropbox = {
+  /** @const */
   EXT: .5, // Extension
+  /** @const */
   DEFAULT_EXTENSION: 0, // Wut.
+  /** @const */
   OVERFLOW: 1.5, // The line spacing that goes around the edge.
 
   /**
    * Creates a cropbox based on a region, the number of intersections, and a
    * true/false flag for drawing the board coordinates.
+   *
+   * @param {glift.enums.boardRegions} region
+   * @param {number} intersects Number of intersections for the Go board.
+   * @param {boolean=} opt_drawBoardCoords Whether or not to draw board coordinates.
+   *    Optional: Defaults to false.
    */
-  getFromRegion: function(region, intersects, drawBoardCoords) {
+  getFromRegion: function(region, intersects, opt_drawBoardCoords) {
     var cropbox = glift.orientation.cropbox.get(region, intersects);
-    drawBoardCoords = drawBoardCoords || false;
+    var drawBoardCoords = opt_drawBoardCoords || false;
     var maxIntersects = drawBoardCoords ? intersects + 2 : intersects;
     var top = cropbox.bbox.top(),
         bottom = cropbox.bbox.bottom(),
@@ -3600,10 +3612,13 @@ glift.displays.cropbox = {
  * A cropbox is similar to a bounding box, but instead of a box based on pixels,
  * it's a box based on points.
  *
+ * @param {!glift.orientation.Cropbox} cbox The wrapped Cropbox.
+ *
  * @constructor
  */
 glift.displays.DisplayCropBox = function(cbox) {
-  this._cbox = cbox;
+  /** @private {!glift.orientation.Cropbox} */
+  this.cbox_ = cbox;
 };
 
 glift.displays.DisplayCropBox.prototype = {
@@ -3611,20 +3626,25 @@ glift.displays.DisplayCropBox.prototype = {
    * Returns the cbox. The cbox is a bounding box that describes what points on
    * the go board should be displayed. Generally, both the width and height of
    * the cbox must be between 0 (exclusive) and maxIntersects (inclusive).
+   *
+   * @return {!glift.orientation.Cropbox}
    */
-  cbox: function() { return this._cbox; },
+  cbox: function() { return this.cbox_; },
 
   /**
    * Returns the bbox for the cropbox
+   *
    * @return {!glift.orientation.BoundingBox}
    */
-  bbox: function() { return this._cbox.bbox; },
+  bbox: function() { return this.cbox_.bbox; },
 
   /**
    * Returns the maximum board size.  Often referred to as max intersections
    * elsewhere.  Typically 9, 13 or 19.
+   *
+   * @return {number}
    */
-  maxBoardSize: function() { return this._cbox.size; },
+  maxBoardSize: function() { return this.cbox_.size; },
 
   /**
    * The extensions are a special modification for cropped boards.  Due to some
@@ -3633,27 +3653,34 @@ glift.displays.DisplayCropBox.prototype = {
    * (the ragged crop-edge).
    *
    * Note: the x and y coordinates for these points will either be 0 or 0.5.
+   *
+   * @return {number}
    */
   topExt: function() {
-    return this._cbox.hasRaggedTop() ? glift.displays.cropbox.EXT: 0;
+    return this.cbox_.hasRaggedTop() ? glift.displays.cropbox.EXT : 0;
   },
+  /** @return {number} */
   botExt: function() { 
-    return this._cbox.hasRaggedBottom() ? glift.displays.cropbox.EXT : 0;
+    return this.cbox_.hasRaggedBottom() ? glift.displays.cropbox.EXT : 0;
   },
+  /** @return {number} */
   leftExt: function() {
-    return this._cbox.hasRaggedLeft() ? glift.displays.cropbox.EXT : 0;
+    return this.cbox_.hasRaggedLeft() ? glift.displays.cropbox.EXT : 0;
   },
+  /** @return {number} */
   rightExt: function() {
-    return this._cbox.hasRaggedRight() ? glift.displays.cropbox.EXT : 0;
+    return this.cbox_.hasRaggedRight() ? glift.displays.cropbox.EXT : 0;
   },
 
   /**
    * Number of x points (or columns) for the cropped go board.
+   * @return {number}
    */
   xPoints: function() { return this.cbox().bbox.width(); },
 
   /**
    * Number of y points (or rows) for the cropped go board.
+   * @return {number}
    */
   yPoints: function() { return this.cbox().bbox.height(); },
 
@@ -3661,6 +3688,7 @@ glift.displays.DisplayCropBox.prototype = {
    * Returns the number of 'intersections' we need to allocate for the height.
    * In otherwords:
    *    - The base intersections (e.g., 19x19).
+   * @return {number}
    */
   widthMod: function() {
     var OVERFLOW = glift.displays.cropbox.OVERFLOW;
@@ -3668,6 +3696,7 @@ glift.displays.DisplayCropBox.prototype = {
         + this.rightExt() + OVERFLOW;
   },
 
+  /** @return {number} */
   heightMod: function() {
     var OVERFLOW = glift.displays.cropbox.OVERFLOW;
     return this.cbox().bbox.height() + this.topExt() +
@@ -3849,7 +3878,7 @@ glift.displays.ids.Generator = function(divId) {
   this._iconGroup = this._eid(this.divId, this._enum.ICON_CONTAINER);
   this._intersectionsGroup = this._eid(this.divId, this._enum.BOARD);
       this._eid(this.divId, this._enum.INTERSECTIONS_CONTAINER);
-  this._tempMarkGroup = this._eid(this.divId, this._enum.TEMP_MARK_CONTAINER);
+  this._tempMarkGroup = this._eid(this.divId, this._enum.TEMP_MARK_GROUP);
 };
 
 glift.displays.ids.Generator.prototype = {
@@ -4174,7 +4203,7 @@ glift.displays.board.Display.prototype = {
     board.boardBase(svg, idGen, env.goBoardBox, theme);
     board.initBlurFilter(divId, svg); // in boardBase.  Should be moved.
 
-    var intGrp = svglib.group().attr('id', idGen.intersections());
+    var intGrp = svglib.group().setAttr('id', idGen.intersections());
     svg.append(intGrp);
 
     board.boardLabels(intGrp, idGen, boardPoints, theme);
@@ -4229,24 +4258,24 @@ goog.require('glift.displays.svg');
 glift.displays.board.boardBase = function(svg, idGen, goBox, theme) {
   if (theme.board.imagefill) {
     svg.append(glift.displays.svg.image()
-      .attr('x', goBox.topLeft().x())
-      .attr('y', goBox.topLeft().y())
-      .attr('width', goBox.width())
-      .attr('height', goBox.height())
-      .attr('xlink:href', theme.board.imagefill)
-      .attr('preserveAspectRatio', 'none'));
+      .setAttr('x', goBox.topLeft().x())
+      .setAttr('y', goBox.topLeft().y())
+      .setAttr('width', goBox.width())
+      .setAttr('height', goBox.height())
+      .setAttr('xlink:href', theme.board.imagefill)
+      .setAttr('preserveAspectRatio', 'none'));
   }
 
   svg.append(glift.displays.svg.rect()
-    .attr('x', goBox.topLeft().x() + 'px')
-    .attr('y', goBox.topLeft().y() + 'px')
-    .attr('width', goBox.width() + 'px')
-    .attr('height', goBox.height() + 'px')
-    .attr('height', goBox.height() + 'px')
-    .attr('fill', theme.board.imagefill ? 'none' : theme.board.fill)
-    .attr('stroke', theme.board.stroke)
-    .attr('stroke-width', theme.board['stroke-width'])
-    .attr('id', idGen.board()));
+    .setAttr('x', goBox.topLeft().x() + 'px')
+    .setAttr('y', goBox.topLeft().y() + 'px')
+    .setAttr('width', goBox.width() + 'px')
+    .setAttr('height', goBox.height() + 'px')
+    .setAttr('height', goBox.height() + 'px')
+    .setAttr('fill', theme.board.imagefill ? 'none' : theme.board.fill)
+    .setAttr('stroke', theme.board.stroke)
+    .setAttr('stroke-width', theme.board['stroke-width'])
+    .setAttr('id', idGen.board()));
 };
 
 /**
@@ -4257,31 +4286,32 @@ glift.displays.board.boardBase = function(svg, idGen, goBox, theme) {
 glift.displays.board.initBlurFilter = function(divId, svg) {
   // svg.append("svg:defs")
     // .append("svg:filter")
-      // .attr("id", divId + '_svg_blur')
+      // .setAttr("id", divId + '_svg_blur')
     // .append("svg:feGaussianBlur")
-      // .attr("stdDeviation", 2);
+      // .setAttr("stdDeviation", 2);
 };
 
 goog.require('glift.displays.board');
 
 glift.displays.board.boardLabels = function(svg, idGen, boardPoints, theme) {
   var svglib = glift.displays.svg;
-  var container = svglib.group().attr('id', idGen.boardCoordLabelGroup());
+  var container = svglib.group().setAttr('id', idGen.boardCoordLabelGroup());
   svg.append(container);
   var labels = boardPoints.edgeCoordLabels;
   for (var i = 0, ii = labels.length; i < ii; i++) {
     var lbl = labels[i];
     container.append(svglib.text()
-        .text(lbl.label)
-        .attr('fill', theme.boardCoordLabels.fill)
-        .attr('stroke', theme.boardCoordLabels.stroke)
-        .attr('opacity', theme.boardCoordLabels.opacity)
-        .attr('text-anchor', 'middle')
-        .attr('dy', '.33em') // for vertical centering
-        .attr('x', lbl.coordPt.x()) // x and y are the anchor points.
-        .attr('y', lbl.coordPt.y())
-        .attr('font-family', theme.boardCoordLabels['font-family'])
-        .attr('font-size', boardPoints.spacing * theme.boardCoordLabels['font-size']));
+        .setText(lbl.label)
+        .setAttr('fill', theme.boardCoordLabels.fill)
+        .setAttr('stroke', theme.boardCoordLabels.stroke)
+        .setAttr('opacity', theme.boardCoordLabels.opacity)
+        .setAttr('text-anchor', 'middle')
+        .setAttr('dy', '.33em') // for vertical centering
+        .setAttr('x', lbl.coordPt.x()) // x and y are the anchor points.
+        .setAttr('y', lbl.coordPt.y())
+        .setAttr('font-family', theme.boardCoordLabels['font-family'])
+        .setAttr('font-size',
+            boardPoints.spacing * theme.boardCoordLabels['font-size']));
   }
 };
 
@@ -4292,7 +4322,7 @@ goog.require('glift.displays.board');
  */
 glift.displays.board.buttons = function(svg, idGen, boardPoints) {
   var svglib = glift.displays.svg;
-  var container = svglib.group().attr('id', idGen.buttonGroup());
+  var container = svglib.group().setAttr('id', idGen.buttonGroup());
   svg.append(container);
 
   var data = boardPoints.data();
@@ -4302,16 +4332,16 @@ glift.displays.board.buttons = function(svg, idGen, boardPoints) {
 
   data = { tl: tl, br: br, spacing: boardPoints.spacing };
   container.append(svglib.rect()
-    .data(data)
-    .attr("x", tl.coordPt.x() - boardPoints.radius)
-    .attr("y", tl.coordPt.y() - boardPoints.radius)
-    .attr("width", br.coordPt.x() - tl.coordPt.x() + boardPoints.spacing)
-    .attr("height", br.coordPt.y() - tl.coordPt.y() + boardPoints.spacing)
-    .attr('opacity', 0)
-    .attr('fill', 'red')
-    .attr('stroke', 'red')
-    .attr('stone_color', 'EMPTY')
-    .attr('id', idGen.fullBoardButton()));
+    .setData(data)
+    .setAttr("x", tl.coordPt.x() - boardPoints.radius)
+    .setAttr("y", tl.coordPt.y() - boardPoints.radius)
+    .setAttr("width", br.coordPt.x() - tl.coordPt.x() + boardPoints.spacing)
+    .setAttr("height", br.coordPt.y() - tl.coordPt.y() + boardPoints.spacing)
+    .setAttr('opacity', 0)
+    .setAttr('fill', 'red')
+    .setAttr('stroke', 'red')
+    .setAttr('stone_color', 'EMPTY')
+    .setAttr('id', idGen.fullBoardButton()));
 };
 
 goog.provide('glift.displays.board.Intersections');
@@ -4320,6 +4350,7 @@ goog.require('glift.displays.board');
 
 /**
  * The backing data for the display.
+ *
  * @package
  * @constructor
  */
@@ -4371,17 +4402,17 @@ glift.displays.board.Intersections.prototype = {
     var stone = stoneGroup.child(this.idGen.stone(pt));
     if (stone !== undefined) {
       var stoneColor = this.theme.stones[color];
-      stone.attr('fill', stoneColor.fill)
-        .attr('stroke', stoneColor.stroke || 1)
-        .attr('stone_color', color)
-        .attr('opacity', stoneColor.opacity);
+      stone.setAttr('fill', stoneColor.fill)
+        .setAttr('stroke', stoneColor.stroke || 1)
+        .setAttr('stone_color', color)
+        .setAttr('opacity', stoneColor.opacity);
       var stoneShadowGroup = this.svg.child(this.idGen.stoneShadowGroup());
       if (stoneShadowGroup  !== undefined) {
         var stoneShadow = stoneShadowGroup.child(this.idGen.stoneShadow(pt));
         if (stoneColor.opacity === 1) {
-          stoneShadow.attr('opacity', 1);
+          stoneShadow.setAttr('opacity', 1);
         } else {
-          stoneShadow.attr('opacity', 0);
+          stoneShadow.setAttr('opacity', 0);
         }
       }
     }
@@ -4397,7 +4428,7 @@ glift.displays.board.Intersections.prototype = {
         .child(this.idGen.stone(pt));
     if (stone) {
       // A stone might not exist if the board is cropped.
-      glift.dom.elem(stone.attr('id')).attr(stone.attrObj());
+      glift.dom.elem(stone.attr('id')).setAttrObj(stone.attrObj());
       var stoneShadowGroup = this.svg.child(this.idGen.stoneShadowGroup());
       if (stoneShadowGroup !== undefined) {
         var stoneShadow = stoneShadowGroup.child(this.idGen.stoneShadow(pt));
@@ -4494,11 +4525,11 @@ glift.displays.board.Intersections.prototype = {
     var starpoint = this.svg.child(this.idGen.starpointGroup())
         .child(this.idGen.starpoint(pt))
     if (starpoint) {
-      starpoint.attr('opacity', 0);
+      starpoint.setAttr('opacity', 0);
     }
     this.svg.child(this.idGen.lineGroup())
         .child(this.idGen.line(pt))
-        .attr('opacity', 0);
+        .setAttr('opacity', 0);
     return this;
   },
 
@@ -4508,10 +4539,12 @@ glift.displays.board.Intersections.prototype = {
     if (this._reqClearForMark(pt, mark)) {
       var starp  = svg.child(idGen.starpointGroup()).child(idGen.starpoint(pt))
       if (starp) {
-        glift.dom.elem(starp.attr('id')).attr('opacity', starp.attr('opacity'));
+        glift.dom.elem(starp.attr('id'))
+            .setAttr('opacity', starp.attr('opacity'));
       }
       var linept = svg.child(idGen.lineGroup()).child(idGen.line(pt))
-      glift.dom.elem(linept.attr('id')).attr('opacity', linept.attr('opacity'));
+      glift.dom.elem(linept.attr('id'))
+          .setAttr('opacity', linept.attr('opacity'));
     }
     markGroup.child(idGen.mark(pt)).attachToParent(markGroup.attr('id'));
     this.markPts.push(pt);
@@ -4533,11 +4566,11 @@ glift.displays.board.Intersections.prototype = {
       var starpoint =
           this.svg.child(idGen.starpointGroup()).child(idGen.starpoint(pt))
       if (starpoint) {
-        starpoint.attr('opacity', 1).updateAttrInDom('opacity');
+        starpoint.setAttr('opacity', 1).updateAttrInDom('opacity');
       }
       var line = this.svg.child(idGen.lineGroup()).child(idGen.line(pt))
       if (line) {
-        line.attr('opacity', 1).updateAttrInDom('opacity');
+        line.setAttr('opacity', 1).updateAttrInDom('opacity');
       }
     }
     markGroup.emptyChildren();
@@ -4557,11 +4590,11 @@ glift.displays.board.Intersections.prototype = {
     var bpt = this.boardPoints.getCoord(pt);
     var boardPoints = this.boardPoints;
     container.append(svglib.path()
-      .attr('d', glift.displays.board.intersectionLine(
+      .setAttr('d', glift.displays.board.intersectionLine(
           bpt, boardPoints.radius * 8, boardPoints.numIntersections))
-      .attr('stroke-width', 3)
-      .attr('stroke', 'blue')
-      .attr('id', this.idGen.guideLine()))
+      .setAttr('stroke-width', 3)
+      .setAttr('stroke', 'blue')
+      .setAttr('id', this.idGen.guideLine()))
   },
 
   clearGuideLines: function() {
@@ -4577,7 +4610,7 @@ glift.displays.board.Intersections.prototype = {
       var children = g.children();
       for (var i = 0, ii = children.length; i < ii; i++) {
         for (var key in attrObj) {
-          children[i].attr(key, attrObj[key]);
+          children[i].setAttr(key, attrObj[key]);
         }
       }
     }
@@ -4595,14 +4628,14 @@ glift.displays.board.Intersections.prototype = {
 
     var stones = this.svg.child(this.idGen.stoneGroup()).children();
     for (var i = 0, len = stones.length; i < len; i++) {
-      glift.dom.elem(stones[i].attr('id')).attr(stoneAttrs);
+      glift.dom.elem(stones[i].attr('id')).setAttrObj(stoneAttrs);
     }
 
     var shadowGroup = this.svg.child(this.idGen.stoneShadowGroup());
     if (shadowGroup) {
       var shadows = shadowGroup.children();
       for (var i = 0, len = shadows.length; i < len; i++) {
-        glift.dom.elem(shadows[i].attr('id')).attr(shadowAttrs);
+        glift.dom.elem(shadows[i].attr('id')).setAttrObj(shadowAttrs);
       }
     }
     return this;
@@ -4716,19 +4749,19 @@ glift.displays.board.lines = function(svg, idGen, boardPoints, theme) {
   // Mapping from int point (e.g., 3,3) hash to id;
   var svglib = glift.displays.svg;
 
-  var container = svglib.group().attr('id', idGen.lineGroup());
+  var container = svglib.group().setAttr('id', idGen.lineGroup());
   svg.append(container);
 
   var data = boardPoints.data();
   for (var i = 0, ii = data.length; i < ii; i++) {
     var pt = data[i];
     container.append(svglib.path()
-      .attr('d', glift.displays.board.intersectionLine(
+      .setAttr('d', glift.displays.board.intersectionLine(
           pt, boardPoints.radius, boardPoints.numIntersections))
-      .attr('stroke', theme.lines.stroke)
-      .attr('stroke-width', theme.lines['stroke-width'])
-      .attr('stroke-linecap', 'round')
-      .attr('id', idGen.line(pt.intPt)));
+      .setAttr('stroke', theme.lines.stroke)
+      .setAttr('stroke-width', theme.lines['stroke-width'])
+      .setAttr('stroke-linecap', 'round')
+      .setAttr('id', idGen.line(pt.intPt)));
   }
 };
 
@@ -4772,8 +4805,8 @@ glift.displays.board.intersectionLine = function(
  * container.
  */
 glift.displays.board.markContainer = function(svg, idGen) {
-  svg.append(glift.displays.svg.group().attr('id', idGen.markGroup()));
-  svg.append(glift.displays.svg.group().attr('id', idGen.tempMarkGroup()));
+  svg.append(glift.displays.svg.group().setAttr('id', idGen.markGroup()));
+  svg.append(glift.displays.svg.group().setAttr('id', idGen.tempMarkGroup()));
 };
 
 /**
@@ -4809,17 +4842,18 @@ glift.displays.board.addMark = function(
       marksTheme = marksTheme.CORRECT_VARIATION;
     }
     container.append(svglib.text()
-        .text(label)
-        .data(pt)
-        .attr('fill', marksTheme.fill)
-        .attr('stroke', marksTheme.stroke)
-        .attr('text-anchor', 'middle')
-        .attr('dy', '.33em') // for vertical centering
-        .attr('x', coordPt.x()) // x and y are the anchor points.
-        .attr('y', coordPt.y())
-        .attr('font-family', stonesTheme.marks['font-family'])
-        .attr('font-size', boardPoints.spacing * stonesTheme.marks['font-size'])
-        .attr('id', markId));
+        .setText(label)
+        .setData(pt)
+        .setAttr('fill', marksTheme.fill)
+        .setAttr('stroke', marksTheme.stroke)
+        .setAttr('text-anchor', 'middle')
+        .setAttr('dy', '.33em') // for vertical centering
+        .setAttr('x', coordPt.x()) // x and y are the anchor points.
+        .setAttr('y', coordPt.y())
+        .setAttr('font-family', stonesTheme.marks['font-family'])
+        .setAttr('font-size',
+            boardPoints.spacing * stonesTheme.marks['font-size'])
+        .setAttr('id', markId));
 
   } else if (mark === marks.SQUARE) {
     var baseDelta = boardPoints.radius / rootTwo;
@@ -4827,15 +4861,15 @@ glift.displays.board.addMark = function(
     // as if it's offset by a little bit.
     var halfWidth = baseDelta - fudge;
     container.append(svglib.rect()
-        .data(pt)
-        .attr('x', coordPt.x() - halfWidth)
-        .attr('y', coordPt.y() - halfWidth)
-        .attr('width', 2 * halfWidth)
-        .attr('height', 2 * halfWidth)
-        .attr('fill', 'none')
-        .attr('stroke-width', 2)
-        .attr('stroke', marksTheme.stroke)
-        .attr('id', markId));
+        .setData(pt)
+        .setAttr('x', coordPt.x() - halfWidth)
+        .setAttr('y', coordPt.y() - halfWidth)
+        .setAttr('width', 2 * halfWidth)
+        .setAttr('height', 2 * halfWidth)
+        .setAttr('fill', 'none')
+        .setAttr('stroke-width', 2)
+        .setAttr('stroke', marksTheme.stroke)
+        .setAttr('id', markId));
 
   } else if (mark === marks.XMARK) {
     var baseDelta = boardPoints.radius / rootTwo;
@@ -4845,8 +4879,8 @@ glift.displays.board.addMark = function(
     var botLeft = coordPt.translate(-1 * halfDelta, halfDelta);
     var botRight = coordPt.translate(halfDelta, halfDelta);
     container.append(svglib.path()
-        .data(pt)
-        .attr('d',
+        .setData(pt)
+        .setAttr('d',
             svgpath.movePt(coordPt) + ' ' +
             svgpath.lineAbsPt(topLeft) + ' ' +
             svgpath.movePt(coordPt) + ' ' +
@@ -4855,45 +4889,45 @@ glift.displays.board.addMark = function(
             svgpath.lineAbsPt(botLeft) + ' ' +
             svgpath.movePt(coordPt) + ' ' +
             svgpath.lineAbsPt(botRight))
-        .attr('stroke-width', 2)
-        .attr('stroke', marksTheme.stroke)
-        .attr('id', markId));
+        .setAttr('stroke-width', 2)
+        .setAttr('stroke', marksTheme.stroke)
+        .setAttr('id', markId));
   } else if (mark === marks.CIRCLE) {
     container.append(svglib.circle()
-        .data(pt)
-        .attr('cx', coordPt.x())
-        .attr('cy', coordPt.y())
-        .attr('r', boardPoints.radius / 2)
-        .attr('fill', 'none')
-        .attr('stroke-width', 2)
-        .attr('stroke', marksTheme.stroke)
-        .attr('id', markId));
+        .setData(pt)
+        .setAttr('cx', coordPt.x())
+        .setAttr('cy', coordPt.y())
+        .setAttr('r', boardPoints.radius / 2)
+        .setAttr('fill', 'none')
+        .setAttr('stroke-width', 2)
+        .setAttr('stroke', marksTheme.stroke)
+        .setAttr('id', markId));
   } else if (mark === marks.STONE_MARKER) {
     var stoneMarkerTheme = stonesTheme.marks['STONE_MARKER'];
     container.append(svglib.circle()
-        .data(pt)
-        .attr('cx', coordPt.x())
-        .attr('cy', coordPt.y())
-        .attr('r', boardPoints.radius / 3)
-        .attr('opacity', marksTheme.STONE_MARKER.opacity)
-        .attr('fill', marksTheme.STONE_MARKER.fill)
-        .attr('id', markId));
+        .setData(pt)
+        .setAttr('cx', coordPt.x())
+        .setAttr('cy', coordPt.y())
+        .setAttr('r', boardPoints.radius / 3)
+        .setAttr('opacity', marksTheme.STONE_MARKER.opacity)
+        .setAttr('fill', marksTheme.STONE_MARKER.fill)
+        .setAttr('id', markId));
   } else if (mark === marks.TRIANGLE) {
     var r = boardPoints.radius - boardPoints.radius / 5;
     var rightNode = coordPt.translate(r * (rootThree / 2), r * (1 / 2));
     var leftNode  = coordPt.translate(r * (-1 * rootThree / 2), r * (1 / 2));
     var topNode = coordPt.translate(0, -1 * r);
     container.append(svglib.path()
-        .data(pt)
-        .attr('fill', 'none')
-        .attr('d',
+        .setData(pt)
+        .setAttr('fill', 'none')
+        .setAttr('d',
             svgpath.movePt(topNode) + ' ' +
             svgpath.lineAbsPt(leftNode) + ' ' +
             svgpath.lineAbsPt(rightNode) + ' ' +
             svgpath.lineAbsPt(topNode))
-        .attr('stroke-width', 2)
-        .attr('stroke', marksTheme.stroke)
-        .attr('id', markId));
+        .setAttr('stroke-width', 2)
+        .setAttr('stroke', marksTheme.stroke)
+        .setAttr('id', markId));
   } else {
     // do nothing.  I suppose we could throw an exception here.
   }
@@ -4907,7 +4941,7 @@ glift.displays.board.addMark = function(
 glift.displays.board.starpoints = function(
     svg, idGen, boardPoints, theme) {
   var svglib = glift.displays.svg;
-  var container = svglib.group().attr('id', idGen.starpointGroup());
+  var container = svglib.group().setAttr('id', idGen.starpointGroup());
   svg.append(container);
 
   var size = theme.starPoints.sizeFraction * boardPoints.spacing;
@@ -4916,12 +4950,12 @@ glift.displays.board.starpoints = function(
     var pt = starPointData[i];
     var coordPt = boardPoints.getCoord(pt).coordPt;
     container.append(svglib.circle()
-      .attr('cx', coordPt.x())
-      .attr('cy', coordPt.y())
-      .attr('r', size)
-      .attr('fill', theme.starPoints.fill)
-      .attr('opacity', 1)
-      .attr('id', idGen.starpoint(pt)));
+      .setAttr('cx', coordPt.x())
+      .setAttr('cy', coordPt.y())
+      .setAttr('r', size)
+      .setAttr('fill', theme.starPoints.fill)
+      .setAttr('opacity', 1)
+      .setAttr('id', idGen.starpoint(pt)));
   }
 };
 
@@ -4931,20 +4965,20 @@ glift.displays.board.starpoints = function(
  */
 glift.displays.board.stones = function(svg, idGen, boardPoints, theme) {
   var svglib = glift.displays.svg;
-  var container = svglib.group().attr('id', idGen.stoneGroup());
+  var container = svglib.group().setAttr('id', idGen.stoneGroup());
   svg.append(container);
   var data = boardPoints.data()
   for (var i = 0, ii = data.length; i < ii; i++) {
     var pt = data[i];
     container.append(svglib.circle()
-      .attr('cx', pt.coordPt.x())
-      .attr('cy', pt.coordPt.y())
-      .attr('r', boardPoints.radius - .4) // subtract for stroke
-      .attr('opacity', 0)
-      .attr('stone_color', 'EMPTY')
-      .attr('fill', 'blue') // dummy color
-      .attr('class', glift.enums.svgElements.STONE)
-      .attr('id', idGen.stone(pt.intPt)));
+      .setAttr('cx', pt.coordPt.x())
+      .setAttr('cy', pt.coordPt.y())
+      .setAttr('r', boardPoints.radius - .4) // subtract for stroke
+      .setAttr('opacity', 0)
+      .setAttr('stone_color', 'EMPTY')
+      .setAttr('fill', 'blue') // dummy color
+      .setAttr('class', glift.enums.svgElements.STONE)
+      .setAttr('id', idGen.stone(pt.intPt)));
   }
 };
 
@@ -4956,21 +4990,21 @@ glift.displays.board.stones = function(svg, idGen, boardPoints, theme) {
 glift.displays.board.shadows = function(svg, idGen, boardPoints, theme) {
   if (theme.stones.shadows === undefined) { return {}; }
   var svglib = glift.displays.svg;
-  var container = svglib.group().attr('id', idGen.stoneShadowGroup());
+  var container = svglib.group().setAttr('id', idGen.stoneShadowGroup());
   svg.append(container);
   var data = boardPoints.data();
   for (var i = 0, ii = data.length; i < ii; i++) {
     var pt = data[i];
     container.append(svglib.circle()
-      .attr('cx', pt.coordPt.x() + boardPoints.radius / 7)
-      .attr('cy', pt.coordPt.y() + boardPoints.radius / 7)
-      .attr('r', boardPoints.radius - 0.4)
-      .attr('opacity', 0)
-      .attr('fill', theme.stones.shadows.fill)
-      // .attr('stroke', theme.stones.shadows.stroke)
-      // .attr('filter', 'url(#' + divId + '_svg_blur)')
-      .attr('class', glift.enums.svgElements.STONE_SHADOW)
-      .attr('id', idGen.stoneShadow(pt.intPt)));
+      .setAttr('cx', pt.coordPt.x() + boardPoints.radius / 7)
+      .setAttr('cy', pt.coordPt.y() + boardPoints.radius / 7)
+      .setAttr('r', boardPoints.radius - 0.4)
+      .setAttr('opacity', 0)
+      .setAttr('fill', theme.stones.shadows.fill)
+      // .setAttr('stroke', theme.stones.shadows.stroke)
+      // .setAttr('filter', 'url(#' + divId + '_svg_blur)')
+      .setAttr('class', glift.enums.svgElements.STONE_SHADOW)
+      .setAttr('id', idGen.stoneShadow(pt.intPt)));
   }
 };
 
@@ -5060,38 +5094,120 @@ glift.displays.commentbox.CommentBox.prototype = {
  */
 glift.displays.gui = {};
 
+goog.provide('glift.displays.gui.MultiCenter')
+goog.provide('glift.displays.gui.SingleCenter')
+goog.provide('glift.displays.gui.Transform')
+
+/**
+ * Transform object. Note that that the scale is set immediately, while the
+ * xMove and yMove are often set later.
+ *
+ * @param {number} scale Scaling factor. Not that 1 means that the object should
+ *    not be scaled.
+ * @param {number=} opt_xMove Defaults to zero if not set.
+ * @param {number=} opt_yMove Defaults to zero if not set
+ * @constructor @final @struct
+ */
+glift.displays.gui.Transform = function(scale, opt_xMove, opt_yMove) {
+  /**
+   * How much to scale the object by.
+   * @type {number}
+   */
+  this.scale = scale;
+  /**
+   * How much to translate the object along the x-axis.
+   * @type {number}
+   */
+  this.xMove = opt_xMove || 0;
+  /**
+   * How much to translate the object along the y-axis.
+   * @type {number}
+   */
+  this.yMove = opt_yMove || 0;
+};
+
+/**
+ * Result of either row-centering or column centering operation
+ *
+ * @param {!Array<!glift.displays.gui.Transform>} transforms The transformations
+ *    to perform.
+ * @param {!Array<!glift.orientation.BoundingBox>} bboxes The transformed bounding
+ *    boxes.
+ * @param {!Array<!glift.orientation.BoundingBox>} unfit Bounding boxes that
+ *    didn't fit given the parameters.
+ * @constructor @final @struct
+ */
+glift.displays.gui.MultiCenter = function(transforms, bboxes, unfit) {
+  this.transforms = transforms;
+  this.bboxes = bboxes;
+  this.unfit = unfit;
+};
+
+/**
+ * Result of either single-element centering.
+ *
+ * @param {!glift.displays.gui.Transform} transforms The transformations
+ *    to perform.
+ * @param {!glift.orientation.BoundingBox} bboxes The transformed bounding
+ *    boxes.
+ *
+ * @constructor @final @struct
+ */
+glift.displays.gui.SingleCenter = function(transform, bbox) {
+  this.transform = transform;
+  this.bbox = bbox;
+};
+
 /**
  * Centers a bunch of icons (really, bounding boxes) within another bounding
- * box.
+ * box. Note: The returned items are guaranteed to be in the order they
+ * appeared as inputs.
  *
- * Return pair of
- *  {
- *    transforms: [...]
- *    bboxes: [...]
- *    unfitTransforms: [...]
- *  }
+ * @param {!glift.orientation.BoundingBox} outerBox
+ * @param {!Array<!glift.orientation.BoundingBox>} outerBox
+ * @param {number} vertMargin
+ * @param {number} horzMargin
+ * @param {number} minSpacing
  *
- * Note: The returned items are guaranteed to be in the order they appeared as
- * inputs.
+ * @return {!glift.displays.gui.MultiCenter}
  */
 glift.displays.gui.rowCenterSimple = function(
     outerBox, inBboxes, vertMargin, horzMargin, minSpacing) {
-  return glift.displays.gui._linearCentering(
+  return glift.displays.gui.linearCentering_(
       outerBox, inBboxes, vertMargin, horzMargin, minSpacing, 0, 'h');
 };
 
+/**
+ * @param {!glift.orientation.BoundingBox} outerBox
+ * @param {!Array<!glift.orientation.BoundingBox>} outerBox
+ * @param {number} vertMargin
+ * @param {number} horzMargin
+ * @param {number} minSpacing
+ *
+ * @return {!glift.displays.gui.MultiCenter}
+ */
 glift.displays.gui.columnCenterSimple = function(
     outerBox, inBboxes, vertMargin, horzMargin, minSpacing) {
-  return glift.displays.gui._linearCentering(
+  return glift.displays.gui.linearCentering_(
       outerBox, inBboxes, vertMargin, horzMargin, minSpacing, 0, 'v');
 };
 
 /**
  * Perform linearCentering either vertically or horizontally.
+ *
+ * @private
+ *
+ * @param {!glift.orientation.BoundingBox} outerBox
+ * @param {!Array<!glift.orientation.BoundingBox>} outerBox
+ * @param {number} vertMargin
+ * @param {number} horzMargin
+ * @param {number} minSpacing
+ * @param {number} maxSpacing Zero indicates no max spacing
+ * @param {string} dir Dir must be either 'v' or 'h'.
+ *
+ * @return {!glift.displays.gui.MultiCenter}
  */
-// TODO(kashomon): Rework this method. It's very complicated and hard to reason
-// about.
-glift.displays.gui._linearCentering = function(
+glift.displays.gui.linearCentering_ = function(
     outerBox, inBboxes, vertMargin, horzMargin, minSpacing, maxSpacing, dir) {
   var outerWidth = outerBox.width(),
       innerWidth = outerWidth - 2 * horzMargin,
@@ -5121,7 +5237,7 @@ glift.displays.gui._linearCentering = function(
     } else {
       var scale = innerHeight / inBboxes[i].height();
     }
-    var partialTransform = { scale: scale };
+    var partialTransform = new glift.displays.gui.Transform(scale);
     var newBbox = inBboxes[i].scale(scale);
     transforms.push(partialTransform);
     newBboxes.push(newBbox);
@@ -5181,9 +5297,21 @@ glift.displays.gui._linearCentering = function(
     }
   }
 
-  return { transforms: transforms, bboxes: finishedBoxes, unfit: unfitBoxes };
+  return new glift.displays.gui.MultiCenter(
+      transforms, finishedBoxes, unfitBoxes);
 };
 
+/**
+ * Center an bounding box within another bounding box.
+ *
+ * @param {!glift.orientation.BoundingBox} outerBox
+ * @param {!glift.orientation.BoundingBox} bbox The bbox to center within the
+ *    outerBbox.
+ * @param {number} vertMargin
+ * @param {number} horzMargin
+ *
+ * @return glif
+ */
 glift.displays.gui.centerWithin = function(
     outerBbox, bbox, vertMargin, horzMargin) {
   var outerWidth = outerBbox.width(),
@@ -5212,13 +5340,12 @@ glift.displays.gui.centerWithin = function(
   if (newBbox.height() < innerHeight) {
     top = top + (innerHeight -  newBbox.height()) / 2;
   }
-  var transform = {
-    xMove: left - newBbox.left(),
-    yMove: top - newBbox.top(),
-    scale: scale
-  };
+  var transform = new glift.displays.gui.Transform(
+    scale,
+    left - newBbox.left(),
+    top - newBbox.top());
   newBbox = newBbox.translate(transform.xMove, transform.yMove);
-  return { transform: transform, bbox: newBbox};
+  return new glift.displays.gui.SingleCenter(transform, newBbox);
 };
 
 goog.provide('glift.displays.icons');
@@ -5330,8 +5457,8 @@ glift.displays.icons.IconBar.prototype = {
         point = glift.util.point;
     this.bbox = divBbox;
     this.svg = svglib.svg()
-      .attr('width', '100%')
-      .attr('height', '100%');
+      .setAttr('width', '100%')
+      .setAttr('height', '100%');
     glift.displays.icons.rowCenterWrapped(
         divBbox, this.icons, this.vertMargin, this.horzMargin)
     this._createIcons();
@@ -5345,17 +5472,17 @@ glift.displays.icons.IconBar.prototype = {
    */
   _createIcons: function() {
     var svglib = glift.displays.svg;
-    var container = svglib.group().attr('id', this.idGen.iconGroup());
+    var container = svglib.group().setAttr('id', this.idGen.iconGroup());
     this.svg.append(container);
-    this.svg.append(svglib.group().attr('id', this.idGen.tempIconGroup()));
+    this.svg.append(svglib.group().setAttr('id', this.idGen.tempIconGroup()));
     for (var i = 0, ii = this.icons.length; i < ii; i++) {
       var icon = this.icons[i];
       var path = svglib.path()
-        .attr('d', icon.iconStr)
-        .attr('id', icon.elementId)
-        .attr('transform', icon.transformString());
+        .setAttr('d', icon.iconStr)
+        .setAttr('id', icon.elementId)
+        .setAttr('transform', icon.transformString());
       for (var key in this.theme.icons.DEFAULT) {
-        path.attr(key, this.theme.icons.DEFAULT[key]);
+        path.setAttr(key, this.theme.icons.DEFAULT[key]);
       }
       container.append(path);
     }
@@ -5367,19 +5494,19 @@ glift.displays.icons.IconBar.prototype = {
    */
   _createIconButtons: function() {
     var svglib = glift.displays.svg;
-    var container = svglib.group().attr('id', this.idGen.buttonGroup());
+    var container = svglib.group().setAttr('id', this.idGen.buttonGroup());
     this.svg.append(container);
     for (var i = 0, len = this.icons.length; i < len; i++) {
       var icon = this.icons[i];
       container.append(svglib.rect()
-        .data(icon.iconName)
-        .attr('x', icon.bbox.topLeft().x())
-        .attr('y', icon.bbox.topLeft().y())
-        .attr('width', icon.bbox.width())
-        .attr('height', icon.bbox.height())
-        .attr('fill', 'blue') // Color doesn't matter, but we need a fill.
-        .attr('opacity', 0)
-        .attr('id', this.idGen.button(icon.iconName)));
+        .setData(icon.iconName)
+        .setAttr('x', icon.bbox.topLeft().x())
+        .setAttr('y', icon.bbox.topLeft().y())
+        .setAttr('width', icon.bbox.width())
+        .setAttr('height', icon.bbox.height())
+        .setAttr('fill', 'blue') // Color doesn't matter, but we need a fill.
+        .setAttr('opacity', 0)
+        .setAttr('id', this.idGen.button(icon.iconName)));
     }
   },
 
@@ -5401,10 +5528,10 @@ glift.displays.icons.IconBar.prototype = {
    * If the tempIcon is specified as a string, it is wrapped first.
    *
    * @param {string} parentIconNameOrIndex Parent icon name.
-   * @param {!glift.displays.icons.WrappedIcon} tempIcon Temporary icon to display
+   * @param {string|!glift.displays.icons.WrappedIcon} tempIcon Temporary icon
+   *    to display.
    * @param {string} color Color string
    * @param {number=} opt_vMargin Optional v margin. Defaults to 2px.
-   * @param {number=} opt_hMargin Optional h margin. Defaults to 2px
    */
   setCenteredTempIcon: function(
       parentIconNameOrIndex, tempIcon, color, opt_vMargin, opt_hMargin) {
@@ -5413,10 +5540,13 @@ glift.displays.icons.IconBar.prototype = {
     var hm = opt_hMargin || 2,
         vm = opt_vMargin || 2;
     var parentIcon = this.getIcon(parentIconNameOrIndex);
+    /** @type {!glift.displays.icons.WrappedIcon} */
+    var wrappedTemp;
     if (glift.util.typeOf(tempIcon) === 'string') {
-      tempIcon = glift.displays.icons.wrappedIcon(tempIcon);
+      wrappedTemp = glift.displays.icons.wrappedIcon(
+        /** @type {string} */ (tempIcon));
     } else {
-      tempIcon = tempIcon.rewrapIcon();
+      wrappedTemp = tempIcon.rewrapIcon();
     }
     var tempIconId = this.idGen.tempIcon(parentIcon.iconName);
 
@@ -5424,16 +5554,16 @@ glift.displays.icons.IconBar.prototype = {
     glift.dom.elem(tempIconId) && glift.dom.elem(tempIconId).remove();
 
     if (parentIcon.subboxIcon !== undefined) {
-      tempIcon = parentIcon.centerWithinSubbox(tempIcon, vm, hm);
+      wrappedTemp = parentIcon.centerWithinSubbox(wrappedTemp, vm, hm);
     } else {
-      tempIcon = parentIcon.centerWithinIcon(tempIcon, vm, hm);
+      wrappedTemp = parentIcon.centerWithinIcon(wrappedTemp, vm, hm);
     }
 
     this.svg.child(this.idGen.tempIconGroup()).appendAndAttach(svglib.path()
-      .attr('d', tempIcon.iconStr)
-      .attr('fill', color) // theme.icons.DEFAULT.fill
-      .attr('id', tempIconId)
-      .attr('transform', tempIcon.transformString()));
+      .setAttr('d', wrappedTemp.iconStr)
+      .setAttr('fill', color) // theme.icons.DEFAULT.fill
+      .setAttr('id', tempIconId)
+      .setAttr('transform', wrappedTemp.transformString()));
     return this;
   },
 
@@ -5455,18 +5585,18 @@ glift.displays.icons.IconBar.prototype = {
     var boxStrokeWidth = 7
     this.clearTempText(iconName);
     var textObj = svglib.text()
-      .text(text)
-      .attr('class', 'tempIcon')
-      .attr('font-family', 'sans-serif') // TODO(kashomon): Put in themes.
-      .attr('font-size', fontSize + 'px')
-      .attr('x', bbox.center().x()) // + boxStrokeWidth + 'px')
-      .attr('y', bbox.center().y()) //+ fontSize)
-      .attr('dy', '.33em') // Move down, for centering purposes
-      .attr('style', 'text-anchor: middle; vertical-align: middle;')
-      .attr('id', this.idGen.tempIconText(iconName))
-      .attr('lengthAdjust', 'spacing'); // also an opt: spacingAndGlyphs
+      .setText(text)
+      .setAttr('class', 'tempIcon')
+      .setAttr('font-family', 'sans-serif') // TODO(kashomon): Put in themes.
+      .setAttr('font-size', fontSize + 'px')
+      .setAttr('x', bbox.center().x()) // + boxStrokeWidth + 'px')
+      .setAttr('y', bbox.center().y()) //+ fontSize)
+      .setAttr('dy', '.33em') // Move down, for centering purposes
+      .setAttr('style', 'text-anchor: middle; vertical-align: middle;')
+      .setAttr('id', this.idGen.tempIconText(iconName))
+      .setAttr('lengthAdjust', 'spacing'); // also an opt: spacingAndGlyphs
     for (var key in attrsObj) {
-      textObj.attr(key, attrsObj[key]);
+      textObj.setAttr(key, attrsObj[key]);
     }
     this.svg.child(this.idGen.tempIconGroup()).appendAndAttach(textObj);
     return this;
@@ -5525,7 +5655,7 @@ glift.displays.icons.IconBar.prototype = {
             var elem = glift.dom.elem(icon.elementId);
             var theme = widgetRef.iconBar.theme.icons;
             for (var key in theme.DEFAULT_HOVER) {
-              elem.attr(key, theme.DEFAULT_HOVER[key]);
+              elem.setAttr(key, theme.DEFAULT_HOVER[key]);
             }
           };
         actionsForIcon.mouseout = iconActions[iconName].mouseout ||
@@ -5534,7 +5664,7 @@ glift.displays.icons.IconBar.prototype = {
             if (elem) { // elem can be null during transitions.
               var theme = widgetRef.iconBar.theme.icons;
               for (var key in theme.DEFAULT) {
-                elem.attr(key, theme.DEFAULT[key]);
+                elem.setAttr(key, theme.DEFAULT[key]);
               }
             }
           };
@@ -5613,16 +5743,6 @@ glift.displays.icons.IconBar.prototype = {
       // Remove if it exists.
       glift.dom.elem(tooltipId) && glift.dom.elem(tooltipId).remove();
     }.bind(this));
-  },
-
-
-  /**
-   * Convenience mothod for adding hover events.  Equivalent to adding mouseover
-   * and mouseout.
-   */
-  setHover: function(name, hoverin, hoverout) {
-    this.setEvent(name, 'mouseover', hoverin);
-    this.setEvent(name, 'mouseout', hoverout);
   },
 
   /**
@@ -5851,11 +5971,11 @@ glift.displays.icons.IconSelector.prototype = {
 
       var svgId = columnId + '_svg';
       var svg = svglib.svg()
-          .attr('id', columnId + '_svg')
-          .attr('height', '100%')
-          .attr('width', '100%');
+          .setAttr('id', columnId + '_svg')
+          .setAttr('height', '100%')
+          .setAttr('width', '100%');
       var idGen = glift.displays.ids.generator(columnId);
-      var container = svglib.group().attr('id', idGen.iconGroup());
+      var container = svglib.group().setAttr('id', idGen.iconGroup());
       svg.append(container);
       for (var i = 0, len = transforms.length; i < len; i++) {
         var icon = rewrapped.shift();
@@ -5863,10 +5983,10 @@ glift.displays.icons.IconSelector.prototype = {
         icon.setElementId(id);
         this.iconList[columnIndex].push(icon);
         container.append(svglib.path()
-            .attr('d', icon.iconStr)
-            .attr('fill', 'black') // replace with theme
-            .attr('id', icon.elementId)
-            .attr('transform', icon.transformString()));
+            .setAttr('d', icon.iconStr)
+            .setAttr('fill', 'black') // replace with theme
+            .setAttr('id', icon.elementId)
+            .setAttr('transform', icon.transformString()));
       }
       this.svgColumnList.push(svg);
       columnIndex++;
@@ -5886,19 +6006,19 @@ glift.displays.icons.IconSelector.prototype = {
       var svg = this.svgColumnList[i];
       var idGen = glift.displays.ids.generator(this.columnIdList[i]);
       var iconColumn = this.iconList[i];
-      var container = svglib.group().attr('id', idGen.buttonGroup());
+      var container = svglib.group().setAttr('id', idGen.buttonGroup());
       svg.append(container);
       for (var j = 0; j < iconColumn.length; j++) {
         var icon = iconColumn[j]
         container.append(svglib.rect()
-          .data(icon.iconName)
-          .attr('x', icon.bbox.topLeft().x())
-          .attr('y', icon.bbox.topLeft().y())
-          .attr('width', icon.bbox.width())
-          .attr('height', icon.bbox.height())
-          .attr('fill', 'blue') // color doesn't matter, but need a fill
-          .attr('opacity', 0)
-          .attr('id', idGen.button(icon.iconName)));
+          .setData(icon.iconName)
+          .setAttr('x', icon.bbox.topLeft().x())
+          .setAttr('y', icon.bbox.topLeft().y())
+          .setAttr('width', icon.bbox.width())
+          .setAttr('height', icon.bbox.height())
+          .setAttr('fill', 'blue') // color doesn't matter, but need a fill
+          .setAttr('opacity', 0)
+          .setAttr('id', idGen.button(icon.iconName)));
       }
     }
   },
@@ -6285,7 +6405,8 @@ glift.displays.icons.wrapIcons = function(iconsRaw) {
   for (var i = 0; i < iconsRaw.length; i++) {
     var item = iconsRaw[i];
     if (glift.util.typeOf(item) === 'string') {
-      out.push(glift.displays.icons.wrappedIcon(item));
+      out.push(glift.displays.icons.wrappedIcon(
+          /** @type {string} */ (item)));
     } else if (glift.util.typeOf(item) === 'array') {
       var subIcons = item;
       // Looks like we only accept the multiopen icon for this category...
@@ -6562,18 +6683,18 @@ glift.displays.svg.createObj = function(type, opt_attrObj) {
 };
 
 /**
- * Create a root SVG object.
- *
+ * Creates a root SVG object.
  * @param {Object=} opt_attrObj optional attribute object.
  * @return {!glift.displays.svg.SvgObj}
  */
 glift.displays.svg.svg = function(opt_attrObj) {
   return new glift.displays.svg.SvgObj('svg', opt_attrObj)
-      .attr('version', '1.1')
-      .attr('xmlns', 'http://www.w3.org/2000/svg');
+      .setAttr('version', '1.1')
+      .setAttr('xmlns', 'http://www.w3.org/2000/svg');
 };
 
 /**
+ * Creates a circle svg object.
  * @param {Object=} opt_attrObj optional attribute object.
  * @return {!glift.displays.svg.SvgObj}
  */
@@ -6582,6 +6703,7 @@ glift.displays.svg.circle = function(opt_attrObj) {
 };
 
 /**
+ * Creates a path svg object.
  * @param {Object=} opt_attrObj optional attribute object.
  * @return {!glift.displays.svg.SvgObj}
  */
@@ -6590,6 +6712,7 @@ glift.displays.svg.path = function(opt_attrObj) {
 };
 
 /**
+ * Creates an rectangle svg object.
  * @param {Object=} opt_attrObj optional attribute object.
  * @return {!glift.displays.svg.SvgObj}
  */
@@ -6598,6 +6721,7 @@ glift.displays.svg.rect = function(opt_attrObj) {
 };
 
 /**
+ * Creates an image svg object.
  * @param {Object=} opt_attrObj optional attribute object.
  * @return {!glift.displays.svg.SvgObj}
  */
@@ -6606,6 +6730,7 @@ glift.displays.svg.image = function(opt_attrObj) {
 };
 
 /**
+ * Creates a text svg object.
  * @param {Object=} opt_attrObj optional attribute object.
  * @return {!glift.displays.svg.SvgObj}
  */
@@ -6615,7 +6740,6 @@ glift.displays.svg.text = function(opt_attrObj) {
 
 /**
  * Create a group object (without any attributes)
- *
  * @return {!glift.displays.svg.SvgObj}
  */
 glift.displays.svg.group = function() {
@@ -6630,17 +6754,24 @@ glift.displays.svg.group = function() {
  * @param {Object=} opt_attrObj optional attribute object.
  */
 glift.displays.svg.SvgObj = function(type, opt_attrObj) {
-  this._type = type;
-  this._attrMap = opt_attrObj || {};
-  this._children = [];
-  this._idMap = {};
-  this._text = '';
-  this._data = undefined;
+  /** @private {string} */
+  this.type_ = type;
+  /** @private {Object} */
+  this.attrMap_ = opt_attrObj || {};
+  /** @private {!Array<!glift.displays.svg.SvgObj>} */
+  this.children_ = [];
+  /** @private {Object<!glift.displays.svg.SvgObj>} */
+  this.idMap_ = {};
+  /** @private {string} */
+  this.text_ = '';
+  /** @private {Object} */
+  this.data_ = undefined;
 };
 
 glift.displays.svg.SvgObj.prototype = {
   /**
    * Attach content to a div.
+   * @param {string} divId}
    */
   attachToParent: function(divId) {
     var svgContainer = document.getElementById(divId);
@@ -6651,6 +6782,7 @@ glift.displays.svg.SvgObj.prototype = {
 
   /**
    * Remove from the element from the DOM.
+   * @return {!glift.displays.svg.SvgObj} this object.
    */
   removeFromDom: function() {
     if (this.attr('id')) {
@@ -6662,76 +6794,89 @@ glift.displays.svg.SvgObj.prototype = {
 
   /**
    * Turn this node (and all children nodes) into SVG elements.
+   * @return {Element} Dom element.
    */
   asElement: function() {
     var elem = document.createElementNS(
-        "http://www.w3.org/2000/svg", this._type);
-    for (var attr in this._attrMap) {
+        "http://www.w3.org/2000/svg", this.type_);
+    for (var attr in this.attrMap_) {
       if (attr === 'xlink:href') {
         elem.setAttributeNS(
-            'http://www.w3.org/1999/xlink', 'href', this._attrMap[attr]);
+            'http://www.w3.org/1999/xlink', 'href', this.attrMap_[attr]);
       } else {
-        elem.setAttribute(attr, this._attrMap[attr]);
+        elem.setAttribute(attr, this.attrMap_[attr]);
       }
     }
-    if (this._type === 'text') {
-      var textNode = document.createTextNode(this._text);
+    if (this.type_ === 'text') {
+      var textNode = document.createTextNode(this.text_);
       elem.appendChild(textNode);
     }
-    for (var i = 0, len = this._children.length; i < len; i++) {
-      elem.appendChild(this._children[i].asElement());
+    for (var i = 0, len = this.children_.length; i < len; i++) {
+      elem.appendChild(this.children_[i].asElement());
     }
     return elem;
   },
 
   /**
    * Return the string form of the svg object.
+   * @return {string}
    */
   render: function() {
-    var base = '<' + this._type;
-    for (var key in this._attrMap) {
-      base += ' ' + key + '="' + this._attrMap[key] + '"';
+    var base = '<' + this.type_;
+    for (var key in this.attrMap_) {
+      base += ' ' + key + '="' + this.attrMap_[key] + '"';
     }
-    base += '>' + this._text;
-    if (this._children.length > 0) {
+    base += '>' + this.text_;
+    if (this.children_.length > 0) {
       var baseBuffer = [base];
-      for (var i = 0, ii = this._children.length; i < ii; i++) {
-        baseBuffer.push(this._children[i].render());
+      for (var i = 0, ii = this.children_.length; i < ii; i++) {
+        baseBuffer.push(this.children_[i].render());
       }
-      baseBuffer.push('</' + this._type + '>');
+      baseBuffer.push('</' + this.type_ + '>');
       base = baseBuffer.join("\n");
     } else {
-      base += '</' + this._type + '>';
+      base += '</' + this.type_ + '>';
     }
     return base;
   },
 
-  /**
-   * Set or get an SVG attribute.
-   */
-  attr: function(key, value) {
-    if (value !== undefined) {
-      this._attrMap[key] = value;
-      return this;
-    } else {
-      return this._attrMap[key];
-    }
+  /** @return {*} A value in the attribute map. */
+  attr: function(key) {
+    return this.attrMap_[key];
   },
 
   /**
-   * Set or get all the an SVG attributes.
+   * Sets an SVG attribute.
+   * @param {string} key The key of an object in the map.
+   * @param {*} value The value to set in the map.
+   * @return {!glift.displays.svg.SvgObj} This object.
    */
-  attrObj: function(obj) {
-    if (obj !== undefined && glift.util.typeOf(obj) === 'object') {
-      this._attrMap = obj;
-      return this;
-    } else {
-      return this._attrMap;
+  setAttr: function(key, value) {
+    this.attrMap_[key] = value;
+    return this;
+  },
+
+  /** @return {Object} The attribute object.  */
+  attrObj: function(opt_obj) {
+    return this.attrMap_;
+  },
+
+  /**
+   * Sets the entire attribute object.
+   * @param {Object} attrObj
+   * @return {!glift.displays.svg.SvgObj} This object.
+   */
+  setAttrObj: function(attrObj) {
+    if (glift.util.typeOf(attrObj) !== 'object') {
+      throw new Error('Attr obj must be of type object');
     }
+    this.attrMap_ = attrObj;
+    return this;
   },
 
   /**
    * Update a particular attribute in the DOM.
+   * @param {string} attr
    */
   updateAttrInDom: function(attr) {
     var elem = document.getElementById(this.attr('id'))
@@ -6741,60 +6886,75 @@ glift.displays.svg.SvgObj.prototype = {
     return this;
   },
 
-  /**
-   * Set some internal data. Note: this data is not attached when the element is
-   * generated.
-   */
+  /** @return {Object} The node's data */
   data: function(data) {
-    if (data !== undefined) {
-      this._data = data;
-      return this;
-    } else {
-      return this._data
-    }
+    return this.data_
   },
 
   /**
-   * Append some text. Ususally only for the 'text' element.
+   * Set some internal data. Note: this data is not attached when the element is
+   * generated.
+   * @param {Object} data
+   * @return {!glift.displays.svg.SvgObj} This object.
    */
+  setData: function(data) {
+    this.data_ = data;
+    return this;
+  },
+
+  /** @return {string} The text on the node. */
   text: function(text) {
-    if (text !== undefined) {
-      this._text = "" + text
-      return this;
-    } else {
-      return this._text;
-    }
+    return this.text_;
+  },
+
+  /**
+   * Append some text. Usually only for text elements.
+   * @param {string} text
+   * @return {!glift.displays.svg.SvgObj} This object.
+   */
+  setText: function(text) {
+    this.text_ = text;
+    return this;
   },
 
   /**
    * Get child from an Id.
+   * @return {!glift.displays.svg.SvgObj} The child obj.
    */
   child: function(id) {
-    return this._idMap[id];
+    return this.idMap_[id];
   },
 
   /**
    * Remove child, based on id.
+   * @return {!glift.displays.svg.SvgObj} This object.
    */
   rmChild: function(id) {
-    delete this._idMap[id];
+    delete this.idMap_[id];
     return this;
   },
 
   /**
    * Get all the Children.
+   * @return {!Array<glift.displays.svg.SvgObj>}
    */
   children: function() {
-    return this._children;
+    return this.children_;
   },
 
-  /** Empty out all the children. */
+  /**
+   * Empty out all the children.
+   * @return {!glift.displays.svg.SvgObj} this object.
+   */
   emptyChildren: function() {
-    this._children = [];
+    this.children_ = [];
     return this;
   },
 
-  /** Empty out all the children and update. */
+  /**
+   * Empty out all the children and update.
+   * @return {!glift.displays.svg.SvgObj} this object.
+   */
   emptyChildrenAndUpdate: function() {
     this.emptyChildren();
     var elem = document.getElementById(this.attr('id'))
@@ -6806,19 +6966,21 @@ glift.displays.svg.SvgObj.prototype = {
 
   /**
    * Add an already existing child.
-   *
-   * Returns the object
+   * @param {!glift.displays.svg.SvgObj} obj Object to add.
+   * @return {!glift.displays.svg.SvgObj} This object.
    */
   append: function(obj) {
     if (obj.attr('id') !== undefined) {
-      this._idMap[obj.attr('id')] = obj;
+      this.idMap_[obj.attr('id')] = obj;
     }
-    this._children.push(obj);
+    this.children_.push(obj);
     return this;
   },
 
   /**
    * Add a new svg object child.
+   * @param {string} type
+   * @param {Object} attrObj
    */
   appendNew: function(type, attrObj) {
     var obj = glift.displays.svg.createObj(type, attrObj);
@@ -6827,6 +6989,7 @@ glift.displays.svg.SvgObj.prototype = {
 
   /**
    * Append an SVG element and attach to the DOM.
+   * @param {!glift.displays.svg.SvgObj} obj
    */
   appendAndAttach: function(obj) {
     this.append(obj);
@@ -6835,12 +6998,16 @@ glift.displays.svg.SvgObj.prototype = {
     }
   },
 
+  /**
+   * Create a copy of the object without any children
+   * @return {!glift.displays.svg.SvgObj}
+   */
   copyNoChildren: function() {
     var newAttr = {};
-    for (var key in this._attrMap) {
-      newAttr[key] = this._attrMap[key];
+    for (var key in this.attrMap_) {
+      newAttr[key] = this.attrMap_[key];
     }
-    return glift.displays.svg.createObj(this._type, newAttr);
+    return glift.displays.svg.createObj(this.type_, newAttr);
   }
 };
 
@@ -7129,29 +7296,31 @@ goog.provide('glift.displays.position.WidgetColumn');
  * @constructor @final @struct
  */
 glift.displays.position.WidgetBoxes = function() {
-  /** @private */
-  this._first = undefined;
-  /** @private */
-  this._second = undefined;
+  /** @private {glift.displays.position.WidgetColumn} */
+  this._first = null;
+  /** @private {glift.displays.position.WidgetColumn} */
+  this._second = null;
 };
 
 glift.displays.position.WidgetBoxes.prototype = {
-  /** Init or get the first column. */
-  first: function(f) {
-    if (f) {
-      this._first = f;
-    } else {
-      return this._first;
-    }
+  /** @param {!glift.displays.position.WidgetColumn} col */
+  setFirst: function(col) {
+    this._first = col;
   },
 
-  /** Init or get the second column. */
-  second: function(f) {
-    if (f) {
-      this._second = f;
-    } else {
-      return this._second;
-    }
+  /** @param {!glift.displays.position.WidgetColumn} col */
+  setSecond: function(col) {
+    this._second = col;
+  },
+
+  /** @return {glift.displays.position.WidgetColumn} First column */
+  first: function() {
+    return this._first;
+  },
+
+  /** @return {glift.displays.position.WidgetColumn} Second column */
+  second: function(col) {
+    return this._second;
   },
 
   /** Get a component by ID. */
@@ -7177,17 +7346,15 @@ glift.displays.position.WidgetBoxes.prototype = {
     if (glift.util.typeOf(fn) !== 'function') {
       return;
     }
-    var colKeys = ['_first', '_second'];
-    for (var i = 0; i < colKeys.length; i++) {
-      var col = this[colKeys[i]];
-      if (col !== undefined) {
-        var ordering = col.ordering;
-        for (var j = 0; j < ordering.length; j++) {
-          var key = ordering[j];
-          fn(key, col.mapping[key]);
-        }
+    var applyOrdering = (function(col, inFn) {
+      var ordering = col.ordering;
+      for (var j = 0; j < ordering.length; j++) {
+        var key = ordering[j];
+        inFn(key, col.mapping[key]);
       }
-    }
+    }).bind(this);
+    this._first && applyOrdering(this._first, fn.bind(this));
+    this._second && applyOrdering(this._second, fn.bind(this));
   },
 
   /**
@@ -7215,7 +7382,8 @@ glift.displays.position.WidgetBoxes.prototype = {
     });
     if (top !== null && left !== null && bottom !== null && right !== null) {
       return glift.orientation.bbox.fromPts(
-          glift.util.point(left, top), glift.util.point(right, bottom));
+          glift.util.point(left, top),
+          glift.util.point(right, bottom));
     } else  {
       return null;
     }
@@ -7394,8 +7562,11 @@ glift.displays.position.WidgetPositioner.prototype = {
   calcVertPositioning: function() {
     var recalCol = this.recalcSplits(this.oneColSplits).first;
     var boxes = new glift.displays.position.WidgetBoxes();
-    boxes.first(this.calculateColumn(
-        recalCol, this.divBox, glift.enums.boardAlignments.TOP));
+    boxes.setFirst(this.calculateColumn(
+        recalCol,
+        this.divBox,
+        glift.enums.boardAlignments.TOP,
+        0 /* startTop */));
     return boxes;
   },
 
@@ -7417,12 +7588,12 @@ glift.displays.position.WidgetPositioner.prototype = {
     var splits = this.recalcSplits(this.twoColSplits);
     var horzSplits = this.splitDivBoxHoriz();
     var boxes = new glift.displays.position.WidgetBoxes();
-    boxes.first(this.calculateColumn(
+    boxes.setFirst(this.calculateColumn(
         splits.first,
         horzSplits[0],
         glift.enums.boardAlignments.RIGHT,
         0 /* startTop */));
-    boxes.second(this.calculateColumn(
+    boxes.setSecond(this.calculateColumn(
         splits.second,
         horzSplits[1],
         null,
@@ -7437,6 +7608,7 @@ glift.displays.position.WidgetPositioner.prototype = {
    * Returns the completed WidgetColumn.
    */
   calculateColumn: function(recalCol, wrapperDiv, alignment, startTop) {
+    var top = startTop || 0;
     var column = new glift.displays.position.WidgetColumn();
     var components = glift.enums.boardComponents;
     var divBoxSplits = [wrapperDiv];
@@ -7466,7 +7638,6 @@ glift.displays.position.WidgetPositioner.prototype = {
       column.setComponent(components.BOARD, board);
     }
 
-    var top = startTop || 0;
     var previousComp = null;
     var previousCompTop = null;
     var colWidth = board ? board.width() : wrapperDiv.width();

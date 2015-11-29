@@ -7,29 +7,31 @@ goog.provide('glift.displays.position.WidgetColumn');
  * @constructor @final @struct
  */
 glift.displays.position.WidgetBoxes = function() {
-  /** @private */
-  this._first = undefined;
-  /** @private */
-  this._second = undefined;
+  /** @private {glift.displays.position.WidgetColumn} */
+  this._first = null;
+  /** @private {glift.displays.position.WidgetColumn} */
+  this._second = null;
 };
 
 glift.displays.position.WidgetBoxes.prototype = {
-  /** Init or get the first column. */
-  first: function(f) {
-    if (f) {
-      this._first = f;
-    } else {
-      return this._first;
-    }
+  /** @param {!glift.displays.position.WidgetColumn} col */
+  setFirst: function(col) {
+    this._first = col;
   },
 
-  /** Init or get the second column. */
-  second: function(f) {
-    if (f) {
-      this._second = f;
-    } else {
-      return this._second;
-    }
+  /** @param {!glift.displays.position.WidgetColumn} col */
+  setSecond: function(col) {
+    this._second = col;
+  },
+
+  /** @return {glift.displays.position.WidgetColumn} First column */
+  first: function() {
+    return this._first;
+  },
+
+  /** @return {glift.displays.position.WidgetColumn} Second column */
+  second: function(col) {
+    return this._second;
   },
 
   /** Get a component by ID. */
@@ -55,17 +57,15 @@ glift.displays.position.WidgetBoxes.prototype = {
     if (glift.util.typeOf(fn) !== 'function') {
       return;
     }
-    var colKeys = ['_first', '_second'];
-    for (var i = 0; i < colKeys.length; i++) {
-      var col = this[colKeys[i]];
-      if (col !== undefined) {
-        var ordering = col.ordering;
-        for (var j = 0; j < ordering.length; j++) {
-          var key = ordering[j];
-          fn(key, col.mapping[key]);
-        }
+    var applyOrdering = (function(col, inFn) {
+      var ordering = col.ordering;
+      for (var j = 0; j < ordering.length; j++) {
+        var key = ordering[j];
+        inFn(key, col.mapping[key]);
       }
-    }
+    }).bind(this);
+    this._first && applyOrdering(this._first, fn.bind(this));
+    this._second && applyOrdering(this._second, fn.bind(this));
   },
 
   /**
@@ -93,7 +93,8 @@ glift.displays.position.WidgetBoxes.prototype = {
     });
     if (top !== null && left !== null && bottom !== null && right !== null) {
       return glift.orientation.bbox.fromPts(
-          glift.util.point(left, top), glift.util.point(right, bottom));
+          glift.util.point(left, top),
+          glift.util.point(right, bottom));
     } else  {
       return null;
     }

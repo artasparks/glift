@@ -59,7 +59,7 @@ glift.displays.ids.Generator = function(divId) {
   this._iconGroup = this._eid(this.divId, this._enum.ICON_CONTAINER);
   this._intersectionsGroup = this._eid(this.divId, this._enum.BOARD);
       this._eid(this.divId, this._enum.INTERSECTIONS_CONTAINER);
-  this._tempMarkGroup = this._eid(this.divId, this._enum.TEMP_MARK_CONTAINER);
+  this._tempMarkGroup = this._eid(this.divId, this._enum.TEMP_MARK_GROUP);
 };
 
 glift.displays.ids.Generator.prototype = {

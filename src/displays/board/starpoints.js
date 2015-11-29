@@ -5,7 +5,7 @@
 glift.displays.board.starpoints = function(
     svg, idGen, boardPoints, theme) {
   var svglib = glift.displays.svg;
-  var container = svglib.group().attr('id', idGen.starpointGroup());
+  var container = svglib.group().setAttr('id', idGen.starpointGroup());
   svg.append(container);
 
   var size = theme.starPoints.sizeFraction * boardPoints.spacing;
@@ -14,11 +14,11 @@ glift.displays.board.starpoints = function(
     var pt = starPointData[i];
     var coordPt = boardPoints.getCoord(pt).coordPt;
     container.append(svglib.circle()
-      .attr('cx', coordPt.x())
-      .attr('cy', coordPt.y())
-      .attr('r', size)
-      .attr('fill', theme.starPoints.fill)
-      .attr('opacity', 1)
-      .attr('id', idGen.starpoint(pt)));
+      .setAttr('cx', coordPt.x())
+      .setAttr('cy', coordPt.y())
+      .setAttr('r', size)
+      .setAttr('fill', theme.starPoints.fill)
+      .setAttr('opacity', 1)
+      .setAttr('id', idGen.starpoint(pt)));
   }
 };

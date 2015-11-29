@@ -109,8 +109,11 @@ glift.displays.position.WidgetPositioner.prototype = {
   calcVertPositioning: function() {
     var recalCol = this.recalcSplits(this.oneColSplits).first;
     var boxes = new glift.displays.position.WidgetBoxes();
-    boxes.first(this.calculateColumn(
-        recalCol, this.divBox, glift.enums.boardAlignments.TOP));
+    boxes.setFirst(this.calculateColumn(
+        recalCol,
+        this.divBox,
+        glift.enums.boardAlignments.TOP,
+        0 /* startTop */));
     return boxes;
   },
 
@@ -132,12 +135,12 @@ glift.displays.position.WidgetPositioner.prototype = {
     var splits = this.recalcSplits(this.twoColSplits);
     var horzSplits = this.splitDivBoxHoriz();
     var boxes = new glift.displays.position.WidgetBoxes();
-    boxes.first(this.calculateColumn(
+    boxes.setFirst(this.calculateColumn(
         splits.first,
         horzSplits[0],
         glift.enums.boardAlignments.RIGHT,
         0 /* startTop */));
-    boxes.second(this.calculateColumn(
+    boxes.setSecond(this.calculateColumn(
         splits.second,
         horzSplits[1],
         null,
@@ -152,6 +155,7 @@ glift.displays.position.WidgetPositioner.prototype = {
    * Returns the completed WidgetColumn.
    */
   calculateColumn: function(recalCol, wrapperDiv, alignment, startTop) {
+    var top = startTop || 0;
     var column = new glift.displays.position.WidgetColumn();
     var components = glift.enums.boardComponents;
     var divBoxSplits = [wrapperDiv];
@@ -181,7 +185,6 @@ glift.displays.position.WidgetPositioner.prototype = {
       column.setComponent(components.BOARD, board);
     }
 
-    var top = startTop || 0;
     var previousComp = null;
     var previousCompTop = null;
     var colWidth = board ? board.width() : wrapperDiv.width();
