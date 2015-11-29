@@ -63,14 +63,6 @@
     deepEqual(out.nextMoves, [1,0,0,0]);
   });
 
-  test('Test nextmoves. Variation -- sideline + minusMoves', function() {
-    // TODO(kashomon): I'm not sure why this test is passing.
-    var mt = glift.rules.movetree.getFromSgf(gameVariation);
-    var out = findNextMovesPath(mt, [0,0,0,0,0,0,1,0], 20);
-    deepEqual(out.treepath, []);
-    deepEqual(out.nextMoves, [0,0,0,0,0,0,1,0]);
-  });
-
   test('Test nextmoves. Variation -- sideline.  No initPos', function() {
     var initPos = [0,0,0,0,0,0,1,0];
     var mt = glift.rules.movetree.getFromSgf(gameVariation, initPos);

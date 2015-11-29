@@ -1,8 +1,6 @@
 goog.provide('glift.displays.cropbox');
 goog.provide('glift.displays.DisplayCropBox');
 
-goog.require('glift.orientation.Cropbox');
-
 glift.displays.cropbox = {
   EXT: .5, // Extension
   DEFAULT_EXTENSION: 0, // Wut.

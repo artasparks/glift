@@ -6,6 +6,7 @@ goog.require('glift.displays.icons');
  * Create a wrapper icon.
  *
  * @param {string} iconName name of the relevant icon.
+ * @return {!glift.displays.icons.WrappedIcon}
  */
 glift.displays.icons.wrappedIcon = function(iconName) {
   return new glift.displays.icons.WrappedIcon(iconName);
@@ -13,6 +14,9 @@ glift.displays.icons.wrappedIcon = function(iconName) {
 
 /**
  * Wrap an array of iconNames.
+ *
+ * @param {!Array<string|!Array<string>>} iconsRaw
+ * return {Array<glift.displays.icons.WrappedIcon>}
  */
 glift.displays.icons.wrapIcons = function(iconsRaw) {
   var out = [];
@@ -22,6 +26,7 @@ glift.displays.icons.wrapIcons = function(iconsRaw) {
       out.push(glift.displays.icons.wrappedIcon(item));
     } else if (glift.util.typeOf(item) === 'array') {
       var subIcons = item;
+      // Looks like we only accept the multiopen icon for this category...
       var outerIcon = glift.displays.icons.wrappedIcon('multiopen')
       for (var j = 0; j < subIcons.length; j++) {
         outerIcon.addAssociatedIcon(subIcons[j]);
@@ -34,11 +39,13 @@ glift.displays.icons.wrapIcons = function(iconsRaw) {
 
 /**
  * Validate that an iconName is valid.
+ * @param {string} iconName
+ * @return {string}
  */
 glift.displays.icons.validateIcon = function(iconName) {
   if (iconName === undefined ||
       glift.displays.icons.svg[iconName] === undefined) {
-    throw "Icon unknown: [" + iconName + "]";
+    throw new Error('Icon unknown: [' + iconName + ']');
   }
   return iconName;
 };
@@ -46,6 +53,8 @@ glift.displays.icons.validateIcon = function(iconName) {
 /**
  * Icon wrapper for convenience.  All you need is:
  *  - The name of the icon
+ *
+ * @param {string} iconName Name of the icon.
  *
  * @constructor
  * @final

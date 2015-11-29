@@ -81,6 +81,7 @@ glift.util = {
    * A utility method -- for prototypal inheritence.
    */
   beget: function (o) {
+    /** @constructor */
     var F = function () {};
     F.prototype = o;
     return new F();

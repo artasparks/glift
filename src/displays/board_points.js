@@ -2,6 +2,15 @@ goog.provide('glift.displays.boardPoints');
 goog.provide('glift.displays.BoardPoints');
 
 /**
+ * @typedef {{
+ *  intPt: glift.Point,
+ *  coordPt: glift.Point,
+ *  bbox: glift.displays.BoundingBox
+ * }}
+ */
+glift.displays.BoardPt;
+
+/**
  * Construct the board points from a linebox.
  */
 glift.displays.boardPoints = function(
@@ -99,6 +108,8 @@ glift.displays.boardPoints = function(
  *  - button bounding box.
  *
  *  Note: The integer points are 0 Indexed.
+ *
+ * @constructor @final @struct
  */
 glift.displays.BoardPoints = function(
     points, spacing, numIntersections, edgeLabels) {

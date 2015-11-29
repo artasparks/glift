@@ -1,14 +1,12 @@
 goog.provide('glift.displays.commentbox.CommentBox');
 
-goog.require('glift.displays.BoundingBox');
-
 /**
  * Create a comment box with:
  *
  * @param {string} divId The div in which the comment box should live
  * @param {!glift.displays.BoundingBox} posBbox The bounding box of the div
  *    (expensive to recompute)
- * @param {!Object} theme The theme object.
+ * @param {!glift.themes.base} theme The theme object.
  * @param {boolean} useMarkdown Whether or not to use markdown
  */
 glift.displays.commentbox.create = function(
@@ -59,6 +57,7 @@ glift.displays.commentbox.CommentBox.prototype = {
   /**
    * Set the text of the comment box. Note: this sanitizes the text to prevent
    * XSS and does some basic HTML-izing.
+   * @param {string} text
    */
   setText: function(text) {
     this.el.empty();
@@ -72,6 +71,6 @@ glift.displays.commentbox.CommentBox.prototype = {
 
   /** Remove all the relevant comment box HTML. */
   destroy: function() {
-    this.commentBoxObj.empty();
+    this.el.remove();
   }
 };

@@ -63,6 +63,7 @@ glift.util.pointArrFromSgfProp = function(str) {
   }
 };
 
+
 /**
  * Take an SGF point (e.g., 'mc') and return a GliftPoint.
  * SGFs are indexed from the Upper Left:
@@ -74,13 +75,14 @@ glift.util.pointArrFromSgfProp = function(str) {
  *   |.
  */
 glift.util.pointFromSgfCoord = function(str) {
-  if (str.length != 2) {
+  if (str.length !== 2) {
     throw 'Unknown SGF Coord length: ' + str.length +
         'for property ' + str;
   }
   var a = 'a'.charCodeAt(0)
   return glift.util.point(str.charCodeAt(0) - a, str.charCodeAt(1) - a);
 };
+
 
 glift.util.pointFromHash = function(str) {
   return glift.util.pointFromString(str);

@@ -202,8 +202,13 @@ glift.displays.board.Intersections.prototype = {
     return this;
   },
 
-  clearMarks: function(markGroup) {
-    markGroup = markGroup || this.svg.child(this.idGen.markGroup());
+  /**
+   * Clear marks (optionally) from a group.
+   * @param {string=} opt_markGroup Specify a mark group ID, or generate one.
+   * @return {glift.displays.board.Intersections} the current obj.
+   */
+  clearMarks: function(opt_markGroup) {
+    var markGroup = opt_markGroup || this.svg.child(this.idGen.markGroup());
     var idGen = this.idGen;
     var children = markGroup.children();
     for (var i = 0, len = children.length; i < len; i++) {

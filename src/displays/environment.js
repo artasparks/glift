@@ -31,22 +31,52 @@ glift.displays.environment = {
   }
 };
 
+/**
+ * @param {string} divId
+ * @param {!glift.displays.BoundingBox} bbox
+ * @param {!Object} options SGF Options.
+ *
+ * @package
+ * @constructor @final @struct
+ */
 glift.displays.GuiEnvironment = function(divId, bbox, options) {
+  /** @type {string} */
   this.divId = divId;
+  /** @type {!glift.displays.BoundingBox} */
   this.bbox = bbox; // required
+  /** @type {number} */
   this.divHeight = bbox.height();
+  /** @type {number} */
   this.divWidth = bbox.width();
+  /** @type {!glift.enums.boardRegions} */
   this.boardRegion = options.boardRegion || glift.enums.boardRegions.ALL;
+  /** @type {number} */
   this.intersections = options.intersections || 19;
+  /** @type {boolean} */
   this.drawBoardCoords = options.drawBoardCoords || false;
 
   var cropNamespace = glift.displays.cropbox;
+
+  /** @type {!glift.displays.DisplayCropBox} */
   this.cropbox = glift.displays.cropbox.getFromRegion(
       this.boardRegion, this.intersections, this.drawBoardCoords);
+
+  // ------- Defined during init ------- //
+  /** @type {glift.displays.BoundingBox} */
+  this.divBox = null;
+  /** @type {glift.displays.BoundingBox} */
+  this.goBoardBox = null;
+  /** @type {glift.displays.LineBox} */
+  this.goBoardLineBox = null;
+  /** @type {glift.displays.BoardPoints} */
+  this.boardPoints = null;
 };
 
 glift.displays.GuiEnvironment.prototype = {
-  // Initialize the internal variables that tell where to place the go broard.
+  /**
+   * Initialize the internal variables that tell where to place the go
+   * broard.
+   */
   init: function() {
     var displays = glift.displays,
         env = displays.environment,

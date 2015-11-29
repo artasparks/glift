@@ -1,3 +1,8 @@
+goog.provide('glift.themes.registered.MOODY');
+
+/**
+ * @extends {glift.themes.base}
+ */
 glift.themes.registered.MOODY = {
   board: {
     fill: '#777'

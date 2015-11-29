@@ -7,9 +7,9 @@ glift.displays.board = {};
 /**
  * Create a new display Board.
  *
- * @param {!Object} env Glift theme wrapper
- * @param {!Object} theme Theme object.
- * @param {string} rotation Rotation enum
+ * @param {!Object} env Glift display environment.
+ * @param {!glift.themes.base} theme A Glift theme.
+ * @param {!glift.enums.rotations} rotation Rotation enum
  */
 glift.displays.board.create = function(env, theme, rotation) {
   return new glift.displays.board.Display(env, theme, rotation).draw();
@@ -18,32 +18,51 @@ glift.displays.board.create = function(env, theme, rotation) {
 /**
  * The core Display object returned to the user.
  *
+ * @param {!Object} environment Gui environment object.
+ * @param {!glift.themes.base} theme A Glift theme.
+ * @param {glift.enums.rotations=} opt_rotation Optional rotation to rotate the
+ *    points.
+ *
  * @constructor
  * @package
  */
-glift.displays.board.Display = function(environment, theme, rotation) {
+glift.displays.board.Display = function(environment, theme, opt_rotation) {
   // Due layering issues, we need to keep track of the order in which we
   // created the objects.
   this._objectHistory = [];
+
   this._environment = environment;
+
   this._theme = theme;
 
-  // Rotation indicates whether we should rotate by stones/marks in the display
-  // by 90, 180, or 270 degrees,
-  this._rotation = rotation || glift.enums.rotations.NO_ROTATION;
-  this._svgBase = null; // defined in draw.
-  this._svg = null; // defined in draw.
-  this._intersections = null// defined in draw;
-  this._buffer = []; // All objects are stuffed into the buffer and are only added
+  /**
+   * Rotation indicates whether we should rotate by stones/marks in the display
+   * by 90, 180, or 270 degrees,
+   * @private {!glift.enums.rotations}
+   */
+  this.rotation_ = opt_rotation || glift.enums.rotations.NO_ROTATION;
+
+  // Variables defined during draw()
+  /** @private {glift.displays.svg.SvgObj} svgBase Root SVG object. */
+  this._svgBase = null;
+  this._svg = null;
+  this._intersections = null;
+
+  // All objects are stuffed into the buffer and are only added to the dom
+  // during flushes.
+  this._buffer = [];
 };
 
 glift.displays.board.Display.prototype = {
   boardPoints: function() { return this._environment.boardPoints; },
+  /** @return {string} */
   boardRegion: function() { return this._environment.boardRegion; },
+  /** @return {string} */
   divId: function() { return this._environment.divId },
   intersectionPoints: function() { return this._environment.intersections; },
   intersections: function() { return this._intersections; },
-  rotation: function() { return this._rotation; },
+  /** @return {!glift.enums.rotations} */
+  rotation: function() { return this.rotation_; },
   width: function() { return this._environment.goBoardBox.width() },
   height: function() { return this._environment.goBoardBox.height() },
 
@@ -51,9 +70,11 @@ glift.displays.board.Display.prototype = {
    * Initialize the SVG
    * This allows us to create a base display object without creating all drawing
    * all the parts.
+   *
+   * @return {!glift.displays.board.Display}
    */
   init: function() {
-    if (this._svg == null) {
+    if (!this._svg) {
       this.destroy(); // make sure everything is cleared out of the div.
       this._svg = glift.displays.svg.svg({
         height: '100%',

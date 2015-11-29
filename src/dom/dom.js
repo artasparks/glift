@@ -23,7 +23,10 @@ glift.dom = {
     return null;
   },
 
-  /** Creates a new div dom element with the relevant id. */
+  /**
+   * Creates a new div dom element with the relevant id.
+   * @param {string} id
+   */
   newDiv: function(id) {
     var elem = glift.dom.elem(document.createElement('div'));
     elem.attr('id', id);
@@ -32,10 +35,11 @@ glift.dom = {
 
   /**
    * Convert some text to some dom elements.
-   * text: The input raw text
-   * optCss: optional CSS object to apply to the lines.
+   * @param {string} text The input raw text
+   * @param {boolean} useMarkdown Whether or not to render with markdown.
+   * @param {!Object=} opt_css Optional CSS object to apply to the lines.
    */
-  convertText: function(text, useMarkdown, optCss) {
+  convertText: function(text, useMarkdown, opt_css) {
     text = glift.dom.sanitize(text);
     if (useMarkdown) {
       text = glift.markdown.render(text);
@@ -50,9 +54,9 @@ glift.dom = {
       for (var i = 0; i < textSegments.length; i++) {
         var seg = textSegments[i];
         var baseCss = { margin: 0, padding: 0, 'min-height': '1em' };
-        if (optCss) {
-          for (var key in optCss) {
-            baseCss[key] = optCss[key];
+        if (opt_css) {
+          for (var key in opt_css) {
+            baseCss[key] = opt_css[key];
           }
         }
         var pNode = glift.dom.newElem('p').css(baseCss);

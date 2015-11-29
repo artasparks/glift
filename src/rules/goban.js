@@ -1,39 +1,52 @@
+goog.provide('glift.rules.CaptureResult');
 goog.provide('glift.rules.Goban');
+goog.provide('glift.rules.StoneResult');
 goog.provide('glift.rules.goban');
+
+/**
+ * Result of a Capture
+ *
+ * @typedef {{
+ *   white: !Array<!glift.rules.Move>,
+ *   black: !Array<!glift.rules.Move>
+ * }}
+ */
+glift.rules.CaptureResult;
 
 glift.rules.goban = {
   /**
    * Creates a Goban instance, just with intersections.
+   * @param {number=} opt_intersections
+   * @return {!glift.rules.Goban}
    */
-  getInstance: function(intersections) {
-    var ints = intersections || 19;
+  getInstance: function(opt_intersections) {
+    var ints = opt_intersections || 19;
     return new glift.rules.Goban(ints);
   },
 
   /**
-   * Creates a goban, from a move tree and (optionally) a treePath, which defines
-   * how to get from the start to a given location.  Usually, the treePath is
-   * the initialPosition, but not necessarily.  If the treepath is undefined, we
-   * craft a treepath to the current location in the movetree.
+   * Creates a goban, from a move tree and (optionally) a treePath, which
+   * defines how to get from the start to a given location.  Usually, the
+   * treePath is the initialPosition, but not necessarily.
    *
    * NOTE: This leaves the movetree in a modified state.
    *
-   * returns:
-   *  {
-   *    goban: Goban,
-   *    captures: [<captures>, <capture>, ...]
-   *  }
-   *
-   * where a capture object looks like:
-   *  { White: [...], Black: [..] }
+   * @param {!glift.rules.MoveTree} mt The movetree.
+   * @param {glift.rules.Treepath=} opt_treepath Optional treepath If the
+   *    treepath is undefined, we craft a treepath to the current location in
+   *    the movetree.
+   * @return {{
+   *   goban: !glift.rules.Goban,
+   *   captures: Array<glift.rules.CaptureResult>
+   * }}
    */
-  getFromMoveTree: function(mt, treepath) {
-    treepath = treepath || mt.treepathToHere();
+  getFromMoveTree: function(mt, opt_treepath) {
+    var treepath = opt_treepath || mt.treepathToHere();
     var goban = new glift.rules.Goban(mt.getIntersections()),
         movetree = mt.getTreeFromRoot(),
         captures = []; // array of captures.
     goban.loadStonesFromMovetree(movetree); // Load root placements.
-    for (var i = 0; 
+    for (var i = 0;
         i < treepath.length && movetree.node().numChildren() > 0;
         i++) {
       movetree.moveDown(treepath[i]);
@@ -62,18 +75,22 @@ glift.rules.goban = {
  * 19,19  : Lower Right
  *
  * As a historical note, this is the oldest part of Glift.
+ *
+ * @constructor @final @structt
  */
 glift.rules.Goban = function(ints) {
   if (!ints || ints <= 0) {
-    throw "Invalid Intersections. Was: " + ints
+    throw new Error("Invalid Intersections. Was: " + ints)
   }
   /** @private {number} */
   this.ints = ints || 19;
+
+  /** @private {!Array<glift.enums.states>} */
   this.stones = glift.rules.initStones_(ints);
 };
 
 glift.rules.Goban.prototype = {
-  /** @return 
+  /** @return {number} The number of intersections. */
   intersections: function() {
     return this.ints;
   },
@@ -82,7 +99,8 @@ glift.rules.Goban.prototype = {
    * getStone helps abstract the nastiness and trickiness of having to use the x/y
    * indices in the reverse order.
    *
-   * Returns: a Color from glift.enums.states.
+   * @param {!glift.Point} point
+   * @return {!glift.enums.states} the state of the intersection
    */
   getStone: function(point) {
     return this.stones[point.y()][point.x()];
@@ -90,8 +108,8 @@ glift.rules.Goban.prototype = {
 
   /**
    * Get all the placed stones on the board (BLACK or WHITE)
-   * Returns an array of the form:
-   *  [ {point:<point>, color:<color>}, {...}, ...]
+   *
+   * @return {!Array<!glift.rules.Move>}
    */
   getAllPlacedStones: function() {
     var out = [];
@@ -171,20 +189,22 @@ glift.rules.Goban.prototype = {
    *
    * addStone always returns a StoneResult object.
    *
-   * A diagram of a StoneResult:
-   * {
-   *    successful: true or false   // Was placing a stone successful?
-   *    captures : [ ... points ... ]  // the intersections of stones captured
-   *        by placing a stone at the intersection (pt).
-   * }
-   *
+   * @param {glift.Point} pt A point
+   * @param {glift.enums.states} color The State to add.
+   * @return {glift.rules.StoneResult}
+   *  successful: boolean,
+   *  captures: Array<glift.Point>
+   * }}
+   * - successful: true or false   // Was placing a stone successful?
+   * - captures :  the intersections of stones captured by
+   *   placing a stone at the intersection (pt).
    */
   addStone: function(pt, color) {
     if (!glift.util.colors.isLegalColor(color)) throw "Unknown color: " + color;
 
     // Add stone fail.  Return a failed StoneResult.
     if (this.outBounds(pt) || !this.placeable(pt))
-      return new glift.rules.StoneResult_(false);
+      return new glift.rules.StoneResult(false);
 
     this._setColor(pt, color); // set stone as active
     var captures = new glift.rules.CaptureTracker_();
@@ -203,14 +223,14 @@ glift.rules.Goban.prototype = {
       if (captures.numCaptures > 0) {
         // Onos! The move is self capture.
         this.clearStone(pt);
-        return new glift.rules.StoneResult_(false);
+        return new glift.rules.StoneResult(false);
       }
     }
 
     var actualCaptures = captures.getCaptures();
     // Remove the captures from the board.
     this.clearSome(actualCaptures);
-    return new glift.rules.StoneResult_(true, actualCaptures);
+    return new glift.rules.StoneResult(true, actualCaptures);
   },
 
   // Get the captures.  We return nothing because state is stored in 'captures'
@@ -322,7 +342,7 @@ glift.rules.Goban.prototype = {
  * @private
  *
  * @param {number} ints The number of intersections.
- * @return {Array<glift.enums.states>} The board.
+ * @return {Array<glift.enums.states>} The board, as an array of states.
  */
 glift.rules.initStones_ = function(ints) {
   var stones = [];
@@ -389,14 +409,19 @@ glift.rules.CaptureTracker_.prototype = {
 /**
  * The stone result keeps track of whether placing a stone was successful and what
  * stones (if any) were captured.
- * @private
+ *
  * @constructor @final @struct
  */
-glift.rules.StoneResult_ = function(success, captures) {
+glift.rules.StoneResult = function(success, captures) {
+  /**
+   * Whether or not the place was successful.
+   * @type {boolean}
+   */
   this.successful = success;
-  if (success) {
-    this.captures = captures;
-  } else {
-    this.captures = [];
-  }
+
+  /**
+   * Array of captured points.
+   * @type {Array<glift.Point>}
+   */
+  this.captures = success ? captures : [];
 };

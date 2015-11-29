@@ -2,10 +2,15 @@
  * Resize the box optimally into the divBox (bounding box). Currently this finds
  * the minimum of height and width, makes a box out of this value, and centers
  * the box.
+ *
+ * @param {glift.displays.BoundingBox} divBox
+ * @param {glift.displays.DisplayCropBox} cropbox
+ * @param {glift.enums.boardAlignments=} opt_alignment
  */
-glift.displays.getResizedBox = function(divBox, cropbox, alignment) {
-  var aligns = glift.enums.boardAlignments,
-      util = glift.util,
+glift.displays.getResizedBox = function(divBox, cropbox, opt_alignment) {
+  var aligns = glift.enums.boardAlignments;
+  var alignment = opt_alignment || aligns.CENTER;
+  var util = glift.util,
       newDims = glift.displays.getCropDimensions(
           divBox.width(),
           divBox.height(),
@@ -22,7 +27,6 @@ glift.displays.getResizedBox = function(divBox, cropbox, alignment) {
       newTop = divBox.topLeft().y() + yDelta,
       newBox = glift.displays.bbox.fromSides(
           util.point(newLeft, newTop), newWidth, newHeight);
-  alignment = alignment || aligns.CENTER;
   if (glift.global.debugMode) {
     newBox._debugInfo = function() {
       return {
@@ -41,8 +45,14 @@ glift.displays.getResizedBox = function(divBox, cropbox, alignment) {
   return newBox;
 };
 
-// Change the dimensions of the box (the height and width) to have the same
-// proportions as cropHeight / cropWidth;
+/**
+ * Change the dimensions of the box (the height and width) to have the same
+ * proportions as cropHeight / cropWidth;
+ *
+ * @param {number} width
+ * @param {number} height
+ * @param {glift.displays.DisplayCropBox} cropbox.
+ */
 glift.displays.getCropDimensions = function(width, height, cropbox) {
   var origRatio = height / width,
       cropRatio = cropbox.heightMod() / cropbox.widthMod(),

@@ -1,3 +1,8 @@
+goog.provide('glift.themes.registered.DEPTH');
+
+/**
+ * @extends {glift.themes.base}
+ */
 glift.themes.registered.DEPTH = {
   stones: {
     shadows: {

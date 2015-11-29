@@ -1,12 +1,14 @@
+goog.require('glift.rules');
+
 /**
  * Autonumber a movetree.
  *
  * NOTE! This removes all numeric labels and replaces them with the labels
  * constructed here, but that's sort of the point.
  *
- * Modifies the current movetree, so no tree is returned.
+ * Modifies the current movetree, so nothing is returned.
  *
- * @param {glift.rules.MoveTree} movetree The movetree to autonumber.
+ * @param {!glift.rules.MoveTree} movetree The movetree to autonumber.
  */
 glift.rules.autonumber = function(movetree) {
   var digitregex = /\d+/;
@@ -18,7 +20,11 @@ glift.rules.autonumber = function(movetree) {
     }
     // First, clear all numeric labels
     var labels = mt.properties().getAllValues('LB');
-    var lblMap = {}; // map from SGF point to label
+    /**
+     * Map from SGF point to string label.
+     * @type {!Object<string>}
+     */
+    var lblMap = {};
     for (var i = 0; labels && i < labels.length; i++) {
       var lblData = labels[i].split(':')
       if (digitregex.test(lblData[1])) {
@@ -73,6 +79,13 @@ glift.rules.autonumber = function(movetree) {
   });
 };
 
+/**
+ * Remove the colliding labels from the label map.
+ *
+ * @param {!glift.rules.MoveTree} mt The movetree
+ * @param {!Object<string>} lblMap Map of SGF Point string to label.
+ * @package
+ */
 glift.rules.removeCollidingLabels = function(mt, lblMap) {
   var toConsider = ['TR', 'SQ'];
   for (var i = 0; i < toConsider.length; i++) {
@@ -97,6 +110,12 @@ glift.rules.removeCollidingLabels = function(mt, lblMap) {
   }
 };
 
+/**
+ * Clear any number-labels at all nodes in the movetree.
+ *
+ * @param {!glift.rules.MoveTree} movetree
+ */
+// TODO(kashomon): Remove? This looks unused.
 glift.rules.clearnumbers = function(movetree) {
   var digitregex = /\d+/;
   movetree.recurseFromRoot(function(mt) {
@@ -105,7 +124,7 @@ glift.rules.clearnumbers = function(movetree) {
       return; // no labels to clear;
     }
     var labels = mt.properties().getAllValues('LB');
-    var newLbls = []; // map from SGF point to label
+    var newLbls = [];
     for (var i = 0; labels && i < labels.length; i++) {
       var lblData = labels[i].split(':')
       if (digitregex.test(lblData[1])) {

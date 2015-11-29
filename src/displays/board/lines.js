@@ -4,10 +4,14 @@ goog.require('glift.displays.board');
  * Create the background lines. These are create at each individual intersection
  * rather than as a whole so that we can clear theme out when we to draw marks
  * on the raw board (rather than on stones).
+ *
+ * @param {glift.displays.svg.SvgObj} svg Base svg obj
+ * @param {!glift.displays.ids.Generator} idGen The ID generator for SVG.
+ * @param {!glift.displays.BoardPoints} boardPoints Board points object.
+ * @param {!glift.themes.base} theme The theme object
  */
 glift.displays.board.lines = function(svg, idGen, boardPoints, theme) {
   // Mapping from int point (e.g., 3,3) hash to id;
-  var elementId = glift.displays.gui.elementId;
   var svglib = glift.displays.svg;
 
   var container = svglib.group().attr('id', idGen.lineGroup());
@@ -26,6 +30,11 @@ glift.displays.board.lines = function(svg, idGen, boardPoints, theme) {
   }
 };
 
+/**
+ * @param {glift.displays.BoardPt} boardPt A
+ * @param {!number} radius Size of the space between the lines
+ * @param {!number} numIntersections Number of intersecitons on the board.
+ */
 glift.displays.board.intersectionLine = function(
     boardPt, radius, numIntersections) {
   // minIntersects: 0 indexed,

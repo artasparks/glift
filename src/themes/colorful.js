@@ -1,7 +1,14 @@
+goog.provide('glift.themes.registered.COLORFUL');
+
+/**
+ * A colorful theme used for debugging.
+ *
+ * @extends {glift.themes.base}
+ */
 glift.themes.registered.COLORFUL = {
   board: {
-    fill: "#f5be7e"
-  }, 
+    fill: '#f5be7e'
+  },
 
   commentBox: {
     css: {

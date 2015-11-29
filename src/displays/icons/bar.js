@@ -66,23 +66,32 @@ glift.displays.icons.IconBar = function(
   this.tooltipId = undefined;
 
   // Post constructor initializiation
-  this._initIconIds(); // Set the ids for the icons above.
-  this._initNameMapping(); // Init the name mapping.
+  this.initIconIds_(); // Set the ids for the icons above.
+  this.initNameMapping_(); // Init the name mapping.
 };
 
 glift.displays.icons.IconBar.prototype = {
-  _initNameMapping: function() {
+  /**
+   * Inializes the name-mapping lookup
+   * @private
+   */
+  initNameMapping_: function() {
     this.forEachIcon(function(icon) {
       this.nameMapping[icon.iconName] = icon;
     }.bind(this));
   },
 
-  _initIconIds: function() {
+  /**
+   * Creates html element ids for each of the icons.
+   * @private
+   */
+  initIconIds_: function() {
     this.forEachIcon(function(icon) {
       icon.setElementId(this.idGen.icon(icon.iconName));
     }.bind(this));
   },
 
+  /** Draws the icon bar. */
   draw: function() {
     this.destroy();
     var svglib = glift.displays.svg;
@@ -160,13 +169,19 @@ glift.displays.icons.IconBar.prototype = {
    * parent icon's bbox.
    *
    * If the tempIcon is specified as a string, it is wrapped first.
+   *
+   * @param {string} parentIconNameOrIndex Parent icon name.
+   * @param {!glift.displays.icons.WrappedIcon} tempIcon Temporary icon to display
+   * @param {string} color Color string
+   * @param {number=} opt_vMargin Optional v margin. Defaults to 2px.
+   * @param {number=} opt_hMargin Optional h margin. Defaults to 2px
    */
   setCenteredTempIcon: function(
-      parentIconNameOrIndex, tempIcon, color, vMargin, hMargin) {
+      parentIconNameOrIndex, tempIcon, color, opt_vMargin, opt_hMargin) {
     // Move these defaults into the Theme.
     var svglib = glift.displays.svg;
-    var hm = hMargin || 2,
-        vm = vMargin || 2;
+    var hm = opt_hMargin || 2,
+        vm = opt_vMargin || 2;
     var parentIcon = this.getIcon(parentIconNameOrIndex);
     if (glift.util.typeOf(tempIcon) === 'string') {
       tempIcon = glift.displays.icons.wrappedIcon(tempIcon);
@@ -249,8 +264,7 @@ glift.displays.icons.IconBar.prototype = {
 
   /** Get the Element ID of the button. */
   buttonId: function(iconName) {
-    return glift.displays.gui.elementId(
-        this.divId, glift.enums.svgElements.BUTTON, iconName);
+    return this.idGen.button(iconName);
   },
 
   /**

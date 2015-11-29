@@ -14,7 +14,7 @@ if (!window['goog']) {
   window['goog'] = {}
   window['goog']['provide'] = function(){};
   window['goog']['require'] = function(){};
-  window['goog']['scope'] = function() {};
+  window['goog']['scope'] = function(fn) { fn() };
 }
 
 goog.provide('glift');
@@ -213,6 +213,7 @@ glift.util = {
    * A utility method -- for prototypal inheritence.
    */
   beget: function (o) {
+    /** @constructor */
     var F = function () {};
     F.prototype = o;
     return new F();
@@ -317,6 +318,7 @@ glift.util.colors = {
 
 goog.provide('glift.enums');
 
+goog.scope(function() {
 /**
  * Various constants used throughout glift.
  */
@@ -333,165 +335,215 @@ glift.enums = {
       return group1 ? group1.toUpperCase() : '';
     });
   },
+}
 
-  /**
-   * Also sometimes referred to as colors.
-   */
-  states: {
-    BLACK: 'BLACK',
-    WHITE: 'WHITE',
-    EMPTY: 'EMPTY'
-  },
+var enums = glift.enums;
 
-  boardAlignments: {
-    TOP: "TOP",
-    RIGHT: "RIGHT",
-    CENTER: "CENTER"
-  },
-
-  directions: {
-    LEFT: 'LEFT',
-    RIGHT: 'RIGHT',
-    TOP: 'TOP',
-    BOTTOM: 'BOTTOM'
-  },
-
-  boardRegions: {
-    LEFT: 'LEFT',
-    RIGHT: 'RIGHT',
-    TOP: 'TOP',
-    BOTTOM: 'BOTTOM',
-    TOP_LEFT: 'TOP_LEFT',
-    TOP_RIGHT: 'TOP_RIGHT',
-    BOTTOM_LEFT: 'BOTTOM_LEFT',
-    BOTTOM_RIGHT: 'BOTTOM_RIGHT',
-    ALL: 'ALL',
-    // Automatically determine the board region.
-    AUTO: 'AUTO',
-    // Minimal cropbox, modulo some heuristics. To do this, you usually need a
-    // movetree, and usually, you need next-path information.
-    MINIMAL: 'MINIMAL'
-  },
-
-
-  controllerMessages: {
-    CONTINUE: 'CONTINUE',
-    DONE: 'DONE',
-    FAILURE: 'FAILURE'
-  },
-
-  marks: {
-    CIRCLE: 'CIRCLE',
-    SQUARE: 'SQUARE',
-    TRIANGLE: 'TRIANGLE',
-    XMARK: 'XMARK',
-    // STONE_MARKER marks the last played stone
-    STONE_MARKER: 'STONE_MARKER',
-    LABEL: 'LABEL',
-
-    // These last few 'marks' are variations on the LABEL mark type.
-    // TODO(kashomon): Consolidate these somehow.
-    //
-    // Neither LABEL_ALPHA nor LABEL_NUMERIC are used for rendering, but they
-    // are extremly convenient to have this distinction when passing information
-    // from the display to the controller
-    LABEL_ALPHA: 'LABEL_ALPHA',
-    LABEL_NUMERIC: 'LABEL_NUMERIC',
-
-    // There last two are variations on the LABEL mark. VARIATION_MARKER is used
-    // so we can color labels differently for variations.
-    VARIATION_MARKER: 'VARIATION_MARKER',
-
-    // We color 'correct' variations differently in problems,
-    CORRECT_VARIATION: 'CORRECT_VARIATION'
-  },
-
-  problemResults: {
-    CORRECT: 'CORRECT',
-    INCORRECT: 'INCORRECT',
-    INDETERMINATE: 'INDETERMINATE',
-    FAILURE: 'FAILURE' // i.e., none of these (couldn't place stone).
-  },
-
-  displayDataTypes: {
-    PARTIAL: 'PARTIAL',
-    FULL: 'FULL'
-  },
-
-  /**
-   * Used to create svg element Ids.  The enum values are slightly modified to
-   * be compatible with being class / id names.
-   */
-  svgElements: {
-    SVG: 'svg',
-    BOARD: 'board',
-    BOARD_COORD_LABELS: 'board_coord_labels',
-    INTERSECTIONS_CONTAINER: 'intersections',
-    BOARD_LINE: 'board_line',
-    BOARD_LINE_CONTAINER: 'board_line_container',
-    BUTTON: 'button',
-    BUTTON_CONTAINER: 'button_container',
-    FULL_BOARD_BUTTON: 'full_board_button',
-    MARK: 'mark',
-    TEMP_MARK_GROUP: 'temp_mark_group',
-    MARK_CONTAINER: 'mark_container',
-    GLIFT_ELEMENT: 'glift_element',
-    STARPOINT: 'starpoint',
-    STARPOINT_CONTAINER: 'starpoint_container',
-    STONE: 'stone',
-    STONE_CONTAINER: 'stone_container',
-    STONE_SHADOW: 'stone_shadow',
-    STONE_SHADOW_CONTAINER: 'stone_shadow_container',
-    GUIDE_LINE: 'guide_line',
-
-    // Icon-bar specific enums
-    ICON: 'icon',
-    ICON_CONTAINER: 'icon_container',
-    TEMP_ICON: 'temp_icon',
-    TEMP_TEXT: 'temp_text',
-    TEMP_ICON_CONTAINER: 'temp_icon_container'
-  },
-
-  showVariations: {
-    ALWAYS: 'ALWAYS',
-    NEVER: 'NEVER',
-    MORE_THAN_ONE: 'MORE_THAN_ONE'
-  },
-
-  /**
-   * Widget types.  These tell the widget manager what widgets to create.
-   */
-  widgetTypes: {
-    CORRECT_VARIATIONS_PROBLEM: 'CORRECT_VARIATIONS_PROBLEM',
-    EXAMPLE: 'EXAMPLE',
-    GAME_SLICE: 'GAME_SLICE',
-    GAME_VIEWER: 'GAME_VIEWER',
-    REDUCED_GAME_VIEWER: 'REDUCED_GAME_VIEWER',
-    STANDARD_PROBLEM: 'STANDARD_PROBLEM',
-    BOARD_EDITOR: 'BOARD_EDITOR'
-  },
-
-  boardComponents: {
-    BOARD: 'BOARD',
-    COMMENT_BOX: 'COMMENT_BOX',
-    EXTRA_ICONBAR: 'EXTRA_ICONBAR',
-    ICONBAR: 'ICONBAR',
-    STATUS_BAR: 'STATUS_BAR'
-  },
-
-  dubug: {
-    NONE: 'NONE',
-    INFO: 'INFO'
-  },
-
-  // Intended to be for points
-  rotations: {
-    NO_ROTATION: 'NO_ROTATION',
-    CLOCKWISE_90: 'CLOCKWISE_90',
-    CLOCKWISE_180: 'CLOCKWISE_180',
-    CLOCKWISE_270: 'CLOCKWISE_270'
-  }
+/**
+ * Also sometimes referred to as colors.
+ * @enum{string}
+ */
+enums.states = {
+  BLACK: 'BLACK',
+  WHITE: 'WHITE',
+  EMPTY: 'EMPTY'
 };
+
+/**
+ * @enum{string}
+ */
+enums.boardAlignments = {
+  TOP: "TOP",
+  RIGHT: "RIGHT",
+  CENTER: "CENTER"
+};
+
+
+/**
+ * List of directions. Used for a variety of tasks.
+ * @enum{string}
+ */
+enums.directions = {
+  LEFT: 'LEFT',
+  RIGHT: 'RIGHT',
+  TOP: 'TOP',
+  BOTTOM: 'BOTTOM'
+};
+
+/**
+ * List of board regions. Usually used for cropping.
+ * @enum{string}
+ */
+enums.boardRegions = {
+  LEFT: 'LEFT',
+  RIGHT: 'RIGHT',
+  TOP: 'TOP',
+  BOTTOM: 'BOTTOM',
+  TOP_LEFT: 'TOP_LEFT',
+  TOP_RIGHT: 'TOP_RIGHT',
+  BOTTOM_LEFT: 'BOTTOM_LEFT',
+  BOTTOM_RIGHT: 'BOTTOM_RIGHT',
+  ALL: 'ALL',
+  // Automatically determine the board region.
+  AUTO: 'AUTO',
+  // Minimal cropbox, modulo some heuristics. To do this, you usually need a
+  // movetree, and usually, you need next-path information.
+  MINIMAL: 'MINIMAL'
+};
+
+/**
+ * Controller messages.
+ * @enum {string}
+ */
+// TODO(kashomon): Delete this
+enums.controllerMessages = {
+  CONTINUE: 'CONTINUE',
+  DONE: 'DONE',
+  FAILURE: 'FAILURE'
+};
+
+/**
+ * @enum {string}
+ */
+enums.marks = {
+  CIRCLE: 'CIRCLE',
+  SQUARE: 'SQUARE',
+  TRIANGLE: 'TRIANGLE',
+  XMARK: 'XMARK',
+  // STONE_MARKER marks the last played stone
+  STONE_MARKER: 'STONE_MARKER',
+  LABEL: 'LABEL',
+
+  // These last few 'marks' are variations on the LABEL mark type.
+  // TODO(kashomon): Consolidate these somehow.
+  //
+  // Neither LABEL_ALPHA nor LABEL_NUMERIC are used for rendering, but they
+  // are extremly convenient to have this distinction when passing information
+  // from the display to the controller
+  LABEL_ALPHA: 'LABEL_ALPHA',
+  LABEL_NUMERIC: 'LABEL_NUMERIC',
+
+  // There last two are variations on the LABEL mark. VARIATION_MARKER is used
+  // so we can color labels differently for variations.
+  VARIATION_MARKER: 'VARIATION_MARKER',
+
+  // We color 'correct' variations differently in problems,
+  CORRECT_VARIATION: 'CORRECT_VARIATION'
+},
+
+/**
+ * Enum to indicate how a move for a problem was resolved.
+ * @enum {string}
+ */
+enums.problemResults = {
+  CORRECT: 'CORRECT',
+  INCORRECT: 'INCORRECT',
+  INDETERMINATE: 'INDETERMINATE',
+  FAILURE: 'FAILURE' // i.e., none of these (couldn't place stone).
+};
+
+/**
+ * How data from glift.intersections should be displayed.
+ * @enum {string}
+ */
+// TODO(kashomon): Delete when we migrate to flattener.
+enums.displayDataTypes = {
+  PARTIAL: 'PARTIAL',
+  FULL: 'FULL'
+};
+
+/**
+ * Used to create svg element Ids.  The enum values are slightly modified to
+ * be compatible with being class / id names.
+ * @enum{string}
+ */
+enums.svgElements = {
+  SVG: 'svg',
+  BOARD: 'board',
+  BOARD_COORD_LABELS: 'board_coord_labels',
+  INTERSECTIONS_CONTAINER: 'intersections',
+  BOARD_LINE: 'board_line',
+  BOARD_LINE_CONTAINER: 'board_line_container',
+  BUTTON: 'button',
+  BUTTON_CONTAINER: 'button_container',
+  FULL_BOARD_BUTTON: 'full_board_button',
+  MARK: 'mark',
+  TEMP_MARK_GROUP: 'temp_mark_group',
+  MARK_CONTAINER: 'mark_container',
+  GLIFT_ELEMENT: 'glift_element',
+  STARPOINT: 'starpoint',
+  STARPOINT_CONTAINER: 'starpoint_container',
+  STONE: 'stone',
+  STONE_CONTAINER: 'stone_container',
+  STONE_SHADOW: 'stone_shadow',
+  STONE_SHADOW_CONTAINER: 'stone_shadow_container',
+  GUIDE_LINE: 'guide_line',
+
+  // Icon-bar specific enums
+  ICON: 'icon',
+  ICON_CONTAINER: 'icon_container',
+  TEMP_ICON: 'temp_icon',
+  TEMP_TEXT: 'temp_text',
+  TEMP_ICON_CONTAINER: 'temp_icon_container'
+};
+
+/**
+ * Whether or not to show variations in the UI.
+ * @enum {string}
+ */
+enums.showVariations = {
+  ALWAYS: 'ALWAYS',
+  NEVER: 'NEVER',
+  MORE_THAN_ONE: 'MORE_THAN_ONE'
+};
+
+/**
+ * The types of widgets users can create. Used to link Controllers and Options.
+ * @enum {string}
+ */
+enums.widgetTypes = {
+  CORRECT_VARIATIONS_PROBLEM: 'CORRECT_VARIATIONS_PROBLEM',
+  EXAMPLE: 'EXAMPLE',
+  GAME_FIGURE: 'GAME_FIGURE',
+  GAME_VIEWER: 'GAME_VIEWER',
+  REDUCED_GAME_VIEWER: 'REDUCED_GAME_VIEWER',
+  STANDARD_PROBLEM: 'STANDARD_PROBLEM',
+  BOARD_EDITOR: 'BOARD_EDITOR'
+},
+
+/**
+ * The types of components that exist in the Glift UI.
+ * @enum {string}
+ */
+enums.boardComponents = {
+  BOARD: 'BOARD',
+  COMMENT_BOX: 'COMMENT_BOX',
+  EXTRA_ICONBAR: 'EXTRA_ICONBAR',
+  ICONBAR: 'ICONBAR',
+  STATUS_BAR: 'STATUS_BAR'
+};
+
+/**
+ * @enum {string}
+ */
+enums.dubug = {
+  NONE: 'NONE',
+  INFO: 'INFO'
+},
+
+/**
+ * Rotations we can apply to Go Boards. Doesn't rotate the fundamental data (the
+ * SGF points), but rotates at the time the board is drawn.
+ * @enum {string}
+ */
+enums.rotations = {
+  NO_ROTATION: 'NO_ROTATION',
+  CLOCKWISE_90: 'CLOCKWISE_90',
+  CLOCKWISE_180: 'CLOCKWISE_180',
+  CLOCKWISE_270: 'CLOCKWISE_270'
+};
+
+});
 
 (function() {
 glift.errors = {};
@@ -908,6 +960,7 @@ glift.util.pointArrFromSgfProp = function(str) {
   }
 };
 
+
 /**
  * Take an SGF point (e.g., 'mc') and return a GliftPoint.
  * SGFs are indexed from the Upper Left:
@@ -919,13 +972,14 @@ glift.util.pointArrFromSgfProp = function(str) {
  *   |.
  */
 glift.util.pointFromSgfCoord = function(str) {
-  if (str.length != 2) {
+  if (str.length !== 2) {
     throw 'Unknown SGF Coord length: ' + str.length +
         'for property ' + str;
   }
   var a = 'a'.charCodeAt(0)
   return glift.util.point(str.charCodeAt(0) - a, str.charCodeAt(1) - a);
 };
+
 
 glift.util.pointFromHash = function(str) {
   return glift.util.pointFromString(str);
@@ -1110,7 +1164,10 @@ glift.dom = {
     return null;
   },
 
-  /** Creates a new div dom element with the relevant id. */
+  /**
+   * Creates a new div dom element with the relevant id.
+   * @param {string} id
+   */
   newDiv: function(id) {
     var elem = glift.dom.elem(document.createElement('div'));
     elem.attr('id', id);
@@ -1119,10 +1176,11 @@ glift.dom = {
 
   /**
    * Convert some text to some dom elements.
-   * text: The input raw text
-   * optCss: optional CSS object to apply to the lines.
+   * @param {string} text The input raw text
+   * @param {boolean} useMarkdown Whether or not to render with markdown.
+   * @param {!Object=} opt_css Optional CSS object to apply to the lines.
    */
-  convertText: function(text, useMarkdown, optCss) {
+  convertText: function(text, useMarkdown, opt_css) {
     text = glift.dom.sanitize(text);
     if (useMarkdown) {
       text = glift.markdown.render(text);
@@ -1137,9 +1195,9 @@ glift.dom = {
       for (var i = 0; i < textSegments.length; i++) {
         var seg = textSegments[i];
         var baseCss = { margin: 0, padding: 0, 'min-height': '1em' };
-        if (optCss) {
-          for (var key in optCss) {
-            baseCss[key] = optCss[key];
+        if (opt_css) {
+          for (var key in opt_css) {
+            baseCss[key] = opt_css[key];
           }
         }
         var pNode = glift.dom.newElem('p').css(baseCss);
@@ -1529,6 +1587,9 @@ glift.ajax = {
   }
 };
 
+goog.provide('glift.themes');
+goog.provide('glift.themes.registered');
+
 glift.themes = {
   /**
    * Registered themes dict.
@@ -1548,7 +1609,7 @@ glift.themes = {
     var registered = glift.themes.registered;
     var rawTheme = !(id in registered) ? null : registered[id];
     if (rawTheme) {
-      return glift.themes.deepCopy({}, rawTheme, registered.DEFAULT);
+      return glift.themes.deepCopy({}, rawTheme, glift.themes.base);
     } else {
       return rawTheme; // null;
     }
@@ -1601,7 +1662,8 @@ glift.themes = {
     return builder;
   },
 
-  /** Accepts a (case sensitive) theme ID and true if the theme exists and false
+  /** 
+   * Accepts a (case sensitive) theme ID and true if the theme exists and false
    * otherwise.
    */
   has: function(id) {
@@ -1612,7 +1674,8 @@ glift.themes = {
     return (id in registered);
   },
 
-  /** Set the 'fill' for the go board to be an image
+  /** 
+   * Set the 'fill' for the go board to be an image
    * For a theme object. This generally assumes you're called 'get' so that you
    * have a copy of the base theme.
    */
@@ -1626,34 +1689,15 @@ glift.themes = {
   }
 };
 
-glift.themes.registered.COLORFUL = {
-  board: {
-    fill: "#f5be7e"
-  }, 
-
-  commentBox: {
-    css: {
-      background: '#CCF',
-      border: '1px solid'
-    }
-  },
-
-  icons: {
-    DEFAULT: {
-      fill: 'blue',
-      stroke: 'none'
-    },
-    DEFAULT_HOVER: {
-      fill: 'red',
-      stroke: 'none'
-    }
-  }
-};
+goog.provide('glift.themes.base');
 
 /**
- * The base theme.  All possible theme options must be specified here.
+ * Base theme from which all others extend. All possible options should be
+ * placed here.
+ *
+ * @abstract
  */
-glift.themes.registered.DEFAULT = {
+glift.themes.base = {
   board: {
     fill: "#f5be7e",
     stroke: "#000000",
@@ -1841,6 +1885,49 @@ glift.themes.registered.DEFAULT = {
   }
 };
 
+goog.provide('glift.themes.registered.COLORFUL');
+
+/**
+ * A colorful theme used for debugging.
+ *
+ * @extends {glift.themes.base}
+ */
+glift.themes.registered.COLORFUL = {
+  board: {
+    fill: '#f5be7e'
+  },
+
+  commentBox: {
+    css: {
+      background: '#CCF',
+      border: '1px solid'
+    }
+  },
+
+  icons: {
+    DEFAULT: {
+      fill: 'blue',
+      stroke: 'none'
+    },
+    DEFAULT_HOVER: {
+      fill: 'red',
+      stroke: 'none'
+    }
+  }
+};
+
+goog.provide('glift.themes.registered.DEFAULT');
+
+/**
+ * @extends {glift.themes.base}
+ */
+glift.themes.registered.DEFAULT = {};
+
+goog.provide('glift.themes.registered.DEPTH');
+
+/**
+ * @extends {glift.themes.base}
+ */
 glift.themes.registered.DEPTH = {
   stones: {
     shadows: {
@@ -1859,6 +1946,11 @@ glift.themes.registered.DEPTH = {
   }
 };
 
+goog.provide('glift.themes.registered.MOODY');
+
+/**
+ * @extends {glift.themes.base}
+ */
 glift.themes.registered.MOODY = {
   board: {
     fill: '#777'
@@ -1884,6 +1976,11 @@ glift.themes.registered.MOODY = {
   }
 }
 
+goog.provide('glift.themes.registered.TEXTBOOK');
+
+/**
+ * @extends {glift.themes.base}
+ */
 glift.themes.registered.TEXTBOOK = {
   board: {
     fill: '#FFF'
@@ -1896,6 +1993,11 @@ glift.themes.registered.TEXTBOOK = {
   }
 };
 
+goog.provide('glift.themes.registered.TRANSPARENT');
+
+/**
+ * @extends {glift.themes.base}
+ */
 glift.themes.registered.TRANSPARENT = {
   board: {
     fill: 'none'
@@ -3525,7 +3627,18 @@ glift.displays.BoundingBox.prototype = {
   }
 };
 
-(function() {
+goog.provide('glift.displays.boardPoints');
+goog.provide('glift.displays.BoardPoints');
+
+/**
+ * @typedef {{
+ *  intPt: glift.Point,
+ *  coordPt: glift.Point,
+ *  bbox: glift.displays.BoundingBox
+ * }}
+ */
+glift.displays.BoardPt;
+
 /**
  * Construct the board points from a linebox.
  */
@@ -3605,14 +3718,8 @@ glift.displays.boardPoints = function(
       }
     }
   }
-  return new BoardPoints(
+  return new glift.displays.BoardPoints(
       points, spacing, maxIntersects, edgeCoords);
-};
-
-/** An edge coordinate label (i.e., A-T, 1-19, depending on side). */
-var EdgeCoordinate = function(pt, label) {
-  this.point = pt;
-  this.label = label;
 };
 
 /**
@@ -3630,8 +3737,11 @@ var EdgeCoordinate = function(pt, label) {
  *  - button bounding box.
  *
  *  Note: The integer points are 0 Indexed.
+ *
+ * @constructor @final @struct
  */
-var BoardPoints = function(points, spacing, numIntersections, edgeLabels) {
+glift.displays.BoardPoints = function(
+    points, spacing, numIntersections, edgeLabels) {
   this.points = points; // int hash is 0 indexed, i.e., 0->18.
   this.spacing = spacing;
   this.radius = spacing / 2;
@@ -3640,7 +3750,7 @@ var BoardPoints = function(points, spacing, numIntersections, edgeLabels) {
   this.dataCache = undefined;
 };
 
-BoardPoints.prototype = {
+glift.displays.BoardPoints.prototype = {
   /**
    * Get the coordinate for a given integer point string.  Note: the integer
    * points are 0 indexed, i.e., 0->18 for a 19x19.  Recall that board points
@@ -3722,12 +3832,9 @@ BoardPoints.prototype = {
     return outStarPoints;
   }
 };
-})();
 
 goog.provide('glift.displays.cropbox');
 goog.provide('glift.displays.DisplayCropBox');
-
-goog.require('glift.orientation.Cropbox');
 
 glift.displays.cropbox = {
   EXT: .5, // Extension
@@ -3838,7 +3945,9 @@ glift.displays.DisplayCropBox.prototype = {
   }
 };
 
-(function() {
+goog.provide('glift.displays.environment');
+goog.provide('glift.displays.GuiEnvironment');
+
 /**
  * The Environment contains:
  *  - The bounding box for the lines.
@@ -3865,26 +3974,56 @@ glift.displays.environment = {
     if (!boardBox) {
       throw new Error('No Bounding Box defined for display environment!')
     }
-    return new GuiEnvironment(divId, boardBox, options);
+    return new glift.displays.GuiEnvironment(divId, boardBox, options);
   }
 };
 
-var GuiEnvironment = function(divId, bbox, options) {
+/**
+ * @param {string} divId
+ * @param {!glift.displays.BoundingBox} bbox
+ * @param {!Object} options SGF Options.
+ *
+ * @package
+ * @constructor @final @struct
+ */
+glift.displays.GuiEnvironment = function(divId, bbox, options) {
+  /** @type {string} */
   this.divId = divId;
+  /** @type {!glift.displays.BoundingBox} */
   this.bbox = bbox; // required
+  /** @type {number} */
   this.divHeight = bbox.height();
+  /** @type {number} */
   this.divWidth = bbox.width();
+  /** @type {!glift.enums.boardRegions} */
   this.boardRegion = options.boardRegion || glift.enums.boardRegions.ALL;
+  /** @type {number} */
   this.intersections = options.intersections || 19;
+  /** @type {boolean} */
   this.drawBoardCoords = options.drawBoardCoords || false;
 
   var cropNamespace = glift.displays.cropbox;
+
+  /** @type {!glift.displays.DisplayCropBox} */
   this.cropbox = glift.displays.cropbox.getFromRegion(
       this.boardRegion, this.intersections, this.drawBoardCoords);
+
+  // ------- Defined during init ------- //
+  /** @type {glift.displays.BoundingBox} */
+  this.divBox = null;
+  /** @type {glift.displays.BoundingBox} */
+  this.goBoardBox = null;
+  /** @type {glift.displays.LineBox} */
+  this.goBoardLineBox = null;
+  /** @type {glift.displays.BoardPoints} */
+  this.boardPoints = null;
 };
 
-GuiEnvironment.prototype = {
-  // Initialize the internal variables that tell where to place the go broard.
+glift.displays.GuiEnvironment.prototype = {
+  /**
+   * Initialize the internal variables that tell where to place the go
+   * broard.
+   */
   init: function() {
     var displays = glift.displays,
         env = displays.environment,
@@ -3918,7 +4057,6 @@ GuiEnvironment.prototype = {
     return this;
   }
 };
-})();
 
 goog.provide('glift.displays.ids');
 goog.provide('glift.displays.ids.Generator');
@@ -3937,15 +4075,18 @@ glift.displays.ids = {
   /**
    * Get an ID for a SVG element (return the stringForm id).
    *
+   * @param {string} divId
+   * @param {glift.enums.svgElements} type
+   * @param {glift.Point|Object|string=} opt_extraData
    * extraData may be undefined.  Usually a point, but also be an icon name.
    */
-  element: function(divId, type, extraData) {
+  element: function(divId, type, opt_extraData) {
     var base = divId + "_" + type;
-    if (extraData !== undefined) {
-      if (extraData.x !== undefined) {
-        return base + '_' + extraData.x() + "_" + extraData.y();
+    if (opt_extraData !== undefined) {
+      if (opt_extraData.x !== undefined) {
+        return base + '_' + opt_extraData.x() + "_" + opt_extraData.y();
       } else {
-        return base + '_' + extraData.toString();
+        return base + '_' + opt_extraData.toString();
       }
     } else {
       return base;
@@ -4020,8 +4161,8 @@ glift.displays.ids.Generator.prototype = {
   buttonGroup: function() { return this._buttonGroup; },
 
   /** ID for a button. */
-  button: function(pt) {
-    return this._eid(this.divId, this._enum.BUTTON, pt);
+  button: function(name) {
+    return this._eid(this.divId, this._enum.BUTTON, name);
   },
 
   /** ID for a full-board button. */
@@ -4129,10 +4270,15 @@ glift.displays.LineBox = function(boundingBox, spacing, cropbox) {
  * Resize the box optimally into the divBox (bounding box). Currently this finds
  * the minimum of height and width, makes a box out of this value, and centers
  * the box.
+ *
+ * @param {glift.displays.BoundingBox} divBox
+ * @param {glift.displays.DisplayCropBox} cropbox
+ * @param {glift.enums.boardAlignments=} opt_alignment
  */
-glift.displays.getResizedBox = function(divBox, cropbox, alignment) {
-  var aligns = glift.enums.boardAlignments,
-      util = glift.util,
+glift.displays.getResizedBox = function(divBox, cropbox, opt_alignment) {
+  var aligns = glift.enums.boardAlignments;
+  var alignment = opt_alignment || aligns.CENTER;
+  var util = glift.util,
       newDims = glift.displays.getCropDimensions(
           divBox.width(),
           divBox.height(),
@@ -4149,7 +4295,6 @@ glift.displays.getResizedBox = function(divBox, cropbox, alignment) {
       newTop = divBox.topLeft().y() + yDelta,
       newBox = glift.displays.bbox.fromSides(
           util.point(newLeft, newTop), newWidth, newHeight);
-  alignment = alignment || aligns.CENTER;
   if (glift.global.debugMode) {
     newBox._debugInfo = function() {
       return {
@@ -4168,8 +4313,14 @@ glift.displays.getResizedBox = function(divBox, cropbox, alignment) {
   return newBox;
 };
 
-// Change the dimensions of the box (the height and width) to have the same
-// proportions as cropHeight / cropWidth;
+/**
+ * Change the dimensions of the box (the height and width) to have the same
+ * proportions as cropHeight / cropWidth;
+ *
+ * @param {number} width
+ * @param {number} height
+ * @param {glift.displays.DisplayCropBox} cropbox.
+ */
 glift.displays.getCropDimensions = function(width, height, cropbox) {
   var origRatio = height / width,
       cropRatio = cropbox.heightMod() / cropbox.widthMod(),
@@ -4195,9 +4346,9 @@ glift.displays.board = {};
 /**
  * Create a new display Board.
  *
- * @param {!Object} env Glift theme wrapper
- * @param {!Object} theme Theme object.
- * @param {string} rotation Rotation enum
+ * @param {!Object} env Glift display environment.
+ * @param {!glift.themes.base} theme A Glift theme.
+ * @param {!glift.enums.rotations} rotation Rotation enum
  */
 glift.displays.board.create = function(env, theme, rotation) {
   return new glift.displays.board.Display(env, theme, rotation).draw();
@@ -4206,32 +4357,51 @@ glift.displays.board.create = function(env, theme, rotation) {
 /**
  * The core Display object returned to the user.
  *
+ * @param {!Object} environment Gui environment object.
+ * @param {!glift.themes.base} theme A Glift theme.
+ * @param {glift.enums.rotations=} opt_rotation Optional rotation to rotate the
+ *    points.
+ *
  * @constructor
  * @package
  */
-glift.displays.board.Display = function(environment, theme, rotation) {
+glift.displays.board.Display = function(environment, theme, opt_rotation) {
   // Due layering issues, we need to keep track of the order in which we
   // created the objects.
   this._objectHistory = [];
+
   this._environment = environment;
+
   this._theme = theme;
 
-  // Rotation indicates whether we should rotate by stones/marks in the display
-  // by 90, 180, or 270 degrees,
-  this._rotation = rotation || glift.enums.rotations.NO_ROTATION;
-  this._svgBase = undefined; // defined in draw.
-  this._svg = undefined; // defined in draw.
-  this._intersections = undefined // defined in draw;
-  this._buffer = []; // All objects are stuffed into the buffer and are only added
+  /**
+   * Rotation indicates whether we should rotate by stones/marks in the display
+   * by 90, 180, or 270 degrees,
+   * @private {!glift.enums.rotations}
+   */
+  this.rotation_ = opt_rotation || glift.enums.rotations.NO_ROTATION;
+
+  // Variables defined during draw()
+  /** @private {glift.displays.svg.SvgObj} svgBase Root SVG object. */
+  this._svgBase = null;
+  this._svg = null;
+  this._intersections = null;
+
+  // All objects are stuffed into the buffer and are only added to the dom
+  // during flushes.
+  this._buffer = [];
 };
 
 glift.displays.board.Display.prototype = {
   boardPoints: function() { return this._environment.boardPoints; },
+  /** @return {string} */
   boardRegion: function() { return this._environment.boardRegion; },
+  /** @return {string} */
   divId: function() { return this._environment.divId },
   intersectionPoints: function() { return this._environment.intersections; },
   intersections: function() { return this._intersections; },
-  rotation: function() { return this._rotation; },
+  /** @return {!glift.enums.rotations} */
+  rotation: function() { return this.rotation_; },
   width: function() { return this._environment.goBoardBox.width() },
   height: function() { return this._environment.goBoardBox.height() },
 
@@ -4239,9 +4409,11 @@ glift.displays.board.Display.prototype = {
    * Initialize the SVG
    * This allows us to create a base display object without creating all drawing
    * all the parts.
+   *
+   * @return {!glift.displays.board.Display}
    */
   init: function() {
-    if (this._svg === undefined) {
+    if (!this._svg) {
       this.destroy(); // make sure everything is cleared out of the div.
       this._svg = glift.displays.svg.svg({
         height: '100%',
@@ -4282,7 +4454,7 @@ glift.displays.board.Display.prototype = {
 
     board.shadows(intGrp, idGen, boardPoints, theme);
     board.stones(intGrp, idGen, boardPoints, theme);
-    board.markContainer(intGrp, idGen, boardPoints, theme);
+    board.markContainer(intGrp, idGen);
     board.buttons(intGrp, idGen, boardPoints);
 
     this._intersections = new glift.displays.board.Intersections(
@@ -4305,23 +4477,28 @@ glift.displays.board.Display.prototype = {
    */
   destroy: function() {
     glift.dom.elem(this.divId()).empty();
-    this._svg = undefined;
-    this._svgBase = undefined;
-    this._intersections = undefined;
+    this._svg = null;
+    this._svgBase = null;
+    this._intersections = null;
     return this;
   }
 };
 
 goog.require('glift.displays.board');
+goog.require('glift.displays.svg');
 
 /**
  * Create the background GoBoard object.  Essentially just a rectangle with a
  * fill color and a border.
+ *
+ * @param {glift.displays.svg.SvgObj} svg Base svg obj
+ * @param {!glift.displays.ids.Generator} idGen The ID generator for SVG.
+ * @param {!glift.displays.BoundingBox} goBox The bounding box of the go board.
+ * @param {!glift.themes.base} theme The theme object
  */
 glift.displays.board.boardBase = function(svg, idGen, goBox, theme) {
-  var svglib = glift.displays.svg;
   if (theme.board.imagefill) {
-    svg.append(svglib.image()
+    svg.append(glift.displays.svg.image()
       .attr('x', goBox.topLeft().x())
       .attr('y', goBox.topLeft().y())
       .attr('width', goBox.width())
@@ -4330,7 +4507,7 @@ glift.displays.board.boardBase = function(svg, idGen, goBox, theme) {
       .attr('preserveAspectRatio', 'none'));
   }
 
-  svg.append(svglib.rect()
+  svg.append(glift.displays.svg.rect()
     .attr('x', goBox.topLeft().x() + 'px')
     .attr('y', goBox.topLeft().y() + 'px')
     .attr('width', goBox.width() + 'px')
@@ -4342,6 +4519,11 @@ glift.displays.board.boardBase = function(svg, idGen, goBox, theme) {
     .attr('id', idGen.board()));
 };
 
+/**
+ * @param {string} divId The element ID of the div in which the SVG board lives.
+ * @param {glift.displays.svg.SvgObj} svg Base svg obj, in which the filters should be
+ *    placed.
+ */
 glift.displays.board.initBlurFilter = function(divId, svg) {
   // svg.append("svg:defs")
     // .append("svg:filter")
@@ -4606,8 +4788,13 @@ glift.displays.board.Intersections.prototype = {
     return this;
   },
 
-  clearMarks: function(markGroup) {
-    markGroup = markGroup || this.svg.child(this.idGen.markGroup());
+  /**
+   * Clear marks (optionally) from a group.
+   * @param {string=} opt_markGroup Specify a mark group ID, or generate one.
+   * @return {glift.displays.board.Intersections} the current obj.
+   */
+  clearMarks: function(opt_markGroup) {
+    var markGroup = opt_markGroup || this.svg.child(this.idGen.markGroup());
     var idGen = this.idGen;
     var children = markGroup.children();
     for (var i = 0, len = children.length; i < len; i++) {
@@ -4789,10 +4976,14 @@ goog.require('glift.displays.board');
  * Create the background lines. These are create at each individual intersection
  * rather than as a whole so that we can clear theme out when we to draw marks
  * on the raw board (rather than on stones).
+ *
+ * @param {glift.displays.svg.SvgObj} svg Base svg obj
+ * @param {!glift.displays.ids.Generator} idGen The ID generator for SVG.
+ * @param {!glift.displays.BoardPoints} boardPoints Board points object.
+ * @param {!glift.themes.base} theme The theme object
  */
 glift.displays.board.lines = function(svg, idGen, boardPoints, theme) {
   // Mapping from int point (e.g., 3,3) hash to id;
-  var elementId = glift.displays.gui.elementId;
   var svglib = glift.displays.svg;
 
   var container = svglib.group().attr('id', idGen.lineGroup());
@@ -4811,6 +5002,11 @@ glift.displays.board.lines = function(svg, idGen, boardPoints, theme) {
   }
 };
 
+/**
+ * @param {glift.displays.BoardPt} boardPt A
+ * @param {!number} radius Size of the space between the lines
+ * @param {!number} numIntersections Number of intersecitons on the board.
+ */
 glift.displays.board.intersectionLine = function(
     boardPt, radius, numIntersections) {
   // minIntersects: 0 indexed,
@@ -5054,15 +5250,13 @@ glift.displays.commentbox = {};
 
 goog.provide('glift.displays.commentbox.CommentBox');
 
-goog.require('glift.displays.BoundingBox');
-
 /**
  * Create a comment box with:
  *
  * @param {string} divId The div in which the comment box should live
  * @param {!glift.displays.BoundingBox} posBbox The bounding box of the div
  *    (expensive to recompute)
- * @param {!Object} theme The theme object.
+ * @param {!glift.themes.base} theme The theme object.
  * @param {boolean} useMarkdown Whether or not to use markdown
  */
 glift.displays.commentbox.create = function(
@@ -5113,6 +5307,7 @@ glift.displays.commentbox.CommentBox.prototype = {
   /**
    * Set the text of the comment box. Note: this sanitizes the text to prevent
    * XSS and does some basic HTML-izing.
+   * @param {string} text
    */
   setText: function(text) {
     this.el.empty();
@@ -5126,7 +5321,7 @@ glift.displays.commentbox.CommentBox.prototype = {
 
   /** Remove all the relevant comment box HTML. */
   destroy: function() {
-    this.commentBoxObj.empty();
+    this.el.remove();
   }
 };
 
@@ -5371,23 +5566,32 @@ glift.displays.icons.IconBar = function(
   this.tooltipId = undefined;
 
   // Post constructor initializiation
-  this._initIconIds(); // Set the ids for the icons above.
-  this._initNameMapping(); // Init the name mapping.
+  this.initIconIds_(); // Set the ids for the icons above.
+  this.initNameMapping_(); // Init the name mapping.
 };
 
 glift.displays.icons.IconBar.prototype = {
-  _initNameMapping: function() {
+  /**
+   * Inializes the name-mapping lookup
+   * @private
+   */
+  initNameMapping_: function() {
     this.forEachIcon(function(icon) {
       this.nameMapping[icon.iconName] = icon;
     }.bind(this));
   },
 
-  _initIconIds: function() {
+  /**
+   * Creates html element ids for each of the icons.
+   * @private
+   */
+  initIconIds_: function() {
     this.forEachIcon(function(icon) {
       icon.setElementId(this.idGen.icon(icon.iconName));
     }.bind(this));
   },
 
+  /** Draws the icon bar. */
   draw: function() {
     this.destroy();
     var svglib = glift.displays.svg;
@@ -5465,13 +5669,19 @@ glift.displays.icons.IconBar.prototype = {
    * parent icon's bbox.
    *
    * If the tempIcon is specified as a string, it is wrapped first.
+   *
+   * @param {string} parentIconNameOrIndex Parent icon name.
+   * @param {!glift.displays.icons.WrappedIcon} tempIcon Temporary icon to display
+   * @param {string} color Color string
+   * @param {number=} opt_vMargin Optional v margin. Defaults to 2px.
+   * @param {number=} opt_hMargin Optional h margin. Defaults to 2px
    */
   setCenteredTempIcon: function(
-      parentIconNameOrIndex, tempIcon, color, vMargin, hMargin) {
+      parentIconNameOrIndex, tempIcon, color, opt_vMargin, opt_hMargin) {
     // Move these defaults into the Theme.
     var svglib = glift.displays.svg;
-    var hm = hMargin || 2,
-        vm = vMargin || 2;
+    var hm = opt_hMargin || 2,
+        vm = opt_vMargin || 2;
     var parentIcon = this.getIcon(parentIconNameOrIndex);
     if (glift.util.typeOf(tempIcon) === 'string') {
       tempIcon = glift.displays.icons.wrappedIcon(tempIcon);
@@ -5554,8 +5764,7 @@ glift.displays.icons.IconBar.prototype = {
 
   /** Get the Element ID of the button. */
   buttonId: function(iconName) {
-    return glift.displays.gui.elementId(
-        this.divId, glift.enums.svgElements.BUTTON, iconName);
+    return this.idGen.button(iconName);
   },
 
   /**
@@ -5737,40 +5946,75 @@ glift.displays.icons.IconBar.prototype = {
 goog.require('glift.displays.icons');
 
 /**
+ * Row center Direcotry
+ * @enum {string}
+ * @private
+ */
+glift.displays.icons.CenterDir = {
+  H: 'h',
+  V: 'v'
+};
+
+
+/**
  * Row-Center an array of wrapped icons.
+ *
+ * @param {!glift.displays.BoundingBox} divBbox
+ * @param {!Array<!glift.displays.icons.WrappedIcon>} wrappedIcons
+ * @param {number} vMargin
+ * @param {number} hMargin
+ * @param {number=} opt_minSpacing
  */
 glift.displays.icons.rowCenterWrapped = function(
-    divBbox, wrappedIcons, vMargin, hMargin, minSpacing) {
+    divBbox, wrappedIcons, vMargin, hMargin, opt_minSpacing) {
+  var minSpacing = opt_minSpacing || 0;
   return glift.displays.icons._centerWrapped(
-      divBbox, wrappedIcons, vMargin, hMargin, minSpacing, 'h');
+      divBbox, wrappedIcons, vMargin, hMargin, minSpacing,
+      glift.displays.icons.CenterDir.H);
 }
 
 /**
  * Column-Center an array of wrapped icons.
+ *
+ * @param {!glift.displays.BoundingBox} divBbox
+ * @param {!Array<!glift.displays.icons.WrappedIcon>} wrappedIcons
+ * @param {number} vMargin
+ * @param {number} hMargin
+ * @param {number=} opt_minSpacing
  */
 glift.displays.icons.columnCenterWrapped = function(
-    divBbox, wrappedIcons, vMargin, hMargin, minSpacing) {
+    divBbox, wrappedIcons, vMargin, hMargin, opt_minSpacing) {
+  var minSpacing = opt_minSpacing || 0;
   return glift.displays.icons._centerWrapped(
-      divBbox, wrappedIcons, vMargin, hMargin, minSpacing, 'v');
+      divBbox, wrappedIcons, vMargin, hMargin, minSpacing,
+      glift.displays.icons.CenterDir.V);
 }
 
 /**
- * Center an array of wrapped icons.
+ * Center wrapped icons
+ *
+ * @private
+ *
+ * @param {!glift.displays.BoundingBox} divBbox
+ * @param {!Array<!glift.displays.icons.WrappedIcon>} wrappedIcons
+ * @param {number} vMargin
+ * @param {number} hMargin
+ * @param {number} minSpacing
+ * @param {glift.displays.icons.CenterDir} direction
  */
 glift.displays.icons._centerWrapped = function(
     divBbox, wrappedIcons, vMargin, hMargin, minSpacing, direction) {
   var bboxes = [];
-  if (direction !== 'h' && direction !== 'v') {
-    direction = 'h'
+  if (direction !== glift.displays.icons.CenterDir.H &&
+      direction !== glift.displays.icons.CenterDir.V) {
+    direction = glift.displays.icons.CenterDir.H;
   }
   for (var i = 0; i < wrappedIcons.length; i++) {
     bboxes.push(wrappedIcons[i].bbox);
   }
 
-  minSpacing = minSpacing || 0;
-
   // Row center returns: { transforms: [...], bboxes: [...] }
-  if (direction === 'h') {
+  if (direction === glift.displays.icons.CenterDir.H) {
     var centeringData = glift.displays.gui.rowCenterSimple(
         divBbox, bboxes, vMargin, hMargin, minSpacing);
   } else {
@@ -6294,6 +6538,7 @@ goog.require('glift.displays.icons');
  * Create a wrapper icon.
  *
  * @param {string} iconName name of the relevant icon.
+ * @return {!glift.displays.icons.WrappedIcon}
  */
 glift.displays.icons.wrappedIcon = function(iconName) {
   return new glift.displays.icons.WrappedIcon(iconName);
@@ -6301,6 +6546,9 @@ glift.displays.icons.wrappedIcon = function(iconName) {
 
 /**
  * Wrap an array of iconNames.
+ *
+ * @param {!Array<string|!Array<string>>} iconsRaw
+ * return {Array<glift.displays.icons.WrappedIcon>}
  */
 glift.displays.icons.wrapIcons = function(iconsRaw) {
   var out = [];
@@ -6310,6 +6558,7 @@ glift.displays.icons.wrapIcons = function(iconsRaw) {
       out.push(glift.displays.icons.wrappedIcon(item));
     } else if (glift.util.typeOf(item) === 'array') {
       var subIcons = item;
+      // Looks like we only accept the multiopen icon for this category...
       var outerIcon = glift.displays.icons.wrappedIcon('multiopen')
       for (var j = 0; j < subIcons.length; j++) {
         outerIcon.addAssociatedIcon(subIcons[j]);
@@ -6322,11 +6571,13 @@ glift.displays.icons.wrapIcons = function(iconsRaw) {
 
 /**
  * Validate that an iconName is valid.
+ * @param {string} iconName
+ * @return {string}
  */
 glift.displays.icons.validateIcon = function(iconName) {
   if (iconName === undefined ||
       glift.displays.icons.svg[iconName] === undefined) {
-    throw "Icon unknown: [" + iconName + "]";
+    throw new Error('Icon unknown: [' + iconName + ']');
   }
   return iconName;
 };
@@ -6334,6 +6585,8 @@ glift.displays.icons.validateIcon = function(iconName) {
 /**
  * Icon wrapper for convenience.  All you need is:
  *  - The name of the icon
+ *
+ * @param {string} iconName Name of the icon.
  *
  * @constructor
  * @final
@@ -6568,36 +6821,73 @@ glift.displays.svg.pathutils = {
 
 goog.provide('glift.displays.svg.SvgObj');
 
-glift.displays.svg.createObj = function(type, attrObj) {
-   return new glift.displays.svg.SvgObj(type, attrObj);
+/**
+ * Creats a SVG Wrapper object.
+ *
+ * @param {string} type Svg element type.
+ * @param {Object=} opt_attrObj optional attribute object.
+ */
+glift.displays.svg.createObj = function(type, opt_attrObj) {
+   return new glift.displays.svg.SvgObj(type, opt_attrObj);
 };
 
-glift.displays.svg.svg = function(attrObj) {
-  return new glift.displays.svg.SvgObj('svg', attrObj)
+/**
+ * Create a root SVG object.
+ *
+ * @param {Object=} opt_attrObj optional attribute object.
+ * @return {!glift.displays.svg.SvgObj}
+ */
+glift.displays.svg.svg = function(opt_attrObj) {
+  return new glift.displays.svg.SvgObj('svg', opt_attrObj)
       .attr('version', '1.1')
       .attr('xmlns', 'http://www.w3.org/2000/svg');
 };
 
-glift.displays.svg.circle = function(attrObj) {
-  return new glift.displays.svg.SvgObj('circle', attrObj);
+/**
+ * @param {Object=} opt_attrObj optional attribute object.
+ * @return {!glift.displays.svg.SvgObj}
+ */
+glift.displays.svg.circle = function(opt_attrObj) {
+  return new glift.displays.svg.SvgObj('circle', opt_attrObj);
 };
 
-glift.displays.svg.path = function(attrObj) {
-  return new glift.displays.svg.SvgObj('path', attrObj);
+/**
+ * @param {Object=} opt_attrObj optional attribute object.
+ * @return {!glift.displays.svg.SvgObj}
+ */
+glift.displays.svg.path = function(opt_attrObj) {
+  return new glift.displays.svg.SvgObj('path', opt_attrObj);
 };
 
-glift.displays.svg.rect = function(attrObj) {
-  return new glift.displays.svg.SvgObj('rect', attrObj);
+/**
+ * @param {Object=} opt_attrObj optional attribute object.
+ * @return {!glift.displays.svg.SvgObj}
+ */
+glift.displays.svg.rect = function(opt_attrObj) {
+  return new glift.displays.svg.SvgObj('rect', opt_attrObj);
 };
 
-glift.displays.svg.image = function(attrObj) {
-  return new glift.displays.svg.SvgObj('image', attrObj);
+/**
+ * @param {Object=} opt_attrObj optional attribute object.
+ * @return {!glift.displays.svg.SvgObj}
+ */
+glift.displays.svg.image = function(opt_attrObj) {
+  return new glift.displays.svg.SvgObj('image', opt_attrObj);
 };
 
-glift.displays.svg.text = function(attrObj) {
-  return new glift.displays.svg.SvgObj('text', attrObj);
+/**
+ * @param {Object=} opt_attrObj optional attribute object.
+ * @return {!glift.displays.svg.SvgObj}
+ */
+glift.displays.svg.text = function(opt_attrObj) {
+  return new glift.displays.svg.SvgObj('text', opt_attrObj);
 };
 
+/**
+ * Create a group object (without any attributes)
+ *
+ * @return {!glift.displays.svg.SvgObj}
+ */
 glift.displays.svg.group = function() {
   return new glift.displays.svg.SvgObj('g');
 };
@@ -6605,10 +6895,13 @@ glift.displays.svg.group = function() {
 /**
  * SVG Wrapper object.
  * @constructor @final @struct
+ *
+ * @param {string} type Svg element type.
+ * @param {Object=} opt_attrObj optional attribute object.
  */
-glift.displays.svg.SvgObj = function(type, attrObj) {
+glift.displays.svg.SvgObj = function(type, opt_attrObj) {
   this._type = type;
-  this._attrMap =  attrObj || {};
+  this._attrMap = opt_attrObj || {};
   this._children = [];
   this._idMap = {};
   this._text = '';
@@ -7599,13 +7892,17 @@ goog.provide('glift.rules');
  */
 glift.rules = {};
 
+goog.require('glift.rules');
+
 /**
- * Autonumber the shit out of the movetree.
+ * Autonumber a movetree.
  *
  * NOTE! This removes all numeric labels and replaces them with the labels
  * constructed here, but that's sort of the point.
  *
- * Modifies the current movtree.
+ * Modifies the current movetree, so nothing is returned.
+ *
+ * @param {!glift.rules.MoveTree} movetree The movetree to autonumber.
  */
 glift.rules.autonumber = function(movetree) {
   var digitregex = /\d+/;
@@ -7617,7 +7914,11 @@ glift.rules.autonumber = function(movetree) {
     }
     // First, clear all numeric labels
     var labels = mt.properties().getAllValues('LB');
-    var lblMap = {}; // map from SGF point to label
+    /**
+     * Map from SGF point to string label.
+     * @type {!Object<string>}
+     */
+    var lblMap = {};
     for (var i = 0; labels && i < labels.length; i++) {
       var lblData = labels[i].split(':')
       if (digitregex.test(lblData[1])) {
@@ -7672,6 +7973,13 @@ glift.rules.autonumber = function(movetree) {
   });
 };
 
+/**
+ * Remove the colliding labels from the label map.
+ *
+ * @param {!glift.rules.MoveTree} mt The movetree
+ * @param {!Object<string>} lblMap Map of SGF Point string to label.
+ * @package
+ */
 glift.rules.removeCollidingLabels = function(mt, lblMap) {
   var toConsider = ['TR', 'SQ'];
   for (var i = 0; i < toConsider.length; i++) {
@@ -7696,6 +8004,12 @@ glift.rules.removeCollidingLabels = function(mt, lblMap) {
   }
 };
 
+/**
+ * Clear any number-labels at all nodes in the movetree.
+ *
+ * @param {!glift.rules.MoveTree} movetree
+ */
+// TODO(kashomon): Remove? This looks unused.
 glift.rules.clearnumbers = function(movetree) {
   var digitregex = /\d+/;
   movetree.recurseFromRoot(function(mt) {
@@ -7704,7 +8018,7 @@ glift.rules.clearnumbers = function(movetree) {
       return; // no labels to clear;
     }
     var labels = mt.properties().getAllValues('LB');
-    var newLbls = []; // map from SGF point to label
+    var newLbls = [];
     for (var i = 0; labels && i < labels.length; i++) {
       var lblData = labels[i].split(':')
       if (digitregex.test(lblData[1])) {
@@ -7721,40 +8035,55 @@ glift.rules.clearnumbers = function(movetree) {
   });
 };
 
-(function(){
+goog.provide('glift.rules.CaptureResult');
+goog.provide('glift.rules.Goban');
+goog.provide('glift.rules.StoneResult');
+goog.provide('glift.rules.goban');
+
+/**
+ * Result of a Capture
+ *
+ * @typedef {{
+ *   white: !Array<!glift.rules.Move>,
+ *   black: !Array<!glift.rules.Move>
+ * }}
+ */
+glift.rules.CaptureResult;
+
 glift.rules.goban = {
   /**
    * Creates a Goban instance, just with intersections.
+   * @param {number=} opt_intersections
+   * @return {!glift.rules.Goban}
    */
-  getInstance: function(intersections) {
-    var ints = intersections || 19;
-    return new Goban(ints);
+  getInstance: function(opt_intersections) {
+    var ints = opt_intersections || 19;
+    return new glift.rules.Goban(ints);
   },
 
   /**
-   * Creates a goban, from a move tree and (optionally) a treePath, which defines
-   * how to get from the start to a given location.  Usually, the treePath is
-   * the initialPosition, but not necessarily.  If the treepath is undefined, we
-   * craft a treepath to the current location in the movetree.
+   * Creates a goban, from a move tree and (optionally) a treePath, which
+   * defines how to get from the start to a given location.  Usually, the
+   * treePath is the initialPosition, but not necessarily.
    *
    * NOTE: This leaves the movetree in a modified state.
    *
-   * returns:
-   *  {
-   *    goban: Goban,
-   *    captures: [<captures>, <capture>, ...]
-   *  }
-   *
-   * where a capture object looks like:
-   *  { White: [...], Black: [..] }
+   * @param {!glift.rules.MoveTree} mt The movetree.
+   * @param {glift.rules.Treepath=} opt_treepath Optional treepath If the
+   *    treepath is undefined, we craft a treepath to the current location in
+   *    the movetree.
+   * @return {{
+   *   goban: !glift.rules.Goban,
+   *   captures: Array<glift.rules.CaptureResult>
+   * }}
    */
-  getFromMoveTree: function(mt, treepath) {
-    treepath = treepath || mt.treepathToHere();
-    var goban = new Goban(mt.getIntersections()),
+  getFromMoveTree: function(mt, opt_treepath) {
+    var treepath = opt_treepath || mt.treepathToHere();
+    var goban = new glift.rules.Goban(mt.getIntersections()),
         movetree = mt.getTreeFromRoot(),
         captures = []; // array of captures.
     goban.loadStonesFromMovetree(movetree); // Load root placements.
-    for (var i = 0; 
+    for (var i = 0;
         i < treepath.length && movetree.node().numChildren() > 0;
         i++) {
       movetree.moveDown(treepath[i]);
@@ -7783,16 +8112,22 @@ glift.rules.goban = {
  * 19,19  : Lower Right
  *
  * As a historical note, this is the oldest part of Glift.
+ *
+ * @constructor @final @structt
  */
-var Goban = function(ints) {
+glift.rules.Goban = function(ints) {
   if (!ints || ints <= 0) {
-    throw "Invalid Intersections. Was: " + ints
+    throw new Error("Invalid Intersections. Was: " + ints)
   }
+  /** @private {number} */
   this.ints = ints || 19;
-  this.stones = initStones(ints);
+
+  /** @private {!Array<glift.enums.states>} */
+  this.stones = glift.rules.initStones_(ints);
 };
 
-Goban.prototype = {
+glift.rules.Goban.prototype = {
+  /** @return {number} The number of intersections. */
   intersections: function() {
     return this.ints;
   },
@@ -7801,7 +8136,8 @@ Goban.prototype = {
    * getStone helps abstract the nastiness and trickiness of having to use the x/y
    * indices in the reverse order.
    *
-   * Returns: a Color from glift.enums.states.
+   * @param {!glift.Point} point
+   * @return {!glift.enums.states} the state of the intersection
    */
   getStone: function(point) {
     return this.stones[point.y()][point.x()];
@@ -7809,8 +8145,8 @@ Goban.prototype = {
 
   /**
    * Get all the placed stones on the board (BLACK or WHITE)
-   * Returns an array of the form:
-   *  [ {point:<point>, color:<color>}, {...}, ...]
+   *
+   * @return {!Array<!glift.rules.Move>}
    */
   getAllPlacedStones: function() {
     var out = [];
@@ -7890,23 +8226,25 @@ Goban.prototype = {
    *
    * addStone always returns a StoneResult object.
    *
-   * A diagram of a StoneResult:
-   * {
-   *    successful: true or false   // Was placing a stone successful?
-   *    captures : [ ... points ... ]  // the intersections of stones captured
-   *        by placing a stone at the intersection (pt).
-   * }
-   *
+   * @param {glift.Point} pt A point
+   * @param {glift.enums.states} color The State to add.
+   * @return {glift.rules.StoneResult}
+   *  successful: boolean,
+   *  captures: Array<glift.Point>
+   * }}
+   * - successful: true or false   // Was placing a stone successful?
+   * - captures :  the intersections of stones captured by
+   *   placing a stone at the intersection (pt).
    */
   addStone: function(pt, color) {
     if (!glift.util.colors.isLegalColor(color)) throw "Unknown color: " + color;
 
     // Add stone fail.  Return a failed StoneResult.
     if (this.outBounds(pt) || !this.placeable(pt))
-      return new StoneResult(false);
+      return new glift.rules.StoneResult(false);
 
     this._setColor(pt, color); // set stone as active
-    var captures = new CaptureTracker();
+    var captures = new glift.rules.CaptureTracker_();
     var oppColor = glift.util.colors.oppositeColor(color);
 
     this._getCaptures(captures, glift.util.point(pt.x() + 1, pt.y()), oppColor);
@@ -7922,14 +8260,14 @@ Goban.prototype = {
       if (captures.numCaptures > 0) {
         // Onos! The move is self capture.
         this.clearStone(pt);
-        return new StoneResult(false);
+        return new glift.rules.StoneResult(false);
       }
     }
 
     var actualCaptures = captures.getCaptures();
     // Remove the captures from the board.
     this.clearSome(actualCaptures);
-    return new StoneResult(true, actualCaptures);
+    return new glift.rules.StoneResult(true, actualCaptures);
   },
 
   // Get the captures.  We return nothing because state is stored in 'captures'
@@ -8036,10 +8374,14 @@ Goban.prototype = {
   }
 };
 
-// Utiity functions
-
-// Private function to initialize the stones.
-var initStones = function(ints) {
+/**
+ * Private function to initialize the stones.
+ * @private
+ *
+ * @param {number} ints The number of intersections.
+ * @return {Array<glift.enums.states>} The board, as an array of states.
+ */
+glift.rules.initStones_ = function(ints) {
   var stones = [];
   for (var i = 0; i < ints; i++) {
     var newRow = [];
@@ -8052,9 +8394,14 @@ var initStones = function(ints) {
 };
 
 
-// CaptureTracker is a utility object that assists in keeping track of captures.
-// As an optimization, we keep track of points we've seen for efficiency.
-var CaptureTracker = function() {
+/**
+ * CaptureTracker is a utility object that assists in keeping track of captures.
+ * As an optimization, we keep track of points we've seen for efficiency.
+ *
+ * @private
+ * @constructor @final @struct
+ */
+glift.rules.CaptureTracker_ = function() {
   this.toCapture = {}; // set of points to capture (mapping pt.hash() -> true)
   this.numCaptures = 0;
   this.considering = []; // list of points we're considering to capture
@@ -8062,7 +8409,7 @@ var CaptureTracker = function() {
   this.liberties = 0;
 };
 
-CaptureTracker.prototype = {
+glift.rules.CaptureTracker_.prototype = {
   clearExceptCaptures: function() {
     this.considering =[];
     this.seen = {};
@@ -8096,18 +8443,35 @@ CaptureTracker.prototype = {
   }
 };
 
-// The stone result keeps track of whether placing a stone was successful and what
-// stones (if any) were captured.
-var StoneResult = function(success, captures) {
+/**
+ * The stone result keeps track of whether placing a stone was successful and what
+ * stones (if any) were captured.
+ *
+ * @constructor @final @struct
+ */
+glift.rules.StoneResult = function(success, captures) {
+  /**
+   * Whether or not the place was successful.
+   * @type {boolean}
+   */
   this.successful = success;
-  if (success) {
-    this.captures = captures;
-  } else {
-    this.captures = [];
-  }
+
+  /**
+   * Array of captured points.
+   * @type {Array<glift.Point>}
+   */
+  this.captures = success ? captures : [];
 };
 
-})();
+goog.provide('glift.rules.Move');
+
+/**
+ * @typedef {{
+ *  point: !glift.Point,
+ *  color: !glift.enums.states
+ * }}
+ */
+glift.rules.Move;
 
 goog.provide('glift.rules.MoveNode');
 
@@ -9407,6 +9771,14 @@ glift.rules.Properties.prototype = {
   }
 };
 
+goog.provide('glift.rules.Treepath');
+goog.provide('glift.rules.treepath');
+
+/**
+ * @typedef {!Array<number>}
+ */
+glift.rules.Treepath;
+
 /**
  * The treepath is specified by a String, which tells how to get to particular
  * position in a game / problem. This implies that the treepaths discussed below
@@ -9460,6 +9832,10 @@ glift.rules.Properties.prototype = {
 glift.rules.treepath = {
   /**
    * Parse a treepath
+   *
+   * @param {number|string|Array<number>|undefined} initPos The initial
+   *    position, which can be defined as a variety of types.
+   * @return {!glift.rules.Treepath}
    */
   parsePath: function(initPos) {
     var errors = glift.errors
@@ -9476,7 +9852,7 @@ glift.rules.treepath = {
     }
 
     if (initPos === '+') {
-      return this.toEnd();
+      return glift.rules.treepath.toEnd_();
     }
 
     var out = [];
@@ -9500,7 +9876,7 @@ glift.rules.treepath = {
           throw new Error('Improper use of + at ' + v[0] + 
               ':  The + character can only occur at the end.');
         }
-        out = out.concat(glift.rules.treepath.toEnd());
+        out = out.concat(glift.rules.treepath.toEnd_());
         return out;
       }
 
@@ -9513,7 +9889,7 @@ glift.rules.treepath = {
           testNum = testNum.slice(0, testNum.length - 1);
           out.push(parseInt(testNum));
           // + must be the last character.
-          out = out.concat(glift.rules.treepath.toEnd());
+          out = out.concat(glift.rules.treepath.toEnd_());
           return out;
         } else {
           out.push(parseInt(testNum));
@@ -9529,7 +9905,8 @@ glift.rules.treepath = {
    * the 0.0.1.0 or [0,0,1,0] syntax. Also, paths like 3.2.1 are transformed
    * into [3,2,1] rather than [0,0,0,2,1].
    *
-   * path: an initial path. Should be an array
+   * @param {!Array<number>|string} pathStr An initial path.
+   * @return {!glift.rules.Treepath} The parsed treepath.
    */
   parseFragment: function(pathStr) {
     if (!pathStr) {
@@ -9550,7 +9927,7 @@ glift.rules.treepath = {
       if (num.charAt(num.length - 1) === '+') {
         num = num.slice(0, num.length - 1);
         out.push(parseInt(num))
-        out = out.concat(glift.rules.treepath.toEnd());
+        out = out.concat(glift.rules.treepath.toEnd_());
       } else {
         out.push(parseInt(num));
       }
@@ -9561,6 +9938,9 @@ glift.rules.treepath = {
   /**
    * Converts a treepath fragement back to a string.  In other words:
    *    [2,0,1,2,6] => 2.0.1.2.6
+   *
+   * @param {!glift.rules.Treepath} path A treepath fragment.
+   * @return {string} A fragment string.
    */
   toFragmentString: function(path) {
     if (glift.util.typeOf(path) !== 'array') {
@@ -9579,6 +9959,9 @@ glift.rules.treepath = {
    *   0,0,0.1 => 3.1
    *
    * Note: Once we're on a variation, we don't collapse the path
+   *
+   * @param {!glift.rules.Treepath} path A full treepath from the root.
+   * @return {string} A full path string.
    */
   toInitPathString: function(path) {
     var out = [];
@@ -9606,19 +9989,28 @@ glift.rules.treepath = {
   },
 
   /**
+   * Lazily computed treepath value.
+   * @private {?glift.rules.Treepath}
+   */
+  storedToEnd_: null,
+
+  /**
    * Return an array of 500 0-th variations.  This is sort of a hack, but
    * changing this would involve rethinking what a treepath is.
+   *
+   * @private
+   * @return {!glift.rules.Treepath}
    */
-  toEnd: function() {
-    if (glift.rules.treepath._storedToEnd !== undefined) {
-      return glift.rules.treepath._storedToEnd;
+  toEnd_: function() {
+    if (glift.rules.treepath.storedToEnd_ != null) {
+      return glift.rules.treepath.storedToEnd_;
     }
     var storedToEnd = []
     for (var i = 0; i < 500; i++) {
       storedToEnd.push(0);
     }
-    glift.rules.treepath._storedToEnd = storedToEnd;
-    return glift.rules.treepath._storedToEnd;
+    glift.rules.treepath.storedToEnd_ = storedToEnd;
+    return glift.rules.treepath.storedToEnd_;
   },
 
   /**
@@ -9632,34 +10024,39 @@ glift.rules.treepath = {
    *  - We go from variation to main branch.
    *  - We exceed minus-moves-override.
    *
-   * Params:
-   * movetree: a movetree, of course.
-   * initTreepath [optional]: the initial treepath. If not specified or
-   *    undefined, use the current location in the movetree.
-   * minusMovesOverride: force findNextMoves to to return a nextMovesTreepath of
-   *    this length, starting from the init treepath.  The actually
-   *    nextMovesTreepath can be shorter. (Note: This option should be deleted).
-   * breakOnComment: Whether or not to break on comments on the main
-   *    variation.  Defaults to true
-   *
-   * returns: on object with three keys:
-   *    movetree: an updated movetree
-   *    treepath: a new treepath that says how to get to this position
-   *    nextMoves: A nextMovesTreepath, used to apply for the purpose of
-   *        crafting moveNumbers.
-   *
    * _Important Note_ on starting moves: the resulting movetree has the
    * property that the initial position of the movetree should not be considered
    * for diagram purposes. I.e., the first move to be diagramed should be the
    * first element of the nextMoves path. So movetree+nextMoves[0] should be
    * the first move.
+   *
+   * @param {glift.rules.MoveTree} movetree A movetree, of course.
+   * @param {glift.rules.Treepath=} opt_initTreepath The initial treepath. If not
+   *    specified or undefined, use the current location in the movetree.
+   * @param {number=} opt_minusMovesOverride: Force findNextMoves to to return a
+   *    nextMovesTreepath of this length, starting from the init treepath.  The
+   *    actual nextMovesTreepath can be shorter. (Note: This option should be
+   *    deleted).
+   * @param {boolean=} opt_breakOnComment Whether or not to break on comments on the
+   *    main variation.  Defaults to true
+   *
+   * @return {{
+   *  movetree: !glift.rules.MoveTree,
+   *  treepath: !glift.rules.Treepath,
+   *  nextMoves: !glift.rules.Treepath
+   * }} An object with the following properties:
+   *
+   * - movetree: An updated movetree
+   * - treepath: A new treepath that says how to get to this position
+   * - nextMoves: A nextMovesTreepath, used to apply for the purpose of
+   *    crafting moveNumbers.
    */
   findNextMovesPath: function(
-      movetree, initTreepath, minusMovesOverride, breakOnComment) {
-    initTreepath = initTreepath || movetree.treepathToHere();
-    breakOnComment = breakOnComment === false ? false : true;
+      movetree, opt_initTreepath, opt_minusMovesOverride, opt_breakOnComment) {
+    var initTreepath = opt_initTreepath || movetree.treepathToHere();
+    var breakOnComment = opt_breakOnComment === false ? false : true;
     var mt = movetree.getTreeFromRoot(initTreepath);
-    var minusMoves = minusMovesOverride || 1000;
+    var minusMoves = opt_minusMovesOverride || 1000;
     var nextMovesTreepath = [];
     var startMainline = mt.onMainline();
     for (var i = 0; mt.node().getParent() && i < minusMoves; i++) {
@@ -9667,12 +10064,11 @@ glift.rules.treepath = {
       nextMovesTreepath.push(varnum);
       mt.moveUp();
       if (breakOnComment &&
-          mt.properties().getOneValue('C') &&
-          !minusMovesOverride) {
+          mt.properties().getOneValue('C')) {
         break;
       }
 
-      if (!startMainline && mt.onMainline() && !minusMovesOverride) {
+      if (!startMainline && mt.onMainline()) {
         break; // Break if we've moved to the mainline from a variation
       }
     }
@@ -9687,22 +10083,25 @@ glift.rules.treepath = {
   /**
    * Apply the nextmoves and find the collisions.
    *
-   * movetree: a rules.movetree.
-   * goban: a rules.goban array.
-   * nextMoves:  A next-moves treepath. See findNextMoves.
-   *
-   * returns: An object with two keys:
-   *    movetree: the updated movetree after applying the nextmoves
-   *    stones: arrayof 'augmented' stone objects
-   *
    * augmented stone objects take the form:
    *    {point: <point>, color: <color>}
    * or
    *    {point: <point>, color: <color>, collision:<idx>}
    *
-   * where idx is an index into the stones object.  If idx is null, the stone
+   * where idx is an index into the stones object. If idx is null, the stone
    * conflicts with a stone added elsewhere (i.e., in the goban).  This should
    * be a reasonably common case.
+   *
+   * @param {!glift.rules.MoveTree} movetree A rules.movetree.
+   * @param {!glift.rules.Goban} goban A rules.goban array.
+   * @param {!glift.rules.Treepath} nextMoves A next-moves treepath (fragment).
+   * @return {{
+   *  movetree: glift.rules.MoveTree,
+   *  stones: Array<Object>
+   * }}
+   *
+   * - movetree: The updated movetree after applying the nextmoves
+   * - stones: Array of 'augmented' stone objects
    */
   applyNextMoves: function(movetree, goban, nextMoves) {
     var colors = glift.enums.states;
@@ -9734,8 +10133,9 @@ glift.rules.treepath = {
    * Flatten the move tree variations into a list of lists, where the sublists
    * are each a treepath.
    *
-   * TODO(kashomon): This is only used by the problem.js file.  Maybe move it in
-   * there.
+   * @param {!glift.rules.MoveTree} movetree The current movetree to flatten.
+   * return {!Array<glift.rules.Treepath>} treepath An array of all possible
+   *    treepaths.
    */
   flattenMoveTree: function(movetree) {
     var out = [];
@@ -9751,6 +10151,11 @@ glift.rules.treepath = {
     return out;
   },
 
+  /**
+   * @param {!glift.rules.MoveTree} movetree The movetree.
+   * @param {!glift.rules.Treepath} pathToHere A treepath to here.
+   * @private
+   */
   _flattenMoveTree: function(movetree, pathToHere) {
     if (pathToHere === undefined) pathToHere = [];
     pathToHere.push(movetree.node().getVarNum());
@@ -10907,7 +11312,6 @@ glift.controllers.gameFigure = function(sgfOptions) {
       glift.controllers.base());
   var newController = glift.util.setMethods(baseController,
       glift.controllers.GameFigure.prototype);
-  newController.drawTo = sgfOptions.drawTo || [];
   newController.initOptions(sgfOptions);
   return newController;
 };
@@ -10925,99 +11329,45 @@ glift.controllers.GameFigure = function() {
 glift.controllers.GameFigure.prototype = {
   /**
    * Additional setup for the gamefigure.
-   *
    * @override
    */
-  extraOptions: function(treepath) {
-    var rules = glift.rules;
-    var initTreepath = treepath || this.initialPosition;
-    this.treepath = rules.treepath.parsePath(initTreepath);
+  extraOptions: function() {
+    // TODO(kashomon): Add this back in once the Flattener is the source of
+    // truth for the UI.
 
-    var initialPosition = this.treepath.length; // used later
-    var nextTreepath = this.drawTo - this.treepath.length;
-    if (this.nextMovesPath.length > 0) {
-      nextTreepath = this.nextMovesPath;
-    }
-    nextTreepath = rules.treepath.parsePath(nextTreepath);
-    this.treepath = this.treepath.concat(nextTreepath);
+    // var rules = glift.rules;
+    // var initTreepath = treepath || this.initialPosition;
+    // this.treepath = rules.treepath.parsePath(initTreepath);
 
-    this.movetree = rules.movetree.getFromSgf(
-        this.sgfString,
-        this.treepath,
-        this.parseType);
-    var gobanData = rules.goban.getFromMoveTree(this.movetree, this.treepath);
-    this.goban = gobanData.goban;
+    // var initialPosition = this.treepath.length; // used later
+    // var nextTreepath = this.drawTo - this.treepath.length;
+    // if (this.nextMovesPath.length > 0) {
+      // nextTreepath = this.nextMovesPath;
+    // }
+    // nextTreepath = rules.treepath.parsePath(nextTreepath);
+    // this.treepath = this.treepath.concat(nextTreepath);
 
-    this.captureHistory = gobanData.captures;
+    // this.movetree = rules.movetree.getFromSgf(
+        // this.sgfString,
+        // this.treepath,
+        // this.parseType);
+    // var gobanData = rules.goban.getFromMoveTree(this.movetree, this.treepath);
+    // this.goban = gobanData.goban;
 
-    // calculate marks, by going backwards through the movetree
-    var curnode = this.movetree.node();
-    var labels = [];
-    for (var i = this.treepath.length; i > initialPosition; i--) {
-      labels.push(curnode.getIntersection() + ":" + i);
-      curnode = curnode.getParent();
-    }
+    // this.captureHistory = gobanData.captures;
 
-    // add marks
-    var allProperties = glift.rules.allProperties;
-    this.movetree.properties().add(allProperties.LB, labels);
+    // // calculate marks, by going backwards through the movetree
+    // var curnode = this.movetree.node();
+    // var labels = [];
+    // for (var i = this.treepath.length; i > initialPosition; i--) {
+      // labels.push(curnode.getIntersection() + ":" + i);
+      // curnode = curnode.getParent();
+    // }
 
-    return this;
+    // // add marks
+    // var allProperties = glift.rules.allProperties;
+    // this.movetree.properties().add(allProperties.LB, labels);
   }
-};
-
-/**
- * A GameViewer encapsulates the idea of traversing a read-only SGF.
- */
-glift.controllers.gameSlice = function(sgfOptions) {
-  var ctrl = glift.controllers;
-  var baseController = glift.util.beget(ctrl.base());
-  var newController = glift.util.setMethods(baseController,
-      ctrl.GameSliceMethods);
-  newController.drawTo = sgfOptions.drawTo || [];
-  newController.initOptions(sgfOptions);
-  return newController;
-};
-
-glift.controllers.GameSliceMethods = {
-
-  initialize: function(treepath) {
-    var rules = glift.rules;
-    var initTreepath = treepath || this.initialPosition;
-    this.treepath = rules.treepath.parsePath(initTreepath);
-
-    var initialPosition = this.treepath.length; // used later
-    var nextTreepath = this.drawTo - this.treepath.length;
-    if (this.nextMovesPath.length > 0) {
-      nextTreepath = this.nextMovesPath;
-    }
-    nextTreepath = rules.treepath.parsePath(nextTreepath);
-    this.treepath = this.treepath.concat(nextTreepath);
-
-    this.movetree = rules.movetree.getFromSgf(
-        this.sgfString, 
-        this.treepath,
-        this.parseType);
-    var gobanData = rules.goban.getFromMoveTree(this.movetree, this.treepath);
-    this.goban = gobanData.goban;
-
-    this.captureHistory = gobanData.captures;
-
-    // calculate marks, by going backwards through the movetree
-    var curnode = this.movetree.node();
-    var labels = [];
-    for (var i = this.treepath.length; i > initialPosition; i--) {
-      labels.push(curnode.getIntersection() + ":" + i);
-      curnode = curnode.getParent();
-    }
-
-    // add marks
-    var allProperties = glift.rules.allProperties;
-    this.movetree.properties().add(allProperties.LB, labels);
-
-    return this;
-  }
-
 };
 
 /**
@@ -14884,20 +15234,7 @@ glift.widgets.options.EXAMPLE = {
 /**
  * Additional Options for EXAMPLEs
  */
-glift.widgets.options.GAME_SLICE = {
-  _markMap: {
-    bstone_a: glift.enums.marks.LABEL_ALPHA,
-    bstone_1: glift.enums.marks.LABEL_NUMERIC,
-    bstone_square: glift.enums.marks.SQUARE,
-    bstone_triangle: glift.enums.marks.TRIANGLE
-  },
-
-  // Map from icon name to color.
-  _placementMap: {
-    bstone: glift.enums.states.BLACK,
-    wstone: glift.enums.states.WHITE
-  },
-
+glift.widgets.options.GAME_FIGURE = {
   stoneClick: function(event, widget, pt) {},
 
   icons: [],
@@ -14906,7 +15243,7 @@ glift.widgets.options.GAME_SLICE = {
 
   showVariations: glift.enums.showVariations.NEVER,
 
-  controllerFunc: glift.controllers.gameSlice,
+  controllerFunc: glift.controllers.gameFigure,
 
   // We disable mouseover and mouseout to make it clear you can't interact with
   // the example widget.

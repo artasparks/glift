@@ -20,7 +20,7 @@
   });
 
   test('Test to end case', function() {
-    deepEqual(parse('1+'), [0].concat(glift.rules.treepath.toEnd()), 
+    deepEqual(parse('1+'), [0].concat(glift.rules.treepath.toEnd_()),
         'Should go to the end');
   });
 
@@ -69,7 +69,7 @@
     deepEqual(parseFragment('1.2-5.2'), [1,2,2], 'Should ignore the -5');
     deepEqual(
         parseFragment('1.11+'),
-        [1,11].concat(glift.rules.treepath.toEnd()));
+        [1,11].concat(glift.rules.treepath.toEnd_()));
   });
 
   test('Convert back to an path fragment string', function() {
@@ -79,8 +79,8 @@
   });
 
   test('Test to end paths', function() {
-    deepEqual(parse('0.1+'), [1].concat(glift.rules.treepath.toEnd()));
-    deepEqual(parse('0.2.3+'), [2,3].concat(glift.rules.treepath.toEnd()));
+    deepEqual(parse('0.1+'), [1].concat(glift.rules.treepath.toEnd_()));
+    deepEqual(parse('0.2.3+'), [2,3].concat(glift.rules.treepath.toEnd_()));
   });
 
   test('Flatten Movetree', function() {

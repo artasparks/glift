@@ -1,4 +1,5 @@
 goog.require('glift.displays.board');
+goog.require('glift.displays.svg');
 
 /**
  * Create the background GoBoard object.  Essentially just a rectangle with a
@@ -6,8 +7,8 @@ goog.require('glift.displays.board');
  *
  * @param {glift.displays.svg.SvgObj} svg Base svg obj
  * @param {!glift.displays.ids.Generator} idGen The ID generator for SVG.
- * @param {!glift.displays.BoardPoints} goBox The bounding box of the go board.
- * @param {Object} theme The theme object
+ * @param {!glift.displays.BoundingBox} goBox The bounding box of the go board.
+ * @param {!glift.themes.base} theme The theme object
  */
 glift.displays.board.boardBase = function(svg, idGen, goBox, theme) {
   if (theme.board.imagefill) {
@@ -34,7 +35,7 @@ glift.displays.board.boardBase = function(svg, idGen, goBox, theme) {
 
 /**
  * @param {string} divId The element ID of the div in which the SVG board lives.
- * @param {svglib.SvgObj} svg Base svg obj, in which the filters should be
+ * @param {glift.displays.svg.SvgObj} svg Base svg obj, in which the filters should be
  *    placed.
  */
 glift.displays.board.initBlurFilter = function(divId, svg) {

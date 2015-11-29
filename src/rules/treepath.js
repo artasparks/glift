@@ -1,3 +1,11 @@
+goog.provide('glift.rules.Treepath');
+goog.provide('glift.rules.treepath');
+
+/**
+ * @typedef {!Array<number>}
+ */
+glift.rules.Treepath;
+
 /**
  * The treepath is specified by a String, which tells how to get to particular
  * position in a game / problem. This implies that the treepaths discussed below
@@ -51,6 +59,10 @@
 glift.rules.treepath = {
   /**
    * Parse a treepath
+   *
+   * @param {number|string|Array<number>|undefined} initPos The initial
+   *    position, which can be defined as a variety of types.
+   * @return {!glift.rules.Treepath}
    */
   parsePath: function(initPos) {
     var errors = glift.errors
@@ -67,7 +79,7 @@ glift.rules.treepath = {
     }
 
     if (initPos === '+') {
-      return this.toEnd();
+      return glift.rules.treepath.toEnd_();
     }
 
     var out = [];
@@ -91,7 +103,7 @@ glift.rules.treepath = {
           throw new Error('Improper use of + at ' + v[0] + 
               ':  The + character can only occur at the end.');
         }
-        out = out.concat(glift.rules.treepath.toEnd());
+        out = out.concat(glift.rules.treepath.toEnd_());
         return out;
       }
 
@@ -104,7 +116,7 @@ glift.rules.treepath = {
           testNum = testNum.slice(0, testNum.length - 1);
           out.push(parseInt(testNum));
           // + must be the last character.
-          out = out.concat(glift.rules.treepath.toEnd());
+          out = out.concat(glift.rules.treepath.toEnd_());
           return out;
         } else {
           out.push(parseInt(testNum));
@@ -120,7 +132,8 @@ glift.rules.treepath = {
    * the 0.0.1.0 or [0,0,1,0] syntax. Also, paths like 3.2.1 are transformed
    * into [3,2,1] rather than [0,0,0,2,1].
    *
-   * path: an initial path. Should be an array
+   * @param {!Array<number>|string} pathStr An initial path.
+   * @return {!glift.rules.Treepath} The parsed treepath.
    */
   parseFragment: function(pathStr) {
     if (!pathStr) {
@@ -141,7 +154,7 @@ glift.rules.treepath = {
       if (num.charAt(num.length - 1) === '+') {
         num = num.slice(0, num.length - 1);
         out.push(parseInt(num))
-        out = out.concat(glift.rules.treepath.toEnd());
+        out = out.concat(glift.rules.treepath.toEnd_());
       } else {
         out.push(parseInt(num));
       }
@@ -152,6 +165,9 @@ glift.rules.treepath = {
   /**
    * Converts a treepath fragement back to a string.  In other words:
    *    [2,0,1,2,6] => 2.0.1.2.6
+   *
+   * @param {!glift.rules.Treepath} path A treepath fragment.
+   * @return {string} A fragment string.
    */
   toFragmentString: function(path) {
     if (glift.util.typeOf(path) !== 'array') {
@@ -170,6 +186,9 @@ glift.rules.treepath = {
    *   0,0,0.1 => 3.1
    *
    * Note: Once we're on a variation, we don't collapse the path
+   *
+   * @param {!glift.rules.Treepath} path A full treepath from the root.
+   * @return {string} A full path string.
    */
   toInitPathString: function(path) {
     var out = [];
@@ -197,19 +216,28 @@ glift.rules.treepath = {
   },
 
   /**
+   * Lazily computed treepath value.
+   * @private {?glift.rules.Treepath}
+   */
+  storedToEnd_: null,
+
+  /**
    * Return an array of 500 0-th variations.  This is sort of a hack, but
    * changing this would involve rethinking what a treepath is.
+   *
+   * @private
+   * @return {!glift.rules.Treepath}
    */
-  toEnd: function() {
-    if (glift.rules.treepath._storedToEnd !== undefined) {
-      return glift.rules.treepath._storedToEnd;
+  toEnd_: function() {
+    if (glift.rules.treepath.storedToEnd_ != null) {
+      return glift.rules.treepath.storedToEnd_;
     }
     var storedToEnd = []
     for (var i = 0; i < 500; i++) {
       storedToEnd.push(0);
     }
-    glift.rules.treepath._storedToEnd = storedToEnd;
-    return glift.rules.treepath._storedToEnd;
+    glift.rules.treepath.storedToEnd_ = storedToEnd;
+    return glift.rules.treepath.storedToEnd_;
   },
 
   /**
@@ -223,34 +251,39 @@ glift.rules.treepath = {
    *  - We go from variation to main branch.
    *  - We exceed minus-moves-override.
    *
-   * Params:
-   * movetree: a movetree, of course.
-   * initTreepath [optional]: the initial treepath. If not specified or
-   *    undefined, use the current location in the movetree.
-   * minusMovesOverride: force findNextMoves to to return a nextMovesTreepath of
-   *    this length, starting from the init treepath.  The actually
-   *    nextMovesTreepath can be shorter. (Note: This option should be deleted).
-   * breakOnComment: Whether or not to break on comments on the main
-   *    variation.  Defaults to true
-   *
-   * returns: on object with three keys:
-   *    movetree: an updated movetree
-   *    treepath: a new treepath that says how to get to this position
-   *    nextMoves: A nextMovesTreepath, used to apply for the purpose of
-   *        crafting moveNumbers.
-   *
    * _Important Note_ on starting moves: the resulting movetree has the
    * property that the initial position of the movetree should not be considered
    * for diagram purposes. I.e., the first move to be diagramed should be the
    * first element of the nextMoves path. So movetree+nextMoves[0] should be
    * the first move.
+   *
+   * @param {glift.rules.MoveTree} movetree A movetree, of course.
+   * @param {glift.rules.Treepath=} opt_initTreepath The initial treepath. If not
+   *    specified or undefined, use the current location in the movetree.
+   * @param {number=} opt_minusMovesOverride: Force findNextMoves to to return a
+   *    nextMovesTreepath of this length, starting from the init treepath.  The
+   *    actual nextMovesTreepath can be shorter. (Note: This option should be
+   *    deleted).
+   * @param {boolean=} opt_breakOnComment Whether or not to break on comments on the
+   *    main variation.  Defaults to true
+   *
+   * @return {{
+   *  movetree: !glift.rules.MoveTree,
+   *  treepath: !glift.rules.Treepath,
+   *  nextMoves: !glift.rules.Treepath
+   * }} An object with the following properties:
+   *
+   * - movetree: An updated movetree
+   * - treepath: A new treepath that says how to get to this position
+   * - nextMoves: A nextMovesTreepath, used to apply for the purpose of
+   *    crafting moveNumbers.
    */
   findNextMovesPath: function(
-      movetree, initTreepath, minusMovesOverride, breakOnComment) {
-    initTreepath = initTreepath || movetree.treepathToHere();
-    breakOnComment = breakOnComment === false ? false : true;
+      movetree, opt_initTreepath, opt_minusMovesOverride, opt_breakOnComment) {
+    var initTreepath = opt_initTreepath || movetree.treepathToHere();
+    var breakOnComment = opt_breakOnComment === false ? false : true;
     var mt = movetree.getTreeFromRoot(initTreepath);
-    var minusMoves = minusMovesOverride || 1000;
+    var minusMoves = opt_minusMovesOverride || 1000;
     var nextMovesTreepath = [];
     var startMainline = mt.onMainline();
     for (var i = 0; mt.node().getParent() && i < minusMoves; i++) {
@@ -258,12 +291,11 @@ glift.rules.treepath = {
       nextMovesTreepath.push(varnum);
       mt.moveUp();
       if (breakOnComment &&
-          mt.properties().getOneValue('C') &&
-          !minusMovesOverride) {
+          mt.properties().getOneValue('C')) {
         break;
       }
 
-      if (!startMainline && mt.onMainline() && !minusMovesOverride) {
+      if (!startMainline && mt.onMainline()) {
         break; // Break if we've moved to the mainline from a variation
       }
     }
@@ -278,22 +310,25 @@ glift.rules.treepath = {
   /**
    * Apply the nextmoves and find the collisions.
    *
-   * movetree: a rules.movetree.
-   * goban: a rules.goban array.
-   * nextMoves:  A next-moves treepath. See findNextMoves.
-   *
-   * returns: An object with two keys:
-   *    movetree: the updated movetree after applying the nextmoves
-   *    stones: arrayof 'augmented' stone objects
-   *
    * augmented stone objects take the form:
    *    {point: <point>, color: <color>}
    * or
    *    {point: <point>, color: <color>, collision:<idx>}
    *
-   * where idx is an index into the stones object.  If idx is null, the stone
+   * where idx is an index into the stones object. If idx is null, the stone
    * conflicts with a stone added elsewhere (i.e., in the goban).  This should
    * be a reasonably common case.
+   *
+   * @param {!glift.rules.MoveTree} movetree A rules.movetree.
+   * @param {!glift.rules.Goban} goban A rules.goban array.
+   * @param {!glift.rules.Treepath} nextMoves A next-moves treepath (fragment).
+   * @return {{
+   *  movetree: glift.rules.MoveTree,
+   *  stones: Array<Object>
+   * }}
+   *
+   * - movetree: The updated movetree after applying the nextmoves
+   * - stones: Array of 'augmented' stone objects
    */
   applyNextMoves: function(movetree, goban, nextMoves) {
     var colors = glift.enums.states;
@@ -325,8 +360,9 @@ glift.rules.treepath = {
    * Flatten the move tree variations into a list of lists, where the sublists
    * are each a treepath.
    *
-   * TODO(kashomon): This is only used by the problem.js file.  Maybe move it in
-   * there.
+   * @param {!glift.rules.MoveTree} movetree The current movetree to flatten.
+   * return {!Array<glift.rules.Treepath>} treepath An array of all possible
+   *    treepaths.
    */
   flattenMoveTree: function(movetree) {
     var out = [];
@@ -342,6 +378,11 @@ glift.rules.treepath = {
     return out;
   },
 
+  /**
+   * @param {!glift.rules.MoveTree} movetree The movetree.
+   * @param {!glift.rules.Treepath} pathToHere A treepath to here.
+   * @private
+   */
   _flattenMoveTree: function(movetree, pathToHere) {
     if (pathToHere === undefined) pathToHere = [];
     pathToHere.push(movetree.node().getVarNum());

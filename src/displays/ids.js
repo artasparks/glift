@@ -15,15 +15,18 @@ glift.displays.ids = {
   /**
    * Get an ID for a SVG element (return the stringForm id).
    *
+   * @param {string} divId
+   * @param {glift.enums.svgElements} type
+   * @param {glift.Point|Object|string=} opt_extraData
    * extraData may be undefined.  Usually a point, but also be an icon name.
    */
-  element: function(divId, type, extraData) {
+  element: function(divId, type, opt_extraData) {
     var base = divId + "_" + type;
-    if (extraData !== undefined) {
-      if (extraData.x !== undefined) {
-        return base + '_' + extraData.x() + "_" + extraData.y();
+    if (opt_extraData !== undefined) {
+      if (opt_extraData.x !== undefined) {
+        return base + '_' + opt_extraData.x() + "_" + opt_extraData.y();
       } else {
-        return base + '_' + extraData.toString();
+        return base + '_' + opt_extraData.toString();
       }
     } else {
       return base;
@@ -98,8 +101,8 @@ glift.displays.ids.Generator.prototype = {
   buttonGroup: function() { return this._buttonGroup; },
 
   /** ID for a button. */
-  button: function(pt) {
-    return this._eid(this.divId, this._enum.BUTTON, pt);
+  button: function(name) {
+    return this._eid(this.divId, this._enum.BUTTON, name);
   },
 
   /** ID for a full-board button. */

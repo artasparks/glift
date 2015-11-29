@@ -1,3 +1,6 @@
+goog.provide('glift.themes');
+goog.provide('glift.themes.registered');
+
 glift.themes = {
   /**
    * Registered themes dict.
@@ -17,7 +20,7 @@ glift.themes = {
     var registered = glift.themes.registered;
     var rawTheme = !(id in registered) ? null : registered[id];
     if (rawTheme) {
-      return glift.themes.deepCopy({}, rawTheme, registered.DEFAULT);
+      return glift.themes.deepCopy({}, rawTheme, glift.themes.base);
     } else {
       return rawTheme; // null;
     }
@@ -70,7 +73,8 @@ glift.themes = {
     return builder;
   },
 
-  /** Accepts a (case sensitive) theme ID and true if the theme exists and false
+  /** 
+   * Accepts a (case sensitive) theme ID and true if the theme exists and false
    * otherwise.
    */
   has: function(id) {
@@ -81,7 +85,8 @@ glift.themes = {
     return (id in registered);
   },
 
-  /** Set the 'fill' for the go board to be an image
+  /** 
+   * Set the 'fill' for the go board to be an image
    * For a theme object. This generally assumes you're called 'get' so that you
    * have a copy of the base theme.
    */
