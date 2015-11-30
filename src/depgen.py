@@ -451,6 +451,7 @@ def main(argv=None):
     beast.add_compile_imports()
   elif 'compile' in flags:
     print 'depgen: Adding typed compile resources'
+    beast.combine_source_files()
     out, err = beast.compile_all_srcs(TYPED_CLOSURE_FLAGS)
     if err != None:
       print err

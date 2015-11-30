@@ -5,8 +5,8 @@
  * container.
  */
 glift.displays.board.markContainer = function(svg, idGen) {
-  svg.append(glift.displays.svg.group().setAttr('id', idGen.markGroup()));
-  svg.append(glift.displays.svg.group().setAttr('id', idGen.tempMarkGroup()));
+  svg.append(glift.displays.svg.group().setId(idGen.markGroup()));
+  svg.append(glift.displays.svg.group().setId(idGen.tempMarkGroup()));
 };
 
 /**
@@ -53,7 +53,7 @@ glift.displays.board.addMark = function(
         .setAttr('font-family', stonesTheme.marks['font-family'])
         .setAttr('font-size',
             boardPoints.spacing * stonesTheme.marks['font-size'])
-        .setAttr('id', markId));
+        .setId(markId));
 
   } else if (mark === marks.SQUARE) {
     var baseDelta = boardPoints.radius / rootTwo;
@@ -69,7 +69,7 @@ glift.displays.board.addMark = function(
         .setAttr('fill', 'none')
         .setAttr('stroke-width', 2)
         .setAttr('stroke', marksTheme.stroke)
-        .setAttr('id', markId));
+        .setId(markId));
 
   } else if (mark === marks.XMARK) {
     var baseDelta = boardPoints.radius / rootTwo;
@@ -91,7 +91,7 @@ glift.displays.board.addMark = function(
             svgpath.lineAbsPt(botRight))
         .setAttr('stroke-width', 2)
         .setAttr('stroke', marksTheme.stroke)
-        .setAttr('id', markId));
+        .setId(markId));
   } else if (mark === marks.CIRCLE) {
     container.append(svglib.circle()
         .setData(pt)
@@ -101,7 +101,7 @@ glift.displays.board.addMark = function(
         .setAttr('fill', 'none')
         .setAttr('stroke-width', 2)
         .setAttr('stroke', marksTheme.stroke)
-        .setAttr('id', markId));
+        .setId(markId));
   } else if (mark === marks.STONE_MARKER) {
     var stoneMarkerTheme = stonesTheme.marks['STONE_MARKER'];
     container.append(svglib.circle()
@@ -111,7 +111,7 @@ glift.displays.board.addMark = function(
         .setAttr('r', boardPoints.radius / 3)
         .setAttr('opacity', marksTheme.STONE_MARKER.opacity)
         .setAttr('fill', marksTheme.STONE_MARKER.fill)
-        .setAttr('id', markId));
+        .setId(markId));
   } else if (mark === marks.TRIANGLE) {
     var r = boardPoints.radius - boardPoints.radius / 5;
     var rightNode = coordPt.translate(r * (rootThree / 2), r * (1 / 2));
@@ -127,7 +127,7 @@ glift.displays.board.addMark = function(
             svgpath.lineAbsPt(topNode))
         .setAttr('stroke-width', 2)
         .setAttr('stroke', marksTheme.stroke)
-        .setAttr('id', markId));
+        .setId(markId));
   } else {
     // do nothing.  I suppose we could throw an exception here.
   }

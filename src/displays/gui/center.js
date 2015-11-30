@@ -50,9 +50,9 @@ glift.displays.gui.MultiCenter = function(transforms, bboxes, unfit) {
 /**
  * Result of either single-element centering.
  *
- * @param {!glift.displays.gui.Transform} transforms The transformations
+ * @param {!glift.displays.gui.Transform} transform The transformation
  *    to perform.
- * @param {!glift.orientation.BoundingBox} bboxes The transformed bounding
+ * @param {!glift.orientation.BoundingBox} bbox The transformed bounding
  *    boxes.
  *
  * @constructor @final @struct
@@ -208,13 +208,13 @@ glift.displays.gui.linearCentering_ = function(
 /**
  * Center an bounding box within another bounding box.
  *
- * @param {!glift.orientation.BoundingBox} outerBox
+ * @param {!glift.orientation.BoundingBox} outerBbox
  * @param {!glift.orientation.BoundingBox} bbox The bbox to center within the
  *    outerBbox.
  * @param {number} vertMargin
  * @param {number} horzMargin
  *
- * @return glif
+ * @return {!glift.displays.gui.SingleCenter}
  */
 glift.displays.gui.centerWithin = function(
     outerBbox, bbox, vertMargin, horzMargin) {

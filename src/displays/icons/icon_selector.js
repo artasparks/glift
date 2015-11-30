@@ -88,11 +88,11 @@ glift.displays.icons.IconSelector.prototype = {
 
       var svgId = columnId + '_svg';
       var svg = svglib.svg()
-          .setAttr('id', columnId + '_svg')
+          .setId(columnId + '_svg')
           .setAttr('height', '100%')
           .setAttr('width', '100%');
       var idGen = glift.displays.ids.generator(columnId);
-      var container = svglib.group().setAttr('id', idGen.iconGroup());
+      var container = svglib.group().setId(idGen.iconGroup());
       svg.append(container);
       for (var i = 0, len = transforms.length; i < len; i++) {
         var icon = rewrapped.shift();
@@ -100,9 +100,9 @@ glift.displays.icons.IconSelector.prototype = {
         icon.setElementId(id);
         this.iconList[columnIndex].push(icon);
         container.append(svglib.path()
+            .setId(icon.elementId)
             .setAttr('d', icon.iconStr)
             .setAttr('fill', 'black') // replace with theme
-            .setAttr('id', icon.elementId)
             .setAttr('transform', icon.transformString()));
       }
       this.svgColumnList.push(svg);
@@ -123,7 +123,7 @@ glift.displays.icons.IconSelector.prototype = {
       var svg = this.svgColumnList[i];
       var idGen = glift.displays.ids.generator(this.columnIdList[i]);
       var iconColumn = this.iconList[i];
-      var container = svglib.group().setAttr('id', idGen.buttonGroup());
+      var container = svglib.group().setId(idGen.buttonGroup());
       svg.append(container);
       for (var j = 0; j < iconColumn.length; j++) {
         var icon = iconColumn[j]
@@ -135,7 +135,7 @@ glift.displays.icons.IconSelector.prototype = {
           .setAttr('height', icon.bbox.height())
           .setAttr('fill', 'blue') // color doesn't matter, but need a fill
           .setAttr('opacity', 0)
-          .setAttr('id', idGen.button(icon.iconName)));
+          .setId(idGen.button(icon.iconName)));
       }
     }
   },

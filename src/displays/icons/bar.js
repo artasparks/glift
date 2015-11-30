@@ -115,14 +115,14 @@ glift.displays.icons.IconBar.prototype = {
    */
   _createIcons: function() {
     var svglib = glift.displays.svg;
-    var container = svglib.group().setAttr('id', this.idGen.iconGroup());
+    var container = svglib.group().setId(this.idGen.iconGroup());
     this.svg.append(container);
-    this.svg.append(svglib.group().setAttr('id', this.idGen.tempIconGroup()));
+    this.svg.append(svglib.group().setId(this.idGen.tempIconGroup()));
     for (var i = 0, ii = this.icons.length; i < ii; i++) {
       var icon = this.icons[i];
       var path = svglib.path()
+        .setId(icon.elementId)
         .setAttr('d', icon.iconStr)
-        .setAttr('id', icon.elementId)
         .setAttr('transform', icon.transformString());
       for (var key in this.theme.icons.DEFAULT) {
         path.setAttr(key, this.theme.icons.DEFAULT[key]);
@@ -137,7 +137,7 @@ glift.displays.icons.IconBar.prototype = {
    */
   _createIconButtons: function() {
     var svglib = glift.displays.svg;
-    var container = svglib.group().setAttr('id', this.idGen.buttonGroup());
+    var container = svglib.group().setId(this.idGen.buttonGroup());
     this.svg.append(container);
     for (var i = 0, len = this.icons.length; i < len; i++) {
       var icon = this.icons[i];
@@ -149,7 +149,7 @@ glift.displays.icons.IconBar.prototype = {
         .setAttr('height', icon.bbox.height())
         .setAttr('fill', 'blue') // Color doesn't matter, but we need a fill.
         .setAttr('opacity', 0)
-        .setAttr('id', this.idGen.button(icon.iconName)));
+        .setId(this.idGen.button(icon.iconName)));
     }
   },
 
@@ -175,6 +175,7 @@ glift.displays.icons.IconBar.prototype = {
    *    to display.
    * @param {string} color Color string
    * @param {number=} opt_vMargin Optional v margin. Defaults to 2px.
+   * @param {number=} opt_hMargin Optional h margin. Defaults to 2px.
    */
   setCenteredTempIcon: function(
       parentIconNameOrIndex, tempIcon, color, opt_vMargin, opt_hMargin) {
@@ -196,16 +197,16 @@ glift.displays.icons.IconBar.prototype = {
     // Remove if it exists.
     glift.dom.elem(tempIconId) && glift.dom.elem(tempIconId).remove();
 
-    if (parentIcon.subboxIcon !== undefined) {
+    if (parentIcon.subboxIcon) {
       wrappedTemp = parentIcon.centerWithinSubbox(wrappedTemp, vm, hm);
     } else {
       wrappedTemp = parentIcon.centerWithinIcon(wrappedTemp, vm, hm);
     }
 
     this.svg.child(this.idGen.tempIconGroup()).appendAndAttach(svglib.path()
+      .setId(tempIconId)
       .setAttr('d', wrappedTemp.iconStr)
       .setAttr('fill', color) // theme.icons.DEFAULT.fill
-      .setAttr('id', tempIconId)
       .setAttr('transform', wrappedTemp.transformString()));
     return this;
   },
@@ -228,6 +229,7 @@ glift.displays.icons.IconBar.prototype = {
     var boxStrokeWidth = 7
     this.clearTempText(iconName);
     var textObj = svglib.text()
+      .setId(this.idGen.tempIconText(iconName))
       .setText(text)
       .setAttr('class', 'tempIcon')
       .setAttr('font-family', 'sans-serif') // TODO(kashomon): Put in themes.
@@ -236,7 +238,6 @@ glift.displays.icons.IconBar.prototype = {
       .setAttr('y', bbox.center().y()) //+ fontSize)
       .setAttr('dy', '.33em') // Move down, for centering purposes
       .setAttr('style', 'text-anchor: middle; vertical-align: middle;')
-      .setAttr('id', this.idGen.tempIconText(iconName))
       .setAttr('lengthAdjust', 'spacing'); // also an opt: spacingAndGlyphs
     for (var key in attrsObj) {
       textObj.setAttr(key, attrsObj[key]);

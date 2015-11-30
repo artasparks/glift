@@ -4,7 +4,7 @@
  */
 glift.displays.board.stones = function(svg, idGen, boardPoints, theme) {
   var svglib = glift.displays.svg;
-  var container = svglib.group().setAttr('id', idGen.stoneGroup());
+  var container = svglib.group().setId(idGen.stoneGroup());
   svg.append(container);
   var data = boardPoints.data()
   for (var i = 0, ii = data.length; i < ii; i++) {
@@ -17,7 +17,7 @@ glift.displays.board.stones = function(svg, idGen, boardPoints, theme) {
       .setAttr('stone_color', 'EMPTY')
       .setAttr('fill', 'blue') // dummy color
       .setAttr('class', glift.enums.svgElements.STONE)
-      .setAttr('id', idGen.stone(pt.intPt)));
+      .setId(idGen.stone(pt.intPt)));
   }
 };
 
@@ -29,7 +29,7 @@ glift.displays.board.stones = function(svg, idGen, boardPoints, theme) {
 glift.displays.board.shadows = function(svg, idGen, boardPoints, theme) {
   if (theme.stones.shadows === undefined) { return {}; }
   var svglib = glift.displays.svg;
-  var container = svglib.group().setAttr('id', idGen.stoneShadowGroup());
+  var container = svglib.group().setId(idGen.stoneShadowGroup());
   svg.append(container);
   var data = boardPoints.data();
   for (var i = 0, ii = data.length; i < ii; i++) {
@@ -43,6 +43,6 @@ glift.displays.board.shadows = function(svg, idGen, boardPoints, theme) {
       // .setAttr('stroke', theme.stones.shadows.stroke)
       // .setAttr('filter', 'url(#' + divId + '_svg_blur)')
       .setAttr('class', glift.enums.svgElements.STONE_SHADOW)
-      .setAttr('id', idGen.stoneShadow(pt.intPt)));
+      .setId(idGen.stoneShadow(pt.intPt)));
   }
 };

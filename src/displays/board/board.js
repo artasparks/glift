@@ -105,7 +105,7 @@ glift.displays.board.Display.prototype = {
     board.boardBase(svg, idGen, env.goBoardBox, theme);
     board.initBlurFilter(divId, svg); // in boardBase.  Should be moved.
 
-    var intGrp = svglib.group().setAttr('id', idGen.intersections());
+    var intGrp = svglib.group().setId(idGen.intersections());
     svg.append(intGrp);
 
     board.boardLabels(intGrp, idGen, boardPoints, theme);

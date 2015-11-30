@@ -82,11 +82,11 @@ glift.displays.board.Intersections.prototype = {
         .child(this.idGen.stone(pt));
     if (stone) {
       // A stone might not exist if the board is cropped.
-      glift.dom.elem(stone.attr('id')).setAttrObj(stone.attrObj());
+      glift.dom.elem(stone.id()).setAttrObj(stone.attrObj());
       var stoneShadowGroup = this.svg.child(this.idGen.stoneShadowGroup());
       if (stoneShadowGroup !== undefined) {
         var stoneShadow = stoneShadowGroup.child(this.idGen.stoneShadow(pt));
-        glift.dom.elem(stoneShadow.attr('id')).attr(stoneShadow.attrObj());
+        glift.dom.elem(stoneShadow.id()).setAttrObj(stoneShadow.attrObj());
       }
     }
     return this;
@@ -193,14 +193,12 @@ glift.displays.board.Intersections.prototype = {
     if (this._reqClearForMark(pt, mark)) {
       var starp  = svg.child(idGen.starpointGroup()).child(idGen.starpoint(pt))
       if (starp) {
-        glift.dom.elem(starp.attr('id'))
-            .setAttr('opacity', starp.attr('opacity'));
+        glift.dom.elem(starp.id()).setAttr('opacity', starp.attr('opacity'));
       }
       var linept = svg.child(idGen.lineGroup()).child(idGen.line(pt))
-      glift.dom.elem(linept.attr('id'))
-          .setAttr('opacity', linept.attr('opacity'));
+      glift.dom.elem(linept.id()).setAttr('opacity', linept.attr('opacity'));
     }
-    markGroup.child(idGen.mark(pt)).attachToParent(markGroup.attr('id'));
+    markGroup.child(idGen.mark(pt)).attachToParent(markGroup.id());
     this.markPts.push(pt);
     return this;
   },
@@ -228,7 +226,7 @@ glift.displays.board.Intersections.prototype = {
       }
     }
     markGroup.emptyChildren();
-    glift.dom.elem(markGroup.attr('id')).empty();
+    glift.dom.elem(markGroup.id()).empty();
     return this;
   },
 
@@ -248,7 +246,7 @@ glift.displays.board.Intersections.prototype = {
           bpt, boardPoints.radius * 8, boardPoints.numIntersections))
       .setAttr('stroke-width', 3)
       .setAttr('stroke', 'blue')
-      .setAttr('id', this.idGen.guideLine()))
+      .setId(this.idGen.guideLine()))
   },
 
   clearGuideLines: function() {
@@ -282,14 +280,14 @@ glift.displays.board.Intersections.prototype = {
 
     var stones = this.svg.child(this.idGen.stoneGroup()).children();
     for (var i = 0, len = stones.length; i < len; i++) {
-      glift.dom.elem(stones[i].attr('id')).setAttrObj(stoneAttrs);
+      glift.dom.elem(stones[i].id()).setAttrObj(stoneAttrs);
     }
 
     var shadowGroup = this.svg.child(this.idGen.stoneShadowGroup());
     if (shadowGroup) {
       var shadows = shadowGroup.children();
       for (var i = 0, len = shadows.length; i < len; i++) {
-        glift.dom.elem(shadows[i].attr('id')).setAttrObj(shadowAttrs);
+        glift.dom.elem(shadows[i].id()).setAttrObj(shadowAttrs);
       }
     }
     return this;
@@ -305,7 +303,7 @@ glift.displays.board.Intersections.prototype = {
     var that = this;
     var id = this.svg.child(this.idGen.buttonGroup())
         .child(this.idGen.fullBoardButton())
-        .attr('id');
+        .id();
     glift.dom.elem(id).on(eventName, function(e) {
       var pt = that._buttonEventPt(e);
       pt && func(e, pt);
@@ -318,7 +316,7 @@ glift.displays.board.Intersections.prototype = {
     var that = this;
     var id = this.svg.child(this.idGen.buttonGroup())
         .child(this.idGen.fullBoardButton())
-        .attr('id');
+        .id();
     glift.dom.elem(id).on('mousemove', function(e) {
       var lastpt = that.lastHoverPoint;
       var curpt = that._buttonEventPt(e);

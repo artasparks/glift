@@ -1,54 +1,16 @@
-displays/icons/bar.js:179: WARNING - optional arguments must be at the end
-  setCenteredTempIcon: function(
-                       ^
-
-dom/dom.js:163: WARNING - parameter elemAttrObj does not appear in glift.dom.Element.prototype.setAttrObj's parameter list
-  setAttrObj: function(attrObj) {
-              ^
-
-displays/svg/svgobj.js:96: ERROR - assignment to property data_ of glift.displays.svg.SvgObj
-found   : undefined
-required: (Object|null)
-  this.data_ = undefined;
-  ^
-
-displays/svg/svgobj.js:117: ERROR - actual parameter 1 of Document.prototype.getElementById does not match formal parameter
-found   : *
-required: string
-      var elem = document.getElementById(this.attr('id'));
-                                         ^
-
-displays/svg/svgobj.js:210: ERROR - actual parameter 1 of Document.prototype.getElementById does not match formal parameter
-found   : *
-required: string
-    var elem = document.getElementById(this.attr('id'))
-                                       ^
-
-displays/svg/svgobj.js:212: ERROR - actual parameter 2 of Element.prototype.setAttribute does not match formal parameter
-found   : *
-required: (boolean|number|string)
-      elem.setAttribute(attr, this.attr(attr));
-                              ^
-
-displays/svg/svgobj.js:288: ERROR - actual parameter 1 of Document.prototype.getElementById does not match formal parameter
-found   : *
-required: string
-    var elem = document.getElementById(this.attr('id'))
-                                       ^
-
-displays/svg/svgobj.js:325: ERROR - actual parameter 1 of glift.displays.svg.SvgObj.prototype.attachToParent does not match formal parameter
-found   : *
-required: string
-      obj.attachToParent(this.attr('id'))
-                         ^
-
-dom/dom.js:21: ERROR - Function glift.dom.Element: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
+dom/dom.js:23: ERROR - Function glift.dom.Element: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
       return new glift.dom.Element(arg);
              ^
 
-dom/dom.js:49: ERROR - Property commentBox never defined on glift.dom.classes
+dom/dom.js:51: ERROR - Property commentBox never defined on glift.dom.classes
     wrapper.setAttr('class', glift.dom.classes.commentBox);
                                                ^
+
+dom/dom.js:149: ERROR - actual parameter 2 of Element.prototype.setAttribute does not match formal parameter
+found   : *
+required: (boolean|number|string)
+    this.el.setAttribute(key, value);
+                              ^
 
 flattener/flattened.js:188: ERROR - Function parseInt: called with 1 argument(s). Function requires at least 2 argument(s) and no more than 2 argument(s).
       num = parseInt(numOrString);
@@ -416,15 +378,15 @@ widgets/base_widget.js:50: ERROR - Function glift.orientation.getQuadCropFromMov
         ? glift.orientation.getQuadCropFromMovetree(this.controller.movetree)
           ^
 
-widgets/base_widget.js:369: ERROR - Property keyHandlerFunc never defined on glift.widgets.BaseWidget
+widgets/base_widget.js:368: ERROR - Property keyHandlerFunc never defined on glift.widgets.BaseWidget
     if (this.keyHandlerFunc !== undefined) {
              ^
 
-widgets/base_widget.js:373: ERROR - Cannot add a property to a struct instance after it is constructed.
+widgets/base_widget.js:372: ERROR - Cannot add a property to a struct instance after it is constructed.
     this.keyHandlerFunc = undefined;
          ^
 
-widgets/base_widget.js:373: ERROR - Property keyHandlerFunc never defined on glift.widgets.BaseWidget
+widgets/base_widget.js:372: ERROR - Property keyHandlerFunc never defined on glift.widgets.BaseWidget
     this.keyHandlerFunc = undefined;
          ^
 
@@ -456,4 +418,4 @@ widgets/manager.js:362: ERROR - Cannot add a property to a struct instance after
     this.temporaryWidget = undefined;
          ^
 
-107 error(s), 2 warning(s), 71.0% typed
+102 error(s), 0 warning(s), 71.6% typed

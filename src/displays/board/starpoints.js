@@ -5,7 +5,7 @@
 glift.displays.board.starpoints = function(
     svg, idGen, boardPoints, theme) {
   var svglib = glift.displays.svg;
-  var container = svglib.group().setAttr('id', idGen.starpointGroup());
+  var container = svglib.group().setId(idGen.starpointGroup());
   svg.append(container);
 
   var size = theme.starPoints.sizeFraction * boardPoints.spacing;
@@ -19,6 +19,6 @@ glift.displays.board.starpoints = function(
       .setAttr('r', size)
       .setAttr('fill', theme.starPoints.fill)
       .setAttr('opacity', 1)
-      .setAttr('id', idGen.starpoint(pt)));
+      .setId(idGen.starpoint(pt)));
   }
 };

@@ -84,16 +84,16 @@ glift.displays.svg.group = function() {
 glift.displays.svg.SvgObj = function(type, opt_attrObj) {
   /** @private {string} */
   this.type_ = type;
-  /** @private {Object} */
+  /** @private {!Object} */
   this.attrMap_ = opt_attrObj || {};
   /** @private {!Array<!glift.displays.svg.SvgObj>} */
   this.children_ = [];
-  /** @private {Object<!glift.displays.svg.SvgObj>} */
+  /** @private {!Object<!glift.displays.svg.SvgObj>} */
   this.idMap_ = {};
   /** @private {string} */
   this.text_ = '';
   /** @private {Object} */
-  this.data_ = undefined;
+  this.data_ = null;
 };
 
 glift.displays.svg.SvgObj.prototype = {
@@ -113,8 +113,8 @@ glift.displays.svg.SvgObj.prototype = {
    * @return {!glift.displays.svg.SvgObj} this object.
    */
   removeFromDom: function() {
-    if (this.attr('id')) {
-      var elem = document.getElementById(this.attr('id'));
+    if (this.id()) {
+      var elem = document.getElementById(this.idOrThrow());
       if (elem) { elem.parentNode.removeChild(elem); }
     }
     return this;
@@ -184,14 +184,42 @@ glift.displays.svg.SvgObj.prototype = {
     return this;
   },
 
+  /** @return {?string} the Id of this object or null. */
+  id: function() {
+    return /** @type {?string} */ (this.attrMap_['id'] || null);
+  },
+
+  /**
+   * Convenience method to avoid null ID type.
+   * @return {string}
+   */
+  idOrThrow: function() {
+    if (this.id() == null) {
+      throw new Error('ID was null; expected to be non-null');
+    }
+    return /** @type {string} */ (this.id());
+  },
+
+  /**
+   * Sets the ID (using the Attribute object as a store).
+   * @param {string} id
+   * @return {!glift.displays.svg.SvgObj} This object.
+   */
+  setId: function(id) {
+    if (id) {
+      this.attrMap_['id'] = id;
+    }
+    return this;
+  },
+
   /** @return {Object} The attribute object.  */
-  attrObj: function(opt_obj) {
+  attrObj: function() {
     return this.attrMap_;
   },
 
   /**
    * Sets the entire attribute object.
-   * @param {Object} attrObj
+   * @param {!Object} attrObj
    * @return {!glift.displays.svg.SvgObj} This object.
    */
   setAttrObj: function(attrObj) {
@@ -203,13 +231,20 @@ glift.displays.svg.SvgObj.prototype = {
   },
 
   /**
-   * Update a particular attribute in the DOM.
-   * @param {string} attr
+   * Update a particular attribute in the DOM with at attribute that exists on
+   * this element.
+   * @param {string} attrName
    */
-  updateAttrInDom: function(attr) {
-    var elem = document.getElementById(this.attr('id'))
-    if (elem && attr && this.attr(attr)) {
-      elem.setAttribute(attr, this.attr(attr));
+  updateAttrInDom: function(attrName) {
+    var id = this.id();
+    if (id) {
+      var elem = document.getElementById(id)
+      if (elem && attrName && this.attr(attrName)) {
+        var value = /** @type (boolean|number|string) */ (this.attr(attrName));
+        elem.setAttribute(attrName, value);
+      }
+    } else {
+      throw new Error('No ID present: could not update the dom:' + id);
     }
     return this;
   },
@@ -285,7 +320,7 @@ glift.displays.svg.SvgObj.prototype = {
    */
   emptyChildrenAndUpdate: function() {
     this.emptyChildren();
-    var elem = document.getElementById(this.attr('id'))
+    var elem = document.getElementById(this.idOrThrow());
     while (elem && elem.firstChild) {
       elem.removeChild(elem.firstChild);
     }
@@ -298,8 +333,8 @@ glift.displays.svg.SvgObj.prototype = {
    * @return {!glift.displays.svg.SvgObj} This object.
    */
   append: function(obj) {
-    if (obj.attr('id') !== undefined) {
-      this.idMap_[obj.attr('id')] = obj;
+    if (obj.id() !== undefined) {
+      this.idMap_[obj.id()] = obj;
     }
     this.children_.push(obj);
     return this;
@@ -309,6 +344,7 @@ glift.displays.svg.SvgObj.prototype = {
    * Add a new svg object child.
    * @param {string} type
    * @param {Object} attrObj
+   * @return {!glift.displays.svg.SvgObj} This object.
    */
   appendNew: function(type, attrObj) {
     var obj = glift.displays.svg.createObj(type, attrObj);
@@ -318,17 +354,19 @@ glift.displays.svg.SvgObj.prototype = {
   /**
    * Append an SVG element and attach to the DOM.
    * @param {!glift.displays.svg.SvgObj} obj
+   * @return {!glift.displays.svg.SvgObj} This object.
    */
   appendAndAttach: function(obj) {
     this.append(obj);
-    if (this.attr('id')) {
-      obj.attachToParent(this.attr('id'))
+    if (this.id()) {
+      obj.attachToParent(this.idOrThrow());
     }
+    return this;
   },
 
   /**
    * Create a copy of the object without any children
-   * @return {!glift.displays.svg.SvgObj}
+   * @return {!glift.displays.svg.SvgObj} The new object.
    */
   copyNoChildren: function() {
     var newAttr = {};

@@ -30,7 +30,7 @@ glift.displays.board.boardBase = function(svg, idGen, goBox, theme) {
     .setAttr('fill', theme.board.imagefill ? 'none' : theme.board.fill)
     .setAttr('stroke', theme.board.stroke)
     .setAttr('stroke-width', theme.board['stroke-width'])
-    .setAttr('id', idGen.board()));
+    .setId(idGen.board()));
 };
 
 /**

@@ -14,7 +14,7 @@ glift.displays.board.lines = function(svg, idGen, boardPoints, theme) {
   // Mapping from int point (e.g., 3,3) hash to id;
   var svglib = glift.displays.svg;
 
-  var container = svglib.group().setAttr('id', idGen.lineGroup());
+  var container = svglib.group().setId(idGen.lineGroup());
   svg.append(container);
 
   var data = boardPoints.data();
@@ -26,7 +26,7 @@ glift.displays.board.lines = function(svg, idGen, boardPoints, theme) {
       .setAttr('stroke', theme.lines.stroke)
       .setAttr('stroke-width', theme.lines['stroke-width'])
       .setAttr('stroke-linecap', 'round')
-      .setAttr('id', idGen.line(pt.intPt)));
+      .setId(idGen.line(pt.intPt)));
   }
 };
 

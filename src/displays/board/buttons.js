@@ -5,7 +5,7 @@ goog.require('glift.displays.board');
  */
 glift.displays.board.buttons = function(svg, idGen, boardPoints) {
   var svglib = glift.displays.svg;
-  var container = svglib.group().setAttr('id', idGen.buttonGroup());
+  var container = svglib.group().setId(idGen.buttonGroup());
   svg.append(container);
 
   var data = boardPoints.data();
@@ -24,5 +24,5 @@ glift.displays.board.buttons = function(svg, idGen, boardPoints) {
     .setAttr('fill', 'red')
     .setAttr('stroke', 'red')
     .setAttr('stone_color', 'EMPTY')
-    .setAttr('id', idGen.fullBoardButton()));
+    .setId(idGen.fullBoardButton()));
 };

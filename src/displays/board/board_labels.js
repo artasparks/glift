@@ -2,7 +2,7 @@ goog.require('glift.displays.board');
 
 glift.displays.board.boardLabels = function(svg, idGen, boardPoints, theme) {
   var svglib = glift.displays.svg;
-  var container = svglib.group().setAttr('id', idGen.boardCoordLabelGroup());
+  var container = svglib.group().setId(idGen.boardCoordLabelGroup());
   svg.append(container);
   var labels = boardPoints.edgeCoordLabels;
   for (var i = 0, ii = labels.length; i < ii; i++) {

@@ -6,7 +6,10 @@ glift.dom = {
   /**
    * Constructs a glift dom element. If arg is a string, assume an ID is being
    * passed in. If arg is an object and has nodeType and nodeType is 1
-   * (ELEMENT_NODE), 
+   * (ELEMENT_NODE), just wrap the element.
+   *
+   * @param {string|Element} arg
+   * @return {glift.dom.Element}
    */
   elem: function(arg) {
     var argtype = glift.util.typeOf(arg);
@@ -26,6 +29,7 @@ glift.dom = {
   /**
    * Creates a new div dom element with the relevant id.
    * @param {string} id
+   * @return {glift.dom
    */
   newDiv: function(id) {
     var elem = glift.dom.elem(document.createElement('div'));
@@ -101,6 +105,7 @@ glift.dom = {
  * @constructor @final @struct
  */
 glift.dom.Element = function(el, id) {
+  /** @type {Element} */
   this.el = el;
   this.id = id || null;
 }
@@ -137,7 +142,9 @@ glift.dom.Element.prototype = {
   },
 
   /**
-   * Set an attribute on the element.
+   * Set an attribute on the element. If the key is an ID and the value is a
+   * string, also set the ID field.
+   *
    * @param {string} key
    * @param {*} value
    * @return {!glift.dom.Element}
@@ -158,7 +165,7 @@ glift.dom.Element.prototype = {
 
   /**
    * Set several attributes using an attribute object.
-   * @param {Object} elemAttrObj A object with multiple attributes.
+   * @param {Object} attrObj A object with multiple attributes.
    */
   setAttrObj: function(attrObj) {
     for (var attrObjKey in attrObj) {
