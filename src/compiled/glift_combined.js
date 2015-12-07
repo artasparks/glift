@@ -106,10 +106,15 @@ glift.init = function(disableZoomForMobile, divId) {
         glift.dom.elem(metas[i]).remove();
       }
     }
-    var head = glift.dom.elem(document.head);
-    var newMeta = glift.dom.elem(document.createElement('meta'));
-    newMeta.attr('name', 'viewport');
-    newMeta.attr('content', noZoomContent);
+    var head = document.head;
+    if (head == null) {
+      throw new Error('document.head was null, ' +
+          'but it must not be null for disable zoom to work.');
+    }
+    head = glift.dom.elem(/** @type {!HTMLHeadElement} */ (head));
+    var newMeta = glift.dom.elem(document.createElement('meta'))
+        .setAttr('name', 'viewport')
+        .setAttr('content', noZoomContent);
     head.prepend(newMeta);
     glift.global.disabledZoom = true; // prevent from being called again.
   }
@@ -1149,20 +1154,25 @@ glift.dom = {
    * passed in. If arg is an object and has nodeType and nodeType is 1
    * (ELEMENT_NODE), just wrap the element.
    *
-   * @param {string|Element} arg
-   * @return {glift.dom.Element}
+   * @param {string|!Element} arg
+   * @return {glift.dom.Element} A wrapped DOM element. Can be null if the ID
+   *    cannot be found or the arg type is not a string or Element.
    */
   elem: function(arg) {
     var argtype = glift.util.typeOf(arg);
     if (argtype === 'string') {
       // Assume an element ID.
+      arg = /** @type {string} */ (arg);
       var el = document.getElementById(arg);
-      if (el === null) { return null; }
-      else { return new glift.dom.Element(el, arg); };
+      if (el === null) {
+        return null;
+      } else {
+        return new glift.dom.Element(/* @type {!Element} */ (el), arg);
+      };
     } else if (argtype === 'object' && arg.nodeType && arg.nodeType === 1) {
       // Assume an HTML node.
       // Note: nodeType of 1 => ELEMENT_NODE.
-      return new glift.dom.Element(arg);
+      return new glift.dom.Element(/** @type {!Element} */ (arg));
     }
     return null;
   },
@@ -1170,7 +1180,7 @@ glift.dom = {
   /**
    * Creates a new div dom element with the relevant id.
    * @param {string} id
-   * @return {glift.dom
+   * @return {!glift.dom.Element}
    */
   newDiv: function(id) {
     var elem = glift.dom.elem(document.createElement('div'));
@@ -1233,9 +1243,17 @@ glift.dom = {
     return newDiv;
   },
 
-  /** Convert a string. */
+  /**
+   * Convert a string allow user to specify a type of Element.
+   *
+   * @param {string} type The type of element to create.
+   * @return {glift.dom.Element}
+   */
   newElem: function(type) {
-    return type ? glift.dom.elem(document.createElement(type + '')) : null;
+    if (!type || glift.util.typeOf(type) !== 'string') {
+      throw new Error('Type must be a string. was: [' + type + ']');
+    }
+    return glift.dom.elem(document.createElement(type));
   }
 };
 
@@ -1243,12 +1261,16 @@ glift.dom = {
  * A simple wrapper for a plain old dom element. Note, id can be null if the
  * Element is constructed directly from elem.
  *
+ * @param {!Element} el A DOM Element.
+ * @param {string=} opt_id Optional ID -- defaults to null.
+ *
  * @constructor @final @struct
  */
-glift.dom.Element = function(el, id) {
-  /** @type {Element} */
+glift.dom.Element = function(el, opt_id) {
+  /** @type {!Element} */
   this.el = el;
-  this.id = id || null;
+  /** @type {?string} */
+  this.id = opt_id || null;
 }
 
 glift.dom.Element.prototype = {
@@ -1287,14 +1309,14 @@ glift.dom.Element.prototype = {
    * string, also set the ID field.
    *
    * @param {string} key
-   * @param {*} value
+   * @param {boolean|number|string} value
    * @return {!glift.dom.Element}
    */
   setAttr: function(key, value) {
     this.el.setAttribute(key, value);
     if (key === 'id' && glift.util.typeOf(value) === 'string') {
       // Also set the ID field if the key is 'id'.
-      this.id = value;
+      this.id = /** @type {string} */ (value);
     }
     return this;
   },
@@ -1423,9 +1445,10 @@ goog.provide('glift.dom.clasess');
 /**
  * Built-in clases used to style Glift.
  */
-// TODO(kashomon): Move to a more appropriate API location.
+// TODO(kashomon): Move to a more appropriate API location. Or just delete this
+// nonsense.
 glift.dom.classes = {
-  COMMENT_BOX: 'glift-comment-box'
+  commentBox: 'glift-comment-box'
 };
 
 goog.require('glift.dom');
@@ -2073,110 +2096,306 @@ glift.markdown.Ast.prototype = {
 
 goog.provide('glift.marked');
 
+
 /**
  * marked - a markdown parser
  * Copyright (c) 2011-2014, Christopher Jeffrey. (MIT Licensed)
  * https://github.com/chjj/marked
+ *
+ * Modified by Kashomon to include closure type checking.
  */
+goog.scope(function() {
 
-;(function() {
+/**
+ * Helpers
+ * @param {string} html Content to encode
+ * @param {boolean=} opt_encode Optional encode param
+ */
+function escape(html, opt_encode) {
+  // TODO(kashomon): Currently I've disabled escaping because it's not language
+  // agnostic. TODO(kashomon): Flag guardthis function to conditionally turn
+  // auto-escaping off.
+  return html;
+  // return html
+    // .replace(!opt_encode ? /&(?!#?\w+;)/g : /&/g, '&amp;')
+    // .replace(/</g, '&lt;')
+    // .replace(/>/g, '&gt;')
+    // .replace(/"/g, '&quot;')
+    // .replace(/'/g, '&#39;');
+}
+
+function unescape(html) {
+  return html.replace(/&([#\w]+);/g, function(_, n) {
+    n = n.toLowerCase();
+    if (n === 'colon') return ':';
+    if (n.charAt(0) === '#') {
+      return n.charAt(1) === 'x'
+        ? String.fromCharCode(parseInt(n.substring(2), 16))
+        : String.fromCharCode(+n.substring(1));
+    }
+    return '';
+  });
+}
+
+/**
+ * An extremely clever function. Successively replaces content in the
+ *
+ * @param {!RegExp} regexBase Regexp object
+ * @param {!string=} opt_flags Optional regex flags
+ *
+ * Note: The return type is complex and thus elided.
+ */
+function replace(regexBase, opt_flags) {
+  var regex = regexBase.source;
+  var opt = opt_flags || '';
+  return function self(name, val) {
+    if (!name) return new RegExp(regex, opt);
+    val = val.source || val;
+    val = val.replace(/(^|[^\[])\^/g, '$1');
+    regex = regex.replace(name, val);
+    return self;
+  };
+}
+
+/**
+ * @param {!Object} obj Base object
+ * @param {...!Object} var_args Target objects to merge into
+ */
+function merge(obj, var_args) {
+  var i = 1
+    , target
+    , key;
+
+  for (; i < arguments.length; i++) {
+    target = arguments[i];
+    for (key in target) {
+      if (Object.prototype.hasOwnProperty.call(target, key)) {
+        obj[key] = target[key];
+      }
+    }
+  }
+
+  return obj;
+}
+
+/**
+ * Marked Parse Method.
+ *
+ * @param {string} src Source text to process
+ * @param {(!glift.marked.Options|Function)=} opt_options Marked options or
+ *    callback
+ * @param {Function=} opt_callback
+ */
+var marked = function(src, opt_options, opt_callback) {
+  /** @type {Function} */
+  var callback;
+  /** @type {glift.marked.Options|undefined} */
+  var opt;
+
+  if (opt_callback || typeof opt_options === 'function') {
+    if (!opt_callback) {
+      // opt_options must be the callback.
+      callback = /** @type {Function} */ (opt_options);
+      opt = undefined;
+    }
+
+    opt = /** @type {glift.marked.Options} */ (
+        merge({}, glift.marked.defaults, opt_options || {}));
+
+    var highlight = opt.highlight
+      , tokens
+      , pending
+      , i = 0;
+
+    try {
+      tokens = Lexer.lex(src, opt)
+    } catch (e) {
+      return callback(e);
+    }
+
+    pending = tokens.length;
+
+    /**
+     * Done callback
+     * @param {string=} err Optional err message.
+     */
+    var done = function(err) {
+      if (err) {
+        opt.highlight = highlight;
+        return callback(err);
+      }
+
+      var out;
+
+      try {
+        out = Parser.parse(tokens, opt);
+      } catch (e) {
+        err = e;
+      }
+
+      opt.highlight = highlight;
+
+      return err
+        ? callback(err)
+        : callback(null, out);
+    };
+
+    if (!highlight || highlight.length < 3) {
+      return done();
+    }
+
+    delete opt.highlight;
+
+    if (!pending) return done();
+
+    for (; i < tokens.length; i++) {
+      (function(token) {
+        if (token.type !== 'code') {
+          return --pending || done();
+        }
+        return highlight(token.text, token.lang, function(err, code) {
+          if (err) return done(err);
+          if (code == null || code === token.text) {
+            return --pending || done();
+          }
+          token.text = code;
+          token.escaped = true;
+          --pending || done();
+        });
+      })(tokens[i]);
+    }
+
+    return;
+  }
+  try {
+    // No callback available.
+    if (opt_options) {
+      opt = merge({}, glift.marked.defaults, opt_options);
+    }
+    return Parser.parse(Lexer.lex(src, opt), opt);
+  } catch (e) {
+    e.message += '\nPlease report this to https://github.com/kashomon/glift.';
+    if ((opt_options || glift.marked.defaults).silent) {
+      return '<p>An error occured:</p><pre>'
+        + escape(e.message + '', true)
+        + '</pre>';
+    }
+    throw e;
+  }
+};
+
+glift.marked = marked;
+glift.marked.parse = marked;
+
+/**
+ * Noop function that acts like a Regex object.
+ */
+var noop = function() {};
+noop.exec = noop;
 
 /**
  * Block-Level Grammar
+ * @constructor
+ * @struct
  */
-
-var block = {
-  newline: /^\n+/,
-  code: /^( {4}[^\n]+\n*)+/,
-  fences: noop,
-  hr: /^( *[-*_]){3,} *(?:\n+|$)/,
-  heading: /^ *(#{1,6}) *([^\n]+?) *#* *(?:\n+|$)/,
-  nptable: noop,
-  lheading: /^([^\n]+)\n *(=|-){2,} *(?:\n+|$)/,
-  blockquote: /^( *>[^\n]+(\n(?!def)[^\n]+)*\n*)+/,
-  list: /^( *)(bull) [\s\S]+?(?:hr|def|\n{2,}(?! )(?!\1bull )\n*|\s*$)/,
-  html: /^ *(?:comment *(?:\n|\s*$)|closed *(?:\n{2,}|\s*$)|closing *(?:\n{2,}|\s*$))/,
-  def: /^ *\[([^\]]+)\]: *<?([^\s>]+)>?(?: +["(]([^\n]+)[")])? *(?:\n+|$)/,
-  table: noop,
-  paragraph: /^((?:[^\n]+\n?(?!hr|heading|lheading|blockquote|tag|def))+)\n*/,
-  text: /^[^\n]+/
+var Blocker = function() {
+  this.newline = /^\n+/;
+  this.code = /^( {4}[^\n]+\n*)+/;
+  this.fences = noop;
+  this.hr = /^( *[-*_]){3,} *(?:\n+|$)/;
+  this.heading = /^ *(#{1,6}) *([^\n]+?) *#* *(?:\n+|$)/;
+  this.nptable = noop,
+  this.lheading = /^([^\n]+)\n *(=|-){2,} *(?:\n+|$)/;
+  this.blockquote = /^( *>[^\n]+(\n(?!def)[^\n]+)*\n*)+/;
+  this.list = /^( *)(bull) [\s\S]+?(?:hr|def|\n{2,}(?! )(?!\1bull )\n*|\s*$)/;
+  this.html = /^ *(?:comment *(?:\n|\s*$)|closed *(?:\n{2,}|\s*$)|closing *(?:\n{2,}|\s*$))/;
+  this.def = /^ *\[([^\]]+)\]: *<?([^\s>]+)>?(?: +["(]([^\n]+)[")])? *(?:\n+|$)/;
+  this.table = noop;
+  this.paragraph = /^((?:[^\n]+\n?(?!hr|heading|lheading|blockquote|tag|def))+)\n*/;
+  this.text = /^[^\n]+/;
+  this.bullet = /(?:[*+-]|\d+\.)/;
+  this.item = /^( *)(bull) [^\n]*(?:\n(?!\1bull )[^\n]*)*/;
+  this.item = replace(this.item, 'gm')
+    (/bull/g, this.bullet)
+    ();
+  this.list = replace(this.list)
+    (/bull/g, this.bullet)
+    ('hr', '\\n+(?=\\1?(?:[-*_] *){3,}(?:\\n+|$))')
+    ('def', '\\n+(?=' + this.def.source + ')')
+    ();
+  this.blockquote = replace(this.blockquote)
+    ('def', this.def)
+    ();
+  this._tag = '(?!(?:'
+    + 'a|em|strong|small|s|cite|q|dfn|abbr|data|time|code'
+    + '|var|samp|kbd|sub|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo'
+    + '|span|br|wbr|ins|del|img)\\b)\\w+(?!:/|[^\\w\\s@]*@)\\b';
+  this.html = replace(this.html)
+    ('comment', /<!--[\s\S]*?-->/)
+    ('closed', /<(tag)[\s\S]+?<\/\1>/)
+    ('closing', /<tag(?:"[^"]*"|'[^']*'|[^'">])*?>/)
+    (/tag/g, this._tag)
+    ();
+  this.paragraph = replace(this.paragraph)
+    ('hr', this.hr)
+    ('heading', this.heading)
+    ('lheading', this.lheading)
+    ('blockquote', this.blockquote)
+    ('tag', '<' + this._tag)
+    ('def', this.def)
+    ();
+  /** Normal Block Grammar */
+  this.normal = merge({}, this);
+  /** GFM Block Grammar */
+  this.gfm = merge({}, this.normal, {
+    fences: /^ *(`{3,}|~{3,}) *(\S+)? *\n([\s\S]+?)\s*\1 *(?:\n+|$)/,
+    paragraph: /^/
+  });
+  this.gfm.paragraph = replace(this.paragraph)
+    ('(?!', '(?!'
+      + this.gfm.fences.source.replace('\\1', '\\2') + '|'
+      + this.list.source.replace('\\1', '\\3') + '|')
+    ();
+  /**
+   * GFM + Tables Block Grammar
+   */
+  this.tables = merge({}, this.gfm, {
+    nptable: /^ *(\S.*\|.*)\n *([-:]+ *\|[-| :]*)\n((?:.*\|.*(?:\n|$))*)\n*/,
+    table: /^ *\|(.+)\n *\|( *[-:]+[-| :]*)\n((?: *\|.*(?:\n|$))*)\n*/
+  });
 };
 
-block.bullet = /(?:[*+-]|\d+\.)/;
-block.item = /^( *)(bull) [^\n]*(?:\n(?!\1bull )[^\n]*)*/;
-block.item = replace(block.item, 'gm')
-  (/bull/g, block.bullet)
-  ();
-
-block.list = replace(block.list)
-  (/bull/g, block.bullet)
-  ('hr', '\\n+(?=\\1?(?:[-*_] *){3,}(?:\\n+|$))')
-  ('def', '\\n+(?=' + block.def.source + ')')
-  ();
-
-block.blockquote = replace(block.blockquote)
-  ('def', block.def)
-  ();
-
-block._tag = '(?!(?:'
-  + 'a|em|strong|small|s|cite|q|dfn|abbr|data|time|code'
-  + '|var|samp|kbd|sub|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo'
-  + '|span|br|wbr|ins|del|img)\\b)\\w+(?!:/|[^\\w\\s@]*@)\\b';
-
-block.html = replace(block.html)
-  ('comment', /<!--[\s\S]*?-->/)
-  ('closed', /<(tag)[\s\S]+?<\/\1>/)
-  ('closing', /<tag(?:"[^"]*"|'[^']*'|[^'">])*?>/)
-  (/tag/g, block._tag)
-  ();
-
-block.paragraph = replace(block.paragraph)
-  ('hr', block.hr)
-  ('heading', block.heading)
-  ('lheading', block.lheading)
-  ('blockquote', block.blockquote)
-  ('tag', '<' + block._tag)
-  ('def', block.def)
-  ();
+var block = new Blocker();
 
 /**
- * Normal Block Grammar
+ * @typedef {{
+ *  type: string,
+ *  text: (string|undefined),
+ *  lang: (string|undefined),
+ *  depth: (number|undefined),
+ *  header: (string|undefined),
+ *  align: (string|undefined),
+ *  cells: (string|undefined),
+ *  ordered: (boolean|undefined),
+ *  pre: (string|undefined),
+ *  href: (string|undefined),
+ *  title: (string|undefined)
+ * }}
  */
+glift.marked.Token;
 
-block.normal = merge({}, block);
-
-/**
- * GFM Block Grammar
- */
-
-block.gfm = merge({}, block.normal, {
-  fences: /^ *(`{3,}|~{3,}) *(\S+)? *\n([\s\S]+?)\s*\1 *(?:\n+|$)/,
-  paragraph: /^/
-});
-
-block.gfm.paragraph = replace(block.paragraph)
-  ('(?!', '(?!'
-    + block.gfm.fences.source.replace('\\1', '\\2') + '|'
-    + block.list.source.replace('\\1', '\\3') + '|')
-  ();
-
-/**
- * GFM + Tables Block Grammar
- */
-
-block.tables = merge({}, block.gfm, {
-  nptable: /^ *(\S.*\|.*)\n *([-:]+ *\|[-| :]*)\n((?:.*\|.*(?:\n|$))*)\n*/,
-  table: /^ *\|(.+)\n *\|( *[-:]+[-| :]*)\n((?: *\|.*(?:\n|$))*)\n*/
-});
 
 /**
  * Block Lexer
+ *
+ * @constructor
+ *
+ * @param {glift.marked.Options=} opt_options
  */
-
-function Lexer(options) {
+glift.marked.Lexer = function(opt_options) {
   this.tokens = [];
   this.tokens.links = {};
-  this.options = options || marked.defaults;
+  this.options = opt_options || glift.marked.defaults;
   this.rules = block.normal;
 
   if (this.options.gfm) {
@@ -2186,41 +2405,62 @@ function Lexer(options) {
       this.rules = block.gfm;
     }
   }
-}
+};
+
+var Lexer = glift.marked.Lexer;
 
 /**
  * Expose Block Rules
  */
-
 Lexer.rules = block;
 
 /**
  * Static Lex Method
+ *
+ * @param {string} src
+ * @param {glift.marked.Options=} opt_options
+ *
+ * @return {!Array<!glift.marked.Token>} Array of tokens
  */
-
-Lexer.lex = function(src, options) {
-  var lexer = new Lexer(options);
+Lexer.lex = function(src, opt_options) {
+  var lexer = new Lexer(opt_options);
   return lexer.lex(src);
 };
 
+glift.marked.lexer = Lexer.lex;
+
 /**
  * Preprocessing
+ *
+ * @return {!Array<!glift.marked.Token>} Array of tokens.
  */
-
 Lexer.prototype.lex = function(src) {
   src = src
+    // Convert carriage returns into newlines
     .replace(/\r\n|\r/g, '\n')
+    // Convert tabs to 4 spaces
     .replace(/\t/g, '    ')
+    // Convert No-break space to a normal space
     .replace(/\u00a0/g, ' ')
+    // Weird Unicode newline codepoint
     .replace(/\u2424/g, '\n');
 
   return this.token(src, true);
 };
 
 /**
- * Lexing
+ * Lexing. Tokenize some source text
+ *
+ * (Kashomon:I have no idea what top or bq do. They look like hacky flags to
+ * encode state).
+ *
+ * @param {string} src Source text
+ * @param {boolean=} top
+ * @param {boolean=} bq
+ *
+ * @return {!Array<!glift.marked.Token>}
+ *
  */
-
 Lexer.prototype.token = function(src, top, bq) {
   src = src.replace(/^ +$/gm, '')
   var next
@@ -2588,13 +2828,14 @@ inline.breaks = merge({}, inline.gfm, {
 
 /**
  * Inline Lexer & Compiler
+ *
+ * @constructor
  */
-
-function InlineLexer(links, options) {
-  this.options = options || marked.defaults;
+glift.marked.InlineLexer = function(links, options) {
+  this.options = options || glift.marked.defaults;
   this.links = links;
   this.rules = inline.normal;
-  this.renderer = this.options.renderer || new Renderer;
+  this.renderer = this.options.renderer || new Renderer();
   this.renderer.options = this.options;
 
   if (!this.links) {
@@ -2613,35 +2854,32 @@ function InlineLexer(links, options) {
   }
 }
 
+var InlineLexer = glift.marked.InlineLexer;
+
 /**
  * Expose Inline Rules
  */
-
 InlineLexer.rules = inline;
 
 /**
  * Static Lexing/Compiling Method
  */
-
 InlineLexer.output = function(src, links, options) {
   var inline = new InlineLexer(links, options);
   return inline.output(src);
 };
 
+glift.marked.inlineLexer = InlineLexer.output;
+
 /**
  * Lexing/Compiling
  */
-
 InlineLexer.prototype.output = function(src) {
   var out = ''
     , link
     , text
     , href
     , cap;
-
-  var escape = function(text) {
-    return text;
-  }
 
   while (src) {
     // escape
@@ -2773,7 +3011,6 @@ InlineLexer.prototype.output = function(src) {
 /**
  * Compile Link
  */
-
 InlineLexer.prototype.outputLink = function(cap, link) {
   var href = escape(link.href)
     , title = link.title ? escape(link.title) : null;
@@ -2786,7 +3023,6 @@ InlineLexer.prototype.outputLink = function(cap, link) {
 /**
  * Smartypants Transformations
  */
-
 InlineLexer.prototype.smartypants = function(text) {
   if (!this.options.smartypants) return text;
   return text
@@ -2807,7 +3043,6 @@ InlineLexer.prototype.smartypants = function(text) {
 /**
  * Mangle Links
  */
-
 InlineLexer.prototype.mangle = function(text) {
   var out = ''
     , l = text.length
@@ -2827,11 +3062,15 @@ InlineLexer.prototype.mangle = function(text) {
 
 /**
  * Renderer
+ *
+ * @constructor
+ * @param {glift.marked.Options=} opt_options
  */
-
-function Renderer(options) {
-  this.options = options || {};
+glift.marked.Renderer = function(opt_options) {
+  this.options = opt_options || {};
 }
+
+var Renderer = glift.marked.Renderer;
 
 Renderer.prototype.code = function(code, lang, escaped) {
   if (this.options.highlight) {
@@ -2959,6 +3198,13 @@ Renderer.prototype.link = function(href, title, text) {
   return out;
 };
 
+/**
+ * Constructs an HTML Image string.
+ * @param {string} href
+ * @param {string} title
+ * @param {string} text
+ * @return {string}
+ */
 Renderer.prototype.image = function(href, title, text) {
   var out = '<img src="' + href + '" alt="' + text + '"';
   if (title) {
@@ -2970,32 +3216,39 @@ Renderer.prototype.image = function(href, title, text) {
 
 /**
  * Parsing & Compiling
+ *
+ * @constructor
+ * @param {glift.marked.Options=} opt_options
  */
-
-function Parser(options) {
+glift.marked.Parser = function(opt_options) {
   this.tokens = [];
   this.token = null;
-  this.options = options || marked.defaults;
+  this.options = opt_options || glift.marked.defaults;
   this.options.renderer = this.options.renderer || new Renderer;
   this.renderer = this.options.renderer;
   this.renderer.options = this.options;
 }
 
+var Parser = glift.marked.Parser;
+
 /**
  * Static Parse Method
+ * @param {!Array<glift.marked.Token>} src Array of tokens.
+ * @param {glift.marked.Options=} opt_options Optional marked options
  */
-
-Parser.parse = function(src, options, renderer) {
-  var parser = new Parser(options, renderer);
+Parser.parse = function(src, opt_options) {
+  var parser = new Parser(opt_options);
   return parser.parse(src);
 };
 
+glift.marked.parse = Parser.parse;
+
 /**
  * Parse Loop
+ * @param {!Array<glift.marked.Token>} src Array of tokens.
  */
-
 Parser.prototype.parse = function(src) {
-  this.inline = new InlineLexer(src.links, this.options, this.renderer);
+  this.inline = new InlineLexer(src.links, this.options);
   this.tokens = src.reverse();
 
   var out = '';
@@ -3009,7 +3262,6 @@ Parser.prototype.parse = function(src) {
 /**
  * Next Token
  */
-
 Parser.prototype.next = function() {
   return this.token = this.tokens.pop();
 };
@@ -3017,7 +3269,6 @@ Parser.prototype.next = function() {
 /**
  * Preview Next Token
  */
-
 Parser.prototype.peek = function() {
   return this.tokens[this.tokens.length - 1] || 0;
 };
@@ -3025,7 +3276,6 @@ Parser.prototype.peek = function() {
 /**
  * Parse Text Tokens
  */
-
 Parser.prototype.parseText = function() {
   var body = this.token.text;
 
@@ -3037,9 +3287,8 @@ Parser.prototype.parseText = function() {
 };
 
 /**
- * Parse Current Token
+ * Parse the current token
  */
-
 Parser.prototype.tok = function() {
   switch (this.token.type) {
     case 'space': {
@@ -3149,163 +3398,28 @@ Parser.prototype.tok = function() {
 };
 
 /**
- * Helpers
+ * @typedef {{
+ *  gfm: (boolean|undefined),
+ *  tables: (boolean|undefined),
+ *  breaks: (boolean|undefined),
+ *  pedantic: (boolean|undefined),
+ *  sanitize: (boolean|undefined),
+ *  smartLists: (boolean|undefined),
+ *  silent: (boolean|undefined),
+ *  highlight: (?Function|undefined),
+ *  langPrefix: (string|undefined),
+ *  smartypants: (boolean|undefined),
+ *  headerPrefix: (string|undefined),
+ *  renderer: (!glift.marked.Renderer|undefined),
+ *  xhtml: (boolean|undefined)
+ * }}
  */
-
-function escape(html, encode) {
-  return html
-    .replace(!encode ? /&(?!#?\w+;)/g : /&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-function unescape(html) {
-  return html.replace(/&([#\w]+);/g, function(_, n) {
-    n = n.toLowerCase();
-    if (n === 'colon') return ':';
-    if (n.charAt(0) === '#') {
-      return n.charAt(1) === 'x'
-        ? String.fromCharCode(parseInt(n.substring(2), 16))
-        : String.fromCharCode(+n.substring(1));
-    }
-    return '';
-  });
-}
-
-function replace(regex, opt) {
-  regex = regex.source;
-  opt = opt || '';
-  return function self(name, val) {
-    if (!name) return new RegExp(regex, opt);
-    val = val.source || val;
-    val = val.replace(/(^|[^\[])\^/g, '$1');
-    regex = regex.replace(name, val);
-    return self;
-  };
-}
-
-function noop() {}
-noop.exec = noop;
-
-function merge(obj) {
-  var i = 1
-    , target
-    , key;
-
-  for (; i < arguments.length; i++) {
-    target = arguments[i];
-    for (key in target) {
-      if (Object.prototype.hasOwnProperty.call(target, key)) {
-        obj[key] = target[key];
-      }
-    }
-  }
-
-  return obj;
-}
-
+glift.marked.Options;
 
 /**
- * Marked
+ * @type {!glift.marked.Options}
  */
-
-function marked(src, opt, callback) {
-  if (callback || typeof opt === 'function') {
-    if (!callback) {
-      callback = opt;
-      opt = null;
-    }
-
-    opt = merge({}, marked.defaults, opt || {});
-
-    var highlight = opt.highlight
-      , tokens
-      , pending
-      , i = 0;
-
-    try {
-      tokens = Lexer.lex(src, opt)
-    } catch (e) {
-      return callback(e);
-    }
-
-    pending = tokens.length;
-
-    var done = function(err) {
-      if (err) {
-        opt.highlight = highlight;
-        return callback(err);
-      }
-
-      var out;
-
-      try {
-        out = Parser.parse(tokens, opt);
-      } catch (e) {
-        err = e;
-      }
-
-      opt.highlight = highlight;
-
-      return err
-        ? callback(err)
-        : callback(null, out);
-    };
-
-    if (!highlight || highlight.length < 3) {
-      return done();
-    }
-
-    delete opt.highlight;
-
-    if (!pending) return done();
-
-    for (; i < tokens.length; i++) {
-      (function(token) {
-        if (token.type !== 'code') {
-          return --pending || done();
-        }
-        return highlight(token.text, token.lang, function(err, code) {
-          if (err) return done(err);
-          if (code == null || code === token.text) {
-            return --pending || done();
-          }
-          token.text = code;
-          token.escaped = true;
-          --pending || done();
-        });
-      })(tokens[i]);
-    }
-
-    return;
-  }
-  try {
-    if (opt) opt = merge({}, marked.defaults, opt);
-    return Parser.parse(Lexer.lex(src, opt), opt);
-  } catch (e) {
-    e.message += '\nPlease report this to https://github.com/chjj/marked.';
-    if ((opt || marked.defaults).silent) {
-      return '<p>An error occured:</p><pre>'
-        + escape(e.message + '', true)
-        + '</pre>';
-    }
-    throw e;
-  }
-}
-
-/**
- * Options
- */
-
-marked.options =
-marked.setOptions = function(opt) {
-  merge(marked.defaults, opt);
-  return marked;
-};
-
-marked.defaults = {
+glift.marked.defaults = {
   gfm: true,
   tables: true,
   breaks: false,
@@ -3317,32 +3431,21 @@ marked.defaults = {
   langPrefix: 'lang-',
   smartypants: false,
   headerPrefix: '',
-  renderer: new Renderer,
+  renderer: new Renderer(),
   xhtml: false
 };
 
 /**
- * Expose
+ * Options
  */
+glift.marked.setOptions = function(opt) {
+  merge(glift.marked.defaults, opt);
+  return glift.marked.parse;
+};
 
-marked.Parser = Parser;
-marked.parser = Parser.parse;
+glift.marked.options = glift.marked.setOptions;
 
-marked.Renderer = Renderer;
-
-marked.Lexer = Lexer;
-marked.lexer = Lexer.lex;
-
-marked.InlineLexer = InlineLexer;
-marked.inlineLexer = InlineLexer.output;
-
-marked.parse = marked;
-
-this.marked = marked;
-
-}).call(function() {
-  return glift;
-}());
+});  // goog.scope
 
 goog.provide('glift.displays');
 
@@ -7147,9 +7250,15 @@ glift.displays.statusbar.StatusBar.prototype.fullscreen = function() {
       wrapperDivId = widget.wrapperDivId,
       newDivId = wrapperDivId + '_fullscreen',
       newDiv = glift.dom.newDiv(newDivId),
-      body = glift.dom.elem(document.body),
       state = widget.getCurrentState(),
       manager = widget.manager;
+
+  var body = document.body;
+  if (body == null) {
+    throw new Error('document.body was null, ' +
+        'but it must not be null for fullscreen to work');
+  }
+  body = glift.dom.elem(/* @type {!HTMLBodyElement} */ (body));
 
   var cssObj = glift.obj.flatMerge({
       position: 'absolute',
@@ -7186,7 +7295,10 @@ glift.displays.statusbar.StatusBar.prototype.unfullscreen = function() {
       state = widget.getCurrentState(),
       manager = widget.manager,
       prevScrollTop = manager.prevScrollTop,
-      body = glift.dom.elem(document.body);
+      // We can safely cast the body; There's no way to get here unless
+      // 'fullscreen()' has already been called.
+      body = glift.dom.elem(/** @type {!HTMLBodyElement} */ (document.body));
+
   widget.destroy();
   wrapperDivEl.remove(); // remove the fullscreen div completely
   widget.wrapperDivId = widget.manager.divId;
@@ -10043,8 +10155,8 @@ glift.rules.treepath = {
    * @param {!glift.rules.Goban} goban A rules.goban array.
    * @param {!glift.rules.Treepath} nextMoves A next-moves treepath (fragment).
    * @return {{
-   *  movetree: glift.rules.MoveTree,
-   *  stones: Array<Object>
+   *  movetree: !glift.rules.MoveTree,
+   *  stones: !Array<!glift.rules.Move>
    * }}
    *
    * - movetree: The updated movetree after applying the nextmoves
@@ -12347,8 +12459,16 @@ goog.require('glift.orientation');
  * aren't allowed (where the X's are quad-regions)
  * .X     X.
  * X. and XX
+ *
+ * @param {!glift.rules.MoveTree} movetree The movetree we want to find the
+ *    optimal cropping-region for.
+ * @param {!(glift.rules.Treepath|string)=} opt_nextMovesPath 
+ *    Optional next moves path for cropping along a specific path.
+ *
+ * @return {!glift.enums.boardRegions} The resulting boardregion cropping.
  */
-glift.orientation.getQuadCropFromMovetree = function(movetree, nextMovesPath) {
+glift.orientation.getQuadCropFromMovetree =
+    function(movetree, opt_nextMovesPath) {
   var br = glift.enums.boardRegions;
   var ints = movetree.getIntersections();
   // It's not clear to me if we should be cropping boards smaller than 19.  It
@@ -12358,8 +12478,8 @@ glift.orientation.getQuadCropFromMovetree = function(movetree, nextMovesPath) {
   }
 
   var minimalBox = glift.orientation.minimalBoundingBox(
-      movetree, nextMovesPath);
-  var boxMapping = glift.orientation._getCropboxMapping(ints);
+      movetree, opt_nextMovesPath);
+  var boxMapping = glift.orientation.getCropboxMapping_();
   for (var i = 0; i < boxMapping.length; i++) {
     var obj = boxMapping[i];
     if (obj.bbox.covers(minimalBox)) {
@@ -12372,27 +12492,38 @@ glift.orientation.getQuadCropFromMovetree = function(movetree, nextMovesPath) {
 };
 
 /**
- * For 19x19, we cache the cropbox mappings. Has the form:
- * [{
- *  bbox: <bbox>
- *  result: BOARD_REGION
- * },{
- *  ...
- * }]
+ * An object contatin a pair: A bounding box and the board region it
+ * corresponds to.
+ *
+ * @typedef {{
+ *  bbox: !glift.orientation.BoundingBox,
+ *  result: !glift.enums.boardRegions
+ * }}
  */
-glift.orientation._cropboxMappingCache = null;
-/** Gets the cropbox mapping. Only for 19x19 currently */
-glift.orientation._getCropboxMapping = function(size) {
-  if (size != 19) {
-    throw new Error('Only for 19x19');
-  }
+glift.orientation.CropboxMapping;
+
+
+/**
+ * For 19x19, we cache the cropbox mappings.
+ * @private {?Object<!glift.orientation.CropboxMapping>}
+ */
+glift.orientation.cropboxMappingCache_ = null;
+
+/**
+ * Gets the cropbox mapping. Only for 19x19 currently. I'm pretty sure it
+ * doesn't make sense to crop a 9x9 and 13x13 is iffy.
+ *
+ * @private
+ * @return {!Object<!glift.orientation.CropboxMapping>}
+ */
+glift.orientation.getCropboxMapping_ = function() {
   var br = glift.enums.boardRegions;
   // See glift.orientation.cropbox for more about how cropboxes are defined.
-  var cbox = function(bregion) {
-    return glift.orientation.cropbox.get(bregion, 19);
+  var cbox = function(boardRegion) {
+    return glift.orientation.cropbox.get(boardRegion, 19);
   };
 
-  if (glift.orientation._cropboxMappingCache == null) {
+  if (glift.orientation.cropboxMappingCache_ == null) {
     // The heart of this method. We know the minimal bounding box for the stones.
     // Then the question is: Which bbox best covers the minimal box? There are 4
     // cases:
@@ -12435,12 +12566,13 @@ glift.orientation._getCropboxMapping = function(size) {
         result: bri
       });
     }
-    glift.orientation._cropboxMappingCache = boxRegions;
+    glift.orientation.cropboxMappingCache_ = boxRegions;
   }
 
-  return glift.orientation._cropboxMappingCache;
+  // Cropbox mapping must be defined here by the logic above
+  return /** @type !{glift.orientation.CropboxMapping} */ (
+      glift.orientation.cropboxMappingCache_);
 };
-
 
 goog.require('glift.orientation');
 
@@ -12457,16 +12589,26 @@ goog.require('glift.orientation');
  *    case of 3.
  *
  * To calculate the minimalBoundingBox for just the current position
+ *
+ * @param {!glift.rules.MoveTree} movetree
+ * @param {(!glift.rules.Treepath|string)=} opt_nextMovesPath
+ *    Optional next moves path for cropping along a specific path.
+ * @return {!glift.orientation.BoundingBox}
  */
-glift.orientation.minimalBoundingBox = function(movetree, nextMovesPath) {
+glift.orientation.minimalBoundingBox = function(movetree, opt_nextMovesPath) {
   var point = glift.util.point;
   var bbox = glift.orientation.bbox.fromPts;
-  var pts = glift.orientation._getDisplayPts(movetree, nextMovesPath);
 
   var ints = movetree.getIntersections() - 1;
-  if (nextMovesPath && glift.util.typeOf(nextMovesPath) === 'string') {
-    nextMovesPath = glift.rules.treepath.parseFragment(nextMovesPath);
+
+  /** @type {!glift.rules.Treepath|undefined} */
+  var nextMovesPath = undefined;
+  if (opt_nextMovesPath && glift.util.typeOf(opt_nextMovesPath) === 'string') {
+    nextMovesPath = glift.rules.treepath.parseFragment(opt_nextMovesPath);
+  } else if (opt_nextMovesPath && glift.util.typeOf(opt_nextMovesPath) === 'array') {
+    nextMovesPath = /** @type {!glift.rules.Treepath} */ (opt_nextMovesPath);
   }
+  var pts = glift.orientation.getDisplayPts_(movetree, nextMovesPath);
 
   // Return a full board when there are no points.
   if (pts.length === 0) {
@@ -12495,8 +12637,17 @@ glift.orientation.minimalBoundingBox = function(movetree, nextMovesPath) {
  * 3. nextMovesPath is a non empty array. Treat the nextMovesPath as a
  *    variations tree path and traverse just the path. Really 2., is a special
  *    case of 3.
+ *
+ * @private
+ *
+ * @param {!glift.rules.MoveTree} movetree
+ *    Optional next moves path for cropping along a specific path.
+ * @param {!glift.rules.Treepath=} opt_nextMovesPath
+ *    Optional next moves path for cropping along a specific path.
+ *
+ * @return {!Array<!glift.Point>}
  */
-glift.orientation._getDisplayPts = function(movetree, nextMovesPath) {
+glift.orientation.getDisplayPts_ = function(movetree, opt_nextMovesPath) {
   // Ensure we aren't changing the parent movetree's state.
   movetree = movetree.newTreeRef();
   var pts = [];
@@ -12522,18 +12673,18 @@ glift.orientation._getDisplayPts = function(movetree, nextMovesPath) {
     }
   };
 
-  if (!nextMovesPath) {
+  if (!opt_nextMovesPath) {
     movetree.recurseFromRoot(function(mt) {
       capturePoints(mt.properties().getAllStones());
     });
-  } else if (nextMovesPath) {
+  } else if (opt_nextMovesPath) {
     // Case 3. Traverse the next moves path.
-    for (var i = 0; i < nextMovesPath.length; i++) {
-      movetree.moveDown(nextMovesPath[i]);
+    for (var i = 0; i < opt_nextMovesPath.length; i++) {
+      movetree.moveDown(opt_nextMovesPath[i]);
       capturePoints(movetree.properties().getAllStones());
     }
     // Case 2. Traverse the next moves path.
-    if (nextMovesPath.length === 0) {
+    if (opt_nextMovesPath.length === 0) {
       capturePoints(movetree.properties().getAllStones());
     }
     capturePoints(movetree.properties().getAllMarks());
@@ -12610,398 +12761,438 @@ goog.provide('glift.flattener');
  * useful for all sorts of go-board rendering, be it print-rendering or a
  * dynamic UI.
  */
-glift.flattener = {
-  /**
-   * Flatten the combination of movetree, goban, cropping, and treepath into an
-   * array (really a 2D array) of symbols, (a Flattened object).
-   *
-   * Some notes about the parameters:
-   *
-   * Required parameters:
-   *  - The movetree is used for extracting:
-   *    -> The marks
-   *    -> The next moves
-   *    -> The previous move
-   *    -> subsequent stones, if a nextMovesTreepath is present.  These are
-   *    given labels.
-   *
-   * Optional parameters:
-   *  - goban: used for extracting all the inital stones.
-   *  - nextMovesTreepath.  Defaults to [].  This is typically only used for
-   *    printed diagrams.
-   *  - startingMoveNum.  Optionally override the move number. If not set, it's
-   *    automatically determined based on whether the position is on the
-   *    mainpath or a variation.
-   *
-   *  // Optional cropping params.
-   *  - boardRegion: indicates what region to crop on.
-   *  - autoBoxCropOnNextMoves. If set, will automatically crop based on the
-   *    nextmoves path.
-   *  - regionRestrictions. Array of allowed boardRegions. If the calculated
-   *    region is not an member of this set, default to using 'ALL'.
-   */
-  flatten: function(movetreeInitial, options) {
-    // Create a new ref to avoid changing original tree ref.
-    var mt = movetreeInitial.newTreeRef();
-    options = options || {};
+glift.flattener = {};
 
-    // Use the provided goban, or reclaculate it.  This is somewhat inefficient,
-    // so it's recommended that the goban be provided.
-    var goban = options.goban || glift.rules.goban.getFromMoveTree(
-        mt.getTreeFromRoot(), mt.treepathToHere()).goban;
-    var showVars =
-        options.showNextVariationsType  || glift.enums.showVariations.NEVER;
-    var nmtp = glift.rules.treepath.parseFragment(options.nextMovesTreepath);
+/**
+ * Flattener Options
+ *
+ * Some notes about the parameters:
+ *
+ * Optional parameters:
+ *  - goban: used for extracting all the inital stones.
+ *  - nextMovesTreepath.  Defaults to [].  This is typically only used for
+ *    printed diagrams.
+ *  - startingMoveNum.  Optionally override the move number. If not set, it's
+ *    automatically determined based on whether the position is on the
+ *    mainpath or a variation.
+ *
+ *  // Optional cropping params.
+ *  - boardRegion: indicates what region to crop on.
+ *  - autoBoxCropOnNextMoves. If set, will automatically crop based on the
+ *    nextmoves path.
+ *  - regionRestrictions. Array of allowed boardRegions. If the calculated
+ *    region is not an member of this set, default to using 'ALL'.
+ *  - autoBoxCropOnNextMoves. Whether or not to perform auto-box cropping.
+ *
+ *  // Options for marks
+ *  - showNextVariationsType
+ *
+ * @typedef {{
+ *  goban: (!glift.rules.Goban|undefined),
+ *  nextMovesTreepath: (!glift.rules.Treepath|string|!Array<number>|undefined),
+ *  startingMoveNum: (number|undefined),
+ *  boardRegion: (glift.enums.boardRegions|undefined),
+ *  regionRestrictions: (!Array<glift.enums.boardRegions>|undefined),
+ *  showNextVariationsType: (glift.enums.showVariations|undefined),
+ *  autoBoxCropOnNextMoves: (boolean|undefined)
+ * }}
+ */
+glift.flattener.Options;
 
-    var startingMoveNum = options.startingMoveNum || null;
 
-    var boardRegion = glift.flattener._getBoardRegion(mt, nmtp, options);
-    var cropping = glift.orientation.cropbox.get(
-        boardRegion, mt.getIntersections());
+/**
+ * Flatten the combination of movetree, goban, cropping, and treepath into an
+ * array (really a 2D array) of symbols, (a Flattened object).
+ *
+ * Required parameters:
+ *  - The movetree is used for extracting:
+ *    -> The marks
+ *    -> The next moves
+ *    -> The previous move
+ *    -> subsequent stones, if a nextMovesTreepath is present.  These are
+ *    given labels.
+ *
+ * @param {!glift.rules.MoveTree} movetreeInitial
+ * @param {!glift.flattener.Options} options
+ *
+ * @return {!glift.flattener.Flattened}
+ */
+glift.flattener.flatten = function(movetreeInitial, options) {
+  // Create a new ref to avoid changing original tree ref.
+  var mt = movetreeInitial.newTreeRef();
+  options = options || {};
 
-    // Find the starting move number before applying the next move path.
-    if (startingMoveNum === null) {
-      startingMoveNum = glift.flattener._findStartingMoveNum(mt, nmtp);
+  // Use the provided goban, or reclaculate it.  This is somewhat inefficient,
+  // so it's recommended that the goban be provided.
+  var goban = options.goban || glift.rules.goban.getFromMoveTree(
+      mt.getTreeFromRoot(), mt.treepathToHere()).goban;
+  var showVars =
+      options.showNextVariationsType  || glift.enums.showVariations.NEVER;
+  var nmtp = glift.rules.treepath.parseFragment(options.nextMovesTreepath || '');
+
+  var startingMoveNum = options.startingMoveNum || null;
+
+  var boardRegion = glift.flattener.getBoardRegion_(mt, nmtp, options);
+  var cropping = glift.orientation.cropbox.get(
+      boardRegion, mt.getIntersections());
+
+  // Find the starting move number before applying the next move path.
+  if (startingMoveNum === null) {
+    startingMoveNum = glift.flattener._findStartingMoveNum(mt, nmtp);
+  }
+
+  // The move number of the first mainline move in the parent-chain.
+  var mainlineMoveNum = mt.getMainlineNode().getNodeNum();
+
+  // Like the above, except in stne format. In other words: {color: <color>,
+  // point: <pt>}. null if at the root (or due to weirdness like placements).
+  var mainlineMove = mt.getMainlineNode().properties().getMove();
+
+  // We also grab the next mainline move. For variations (for display), we
+  // usually want to reference the _next_ move rather than the parent mainline
+  // move. As with the mainline move above, the next move can be null.
+  var nextMainlineMove = null;
+  var nextMainlineNode = mt.getMainlineNode().getChild(0);
+  if (nextMainlineNode) {
+    nextMainlineMove = nextMainlineNode.properties().getMove();
+  }
+
+  // Initial move number -- used to calculate the ending move number.
+  var initNodeNumber = mt.node().getNodeNum();
+
+  // Map of ptString to move.
+  var applied = glift.rules.treepath.applyNextMoves(mt, goban, nmtp);
+
+  // Map of ptString to stone obj.
+  var stoneMap = glift.flattener._stoneMap(goban, applied.stones);
+
+  // Replace the movetree reference with the new position.  This movetree
+  // should be equivalent to applying the initial treepath and then applying
+  // the nextmoves treepath.
+  mt = applied.movetree;
+
+  // Calculate the ending move number. Since starting move num is only used
+  // in conjunction with next moves paths, we can just look at the next moves
+  // path array.
+  var endingMoveNum = startingMoveNum + nmtp.length - 1;
+  if (endingMoveNum < startingMoveNum) {
+    // This can occur if we haven't move anywhere. In that case, we won't be
+    // using the starting / ending move numbers for labeling the next moves,
+    // but it's nice to keep the starting/ending moves coherent.
+    endingMoveNum = startingMoveNum;
+  }
+
+  // Get the marks at the current position
+  var mksOut = glift.flattener._markMap(mt);
+  var labels = mksOut.labels; // map of ptstr to label str
+  var marks = mksOut.marks; // map of ptstr to symbol
+
+  // Optionally update the labels with labels used to indicate variations.
+  var sv = glift.enums.showVariations
+  if (showVars === sv.ALWAYS || (
+      showVars === sv.MORE_THAN_ONE && mt.node().numChildren() > 1)) {
+    glift.flattener._updateLabelsWithVariations(mt, marks, labels);
+  }
+
+  // Calculate the collision stones and update the marks / labels maps if
+  // necessary.
+  var collisions = glift.flattener._createStoneLabels(
+      applied.stones, stoneMap, marks, labels, startingMoveNum);
+
+  // Finally! Generate the intersections double-array.
+  var board = glift.flattener.board.create(cropping, stoneMap, marks, labels);
+
+  // TODO(kashomon): Support
+  // - lastMove
+  // - nextPossibleMoves
+  // - selectedNextMove
+  // - correctNextMoves
+  var comment = mt.properties().getComment() || '';
+  return new glift.flattener.Flattened(
+      board, collisions, comment, boardRegion, cropping, mt.onMainline(),
+      startingMoveNum, endingMoveNum, mainlineMoveNum, mainlineMove,
+      nextMainlineMove, stoneMap, marks, labels);
+};
+
+
+/**
+ * Returns the board region for a movetree. Relevant configurability:
+ *
+ * mt: The movetree at the relevant position.
+ * nmtp: The next moves treepath.
+ *
+ * options vars:
+ * options.autoBoxCropOnNextMoves: auto-crop based on the just the nextmoves
+ *    rather than the whole tree.
+ * options.regionRestrictions: AN array
+ *
+ * This is probably too configurable at the moment.
+ *
+ * @param {!glift.rules.MoveTree} mt
+ * @param {!glift.rules.Treepath} nmtp
+ * @param {!glift.flattener.Options} options
+ *
+ * @return {glift.enums.boardRegions} The board region.
+ */
+glift.flattener.getBoardRegion_ = function(mt, nmtp, options) {
+  var boardRegion =
+      options.boardRegion || glift.enums.boardRegions.ALL;
+  var autoBoxCropOnNextMoves = options.autoBoxCropOnNextMoves || false;
+  if (autoBoxCropOnNextMoves) {
+    boardRegion = glift.orientation.getQuadCropFromMovetree(mt, nmtp);
+  }
+  if (boardRegion === glift.enums.boardRegions.AUTO) {
+    boardRegion = glift.orientation.getQuadCropFromMovetree(mt);
+  }
+  var regionRestrictions = options.regionRestrictions || null;
+
+  if (regionRestrictions) {
+    if (glift.util.typeOf(regionRestrictions) !== 'array') {
+      throw new Error('Invalid type for options.regionRestrictions: ' +
+          'Must be array; was: ' + glift.util.typeOf(regionRestrictions));
     }
-
-    // The move number of the first mainline move in the parent-chain.
-    var mainlineMoveNum = mt.getMainlineNode().getNodeNum();
-
-    // Like the above, except in stne format. In other words: {color: <color>,
-    // point: <pt>}. null if at the root (or due to weirdness like placements).
-    var mainlineMove = mt.getMainlineNode().properties().getMove();
-
-    // We also grab the next mainline move. For variations (for display), we
-    // usually want to reference the _next_ move rather than the parent mainline
-    // move. As with the mainline move above, the next move can be null.
-    var nextMainlineMove = null;
-    var nextMainlineNode = mt.getMainlineNode().getChild(0);
-    if (nextMainlineNode) {
-      nextMainlineMove = nextMainlineNode.properties().getMove();
-    }
-
-    // Initial move number -- used to calculate the ending move number.
-    var initNodeNumber = mt.node().getNodeNum();
-
-    // Map of ptString to move.
-    var applied = glift.rules.treepath.applyNextMoves(mt, goban, nmtp);
-    // Map of ptString to stone obj.
-    var stoneMap = glift.flattener._stoneMap(goban, applied.stones);
-
-    // Replace the movetree reference with the new position.  This movetree
-    // should be equivalent to applying the initial treepath and then applying
-    // the nextmoves treepath.
-    mt = applied.movetree;
-
-    // Calculate the ending move number. Since starting move num is only used
-    // in conjunction with next moves paths, we can just look at the next moves
-    // path array.
-    var endingMoveNum = startingMoveNum + nmtp.length - 1;
-    if (endingMoveNum < startingMoveNum) {
-      // This can occur if we haven't move anywhere. In that case, we won't be
-      // using the starting / ending move numbers for labeling the next moves,
-      // but it's nice to keep the starting/ending moves coherent.
-      endingMoveNum = startingMoveNum;
-    }
-
-    // Get the marks at the current position
-    var mksOut = glift.flattener._markMap(mt);
-    var labels = mksOut.labels; // map of ptstr to label str
-    var marks = mksOut.marks; // map of ptstr to symbol
-
-    // Optionally update the labels with labels used to indicate variations.
-    var sv = glift.enums.showVariations
-    if (showVars === sv.ALWAYS || (
-        showVars === sv.MORE_THAN_ONE && mt.node().numChildren() > 1)) {
-      glift.flattener._updateLabelsWithVariations(mt, marks, labels);
-    }
-
-    // Calculate the collision stones and update the marks / labels maps if
-    // necessary.
-    var collisions = glift.flattener._createStoneLabels(
-        applied.stones, stoneMap, marks, labels, startingMoveNum);
-
-    // Finally! Generate the intersections double-array.
-    var board = glift.flattener.board.create(cropping, stoneMap, marks, labels);
-
-    // TODO(kashomon): Support
-    // - lastMove
-    // - nextPossibleMoves
-    // - selectedNextMove
-    // - correctNextMoves
-    var comment = mt.properties().getComment() || '';
-    return new glift.flattener.Flattened(
-        board, collisions, comment, boardRegion, cropping, mt.onMainline(),
-        startingMoveNum, endingMoveNum, mainlineMoveNum, mainlineMove,
-        nextMainlineMove, stoneMap, marks, labels);
-  },
-
-  /**
-   * Returns the board region for a movetree. Relevant configurability:
-   *
-   * mt: The movetree at the relevant position.
-   * nmtp: The next moves treepath.
-   *
-   * options vars:
-   * options.autoBoxCropOnNextMoves: auto-crop based on the just the nextmoves
-   *    rather than the whole tree.
-   * options.regionRestrictions: AN array
-   *
-   * This is probably too configurable at the moment.
-   */
-  _getBoardRegion: function(mt, nmtp, options) {
-    var boardRegion =
-        options.boardRegion || glift.enums.boardRegions.ALL;
-    var autoBoxCropOnNextMoves = options.autoBoxCropOnNextMoves || false;
-    if (autoBoxCropOnNextMoves) {
-      boardRegion = glift.orientation.getQuadCropFromMovetree(mt, nmtp);
-    }
-    if (boardRegion === glift.enums.boardRegions.AUTO) {
-      boardRegion = glift.orientation.getQuadCropFromMovetree(mt);
-    }
-    var regionRestrictions = options.regionRestrictions || null;
-
-    if (regionRestrictions) {
-      if (glift.util.typeOf(regionRestrictions) !== 'array') {
-        throw new Error('Invalid type for options.regionRestrictions: ' +
-            'Must be array; was: ' + glift.util.typeOf(regionRestrictions));
+    // The user has decided to manuall specify a set of region restrictions.
+    for (var i = 0; i < regionRestrictions.length; i++) {
+      // We return the first region that matches. The order of the array
+      // should give the preference of regions.
+      if (boardRegion.indexOf(regionRestrictions[i]) > -1) {
+        return regionRestrictions[i];
       }
-      // The user has decided to manuall specify a set of region restrictions.
-      for (var i = 0; i < regionRestrictions.length; i++) {
-        // We return the first region that matches. The order of the array
-        // should give the preference of regions.
-        if (boardRegion.indexOf(regionRestrictions[i]) > -1) {
-          return regionRestrictions[i];
-        }
-      }
-      return glift.enums.boardRegions.ALL;
     }
-    return boardRegion;
-  },
+    return glift.enums.boardRegions.ALL;
+  }
+  return boardRegion;
+};
 
-  /**
-   * Note: This contains ALL stones for a given position.
-   *
-   * Get map from pt string to stone {point: <point>, color: <color>}.
-   * goban: a glift.rules.goban instance.
-   * nextStones: array of stone objects -- {point: <pt>, color: <color>}
-   *    that are a result of applying a next-moves-treepath.
-   */
-  _stoneMap: function(goban, nextStones) {
-    var out = {};
-    // Array of {color: <color>, point: <point>}
-    var gobanStones = goban.getAllPlacedStones();
-    for (var i = 0; i < gobanStones.length; i++) {
-      var stone = gobanStones[i];
-      out[stone.point.toString()] = stone;
+
+/**
+ * Note: This contains ALL stones for a given position.
+ *
+ * @param {!glift.rules.Goban} goban
+ * @param {!Array<glift.rules.Move>} nextStones that are the result of applying
+ *    a next-moves path.
+ *
+ * @return {!Object<string, !glift.rules.Move>} Map from point string to stone.
+ */
+glift.flattener._stoneMap = function(goban, nextStones) {
+  var out = {};
+  // Array of {color: <color>, point: <point>}
+  var gobanStones = goban.getAllPlacedStones();
+  for (var i = 0; i < gobanStones.length; i++) {
+    var stone = gobanStones[i];
+    out[stone.point.toString()] = stone;
+  }
+
+  for (var i = 0; i < nextStones.length; i++) {
+    var stone = nextStones[i];
+    var mv = { point: stone.point, color: stone.color };
+    var ptstr = mv.point.toString();
+    if (!out[ptstr]) {
+      out[ptstr] = mv;
     }
+  }
+  return out;
+};
 
-    for (var i = 0; i < nextStones.length; i++) {
-      var stone = nextStones[i];
-      var mv = { point: stone.point, color: stone.color };
-      var ptstr = mv.point.toString();
-      if (!out[ptstr]) {
-        out[ptstr] = mv;
-      }
-    }
-    return out;
-  },
 
-  /**
-   * Get the relevant marks.  Returns an object containing two fields: marks,
-   * which is a map from ptString to Symbol ID. and labels, which is a map
-   * from ptString to text label.
-   *
-   * If there are two marks on the same intersection specified, the behavior is
-   * undefined.  Either mark might succeed in being placed.
-   *
-   * Example return value:
-   * {
-   *  marks: {
-   *    "12,5": 13
-   *    "12,3": 23
-   *  },
-   *  labels: {
-   *    "12,3": "A"
-   *    "12,4": "B"
-   *  }
-   * }
-   */
-  _markMap: function(movetree) {
-    var out = { marks: {}, labels: {} };
-    var symbols = glift.flattener.symbols;
-    var propertiesToSymbols = {
-      CR: symbols.CIRCLE,
-      LB: symbols.TEXTLABEL,
-      MA: symbols.XMARK,
-      SQ: symbols.SQUARE,
-      TR: symbols.TRIANGLE
-    };
-    for (var prop in propertiesToSymbols) {
-      var symbol = propertiesToSymbols[prop];
-      if (movetree.properties().contains(prop)) {
-        var data = movetree.properties().getAllValues(prop);
-        for (var i = 0; i < data.length; i++) {
-          if (prop === glift.rules.allProperties.LB) {
-            var lblPt = glift.sgf.convertFromLabelData(data[i]);
-            var key = lblPt.point.toString();
-            out.marks[key] = symbol;
-            out.labels[key] = lblPt.value;
-          } else {
-            var newPts = glift.util.pointArrFromSgfProp(data[i])
-            for (var j = 0; j < newPts.length; j++) {
-              out.marks[newPts[j].toString()] = symbol;
-            }
+/**
+ * Get the relevant marks.  Returns an object containing two fields: marks,
+ * which is a map from ptString to Symbol ID. and labels, which is a map
+ * from ptString to text label.
+ *
+ * If there are two marks on the same intersection specified, the behavior is
+ * undefined.  Either mark might succeed in being placed.
+ *
+ * Example return value:
+ * {
+ *  marks: {
+ *    "12,5": 13
+ *    "12,3": 23
+ *  },
+ *  labels: {
+ *    "12,3": "A"
+ *    "12,4": "B"
+ *  }
+ * }
+ */
+glift.flattener._markMap = function(movetree) {
+  var out = { marks: {}, labels: {} };
+  var symbols = glift.flattener.symbols;
+  var propertiesToSymbols = {
+    CR: symbols.CIRCLE,
+    LB: symbols.TEXTLABEL,
+    MA: symbols.XMARK,
+    SQ: symbols.SQUARE,
+    TR: symbols.TRIANGLE
+  };
+  for (var prop in propertiesToSymbols) {
+    var symbol = propertiesToSymbols[prop];
+    if (movetree.properties().contains(prop)) {
+      var data = movetree.properties().getAllValues(prop);
+      for (var i = 0; i < data.length; i++) {
+        if (prop === glift.rules.allProperties.LB) {
+          var lblPt = glift.sgf.convertFromLabelData(data[i]);
+          var key = lblPt.point.toString();
+          out.marks[key] = symbol;
+          out.labels[key] = lblPt.value;
+        } else {
+          var newPts = glift.util.pointArrFromSgfProp(data[i])
+          for (var j = 0; j < newPts.length; j++) {
+            out.marks[newPts[j].toString()] = symbol;
           }
         }
       }
     }
-    return out;
-  },
+  }
+  return out;
+};
 
-  /**
-   * Automatically finds the starting move number given a movetree position. This
-   * is meant to be for well-formed variation paths.  That is, if we are
-   * currently on the main path, we expect the next move paths will immediately
-   * start on the variation or stay on the main path.
-   *
-   * Given this, there are three cases to consider:
-   *    1. The movetree is on the mainpath and the next moves path stays on the
-   *    main path:  Return the nodenum + 1 (this is the
-   *    2. The movetere is on the mainpath, but the next move puts us on a
-   *    variation. Return 1 (start over)
-   *    3.  The movetree starts on a variation.  Count the number of moves since
-   *    the mainpath branch.
-   *
-   * Note: The starting move is only interesting in the case where there's a
-   * next-moves-path. If there's no next-moves-path specified, this number is
-   * effectively unused.
-   */
-  _findStartingMoveNum: function(mt, nextMovesPath) {
-    mt = mt.newTreeRef();
-    if (mt.onMainline()) {
-      if (nextMovesPath.length > 0 && nextMovesPath[0] > 0) {
-        return 1;
-      } else {
-        return mt.node().getNodeNum() + 1;
-      }
+/**
+ * Automatically finds the starting move number given a movetree position. This
+ * is meant to be for well-formed variation paths.  That is, if we are
+ * currently on the main path, we expect the next move paths will immediately
+ * start on the variation or stay on the main path.
+ *
+ * Given this, there are three cases to consider:
+ *    1. The movetree is on the mainpath and the next moves path stays on the
+ *    main path:  Return the nodenum + 1 (this is the
+ *    2. The movetere is on the mainpath, but the next move puts us on a
+ *    variation. Return 1 (start over)
+ *    3.  The movetree starts on a variation.  Count the number of moves since
+ *    the mainpath branch.
+ *
+ * Note: The starting move is only interesting in the case where there's a
+ * next-moves-path. If there's no next-moves-path specified, this number is
+ * effectively unused.
+ */
+glift.flattener._findStartingMoveNum = function(mt, nextMovesPath) {
+  mt = mt.newTreeRef();
+  if (mt.onMainline()) {
+    if (nextMovesPath.length > 0 && nextMovesPath[0] > 0) {
+      return 1;
+    } else {
+      return mt.node().getNodeNum() + 1;
     }
-    var mvnum = 1;
-    while (!mt.onMainline()) {
-      mvnum++;
-      mt.moveUp();
+  }
+  var mvnum = 1;
+  while (!mt.onMainline()) {
+    mvnum++;
+    mt.moveUp();
+  }
+  return mvnum;
+};
+
+/**
+ * Create or apply labels to identify collisions that occurred during apply.
+ *
+ * stones: stones that exist on the next moves path.
+ * marks: map from ptstring to Mark symbol int.
+ *    see -- glift.lattener.symbols.
+ * labels: map from ptstring to label string.
+ * startingMoveNum: The number at which to start creating labels
+ *
+ * returns: an array of collision objects:
+ *
+ *  {
+ *    color: <color of the move to be played>,
+ *    mvnum: <move number>,
+ *    label: <label>,
+      collisionStoneColor: <color of the stone under the label>
+ *  }
+ *
+ * This data is meant to be used like the following:
+ *    '<color> <mvnum> at <collisionStoneColor> <label>'
+ * as in this example:
+ *    'Black 13 at White 2'
+ *
+ * Sadly, this has has the side effect of altering the marks / labels maps.
+ */
+// TODO(kashomon): Guard this with a autoLabelMoves flag.
+glift.flattener._createStoneLabels = function(
+    appliedStones, stoneMap, marks, labels, startingMoveNum) {
+  if (!appliedStones || appliedStones.length === 0) {
+    return []; // Don't perform relabeling if no stones are found.
+  }
+  // Collision labels, for when stone.collision = null.
+  var extraLabs = 'abcdefghijklmnopqrstuvwxyz';
+  var labsIdx = 0; // Index into extra labels string above.
+  var symb = glift.flattener.symbols;
+  var collisions = []; // {color: <color>, mvnum: <number>, label: <lbl>}
+
+  // Remove any number labels currently existing in the marks map.  This
+  // method also numbers stones.
+  var digitRegex = /[0-9]/;
+  for (var ptstr in labels) {
+    if (digitRegex.test(labels[ptstr])) {
+      delete labels[ptstr];
+      delete marks[ptstr];
     }
-    return mvnum;
-  },
+  }
 
-  /**
-   * Create or apply labels to identify collisions that occurred during apply.
-   *
-   * stones: stones that exist on the next moves path.
-   * marks: map from ptstring to Mark symbol int.
-   *    see -- glift.lattener.symbols.
-   * labels: map from ptstring to label string.
-   * startingMoveNum: The number at which to start creating labels
-   *
-   * returns: an array of collision objects:
-   *
-   *  {
-   *    color: <color of the move to be played>,
-   *    mvnum: <move number>,
-   *    label: <label>,
-        collisionStoneColor: <color of the stone under the label>
-   *  }
-   *
-   * This data is meant to be used like the following:
-   *    '<color> <mvnum> at <collisionStoneColor> <label>'
-   * as in this example:
-   *    'Black 13 at White 2'
-   *
-   * Sadly, this has has the side effect of altering the marks / labels maps.
-   */
-  // TODO(kashomon): Guard this with a autoLabelMoves flag.
-  _createStoneLabels: function(
-      appliedStones, stoneMap, marks, labels, startingMoveNum) {
-    if (!appliedStones || appliedStones.length === 0) {
-      return []; // Don't perform relabeling if no stones are found.
-    }
-    // Collision labels, for when stone.collision = null.
-    var extraLabs = 'abcdefghijklmnopqrstuvwxyz';
-    var labsIdx = 0; // Index into extra labels string above.
-    var symb = glift.flattener.symbols;
-    var collisions = []; // {color: <color>, mvnum: <number>, label: <lbl>}
-
-    // Remove any number labels currently existing in the marks map.  This
-    // method also numbers stones.
-    var digitRegex = /[0-9]/;
-    for (var ptstr in labels) {
-      if (digitRegex.test(labels[ptstr])) {
-        delete labels[ptstr];
-        delete marks[ptstr];
-      }
+  // Create labels for each stone in the next moves treepath.  Note -- we only
+  // add labels in the case when there's a next moves path.
+  for (var i = 0; i < appliedStones.length; i++) {
+    var stone = appliedStones[i];
+    var ptStr = stone.point.toString();
+    var nextMoveNum = i + startingMoveNum;
+    var colStone = stoneMap[ptStr];
+    // If there's a stone in the stone map (which there _should_ be since
+    // there's a collision), then we store that in the collision object
+    var colStoneColor = undefined;
+    if (colStone && colStone.color) {
+      colStoneColor = colStone.color;
     }
 
-    // Create labels for each stone in the next moves treepath.  Note -- we only
-    // add labels in the case when there's a next moves path.
-    for (var i = 0; i < appliedStones.length; i++) {
-      var stone = appliedStones[i];
-      var ptStr = stone.point.toString();
-      var nextMoveNum = i + startingMoveNum;
-      var colStone = stoneMap[ptStr];
-      // If there's a stone in the stone map (which there _should_ be since
-      // there's a collision), then we store that in the collision object
-      var colStoneColor = undefined;
-      if (colStone && colStone.color) {
-        colStoneColor = colStone.color;
+    // This is a collision stone. Perform collision labeling.
+    if (stone.hasOwnProperty('collision')) {
+      var col = {
+        color: stone.color,
+        mvnum: (nextMoveNum) + '',
+        label: undefined,
+        collisionStoneColor: colStoneColor
+      };
+      if (labels[ptStr]) { // First see if there are any available labels.
+        col.label = labels[ptStr];
+      } else if (glift.util.typeOf(stone.collision) === 'number') {
+        var collisionNum = stone.collision + startingMoveNum;
+        col.label = (collisionNum) + ''; // label is idx.
+      } else { // should be null
+        var lbl = extraLabs.charAt(labsIdx);
+        labsIdx++;
+        col.label = lbl;
+        marks[ptStr] = symb.TEXTLABEL;
+        labels[ptStr] = lbl;
       }
+      collisions.push(col);
 
-      // This is a collision stone. Perform collision labeling.
-      if (stone.hasOwnProperty('collision')) {
-        var col = {
-          color: stone.color,
-          mvnum: (nextMoveNum) + '',
-          label: undefined,
-          collisionStoneColor: colStoneColor
-        };
-        if (labels[ptStr]) { // First see if there are any available labels.
-          col.label = labels[ptStr];
-        } else if (glift.util.typeOf(stone.collision) === 'number') {
-          var collisionNum = stone.collision + startingMoveNum;
-          col.label = (collisionNum) + ''; // label is idx.
-        } else { // should be null
-          var lbl = extraLabs.charAt(labsIdx);
-          labsIdx++;
-          col.label = lbl;
-          marks[ptStr] = symb.TEXTLABEL;
-          labels[ptStr] = lbl;
-        }
-        collisions.push(col);
-
-      // This is not a collision stone. Perform standard move-labeling.
-      } else {
-        // Create new labels for our move number.
-        marks[ptStr] = symb.TEXTLABEL; // Override labels.
-        labels[ptStr] = (nextMoveNum) + ''
-      }
+    // This is not a collision stone. Perform standard move-labeling.
+    } else {
+      // Create new labels for our move number.
+      marks[ptStr] = symb.TEXTLABEL; // Override labels.
+      labels[ptStr] = (nextMoveNum) + ''
     }
-    return collisions;
-  },
+  }
+  return collisions;
+};
 
-  /**
-   * Update the labels with variations numbers. This is an optional step and
-   * usually isn't done for diagrams-for-print.
-   */
-  _updateLabelsWithVariations: function(mt, marks, labels) {
-    for (var i = 0; i < mt.node().numChildren(); i++) {
-      var move = mt.node().getChild(i).properties().getMove();
-      if (move && move.point) {
-        var pt = move.point;
-        var ptStr = pt.toString();
-        if (labels[ptStr] === undefined) {
-          labels[ptStr] = '' + (i + 1);
-        }
-        marks[ptStr] = glift.flattener.symbols.NEXTVARIATION;
+/**
+ * Update the labels with variations numbers. This is an optional step and
+ * usually isn't done for diagrams-for-print.
+ *
+ * @param {!glift.rules.MoveTree} mt
+ * @param {!Object} marks
+ * @param {!Object} labels
+ */
+glift.flattener._updateLabelsWithVariations = function(mt, marks, labels) {
+  for (var i = 0; i < mt.node().numChildren(); i++) {
+    var move = mt.node().getChild(i).properties().getMove();
+    if (move && move.point) {
+      var pt = move.point;
+      var ptStr = pt.toString();
+      if (labels[ptStr] === undefined) {
+        labels[ptStr] = '' + (i + 1);
       }
+      marks[ptStr] = glift.flattener.symbols.NEXTVARIATION;
     }
   }
 };
@@ -13013,10 +13204,15 @@ glift.flattener.board = {
   /**
    * Constructs a board object: a 2D array of intersections.
    *
-   * cropping: A cropping object, which says how to crop the board.
-   * stoneMap: map from pt-string to stone {point: <pt>, color: <color>}
-   * markMap: map from pt-string to mark symbol (flattener.symbols)
-   * labelMap: map from pt-string to label string
+   * @param {!glift.orientation.Cropbox} cropping A cropping object, which says
+   *    how to crop the board.
+   * @param {!Object<!glift.rules.Move>} stoneMap A map from pt-string to
+   *    move.
+   * @param {!Object<glift.flattener.symbols>} markMap A map from pt-string to
+   *    mark symbol.
+   * @param {!Object<string>} labelMap A map from pt-string to label string
+   *
+   * @return {!glift.flattener.Board<Intersection>}
    */
   create: function(cropping, stoneMap, markMap, labelMap) {
     var point = glift.util.point;
@@ -13043,6 +13239,15 @@ glift.flattener.board = {
 /**
  * Board object.  Meant to be created with the static constuctor method 'create'.
  *
+ * @param {!Array<!Array<!T>>} boardArray A matrix of
+ *    intersection object of type T.
+ * @param {!glift.orientation.BoundingBox} bbox The bounding box of the board
+ *    (using board points).
+ * @param {number} maxBoardSize Integer number denoting the max board size
+ *    (i.e., usually 9, 13, or 19).
+ *
+ * @template T
+ *
  * @constructor @final @struct
  */
 glift.flattener.Board = function(boardArray, bbox, maxBoardSize) {
@@ -13050,14 +13255,24 @@ glift.flattener.Board = function(boardArray, bbox, maxBoardSize) {
    * 2D Array of intersections. Generally, this is an array of intersections,
    * but could be backed by a different underlying objects based on a
    * transformation.
+   *
+   * @private {!Array<!Array<!T>>}
    */
-  this._boardArray = boardArray;
+  this.boardArray_ = boardArray;
 
-  /** Bounding box for the crop box. */
-  this._bbox = bbox;
+  /**
+   * Bounding box for the crop box.
+   *
+   * @private {!glift.orientation.BoundingBox}
+   */
+  this.bbox_ = bbox;
 
-  /** Maximum board size.  Generally 9, 13, or 19. */
-  this._maxBoardSize = maxBoardSize;
+  /**
+   * Maximum board size.  Generally 9, 13, or 19. 
+   *
+   * @private {number}
+   */
+  this.maxBoardSize_ = maxBoardSize;
 };
 
 glift.flattener.Board.prototype = {
@@ -13068,6 +13283,9 @@ glift.flattener.Board.prototype = {
    *
    * @param {!glift.Point|number} ptOrX a Point object or, optionaly, a number.
    * @param {number=} opt_y If the first param is a number.
+   *
+   * @return {T} Intersection or null if the
+   *    coordinate is out of bounds.
    */
   getIntBoardPt: function(ptOrX, opt_y) {
     if (glift.util.typeOf(ptOrX) === 'number' &&
@@ -13085,6 +13303,8 @@ glift.flattener.Board.prototype = {
    *
    * @param {!glift.Point|number} ptOrX a Point object or, optionaly, a number.
    * @param {number=} opt_y If the first param is a number.
+   *
+   * @return {T}
    */
   getInt: function(ptOrX, opt_y) {
     if (glift.util.typeOf(ptOrX) === 'number' &&
@@ -13093,46 +13313,62 @@ glift.flattener.Board.prototype = {
     } else {
       var pt = ptOrX;
     }
-    var row = this._boardArray[pt.y()];
-    if (row === undefined) { return row; }
-    return row[pt.x()];
+    var row = this.boardArray_[pt.y()];
+    if (!row) { return null };
+    return row[pt.x()] || null;
   },
 
-  /** Turns a 0 indexed pt to a point that's board-indexed. */
+  /**
+   * Turns a 0 indexed pt to a point that's board-indexed.
+   * @param {!glift.Point} pt
+   * @return {!glift.Point} The translated point
+   */
   ptToBoardPt: function(pt) {
-    return pt.translate(this._bbox.left(), this._bbox.top());
+    return pt.translate(this.bbox_.left(), this.bbox_.top());
   },
 
-  /** Turns a 0 indexed pt to a point that's board-indexed. */
+  /**
+   * Turns a 0 indexed pt to a point that's board-indexed.
+   * @param {!glift.Point} pt
+   * @return {!glift.Point} The translated point
+   */
   boardPtToPt: function(pt) {
-    return pt.translate(-this._bbox.left(), -this._bbox.top());
+    return pt.translate(-this.bbox_.left(), -this.bbox_.top());
   },
 
-  /** Returns the board array. */
+  /**
+   * Returns the board array.
+   * @return {!Array<!Array<!T>>}
+   */
   boardArray: function() {
-    return this._boardArray;
+    return this.boardArray_;
   },
 
-  /** Returns the size of the board. Usually 9, 13 or 19. */
+  /**
+   * Returns the size of the board. Usually 9, 13 or 19.
+   * @return {number}
+   */
   maxBoardSize: function() {
-    return this._maxBoardSize;
+    return this.maxBoardSize_;
   },
 
   /**
    * Returns the height of the Go board. Note that this won't necessarily be the
    * length of the board - 1 due to cropping.
+   * @return {number}
    */
   height: function() {
-    return this._boardArray.length;
+    return this.boardArray_.length;
   },
 
   /**
    * Returns the width of the Go board. Note that this won't necessarily be the
    * length of the board - 1 due to cropping.
+   * @return {number}
    */
   width: function() {
     // Here we assume that the Go board is rectangular.
-    return this._boardArray[0].length;
+    return this.boardArray_[0].length;
   },
 
   /**
@@ -13145,19 +13381,25 @@ glift.flattener.Board.prototype = {
    * Where X and Y are indexed from the top left and range from 0 to the
    * cropping box width / height respectively.  Equivalently, you can think of x
    * and y as the column and row, although I find this more confusing.
+   *
+   * @param {function(T, number, number): U} fn Function that takes an
+   *    Intersection, an x, and a y, and returns a new Intersection.
+   * @return {!glift.flattener.Board<U>} A new board object.
+   *
+   * @template U
    */
   transform: function(fn) {
     var outArray = [];
-    for (var y = 0; y < this._boardArray.length; y++) {
+    for (var y = 0; y < this.boardArray_.length; y++) {
       var row = [];
       // Assumes a rectangular double array but this should always be the case.
-      for (var x = 0; x < this._boardArray[0].length; x++) {
-        var intersect = this._boardArray[y][x];
+      for (var x = 0; x < this.boardArray_[0].length; x++) {
+        var intersect = this.boardArray_[y][x];
         row.push(fn(intersect, x, y));
       }
       outArray.push(row);
     }
-    return new glift.flattener.Board(outArray, this._bbox, this._maxBoardSize);
+    return new glift.flattener.Board(outArray, this.bbox_, this.maxBoardSize_);
   }
 };
 
@@ -13165,6 +13407,8 @@ goog.provide('glift.flattener.Flattened');
 
 /**
  * Data used to populate either a display or diagram.
+ *
+ * @constructor @final @struct
  */
 glift.flattener.Flattened = function(
     board, collisions, comment, boardRegion, cropping, isOnMainPath,
@@ -13348,7 +13592,7 @@ glift.flattener.Flattened.prototype = {
     if (typeof numOrString === 'number') {
       // noop
     } else if (typeof numOrString === 'string' && /\d+/.test(numOrString)) {
-      num = parseInt(numOrString);
+      num = parseInt(numOrString, 10);
     } else {
       return numOrString;
     }
@@ -13550,6 +13794,7 @@ glift.flattener.Intersection.prototype = {
 
 /**
  * Symbolic representation of a Go Board display.
+ * @enum {number}
  */
 glift.flattener.symbols = {
   // Empty location.  Useful for creating dense arrays.  Can be used for any of
@@ -13598,10 +13843,20 @@ glift.flattener.symbols = {
 };
 
 /**
+ * Look-up map that allows us to determine a string key for a symbol number.
+ * Lazily initialized via symbolStr.
+ *
+ * @private {Object<number, string>}
+ */
+glift.flattener._reverseSymbol = null;
+
+/**
  * Convert a symbol number to a symbol string.
+ * @param {number} num Symbol number
+ * @return {string} Symbol name
  */
 glift.flattener.symbolStr = function(num) {
-  if (glift.flattener._reverseSymbol === undefined) {
+  if (glift.flattener._reverseSymbol == null) {
     // Create and store a reverse mapping.
     var reverse = {};
     var symb = glift.flattener.symbols;

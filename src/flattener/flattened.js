@@ -2,6 +2,8 @@ goog.provide('glift.flattener.Flattened');
 
 /**
  * Data used to populate either a display or diagram.
+ *
+ * @constructor @final @struct
  */
 glift.flattener.Flattened = function(
     board, collisions, comment, boardRegion, cropping, isOnMainPath,
@@ -185,7 +187,7 @@ glift.flattener.Flattened.prototype = {
     if (typeof numOrString === 'number') {
       // noop
     } else if (typeof numOrString === 'string' && /\d+/.test(numOrString)) {
-      num = parseInt(numOrString);
+      num = parseInt(numOrString, 10);
     } else {
       return numOrString;
     }

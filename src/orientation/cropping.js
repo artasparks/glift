@@ -13,8 +13,16 @@ goog.require('glift.orientation');
  * aren't allowed (where the X's are quad-regions)
  * .X     X.
  * X. and XX
+ *
+ * @param {!glift.rules.MoveTree} movetree The movetree we want to find the
+ *    optimal cropping-region for.
+ * @param {!(glift.rules.Treepath|string)=} opt_nextMovesPath 
+ *    Optional next moves path for cropping along a specific path.
+ *
+ * @return {!glift.enums.boardRegions} The resulting boardregion cropping.
  */
-glift.orientation.getQuadCropFromMovetree = function(movetree, nextMovesPath) {
+glift.orientation.getQuadCropFromMovetree =
+    function(movetree, opt_nextMovesPath) {
   var br = glift.enums.boardRegions;
   var ints = movetree.getIntersections();
   // It's not clear to me if we should be cropping boards smaller than 19.  It
@@ -24,8 +32,8 @@ glift.orientation.getQuadCropFromMovetree = function(movetree, nextMovesPath) {
   }
 
   var minimalBox = glift.orientation.minimalBoundingBox(
-      movetree, nextMovesPath);
-  var boxMapping = glift.orientation._getCropboxMapping(ints);
+      movetree, opt_nextMovesPath);
+  var boxMapping = glift.orientation.getCropboxMapping_();
   for (var i = 0; i < boxMapping.length; i++) {
     var obj = boxMapping[i];
     if (obj.bbox.covers(minimalBox)) {
@@ -38,27 +46,38 @@ glift.orientation.getQuadCropFromMovetree = function(movetree, nextMovesPath) {
 };
 
 /**
- * For 19x19, we cache the cropbox mappings. Has the form:
- * [{
- *  bbox: <bbox>
- *  result: BOARD_REGION
- * },{
- *  ...
- * }]
+ * An object contatin a pair: A bounding box and the board region it
+ * corresponds to.
+ *
+ * @typedef {{
+ *  bbox: !glift.orientation.BoundingBox,
+ *  result: !glift.enums.boardRegions
+ * }}
  */
-glift.orientation._cropboxMappingCache = null;
-/** Gets the cropbox mapping. Only for 19x19 currently */
-glift.orientation._getCropboxMapping = function(size) {
-  if (size != 19) {
-    throw new Error('Only for 19x19');
-  }
+glift.orientation.CropboxMapping;
+
+
+/**
+ * For 19x19, we cache the cropbox mappings.
+ * @private {?Object<!glift.orientation.CropboxMapping>}
+ */
+glift.orientation.cropboxMappingCache_ = null;
+
+/**
+ * Gets the cropbox mapping. Only for 19x19 currently. I'm pretty sure it
+ * doesn't make sense to crop a 9x9 and 13x13 is iffy.
+ *
+ * @private
+ * @return {!Object<!glift.orientation.CropboxMapping>}
+ */
+glift.orientation.getCropboxMapping_ = function() {
   var br = glift.enums.boardRegions;
   // See glift.orientation.cropbox for more about how cropboxes are defined.
-  var cbox = function(bregion) {
-    return glift.orientation.cropbox.get(bregion, 19);
+  var cbox = function(boardRegion) {
+    return glift.orientation.cropbox.get(boardRegion, 19);
   };
 
-  if (glift.orientation._cropboxMappingCache == null) {
+  if (glift.orientation.cropboxMappingCache_ == null) {
     // The heart of this method. We know the minimal bounding box for the stones.
     // Then the question is: Which bbox best covers the minimal box? There are 4
     // cases:
@@ -101,9 +120,10 @@ glift.orientation._getCropboxMapping = function(size) {
         result: bri
       });
     }
-    glift.orientation._cropboxMappingCache = boxRegions;
+    glift.orientation.cropboxMappingCache_ = boxRegions;
   }
 
-  return glift.orientation._cropboxMappingCache;
+  // Cropbox mapping must be defined here by the logic above
+  return /** @type !{glift.orientation.CropboxMapping} */ (
+      glift.orientation.cropboxMappingCache_);
 };
-

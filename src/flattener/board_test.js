@@ -51,7 +51,7 @@
     deepEqual(i.mark(), symb.EMPTY);
 
     i = board.getIntBoardPt(pt(0,0));
-    ok(i === undefined);
+    ok(i === null, 'Out of bounds point should be null.');
 
     i = board.getIntBoardPt(pt(14,1));
     deepEqual(i.base(), symb.CENTER);

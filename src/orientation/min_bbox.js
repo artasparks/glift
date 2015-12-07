@@ -13,16 +13,26 @@ goog.require('glift.orientation');
  *    case of 3.
  *
  * To calculate the minimalBoundingBox for just the current position
+ *
+ * @param {!glift.rules.MoveTree} movetree
+ * @param {(!glift.rules.Treepath|string)=} opt_nextMovesPath
+ *    Optional next moves path for cropping along a specific path.
+ * @return {!glift.orientation.BoundingBox}
  */
-glift.orientation.minimalBoundingBox = function(movetree, nextMovesPath) {
+glift.orientation.minimalBoundingBox = function(movetree, opt_nextMovesPath) {
   var point = glift.util.point;
   var bbox = glift.orientation.bbox.fromPts;
-  var pts = glift.orientation._getDisplayPts(movetree, nextMovesPath);
 
   var ints = movetree.getIntersections() - 1;
-  if (nextMovesPath && glift.util.typeOf(nextMovesPath) === 'string') {
-    nextMovesPath = glift.rules.treepath.parseFragment(nextMovesPath);
+
+  /** @type {!glift.rules.Treepath|undefined} */
+  var nextMovesPath = undefined;
+  if (opt_nextMovesPath && glift.util.typeOf(opt_nextMovesPath) === 'string') {
+    nextMovesPath = glift.rules.treepath.parseFragment(opt_nextMovesPath);
+  } else if (opt_nextMovesPath && glift.util.typeOf(opt_nextMovesPath) === 'array') {
+    nextMovesPath = /** @type {!glift.rules.Treepath} */ (opt_nextMovesPath);
   }
+  var pts = glift.orientation.getDisplayPts_(movetree, nextMovesPath);
 
   // Return a full board when there are no points.
   if (pts.length === 0) {
@@ -51,8 +61,17 @@ glift.orientation.minimalBoundingBox = function(movetree, nextMovesPath) {
  * 3. nextMovesPath is a non empty array. Treat the nextMovesPath as a
  *    variations tree path and traverse just the path. Really 2., is a special
  *    case of 3.
+ *
+ * @private
+ *
+ * @param {!glift.rules.MoveTree} movetree
+ *    Optional next moves path for cropping along a specific path.
+ * @param {!glift.rules.Treepath=} opt_nextMovesPath
+ *    Optional next moves path for cropping along a specific path.
+ *
+ * @return {!Array<!glift.Point>}
  */
-glift.orientation._getDisplayPts = function(movetree, nextMovesPath) {
+glift.orientation.getDisplayPts_ = function(movetree, opt_nextMovesPath) {
   // Ensure we aren't changing the parent movetree's state.
   movetree = movetree.newTreeRef();
   var pts = [];
@@ -78,18 +97,18 @@ glift.orientation._getDisplayPts = function(movetree, nextMovesPath) {
     }
   };
 
-  if (!nextMovesPath) {
+  if (!opt_nextMovesPath) {
     movetree.recurseFromRoot(function(mt) {
       capturePoints(mt.properties().getAllStones());
     });
-  } else if (nextMovesPath) {
+  } else if (opt_nextMovesPath) {
     // Case 3. Traverse the next moves path.
-    for (var i = 0; i < nextMovesPath.length; i++) {
-      movetree.moveDown(nextMovesPath[i]);
+    for (var i = 0; i < opt_nextMovesPath.length; i++) {
+      movetree.moveDown(opt_nextMovesPath[i]);
       capturePoints(movetree.properties().getAllStones());
     }
     // Case 2. Traverse the next moves path.
-    if (nextMovesPath.length === 0) {
+    if (opt_nextMovesPath.length === 0) {
       capturePoints(movetree.properties().getAllStones());
     }
     capturePoints(movetree.properties().getAllMarks());

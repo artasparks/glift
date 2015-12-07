@@ -8,20 +8,25 @@ glift.dom = {
    * passed in. If arg is an object and has nodeType and nodeType is 1
    * (ELEMENT_NODE), just wrap the element.
    *
-   * @param {string|Element} arg
-   * @return {glift.dom.Element}
+   * @param {string|!Element} arg
+   * @return {glift.dom.Element} A wrapped DOM element. Can be null if the ID
+   *    cannot be found or the arg type is not a string or Element.
    */
   elem: function(arg) {
     var argtype = glift.util.typeOf(arg);
     if (argtype === 'string') {
       // Assume an element ID.
+      arg = /** @type {string} */ (arg);
       var el = document.getElementById(arg);
-      if (el === null) { return null; }
-      else { return new glift.dom.Element(el, arg); };
+      if (el === null) {
+        return null;
+      } else {
+        return new glift.dom.Element(/* @type {!Element} */ (el), arg);
+      };
     } else if (argtype === 'object' && arg.nodeType && arg.nodeType === 1) {
       // Assume an HTML node.
       // Note: nodeType of 1 => ELEMENT_NODE.
-      return new glift.dom.Element(arg);
+      return new glift.dom.Element(/** @type {!Element} */ (arg));
     }
     return null;
   },
@@ -29,7 +34,7 @@ glift.dom = {
   /**
    * Creates a new div dom element with the relevant id.
    * @param {string} id
-   * @return {glift.dom
+   * @return {!glift.dom.Element}
    */
   newDiv: function(id) {
     var elem = glift.dom.elem(document.createElement('div'));
@@ -92,9 +97,17 @@ glift.dom = {
     return newDiv;
   },
 
-  /** Convert a string. */
+  /**
+   * Convert a string allow user to specify a type of Element.
+   *
+   * @param {string} type The type of element to create.
+   * @return {glift.dom.Element}
+   */
   newElem: function(type) {
-    return type ? glift.dom.elem(document.createElement(type + '')) : null;
+    if (!type || glift.util.typeOf(type) !== 'string') {
+      throw new Error('Type must be a string. was: [' + type + ']');
+    }
+    return glift.dom.elem(document.createElement(type));
   }
 };
 
@@ -102,12 +115,16 @@ glift.dom = {
  * A simple wrapper for a plain old dom element. Note, id can be null if the
  * Element is constructed directly from elem.
  *
+ * @param {!Element} el A DOM Element.
+ * @param {string=} opt_id Optional ID -- defaults to null.
+ *
  * @constructor @final @struct
  */
-glift.dom.Element = function(el, id) {
-  /** @type {Element} */
+glift.dom.Element = function(el, opt_id) {
+  /** @type {!Element} */
   this.el = el;
-  this.id = id || null;
+  /** @type {?string} */
+  this.id = opt_id || null;
 }
 
 glift.dom.Element.prototype = {
@@ -146,14 +163,14 @@ glift.dom.Element.prototype = {
    * string, also set the ID field.
    *
    * @param {string} key
-   * @param {*} value
+   * @param {boolean|number|string} value
    * @return {!glift.dom.Element}
    */
   setAttr: function(key, value) {
     this.el.setAttribute(key, value);
     if (key === 'id' && glift.util.typeOf(value) === 'string') {
       // Also set the ID field if the key is 'id'.
-      this.id = value;
+      this.id = /** @type {string} */ (value);
     }
     return this;
   },

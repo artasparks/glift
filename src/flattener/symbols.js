@@ -1,5 +1,6 @@
 /**
  * Symbolic representation of a Go Board display.
+ * @enum {number}
  */
 glift.flattener.symbols = {
   // Empty location.  Useful for creating dense arrays.  Can be used for any of
@@ -48,10 +49,20 @@ glift.flattener.symbols = {
 };
 
 /**
+ * Look-up map that allows us to determine a string key for a symbol number.
+ * Lazily initialized via symbolStr.
+ *
+ * @private {Object<number, string>}
+ */
+glift.flattener._reverseSymbol = null;
+
+/**
  * Convert a symbol number to a symbol string.
+ * @param {number} num Symbol number
+ * @return {string} Symbol name
  */
 glift.flattener.symbolStr = function(num) {
-  if (glift.flattener._reverseSymbol === undefined) {
+  if (glift.flattener._reverseSymbol == null) {
     // Create and store a reverse mapping.
     var reverse = {};
     var symb = glift.flattener.symbols;

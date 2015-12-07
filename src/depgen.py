@@ -117,7 +117,7 @@ TYPED_CLOSURE_FLAGS = [
   '--jscomp_error=undefinedVars',
   '--jscomp_error=undefinedNames',
   '--jscomp_error=deprecated',
-  # '--jscomp_error=checkTypes',
+  '--jscomp_error=checkTypes',
   # '--jscomp_warning=globalThis'
   # '--jscomp_warning=missingProperties'
 ]

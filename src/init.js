@@ -28,10 +28,15 @@ glift.init = function(disableZoomForMobile, divId) {
         glift.dom.elem(metas[i]).remove();
       }
     }
-    var head = glift.dom.elem(document.head);
-    var newMeta = glift.dom.elem(document.createElement('meta'));
-    newMeta.attr('name', 'viewport');
-    newMeta.attr('content', noZoomContent);
+    var head = document.head;
+    if (head == null) {
+      throw new Error('document.head was null, ' +
+          'but it must not be null for disable zoom to work.');
+    }
+    head = glift.dom.elem(/** @type {!HTMLHeadElement} */ (head));
+    var newMeta = glift.dom.elem(document.createElement('meta'))
+        .setAttr('name', 'viewport')
+        .setAttr('content', noZoomContent);
     head.prepend(newMeta);
     glift.global.disabledZoom = true; // prevent from being called again.
   }

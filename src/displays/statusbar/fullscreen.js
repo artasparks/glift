@@ -12,9 +12,15 @@ glift.displays.statusbar.StatusBar.prototype.fullscreen = function() {
       wrapperDivId = widget.wrapperDivId,
       newDivId = wrapperDivId + '_fullscreen',
       newDiv = glift.dom.newDiv(newDivId),
-      body = glift.dom.elem(document.body),
       state = widget.getCurrentState(),
       manager = widget.manager;
+
+  var body = document.body;
+  if (body == null) {
+    throw new Error('document.body was null, ' +
+        'but it must not be null for fullscreen to work');
+  }
+  body = glift.dom.elem(/* @type {!HTMLBodyElement} */ (body));
 
   var cssObj = glift.obj.flatMerge({
       position: 'absolute',
@@ -51,7 +57,10 @@ glift.displays.statusbar.StatusBar.prototype.unfullscreen = function() {
       state = widget.getCurrentState(),
       manager = widget.manager,
       prevScrollTop = manager.prevScrollTop,
-      body = glift.dom.elem(document.body);
+      // We can safely cast the body; There's no way to get here unless
+      // 'fullscreen()' has already been called.
+      body = glift.dom.elem(/** @type {!HTMLBodyElement} */ (document.body));
+
   widget.destroy();
   wrapperDivEl.remove(); // remove the fullscreen div completely
   widget.wrapperDivId = widget.manager.divId;

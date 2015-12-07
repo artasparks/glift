@@ -323,8 +323,8 @@ glift.rules.treepath = {
    * @param {!glift.rules.Goban} goban A rules.goban array.
    * @param {!glift.rules.Treepath} nextMoves A next-moves treepath (fragment).
    * @return {{
-   *  movetree: glift.rules.MoveTree,
-   *  stones: Array<Object>
+   *  movetree: !glift.rules.MoveTree,
+   *  stones: !Array<!glift.rules.Move>
    * }}
    *
    * - movetree: The updated movetree after applying the nextmoves

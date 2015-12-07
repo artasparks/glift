@@ -1,109 +1,305 @@
 goog.provide('glift.marked');
 
+
 /**
  * marked - a markdown parser
  * Copyright (c) 2011-2014, Christopher Jeffrey. (MIT Licensed)
  * https://github.com/chjj/marked
+ *
+ * Modified by Kashomon to include closure type checking.
  */
+goog.scope(function() {
 
-;(function() {
+/**
+ * Helpers
+ * @param {string} html Content to encode
+ * @param {boolean=} opt_encode Optional encode param
+ */
+function escape(html, opt_encode) {
+  // TODO(kashomon): Currently I've disabled escaping because it's not language
+  // agnostic. TODO(kashomon): Flag guardthis function to conditionally turn
+  // auto-escaping off.
+  return html;
+  // return html
+    // .replace(!opt_encode ? /&(?!#?\w+;)/g : /&/g, '&amp;')
+    // .replace(/</g, '&lt;')
+    // .replace(/>/g, '&gt;')
+    // .replace(/"/g, '&quot;')
+    // .replace(/'/g, '&#39;');
+}
+
+function unescape(html) {
+  return html.replace(/&([#\w]+);/g, function(_, n) {
+    n = n.toLowerCase();
+    if (n === 'colon') return ':';
+    if (n.charAt(0) === '#') {
+      return n.charAt(1) === 'x'
+        ? String.fromCharCode(parseInt(n.substring(2), 16))
+        : String.fromCharCode(+n.substring(1));
+    }
+    return '';
+  });
+}
+
+/**
+ * An extremely clever function. Successively replaces content in the
+ *
+ * @param {!RegExp} regexBase Regexp object
+ * @param {!string=} opt_flags Optional regex flags
+ *
+ * Note: The return type is complex and thus elided.
+ */
+function replace(regexBase, opt_flags) {
+  var regex = regexBase.source;
+  var opt = opt_flags || '';
+  return function self(name, val) {
+    if (!name) return new RegExp(regex, opt);
+    val = val.source || val;
+    val = val.replace(/(^|[^\[])\^/g, '$1');
+    regex = regex.replace(name, val);
+    return self;
+  };
+}
+
+/**
+ * @param {!Object} obj Base object
+ * @param {...!Object} var_args Target objects to merge into
+ */
+function merge(obj, var_args) {
+  var i = 1
+    , target
+    , key;
+
+  for (; i < arguments.length; i++) {
+    target = arguments[i];
+    for (key in target) {
+      if (Object.prototype.hasOwnProperty.call(target, key)) {
+        obj[key] = target[key];
+      }
+    }
+  }
+
+  return obj;
+}
+
+/**
+ * Marked Parse Method.
+ *
+ * @param {string} src Source text to process
+ * @param {(!glift.marked.Options|Function)=} opt_options Marked options or
+ *    callback
+ * @param {Function=} opt_callback
+ */
+var marked = function(src, opt_options, opt_callback) {
+  /** @type {Function} */
+  var callback;
+  /** @type {glift.marked.Options|undefined} */
+  var opt;
+
+  if (opt_callback || typeof opt_options === 'function') {
+    if (!opt_callback) {
+      // opt_options must be the callback.
+      callback = /** @type {Function} */ (opt_options);
+      opt = undefined;
+    }
+
+    opt = /** @type {glift.marked.Options} */ (
+        merge({}, glift.marked.defaults, opt_options || {}));
+
+    var highlight = opt.highlight
+      , tokens
+      , pending
+      , i = 0;
+
+    try {
+      tokens = Lexer.lex(src, opt)
+    } catch (e) {
+      return callback(e);
+    }
+
+    pending = tokens.length;
+
+    /**
+     * Done callback
+     * @param {string=} err Optional err message.
+     */
+    var done = function(err) {
+      if (err) {
+        opt.highlight = highlight;
+        return callback(err);
+      }
+
+      var out;
+
+      try {
+        out = Parser.parse(tokens, opt);
+      } catch (e) {
+        err = e;
+      }
+
+      opt.highlight = highlight;
+
+      return err
+        ? callback(err)
+        : callback(null, out);
+    };
+
+    if (!highlight || highlight.length < 3) {
+      return done();
+    }
+
+    delete opt.highlight;
+
+    if (!pending) return done();
+
+    for (; i < tokens.length; i++) {
+      (function(token) {
+        if (token.type !== 'code') {
+          return --pending || done();
+        }
+        return highlight(token.text, token.lang, function(err, code) {
+          if (err) return done(err);
+          if (code == null || code === token.text) {
+            return --pending || done();
+          }
+          token.text = code;
+          token.escaped = true;
+          --pending || done();
+        });
+      })(tokens[i]);
+    }
+
+    return;
+  }
+  try {
+    // No callback available.
+    if (opt_options) {
+      opt = merge({}, glift.marked.defaults, opt_options);
+    }
+    return Parser.parse(Lexer.lex(src, opt), opt);
+  } catch (e) {
+    e.message += '\nPlease report this to https://github.com/kashomon/glift.';
+    if ((opt_options || glift.marked.defaults).silent) {
+      return '<p>An error occured:</p><pre>'
+        + escape(e.message + '', true)
+        + '</pre>';
+    }
+    throw e;
+  }
+};
+
+glift.marked = marked;
+glift.marked.parse = marked;
+
+/**
+ * Noop function that acts like a Regex object.
+ */
+var noop = function() {};
+noop.exec = noop;
 
 /**
  * Block-Level Grammar
+ * @constructor
+ * @struct
  */
-
-var block = {
-  newline: /^\n+/,
-  code: /^( {4}[^\n]+\n*)+/,
-  fences: noop,
-  hr: /^( *[-*_]){3,} *(?:\n+|$)/,
-  heading: /^ *(#{1,6}) *([^\n]+?) *#* *(?:\n+|$)/,
-  nptable: noop,
-  lheading: /^([^\n]+)\n *(=|-){2,} *(?:\n+|$)/,
-  blockquote: /^( *>[^\n]+(\n(?!def)[^\n]+)*\n*)+/,
-  list: /^( *)(bull) [\s\S]+?(?:hr|def|\n{2,}(?! )(?!\1bull )\n*|\s*$)/,
-  html: /^ *(?:comment *(?:\n|\s*$)|closed *(?:\n{2,}|\s*$)|closing *(?:\n{2,}|\s*$))/,
-  def: /^ *\[([^\]]+)\]: *<?([^\s>]+)>?(?: +["(]([^\n]+)[")])? *(?:\n+|$)/,
-  table: noop,
-  paragraph: /^((?:[^\n]+\n?(?!hr|heading|lheading|blockquote|tag|def))+)\n*/,
-  text: /^[^\n]+/
+var Blocker = function() {
+  this.newline = /^\n+/;
+  this.code = /^( {4}[^\n]+\n*)+/;
+  this.fences = noop;
+  this.hr = /^( *[-*_]){3,} *(?:\n+|$)/;
+  this.heading = /^ *(#{1,6}) *([^\n]+?) *#* *(?:\n+|$)/;
+  this.nptable = noop,
+  this.lheading = /^([^\n]+)\n *(=|-){2,} *(?:\n+|$)/;
+  this.blockquote = /^( *>[^\n]+(\n(?!def)[^\n]+)*\n*)+/;
+  this.list = /^( *)(bull) [\s\S]+?(?:hr|def|\n{2,}(?! )(?!\1bull )\n*|\s*$)/;
+  this.html = /^ *(?:comment *(?:\n|\s*$)|closed *(?:\n{2,}|\s*$)|closing *(?:\n{2,}|\s*$))/;
+  this.def = /^ *\[([^\]]+)\]: *<?([^\s>]+)>?(?: +["(]([^\n]+)[")])? *(?:\n+|$)/;
+  this.table = noop;
+  this.paragraph = /^((?:[^\n]+\n?(?!hr|heading|lheading|blockquote|tag|def))+)\n*/;
+  this.text = /^[^\n]+/;
+  this.bullet = /(?:[*+-]|\d+\.)/;
+  this.item = /^( *)(bull) [^\n]*(?:\n(?!\1bull )[^\n]*)*/;
+  this.item = replace(this.item, 'gm')
+    (/bull/g, this.bullet)
+    ();
+  this.list = replace(this.list)
+    (/bull/g, this.bullet)
+    ('hr', '\\n+(?=\\1?(?:[-*_] *){3,}(?:\\n+|$))')
+    ('def', '\\n+(?=' + this.def.source + ')')
+    ();
+  this.blockquote = replace(this.blockquote)
+    ('def', this.def)
+    ();
+  this._tag = '(?!(?:'
+    + 'a|em|strong|small|s|cite|q|dfn|abbr|data|time|code'
+    + '|var|samp|kbd|sub|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo'
+    + '|span|br|wbr|ins|del|img)\\b)\\w+(?!:/|[^\\w\\s@]*@)\\b';
+  this.html = replace(this.html)
+    ('comment', /<!--[\s\S]*?-->/)
+    ('closed', /<(tag)[\s\S]+?<\/\1>/)
+    ('closing', /<tag(?:"[^"]*"|'[^']*'|[^'">])*?>/)
+    (/tag/g, this._tag)
+    ();
+  this.paragraph = replace(this.paragraph)
+    ('hr', this.hr)
+    ('heading', this.heading)
+    ('lheading', this.lheading)
+    ('blockquote', this.blockquote)
+    ('tag', '<' + this._tag)
+    ('def', this.def)
+    ();
+  /** Normal Block Grammar */
+  this.normal = merge({}, this);
+  /** GFM Block Grammar */
+  this.gfm = merge({}, this.normal, {
+    fences: /^ *(`{3,}|~{3,}) *(\S+)? *\n([\s\S]+?)\s*\1 *(?:\n+|$)/,
+    paragraph: /^/
+  });
+  this.gfm.paragraph = replace(this.paragraph)
+    ('(?!', '(?!'
+      + this.gfm.fences.source.replace('\\1', '\\2') + '|'
+      + this.list.source.replace('\\1', '\\3') + '|')
+    ();
+  /**
+   * GFM + Tables Block Grammar
+   */
+  this.tables = merge({}, this.gfm, {
+    nptable: /^ *(\S.*\|.*)\n *([-:]+ *\|[-| :]*)\n((?:.*\|.*(?:\n|$))*)\n*/,
+    table: /^ *\|(.+)\n *\|( *[-:]+[-| :]*)\n((?: *\|.*(?:\n|$))*)\n*/
+  });
 };
 
-block.bullet = /(?:[*+-]|\d+\.)/;
-block.item = /^( *)(bull) [^\n]*(?:\n(?!\1bull )[^\n]*)*/;
-block.item = replace(block.item, 'gm')
-  (/bull/g, block.bullet)
-  ();
-
-block.list = replace(block.list)
-  (/bull/g, block.bullet)
-  ('hr', '\\n+(?=\\1?(?:[-*_] *){3,}(?:\\n+|$))')
-  ('def', '\\n+(?=' + block.def.source + ')')
-  ();
-
-block.blockquote = replace(block.blockquote)
-  ('def', block.def)
-  ();
-
-block._tag = '(?!(?:'
-  + 'a|em|strong|small|s|cite|q|dfn|abbr|data|time|code'
-  + '|var|samp|kbd|sub|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo'
-  + '|span|br|wbr|ins|del|img)\\b)\\w+(?!:/|[^\\w\\s@]*@)\\b';
-
-block.html = replace(block.html)
-  ('comment', /<!--[\s\S]*?-->/)
-  ('closed', /<(tag)[\s\S]+?<\/\1>/)
-  ('closing', /<tag(?:"[^"]*"|'[^']*'|[^'">])*?>/)
-  (/tag/g, block._tag)
-  ();
-
-block.paragraph = replace(block.paragraph)
-  ('hr', block.hr)
-  ('heading', block.heading)
-  ('lheading', block.lheading)
-  ('blockquote', block.blockquote)
-  ('tag', '<' + block._tag)
-  ('def', block.def)
-  ();
+var block = new Blocker();
 
 /**
- * Normal Block Grammar
+ * @typedef {{
+ *  type: string,
+ *  text: (string|undefined),
+ *  lang: (string|undefined),
+ *  depth: (number|undefined),
+ *  header: (string|undefined),
+ *  align: (string|undefined),
+ *  cells: (string|undefined),
+ *  ordered: (boolean|undefined),
+ *  pre: (string|undefined),
+ *  href: (string|undefined),
+ *  title: (string|undefined)
+ * }}
  */
+glift.marked.Token;
 
-block.normal = merge({}, block);
-
-/**
- * GFM Block Grammar
- */
-
-block.gfm = merge({}, block.normal, {
-  fences: /^ *(`{3,}|~{3,}) *(\S+)? *\n([\s\S]+?)\s*\1 *(?:\n+|$)/,
-  paragraph: /^/
-});
-
-block.gfm.paragraph = replace(block.paragraph)
-  ('(?!', '(?!'
-    + block.gfm.fences.source.replace('\\1', '\\2') + '|'
-    + block.list.source.replace('\\1', '\\3') + '|')
-  ();
-
-/**
- * GFM + Tables Block Grammar
- */
-
-block.tables = merge({}, block.gfm, {
-  nptable: /^ *(\S.*\|.*)\n *([-:]+ *\|[-| :]*)\n((?:.*\|.*(?:\n|$))*)\n*/,
-  table: /^ *\|(.+)\n *\|( *[-:]+[-| :]*)\n((?: *\|.*(?:\n|$))*)\n*/
-});
 
 /**
  * Block Lexer
+ *
+ * @constructor
+ *
+ * @param {glift.marked.Options=} opt_options
  */
-
-function Lexer(options) {
+glift.marked.Lexer = function(opt_options) {
   this.tokens = [];
   this.tokens.links = {};
-  this.options = options || marked.defaults;
+  this.options = opt_options || glift.marked.defaults;
   this.rules = block.normal;
 
   if (this.options.gfm) {
@@ -113,41 +309,62 @@ function Lexer(options) {
       this.rules = block.gfm;
     }
   }
-}
+};
+
+var Lexer = glift.marked.Lexer;
 
 /**
  * Expose Block Rules
  */
-
 Lexer.rules = block;
 
 /**
  * Static Lex Method
+ *
+ * @param {string} src
+ * @param {glift.marked.Options=} opt_options
+ *
+ * @return {!Array<!glift.marked.Token>} Array of tokens
  */
-
-Lexer.lex = function(src, options) {
-  var lexer = new Lexer(options);
+Lexer.lex = function(src, opt_options) {
+  var lexer = new Lexer(opt_options);
   return lexer.lex(src);
 };
 
+glift.marked.lexer = Lexer.lex;
+
 /**
  * Preprocessing
+ *
+ * @return {!Array<!glift.marked.Token>} Array of tokens.
  */
-
 Lexer.prototype.lex = function(src) {
   src = src
+    // Convert carriage returns into newlines
     .replace(/\r\n|\r/g, '\n')
+    // Convert tabs to 4 spaces
     .replace(/\t/g, '    ')
+    // Convert No-break space to a normal space
     .replace(/\u00a0/g, ' ')
+    // Weird Unicode newline codepoint
     .replace(/\u2424/g, '\n');
 
   return this.token(src, true);
 };
 
 /**
- * Lexing
+ * Lexing. Tokenize some source text
+ *
+ * (Kashomon:I have no idea what top or bq do. They look like hacky flags to
+ * encode state).
+ *
+ * @param {string} src Source text
+ * @param {boolean=} top
+ * @param {boolean=} bq
+ *
+ * @return {!Array<!glift.marked.Token>}
+ *
  */
-
 Lexer.prototype.token = function(src, top, bq) {
   src = src.replace(/^ +$/gm, '')
   var next
@@ -515,13 +732,14 @@ inline.breaks = merge({}, inline.gfm, {
 
 /**
  * Inline Lexer & Compiler
+ *
+ * @constructor
  */
-
-function InlineLexer(links, options) {
-  this.options = options || marked.defaults;
+glift.marked.InlineLexer = function(links, options) {
+  this.options = options || glift.marked.defaults;
   this.links = links;
   this.rules = inline.normal;
-  this.renderer = this.options.renderer || new Renderer;
+  this.renderer = this.options.renderer || new Renderer();
   this.renderer.options = this.options;
 
   if (!this.links) {
@@ -540,35 +758,32 @@ function InlineLexer(links, options) {
   }
 }
 
+var InlineLexer = glift.marked.InlineLexer;
+
 /**
  * Expose Inline Rules
  */
-
 InlineLexer.rules = inline;
 
 /**
  * Static Lexing/Compiling Method
  */
-
 InlineLexer.output = function(src, links, options) {
   var inline = new InlineLexer(links, options);
   return inline.output(src);
 };
 
+glift.marked.inlineLexer = InlineLexer.output;
+
 /**
  * Lexing/Compiling
  */
-
 InlineLexer.prototype.output = function(src) {
   var out = ''
     , link
     , text
     , href
     , cap;
-
-  var escape = function(text) {
-    return text;
-  }
 
   while (src) {
     // escape
@@ -700,7 +915,6 @@ InlineLexer.prototype.output = function(src) {
 /**
  * Compile Link
  */
-
 InlineLexer.prototype.outputLink = function(cap, link) {
   var href = escape(link.href)
     , title = link.title ? escape(link.title) : null;
@@ -713,7 +927,6 @@ InlineLexer.prototype.outputLink = function(cap, link) {
 /**
  * Smartypants Transformations
  */
-
 InlineLexer.prototype.smartypants = function(text) {
   if (!this.options.smartypants) return text;
   return text
@@ -734,7 +947,6 @@ InlineLexer.prototype.smartypants = function(text) {
 /**
  * Mangle Links
  */
-
 InlineLexer.prototype.mangle = function(text) {
   var out = ''
     , l = text.length
@@ -754,11 +966,15 @@ InlineLexer.prototype.mangle = function(text) {
 
 /**
  * Renderer
+ *
+ * @constructor
+ * @param {glift.marked.Options=} opt_options
  */
-
-function Renderer(options) {
-  this.options = options || {};
+glift.marked.Renderer = function(opt_options) {
+  this.options = opt_options || {};
 }
+
+var Renderer = glift.marked.Renderer;
 
 Renderer.prototype.code = function(code, lang, escaped) {
   if (this.options.highlight) {
@@ -886,6 +1102,13 @@ Renderer.prototype.link = function(href, title, text) {
   return out;
 };
 
+/**
+ * Constructs an HTML Image string.
+ * @param {string} href
+ * @param {string} title
+ * @param {string} text
+ * @return {string}
+ */
 Renderer.prototype.image = function(href, title, text) {
   var out = '<img src="' + href + '" alt="' + text + '"';
   if (title) {
@@ -897,32 +1120,39 @@ Renderer.prototype.image = function(href, title, text) {
 
 /**
  * Parsing & Compiling
+ *
+ * @constructor
+ * @param {glift.marked.Options=} opt_options
  */
-
-function Parser(options) {
+glift.marked.Parser = function(opt_options) {
   this.tokens = [];
   this.token = null;
-  this.options = options || marked.defaults;
+  this.options = opt_options || glift.marked.defaults;
   this.options.renderer = this.options.renderer || new Renderer;
   this.renderer = this.options.renderer;
   this.renderer.options = this.options;
 }
 
+var Parser = glift.marked.Parser;
+
 /**
  * Static Parse Method
+ * @param {!Array<glift.marked.Token>} src Array of tokens.
+ * @param {glift.marked.Options=} opt_options Optional marked options
  */
-
-Parser.parse = function(src, options, renderer) {
-  var parser = new Parser(options, renderer);
+Parser.parse = function(src, opt_options) {
+  var parser = new Parser(opt_options);
   return parser.parse(src);
 };
 
+glift.marked.parse = Parser.parse;
+
 /**
  * Parse Loop
+ * @param {!Array<glift.marked.Token>} src Array of tokens.
  */
-
 Parser.prototype.parse = function(src) {
-  this.inline = new InlineLexer(src.links, this.options, this.renderer);
+  this.inline = new InlineLexer(src.links, this.options);
   this.tokens = src.reverse();
 
   var out = '';
@@ -936,7 +1166,6 @@ Parser.prototype.parse = function(src) {
 /**
  * Next Token
  */
-
 Parser.prototype.next = function() {
   return this.token = this.tokens.pop();
 };
@@ -944,7 +1173,6 @@ Parser.prototype.next = function() {
 /**
  * Preview Next Token
  */
-
 Parser.prototype.peek = function() {
   return this.tokens[this.tokens.length - 1] || 0;
 };
@@ -952,7 +1180,6 @@ Parser.prototype.peek = function() {
 /**
  * Parse Text Tokens
  */
-
 Parser.prototype.parseText = function() {
   var body = this.token.text;
 
@@ -964,9 +1191,8 @@ Parser.prototype.parseText = function() {
 };
 
 /**
- * Parse Current Token
+ * Parse the current token
  */
-
 Parser.prototype.tok = function() {
   switch (this.token.type) {
     case 'space': {
@@ -1076,163 +1302,28 @@ Parser.prototype.tok = function() {
 };
 
 /**
- * Helpers
+ * @typedef {{
+ *  gfm: (boolean|undefined),
+ *  tables: (boolean|undefined),
+ *  breaks: (boolean|undefined),
+ *  pedantic: (boolean|undefined),
+ *  sanitize: (boolean|undefined),
+ *  smartLists: (boolean|undefined),
+ *  silent: (boolean|undefined),
+ *  highlight: (?Function|undefined),
+ *  langPrefix: (string|undefined),
+ *  smartypants: (boolean|undefined),
+ *  headerPrefix: (string|undefined),
+ *  renderer: (!glift.marked.Renderer|undefined),
+ *  xhtml: (boolean|undefined)
+ * }}
  */
-
-function escape(html, encode) {
-  return html
-    .replace(!encode ? /&(?!#?\w+;)/g : /&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-function unescape(html) {
-  return html.replace(/&([#\w]+);/g, function(_, n) {
-    n = n.toLowerCase();
-    if (n === 'colon') return ':';
-    if (n.charAt(0) === '#') {
-      return n.charAt(1) === 'x'
-        ? String.fromCharCode(parseInt(n.substring(2), 16))
-        : String.fromCharCode(+n.substring(1));
-    }
-    return '';
-  });
-}
-
-function replace(regex, opt) {
-  regex = regex.source;
-  opt = opt || '';
-  return function self(name, val) {
-    if (!name) return new RegExp(regex, opt);
-    val = val.source || val;
-    val = val.replace(/(^|[^\[])\^/g, '$1');
-    regex = regex.replace(name, val);
-    return self;
-  };
-}
-
-function noop() {}
-noop.exec = noop;
-
-function merge(obj) {
-  var i = 1
-    , target
-    , key;
-
-  for (; i < arguments.length; i++) {
-    target = arguments[i];
-    for (key in target) {
-      if (Object.prototype.hasOwnProperty.call(target, key)) {
-        obj[key] = target[key];
-      }
-    }
-  }
-
-  return obj;
-}
-
+glift.marked.Options;
 
 /**
- * Marked
+ * @type {!glift.marked.Options}
  */
-
-function marked(src, opt, callback) {
-  if (callback || typeof opt === 'function') {
-    if (!callback) {
-      callback = opt;
-      opt = null;
-    }
-
-    opt = merge({}, marked.defaults, opt || {});
-
-    var highlight = opt.highlight
-      , tokens
-      , pending
-      , i = 0;
-
-    try {
-      tokens = Lexer.lex(src, opt)
-    } catch (e) {
-      return callback(e);
-    }
-
-    pending = tokens.length;
-
-    var done = function(err) {
-      if (err) {
-        opt.highlight = highlight;
-        return callback(err);
-      }
-
-      var out;
-
-      try {
-        out = Parser.parse(tokens, opt);
-      } catch (e) {
-        err = e;
-      }
-
-      opt.highlight = highlight;
-
-      return err
-        ? callback(err)
-        : callback(null, out);
-    };
-
-    if (!highlight || highlight.length < 3) {
-      return done();
-    }
-
-    delete opt.highlight;
-
-    if (!pending) return done();
-
-    for (; i < tokens.length; i++) {
-      (function(token) {
-        if (token.type !== 'code') {
-          return --pending || done();
-        }
-        return highlight(token.text, token.lang, function(err, code) {
-          if (err) return done(err);
-          if (code == null || code === token.text) {
-            return --pending || done();
-          }
-          token.text = code;
-          token.escaped = true;
-          --pending || done();
-        });
-      })(tokens[i]);
-    }
-
-    return;
-  }
-  try {
-    if (opt) opt = merge({}, marked.defaults, opt);
-    return Parser.parse(Lexer.lex(src, opt), opt);
-  } catch (e) {
-    e.message += '\nPlease report this to https://github.com/chjj/marked.';
-    if ((opt || marked.defaults).silent) {
-      return '<p>An error occured:</p><pre>'
-        + escape(e.message + '', true)
-        + '</pre>';
-    }
-    throw e;
-  }
-}
-
-/**
- * Options
- */
-
-marked.options =
-marked.setOptions = function(opt) {
-  merge(marked.defaults, opt);
-  return marked;
-};
-
-marked.defaults = {
+glift.marked.defaults = {
   gfm: true,
   tables: true,
   breaks: false,
@@ -1244,29 +1335,18 @@ marked.defaults = {
   langPrefix: 'lang-',
   smartypants: false,
   headerPrefix: '',
-  renderer: new Renderer,
+  renderer: new Renderer(),
   xhtml: false
 };
 
 /**
- * Expose
+ * Options
  */
+glift.marked.setOptions = function(opt) {
+  merge(glift.marked.defaults, opt);
+  return glift.marked.parse;
+};
 
-marked.Parser = Parser;
-marked.parser = Parser.parse;
+glift.marked.options = glift.marked.setOptions;
 
-marked.Renderer = Renderer;
-
-marked.Lexer = Lexer;
-marked.lexer = Lexer.lex;
-
-marked.InlineLexer = InlineLexer;
-marked.inlineLexer = InlineLexer.output;
-
-marked.parse = marked;
-
-this.marked = marked;
-
-}).call(function() {
-  return glift;
-}());
+});  // goog.scope
