@@ -67,6 +67,9 @@ JS_DIRECTORIES = [
     'flattener',
     'widgets',
     'widgets/options',
+
+    # Lastly: The API
+    'api',
     ]
 
 EXCLUDE = set([
@@ -119,7 +122,8 @@ TYPED_CLOSURE_FLAGS = [
   '--jscomp_error=undefinedNames',
   '--jscomp_error=deprecated',
   '--jscomp_error=checkTypes',
-  '--jscomp_error=missingProperties'
+  '--jscomp_error=missingProperties',
+  # '--jscomp_error=accessControls'
   # '--jscomp_warning=globalThis'
 ]
 

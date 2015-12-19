@@ -1,9 +1,9 @@
 (function() {
-  module('glift.widgets.widgetsTest');
+  module('glift.api.createTest');
   var testUtil = glift.testUtil;
 
   test('Successfully create a basic widget (Game Viewer)', function() {
-    var manager = glift.widgets.create({
+    var manager = glift.api.create({
       sgf: testdata.sgfs.complexproblem,
     });
     ok(manager !== undefined);
@@ -29,7 +29,7 @@
     var wtypes = glift.enums.widgetTypes;
     var sgfs = testdata.sgfs;
     // TODO(kashomon): Do more extensive integration testing here.
-    var manager = glift.widgets.create({
+    var manager = glift.api.create({
       sgfCollection: [{
           sgfString: sgfs.complexproblem,
           widgetType: wtypes.STANDARD_PROBLEM
