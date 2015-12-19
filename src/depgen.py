@@ -123,7 +123,7 @@ TYPED_CLOSURE_FLAGS = [
   '--jscomp_error=deprecated',
   '--jscomp_error=checkTypes',
   '--jscomp_error=missingProperties',
-  # '--jscomp_error=accessControls'
+  '--jscomp_error=accessControls'
   # '--jscomp_warning=globalThis'
 ]
 
