@@ -60,7 +60,7 @@ glift.rules.treepath = {
   /**
    * Parse a treepath
    *
-   * @param {number|string|Array<number>|undefined} initPos The initial
+   * @param {number|string|!Array<number>|undefined} initPos The initial
    *    position, which can be defined as a variety of types.
    * @return {!glift.rules.Treepath}
    */
@@ -71,7 +71,7 @@ glift.rules.treepath = {
     } else if (glift.util.typeOf(initPos) === 'number') {
       initPos = '' + initPos;
     } else if (glift.util.typeOf(initPos) === 'array') {
-      return initPos;
+      return /** @type {glift.rules.Treepath} */ (initPos);
     } else if (glift.util.typeOf(initPos) === 'string') {
       // Fallthrough and parse the path.  This is the expected behavior.
     } else {
@@ -92,7 +92,7 @@ glift.rules.treepath = {
       var v = sect[i].split('\.');
       // Handle the first number (e.g., 4); We necessitate this to be a move
       // number, so we push 0s until we get to the move number.
-      var firstNum = parseInt(v[0])
+      var firstNum = parseInt(v[0], 10)
       for (var j = 0; j < firstNum - lastNum; j++) {
         out.push(0);
       }
@@ -114,12 +114,12 @@ glift.rules.treepath = {
         // Handle the last number. 1+
         if (testNum.charAt(testNum.length - 1) === '+') {
           testNum = testNum.slice(0, testNum.length - 1);
-          out.push(parseInt(testNum));
+          out.push(parseInt(testNum, 10));
           // + must be the last character.
           out = out.concat(glift.rules.treepath.toEnd_());
           return out;
         } else {
-          out.push(parseInt(testNum));
+          out.push(parseInt(testNum, 10));
         }
         lastNum++;
       }
@@ -141,7 +141,8 @@ glift.rules.treepath = {
     }
     var vartype = glift.util.typeOf(pathStr);
     if (vartype === 'array') {
-      return pathStr; // assume the array is in the correct format
+      // Assume the array is in the correct format
+      return /** @type {glift.rules.Treepath} */ (pathStr);
     }
     if (vartype !== 'string') {
       throw new Error('When parsing fragments, type should be string. was: ' + 
@@ -153,10 +154,10 @@ glift.rules.treepath = {
       var num = splat[i];
       if (num.charAt(num.length - 1) === '+') {
         num = num.slice(0, num.length - 1);
-        out.push(parseInt(num))
+        out.push(parseInt(num, 10))
         out = out.concat(glift.rules.treepath.toEnd_());
       } else {
-        out.push(parseInt(num));
+        out.push(parseInt(num, 10));
       }
     }
     return out;
@@ -291,7 +292,7 @@ glift.rules.treepath = {
       nextMovesTreepath.push(varnum);
       mt.moveUp();
       if (breakOnComment &&
-          mt.properties().getOneValue('C')) {
+          mt.properties().getOneValue(glift.rules.prop.C)) {
         break;
       }
 
@@ -392,7 +393,7 @@ glift.rules.treepath = {
       var thisout = glift.rules.treepath._flattenMoveTree(
           movetree, pathToHere.slice());
       out = out.concat(thisout)
-      movetree.moveUp(i)
+      movetree.moveUp()
     }
     if (out.length == 0) out.push(pathToHere);
     return out;

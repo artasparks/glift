@@ -270,7 +270,7 @@
   });
 
   test('getCurrentPlayer passing example', function() {
-    var states = glift.enums.states
+    var states = glift.enums.states;
     var movetree = glift.rules.movetree.getFromSgf(
         testdata.sgfs.passingExample,  [0,0]);
     deepEqual(movetree.getCurrentPlayer(), states.WHITE);

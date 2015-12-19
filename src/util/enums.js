@@ -1,6 +1,5 @@
 goog.provide('glift.enums');
 
-goog.scope(function() {
 /**
  * Various constants used throughout glift.
  */
@@ -17,15 +16,13 @@ glift.enums = {
       return group1 ? group1.toUpperCase() : '';
     });
   },
-}
-
-var enums = glift.enums;
+};
 
 /**
  * Also sometimes referred to as colors.
  * @enum{string}
  */
-enums.states = {
+glift.enums.states = {
   BLACK: 'BLACK',
   WHITE: 'WHITE',
   EMPTY: 'EMPTY'
@@ -34,7 +31,7 @@ enums.states = {
 /**
  * @enum{string}
  */
-enums.boardAlignments = {
+glift.enums.boardAlignments = {
   TOP: "TOP",
   RIGHT: "RIGHT",
   CENTER: "CENTER"
@@ -45,7 +42,7 @@ enums.boardAlignments = {
  * List of directions. Used for a variety of tasks.
  * @enum{string}
  */
-enums.directions = {
+glift.enums.directions = {
   LEFT: 'LEFT',
   RIGHT: 'RIGHT',
   TOP: 'TOP',
@@ -56,7 +53,7 @@ enums.directions = {
  * List of board regions. Usually used for cropping.
  * @enum{string}
  */
-enums.boardRegions = {
+glift.enums.boardRegions = {
   LEFT: 'LEFT',
   RIGHT: 'RIGHT',
   TOP: 'TOP',
@@ -78,7 +75,7 @@ enums.boardRegions = {
  * @enum {string}
  */
 // TODO(kashomon): Delete this
-enums.controllerMessages = {
+glift.enums.controllerMessages = {
   CONTINUE: 'CONTINUE',
   DONE: 'DONE',
   FAILURE: 'FAILURE'
@@ -87,7 +84,7 @@ enums.controllerMessages = {
 /**
  * @enum {string}
  */
-enums.marks = {
+glift.enums.marks = {
   CIRCLE: 'CIRCLE',
   SQUARE: 'SQUARE',
   TRIANGLE: 'TRIANGLE',
@@ -111,13 +108,13 @@ enums.marks = {
 
   // We color 'correct' variations differently in problems,
   CORRECT_VARIATION: 'CORRECT_VARIATION'
-},
+};
 
 /**
  * Enum to indicate how a move for a problem was resolved.
  * @enum {string}
  */
-enums.problemResults = {
+glift.enums.problemResults = {
   CORRECT: 'CORRECT',
   INCORRECT: 'INCORRECT',
   INDETERMINATE: 'INDETERMINATE',
@@ -129,7 +126,7 @@ enums.problemResults = {
  * @enum {string}
  */
 // TODO(kashomon): Delete when we migrate to flattener.
-enums.displayDataTypes = {
+glift.enums.displayDataTypes = {
   PARTIAL: 'PARTIAL',
   FULL: 'FULL'
 };
@@ -139,7 +136,7 @@ enums.displayDataTypes = {
  * be compatible with being class / id names.
  * @enum{string}
  */
-enums.svgElements = {
+glift.enums.svgElements = {
   SVG: 'svg',
   BOARD: 'board',
   BOARD_COORD_LABELS: 'board_coord_labels',
@@ -161,7 +158,7 @@ enums.svgElements = {
   STONE_SHADOW_CONTAINER: 'stone_shadow_container',
   GUIDE_LINE: 'guide_line',
 
-  // Icon-bar specific enums
+  // Icon-bar specific glift.enums
   ICON: 'icon',
   ICON_CONTAINER: 'icon_container',
   TEMP_ICON: 'temp_icon',
@@ -173,7 +170,7 @@ enums.svgElements = {
  * Whether or not to show variations in the UI.
  * @enum {string}
  */
-enums.showVariations = {
+glift.enums.showVariations = {
   ALWAYS: 'ALWAYS',
   NEVER: 'NEVER',
   MORE_THAN_ONE: 'MORE_THAN_ONE'
@@ -183,7 +180,7 @@ enums.showVariations = {
  * The types of widgets users can create. Used to link Controllers and Options.
  * @enum {string}
  */
-enums.widgetTypes = {
+glift.enums.widgetTypes = {
   CORRECT_VARIATIONS_PROBLEM: 'CORRECT_VARIATIONS_PROBLEM',
   EXAMPLE: 'EXAMPLE',
   GAME_FIGURE: 'GAME_FIGURE',
@@ -191,13 +188,13 @@ enums.widgetTypes = {
   REDUCED_GAME_VIEWER: 'REDUCED_GAME_VIEWER',
   STANDARD_PROBLEM: 'STANDARD_PROBLEM',
   BOARD_EDITOR: 'BOARD_EDITOR'
-},
+};
 
 /**
  * The types of components that exist in the Glift UI.
  * @enum {string}
  */
-enums.boardComponents = {
+glift.enums.boardComponents = {
   BOARD: 'BOARD',
   COMMENT_BOX: 'COMMENT_BOX',
   EXTRA_ICONBAR: 'EXTRA_ICONBAR',
@@ -208,21 +205,19 @@ enums.boardComponents = {
 /**
  * @enum {string}
  */
-enums.dubug = {
+glift.enums.dubug = {
   NONE: 'NONE',
   INFO: 'INFO'
-},
+};
 
 /**
  * Rotations we can apply to Go Boards. Doesn't rotate the fundamental data (the
  * SGF points), but rotates at the time the board is drawn.
  * @enum {string}
  */
-enums.rotations = {
+glift.enums.rotations = {
   NO_ROTATION: 'NO_ROTATION',
   CLOCKWISE_90: 'CLOCKWISE_90',
   CLOCKWISE_180: 'CLOCKWISE_180',
   CLOCKWISE_270: 'CLOCKWISE_270'
 };
-
-});

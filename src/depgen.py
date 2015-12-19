@@ -38,6 +38,7 @@ TEST_FILES_TO_AUTOGEN = [
 JS_DIRECTORIES = [
     '.',
     'util',
+    # maybe extract enums?
     # 'gcore/util', -- for closure migration
 
     'dom',

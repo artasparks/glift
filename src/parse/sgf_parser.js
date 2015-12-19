@@ -13,7 +13,7 @@
  *
  * To disable this behavior, set metadataProperty to null.
  *
- * @api(experimental)
+ * api:experimental
  */
 glift.parse.sgfMetadataProperty = 'GC';
 
@@ -24,6 +24,9 @@ glift.parse.sgfMetadataProperty = 'GC';
  *
  * Note: Because SGFs have notoriously bad data / properties, we log warnings
  * for unknown properties rather than throwing errors.
+ *
+ * @param {string} sgfString
+ * @return {!glift.rules.MoveTree}
  */
 glift.parse.sgf = function(sgfString) {
   var states = {
@@ -90,7 +93,9 @@ glift.parse.sgf = function(sgfString) {
         try {
           var pdata = propData[0].replace(/\\]/g, ']');
           var mdata = JSON.parse(pdata);
-          movetree.setMetdata(mdata);
+          if (glift.util.typeOf(mdata) === 'object') {
+            movetree.setMetdata(/** @type {Object} */ (mdata));
+          }
         } catch (e) {
           glift.util.logz('For property: ' + curProp + ' unable to parse ' +
               ': ' + propData + ' as JSON for SGF metadata');
@@ -146,7 +151,7 @@ glift.parse.sgf = function(sgfString) {
             // lengths, even though all standard SGF properties are 1-2 chars.
           } else if (curchar === syn.LBRACE) {
             curProp = flushCharBuffer();
-            if (glift.rules.allProperties[curProp] === undefined) {
+            if (glift.rules.prop[curProp] === undefined) {
               pwarn('Unknown property: ' + curProp);
             }
             curstate = states.PROP_DATA;
@@ -229,6 +234,11 @@ glift.parse.sgf = function(sgfString) {
 
 /**
  * Throw a parser error or log a parse warning.  The message is optional.
+ * @param {number} lineNum
+ * @param {number} colNum
+ * @param {string} curchar
+ * @param {string} message
+ * @param {boolean} isWarning
  */
 glift.parse.sgfParseError = function(lineNum, colNum, curchar, message, isWarning) {
   var header = 'SGF Parsing ' + (isWarning ? 'Warning' : 'Error');

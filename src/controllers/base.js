@@ -24,27 +24,32 @@ glift.controllers.BaseController = function() {
   // lifetime of the controller.
   /** @package {string} */
   this.sgfString = '';
-  /** @package {!Array<number>} */
+  /** @package {!glift.rules.Treepath} */
   this.initialPosition = [];
 
   /**
    * Used only for examples (see the Game Figure). Indicates how to create
    * numbers based on the 
-   * @package {!Array<number>}
+   * @package {!glift.rules.Treepath}
    */
   this.nextMovesPath = [];
   /**
    * Used only for problem-types.
-   * @package {!Object}
+   * @package {!Object<glift.rules.prop, string>}
    */
   this.problemConditions = {};
 
   // State variables that are defined on initialize and that could are
   // necessarily mutable.
-  this.parseType = undefined;
-  this.treepath = undefined;
-  this.movetree = undefined;
-  this.goban = undefined;
+  /** @package {?glift.parse.parseType} */
+  this.parseType = null;
+  /** @package {?glift.rules.Treepath} */
+  this.treepath = null;
+  /** @package {glift.rules.MoveTree} */
+  this.movetree = null;
+  /** @package {glift.rules.Goban} goban */
+  this.goban = null;
+  /** @package {!Array<!glift.rules.CaptureResult>} */
   this.captureHistory = [];
 };
 
@@ -64,7 +69,7 @@ glift.controllers.BaseController.prototype = {
     this.parseType = sgfOptions.parseType || glift.parse.parseType.SGF;
     this.sgfString = sgfOptions.sgfString || '';
     this.initialPosition = sgfOptions.initialPosition || [];
-    this.problemConditions = sgfOptions.problemConditions || undefined;
+    this.problemConditions = sgfOptions.problemConditions || null;
     this.nextMovesPath = sgfOptions.nextMovesPath || [];
     this.initialize();
     return this;
@@ -100,7 +105,9 @@ glift.controllers.BaseController.prototype = {
 
     this.movetree = rules.movetree.getFromSgf(
         this.sgfString, this.treepath, this.parseType);
-    var gobanData = rules.goban.getFromMoveTree(this.movetree, this.treepath);
+
+    var gobanData = rules.goban.getFromMoveTree(
+        /** @type {!glift.rules.MoveTree} */ (this.movetree), this.treepath);
     this.goban = gobanData.goban;
     this.captureHistory = gobanData.captures;
     this.extraOptions(); // Overridden by implementers
@@ -144,6 +151,8 @@ glift.controllers.BaseController.prototype = {
    * Gets the variation number of the next move. This will be something different
    * if we've used setNextVariation or if we've already played into a variation.
    * Otherwise, it will be 0.
+   *
+   * @return {number}
    */
   nextVariationNumber: function() {
     return this.treepath[this.currentMoveNumber()] || 0;
@@ -152,6 +161,9 @@ glift.controllers.BaseController.prototype = {
   /**
    * Sets what the next variation will be.  The number is applied modulo the
    * number of possible variations.
+   *
+   * @param {number} num
+   * @return {!glift.controllers.BaseController} this
    */
   setNextVariation: function(num) {
     // Recall that currentMoveNumber  s the same as the depth number ==

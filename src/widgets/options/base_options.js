@@ -54,7 +54,7 @@ glift.widgets.options.baseOptions = {
    */
   sgfDefaults: {
     /**
-     * A literal SGF String.  Should not be specified in SGF defaults
+     * A literal SGF String.  Should not be specified in SGF defaults.
      * @api(1.0)
      */
     sgfString: undefined,

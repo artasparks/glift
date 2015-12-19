@@ -1,20 +1,47 @@
 goog.provide('glift.rules.MoveNode');
 
-glift.rules.movenode = function(properties, children, nodeId, parentNode) {
-  return new glift.rules.MoveNode(properties, children, nodeId, parentNode);
+/**
+ * Id for a particular node. Note: The ID is not guaranteed to be unique
+ *
+ * @typedef {{
+ *  nodeNum: number,
+ *  varNum: number
+ * }}
+ */
+glift.rules.NodeId
+
+/**
+ * Creates a new
+ *
+ * @param {!glift.rules.Properties=} opt_properties
+ * @param {!Array<glift.rules.MoveNode>=} opt_children
+ * @param {!glift.rules.NodeId=} opt_nodeId
+ * @param {!glift.rules.MoveNode=} opt_parentNode
+ *
+ */
+glift.rules.movenode = function(
+    opt_properties, opt_children, opt_nodeId, opt_parentNode) {
+  return new glift.rules.MoveNode(
+       opt_properties, opt_children, opt_nodeId, opt_parentNode);
 };
 
 /**
  * A Node in the MoveTree.
  *
+ * @param {!glift.rules.Properties=} opt_properties
+ * @param {!Array<glift.rules.MoveNode>=} opt_children
+ * @param {!glift.rules.NodeId=} opt_nodeId
+ * @param {!glift.rules.MoveNode=} opt_parentNode
+ *
  * @package
  * @constructor @final @struct
  */
-glift.rules.MoveNode = function(properties, children, nodeId, parentNode) {
-  this._properties = properties || glift.rules.properties();
-  this.children = children || [];
-  this._nodeId = nodeId || { nodeNum: 0, varNum: 0 }; // this is a bad default.
-  this._parentNode = parentNode;
+glift.rules.MoveNode = function(
+    opt_properties, opt_children, opt_nodeId, opt_parentNode) {
+  this._properties = opt_properties || glift.rules.properties();
+  this.children = opt_children || [];
+  this._nodeId = opt_nodeId || { nodeNum: 0, varNum: 0 }; // this is a bad default.
+  this._parentNode = opt_parentNode;
   /**
    * Marker for determining mainline.  Should ONLY be used by onMainline from
    * the movetree.

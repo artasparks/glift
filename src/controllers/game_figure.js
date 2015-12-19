@@ -66,7 +66,7 @@ glift.controllers.GameFigure.prototype = {
     // }
 
     // // add marks
-    // var allProperties = glift.rules.allProperties;
-    // this.movetree.properties().add(allProperties.LB, labels);
+    // var prop = glift.rules.prop;
+    // this.movetree.properties().add(prop.LB, labels);
   }
 };

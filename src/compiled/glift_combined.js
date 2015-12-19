@@ -50,10 +50,17 @@ glift.global = {
   performanceDebugLevel: 'NONE',
 
   /**
-   * Map of performance timestamps.
-   * TODO(kashomon): Indicate that this is private and what it's used for.
+   * Map of performance timestamps. Not normally used unless
+   * performanceDebugLevel is set.
    */
-  perf: {},
+  perf: {
+    /** @type {?Date} */
+    first: null,
+    /** @type {?Date} */
+    last: null,
+    /** @type {?Date} */
+    lastMajor: null,
+  },
 
   /**
    * The registry.  Used to determine who has 'ownership' of key-presses.
@@ -138,6 +145,26 @@ glift.init = function(disableZoomForMobile, divId) {
 goog.provide('glift.util');
 
 glift.util = {
+  /**
+   * @param{T|undefined|null} param
+   * @param{string=} opt_msg
+   * @return {!T}
+   *
+   * @template T
+   */
+  assertDef: function(param, opt_msg) {
+    var msg = opt_msg || '';
+    if (param === undefined || param === null) {
+      throw new Error('Param not defined! ' + msg);
+    } else {
+      // TODO(kashomon): Currently, this doesn't work the way I'd want to.
+      return param;
+    }
+  },
+
+  /**
+   * Log a message. Allows the for the possibility of overwriting for tests.
+   */
   logz: function(msg) {
     console.log(msg);
     return null; // default value to return.
@@ -323,7 +350,6 @@ glift.util.colors = {
 
 goog.provide('glift.enums');
 
-goog.scope(function() {
 /**
  * Various constants used throughout glift.
  */
@@ -340,15 +366,13 @@ glift.enums = {
       return group1 ? group1.toUpperCase() : '';
     });
   },
-}
-
-var enums = glift.enums;
+};
 
 /**
  * Also sometimes referred to as colors.
  * @enum{string}
  */
-enums.states = {
+glift.enums.states = {
   BLACK: 'BLACK',
   WHITE: 'WHITE',
   EMPTY: 'EMPTY'
@@ -357,7 +381,7 @@ enums.states = {
 /**
  * @enum{string}
  */
-enums.boardAlignments = {
+glift.enums.boardAlignments = {
   TOP: "TOP",
   RIGHT: "RIGHT",
   CENTER: "CENTER"
@@ -368,7 +392,7 @@ enums.boardAlignments = {
  * List of directions. Used for a variety of tasks.
  * @enum{string}
  */
-enums.directions = {
+glift.enums.directions = {
   LEFT: 'LEFT',
   RIGHT: 'RIGHT',
   TOP: 'TOP',
@@ -379,7 +403,7 @@ enums.directions = {
  * List of board regions. Usually used for cropping.
  * @enum{string}
  */
-enums.boardRegions = {
+glift.enums.boardRegions = {
   LEFT: 'LEFT',
   RIGHT: 'RIGHT',
   TOP: 'TOP',
@@ -401,7 +425,7 @@ enums.boardRegions = {
  * @enum {string}
  */
 // TODO(kashomon): Delete this
-enums.controllerMessages = {
+glift.enums.controllerMessages = {
   CONTINUE: 'CONTINUE',
   DONE: 'DONE',
   FAILURE: 'FAILURE'
@@ -410,7 +434,7 @@ enums.controllerMessages = {
 /**
  * @enum {string}
  */
-enums.marks = {
+glift.enums.marks = {
   CIRCLE: 'CIRCLE',
   SQUARE: 'SQUARE',
   TRIANGLE: 'TRIANGLE',
@@ -434,13 +458,13 @@ enums.marks = {
 
   // We color 'correct' variations differently in problems,
   CORRECT_VARIATION: 'CORRECT_VARIATION'
-},
+};
 
 /**
  * Enum to indicate how a move for a problem was resolved.
  * @enum {string}
  */
-enums.problemResults = {
+glift.enums.problemResults = {
   CORRECT: 'CORRECT',
   INCORRECT: 'INCORRECT',
   INDETERMINATE: 'INDETERMINATE',
@@ -452,7 +476,7 @@ enums.problemResults = {
  * @enum {string}
  */
 // TODO(kashomon): Delete when we migrate to flattener.
-enums.displayDataTypes = {
+glift.enums.displayDataTypes = {
   PARTIAL: 'PARTIAL',
   FULL: 'FULL'
 };
@@ -462,7 +486,7 @@ enums.displayDataTypes = {
  * be compatible with being class / id names.
  * @enum{string}
  */
-enums.svgElements = {
+glift.enums.svgElements = {
   SVG: 'svg',
   BOARD: 'board',
   BOARD_COORD_LABELS: 'board_coord_labels',
@@ -484,7 +508,7 @@ enums.svgElements = {
   STONE_SHADOW_CONTAINER: 'stone_shadow_container',
   GUIDE_LINE: 'guide_line',
 
-  // Icon-bar specific enums
+  // Icon-bar specific glift.enums
   ICON: 'icon',
   ICON_CONTAINER: 'icon_container',
   TEMP_ICON: 'temp_icon',
@@ -496,7 +520,7 @@ enums.svgElements = {
  * Whether or not to show variations in the UI.
  * @enum {string}
  */
-enums.showVariations = {
+glift.enums.showVariations = {
   ALWAYS: 'ALWAYS',
   NEVER: 'NEVER',
   MORE_THAN_ONE: 'MORE_THAN_ONE'
@@ -506,7 +530,7 @@ enums.showVariations = {
  * The types of widgets users can create. Used to link Controllers and Options.
  * @enum {string}
  */
-enums.widgetTypes = {
+glift.enums.widgetTypes = {
   CORRECT_VARIATIONS_PROBLEM: 'CORRECT_VARIATIONS_PROBLEM',
   EXAMPLE: 'EXAMPLE',
   GAME_FIGURE: 'GAME_FIGURE',
@@ -514,13 +538,13 @@ enums.widgetTypes = {
   REDUCED_GAME_VIEWER: 'REDUCED_GAME_VIEWER',
   STANDARD_PROBLEM: 'STANDARD_PROBLEM',
   BOARD_EDITOR: 'BOARD_EDITOR'
-},
+};
 
 /**
  * The types of components that exist in the Glift UI.
  * @enum {string}
  */
-enums.boardComponents = {
+glift.enums.boardComponents = {
   BOARD: 'BOARD',
   COMMENT_BOX: 'COMMENT_BOX',
   EXTRA_ICONBAR: 'EXTRA_ICONBAR',
@@ -531,24 +555,22 @@ enums.boardComponents = {
 /**
  * @enum {string}
  */
-enums.dubug = {
+glift.enums.dubug = {
   NONE: 'NONE',
   INFO: 'INFO'
-},
+};
 
 /**
  * Rotations we can apply to Go Boards. Doesn't rotate the fundamental data (the
  * SGF points), but rotates at the time the board is drawn.
  * @enum {string}
  */
-enums.rotations = {
+glift.enums.rotations = {
   NO_ROTATION: 'NO_ROTATION',
   CLOCKWISE_90: 'CLOCKWISE_90',
   CLOCKWISE_180: 'CLOCKWISE_180',
   CLOCKWISE_270: 'CLOCKWISE_270'
 };
-
-});
 
 (function() {
 glift.errors = {};
@@ -7951,6 +7973,121 @@ goog.provide('glift.rules');
  */
 glift.rules = {};
 
+goog.provide('glift.rules.prop');
+
+/**
+ * All the SGF Properties plus some things.
+ * @enum {string}
+ */
+//  TODO(kashomon): Comment these and delete the invalid ones.
+glift.rules.prop = {
+/** Node: Black placements */
+AB: 'AB',
+AE: 'AE',
+AN: 'AN',
+/** Root: Creating program ex:[Glift:1.1.0] */
+AP: 'AP',
+AR: 'AR',
+AS: 'AS',
+AW: 'AW',
+/** Node: Black move */
+B: 'B',
+BL: 'BL',
+BM: 'BM',
+BR: 'BR',
+BS: 'BS',
+BT: 'BT', 
+/** Node: Comment */
+C: 'C',
+/** Root: Encoding ex:[UTF-8] */
+CA: 'CA',
+CH: 'CH',
+CP: 'CP',
+CR: 'CR',
+DD: 'DD',
+DM: 'DM',
+DO: 'DO',
+DT: 'DT',
+EL: 'EL', 
+EV: 'EV',
+EX: 'EX', 
+/** Root: SGF Version. */
+FF: 'FF',
+FG: 'FG',
+GB: 'GB', 
+/** Root: Game Comment. */
+GC: 'GC',
+/** Root: Game */
+GM: 'GM', 
+/** Root: Game Name */
+GN: 'GN',
+GW: 'GW',
+HA: 'HA',
+HO: 'HO',
+ID: 'ID',
+IP: 'IP',
+IT: 'IT',
+IY: 'IY',
+/** Root: Komi ex:[0.00]*/
+KM: 'KM',
+KO: 'KO',
+L: 'L',
+/** Node: Label Mark */
+LB: 'LB',
+LN: 'LN',
+LT: 'LT',
+M: 'M',
+MA: 'MA',
+MN: 'MN',
+N: 'N',
+OB: 'OB',
+OH: 'OH',
+OM: 'OM',
+ON: 'ON',
+OP: 'OP',
+OT: 'OT',
+OV: 'OV',
+OW: 'OW',
+PB: 'PB',
+PC: 'PC',
+/** Node: Current player */
+PL: 'PL',
+PM: 'PM',
+PW: 'PW',
+RE: 'RE',
+RG: 'RG',
+RO: 'RO',
+RU: 'RU',
+SC: 'SC',
+SE: 'SE',
+SI: 'SI',
+SL: 'SL',
+SO: 'SO',
+/** Node: Square-mark */
+SQ: 'SQ',
+ST: 'ST',
+SU: 'SU',
+/** Root: Size of the Go board */
+SZ: 'SZ',
+TB: 'TB',
+TC: 'TC',
+TE: 'TE',
+TM: 'TM',
+TR: 'TR',
+TW: 'TW',
+UC: 'UC',
+US: 'US',
+V: 'V', 
+VW: 'VW',
+/** Node: White Move. */
+W: 'W',
+WL: 'WL',
+WR: 'WR',
+WS: 'WS',
+WT: 'WT',
+MU: 'MU'
+};
+
 goog.require('glift.rules');
 
 /**
@@ -7967,12 +8104,11 @@ glift.rules.autonumber = function(movetree) {
   var digitregex = /\d+/;
   var singledigit = /0\d/;
   movetree.recurseFromRoot(function(mt) {
-    if (!mt.properties().contains('C') ||
-        mt.properties().getOneValue('C') === '') {
+    if (!mt.properties().getComment()) {
       return; // Nothing to do.  We only autonumber on comments.
     }
     // First, clear all numeric labels
-    var labels = mt.properties().getAllValues('LB');
+    var labels = mt.properties().getAllValues(glift.rules.prop.LB);
     /**
      * Map from SGF point to string label.
      * @type {!Object<string>}
@@ -8023,9 +8159,9 @@ glift.rules.autonumber = function(movetree) {
     }
 
     if (newlabels.length === 0) {
-      mt.properties().remove('LB');
+      mt.properties().remove(glift.rules.prop.LB);
     } else {
-      mt.properties().set('LB', newlabels);
+      mt.properties().set(glift.rules.prop.LB, newlabels);
     }
 
     glift.rules.removeCollidingLabels(mt, lblMap);
@@ -8073,10 +8209,10 @@ glift.rules.clearnumbers = function(movetree) {
   var digitregex = /\d+/;
   movetree.recurseFromRoot(function(mt) {
     // Clear all numeric labels
-    if (!mt.properties().contains('LB')) {
+    if (!mt.properties().contains(glift.rules.prop.LB)) {
       return; // no labels to clear;
     }
-    var labels = mt.properties().getAllValues('LB');
+    var labels = mt.properties().getAllValues(glift.rules.prop.LB);
     var newLbls = [];
     for (var i = 0; labels && i < labels.length; i++) {
       var lblData = labels[i].split(':')
@@ -8087,9 +8223,9 @@ glift.rules.clearnumbers = function(movetree) {
       }
     }
     if (newLbls.length === 0) {
-      mt.properties().remove('LB');
+      mt.properties().remove(glift.rules.prop.LB);
     } else {
-      mt.properties().set('LB', newLbls);
+      mt.properties().set(glift.rules.prop.LB, newLbls);
     }
   });
 };
@@ -8103,8 +8239,8 @@ goog.provide('glift.rules.goban');
  * Result of a Capture
  *
  * @typedef {{
- *   white: !Array<!glift.rules.Move>,
- *   black: !Array<!glift.rules.Move>
+ *   WHITE: !Array<!glift.rules.Move>,
+ *   BLACK: !Array<!glift.rules.Move>
  * }}
  */
 glift.rules.CaptureResult;
@@ -8128,12 +8264,12 @@ glift.rules.goban = {
    * NOTE: This leaves the movetree in a modified state.
    *
    * @param {!glift.rules.MoveTree} mt The movetree.
-   * @param {glift.rules.Treepath=} opt_treepath Optional treepath If the
+   * @param {!glift.rules.Treepath=} opt_treepath Optional treepath If the
    *    treepath is undefined, we craft a treepath to the current location in
    *    the movetree.
    * @return {{
    *   goban: !glift.rules.Goban,
-   *   captures: Array<glift.rules.CaptureResult>
+   *   captures: !Array<!glift.rules.CaptureResult>
    * }}
    */
   getFromMoveTree: function(mt, opt_treepath) {
@@ -8172,7 +8308,9 @@ glift.rules.goban = {
  *
  * As a historical note, this is the oldest part of Glift.
  *
- * @constructor @final @structt
+ * @param {number} ints
+ *
+ * @constructor @final @struct
  */
 glift.rules.Goban = function(ints) {
   if (!ints || ints <= 0) {
@@ -8223,39 +8361,60 @@ glift.rules.Goban.prototype = {
     return out;
   },
 
-  // Returns true or false:
-  // True = stone can be placed
-  // False = can't
-  placeable: function(point, color) {
+  /**
+   * @param {!glift.Point} point
+   * @param {!glift.enums.states=} opt_color Optional (currently unused) color.
+   * @return {boolean} True if the board is empty at particular point and the
+   *    point is within the bounds of the board.
+   */
+  placeable: function(point, opt_color) {
     // Currently, color is unused, but there are plans to use it because
-    // self-capture is disallowed.
+    // self-capture is disallowed. Add-stone will still fail.
     return this.inBounds(point)
         && this.getStone(point) === glift.enums.states.EMPTY;
   },
 
-  // Returns true if out-of-bounds.  False, otherwise
+  /**
+   * @param {!glift.Point} point
+   * @return {boolean} True if the point is out-of-bounds.
+   */
   outBounds: function(point) {
     return glift.util.outBounds(point.x(), this.ints)
         || glift.util.outBounds(point.y(), this.ints);
   },
 
-  // Returns true if in-bounds. False, otherwise
+  /**
+   * @param {!glift.Point} point
+   * @return {boolean} True if the point is in-bounds.
+   */
   inBounds: function(point) {
     return glift.util.inBounds(point.x(), this.ints)
         && glift.util.inBounds(point.y(), this.ints);
   },
 
-  // Simply set the intersection back to EMPTY
+  /**
+   * Clear a stone from an intersection
+   * @param {!glift.Point} point
+   */
   clearStone: function(point) {
     this._setColor(point, glift.enums.states.EMPTY);
   },
 
+  /**
+   * Clear an array of stones on the board.
+   * @param {!Array<!glift.Point>} points
+   */
   clearSome: function(points) {
     for (var i = 0; i < points.length; i++) {
       this.clearStone(points[i]);
     }
   },
 
+  /**
+   * @param {!glift.Point} point
+   * @param {glift.enums.states} color
+   * @private
+   */
   _setColor: function(point, color) {
     this.stones[point.y()][point.x()] = color;
   },
@@ -8264,8 +8423,11 @@ glift.rules.Goban.prototype = {
    * Try to add a stone on a new go board instance, but don't change state.
    *
    * Returns true / false depending on whether the 'add' was successful.
+   *
+   * @param {!glift.Point} point
+   * @param {glift.enums.states} color
    */
-  // TODO(kashomon): Needs a test.
+  // TODO(kashomon): Itself needs a test.
   testAddStone: function(point, color) {
     var addStoneResult = this.addStone(point, color);
 
@@ -8285,15 +8447,9 @@ glift.rules.Goban.prototype = {
    *
    * addStone always returns a StoneResult object.
    *
-   * @param {glift.Point} pt A point
+   * @param {!glift.Point} pt A point
    * @param {glift.enums.states} color The State to add.
-   * @return {glift.rules.StoneResult}
-   *  successful: boolean,
-   *  captures: Array<glift.Point>
-   * }}
-   * - successful: true or false   // Was placing a stone successful?
-   * - captures :  the intersections of stones captured by
-   *   placing a stone at the intersection (pt).
+   * @return {!glift.rules.StoneResult}
    */
   addStone: function(pt, color) {
     if (!glift.util.colors.isLegalColor(color)) throw "Unknown color: " + color;
@@ -8329,16 +8485,28 @@ glift.rules.Goban.prototype = {
     return new glift.rules.StoneResult(true, actualCaptures);
   },
 
-  // Get the captures.  We return nothing because state is stored in 'captures'
+  /**
+   * Get the captures.  We return nothing because state is stored in 'captures'
+   *
+   * @param {!glift.rules.CaptureTracker_} captures
+   * @param {!glift.Point} pt
+   * @param {glift.enums.states} color
+   */
   _getCaptures: function(captures, pt, color) {
     this._findConnected(captures, pt, color);
     if (captures.liberties <= 0) captures.consideringToCaptures();
     captures.clearExceptCaptures();
   },
 
-  // find the stones of the same color connected to eachother.  The color to
-  // find is the param color. We return nothing because state is stored in
-  // 'captures'.
+  /**
+   * Find the stones of the same color connected to eachother.  The color to
+   * find is the param color. We return nothing because state is stored in
+   * 'captures'.
+   *
+   * @param {!glift.rules.CaptureTracker_} captures
+   * @param {!glift.Point} pt
+   * @param {glift.enums.states} color
+   */
   _findConnected: function(captures, pt, color) {
     var util = glift.util;
     // check to make sure we haven't already seen a stone
@@ -8380,24 +8548,33 @@ glift.rules.Goban.prototype = {
    *    WHITE: [{point},{point},{point},...],
    *    BLACK: [{point},{point},{point},...]
    * }
+   *
+   * @param {!glift.rules.MoveTree} movetree
+   * @return {!glift.rules.CaptureResult}
    */
   loadStonesFromMovetree: function(movetree) {
+    /** @type {!Array<glift.enums.states>} */
     var colors = [ glift.enums.states.BLACK, glift.enums.states.WHITE ];
     var captures = { BLACK : [], WHITE : [] };
     for (var i = 0; i < colors.length; i++) {
       var color = colors[i]
       var placements = movetree.properties().getPlacementsAsPoints(color);
       for (var j = 0, len = placements.length; j < len; j++) {
-        this._loadStone({point: placements[j], color: color}, captures);
+        this.loadStone_({point: placements[j], color: color}, captures);
       }
     }
-    this._loadStone(movetree.properties().getMove(), captures);
+    this.loadStone_(movetree.properties().getMove(), captures);
     return captures;
   },
 
-  _loadStone: function(mv, captures) {
+  /**
+   * @param {?glift.rules.Move} mv
+   * @param {!glift.rules.CaptureResult} captures
+   * @private
+   */
+  loadStone_: function(mv, captures) {
     // note: if mv is defined, but mv.point is undefined, this is a PASS.
-    if (mv  && mv.point !== undefined) {
+    if (mv && mv.point !== undefined) {
       var result = this.addStone(mv.point, mv.color);
       if (result.successful) {
         var oppositeColor = glift.util.colors.oppositeColor(mv.color);
@@ -8414,20 +8591,26 @@ glift.rules.Goban.prototype = {
    * Recall that stones and captures both have the form:
    *  { BLACK: [..move..], WHITE: [..move..] };
    *
-   * where move looks like:
-   *  { point: pt, color: color }
+   * @param {!glift.rules.MoveCollection} stones
+   * @param {!glift.rules.CaptureResult} captures
    */
   // TODO(kashomon): Add testing for this in goban_test
   unloadStones: function(stones, captures) {
-    var colors = [ glift.enums.states.BLACK, glift.enums.states.WHITE ];
     for (var color in stones) {
-      for (var j = 0; j < stones[color].length; j++) {
-        this.clearStone(stones[color][j].point);
+      var c = /** @type {glift.enums.states} */ (color);
+      var arr = /** @type {!Array<!glift.rules.Move>} */ (stones[c]);
+      for (var j = 0; j < arr.length; j++) {
+        var move = arr[j];
+        if (move.point) {
+          this.clearStone(move.point);
+        }
       }
     }
     for (var color in captures) {
-      for (var i = 0; i < captures[color].length; i++) {
-        this.addStone(captures[color][i], color);
+      var c = /** @type {glift.enums.states} */ (color);
+      var arr = /** @type {!Array<!glift.Point>} */ (captures[c]);
+      for (var i = 0; i < arr.length; i++) {
+        this.addStone(arr[i], c);
       }
     }
   }
@@ -8435,10 +8618,10 @@ glift.rules.Goban.prototype = {
 
 /**
  * Private function to initialize the stones.
- * @private
  *
  * @param {number} ints The number of intersections.
- * @return {Array<glift.enums.states>} The board, as an array of states.
+ * @return {!Array<glift.enums.states>} The board, as an array of states.
+ * @private
  */
 glift.rules.initStones_ = function(ints) {
   var stones = [];
@@ -8469,12 +8652,14 @@ glift.rules.CaptureTracker_ = function() {
 };
 
 glift.rules.CaptureTracker_.prototype = {
+  /** Clear everything except captures */
   clearExceptCaptures: function() {
-    this.considering =[];
+    this.considering = [];
     this.seen = {};
     this.liberties = 0;
   },
 
+  /** Add points-to-consider to capture */
   consideringToCaptures: function() {
     for (var i = 0; i < this.considering.length; i++) {
       var value = this.considering[i];
@@ -8485,14 +8670,20 @@ glift.rules.CaptureTracker_.prototype = {
     }
   },
 
+  /**
+   * Add to the liberties
+   * @param {number} x
+   */
   addLiberties: function(x) {
     this.liberties += x;
   },
 
+  /** @param {!glift.Point} point add a point to the seen-map */
   addSeen: function(point) {
     this.seen[point.hash()] = true;
   },
 
+  /** @return {!Array<!glift.Point>} */
   getCaptures: function() {
     var out = [];
     for (var key in this.toCapture) {
@@ -8506,9 +8697,12 @@ glift.rules.CaptureTracker_.prototype = {
  * The stone result keeps track of whether placing a stone was successful and what
  * stones (if any) were captured.
  *
+ * @param {boolean} success Whether or not the stone-placement was successful.
+ * @param {!Array<!glift.Point>=} opt_captures The Array of captured points, if
+ *    there are any captures
  * @constructor @final @struct
  */
-glift.rules.StoneResult = function(success, captures) {
+glift.rules.StoneResult = function(success, opt_captures) {
   /**
    * Whether or not the place was successful.
    * @type {boolean}
@@ -8517,16 +8711,20 @@ glift.rules.StoneResult = function(success, captures) {
 
   /**
    * Array of captured points.
-   * @type {Array<glift.Point>}
+   * @type {!Array<!glift.Point>}
    */
-  this.captures = success ? captures : [];
+  this.captures = opt_captures || [];
 };
 
 goog.provide('glift.rules.Move');
 
 /**
+ * A type encapsulating the idea of a move.
+ *
+ * A move can have an undefined point because players may pass.
+ *
  * @typedef {{
- *  point: !glift.Point,
+ *  point: (!glift.Point|undefined),
  *  color: !glift.enums.states
  * }}
  */
@@ -8534,21 +8732,48 @@ glift.rules.Move;
 
 goog.provide('glift.rules.MoveNode');
 
-glift.rules.movenode = function(properties, children, nodeId, parentNode) {
-  return new glift.rules.MoveNode(properties, children, nodeId, parentNode);
+/**
+ * Id for a particular node. Note: The ID is not guaranteed to be unique
+ *
+ * @typedef {{
+ *  nodeNum: number,
+ *  varNum: number
+ * }}
+ */
+glift.rules.NodeId
+
+/**
+ * Creates a new
+ *
+ * @param {!glift.rules.Properties=} opt_properties
+ * @param {!Array<glift.rules.MoveNode>=} opt_children
+ * @param {!glift.rules.NodeId=} opt_nodeId
+ * @param {!glift.rules.MoveNode=} opt_parentNode
+ *
+ */
+glift.rules.movenode = function(
+    opt_properties, opt_children, opt_nodeId, opt_parentNode) {
+  return new glift.rules.MoveNode(
+       opt_properties, opt_children, opt_nodeId, opt_parentNode);
 };
 
 /**
  * A Node in the MoveTree.
  *
+ * @param {!glift.rules.Properties=} opt_properties
+ * @param {!Array<glift.rules.MoveNode>=} opt_children
+ * @param {!glift.rules.NodeId=} opt_nodeId
+ * @param {!glift.rules.MoveNode=} opt_parentNode
+ *
  * @package
  * @constructor @final @struct
  */
-glift.rules.MoveNode = function(properties, children, nodeId, parentNode) {
-  this._properties = properties || glift.rules.properties();
-  this.children = children || [];
-  this._nodeId = nodeId || { nodeNum: 0, varNum: 0 }; // this is a bad default.
-  this._parentNode = parentNode;
+glift.rules.MoveNode = function(
+    opt_properties, opt_children, opt_nodeId, opt_parentNode) {
+  this._properties = opt_properties || glift.rules.properties();
+  this.children = opt_children || [];
+  this._nodeId = opt_nodeId || { nodeNum: 0, varNum: 0 }; // this is a bad default.
+  this._parentNode = opt_parentNode;
   /**
    * Marker for determining mainline.  Should ONLY be used by onMainline from
    * the movetree.
@@ -8644,13 +8869,14 @@ var numberMoves = function(move, nodeNum, varNum) {
 };
 
 goog.provide('glift.rules.MoveTree');
+goog.provide('glift.rules.movetree');
 
 /**
  * When an SGF is parsed by the parser, it is transformed into the following:
  *
  *MoveTree {
- * _currentNode
- * _rootNode
+ * currentNode_
+ * rootNode_
  *}
  *
  * And where a MoveNode looks like the following:
@@ -8678,11 +8904,16 @@ goog.provide('glift.rules.MoveTree');
  * latter of which is a list to capture the idea of multiple variations.
  */
 glift.rules.movetree = {
-  /** Create an empty MoveTree */
-  getInstance: function(intersections) {
+  /**
+   * Create an empty MoveTree.
+   *
+   * @param {number=} opt_intersections Optional intersections. Defaults to 19.
+   * @return {!glift.rules.MoveTree} New movetree instance.
+   */
+  getInstance: function(opt_intersections) {
     var mt = new glift.rules.MoveTree(glift.rules.movenode());
-    if (intersections !== undefined) {
-      mt._setIntersections(intersections);
+    if (opt_intersections !== undefined) {
+      mt._setIntersections(opt_intersections);
     }
     return mt;
   },
@@ -8690,15 +8921,23 @@ glift.rules.movetree = {
   /**
    * Create a MoveTree from an SGF.
    * Note: initPosition and parseType are both optional.
+   *
+   * @param {string} sgfString
+   * @param {(string|number|!Array<number>)=} opt_initPosition
+   * @param {glift.parse.parseType=} opt_parseType
+   * @return {glift.rules.MoveTree}
    */
-  getFromSgf: function(sgfString, initPosition, parseType) {
-    initPosition = initPosition || []; // treepath.
-    parseType = parseType || glift.parse.parseType.SGF;
+  getFromSgf: function(sgfString, opt_initPosition, opt_parseType) {
+    var initPosition = opt_initPosition || []; // treepath.
+    var parseType = parseType || glift.parse.parseType.SGF;
 
     if (glift.util.typeOf(initPosition) === 'string' ||
         glift.util.typeOf(initPosition) === 'number') {
       initPosition = glift.rules.treepath.parsePath(initPosition);
     }
+
+    var initTreepath = /** @type {glift.rules.Treepath} */ (initPosition);
+
     if (sgfString === undefined || sgfString === '') {
       return glift.rules.movetree.getInstance(19);
     }
@@ -8706,13 +8945,17 @@ glift.rules.movetree = {
     glift.util.majorPerfLog('Before SGF parsing in movetree');
     var mt = glift.parse.fromString(sgfString, parseType);
 
-    mt = mt.getTreeFromRoot(initPosition);
+    mt = mt.getTreeFromRoot(initTreepath);
     glift.util.majorPerfLog('After SGF parsing in movetree');
 
     return mt;
   },
 
-  /** Seach nodes with a Depth First Search. */
+  /**
+   * Seach nodes with a Depth First Search.
+   * @param {!glift.rules.MoveTree} moveTree
+   * @param {function(!glift.rules.MoveTree)} func
+   */
   searchMoveTreeDFS: function(moveTree, func) {
     func(moveTree);
     for (var i = 0; i < moveTree.node().numChildren(); i++) {
@@ -8721,36 +8964,41 @@ glift.rules.movetree = {
     }
   },
 
-  /** Convenience method for setting the root properties in a standard way */
+  /**
+   * Convenience method for setting the root properties in a standard way
+   * @param {!glift.rules.MoveTree} mt
+   * @return {!glift.rules.MoveTree} The initialized movetree.
+   */
   initRootProperties: function(mt) {
     var root = mt.getTreeFromRoot();
     var props = root.properties();
-    if (!props.contains('GM')) {
-      props.add('GM', '1');
+    var prop = glift.rules.prop;
+    if (!props.contains(prop.GM)) {
+      props.add(prop.GM, '1');
     }
-    if (!props.contains('FF')) {
-      props.add('FF', '4');
+    if (!props.contains(prop.FF)) {
+      props.add(prop.FF, '4');
     }
-    if (!props.contains('CA')) {
-      props.add('CA', 'UTF-8');
+    if (!props.contains(prop.CA)) {
+      props.add(prop.CA, 'UTF-8');
     }
-    if (!props.contains('AP')) {
-      props.add('AP', 'Glift:' + glift.global.version);
+    if (!props.contains(prop.AP)) {
+      props.add(prop.AP, 'Glift:' + glift.global.version);
     }
-    if (!props.contains('KM')) {
-      props.add('KM', '0.00');
+    if (!props.contains(prop.KM)) {
+      props.add(prop.KM, '0.00');
     }
-    if (!props.contains('RU')) {
-      props.add('RU', 'Japanese');
+    if (!props.contains(prop.RU)) {
+      props.add(prop.RU, 'Japanese');
     }
-    if (!props.contains('SZ')) {
-      props.add('SZ', '19');
+    if (!props.contains(prop.SZ)) {
+      props.add(prop.SZ, '19');
     }
-    if (!props.contains('PB')) {
-      props.add('PB', 'Black');
+    if (!props.contains(prop.PB)) {
+      props.add(prop.PB, 'Black');
     }
-    if (!props.contains('PW')) {
-      props.add('PW', 'White');
+    if (!props.contains(prop.PW)) {
+      props.add(prop.PW, 'White');
     }
     // Note: we don't set ST because it's a dumb option. (Style of
     // variation-showing).
@@ -8766,12 +9014,19 @@ glift.rules.movetree = {
  * problem, demonstration, or example.  Thus, this is the place where such moves
  * as currentPlayer or lastMove.
  *
+ * @param {!glift.rules.MoveNode} rootNode
+ * @param {!glift.rules.MoveNode=} opt_currentNode
+ * @param {Object=} opt_metadata
+ *
  * @constructor @final @struct
  */
-glift.rules.MoveTree = function(rootNode, currentNode, metadata) {
-  this._rootNode = rootNode;
-  this._currentNode = currentNode || rootNode;
-  this._markedMainline = false;
+glift.rules.MoveTree = function(rootNode, opt_currentNode, opt_metadata) {
+  /** @private {!glift.rules.MoveNode} */
+  this.rootNode_ = rootNode;
+  /** @private {!glift.rules.MoveNode} */
+  this.currentNode_ = opt_currentNode || rootNode;
+  /** @private {boolean} */
+  this.markedMainline_ = false;
 
   /**
    * Metadata is arbitrary data attached to the node.
@@ -8779,8 +9034,9 @@ glift.rules.MoveTree = function(rootNode, currentNode, metadata) {
    * As a side note, Metadata extraction in Glift happens in the parser and so
    * will not show up in comments.  See the metadataProperty option in
    * options.baseOptions.
+   * @private {Object}
    */
-  this._metadata = metadata || null;
+  this.metadata_ = opt_metadata || null;
 };
 
 glift.rules.MoveTree.prototype = {
@@ -8788,34 +9044,50 @@ glift.rules.MoveTree.prototype = {
   // Most common methods //
   /////////////////////////
 
-  /** Get the current node -- that is, the node at the current position. */
+  /**
+   * Get the current node -- that is, the node at the current position.
+   * @return {!glift.rules.MoveNode}
+   */
   node: function() {
-    return this._currentNode;
+    return this.currentNode_;
   },
 
-  /** Get the properties object on the current node. */
+  /**
+   * Get the properties object on the current node.
+   * @return {!glift.rules.Properties}
+   */
   properties: function() {
     return this.node().properties();
   },
 
-  /** Gets global movetree metadata. */
+  /**
+   * Gets global movetree metadata.
+   * @return {Object}
+   */
   metadata: function() {
-    return this._metadata;
+    return this.metadata_;
   },
 
-  /** Set the metadata for this Movetree. */
+  /**
+   * Set the metadata for this Movetree.
+   * @param {Object} data
+   * @return {!glift.rules.MoveTree} this
+   */
   setMetdata: function(data) {
-    this._metadata = data;
+    this.metadata_ = data;
+    return this;
   },
 
   /**
    * Move down, but only if there is an available variation.  variationNum can
    * be undefined for convenicence, in which case it defaults to 0.
+   * @param {number=} opt_variationNum
+   * @return {!glift.rules.MoveTree} this
    */
-  moveDown: function(variationNum) {
-    var num = variationNum === undefined ? 0 : variationNum;
+  moveDown: function(opt_variationNum) {
+    var num = opt_variationNum || 0;
     if (this.node().getChild(num) !== undefined) {
-      this._currentNode = this.node().getChild(num);
+      this.currentNode_ = this.node().getChild(num);
     }
     return this;
   },
@@ -8823,24 +9095,26 @@ glift.rules.MoveTree.prototype = {
   /**
    * Move up a move, but only if you are not at root move.
    * At the root node, movetree.moveUp().moveUp() == movetree.moveUp();
+   * @return {!glift.rules.MoveTree} this
    */
   moveUp: function() {
-    var parent = this._currentNode.getParent();
-    if (parent) { this._currentNode = parent; }
+    var parent = this.currentNode_.getParent();
+    if (parent) { this.currentNode_ = parent; }
     return this;
   },
 
   /**
    * Get the current player as a color.
+   * @return {!glift.enums.states}
    */
   getCurrentPlayer: function() {
     var states = glift.enums.states;
     var tokenMap = {W: 'WHITE', B: 'BLACK'};
-    var curNode = this._currentNode;
+    var curNode = this.currentNode_;
 
     // The PL property is a short circuit. Usually only used on the root node.
-    if (this.properties().contains('PL')) {
-      return tokenMap[this.properties().getOneValue('PL')]
+    if (this.properties().contains(glift.rules.prop.PL)) {
+      return tokenMap[this.properties().getOneValue(glift.rules.prop.PL)];
     }
 
     var move = curNode.properties().getMove();
@@ -8866,10 +9140,11 @@ glift.rules.MoveTree.prototype = {
    * Get a new tree reference.  The underlying tree remains the same, but this
    * is a lightway to create new references so the current node position can be
    * changed.
+   * @return {!glift.rules.MoveTree}
    */
   newTreeRef: function() {
     return new glift.rules.MoveTree(
-        this._rootNode, this._currentNode, this._metadata);
+        this.rootNode_, this.currentNode_, this.metadata_);
   },
 
   /**
@@ -8878,9 +9153,12 @@ glift.rules.MoveTree.prototype = {
    *
    * Since a MoveTree is a tree of connected nodes, we can create a sub-tree
    * from any position in the tree.  This can be useful for recursion.
+   *
+   * @param {!glift.rules.MoveNode} node
+   * @return {!glift.rules.MoveTree} New movetree reference.
    */
   getFromNode: function(node) {
-    return new glift.rules.MoveTree(node, node, this._metadata);
+    return new glift.rules.MoveTree(node, node, this.metadata_);
   },
 
   /**
@@ -8888,10 +9166,11 @@ glift.rules.MoveTree.prototype = {
    * creates a new tree reference. Thus, if you don't assign to a var, nothing
    * will happen.
    *
-   * treepath: optionally also apply a treepath to the tree
+   * @param {!glift.rules.Treepath=} treepath
+   * @return {!glift.rules.MoveTree} New movetree reference.
    */
   getTreeFromRoot: function(treepath) {
-    var mt = this.getFromNode(this._rootNode);
+    var mt = this.getFromNode(this.rootNode_);
     if (treepath && glift.util.typeOf(treepath) === 'array') {
       for (var i = 0, len = treepath.length;
            i < len && mt.node().numChildren() > 0; i++) {
@@ -8904,7 +9183,10 @@ glift.rules.MoveTree.prototype = {
   ///////////////////////////////////
   // Other methods, in Alpha Order //
   ///////////////////////////////////
-  /** Add a new Node to the cur position and move to that position. */
+  /**
+   * Add a new Node to the cur position and move to that position. 
+   * @return {!glift.rules.MoveTree} this
+   */
   addNode: function() {
     this.node().addChild();
     this.moveDown(this.node().numChildren() - 1);
@@ -8917,9 +9199,12 @@ glift.rules.MoveTree.prototype = {
 
   /**
    * Given a point and a color, find the variation number corresponding to the
-   * branch that has the sepceified move.
+   * branch that has the specified move. The idea behind this method is that:
+   * some player plays a move: does the move currently exist in the movetree?
    *
-   * return either the number or null if no such number exists.
+   * @param {!glift.Point} point Intersection for the move
+   * @param {glift.enums.states} color Color of the move.
+   * @return {number|null} either the number or null if no such number exists.
    */
   findNextMove: function(point, color) {
     var nextNodes = this.node().children,
@@ -8943,12 +9228,15 @@ glift.rules.MoveTree.prototype = {
     }
   },
 
-  /** Get the intersections number of the go board, by looking at the props. */
+  /**
+   * Get the intersections number of the go board, by looking at the props. 
+   * @return {number}
+   */
   getIntersections: function() {
     var mt = this.getTreeFromRoot(),
-        allProperties = glift.rules.allProperties;
-    if (mt.properties().contains(allProperties.SZ)) {
-      var ints = parseInt(mt.properties().getAllValues(allProperties.SZ));
+        prop = glift.rules.prop;
+    if (mt.properties().contains(prop.SZ)) {
+      var ints = parseInt(mt.properties().getAllValues(prop.SZ), 10);
       return ints;
     } else {
       return 19;
@@ -8965,6 +9253,7 @@ glift.rules.MoveTree.prototype = {
    *  - At the root node.
    *  - When, in the middle of the game, stone-placements are added for
    *    illustration (AW,AB).
+   * @return {?glift.rules.Move}
    */
   getLastMove: function() {
     return this.properties().getMove();
@@ -8974,7 +9263,8 @@ glift.rules.MoveTree.prototype = {
    * If not on the mainline, returns the appriate 'move number' for a variation,
    * for the current location, which is the number of moves to mainline
    *
-   * Returns 0 if on mainline.
+   * @return {number} The number of moves to get to the mainline branch and 0 if
+   *    already on the mainline branch.
    */
   movesToMainline: function() {
     var mt = this.newTreeRef();
@@ -8986,6 +9276,8 @@ glift.rules.MoveTree.prototype = {
 
   /**
    * Gets the the first node in the parent chain that is on the mainline.
+   *
+   * @return {!glift.rules.MoveNode}
    */
   getMainlineNode: function() {
     var mt = this.newTreeRef();
@@ -8998,11 +9290,10 @@ glift.rules.MoveTree.prototype = {
   /**
    * Get the next moves (i.e., nodes with either B or W properties);
    *
-   * returns: an array of dicts with the moves, e.g.,
-   *    [{color: <Color>, point: point },...]
-   *
-   * The ordering of the moves is guranteed to be the ordering of the
+   * The ordering of the moves is guaranteed to be the ordering of the
    *    variations at the time of creation.
+   *
+   * @return {!Array<!glift.rules.Move>}
    */
   nextMoves: function() {
     var curNode = this.node();
@@ -9017,16 +9308,19 @@ glift.rules.MoveTree.prototype = {
     return nextMoves;
   },
 
-  /** Returns true if the tree is currently on a mainline variation. */
+  /**
+   * @return {boolean} Returns true if the tree is currently on a mainline
+   *    variation.
+   */
   onMainline: function() {
-    if (!this._markedMainline) {
+    if (!this.markedMainline_) {
       var mt = this.getTreeFromRoot();
       mt.node()._mainline = true;
       while (mt.node().numChildren() > 0) {
         mt.moveDown();
         mt.node()._mainline = true;
       }
-      this._markedMainline = true;
+      this.markedMainline_ = true;
     }
     return this.node()._mainline;
   },
@@ -9035,6 +9329,8 @@ glift.rules.MoveTree.prototype = {
    * Construct an entirely new movetree, but add all the previous stones as
    * placements.  If the tree is at the root, it's equivalent to a copy of the
    * movetree.
+   *
+   * @return {!glift.rules.MoveTree} Entirely new movetree.
    */
   rebase: function() {
     var path = this.treepathToHere();
@@ -9081,22 +9377,31 @@ glift.rules.MoveTree.prototype = {
     var tokenmap = {BLACK: 'B', WHITE: 'W'};
     var mtCurPlayer = mt.getCurrentPlayer();
     if (mtCurPlayer !== oldCurrentPlayer) {
-      mt.properties().add('PL', tokenmap[oldCurrentPlayer]);
+      mt.properties().add(glift.rules.prop.PL, tokenmap[oldCurrentPlayer]);
     }
     return mt;
   },
 
-  /** Recursive over the movetree. func is called on the movetree. */
+  /**
+   * Recursive over the movetree. func is called on the movetree.
+   * @param {function(glift.rules.MoveTree)} func
+   */
   recurse: function(func) {
     glift.rules.movetree.searchMoveTreeDFS(this, func);
   },
 
-  /** Recursive over the movetree from root. func is called on the movetree. */
+  /**
+   * Recursive over the movetree from root. func is called on the movetree. 
+   * @param {function(glift.rules.MoveTree)} func
+   */
   recurseFromRoot: function(func) {
     glift.rules.movetree.searchMoveTreeDFS(this.getTreeFromRoot(), func);
   },
 
-  /** Convert this movetree to an SGF. */
+  /**
+   * Convert this movetree to an SGF.
+   * @return {string}
+   */
   toSgf: function() {
     return this._toSgfBuffer(this.getTreeFromRoot().node(), []).join("");
   },
@@ -9105,7 +9410,7 @@ glift.rules.MoveTree.prototype = {
    * Create a treepath to the current location. This does not change the current
    * movetree.
    *
-   * returns: A treepath (an array of variation numbers);
+   * @return {!glift.rules.Treepath} A treepath (an array of variation numbers);
    */
   treepathToHere: function() {
     var newTreepath = [];
@@ -9121,18 +9426,24 @@ glift.rules.MoveTree.prototype = {
    * Set the intersections property.
    * Note: This is quite dangerous. If the goban and other data structures are
    * not also updated, chaos will ensue
+   *
+   * @param {number} intersections
+   * @return {glift.rules.MoveTree} this object.
    */
   _setIntersections: function(intersections) {
     var mt = this.getTreeFromRoot(),
-        allProperties = glift.rules.allProperties;
-    if (!mt.properties().contains(allProperties.SZ)) {
-      this.properties().add(allProperties.SZ, intersections + "");
+        prop = glift.rules.prop;
+    if (!mt.properties().contains(prop.SZ)) {
+      this.properties().add(prop.SZ, intersections + "");
     }
     return this;
   },
 
   /**
    * Recursive method to build an SGF into an array of data.
+   * @param {!glift.rules.MoveNode} node A MoveNode instance.
+   * @param {!Array<string>} builder String buffer
+   * @return {!Array<string>} the built buffer
    */
   _toSgfBuffer: function(node, builder) {
     if (node.getParent()) {
@@ -9266,10 +9577,62 @@ glift.rules.problems = {
 };
 
 goog.provide('glift.rules.Properties');
+goog.provide('glift.rules.MoveCollection');
 
-glift.rules.properties = function(map) {
-  return new glift.rules.Properties(map);
+/**
+ * @param {!Object<glift.rules.prop, !Array<string>>=} opt_map
+ * @return {!glift.rules.Properties}
+ */
+glift.rules.properties = function(opt_map) {
+  return new glift.rules.Properties(opt_map);
 };
+
+/**
+ * A collection of moves.
+ *
+ * @typedef {{
+ *  WHITE: !Array<!glift.rules.Move>,
+ *  BLACK: !Array<!glift.rules.Move>
+ * }}
+ */
+glift.rules.MoveCollection;
+
+
+/**
+ * Mark Value. Encapsulates type of mark properties.
+ * @typedef {{
+ *  point: !glift.Point,
+ *  value: string
+ * }}
+ */
+glift.rules.MarkValue;
+
+
+/**
+ * A collection of marks.
+ *
+ * @typedef {!Object<glift.enums.marks, !Array<glift.rules.MarkValue>>}
+ */
+glift.rules.MarkCollection;
+
+
+/**
+ * An object describing a property.
+ *
+ * Example:
+ * {
+ *  prop: GN
+ *  displayName: 'Game Name',
+ *  value: 'Lee Sedol vs Gu Li'
+ * }
+ *
+ * @typedef {{
+ *  prop: glift.rules.prop,
+ *  displayName: string,
+ *  value: string
+ * }}
+ */
+glift.rules.PropDescriptor;
 
 /**
  * Properties that accept point values. This is here mostly for full-board
@@ -9280,8 +9643,9 @@ glift.rules.properties = function(map) {
  *  [aa:cc] - Point Rectangle (all points from 0,0 to 2,2 in a rect)
  *
  * Additionally Labels (LB) have the format
- *  [lbl
+ *  [ab:label]
  *
+ * @type {!Object<glift.rules.prop, boolean>}
  */
 glift.rules.propertiesWithPts = {
   // Marks
@@ -9299,29 +9663,15 @@ glift.rules.propertiesWithPts = {
   TW: true // white area
 };
 
-/** All the SGF Properties plus some things. */
-//  TODO(kashomon): Comment these and delete the invalid ones.
-glift.rules.allProperties = {
-AB: 'AB', AE: 'AE', AN: 'AN', AP: 'AP', AR: 'AR', AS: 'AS', AW: 'AW', B: 'B',
-BL: 'BL', BM: 'BM', BR: 'BR', BS: 'BS', BT: 'BT', C: 'C', CA: 'CA', CH: 'CH',
-CP: 'CP', CR: 'CR', DD: 'DD', DM: 'DM', DO: 'DO', DT: 'DT', EL: 'EL', EV: 'EV',
-EX: 'EX', FF: 'FF', FG: 'FG', GB: 'GB', GC: 'GC', GM: 'GM', GN: 'GN', GW: 'GW',
-HA: 'HA', HO: 'HO', ID: 'ID', IP: 'IP', IT: 'IT', IY: 'IY', KM: 'KM', KO: 'KO',
-L: 'L', LB: 'LB', LN: 'LN', LT: 'LT', M: 'M', MA: 'MA', MN: 'MN', N: 'N', OB:
-'OB', OH: 'OH', OM: 'OM', ON: 'ON', OP: 'OP', OT: 'OT', OV: 'OV', OW: 'OW', PB:
-'PB', PC: 'PC', PL: 'PL', PM: 'PM', PW: 'PW', RE: 'RE', RG: 'RG', RO: 'RO', RU:
-'RU', SC: 'SC', SE: 'SE', SI: 'SI', SL: 'SL', SO: 'SO', SQ: 'SQ', ST: 'ST', SU:
-'SU', SZ: 'SZ', TB: 'TB', TC: 'TC', TE: 'TE', TM: 'TM', TR: 'TR', TW: 'TW', UC:
-'UC', US: 'US', V: 'V', VW: 'VW', W: 'W', WL: 'WL', WR: 'WR', WS: 'WS', WT: 'WT',
-MU: 'MU'
-};
-
 /**
+ * @param {!Object<glift.rules.prop, !Array<string>>=} opt_map
+ *
  * @package
  * @constructor @final @struct
  */
-glift.rules.Properties = function(map) {
-  this.propMap = map || {};
+glift.rules.Properties = function(opt_map) {
+  /** @package {!Object<glift.rules.prop, !Array<string>>} */
+  this.propMap = opt_map || {};
 };
 
 glift.rules.Properties.prototype = {
@@ -9339,19 +9689,23 @@ glift.rules.Properties.prototype = {
    * Note that this does not overwrite an existing property - for that, the user
    * has to delete the existing property. If the property already exists, we add
    * another data element onto the array.
+   *
+   * @param {glift.rules.prop} prop
+   * @param {string|!Array<string>} value
+   * @return {!glift.rules.Properties} this
    */
   add: function(prop, value) {
     // Return if the property is not string or a real property
-    if (!glift.rules.allProperties[prop]) {
+    if (!glift.rules.prop[prop]) {
       glift.util.logz('Warning! The property [' + prop + ']' +
-          ' is not valid and is not recognized in the SGF spec.');
+          ' is not valid and is not recognized in the SGF spec.' +
+          ' Thus, this property will be ignored');
+      return this;
     }
     var valueType = glift.util.typeOf(value);
 
     if (valueType !== 'string' && valueType !== 'array') {
-      // The value has to be either a string or an array.  Maybe we should throw
-      // an error?
-      value = [ this.unescape(value) ];
+      throw new Error('Unsupported type "' + valueType + '" for prop ' + prop);
     } else if (valueType === 'array') {
       // Force all array values to be of type string.
       for (var i = 0, len = value.length; i < len; i++) {
@@ -9359,7 +9713,7 @@ glift.rules.Properties.prototype = {
         value[i] = this.unescape(value[i]);
       }
     } else if (valueType === 'string') {
-      value = [ this.unescape(value) ];
+      value = [ this.unescape(/** @type {string} */ (value)) ];
     } else {
       throw new Error('Unexpected type ' +
           glift.util.typeOf(value) + ' for prop ' + prop);
@@ -9397,7 +9751,7 @@ glift.rules.Properties.prototype = {
    * If the property doesn't exist, returns null.
    */
   getAllValues: function(strProp) {
-    if (glift.rules.allProperties[strProp] === undefined) {
+    if (glift.rules.prop[strProp] === undefined) {
       return null; // Not a valid Property
     } else if (this.propMap[strProp]) {
       return this.propMap[strProp].slice(); // Return a shallow copy.
@@ -9413,11 +9767,14 @@ glift.rules.Properties.prototype = {
    * Since the getOneValue() always returns an array, it's sometimes useful to
    * return the first property in the list.  Like getOneValue(), if a property
    * or value can't be found, null is returned.
+   *
+   * @param {glift.rules.prop} prop The property
+   * @param {number=} opt_index Optional index. Defaults to 0.
+   * @return {?string} The string property or null.
    */
-  getOneValue: function(strProp, index) {
-    index = (index !== undefined
-        && typeof index === 'number' && index >= 0) ? index : 0;
-    var arr = this.getAllValues(strProp);
+  getOneValue: function(prop, opt_index) {
+    var index = opt_index || 0;
+    var arr = this.getAllValues(prop);
     if (arr && arr.length >= 1) {
       return arr[index];
     } else {
@@ -9430,14 +9787,17 @@ glift.rules.Properties.prototype = {
    * Optionally, the user can provide an index, since each property points to an
    * array of values.
    *
-   * Returns null if the property doesn't exist.
+   * @param {glift.rules.prop} prop The SGF property.
+   * @param {number=} opt_index Optional index. defaults to 0.
+   * @return {?glift.Point} Returns a Glift point or null if the property
+   *    doesn't exist.
    */
-  getAsPoint: function(strProp, index) {
-    var out = this.getOneValue(strProp, index);
+  getAsPoint: function(prop, opt_index) {
+    var out = this.getOneValue(prop, opt_index);
     if (out) {
       return glift.util.pointFromSgfCoord(out);
     } else {
-      return out;
+      return null;
     }
   },
 
@@ -9447,21 +9807,25 @@ glift.rules.Properties.prototype = {
    * Recall that in the SGF, we should have already converted any point
    * rectangles, so there shouldn't be any issues here with converting point
    * rectangles.
+   *
+   * @param {glift.rules.prop} prop
+   * @param {number} size Size of the Go Board.
+   * @param {glift.enums.rotations} rotation Rotation to perform
    */
-  rotate: function(strProp, size, rotation) {
-    if (!glift.rules.propertiesWithPts.hasOwnProperty(strProp)) {
-      return null;
+  rotate: function(prop, size, rotation) {
+    if (!glift.rules.propertiesWithPts[prop]) {
+      return;
     }
     if (!glift.enums.rotations[rotation] ||
         rotation === glift.enums.rotations.NO_ROTATION) {
-      return null;
+      return
     }
     var regex = /([a-z][a-z])/g;
-    if (strProp === glift.rules.allProperties.LB) {
+    if (prop === glift.rules.prop.LB) {
       // We handle labels specially since labels have a unqiue format
       regex = /([a-z][a-z])(?=:)/g;
     }
-    var vals = this.getAllValues(strProp);
+    var vals = this.getAllValues(prop);
     for (var i = 0; i < vals.length; i++) {
       vals[i] = vals[i].replace(regex, function(sgfPoint) {
         return glift.util.pointFromSgfCoord(sgfPoint)
@@ -9469,18 +9833,27 @@ glift.rules.Properties.prototype = {
             .toSgfCoord();
       });
     }
-    this.propMap[strProp] = vals;
+    this.propMap[prop] = vals;
   },
 
   /**
    * Returns true if the current move has the property "prop".  Return
    * false otherwise.
+   *
+   * @param {glift.rules.prop} prop
+   * @return {boolean}
    */
   contains: function(prop) {
     return prop in this.propMap;
   },
 
-  /** Tests wether a prop contains a value */
+  /**
+   * Tests wether a prop contains a value
+   *
+   * @param {glift.rules.prop} prop
+   * @param {string} value
+   * @return {boolean}
+   */
   hasValue : function(prop, value) {
     if (!this.contains(prop)) {
       return false;
@@ -9494,7 +9867,11 @@ glift.rules.Properties.prototype = {
     return false;
   },
 
-  /** Deletes the prop and return the value. */
+  /**
+   * Deletes the prop and return the value.
+   * @param {glift.rules.prop} prop
+   * @return {?Array<string>} The former values of this property.
+   */
   remove: function(prop) {
     if (this.contains(prop)) {
       var allValues = this.getAllValues(prop);
@@ -9509,6 +9886,8 @@ glift.rules.Properties.prototype = {
    * Remove one value from the property list. Returns the value if it was
    * successfully removed.  Removes only the first value -- any subsequent value
    * remains in the property list.
+   * @param {glift.rules.prop} prop
+   * @param {string} value
    */
   removeOneValue: function(prop, value) {
     if (this.contains(prop)) {
@@ -9531,11 +9910,15 @@ glift.rules.Properties.prototype = {
 
   /**
    * Sets current value, even if the property already exists.
+   * @param {glift.rules.prop} prop
+   * @param {string|!Array<string>} value
+   * @return {glift.rules.Properties} this
    */
   set: function(prop, value) {
     if (prop !== undefined && value !== undefined) {
       if (glift.util.typeOf(value) === 'string') {
-        this.propMap[prop] = [ this.unescape(value) ];
+        this.propMap[prop] = [
+            this.unescape(/** @type {string} */ (value)) ];
       } else if (glift.util.typeOf(value) === 'array') {
         for (var i = 0; i < value.length; i++) {
           if (glift.util.typeOf(value[i]) !== 'string') {
@@ -9545,7 +9928,7 @@ glift.rules.Properties.prototype = {
           }
           value[i] = this.unescape(value[i]);
         }
-        this.propMap[prop] = value
+        this.propMap[prop] = /** @type {!Array<string>} */ (value);
       }
     }
     return this;
@@ -9555,30 +9938,36 @@ glift.rules.Properties.prototype = {
   // Convenience methods //
   //---------------------//
 
-  // Get all the placements for a color (BLACK or WHITE).  Return as an array.
+  /**
+   * Get all the placements for a color.  Return as an array.
+   * @param {glift.enums.states} color
+   * @return {!Array<!glift.Point>} points.
+   */
   getPlacementsAsPoints: function(color) {
-    var prop = '';
+    var prop;
     if (color === glift.enums.states.BLACK) {
-      prop = glift.rules.allProperties.AB;
+      prop = glift.rules.prop.AB;
     } else if (color === glift.enums.states.WHITE) {
-      prop = glift.rules.allProperties.AW;
+      prop = glift.rules.prop.AW;
+    } else {
+      return  [];
     }
-    if (prop === '' || !this.contains(prop)) {
+
+    if (!this.contains(prop)) {
       return [];
     }
     return glift.sgf.allSgfCoordsToPoints(this.getAllValues(prop));
   },
 
   /**
-   * Get the current comment on the move. This is, of course, just a convenience
-   * method -- equivalent to properties().getOneValue('C'). It's provided as a
-   * convenience method since it's an extremely comment operation.
+   * Get the current comment on the move. It's provided as a convenience method
+   * since it's an extremely comment operation.
    *
-   * Returns: string or null.
+   * @return {?string}
    */
   getComment: function() {
-    if (this.contains('C')) {
-      return this.getOneValue('C');
+    if (this.contains(glift.rules.prop.C)) {
+      return this.getOneValue(glift.rules.prop.C);
     } else {
       return null;
     }
@@ -9587,30 +9976,32 @@ glift.rules.Properties.prototype = {
   /**
    * Get the current Move.  Returns null if no move exists.
    *
-   * Specifically, returns a dict:
-   *  {
-   *    color: <BLACK / WHITE>
-   *    point: point
-   *  }
-   *
    * If the move is a pass, then in the SGF, we'll see B[] or W[].  Thus,
    * we will return { color: BLACK } or { color: WHITE }, but we won't have any
    * point associated with this.
+   *
+   * @return {?glift.rules.Move}.
    */
   getMove: function() {
     var BLACK = glift.enums.states.BLACK;
     var WHITE = glift.enums.states.WHITE;
-    if (this.contains('B')) {
-      if (this.getOneValue('B') === "") {
+    if (this.contains(glift.rules.prop.B)) {
+      if (this.getOneValue(glift.rules.prop.B) === "") {
         return { color: BLACK }; // This is a PASS
       } else {
-        return { color: BLACK, point: this.getAsPoint('B') }
+        return {
+          color: BLACK,
+          point: this.getAsPoint(glift.rules.prop.B) || undefined
+        }
       }
-    } else if (this.contains('W')) {
-      if (this.getOneValue('W') === "") {
+    } else if (this.contains(glift.rules.prop.W)) {
+      if (this.getOneValue(glift.rules.prop.W) === '') {
         return { color: WHITE }; // This is a PASS
       } else {
-        return { color: WHITE, point: this.getAsPoint('W') };
+        return {
+          color: WHITE,
+          point: this.getAsPoint(glift.rules.prop.W) || undefined
+        };
       }
     } else {
       return null;
@@ -9630,6 +10021,10 @@ glift.rules.Properties.prototype = {
    *
    * Note: This is an O(lnm) ~ O(n^3).  But practice, you'll want to test
    * against singular properties, so it's more like O(n^2)
+   *
+   * @param {!Object<glift.rules.prop, !Array<string>>} conditions Set of
+   *    property-conditions to check.
+   * @return {boolean}
    */
   matches: function(conditions) {
     for (var key in conditions) {
@@ -9656,17 +10051,7 @@ glift.rules.Properties.prototype = {
   /**
    * Get all the stones (placements and moves).  This ignores 'PASS' moves.
    *
-   * returns:
-   *  {
-   *    BLACK: [<move>, <move>, ...]
-   *    WHITE: [...]
-   *  }
-   *
-   *  where move is:
-   *  {
-   *    point: pt,
-   *    color: color
-   *  }
+   * @return {!glift.rules.MoveCollection}
    */
   getAllStones: function() {
     var states = glift.enums.states,
@@ -9703,8 +10088,12 @@ glift.rules.Properties.prototype = {
    *    LABEL: [{value: lb, point: pt}, ...],
    *    : [{point: pt}, ...]
    *  }
+   * return {!glift.rules.MarkCollection}
    */
   getAllMarks: function() {
+    /**
+     * @type {!Object<glift.rules.prop, glift.enums.states>}
+     */
     var propertiesToMarks = {
       CR: glift.enums.marks.CIRCLE,
       LB: glift.enums.marks.LABEL,
@@ -9719,7 +10108,7 @@ glift.rules.Properties.prototype = {
         var data = this.getAllValues(prop);
         var marksToAdd = [];
         for (var i = 0; i < data.length; i++) {
-          if (prop === glift.rules.allProperties.LB) {
+          if (prop === glift.rules.prop.LB) {
             // Labels have the form { point: pt, value: 'A' }
             marksToAdd.push(glift.sgf.convertFromLabelData(data[i]));
           } else {
@@ -9775,11 +10164,14 @@ glift.rules.Properties.prototype = {
    *  value: 'Lee Sedol vs Gu Li'
    * },...
    * ]
+   * @return {!Array<glift.rules.PropDescriptor>}
    */
   // TODO(kashomon): Add test
   getGameInfo: function() {
     var gameInfoArr = [];
-    // Probably should live in a more canonical place (properties.js).
+    /**
+     * @type {!Object<glift.rules.prop, string>}
+     */
     var propNameMap = {
       PW: 'White Player',
       PB: 'Black Player',
@@ -9804,13 +10196,15 @@ glift.rules.Properties.prototype = {
         };
         // Post processing for some values.
         // We attach the ranks like Kashomon [9d], if they exist.
-        if (key === 'PW' && this.contains('WR')) {
-          obj.value += ' [' + this.getOneValue('WR') + ']';
-        } else if (key === 'PB' && this.contains('BR')) {
-          obj.value += ' [' + this.getOneValue('BR') + ']';
+        if (key === glift.rules.prop.PW &&
+            this.contains(glift.rules.prop.WR)) {
+          obj.value += ' [' + this.getOneValue(glift.rules.prop.WR) + ']';
+        } else if (key === glift.rules.prop.PB &&
+            this.contains(glift.rules.prop.BR)) {
+          obj.value += ' [' + this.getOneValue(glift.rules.prop.BR) + ']';
         }
         // Remove trailing zeroes on komi amounts.
-        else if (key === 'KM') {
+        else if (key === glift.rules.prop.KM) {
           obj.value = parseFloat(this.getOneValue(key)) + '' || '0';
         }
         gameInfoArr.push(obj);
@@ -9819,12 +10213,20 @@ glift.rules.Properties.prototype = {
     return gameInfoArr;
   },
 
-  /** Escapes some text by converting ] to \\] */
+  /**
+   * Escapes some text by converting ] to \\] 
+   * @param {string} text
+   * @return {string}
+   */
   escape: function(text) {
     return text.toString().replace(/]/g, '\\]');
   },
 
-  /** Unescapes some text by converting \\] to ] */
+  /**
+   * Unescapes some text by converting \\] to ] 
+   * @param {string} text
+   * @return {string}
+   */
   unescape: function(text) {
     return text.toString().replace(/\\]/g, ']');
   }
@@ -9892,7 +10294,7 @@ glift.rules.treepath = {
   /**
    * Parse a treepath
    *
-   * @param {number|string|Array<number>|undefined} initPos The initial
+   * @param {number|string|!Array<number>|undefined} initPos The initial
    *    position, which can be defined as a variety of types.
    * @return {!glift.rules.Treepath}
    */
@@ -9903,7 +10305,7 @@ glift.rules.treepath = {
     } else if (glift.util.typeOf(initPos) === 'number') {
       initPos = '' + initPos;
     } else if (glift.util.typeOf(initPos) === 'array') {
-      return initPos;
+      return /** @type {glift.rules.Treepath} */ (initPos);
     } else if (glift.util.typeOf(initPos) === 'string') {
       // Fallthrough and parse the path.  This is the expected behavior.
     } else {
@@ -9924,7 +10326,7 @@ glift.rules.treepath = {
       var v = sect[i].split('\.');
       // Handle the first number (e.g., 4); We necessitate this to be a move
       // number, so we push 0s until we get to the move number.
-      var firstNum = parseInt(v[0])
+      var firstNum = parseInt(v[0], 10)
       for (var j = 0; j < firstNum - lastNum; j++) {
         out.push(0);
       }
@@ -9946,12 +10348,12 @@ glift.rules.treepath = {
         // Handle the last number. 1+
         if (testNum.charAt(testNum.length - 1) === '+') {
           testNum = testNum.slice(0, testNum.length - 1);
-          out.push(parseInt(testNum));
+          out.push(parseInt(testNum, 10));
           // + must be the last character.
           out = out.concat(glift.rules.treepath.toEnd_());
           return out;
         } else {
-          out.push(parseInt(testNum));
+          out.push(parseInt(testNum, 10));
         }
         lastNum++;
       }
@@ -9973,7 +10375,8 @@ glift.rules.treepath = {
     }
     var vartype = glift.util.typeOf(pathStr);
     if (vartype === 'array') {
-      return pathStr; // assume the array is in the correct format
+      // Assume the array is in the correct format
+      return /** @type {glift.rules.Treepath} */ (pathStr);
     }
     if (vartype !== 'string') {
       throw new Error('When parsing fragments, type should be string. was: ' + 
@@ -9985,10 +10388,10 @@ glift.rules.treepath = {
       var num = splat[i];
       if (num.charAt(num.length - 1) === '+') {
         num = num.slice(0, num.length - 1);
-        out.push(parseInt(num))
+        out.push(parseInt(num, 10))
         out = out.concat(glift.rules.treepath.toEnd_());
       } else {
-        out.push(parseInt(num));
+        out.push(parseInt(num, 10));
       }
     }
     return out;
@@ -10123,7 +10526,7 @@ glift.rules.treepath = {
       nextMovesTreepath.push(varnum);
       mt.moveUp();
       if (breakOnComment &&
-          mt.properties().getOneValue('C')) {
+          mt.properties().getOneValue(glift.rules.prop.C)) {
         break;
       }
 
@@ -10224,7 +10627,7 @@ glift.rules.treepath = {
       var thisout = glift.rules.treepath._flattenMoveTree(
           movetree, pathToHere.slice());
       out = out.concat(thisout)
-      movetree.moveUp(i)
+      movetree.moveUp()
     }
     if (out.length == 0) out.push(pathToHere);
     return out;
@@ -10267,7 +10670,7 @@ glift.sgf = {
    *          FOO => null
    */
   markToProperty: function(mark)  {
-    var allProps = glift.rules.allProperties;
+    var allProps = glift.rules.prop;
     var markToPropertyMap = {
       LABEL_ALPHA: allProps.LB,
       LABEL_NUMERIC: allProps.LB,
@@ -10333,17 +10736,35 @@ glift.sgf = {
   }
 };
 
+goog.provide('glift.parse');
+
 /**
  * Glift parsing
  */
 glift.parse = {
-  /** Parse types */
+  /**
+   * Parse types
+   * @enum {string}
+   */
   parseType: {
+    /** FF4 Parse Type */
     SGF: 'SGF',
+    /** Tygem .gib files. */
     TYGEM: 'TYGEM',
+    /** 
+     * Really, this is FF3.
+     * TODO(kashomon): Support FF3 as first class citizen
+     */
     PANDANET: 'PANDANET'
   },
 
+  /**
+   * Parse a Go-format format from a string.
+   *
+   * @param {string} str Raw contents that need to be parsed.
+   * @param {string} filename Name of the file from which the contents came.
+   * @return {!glift.rules.MoveTree}
+   */
   fromFileName: function(str, filename) {
     var parseType = glift.parse.parseType;
     var ttype = parseType.SGF;
@@ -10361,9 +10782,13 @@ glift.parse = {
 
   /**
    * Transforms a stringified game-file into a movetree.
+   *
+   * @param {string} str Raw contents that need to be parsed.
+   * @param {glift.parse.parseType=} opt_ttype The parse type.
+   * @return {!glift.rules.MoveTree}
    */
-  fromString: function(str, ttype) {
-    ttype = ttype || glift.parse.parseType.SGF;
+  fromString: function(str, opt_ttype) {
+    var ttype = opt_ttype || glift.parse.parseType.SGF;
     var methodName = glift.enums.toCamelCase(ttype);
     var func = glift.parse[methodName];
     var movetree = func(str);
@@ -10398,7 +10823,7 @@ glift.parse.pandanet = function(string) {
  *
  * To disable this behavior, set metadataProperty to null.
  *
- * @api(experimental)
+ * api:experimental
  */
 glift.parse.sgfMetadataProperty = 'GC';
 
@@ -10409,6 +10834,9 @@ glift.parse.sgfMetadataProperty = 'GC';
  *
  * Note: Because SGFs have notoriously bad data / properties, we log warnings
  * for unknown properties rather than throwing errors.
+ *
+ * @param {string} sgfString
+ * @return {!glift.rules.MoveTree}
  */
 glift.parse.sgf = function(sgfString) {
   var states = {
@@ -10475,7 +10903,9 @@ glift.parse.sgf = function(sgfString) {
         try {
           var pdata = propData[0].replace(/\\]/g, ']');
           var mdata = JSON.parse(pdata);
-          movetree.setMetdata(mdata);
+          if (glift.util.typeOf(mdata) === 'object') {
+            movetree.setMetdata(/** @type {Object} */ (mdata));
+          }
         } catch (e) {
           glift.util.logz('For property: ' + curProp + ' unable to parse ' +
               ': ' + propData + ' as JSON for SGF metadata');
@@ -10531,7 +10961,7 @@ glift.parse.sgf = function(sgfString) {
             // lengths, even though all standard SGF properties are 1-2 chars.
           } else if (curchar === syn.LBRACE) {
             curProp = flushCharBuffer();
-            if (glift.rules.allProperties[curProp] === undefined) {
+            if (glift.rules.prop[curProp] === undefined) {
               pwarn('Unknown property: ' + curProp);
             }
             curstate = states.PROP_DATA;
@@ -10614,6 +11044,11 @@ glift.parse.sgf = function(sgfString) {
 
 /**
  * Throw a parser error or log a parse warning.  The message is optional.
+ * @param {number} lineNum
+ * @param {number} colNum
+ * @param {string} curchar
+ * @param {string} message
+ * @param {boolean} isWarning
  */
 glift.parse.sgfParseError = function(lineNum, colNum, curchar, message, isWarning) {
   var header = 'SGF Parsing ' + (isWarning ? 'Warning' : 'Error');
@@ -10631,6 +11066,9 @@ glift.parse.sgfParseError = function(lineNum, colNum, curchar, message, isWarnin
  * difficult to know if this is truly an accurate parser. Oh well.
  *
  * Also, it's a horrible format. Also, this is a pretty hacky parser.
+ *
+ * @param {string} gibString
+ * @retutrn {!glift.rules.MoveTree}
  */
 glift.parse.tygem = function(gibString) {
   var states = {
@@ -10683,8 +11121,8 @@ glift.parse.tygem = function(gibString) {
       // the upper left, as with SGFs. Also, the intersections are 0-indexed.
       var splat = str.split(" ");
       var colorToken = colorToToken[splat[3]];
-      var x = parseInt(splat[4]);
-      var y = parseInt(splat[5]);
+      var x = parseInt(splat[4], 10);
+      var y = parseInt(splat[5], 10);
       movetree.addNode().properties().add(
           colorToken, glift.util.point(x, y).toSgfCoord());
     }
@@ -10728,27 +11166,32 @@ glift.controllers.BaseController = function() {
   // lifetime of the controller.
   /** @package {string} */
   this.sgfString = '';
-  /** @package {!Array<number>} */
+  /** @package {!glift.rules.Treepath} */
   this.initialPosition = [];
 
   /**
    * Used only for examples (see the Game Figure). Indicates how to create
    * numbers based on the 
-   * @package {!Array<number>}
+   * @package {!glift.rules.Treepath}
    */
   this.nextMovesPath = [];
   /**
    * Used only for problem-types.
-   * @package {!Object}
+   * @package {!Object<glift.rules.prop, string>}
    */
   this.problemConditions = {};
 
   // State variables that are defined on initialize and that could are
   // necessarily mutable.
-  this.parseType = undefined;
-  this.treepath = undefined;
-  this.movetree = undefined;
-  this.goban = undefined;
+  /** @package {?glift.parse.parseType} */
+  this.parseType = null;
+  /** @package {?glift.rules.Treepath} */
+  this.treepath = null;
+  /** @package {glift.rules.MoveTree} */
+  this.movetree = null;
+  /** @package {glift.rules.Goban} goban */
+  this.goban = null;
+  /** @package {!Array<!glift.rules.CaptureResult>} */
   this.captureHistory = [];
 };
 
@@ -10768,7 +11211,7 @@ glift.controllers.BaseController.prototype = {
     this.parseType = sgfOptions.parseType || glift.parse.parseType.SGF;
     this.sgfString = sgfOptions.sgfString || '';
     this.initialPosition = sgfOptions.initialPosition || [];
-    this.problemConditions = sgfOptions.problemConditions || undefined;
+    this.problemConditions = sgfOptions.problemConditions || null;
     this.nextMovesPath = sgfOptions.nextMovesPath || [];
     this.initialize();
     return this;
@@ -10804,7 +11247,9 @@ glift.controllers.BaseController.prototype = {
 
     this.movetree = rules.movetree.getFromSgf(
         this.sgfString, this.treepath, this.parseType);
-    var gobanData = rules.goban.getFromMoveTree(this.movetree, this.treepath);
+
+    var gobanData = rules.goban.getFromMoveTree(
+        /** @type {!glift.rules.MoveTree} */ (this.movetree), this.treepath);
     this.goban = gobanData.goban;
     this.captureHistory = gobanData.captures;
     this.extraOptions(); // Overridden by implementers
@@ -10848,6 +11293,8 @@ glift.controllers.BaseController.prototype = {
    * Gets the variation number of the next move. This will be something different
    * if we've used setNextVariation or if we've already played into a variation.
    * Otherwise, it will be 0.
+   *
+   * @return {number}
    */
   nextVariationNumber: function() {
     return this.treepath[this.currentMoveNumber()] || 0;
@@ -10856,6 +11303,9 @@ glift.controllers.BaseController.prototype = {
   /**
    * Sets what the next variation will be.  The number is applied modulo the
    * number of possible variations.
+   *
+   * @param {number} num
+   * @return {!glift.controllers.BaseController} this
    */
   setNextVariation: function(num) {
     // Recall that currentMoveNumber  s the same as the depth number ==
@@ -11112,7 +11562,7 @@ glift.controllers.BoardEditor.prototype = {
    * this._ptTolabelMap: A map from pt (string) to {label + optional data}.
    */
   _initLabelTrackers: function() {
-    var allProps = glift.rules.allProperties;
+    var prop = glift.rules.prop;
     var marks = glift.enums.marks;
     var numericLabelMap = {}; // number-string to 'true'
     var alphaLabelMap = {}; // alphabetic label to 'true'
@@ -11424,8 +11874,8 @@ glift.controllers.GameFigure.prototype = {
     // }
 
     // // add marks
-    // var allProperties = glift.rules.allProperties;
-    // this.movetree.properties().add(allProperties.LB, labels);
+    // var prop = glift.rules.prop;
+    // this.movetree.properties().add(prop.LB, labels);
   }
 };
 
@@ -11985,7 +12435,7 @@ glift.bridge.intersections = {
         var marksToAdd = [];
         var data = movetree.properties().getAllValues(prop);
         for (var i = 0; i < data.length; i++) {
-          if (prop === glift.rules.allProperties.LB) {
+          if (prop === glift.rules.prop.LB) {
             // Labels have the form { point: pt, value: 'A' }
             marksToAdd.push(glift.sgf.convertFromLabelData(data[i]));
           } else {
@@ -13030,7 +13480,7 @@ glift.flattener._markMap = function(movetree) {
     if (movetree.properties().contains(prop)) {
       var data = movetree.properties().getAllValues(prop);
       for (var i = 0; i < data.length; i++) {
-        if (prop === glift.rules.allProperties.LB) {
+        if (prop === glift.rules.prop.LB) {
           var lblPt = glift.sgf.convertFromLabelData(data[i]);
           var key = lblPt.point.toString();
           out.marks[key] = symbol;
@@ -14293,11 +14743,7 @@ glift.widgets.BaseWidget.prototype = {
     glift.keyMappings.unregisterInstance(managerId);
     glift.dom.elem(this.wrapperDivId) &&
         glift.dom.elem(this.wrapperDivId).empty();
-    if (this.keyHandlerFunc !== undefined) {
-      document.body.keydown = null;
-    }
     this.correctness = undefined;
-    this.keyHandlerFunc = undefined;
     this.display = undefined;
   }
 };
@@ -14308,21 +14754,22 @@ goog.provide('glift.widgets.WidgetManager');
  * The Widget Manager manages state across widgets.  When widgets are created,
  * they are always created in the context of a Widget Manager.
  *
- * divId: the element id of the div without the selector hash (#)
- * sgfCollection: array of sgf objects or a string URL. At creation time of the
- *    manager, The param sgfCollection may either be an array or a string
- *    representing a URL.  If the sgfCollection is a string, then the JSON is
- *    requsted at draw-time and passed to this.sgfCollection.
- * sgfCache: An initial setup for the SGF cache.
- * sgfColIndex: numbered index into the sgfCollection.
- * allowWrapAround: true or false.  Whether to allow wrap around in the SGF
- *    manager.
- * loadColInBack: true or false. Whether or to load the SGFs in the background.
- * sgfDefaults: filled-in sgf default options.  See ./options/base_options.js
- * displayOptions: filled-in display options. See ./options/base_options.js
- * actions: combination of stone actions and icon actions.
- * metadata: metadata about the this instance of glift.
- * hooks: user-provided functions.
+ * @param {string} divId: the element id of the div without the selector hash (#)
+ * @param {!Array<string>} sgfCollection: array of sgf objects or a string URL.
+ *    At creation time of the manager, The param sgfCollection may either be an
+ *    array or a string representing a URL.  If the sgfCollection is a string,
+ *    then the JSON is requsted at draw-time and passed to this.sgfCollection.
+ * @param {!Object<string>} sgfMapping An initial setup for the SGF cache. A map
+ *    from SGF-ID to the sgf contents.
+ * @param {number} sgfColIndex A numbered index into the sgfCollection.
+ * @param {boolean} allowWrapAround Whether to allow wrap around
+ *    in the SGF manager.
+ * @param {boolean} loadColInBack: Whether or to load the SGFs in the background.
+ * @param {!Object} sgfDefaults Filled-in sgf default options. See
+ * @param {!Object} displayOptions: filled-in display options.
+ * @param {!Object} actions: combination of stone actions and icon actions.
+ * @param {!Object} metadata: metadata about the this instance of glift.
+ * @param {!Object} hooks: user-provided functions.
  *
  * @constructor @final @struct
  */
@@ -14337,10 +14784,14 @@ glift.widgets.WidgetManager = function(divId, sgfCollection, sgfMapping,
   // Register the instance. Maybe should be its own method.
   glift.global.instanceRegistry[this.id] = this;
 
-  // Set as active, if the active instance hasn't already been set.
+  // Set as active, if the active instance hasn't already been set. You can only
+  // have one Glift instance per page that's active.
   !glift.global.activeInstanceId && this.setActive();
 
-  // The original div id.
+  /**
+   * The original div id.
+   * @type {string}
+   */
   this.divId = divId;
 
   // The fullscreen div id. Only set via the fullscreen button. Necessary to
@@ -14384,8 +14835,19 @@ glift.widgets.WidgetManager = function(divId, sgfCollection, sgfMapping,
   this.loadColInBack = loadColInBack;
   this.initBackgroundLoading = false;
 
-  // Defined on draw
+  /**
+   * The main workhorse: The base glift widget. This is the object that handles
+   * all the relevant SGF, controller, and display state.
+   * @type {!glift.widgets.BaseWidget|undefined}
+   */
   this.currentWidget = undefined;
+  /**
+   * Sometimes it's useful to create a temporary widget and hide the current
+   * widget. The usecase for this is problems, where we define a temporary
+   * results window.
+   * @type {!glift.widgets.BaseWidget|undefined}
+   */
+  this.temporaryWidget = undefined
 
   /**
    * Global metadata for this manager instance.
@@ -14843,7 +15305,7 @@ glift.widgets.options.baseOptions = {
    */
   sgfDefaults: {
     /**
-     * A literal SGF String.  Should not be specified in SGF defaults
+     * A literal SGF String.  Should not be specified in SGF defaults.
      * @api(1.0)
      */
     sgfString: undefined,

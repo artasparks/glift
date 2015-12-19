@@ -365,11 +365,7 @@ glift.widgets.BaseWidget.prototype = {
     glift.keyMappings.unregisterInstance(managerId);
     glift.dom.elem(this.wrapperDivId) &&
         glift.dom.elem(this.wrapperDivId).empty();
-    if (this.keyHandlerFunc !== undefined) {
-      document.body.keydown = null;
-    }
     this.correctness = undefined;
-    this.keyHandlerFunc = undefined;
     this.display = undefined;
   }
 };

@@ -1,6 +1,26 @@
 goog.provide('glift.util');
 
 glift.util = {
+  /**
+   * @param{T|undefined|null} param
+   * @param{string=} opt_msg
+   * @return {!T}
+   *
+   * @template T
+   */
+  assertDef: function(param, opt_msg) {
+    var msg = opt_msg || '';
+    if (param === undefined || param === null) {
+      throw new Error('Param not defined! ' + msg);
+    } else {
+      // TODO(kashomon): Currently, this doesn't work the way I'd want to.
+      return param;
+    }
+  },
+
+  /**
+   * Log a message. Allows the for the possibility of overwriting for tests.
+   */
   logz: function(msg) {
     console.log(msg);
     return null; // default value to return.

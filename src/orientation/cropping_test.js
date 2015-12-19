@@ -54,12 +54,12 @@
     var point = glift.util.point;
     var mt = glift.rules.movetree.getInstance(13);
     // 0,0 Normally causes the board to be top left
-    mt.properties().add('AB', point(0,0));
+    mt.properties().add('AB', point(0,0).toSgfCoord());
     deepEqual(getCropRegion(mt), boardRegions.ALL, '13x13 => ALL');
 
     mt = glift.rules.movetree.getInstance(9);
     // 0,0 Normally causes the board to be top left
-    mt.properties().add('AB', point(0,0));
+    mt.properties().add('AB', point(0,0).toSgfCoord());
     deepEqual(getCropRegion(mt), boardRegions.ALL, '9x9 => ALL');
   });
 

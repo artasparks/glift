@@ -1,8 +1,60 @@
 goog.provide('glift.rules.Properties');
+goog.provide('glift.rules.MoveCollection');
 
-glift.rules.properties = function(map) {
-  return new glift.rules.Properties(map);
+/**
+ * @param {!Object<glift.rules.prop, !Array<string>>=} opt_map
+ * @return {!glift.rules.Properties}
+ */
+glift.rules.properties = function(opt_map) {
+  return new glift.rules.Properties(opt_map);
 };
+
+/**
+ * A collection of moves.
+ *
+ * @typedef {{
+ *  WHITE: !Array<!glift.rules.Move>,
+ *  BLACK: !Array<!glift.rules.Move>
+ * }}
+ */
+glift.rules.MoveCollection;
+
+
+/**
+ * Mark Value. Encapsulates type of mark properties.
+ * @typedef {{
+ *  point: !glift.Point,
+ *  value: string
+ * }}
+ */
+glift.rules.MarkValue;
+
+
+/**
+ * A collection of marks.
+ *
+ * @typedef {!Object<glift.enums.marks, !Array<glift.rules.MarkValue>>}
+ */
+glift.rules.MarkCollection;
+
+
+/**
+ * An object describing a property.
+ *
+ * Example:
+ * {
+ *  prop: GN
+ *  displayName: 'Game Name',
+ *  value: 'Lee Sedol vs Gu Li'
+ * }
+ *
+ * @typedef {{
+ *  prop: glift.rules.prop,
+ *  displayName: string,
+ *  value: string
+ * }}
+ */
+glift.rules.PropDescriptor;
 
 /**
  * Properties that accept point values. This is here mostly for full-board
@@ -13,8 +65,9 @@ glift.rules.properties = function(map) {
  *  [aa:cc] - Point Rectangle (all points from 0,0 to 2,2 in a rect)
  *
  * Additionally Labels (LB) have the format
- *  [lbl
+ *  [ab:label]
  *
+ * @type {!Object<glift.rules.prop, boolean>}
  */
 glift.rules.propertiesWithPts = {
   // Marks
@@ -32,29 +85,15 @@ glift.rules.propertiesWithPts = {
   TW: true // white area
 };
 
-/** All the SGF Properties plus some things. */
-//  TODO(kashomon): Comment these and delete the invalid ones.
-glift.rules.allProperties = {
-AB: 'AB', AE: 'AE', AN: 'AN', AP: 'AP', AR: 'AR', AS: 'AS', AW: 'AW', B: 'B',
-BL: 'BL', BM: 'BM', BR: 'BR', BS: 'BS', BT: 'BT', C: 'C', CA: 'CA', CH: 'CH',
-CP: 'CP', CR: 'CR', DD: 'DD', DM: 'DM', DO: 'DO', DT: 'DT', EL: 'EL', EV: 'EV',
-EX: 'EX', FF: 'FF', FG: 'FG', GB: 'GB', GC: 'GC', GM: 'GM', GN: 'GN', GW: 'GW',
-HA: 'HA', HO: 'HO', ID: 'ID', IP: 'IP', IT: 'IT', IY: 'IY', KM: 'KM', KO: 'KO',
-L: 'L', LB: 'LB', LN: 'LN', LT: 'LT', M: 'M', MA: 'MA', MN: 'MN', N: 'N', OB:
-'OB', OH: 'OH', OM: 'OM', ON: 'ON', OP: 'OP', OT: 'OT', OV: 'OV', OW: 'OW', PB:
-'PB', PC: 'PC', PL: 'PL', PM: 'PM', PW: 'PW', RE: 'RE', RG: 'RG', RO: 'RO', RU:
-'RU', SC: 'SC', SE: 'SE', SI: 'SI', SL: 'SL', SO: 'SO', SQ: 'SQ', ST: 'ST', SU:
-'SU', SZ: 'SZ', TB: 'TB', TC: 'TC', TE: 'TE', TM: 'TM', TR: 'TR', TW: 'TW', UC:
-'UC', US: 'US', V: 'V', VW: 'VW', W: 'W', WL: 'WL', WR: 'WR', WS: 'WS', WT: 'WT',
-MU: 'MU'
-};
-
 /**
+ * @param {!Object<glift.rules.prop, !Array<string>>=} opt_map
+ *
  * @package
  * @constructor @final @struct
  */
-glift.rules.Properties = function(map) {
-  this.propMap = map || {};
+glift.rules.Properties = function(opt_map) {
+  /** @package {!Object<glift.rules.prop, !Array<string>>} */
+  this.propMap = opt_map || {};
 };
 
 glift.rules.Properties.prototype = {
@@ -72,19 +111,23 @@ glift.rules.Properties.prototype = {
    * Note that this does not overwrite an existing property - for that, the user
    * has to delete the existing property. If the property already exists, we add
    * another data element onto the array.
+   *
+   * @param {glift.rules.prop} prop
+   * @param {string|!Array<string>} value
+   * @return {!glift.rules.Properties} this
    */
   add: function(prop, value) {
     // Return if the property is not string or a real property
-    if (!glift.rules.allProperties[prop]) {
+    if (!glift.rules.prop[prop]) {
       glift.util.logz('Warning! The property [' + prop + ']' +
-          ' is not valid and is not recognized in the SGF spec.');
+          ' is not valid and is not recognized in the SGF spec.' +
+          ' Thus, this property will be ignored');
+      return this;
     }
     var valueType = glift.util.typeOf(value);
 
     if (valueType !== 'string' && valueType !== 'array') {
-      // The value has to be either a string or an array.  Maybe we should throw
-      // an error?
-      value = [ this.unescape(value) ];
+      throw new Error('Unsupported type "' + valueType + '" for prop ' + prop);
     } else if (valueType === 'array') {
       // Force all array values to be of type string.
       for (var i = 0, len = value.length; i < len; i++) {
@@ -92,7 +135,7 @@ glift.rules.Properties.prototype = {
         value[i] = this.unescape(value[i]);
       }
     } else if (valueType === 'string') {
-      value = [ this.unescape(value) ];
+      value = [ this.unescape(/** @type {string} */ (value)) ];
     } else {
       throw new Error('Unexpected type ' +
           glift.util.typeOf(value) + ' for prop ' + prop);
@@ -130,7 +173,7 @@ glift.rules.Properties.prototype = {
    * If the property doesn't exist, returns null.
    */
   getAllValues: function(strProp) {
-    if (glift.rules.allProperties[strProp] === undefined) {
+    if (glift.rules.prop[strProp] === undefined) {
       return null; // Not a valid Property
     } else if (this.propMap[strProp]) {
       return this.propMap[strProp].slice(); // Return a shallow copy.
@@ -146,11 +189,14 @@ glift.rules.Properties.prototype = {
    * Since the getOneValue() always returns an array, it's sometimes useful to
    * return the first property in the list.  Like getOneValue(), if a property
    * or value can't be found, null is returned.
+   *
+   * @param {glift.rules.prop} prop The property
+   * @param {number=} opt_index Optional index. Defaults to 0.
+   * @return {?string} The string property or null.
    */
-  getOneValue: function(strProp, index) {
-    index = (index !== undefined
-        && typeof index === 'number' && index >= 0) ? index : 0;
-    var arr = this.getAllValues(strProp);
+  getOneValue: function(prop, opt_index) {
+    var index = opt_index || 0;
+    var arr = this.getAllValues(prop);
     if (arr && arr.length >= 1) {
       return arr[index];
     } else {
@@ -163,14 +209,17 @@ glift.rules.Properties.prototype = {
    * Optionally, the user can provide an index, since each property points to an
    * array of values.
    *
-   * Returns null if the property doesn't exist.
+   * @param {glift.rules.prop} prop The SGF property.
+   * @param {number=} opt_index Optional index. defaults to 0.
+   * @return {?glift.Point} Returns a Glift point or null if the property
+   *    doesn't exist.
    */
-  getAsPoint: function(strProp, index) {
-    var out = this.getOneValue(strProp, index);
+  getAsPoint: function(prop, opt_index) {
+    var out = this.getOneValue(prop, opt_index);
     if (out) {
       return glift.util.pointFromSgfCoord(out);
     } else {
-      return out;
+      return null;
     }
   },
 
@@ -180,21 +229,25 @@ glift.rules.Properties.prototype = {
    * Recall that in the SGF, we should have already converted any point
    * rectangles, so there shouldn't be any issues here with converting point
    * rectangles.
+   *
+   * @param {glift.rules.prop} prop
+   * @param {number} size Size of the Go Board.
+   * @param {glift.enums.rotations} rotation Rotation to perform
    */
-  rotate: function(strProp, size, rotation) {
-    if (!glift.rules.propertiesWithPts.hasOwnProperty(strProp)) {
-      return null;
+  rotate: function(prop, size, rotation) {
+    if (!glift.rules.propertiesWithPts[prop]) {
+      return;
     }
     if (!glift.enums.rotations[rotation] ||
         rotation === glift.enums.rotations.NO_ROTATION) {
-      return null;
+      return
     }
     var regex = /([a-z][a-z])/g;
-    if (strProp === glift.rules.allProperties.LB) {
+    if (prop === glift.rules.prop.LB) {
       // We handle labels specially since labels have a unqiue format
       regex = /([a-z][a-z])(?=:)/g;
     }
-    var vals = this.getAllValues(strProp);
+    var vals = this.getAllValues(prop);
     for (var i = 0; i < vals.length; i++) {
       vals[i] = vals[i].replace(regex, function(sgfPoint) {
         return glift.util.pointFromSgfCoord(sgfPoint)
@@ -202,18 +255,27 @@ glift.rules.Properties.prototype = {
             .toSgfCoord();
       });
     }
-    this.propMap[strProp] = vals;
+    this.propMap[prop] = vals;
   },
 
   /**
    * Returns true if the current move has the property "prop".  Return
    * false otherwise.
+   *
+   * @param {glift.rules.prop} prop
+   * @return {boolean}
    */
   contains: function(prop) {
     return prop in this.propMap;
   },
 
-  /** Tests wether a prop contains a value */
+  /**
+   * Tests wether a prop contains a value
+   *
+   * @param {glift.rules.prop} prop
+   * @param {string} value
+   * @return {boolean}
+   */
   hasValue : function(prop, value) {
     if (!this.contains(prop)) {
       return false;
@@ -227,7 +289,11 @@ glift.rules.Properties.prototype = {
     return false;
   },
 
-  /** Deletes the prop and return the value. */
+  /**
+   * Deletes the prop and return the value.
+   * @param {glift.rules.prop} prop
+   * @return {?Array<string>} The former values of this property.
+   */
   remove: function(prop) {
     if (this.contains(prop)) {
       var allValues = this.getAllValues(prop);
@@ -242,6 +308,8 @@ glift.rules.Properties.prototype = {
    * Remove one value from the property list. Returns the value if it was
    * successfully removed.  Removes only the first value -- any subsequent value
    * remains in the property list.
+   * @param {glift.rules.prop} prop
+   * @param {string} value
    */
   removeOneValue: function(prop, value) {
     if (this.contains(prop)) {
@@ -264,11 +332,15 @@ glift.rules.Properties.prototype = {
 
   /**
    * Sets current value, even if the property already exists.
+   * @param {glift.rules.prop} prop
+   * @param {string|!Array<string>} value
+   * @return {glift.rules.Properties} this
    */
   set: function(prop, value) {
     if (prop !== undefined && value !== undefined) {
       if (glift.util.typeOf(value) === 'string') {
-        this.propMap[prop] = [ this.unescape(value) ];
+        this.propMap[prop] = [
+            this.unescape(/** @type {string} */ (value)) ];
       } else if (glift.util.typeOf(value) === 'array') {
         for (var i = 0; i < value.length; i++) {
           if (glift.util.typeOf(value[i]) !== 'string') {
@@ -278,7 +350,7 @@ glift.rules.Properties.prototype = {
           }
           value[i] = this.unescape(value[i]);
         }
-        this.propMap[prop] = value
+        this.propMap[prop] = /** @type {!Array<string>} */ (value);
       }
     }
     return this;
@@ -288,30 +360,36 @@ glift.rules.Properties.prototype = {
   // Convenience methods //
   //---------------------//
 
-  // Get all the placements for a color (BLACK or WHITE).  Return as an array.
+  /**
+   * Get all the placements for a color.  Return as an array.
+   * @param {glift.enums.states} color
+   * @return {!Array<!glift.Point>} points.
+   */
   getPlacementsAsPoints: function(color) {
-    var prop = '';
+    var prop;
     if (color === glift.enums.states.BLACK) {
-      prop = glift.rules.allProperties.AB;
+      prop = glift.rules.prop.AB;
     } else if (color === glift.enums.states.WHITE) {
-      prop = glift.rules.allProperties.AW;
+      prop = glift.rules.prop.AW;
+    } else {
+      return  [];
     }
-    if (prop === '' || !this.contains(prop)) {
+
+    if (!this.contains(prop)) {
       return [];
     }
     return glift.sgf.allSgfCoordsToPoints(this.getAllValues(prop));
   },
 
   /**
-   * Get the current comment on the move. This is, of course, just a convenience
-   * method -- equivalent to properties().getOneValue('C'). It's provided as a
-   * convenience method since it's an extremely comment operation.
+   * Get the current comment on the move. It's provided as a convenience method
+   * since it's an extremely comment operation.
    *
-   * Returns: string or null.
+   * @return {?string}
    */
   getComment: function() {
-    if (this.contains('C')) {
-      return this.getOneValue('C');
+    if (this.contains(glift.rules.prop.C)) {
+      return this.getOneValue(glift.rules.prop.C);
     } else {
       return null;
     }
@@ -320,30 +398,32 @@ glift.rules.Properties.prototype = {
   /**
    * Get the current Move.  Returns null if no move exists.
    *
-   * Specifically, returns a dict:
-   *  {
-   *    color: <BLACK / WHITE>
-   *    point: point
-   *  }
-   *
    * If the move is a pass, then in the SGF, we'll see B[] or W[].  Thus,
    * we will return { color: BLACK } or { color: WHITE }, but we won't have any
    * point associated with this.
+   *
+   * @return {?glift.rules.Move}.
    */
   getMove: function() {
     var BLACK = glift.enums.states.BLACK;
     var WHITE = glift.enums.states.WHITE;
-    if (this.contains('B')) {
-      if (this.getOneValue('B') === "") {
+    if (this.contains(glift.rules.prop.B)) {
+      if (this.getOneValue(glift.rules.prop.B) === "") {
         return { color: BLACK }; // This is a PASS
       } else {
-        return { color: BLACK, point: this.getAsPoint('B') }
+        return {
+          color: BLACK,
+          point: this.getAsPoint(glift.rules.prop.B) || undefined
+        }
       }
-    } else if (this.contains('W')) {
-      if (this.getOneValue('W') === "") {
+    } else if (this.contains(glift.rules.prop.W)) {
+      if (this.getOneValue(glift.rules.prop.W) === '') {
         return { color: WHITE }; // This is a PASS
       } else {
-        return { color: WHITE, point: this.getAsPoint('W') };
+        return {
+          color: WHITE,
+          point: this.getAsPoint(glift.rules.prop.W) || undefined
+        };
       }
     } else {
       return null;
@@ -363,6 +443,10 @@ glift.rules.Properties.prototype = {
    *
    * Note: This is an O(lnm) ~ O(n^3).  But practice, you'll want to test
    * against singular properties, so it's more like O(n^2)
+   *
+   * @param {!Object<glift.rules.prop, !Array<string>>} conditions Set of
+   *    property-conditions to check.
+   * @return {boolean}
    */
   matches: function(conditions) {
     for (var key in conditions) {
@@ -389,17 +473,7 @@ glift.rules.Properties.prototype = {
   /**
    * Get all the stones (placements and moves).  This ignores 'PASS' moves.
    *
-   * returns:
-   *  {
-   *    BLACK: [<move>, <move>, ...]
-   *    WHITE: [...]
-   *  }
-   *
-   *  where move is:
-   *  {
-   *    point: pt,
-   *    color: color
-   *  }
+   * @return {!glift.rules.MoveCollection}
    */
   getAllStones: function() {
     var states = glift.enums.states,
@@ -436,8 +510,12 @@ glift.rules.Properties.prototype = {
    *    LABEL: [{value: lb, point: pt}, ...],
    *    : [{point: pt}, ...]
    *  }
+   * return {!glift.rules.MarkCollection}
    */
   getAllMarks: function() {
+    /**
+     * @type {!Object<glift.rules.prop, glift.enums.states>}
+     */
     var propertiesToMarks = {
       CR: glift.enums.marks.CIRCLE,
       LB: glift.enums.marks.LABEL,
@@ -452,7 +530,7 @@ glift.rules.Properties.prototype = {
         var data = this.getAllValues(prop);
         var marksToAdd = [];
         for (var i = 0; i < data.length; i++) {
-          if (prop === glift.rules.allProperties.LB) {
+          if (prop === glift.rules.prop.LB) {
             // Labels have the form { point: pt, value: 'A' }
             marksToAdd.push(glift.sgf.convertFromLabelData(data[i]));
           } else {
@@ -508,11 +586,14 @@ glift.rules.Properties.prototype = {
    *  value: 'Lee Sedol vs Gu Li'
    * },...
    * ]
+   * @return {!Array<glift.rules.PropDescriptor>}
    */
   // TODO(kashomon): Add test
   getGameInfo: function() {
     var gameInfoArr = [];
-    // Probably should live in a more canonical place (properties.js).
+    /**
+     * @type {!Object<glift.rules.prop, string>}
+     */
     var propNameMap = {
       PW: 'White Player',
       PB: 'Black Player',
@@ -537,13 +618,15 @@ glift.rules.Properties.prototype = {
         };
         // Post processing for some values.
         // We attach the ranks like Kashomon [9d], if they exist.
-        if (key === 'PW' && this.contains('WR')) {
-          obj.value += ' [' + this.getOneValue('WR') + ']';
-        } else if (key === 'PB' && this.contains('BR')) {
-          obj.value += ' [' + this.getOneValue('BR') + ']';
+        if (key === glift.rules.prop.PW &&
+            this.contains(glift.rules.prop.WR)) {
+          obj.value += ' [' + this.getOneValue(glift.rules.prop.WR) + ']';
+        } else if (key === glift.rules.prop.PB &&
+            this.contains(glift.rules.prop.BR)) {
+          obj.value += ' [' + this.getOneValue(glift.rules.prop.BR) + ']';
         }
         // Remove trailing zeroes on komi amounts.
-        else if (key === 'KM') {
+        else if (key === glift.rules.prop.KM) {
           obj.value = parseFloat(this.getOneValue(key)) + '' || '0';
         }
         gameInfoArr.push(obj);
@@ -552,12 +635,20 @@ glift.rules.Properties.prototype = {
     return gameInfoArr;
   },
 
-  /** Escapes some text by converting ] to \\] */
+  /**
+   * Escapes some text by converting ] to \\] 
+   * @param {string} text
+   * @return {string}
+   */
   escape: function(text) {
     return text.toString().replace(/]/g, '\\]');
   },
 
-  /** Unescapes some text by converting \\] to ] */
+  /**
+   * Unescapes some text by converting \\] to ] 
+   * @param {string} text
+   * @return {string}
+   */
   unescape: function(text) {
     return text.toString().replace(/\\]/g, ']');
   }

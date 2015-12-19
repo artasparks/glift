@@ -3,6 +3,9 @@
  * difficult to know if this is truly an accurate parser. Oh well.
  *
  * Also, it's a horrible format. Also, this is a pretty hacky parser.
+ *
+ * @param {string} gibString
+ * @retutrn {!glift.rules.MoveTree}
  */
 glift.parse.tygem = function(gibString) {
   var states = {
@@ -55,8 +58,8 @@ glift.parse.tygem = function(gibString) {
       // the upper left, as with SGFs. Also, the intersections are 0-indexed.
       var splat = str.split(" ");
       var colorToken = colorToToken[splat[3]];
-      var x = parseInt(splat[4]);
-      var y = parseInt(splat[5]);
+      var x = parseInt(splat[4], 10);
+      var y = parseInt(splat[5], 10);
       movetree.addNode().properties().add(
           colorToken, glift.util.point(x, y).toSgfCoord());
     }

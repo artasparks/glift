@@ -14,12 +14,11 @@ glift.rules.autonumber = function(movetree) {
   var digitregex = /\d+/;
   var singledigit = /0\d/;
   movetree.recurseFromRoot(function(mt) {
-    if (!mt.properties().contains('C') ||
-        mt.properties().getOneValue('C') === '') {
+    if (!mt.properties().getComment()) {
       return; // Nothing to do.  We only autonumber on comments.
     }
     // First, clear all numeric labels
-    var labels = mt.properties().getAllValues('LB');
+    var labels = mt.properties().getAllValues(glift.rules.prop.LB);
     /**
      * Map from SGF point to string label.
      * @type {!Object<string>}
@@ -70,9 +69,9 @@ glift.rules.autonumber = function(movetree) {
     }
 
     if (newlabels.length === 0) {
-      mt.properties().remove('LB');
+      mt.properties().remove(glift.rules.prop.LB);
     } else {
-      mt.properties().set('LB', newlabels);
+      mt.properties().set(glift.rules.prop.LB, newlabels);
     }
 
     glift.rules.removeCollidingLabels(mt, lblMap);
@@ -120,10 +119,10 @@ glift.rules.clearnumbers = function(movetree) {
   var digitregex = /\d+/;
   movetree.recurseFromRoot(function(mt) {
     // Clear all numeric labels
-    if (!mt.properties().contains('LB')) {
+    if (!mt.properties().contains(glift.rules.prop.LB)) {
       return; // no labels to clear;
     }
-    var labels = mt.properties().getAllValues('LB');
+    var labels = mt.properties().getAllValues(glift.rules.prop.LB);
     var newLbls = [];
     for (var i = 0; labels && i < labels.length; i++) {
       var lblData = labels[i].split(':')
@@ -134,9 +133,9 @@ glift.rules.clearnumbers = function(movetree) {
       }
     }
     if (newLbls.length === 0) {
-      mt.properties().remove('LB');
+      mt.properties().remove(glift.rules.prop.LB);
     } else {
-      mt.properties().set('LB', newLbls);
+      mt.properties().set(glift.rules.prop.LB, newLbls);
     }
   });
 };

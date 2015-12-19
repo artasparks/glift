@@ -4,21 +4,22 @@ goog.provide('glift.widgets.WidgetManager');
  * The Widget Manager manages state across widgets.  When widgets are created,
  * they are always created in the context of a Widget Manager.
  *
- * divId: the element id of the div without the selector hash (#)
- * sgfCollection: array of sgf objects or a string URL. At creation time of the
- *    manager, The param sgfCollection may either be an array or a string
- *    representing a URL.  If the sgfCollection is a string, then the JSON is
- *    requsted at draw-time and passed to this.sgfCollection.
- * sgfCache: An initial setup for the SGF cache.
- * sgfColIndex: numbered index into the sgfCollection.
- * allowWrapAround: true or false.  Whether to allow wrap around in the SGF
- *    manager.
- * loadColInBack: true or false. Whether or to load the SGFs in the background.
- * sgfDefaults: filled-in sgf default options.  See ./options/base_options.js
- * displayOptions: filled-in display options. See ./options/base_options.js
- * actions: combination of stone actions and icon actions.
- * metadata: metadata about the this instance of glift.
- * hooks: user-provided functions.
+ * @param {string} divId: the element id of the div without the selector hash (#)
+ * @param {!Array<string>} sgfCollection: array of sgf objects or a string URL.
+ *    At creation time of the manager, The param sgfCollection may either be an
+ *    array or a string representing a URL.  If the sgfCollection is a string,
+ *    then the JSON is requsted at draw-time and passed to this.sgfCollection.
+ * @param {!Object<string>} sgfMapping An initial setup for the SGF cache. A map
+ *    from SGF-ID to the sgf contents.
+ * @param {number} sgfColIndex A numbered index into the sgfCollection.
+ * @param {boolean} allowWrapAround Whether to allow wrap around
+ *    in the SGF manager.
+ * @param {boolean} loadColInBack: Whether or to load the SGFs in the background.
+ * @param {!Object} sgfDefaults Filled-in sgf default options. See
+ * @param {!Object} displayOptions: filled-in display options.
+ * @param {!Object} actions: combination of stone actions and icon actions.
+ * @param {!Object} metadata: metadata about the this instance of glift.
+ * @param {!Object} hooks: user-provided functions.
  *
  * @constructor @final @struct
  */
@@ -33,10 +34,14 @@ glift.widgets.WidgetManager = function(divId, sgfCollection, sgfMapping,
   // Register the instance. Maybe should be its own method.
   glift.global.instanceRegistry[this.id] = this;
 
-  // Set as active, if the active instance hasn't already been set.
+  // Set as active, if the active instance hasn't already been set. You can only
+  // have one Glift instance per page that's active.
   !glift.global.activeInstanceId && this.setActive();
 
-  // The original div id.
+  /**
+   * The original div id.
+   * @type {string}
+   */
   this.divId = divId;
 
   // The fullscreen div id. Only set via the fullscreen button. Necessary to
@@ -80,8 +85,19 @@ glift.widgets.WidgetManager = function(divId, sgfCollection, sgfMapping,
   this.loadColInBack = loadColInBack;
   this.initBackgroundLoading = false;
 
-  // Defined on draw
+  /**
+   * The main workhorse: The base glift widget. This is the object that handles
+   * all the relevant SGF, controller, and display state.
+   * @type {!glift.widgets.BaseWidget|undefined}
+   */
   this.currentWidget = undefined;
+  /**
+   * Sometimes it's useful to create a temporary widget and hide the current
+   * widget. The usecase for this is problems, where we define a temporary
+   * results window.
+   * @type {!glift.widgets.BaseWidget|undefined}
+   */
+  this.temporaryWidget = undefined
 
   /**
    * Global metadata for this manager instance.

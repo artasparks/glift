@@ -172,7 +172,7 @@ glift.bridge.intersections = {
         var marksToAdd = [];
         var data = movetree.properties().getAllValues(prop);
         for (var i = 0; i < data.length; i++) {
-          if (prop === glift.rules.allProperties.LB) {
+          if (prop === glift.rules.prop.LB) {
             // Labels have the form { point: pt, value: 'A' }
             marksToAdd.push(glift.sgf.convertFromLabelData(data[i]));
           } else {

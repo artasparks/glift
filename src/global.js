@@ -21,10 +21,17 @@ glift.global = {
   performanceDebugLevel: 'NONE',
 
   /**
-   * Map of performance timestamps.
-   * TODO(kashomon): Indicate that this is private and what it's used for.
+   * Map of performance timestamps. Not normally used unless
+   * performanceDebugLevel is set.
    */
-  perf: {},
+  perf: {
+    /** @type {?Date} */
+    first: null,
+    /** @type {?Date} */
+    last: null,
+    /** @type {?Date} */
+    lastMajor: null,
+  },
 
   /**
    * The registry.  Used to determine who has 'ownership' of key-presses.
