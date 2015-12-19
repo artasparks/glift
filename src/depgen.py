@@ -92,7 +92,7 @@ OLD_CLOSURE_FLAGS = [
 
 # See:
 # https://github.com/google/closure-compiler/wiki/Warnings
-# Not ethat warning_level=VERBOSE corresponds to:
+# Note that warning_level=VERBOSE corresponds to:
 #
 # --jscomp_warning=checkTypes
 # --jscomp_error=checkVars
@@ -119,8 +119,8 @@ TYPED_CLOSURE_FLAGS = [
   '--jscomp_error=undefinedNames',
   '--jscomp_error=deprecated',
   '--jscomp_error=checkTypes',
+  '--jscomp_error=missingProperties'
   # '--jscomp_warning=globalThis'
-  # '--jscomp_warning=missingProperties'
 ]
 
 HEADER = '<!-- AUTO-GEN-DEPS -->'
