@@ -612,7 +612,7 @@ glift.keyMappings = {
    * Some keys must be bound with 'keydown' rather than key code
    * mappings.
    */
-  _nameToCodeKeyDown: {
+  specialChars: {
     BACKSPACE: 8,
     ESCAPE: 27,
     ARROW_LEFT:37,
@@ -627,7 +627,7 @@ glift.keyMappings = {
   nameToCode: function(name) {
     if (name.length !== 1) {
       if (/[A-Z](_[A-Z]+)*/.test(name)) {
-        return glift.keyMappings._nameToCodeKeyDown[name] || null
+        return glift.keyMappings.specialChars[name] || null
       } else {
         return null
       }
@@ -641,8 +641,8 @@ glift.keyMappings = {
     if (!glift.keyMappings._codeToNameKeyDown) {
       // Bite the bullet and define the map.
       var newmap = {};
-      for (var name in glift.keyMappings._nameToCodeKeyDown) {
-        var keycode = glift.keyMappings._nameToCodeKeyDown[name]
+      for (var name in glift.keyMappings.specialChars) {
+        var keycode = glift.keyMappings.specialChars[name]
         newmap[keycode] = name;
       }
       glift.keyMappings._codeToNameKeyDown = newmap;
@@ -9617,6 +9617,14 @@ glift.rules.MarkCollection;
 
 
 /**
+ * Map of prop-to-values.
+ *
+ * @typedef {!Object<glift.rules.prop, !Array<string>>}
+ */
+glift.rules.ProblemConditions;
+
+
+/**
  * An object describing a property.
  *
  * Example:
@@ -10022,7 +10030,7 @@ glift.rules.Properties.prototype = {
    * Note: This is an O(lnm) ~ O(n^3).  But practice, you'll want to test
    * against singular properties, so it's more like O(n^2)
    *
-   * @param {!Object<glift.rules.prop, !Array<string>>} conditions Set of
+   * @param {!glift.rules.ProblemConditions} conditions Set of
    *    property-conditions to check.
    * @return {boolean}
    */
@@ -10164,7 +10172,7 @@ glift.rules.Properties.prototype = {
    *  value: 'Lee Sedol vs Gu Li'
    * },...
    * ]
-   * @return {!Array<glift.rules.PropDescriptor>}
+   * @return {!Array<!glift.rules.PropDescriptor>}
    */
   // TODO(kashomon): Add test
   getGameInfo: function() {
@@ -11141,6 +11149,14 @@ goog.provide('glift.controllers');
 glift.controllers = {};
 
 goog.provide('glift.controllers.BaseController');
+goog.provide('glift.controllers.ControllerFunc');
+
+/**
+ * A type used for SGF Options.
+ *
+ * @typedef {function(glift.api.SgfOptions):glift.controllers.BaseController}
+ */
+glift.controllers.ControllerFunc;
 
 /**
  * Creates a base controller implementation.
@@ -11166,18 +11182,19 @@ glift.controllers.BaseController = function() {
   // lifetime of the controller.
   /** @package {string} */
   this.sgfString = '';
-  /** @package {!glift.rules.Treepath} */
+
+  /** @package {string|!Array<number>} */
   this.initialPosition = [];
 
   /**
    * Used only for examples (see the Game Figure). Indicates how to create
    * numbers based on the 
-   * @package {!glift.rules.Treepath}
+   * @package {!string|!Array<number>}
    */
   this.nextMovesPath = [];
   /**
    * Used only for problem-types.
-   * @package {!Object<glift.rules.prop, string>}
+   * @package {!glift.rules.ProblemConditions}
    */
   this.problemConditions = {};
 
@@ -11202,7 +11219,7 @@ glift.controllers.BaseController.prototype = {
    * Note that these options should be protected by the options parsing (see
    * options.js in this same directory).  Thus, no special checks are made here.
    *
-   * @param {Object} sgfOptions Object containing SGF options.
+   * @param {!glift.api.SgfOptions} sgfOptions Object containing SGF options.
    */
   initOptions: function(sgfOptions) {
     if (sgfOptions === undefined) {
@@ -11211,7 +11228,7 @@ glift.controllers.BaseController.prototype = {
     this.parseType = sgfOptions.parseType || glift.parse.parseType.SGF;
     this.sgfString = sgfOptions.sgfString || '';
     this.initialPosition = sgfOptions.initialPosition || [];
-    this.problemConditions = sgfOptions.problemConditions || null;
+    this.problemConditions = sgfOptions.problemConditions || {};
     this.nextMovesPath = sgfOptions.nextMovesPath || [];
     this.initialize();
     return this;
@@ -11259,7 +11276,7 @@ glift.controllers.BaseController.prototype = {
   /**
    * It's expected that this will be implemented by those extending this base
    * class.  This is called during initOptions above.
-   * @param {Object=} opt_options
+   * @param {glift.api.SgfOptions=} opt_options
    */
   extraOptions: function(opt_options) { /* Implemented by other controllers. */ },
 
@@ -11316,7 +11333,10 @@ glift.controllers.BaseController.prototype = {
     return this;
   },
 
-  /** Gets the treepath to the current position */
+  /**
+   * Gets the treepath to the current position.
+   * @return {!glift.rules.Treepath}.
+   */
   pathToCurrentPosition: function() {
     return this.movetree.treepathToHere();
   },
@@ -11325,6 +11345,7 @@ glift.controllers.BaseController.prototype = {
    * Gets the game info key-value pairs. This consists of global data about the
    * game, such as the names of the players, the result of the game, the
    * name of the tournament, etc.
+   * @return {!Array<!glift.rules.PropDescriptor>}
    */
   getGameInfo: function() {
     return this.movetree.getTreeFromRoot().properties().getGameInfo();
@@ -11365,7 +11386,11 @@ glift.controllers.BaseController.prototype = {
         this.nextVariationNumber());
   },
 
-  /** Get the captures that occured for the current move. */
+  /**
+   * Get the captures that occured for the current move.
+   *
+   * @return {!glift.rules.CaptureResult}
+   */
   getCaptures: function() {
     if (this.captureHistory.length === 0) {
       return { BLACK: [], WHITE: [] };
@@ -11379,6 +11404,10 @@ glift.controllers.BaseController.prototype = {
    *    BLACK: <number>
    *    WHITE: <number>
    *  }
+   * @return {{
+   *  BLACK: number,
+   *  WHITE: number
+   * }}
    */
   // TODO(kashomon): Add tests
   getCaptureCount: function() {
@@ -11398,6 +11427,10 @@ glift.controllers.BaseController.prototype = {
    *
    * Note, this method isn't always totally accurate. This method must be very
    * fast since it's expected that this will be used for hover events.
+   *
+   * @param {!glift.Point} point
+   * @param {!glift.enums.states} color
+   * @return {boolean}
    */
   canAddStone: function(point, color) {
     return this.goban.placeable(point, color);
@@ -11410,22 +11443,24 @@ glift.controllers.BaseController.prototype = {
    * This will be undefined until initialize is called, so the clients of the
    * controller must make sure to always initialize the board position
    * first.
+   *
+   * @return {!glift.enums.states}
    */
   getCurrentPlayer: function() {
     return this.movetree.getCurrentPlayer();
   },
 
-  /** Get the current SGF string. */
+  /** @return {string} The current SGF string. */
   currentSgf: function() {
     return this.movetree.toSgf();
   },
 
-  /** Get the original SGF string. */
+  /** @return {string} The original SGF string. */
   originalSgf: function() {
     return this.sgfString;
   },
 
-  /** Returns the number of intersections.  Should be known at load time. */
+  /** @return {number} Returns the number of intersections. */
   getIntersections: function() {
     return this.movetree.getIntersections();
   },
@@ -14704,32 +14739,16 @@ goog.provide('glift.widgets.WidgetManager');
  * The Widget Manager manages state across widgets.  When widgets are created,
  * they are always created in the context of a Widget Manager.
  *
- * @param {string} divId: the element id of the div without the selector hash (#)
- * @param {!Array<string>} sgfCollection: array of sgf objects or a string URL.
- *    At creation time of the manager, The param sgfCollection may either be an
- *    array or a string representing a URL.  If the sgfCollection is a string,
- *    then the JSON is requsted at draw-time and passed to this.sgfCollection.
- * @param {!Object<string>} sgfMapping An initial setup for the SGF cache. A map
- *    from SGF-ID to the sgf contents.
- * @param {number} sgfColIndex A numbered index into the sgfCollection.
- * @param {boolean} allowWrapAround Whether to allow wrap around
- *    in the SGF manager.
- * @param {boolean} loadColInBack: Whether or to load the SGFs in the background.
- * @param {!Object} sgfDefaults Filled-in sgf default options. See
- * @param {!Object} displayOptions: filled-in display options.
- * @param {!Object} actions: combination of stone actions and icon actions.
- * @param {!Object} metadata: metadata about the this instance of glift.
- * @param {!Object} hooks: user-provided functions.
+ * @param {glift.api.Options} options Options Template for Glift API Options.
  *
  * @constructor @final @struct
  */
-glift.widgets.WidgetManager = function(divId, sgfCollection, sgfMapping,
-    sgfColIndex, allowWrapAround, loadColInBack, sgfDefaults, displayOptions,
-    actions, metadata, hooks) {
+glift.widgets.WidgetManager = function(options) {
+
   // Globally unique ID, at least across all glift instances in the current
   // page. In theory, the divId should be globally unique, but might as well be
   // absolutely sure.
-  this.id = divId + '-glift-' + glift.util.idGenerator.next();
+  this.id = options.divId + '-glift-' + glift.util.idGenerator.next();
 
   // Register the instance. Maybe should be its own method.
   glift.global.instanceRegistry[this.id] = this;
@@ -14742,7 +14761,7 @@ glift.widgets.WidgetManager = function(divId, sgfCollection, sgfMapping,
    * The original div id.
    * @type {string}
    */
-  this.divId = divId;
+  this.divId = options.divId;
 
   // The fullscreen div id. Only set via the fullscreen button. Necessary to
   // have for problem collections.
@@ -14754,35 +14773,81 @@ glift.widgets.WidgetManager = function(divId, sgfCollection, sgfMapping,
   // we track the window-resizing function.
   this.oldWindowResize = null;
 
-  // Note: At creation time of the manager, The param sgfCollection may either
-  // be an array or a string representing a URL.  If the sgfCollection is a
-  // string, then the JSON is requsted at draw-time and passed to
-  // this.sgfCollection
+  /**
+   * Note: At creation time of the manager, The param sgfCollection may either
+   * be an array or a string representing a URL.  If the sgfCollection is a
+   * string, then the JSON is requsted at draw-time and passed to
+   * this.sgfCollection
+   *
+   * @type {!Array<!glift.api.SgfOptions|string>}
+   */
   this.sgfCollection = [];
 
-  // Cache of SGFs.  Useful for reducing the number AJAX calls.
-  //
-  // Map from SGF name to String contents.
-  this.sgfCache = sgfMapping || {};
+  /**
+   * Cache of SGFs.  Useful for reducing the number AJAX calls.
+   * Map from SGF name to String contents.
+   *
+   * @type {!Object<string>}
+   */
+  this.sgfCache = options.sgfMapping;
 
-  // URL for getting the entire SGF collection.
+  /**
+   * URL for getting the entire SGF collection.
+   *
+   * @type {?string}
+   */
   this.sgfCollectionUrl = null;
 
   // Suppert either explicit arrays or URLs for fetching JSON.
-  if (glift.util.typeOf(sgfCollection) === 'string') {
-    this.sgfCollectionUrl = sgfCollection;
+  if (glift.util.typeOf(options.sgfCollection) === 'string') {
+    this.sgfCollectionUrl = /** @type {string} */ (options.sgfCollection);
   } else {
-    this.sgfCollection = sgfCollection;
+    this.sgfCollection = /** @type {!Array<!glift.api.SgfOptions|string>} */ (
+        options.sgfCollection);
   }
 
-  this.sgfColIndex = sgfColIndex;
-  this.allowWrapAround = allowWrapAround
-  this.sgfDefaults = sgfDefaults;
-  this.displayOptions = displayOptions;
-  this.actions = actions;
+  /**
+   * Index into the SGF Collection, if it exists.
+   * @type {number}
+   */
+  this.sgfColIndex = options.initialIndex;
 
-  // True or false. Whether to load SGFs in the background.
-  this.loadColInBack = loadColInBack;
+  /** @type {boolean} */
+  this.allowWrapAround = options.allowWrapAround
+
+  /**
+   * The SGF Defaults template.
+   * @type {!glift.api.SgfOptions}
+   */
+  this.sgfDefaults = options.sgfDefaults;
+  /**
+   * Display options
+   * @type {!glift.api.DisplayOptions}
+   */
+  this.displayOptions = options.display;
+
+  /**
+   * Actions for the Icons and for stone defaults
+   * @typedef {{
+   *  iconActions: !glift.api.IconActions,
+   *  stoneActions: !glift.api.StoneActions
+   * }}
+   */
+  // TODO(kashomon): Break this apart. No need to squash these into one obj.
+  this.actions = {
+    iconActions: options.iconActions,
+    stoneActions: options.stoneActions,
+  };
+
+  /**
+   * Whether to load SGFs in the background.
+   * @type {boolean}
+   */
+  this.loadColInBack = options.loadCollectionInBackground;
+  /**
+   * Whether or not the background loading has begun.
+   * @type {boolean}
+   */
   this.initBackgroundLoading = false;
 
   /**
@@ -14801,15 +14866,17 @@ glift.widgets.WidgetManager = function(divId, sgfCollection, sgfMapping,
 
   /**
    * Global metadata for this manager instance.
+   * @type {!Object|undefined}
    */
-  this.metadata = metadata || undefined;
+  this.metadata = options.metadata;
 
   /**
    * External hooks provided by users.
    *
    * A map of hook-name to hook-function.
+   * @type {!glift.api.HookOptions}
    */
-  this.hooks = hooks;
+  this.hooks = options.hooks;
 };
 
 glift.widgets.WidgetManager.prototype = {
@@ -14834,7 +14901,8 @@ glift.widgets.WidgetManager.prototype = {
 
     if (this.sgfCollection.length === 0 && this.sgfCollectionUrl) {
       glift.ajax.get(this.sgfCollectionUrl, function(data) {
-        this.sgfCollection = JSON.parse(data);
+        this.sgfCollection = /** @type {!Array<string|!glift.api.SgfOptions>} */ (
+            JSON.parse(data));
         afterCollectionLoad();
       }.bind(this));
     } else {
@@ -14867,6 +14935,8 @@ glift.widgets.WidgetManager.prototype = {
 
   /** Modifies the SgfOptions by resetting the icons settings. */
   _resetIcons: function(processedObj) {
+    // TODO(kashomon): This seems really hacky and likely needs significant
+    // cleanup.
     if (this.sgfCollection.length > 1) {
       if (this.allowWrapAround) {
         processedObj.icons.push(this.displayOptions.nextSgfIcon);
@@ -14897,17 +14967,20 @@ glift.widgets.WidgetManager.prototype = {
     }
     var curSgfObj = this.sgfCollection[index];
     if (glift.util.typeOf(curSgfObj) === 'string') {
+      var str = /** @type {string} */ (curSgfObj);
       var out = {};
-      if (/^\s*\(;/.test(curSgfObj)) {
+      if (/^\s*\(;/.test(str)) {
         // We assume that this is a standard SGF String.
-        out.sgfString = curSgfObj;
+        out.sgfString = str;
       } else {
         // Assume a URL.
-        out.url = curSgfObj
+        out.url = str;
       }
-      curSgfObj = out;
+      var toProc = out;
+    } else {
+      var toProc = /** @type {!Object} */ (curSgfObj);
     }
-    var proc = glift.widgets.options.setSgfOptions(curSgfObj, this.sgfDefaults);
+    var proc = this.sgfDefaults.createSgfObj(toProc);
     return this._resetIcons(proc);
   },
 
@@ -15053,7 +15126,10 @@ glift.widgets.WidgetManager.prototype = {
     loader(this.sgfColIndex + 1);
   },
 
-  /** Whether or not the widget is currently fullscreened. */
+  /**
+   * Whether or not the widget is currently fullscreened.
+   * @return {boolean}
+   */
   isFullscreen: function() {
     return !!this.fullscreenDivId;
   },
@@ -15218,10 +15294,11 @@ glift.widgets.options = {
  *    encompass other types go-data, like the Tygem .gib filetypes.
  *
  * API annotations:
- *  - @api(1.X) Indicates an option supported for the lifetime of the 1.X
+ *
+ *  - api:1.X Indicates an option supported for the lifetime of the 1.X
  *    release.
- *  - @api(beta) Indicates an option currently slated to become a 1.X option.
- *  - @api(experimental) Indicates an option in testing.
+ *  - api:beta Indicates an option currently slated to become a 1.X option.
+ *  - api:experimental Indicates an option in testing.
  */
 glift.widgets.options.baseOptions = {
   /**
@@ -15240,7 +15317,7 @@ glift.widgets.options.baseOptions = {
    * As you might expect, if the user sets sgf to a literal string form or to a
    * url, it is transformed into an SGF object internally.
    *
-   * @api(1.0)
+   * api:1.0
    */
   sgf: undefined,
 
@@ -15251,19 +15328,20 @@ glift.widgets.options.baseOptions = {
    * options are specified here, but should only be specified in the individual
    * SGF (sgfString, url).
    *
-   * @api(1.0)
+   * api:1.0
    */
   sgfDefaults: {
     /**
      * A literal SGF String.  Should not be specified in SGF defaults.
-     * @api(1.0)
+     * api:1.0
      */
     sgfString: undefined,
 
     /**
      * URL (usually relative) to an SGF. Once loaded, the resulting data is
      * cached to speed recall time.
-     * @api(1.0)
+     *
+     * api:1.0
      */
     url: undefined,
 
@@ -15281,13 +15359,15 @@ glift.widgets.options.baseOptions = {
      *  SGF
      *  TYGEM
      *  PANDANET
-     * @api(beta)
+     *
+     * api:beta
      */
     parseType: glift.parse.parseType.SGF,
 
     /**
      * The default widget type. Specifies what type of widget to create.
-     * @api(1.0)
+     *
+     * api:1.0
      */
     widgetType: glift.enums.widgetTypes.GAME_VIEWER,
 
@@ -15308,7 +15388,8 @@ glift.widgets.options.baseOptions = {
      *             traveling through the 3rd varition on the 2nd move
      * 0+        - Go to the end of the game
      * 2.3+      - Start at the 3rd variation on move 2, and go to the end
-     * @api(1.0)
+     *
+     * api:1.0
      */
     initialPosition: '',
 
@@ -15332,20 +15413,24 @@ glift.widgets.options.baseOptions = {
      *
      * These are not:
      *  2-3
+     *
+     * api:1.1
      */
     nextMovesPath: '',
 
     /**
      * The board region to display.  The boardRegion will be 'guessed' if it's set
      * to 'AUTO'.
-     * @api(1.0)
+     *
+     * api:1.0
      */
     boardRegion: glift.enums.boardRegions.AUTO,
 
     /**
      * What rotation to apply to -just- the display of the stones. Any of:
      * NO_ROTATION, CLOCKWISE_90, CLOCKWISE_180, CLOCKWISE_270, or undefined;
-     * @api(beta)
+     *
+     * api:beta
      */
     rotation: glift.enums.rotations.NO_ROTATION,
 
@@ -15357,7 +15442,8 @@ glift.widgets.options.baseOptions = {
      *
      * The default tests whether there is a 'GB' property or a 'C' (comment)
      * property containing 'Correct' or 'is correct'.
-     * @api(1.0)
+     *
+     * api:1.0
      */
     problemConditions: {
       GB: [],
@@ -15368,7 +15454,8 @@ glift.widgets.options.baseOptions = {
      * Specifies what action to perform based on a particular keystroke.  In
      * otherwords, a mapping from key-enum to action path.
      * See glift.keyMappings
-     * @api(beta)
+     *
+     * api:beta
      */
     keyMappings: {
       ARROW_LEFT: 'iconActions.chevron-left.click',
@@ -15377,7 +15464,8 @@ glift.widgets.options.baseOptions = {
 
     /**
      * The UI Components to use for this display.
-     * @api(1.0)
+     *
+     * api:1.0
      */
     uiComponents: [
       'BOARD',
@@ -15388,7 +15476,8 @@ glift.widgets.options.baseOptions = {
 
     /**
      * Convenience variables for disabling ui components.
-     * @api(experimental)
+     *
+     * api:experimental
      */
     disableStatusBar: false,
     disableBoard: false,
@@ -15409,7 +15498,7 @@ glift.widgets.options.baseOptions = {
      *   'settings-wrench'
      * ],
      *
-     * @api(1.0)
+     * api:1.0
      */
     statusBarIcons: undefined,
 
@@ -15418,7 +15507,7 @@ glift.widgets.options.baseOptions = {
      * meant to be used directly by Glift but by other programs utilizing Glift
      * and so the metadata has no expected structure.
      *
-     * @api(experimental)
+     * api:experimental
      */
     metadata: undefined,
 
@@ -15462,20 +15551,23 @@ glift.widgets.options.baseOptions = {
     /**
      * The function that creates the controller at widget-creation time.
      * See glift.controllers for more detail
-     * @api(1.0)
+     *
+     * api:1.0
      */
     controllerFunc: undefined,
 
     /**
      * The names of the icons to use in the icon-bar.  This is a list of
      * icon-names, which must be spceified in glift.displays.icons.svg.
-     * @api(1.0)
+     *
+     * api:1.0
      */
     icons: undefined,
 
     /**
      * The action that is performed when a sure clicks on an intersection.
-     * @api(1.0)
+     *
+     * api:1.0
      */
     stoneClick: undefined,
 
@@ -15494,7 +15586,8 @@ glift.widgets.options.baseOptions = {
   /**
    * The div id in which we create the go board.  The default is glift_display,
    * but this will almost certainly need to be set by the user.
-   * @api(1.0)
+   *
+   * api:1.0
    */
   divId: 'glift_display',
 
@@ -15509,7 +15602,8 @@ glift.widgets.options.baseOptions = {
    * Once an SGF Collection is loaded, Glift looks through each entry in the
    * collection.  If an SGF URL is found, the SGF is loaded in the background
    * and cached.
-   * @api(1.0)
+   *
+   * api:1.0
    */
   sgfCollection: undefined,
 
@@ -15522,27 +15616,30 @@ glift.widgets.options.baseOptions = {
    *    [name/alias]: <sgf string>
    *  }
    *
-   * @api(experimental)
+   * api:experimental
    */
   sgfMapping: undefined,
 
   /**
    * Index into the above collection.  This is mostly useful for remembering
    * someone's position in the sgf collection.
-   * @api(1.0)
+   *
+   * api:1.0
    */
   initialIndex: 0,
 
   /**
    * If there are multiple SGFs in the SGF list, this flag indicates whether or
    * not to allow the user to go back to the beginnig (or conversely, the end).
-   * @api(experimental)
+   *
+   * api:experimental
    */
   allowWrapAround: false,
 
   /**
    * Wether or not to load the the collection in the background via XHR requests.
-   * @api(beta)
+   *
+   * api:beta
    */
   loadCollectionInBackground: true,
 
@@ -15552,7 +15649,8 @@ glift.widgets.options.baseOptions = {
    * and so the metadata has no expected structure.
    *
    * Thus is currently (sometimes) used by GPub.
-   * @api(experimental)
+   *
+   * api:experimental
    */
   metadata: undefined,
 
@@ -15560,7 +15658,7 @@ glift.widgets.options.baseOptions = {
    * Hooks are places where users can provide custom functions to 'hook' into
    * Glift behavior.
    *
-   * @api(experimental)
+   * api:experimental
    */
   hooks: {
     /**
@@ -15590,7 +15688,7 @@ glift.widgets.options.baseOptions = {
 
   /**
    * Miscellaneous options for display.
-   * @api(1.0)
+   * api:1.0
    */
   display: {
     /**
@@ -15602,7 +15700,7 @@ glift.widgets.options.baseOptions = {
      *  'images/kaya.jpg'
      *  'http://www.mywebbie.com/images/kaya.jpg'
      *
-     * @api(1.0)
+     * api:1.0
      */
     goBoardBackground: '',
 
@@ -15612,7 +15710,7 @@ glift.widgets.options.baseOptions = {
      *  - MOODY (gray background, no stone outlines)
      *  - TRANSPARENT (board is transparent)
      *  - TEXTBOOK (Everything black and white)
-     * @api(1.0)
+     * api:1.0
      */
     theme: 'DEFAULT',
 
@@ -15620,7 +15718,7 @@ glift.widgets.options.baseOptions = {
      * On the edges of the board, draw the board coordinates.
      * - On the left, use the numbers 1-19
      * - On the bottom, use A-T (all letters minus I)
-     * @api(1.0)
+     * api:1.0
      */
     drawBoardCoords: false,
 
@@ -15677,7 +15775,7 @@ glift.widgets.options.baseOptions = {
   /**
    * Actions for stones.  If the user specifies his own actions, then the
    * actions specified by the user will take precedence.
-   * @api(1.0)
+   * api:1.0
    */
   stoneActions: {
     /**
@@ -15719,7 +15817,7 @@ glift.widgets.options.baseOptions = {
    */
   iconActions: {
     start: {
-      click:  function(event, widget, icon, iconBar) {
+      click: function(event, widget, icon, iconBar) {
         widget.applyBoardData(widget.controller.toBeginning());
       },
       tooltip: 'Go to the beginning'
@@ -16093,8 +16191,6 @@ glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
 
   controllerFunc: glift.controllers.staticProblem,
 
-  correctVariationsResetTime: 750, // In milliseconds.
-
   statusBarIcons: [
     'fullscreen'
   ]
@@ -16147,7 +16243,6 @@ glift.widgets.options.GAME_FIGURE = {
   statusBarIcons: [
     'fullscreen'
   ]
-
 };
 
 /**
@@ -16265,7 +16360,8 @@ glift.widgets.options.STANDARD_PROBLEM = {
 goog.provide('glift.api');
 
 /**
- * Namespace for API-related methods. Not all of these are meant to 
+ * Namespace for API-related methods. Not all of these are meant to be exposed
+ * as public methods.
  */
 glift.api = {
   /**
@@ -16273,12 +16369,13 @@ glift.api = {
    * method directly, instead peferring 'glift.create(<options>)'.
    *
    * @package
-   * @param {Object} options
+   * @param {!Object} inOptions A Glift's options obj (specified as an object
+   *    literal). See glift.api.Options.
    * @return {glift.widgets.WidgetManager}
    */
-  create: function(options) {
+  create: function(inOptions) {
     glift.util.perfInit();
-    var manager = glift.api.createNoDraw(options);
+    var manager = glift.api.createNoDraw(inOptions);
 
     glift.init(
         manager.displayOptions.disableZoomForMobile,
@@ -16295,28 +16392,16 @@ glift.api = {
    * Create a widgetManager without performing 'draw'.  This also has the
    * side effect of avoiding init code.
    *
-   * @package
-   * @param {Object} inOptions
+   * This is public because it's sometimes useful to create a Glift instance
+   * this way.
+   *
+   * @param {!Object} inOptions
    * @return {glift.widgets.WidgetManager}
    */
   createNoDraw: function(inOptions) {
-    var options = glift.widgets.options.setOptionDefaults(inOptions);
-    var actions = {};
-    actions.iconActions = options.iconActions;
-    actions.stoneActions = options.stoneActions;
-
-    return new glift.widgets.WidgetManager(
-        options.divId,
-        options.sgfCollection,
-        options.sgfMapping,
-        options.initialIndex,
-        options.allowWrapAround,
-        options.loadCollectionInBackground,
-        options.sgfDefaults,
-        options.display,
-        actions,
-        options.metadata,
-        options.hooks);
+    var options = new glift.api.Options(
+        /** @type {!glift.api.Options} */ (inOptions));
+    return new glift.widgets.WidgetManager(options);
   }
 };
 
@@ -16327,3 +16412,1466 @@ glift.api = {
  * api:1.0
  */
 glift.create = glift.api.create;
+
+goog.provide('glift.api.DisplayOptions');
+
+
+/**
+ * Miscellaneous options for display.
+ * api:1.0
+ *
+ * @param {glift.api.DisplayOptions=} opt_o Optional display options obj.
+ *
+ * @constructor @final @struct
+ */
+glift.api.DisplayOptions = function(opt_o) {
+  var o = opt_o || {};
+
+  /**
+   * Specify a background image for the go board.  You can specify an absolute
+   * or a relative path.  As you may expect, you cannot do cross domain
+   * requests.
+   *
+   * Examples:
+   *  'images/kaya.jpg'
+   *  'http://www.mywebbie.com/images/kaya.jpg'
+   *
+   * api:1.0
+   *
+   * @type {string}
+   */
+  this.goBoardBackground = o.goBoardBackground || '';
+
+  /**
+   * The name of the theme to be used for this instance. Other themes include:
+   *  - DEPTH (stones with shadows)
+   *  - MOODY (gray background, no stone outlines)
+   *  - TRANSPARENT (board is transparent)
+   *  - TEXTBOOK (Everything black and white)
+   * api:1.0
+   *
+   * @type {string}
+   */
+  // TODO(kashomon): Make a proper enum for this.
+  this.theme = o.theme || 'DEFAULT';
+
+  /**
+   * On the edges of the board, draw the board coordinates.
+   * - On the left, use the numbers 1-19
+   * - On the bottom, use A-T (all letters minus I)
+   * api:1.0
+   *
+   * @type {boolean}
+   */
+  this.drawBoardCoords = !!o.drawBoardCoords || false;
+
+  /**
+   * Split percentages to use for a one-column widget format.
+   *
+   * @type {!Object}
+   */
+  // TODO(kashomon): Define proper type for this.
+  this.oneColumnSplits = o.oneColumnSplits || {
+    first: [
+      { component: 'STATUS_BAR',   ratio: 0.06 },
+      { component: 'BOARD',       ratio: 0.67 },
+      { component: 'COMMENT_BOX', ratio: 0.18 },
+      { component: 'ICONBAR',     ratio: 0.09 }
+    ]
+  };
+
+  /**
+   * Split percentages to use for a two-column widget format.
+   *
+   * @type {!Object}
+   */
+  // TODO(kashomon): Define a proper type for this.
+  this.twoColumnSplits = o.twoColumnSplits || {
+    first: [
+      { component: 'BOARD', ratio: 1 }
+    ],
+    second: [
+      { component: 'STATUS_BAR',     ratio: 0.07 },
+      { component: 'COMMENT_BOX',   ratio: 0.83 },
+      { component: 'ICONBAR',       ratio: 0.10 }
+    ]
+  };
+
+  /**
+   * Previous SGF icon.
+   * @type {string}
+   */
+  this.previousSgfIcon = o.previousSgfIcon || 'chevron-left';
+
+  /**
+   * Next SGF Icon.
+   * @type {string}
+   */
+  this.nextSgfIcon = o.nextSgfIcon || 'chevron-right';
+
+  /**
+   * For convenience: Disable zoom for mobile users.
+   * @type {boolean}
+   */
+  this.disableZoomForMobile = !!o.disableZoomForMobile || false;
+
+  /**
+   * Whether or not to enable keyboard shortcuts. This currently binds
+   * keypress events to document.body, so it's not unlikely this could
+   * conflict with other applications' keybindings.
+   * @type {boolean}
+   */
+  this.enableKeyboardShortcuts =
+      o.enableKeyboardShortcuts !== undefined ?
+      !!o.enableKeyboardShortcuts : true;
+
+  /**
+   * Use Markdown for the comment box.  This requires that marked.js be
+   * installed in the global scope. (https://github.com/chjj/marked)
+   * @api(experimental)
+   *
+   * @type {boolean}
+   */
+  this.useMarkdown = !!o.useMarkdown || false;
+};
+
+goog.provide('glift.api.HookOptions');
+
+/**
+ * Hooks/callbacks for integrating with glift.
+ *
+ * @param {!glift.api.HookOptions=} opt_o Optional options.
+ *
+ * @constructor @final @struct
+ */
+glift.api.HookOptions = function(opt_o) {
+  var o = opt_o || {};
+
+  /**
+   * Instead of an SGF collection, users can provide a getNextSgf function.
+   * This means that the SGFs in a are stored external to Glift (e.g., on a
+   * problem-server).
+   *
+   * Has the format: function(callback)
+   *
+   * The call back always expects an sgf object, which has the form:
+   *  {
+   *    sgfString: <string-sgf contents>
+   *    alias: <string for cache-hits>
+   *  }
+   *
+   * @type {(function()|undefined)}
+   */
+  this.getNextSgf = o.getNextSgf || undefined;
+
+  /**
+   * Fires when user gets a problem correct. This is a notification function
+   * only.
+   *
+   * @type {(function()|undefined)}
+   */
+  this.problemCorrect = o.problemCorrect || undefined;
+
+  /**
+   * Fires when user gets a problem wrong.
+   *
+   * @type {(function()|undefined)}
+   */
+  this.problemIncorrect = o.problemIncorrect || undefined;
+};
+
+goog.provide('glift.api.IconActions');
+goog.provide('glift.api.IconDef');
+goog.provide('glift.api.IconFn');
+
+/**
+ * A typedef representing an action performed on the Go Board itself (clicking,
+ * hovering, etc.)
+ *
+ * @typedef {function(
+ *  !Event,
+ *  !glift.widgets.BaseWidget,
+ *  !glift.displays.icons.WrappedIcon,
+ *  !glift.displays.icons.IconBar)
+ * }
+ */
+glift.api.IconFn;
+
+/**
+ * An icon definition.
+ * @typedef {{
+ *  click: (!glift.api.IconFn|undefined),
+ *  tooltip: (string|undefined)
+ * }}
+ */
+glift.api.IconDef;
+
+/**
+ * A collection of Icon Actions.
+ * @typedef {!Object<string, glift.api.IconDef>}
+ */
+glift.api.IconActions;
+
+/**
+ * The actions for the icons (see glift.displays.svg.icons).
+ * @type {!glift.api.IconActions}
+ */
+glift.api.iconActionDefaults = {
+  start: {
+    click: function(event, widget, icon, iconBar) {
+      widget.applyBoardData(widget.controller.toBeginning());
+    },
+    tooltip: 'Go to the beginning'
+  },
+
+  end: {
+    click:  function(event, widget, icon, iconBar) {
+      widget.applyBoardData(widget.controller.toEnd());
+    },
+    tooltip: 'Go to the end'
+  },
+
+  arrowright: {
+    click: function(event, widget, icon, iconBar) {
+      widget.applyBoardData(widget.controller.nextMove());
+    },
+    tooltip: 'Next move'
+  },
+
+  arrowleft: {
+    click:  function(event, widget, icon, iconBar) {
+      widget.applyBoardData(widget.controller.prevMove());
+    },
+    tooltip: 'Previous move'
+  },
+
+  // Get next problem.
+  'chevron-right': {
+    click: function(event, widget, icon, iconBar) {
+      widget.manager.nextSgf();
+    },
+    tooltip: 'Next panel'
+  },
+
+  // Get the previous problem.
+  'chevron-left': {
+    click: function(event, widget, icon, iconBar) {
+      widget.manager.prevSgf();
+    },
+    tooltip: 'Previous panel'
+  },
+
+  // Try again
+  refresh: {
+    click: function(event, widget, icon, iconBar) {
+      widget.reload();
+    },
+    tooltip: 'Try the problem again'
+  },
+
+  // Undo for just problems (i.e., back one move).
+  'undo-problem-move': {
+    click:  function(event, widget, icon, iconBar) {
+      if (widget.controller.movetree.node().getNodeNum() <=
+          widget.initialMoveNumber) {
+        return;
+      }
+
+      if (widget.initialPlayerColor === widget.controller.getCurrentPlayer()) {
+        // If it's our move, then the last move was by the opponent -- we need
+        // an extra move backwards.
+        widget.applyBoardData(widget.controller.prevMove());
+      }
+
+      widget.applyBoardData(widget.controller.prevMove());
+      if (widget.initialMoveNumber ===
+          widget.controller.movetree.node().getNodeNum()) {
+        // We're at the root.  We can assume correctness, so reset the widget.
+        widget.reload();
+      } else {
+        var problemResults = glift.enums.problemResults;
+        var correctness = widget.controller.correctnessStatus();
+        widget.iconBar.destroyTempIcons();
+        if (correctness === problemResults.CORRECT) {
+            widget.iconBar.setCenteredTempIcon(
+                'multiopen-boxonly', 'check', '#0CC');
+            widget.correctness = problemResults.CORRECT;
+        } else if (correctness === problemResults.INCORRECT) {
+          widget.iconBar.destroyTempIcons();
+          widget.iconBar.setCenteredTempIcon(
+              'multiopen-boxonly', 'cross', 'red');
+          widget.correctness = problemResults.INCORRECT;
+        }
+      }
+    },
+    tooltip: 'Undo last move attempt'
+  },
+
+  undo: {
+    click: function(event, widget, icon, iconBar) {
+      widget.manager.returnToOriginalWidget();
+    },
+    tooltip: 'Return to the parent widget'
+  },
+
+  'jump-left-arrow': {
+    click: function(event, widget, icon, iconBar) {
+      var maxMoves = 20;
+      widget.applyBoardData(widget.controller.previousCommentOrBranch(maxMoves));
+    },
+    tooltip: 'Previous branch or comment'
+  },
+
+  'jump-right-arrow': {
+    click: function(event, widget, icon, iconBar) {
+      var maxMoves = 20;
+      widget.applyBoardData(widget.controller.nextCommentOrBranch(maxMoves));
+    },
+    tooltip: 'Previous branch or comment'
+  },
+
+  // Go to the explain-board for a problem.
+  // (was roadmap)
+  'problem-explanation': {
+    click: function(event, widget, icon, iconBar) {
+      var manager = widget.manager;
+      var sgfObj = {
+        widgetType: glift.enums.widgetTypes.GAME_VIEWER,
+        initialPosition: widget.controller.initialPosition,
+        sgfString: widget.controller.originalSgf(),
+        showVariations: glift.enums.showVariations.ALWAYS,
+        problemConditions: glift.util.simpleClone(
+            widget.sgfOptions.problemConditions),
+        icons: [
+          'jump-left-arrow',
+          'jump-right-arrow',
+          'arrowleft',
+          'arrowright',
+          'undo'
+        ],
+        rotation: widget.sgfOptions.rotation,
+        boardRegion: widget.sgfOptions.boardRegion
+      }
+      manager.createTemporaryWidget(sgfObj);
+    },
+    tooltip: 'Explore the solution'
+  },
+
+  multiopen: {
+    click: function(event, widget, icon, iconBar) {
+      var ic = glift.displays.icons.iconSelector(
+          widget.wrapperDivId,
+          iconBar.divId,
+          icon);
+      ic.setIconEvents('click', function(event, wrappedIcon) {
+        var multi = iconBar.getIcon('multiopen')
+        multi.setActive(wrappedIcon.iconName);
+        iconBar.setCenteredTempIcon('multiopen', multi.getActive(), 'black');
+      });
+    }
+  },
+
+  'multiopen-boxonly': {
+    mouseover: function() {},
+    mouseout: function() {},
+    click: function() {},
+    tooltip: 'Shows if the problem is solved'
+  },
+
+  //////////////////////
+  // Status Bar Icons //
+  //////////////////////
+
+  'game-info': {
+    click: function(event, widget, icon, iconBar) {
+      widget.statusBar &&
+      widget.statusBar.gameInfo(
+          widget.controller.getGameInfo(),
+          widget.controller.getCaptureCount());
+    },
+    tooltip: 'Show the game info'
+  },
+
+  // TODO(kashomon): The 'move-indicator' is harded somewhere and needs to be
+  // fixed.
+  'move-indicator': {
+    click: function() {},
+    mouseover: function() {},
+    mouseout: function() {},
+    tooltip: 'Shows the current move number'
+  },
+
+  fullscreen: {
+    click: function(event, widget, icon, iconBar) {
+      widget.statusBar && widget.statusBar.fullscreen();
+    },
+    tooltip: 'Expand display to fill entire screen.'
+  },
+
+  unfullscreen: {
+    click: function(event, widget, icon, iconBar) {
+      // We need to stop event propagation because often the un-fullscreen
+      // button will be over some other clickable element.
+      event.preventDefault && event.preventDefault();
+      event.stopPropagation && event.stopPropagation();
+      widget.statusBar && widget.statusBar.unfullscreen();
+    },
+    tooltip: 'Return display original size.'
+  },
+
+  'settings-wrench': {
+    click: function() {},
+    tooltip: 'Show Glift Settings'
+  }
+};
+
+goog.provide('glift.api.Options');
+
+/**
+ * Option defaults. Sometimes I will refer to the a subset of these options as a
+ * Glift Spec.
+ *
+ * Generally, there are three classes of options:
+ *
+ * 1. Manager Options. Meta options having to do with managing widgets.  These
+ *    are generally at the top level.
+ * 2. Display Options. Options having to do with how widgets are displayed
+ * 3. SGF Options. Options having to do specifically with each SGF.
+ *
+ * Terminology:
+ *  - I use SGF through this file and in Glift to refer to a go-data-file.  This
+ *    is largely due to myopia early in the dev process. With the @api(1.X) in
+ *    full sway, it's not easy to change this distinction. Regardless, it is
+ *    possible that in the future, SGF strings and SGF URLs will grow to
+ *    encompass other types go-data, like the Tygem .gib filetypes.
+ *
+ * API annotations:
+ *
+ *  - api:1.X Indicates an option supported for the lifetime of the 1.X
+ *    release.
+ *  - api:beta Indicates an option currently slated to become a 1.X option.
+ *  - api:experimental Indicates an option in testing.
+ *
+ * @param {!glift.api.Options=} opt_o
+ *
+ * @constructor @final @struct
+ */
+glift.api.Options = function(opt_o) {
+  var o = opt_o || {};
+
+  /**
+   * The sgf parameter can be one of the following:
+   *  - An SGF in literal string form.
+   *  - A URL to an SGF.
+   *  - An SGF Object, with parameters specified in SGF Defaults
+   *
+   * If sgf is specified as an object in can contain any of the options
+   * specified in sgfDefaults.  In addition, the follow parameters may be
+   * specified:
+   *  - sgfString: a literal SGF String
+   *  - initialPosition: where to start in the SGF
+   *  - url: a url to an SGF. see sgfDefaults for va
+   *
+   * As you might expect, if the user sets sgf to a literal string form or to a
+   * url, it is transformed into an SGF object internally.
+   *
+   * Practically speaking, this value will always be undefined after the
+   * glift.api.Options object construction since the 'SGF' will get stuffed into
+   * the SGF Collection immediately and set to undefined.
+   *
+   * api:1.0
+   *
+   * @type {(string|glift.api.SgfOptions|undefined)}
+   */
+  this.sgf = o.sgf || undefined;
+
+  /**
+   * See: glift.api.sgfOptionDefaults and glift.api.SgfOptions
+   * api:1.0
+   *
+   * @type {!glift.api.SgfOptions}
+   */
+  this.sgfDefaults = new glift.api.SgfOptions(o.sgfDefaults);
+
+  /**
+   * The div id in which we create the go board.  The default is glift_display,
+   * but this will almost certainly need to be set by the user.
+   * api:1.0
+   *
+   * @type {string}
+   */
+  this.divId = o.divId || 'glift_display';
+
+  /**
+   * The SGF collection represents a set of SGFs. Like the Sgf parameter, this
+   * can take one of three values:
+   * - An array of SGF objects. If the SGF param above is defined, the sgf
+   *   collection will automatically become an array of size one containing the
+   *   SGF element above.
+   * - A URL (to load the collection asynchronously).  The received data must be
+   *   a JSON array, containing a list of serialized SGF objects.
+   *
+   * Once an SGF Collection is loaded, Glift looks through each entry in the
+   * collection.  If an SGF URL is found, the SGF is loaded in the background
+   * and cached.
+   * api:1.0
+   *
+   * @type {!Array<!glift.api.SgfOptions|string>|string}
+   */
+  this.sgfCollection = o.sgfCollection || [];
+
+  if (this.sgf && this.sgfCollection.length > 0) {
+    throw new Error('Illegal options configuration: you cannot define both ' +
+        'sgf and sgfCollection')
+  }
+
+  if (this.sgf && this.sgfCollection.length === 0) {
+    this.sgfCollection.push(this.sgf);
+    // Remove the single SGF parameter now that it's stored in the SGF
+    // Collection.
+    this.sgf = undefined;
+  }
+
+  // Allow the possibility of specifying an EMPTY
+  if (!this.sgf && this.sgfCollection.length === 0) {
+    this.sgfCollection = [{}];
+  }
+
+  /**
+   * An experimental feature. Create an association between.  This defines the
+   * basis of the manager SGF cache.
+   *
+   * Expects the structure:
+   *  {
+   *    [name/alias]: <sgf string>
+   *  }
+   *
+   * api:experimental
+   *
+   * @type {!Object<string>}
+   */
+  this.sgfMapping = o.sgfMapping || {};
+
+  /**
+   * Index into the above collection.  This is mostly useful for remembering
+   * someone's position in the sgf collection.
+   *
+   * api:1.0
+   *
+   * @type {number}
+   */
+  this.initialIndex = o.initialIndex || 0;
+
+  /**
+   * If there are multiple SGFs in the SGF list, this flag indicates whether or
+   * not to allow the user to go back to the beginnig (or conversely, the end).
+   *
+   * api:experimental
+   *
+   * @type {boolean}
+   */
+  this.allowWrapAround = !!o.allowWrapAround || false;
+
+  /**
+   * Wether or not to load the the collection in the background via XHR requests.
+   *
+   * api:beta
+   *
+   * @type {boolean}
+   */
+  this.loadCollectionInBackground =
+      o.loadCollectionInBackground !== undefined ?
+      !!o.loadCollectionInBackground : true;
+
+  /**
+   * Global metadata for this set of options or SGF collection.  These is not
+   * meant to be used directly by Glift but by other programs utilizing Glift
+   * and so the metadata has no expected structure.
+   *
+   * Note: This was created to be used by GPub.
+   *
+   * api:experimental
+   *
+   * @type {!Object|undefined}
+   */
+  this.metadata = o.metadata || undefined;
+
+  /**
+   * Hooks are places where users can provide custom functions to 'hook' into
+   * Glift behavior.
+   *
+   * api:experimental
+   *
+   * @type {!glift.api.HookOptions}
+   */
+  this.hooks = new glift.api.HookOptions(o.hooks);
+
+  /**
+   * Miscellaneous options for display.
+   * api:1.0
+   *
+   * @type {!glift.api.DisplayOptions}
+   */
+  this.display = new glift.api.DisplayOptions(o.display);
+
+  /**
+   * Default actions for stones.
+   * api:1.0
+   *
+   * @type {!glift.api.StoneActions}
+   */
+  this.stoneActions = new glift.api.StoneActions(o.stoneActions);
+
+  /**
+   * The actions for the icons.  See glift.api.iconActionDefaults.
+   * api:1.0
+   *
+   * @type {!glift.api.IconActions}
+   */
+  this.iconActions = o.iconActions || {};
+  for (var iconName in glift.api.iconActionDefaults) {
+    if (!this.iconActions[iconName]) {
+      this.iconActions[iconName] = glift.api.iconActionDefaults[iconName];
+    }
+  }
+};
+
+goog.provide('glift.api.SgfOptions');
+goog.provide('glift.api.WidgetTypeOptions');
+
+/**
+ * SGF Options specifically overridden from a specific widget type.
+ *
+ * See glift.api.SgfOptions for more details
+ *
+ * Notes:
+ * - The first four params are optional.
+ * - The the rest are required.
+ *
+ * @typedef {{
+ *  keyMappings: (!Object<string>|undefined),
+ *  markLastMove: (boolean|undefined),
+ *  problemConditions: (!glift.rules.ProblemConditions|undefined),
+ *  controllerFunc: !glift.controllers.ControllerFunc,
+ *  icons: !Array<string>,
+ *  showVariations: glift.enums.showVariations,
+ *  statusBarIcons: !Array<string>,
+ *  stoneClick: !glift.api.StoneFn,
+ *  stoneMouseover: (glift.api.StoneFn|undefined),
+ *  stoneMouseout: (glift.api.StoneFn|undefined)
+ * }}
+ */
+glift.api.WidgetTypeOptions;
+
+/**
+ * The defaults for SGF objects. These are equivalent to the options used for
+ * each SGF.  In other words, you can set these options either in each
+ * individual SGF, or you may set these options in the SGF defaults. Some
+ * options are specified here, but should only be specified in the individual
+ * SGF (sgfString, url).
+ *
+ * @constructor @final @struct
+ *
+ * @param {glift.api.SgfOptions=} opt_o Options which may be partially filled
+ *    out.
+ */
+glift.api.SgfOptions = function(opt_o) {
+  var o = opt_o || {};
+
+  /**
+   * A literal SGF String.  Should not be specified in SGF defaults.
+   * api:1.0
+   *
+   * @type {string|undefined}
+   */
+  this.sgfString = o.sgfString !== undefined ? o.sgfString : undefined;
+
+  /**
+   * URL (usually relative) to an SGF. Once loaded, the resulting data is
+   * cached to speed recall time.
+   * api:1.0
+   *
+   * @type {string|undefined}
+   */
+  this.url = o.url !== undefined ? o.url : undefined;
+
+  /**
+   * A name to by which an SGF String can be referred to later.  This is only
+   * necessary for SGF Strings -- URLs are their own aliases.
+   *
+   * Note: If this feature is used, the SGF should be supplied in a SGF Mapping.
+   * api:experimental
+   *
+   * @type {string|undefined}
+   */
+  this.alias = o.alias !== undefined ? o.alias : undefined;
+
+  /**
+   * Parsing type.  Defaults to SGF. Supports:
+   *  SGF
+   *  TYGEM
+   *  PANDANET
+   *
+   * api:beta
+   *
+   * @type {glift.parse.parseType}
+   */
+  this.parseType = o.parseType || glift.parse.parseType.SGF;
+
+  /**
+   * The default widget type. Specifies what type of widget to create.
+   *
+   * api:1.0
+   *
+   * @type {glift.enums.widgetTypes}
+   */
+  this.widgetType = o.widgetType || glift.enums.widgetTypes.GAME_VIEWER;
+
+  /**
+   * Defines where to start on the go board. An empty string implies the very
+   * beginning, which is equally equivalent to 0 or [0].
+   *
+   * Rather than describe how you can detail the paths, here are some examples
+   * of ways to specify an initial position.
+   * 0         - Start at the 0th move (the root node)
+   * 1         - Start at the 1st move.
+   * 53        - Start at the 53rd move, taking the primary (main-line) path
+   * 2.3       - Start at the 3rd variation on move 2 (actually move 3)
+   * 3         - Start at the 3rd move, going through all the top variations
+   * 2.0       - Start at the 3rd move, going through all the top variations
+   * 0.0.0.0   - Start at the 3rd move, going through all the top variations
+   * 2.3-4.1   - Start at the 1st variation of the 4th move, arrived at by
+   *             traveling through the 3rd varition on the 2nd move
+   * 0+        - Go to the end of the game
+   * 2.3+      - Start at the 3rd variation on move 2, and go to the end
+   *
+   * api:1.0
+   *
+   * @type {string|!Array<number>}
+   */
+  this.initialPosition = o.initialPosition || '';
+
+  /**
+   * The next moves path indicates moves that should be played past the
+   * initial position. This should only be used for 'EXAMPLE' types and is
+   * meant to simulate print diagriams.
+   *
+   * The next moves path is a path similar to the initial position in that it
+   * specifies a path.  However, it's more restricted because we can't specify
+   * move numbers -- only variation numbers -- since a next moves path is a
+   * path fragment. Moreover, the first number is interpreted as a variation
+   * number rather than a move number, as is the case for the initial
+   * position.
+   *
+   * In otherwords, these are allowed:
+   *  1         - Go through the 1st variation
+   *  0.0.0.0   - Go through the 0th varation 4 times
+   *  2.3       - Go through the 2nd variation and the 3rd variation
+   *  2.0+      - Go through the 2nd variation and go to the end.
+   *
+   * These are not:
+   *  2-3
+   *
+   * api:1.1
+   *
+   * @type {string|!Array<number>}
+   */
+  this.nextMovesPath = o.nextMovesPath || '';
+
+  /**
+   * The board region to display.  The boardRegion will be 'guessed' if it's set
+   * to 'AUTO'.
+   *
+   * api:1.0
+   *
+   * @type {glift.enums.boardRegions}
+   */
+  this.boardRegion = o.boardRegion || glift.enums.boardRegions.AUTO;
+
+  /**
+   * What rotation to apply to -just- the display of the stones. Any of:
+   * NO_ROTATION, CLOCKWISE_90, CLOCKWISE_180, CLOCKWISE_270, or undefined;
+   *
+   * api:beta
+   *
+   * @type {glift.enums.rotations}
+   */
+  this.rotation = o.rotation || glift.enums.rotations.NO_ROTATION;
+
+  /**
+   * The UI Components to use for this display.
+   *
+   * api:1.0
+   *
+   * @type {!Array<glift.enums.boardComponents>}
+   */
+  this.uiComponents = o.uiComponents || [
+    glift.enums.boardComponents.BOARD,
+    glift.enums.boardComponents.COMMENT_BOX,
+    glift.enums.boardComponents.STATUS_BAR,
+    glift.enums.boardComponents.ICONBAR
+  ];
+
+  /**
+   * Convenience variables for disabling ui components.
+   *
+   * api:experimental
+   * @type {boolean}
+   */
+  this.disableStatusBar = !!o.disableStatusBar || false;
+  /* @type {boolean} */
+  this.disableBoard = !!o.disableBoard || false;
+  /* @type {boolean} */
+  this.disableCommentBox = !!o.disableCommentBox || false;
+  /* @type {boolean} */
+  this.disableIconBar = !!o.disableIconBar || false;
+
+  /**
+   * Metadata for this SGF.  Like the global metadata, this option is not
+   * meant to be used directly by Glift but by other programs utilizing Glift
+   * and so the metadata has no expected structure.
+   *
+   * api:experimental
+   *
+   * @type {!Object|undefined}
+   */
+  this.metadata = o.metadata || undefined;
+
+  /**
+   * For all correct, there are multiple correct answers that a user must get.
+   * This allows us to specify (in ms) how long the user has until the problem
+   * is automatically reset.
+   *
+   * Should be overridden by the widget options.
+   *
+   * @type {number|undefined}
+   */
+  this.correctVariationsResetTime =
+      o.correctVariationsResetTime !== undefined ?
+      o.correctVariationsResetTime : 750; // ms
+
+  /**
+   * You can, if you wish, override the total number of correct variations
+   * that a user must get correct. Currently only applies to
+   * CORRECT_VARIATIONS_PROBLEM.
+   *
+   * @type {number|undefined}
+   */
+  this.totalCorrectVariationsOverride =
+      o.totalCorrectVariationsOverride || undefined;
+
+  //-------------------------------------------------------------------------
+  // These options must always be overriden by the widget type overrides.
+  //
+  // This could easily be changed, but right now this exists as a reminder to
+  // the widget creator that they should override these options. In practice,
+  // it seems that these particular options need to be set on a per-widget
+  // basis anyway.
+  //-------------------------------------------------------------------------
+
+  /**
+   * Icons to use in the status bar.
+   *
+   * Note: These should be defined by the type-specific options.
+   *
+   * An example of what this looks like in practice:
+   *
+   * [
+   *   'game-info',
+   *   'move-indicator',
+   *   'fullscreen'
+   *   'settings-wrench'
+   * ],
+   *
+   * api:1.0
+   *
+   * @type {!Array<string>|undefined}
+   */
+  this.statusBarIcons = o.statusBarIcons || undefined;
+
+  /**
+   * Specifies what action to perform based on a particular keystroke.  In
+   * otherwords, a mapping from key-enum to action path.
+   * See glift.keyMappings
+   *
+   * api:beta
+   *
+   * @type {!Object<string>}
+   */
+  this.keyMappings = o.keyMappings || {
+    ARROW_LEFT: 'iconActions.chevron-left.click',
+    ARROW_RIGHT: 'iconActions.chevron-right.click'
+  };
+
+  /**
+   * Conditions for determing whether a branch of a movetree is correct.  A
+   * map from property-keys, to an array of substring values.  If the array is
+   * empty, then we only test to see if the property exists at the current
+   * positien.
+   *
+   * The default tests whether there is a 'GB' property or a 'C' (comment)
+   * property containing 'Correct' or 'is correct'.
+   *
+   * api:1.0
+   *
+   * @type {!glift.rules.ProblemConditions}
+   */
+  this.problemConditions = o.problemConditions || {
+    GB: [],
+    C: ['Correct', 'is correct', 'is the correct']
+  };
+
+  /**
+   * Whether or not to show variations.  See glift.enums.showVariations
+   * Values: NEVER, ALWAYS, MORE_THAN_ONE
+   *
+   * @type {glift.enums.showVariations}
+   */
+  this.showVariations = o.showVariations ||
+      glift.enums.showVariations.MORE_THAN_ONE;
+
+  /**
+   * Whether or not to mark the last move played.  Either true or false, but
+   * defaults to true.
+   *
+   * @type {boolean}
+   */
+  this.markLastMove = o.markLastMove !== undefined ?
+      o.markLastMove : true;
+
+  /**
+   * The function that creates the controller at widget-creation time.
+   * See glift.controllers for more detail
+   *
+   * api:1.0
+   *
+   * @type {!glift.controllers.ControllerFunc|undefined}
+   */
+  this.controllerFunc = o.controllerFunc || undefined;
+
+  /**
+   * The names of the icons to use in the icon-bar.  This is a list of
+   * icon-names, which must be spceified in glift.displays.icons.svg.
+   *
+   * api:1.0
+   *
+   * @type {!Array<string>|undefined}
+   */
+  this.icons = o.icons || undefined;
+
+  /**
+   * The action that is performed when a sure clicks on an intersection.
+   *
+   * api:1.0
+   *
+   * @type {!glift.api.StoneFn|undefined}
+   */
+  this.stoneClick = o.stoneClick || undefined;
+
+  /**
+   * Mouseover/mouseout override for stones.
+   * @type {!glift.api.StoneFn}
+   */
+  this.stoneMouseover = o.stoneMouseover || undefined;
+  /** @type {!glift.api.StoneFn} */
+  this.stoneMouseout = o.stoneMouseout || undefined;
+};
+
+glift.api.SgfOptions.prototype = {
+  /**
+   * Set some defaults in the sgf object.  This does two passes of 'option'
+   * settings.  First we apply the sgfOptions. Then, we apply the
+   * widgetOverrides to any options not already filled in.
+   *
+   * sgf: An object {...} with some settings specified by sgfDefaults.
+   * sgfDefaults: Processed SGF defaults.
+   *
+   * @param {!Object} sgf The raw SGF object.
+   *
+   * @retun {!glift.api.SgfOptions} The completed SGF options, which can be then
+   * used by the widget manager and the controller.
+   */
+  createSgfObj: function(sgf) {
+    if (glift.util.typeOf(sgf) !== 'object') {
+      throw new Error('SGF must be of type object, was: '
+          + glift.util.typeOf(sgf) + ', for ' + sgf);
+    }
+
+    var widgetType = sgf.widgetType || this.widgetType;
+    var widgetOverrides = glift.api.widgetopt[widgetType];
+    for (var key in widgetOverrides) {
+      if (!sgf[key] && widgetOverrides[key] !== undefined) {
+        sgf[key] = glift.util.simpleClone(widgetOverrides[key]);
+      }
+    }
+
+    var sdef = /** @type {!Object} */ (this);
+    for (var key in sdef) {
+      if (!sgf[key] && sdef[key] !== undefined && key !== 'createSgfObj') {
+        sgf[key] = sdef[key];
+      }
+    }
+
+    return new glift.api.SgfOptions(/** @type {!glift.api.SgfOptions} */ (sgf));
+  }
+};
+
+goog.provide('glift.api.StoneActions');
+goog.provide('glift.api.StoneFn');
+
+
+/**
+ * A typedef representing an action that can be performed by clic
+ *
+ * @typedef {function(
+ *  !Event,
+ *  !glift.widgets.BaseWidget,
+ *  !glift.Point)
+ * }
+ */
+glift.api.StoneFn;
+
+/**
+ * Actions for stones.  If the user specifies his own actions, then the
+ * actions specified by the user will take precedence.
+ *
+ * @param {glift.api.StoneActions=} opt_o
+ *
+ * @constructor @final @struct
+ */
+glift.api.StoneActions = function(opt_o) {
+  var o = opt_o || {};
+
+  // Note: We don't add a click function here because a default-click handler
+  // doesn't make sense across widget types.
+
+  /**
+   * Add ghost-stone for cursor hovering.
+   *
+   * @type {!glift.api.StoneFn}
+   */
+  this.mouseover = o.mouseover || function(event, widget, pt) {
+    var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
+    var currentPlayer = widget.controller.getCurrentPlayer();
+    if (widget.controller.canAddStone(pt, currentPlayer)) {
+      widget.display.intersections()
+          .setStoneColor(pt, hoverColors[currentPlayer]);
+    }
+  };
+
+  /**
+   * Ghost-stone removal for cursor hovering.
+   *
+   * @type {!glift.api.StoneFn}
+   */
+  this.mouseout = o.mouseout || function(event, widget, pt) {
+    var currentPlayer = widget.controller.getCurrentPlayer();
+    if (widget.controller.canAddStone(pt, currentPlayer)) {
+      widget.display && widget.display.intersections()
+          .setStoneColor(pt, 'EMPTY');
+    }
+  };
+
+  /**
+   * A basic touchend function that defaults to the normal stone-click handler.
+   * It's possible we may wish to expand this to include guide-lines.
+   *
+   * @type {!glift.api.StoneFn}
+   */
+  // TODO(kashomon): It's not clear if we want this. Revisit later.
+  this.touchend = o.touchend || function(event, widget, pt) {
+    event.preventDefault && event.preventDefault();
+    event.stopPropagation && event.stopPropagation();
+    widget.sgfOptions.stoneClick(event, widget, pt);
+  };
+};
+
+goog.provide('glift.api.widgetopt');
+
+/**
+ * A collection of widget options keyed by widget types.
+ *
+ * @type {!Object<glift.enums.widgetTypes, glift.api.WidgetTypeOptions>}
+ */
+glift.api.widgetopt = {};
+
+(function() {
+
+/**
+ * Board Editor options.
+ */
+glift.api.widgetopt[glift.enums.widgetTypes.BOARD_EDITOR] = {
+  // TODO(kashomon): Move these options to local vars above.
+  _markMap: {
+    bstone_a: glift.enums.marks.LABEL_ALPHA,
+    bstone_1: glift.enums.marks.LABEL_NUMERIC,
+    bstone_square: glift.enums.marks.SQUARE,
+    bstone_triangle: glift.enums.marks.TRIANGLE
+  },
+
+  // Map from icon name to color.
+  _placementMap: {
+    bstone: glift.enums.states.BLACK,
+    wstone: glift.enums.states.WHITE
+  },
+
+  markLastMove: undefined, // rely on defaults
+  keyMappings: undefined, // rely on defaults
+
+  problemConditions: {},
+
+  controllerFunc: glift.controllers.boardEditor,
+
+  icons: ['start', 'end', 'arrowleft', 'arrowright',
+      [ // Icons for changing click behavior
+        'twostones', // normal move
+        'bstone', // black placement
+        'wstone', // white placement
+        'bstone_a', // Label with A-Z
+        'bstone_1', // Label with 1+
+        'bstone_triangle', // Label with Triangle
+        'bstone_square', // Label with square
+        'nostone-xmark' // erase
+        // TODO(kashomon): Erase, circle
+      ]],
+
+  showVariations: glift.enums.showVariations.ALWAYS,
+
+  statusBarIcons: [
+    'game-info',
+    'move-indicator',
+    'fullscreen'
+  ],
+
+  stoneClick: function(event, widget, pt) {
+    widget.display.intersections().clearTempMarks();
+    var placementMap = glift.widgets.options.BOARD_EDITOR._placementMap;
+    var iconToMark = glift.widgets.options.BOARD_EDITOR._markMap;
+    var iconName = widget.iconBar.getIcon('multiopen').getActive().iconName;
+    var currentPlayer = widget.controller.getCurrentPlayer();
+
+    if (placementMap[iconName]) {
+      var color = placementMap[iconName];
+      var partialData = widget.controller.addPlacement(pt, color);
+      widget.applyBoardData(partialData);
+    } else if (iconToMark[iconName]) {
+      var partialData = widget.controller.addMark(pt, iconToMark[iconName]);
+      if (partialData) {
+        widget.applyBoardData(partialData);
+      }
+    } else if (iconName === 'twostones') {
+      var partialData = widget.controller.addStone(pt, currentPlayer);
+      if (partialData) {
+        widget.applyBoardData(partialData);
+      }
+    }
+    // TODO(kashomon): handle 'nostone-xmark' -- i.e., clearing an intersection.
+  },
+
+  stoneMouseover: function(event, widget, pt) {
+    var marks = glift.enums.marks;
+    var iconToMark = glift.widgets.options.BOARD_EDITOR._markMap;
+    var placementMap = glift.widgets.options.BOARD_EDITOR._placementMap;
+    var hoverColors = { 'BLACK': 'BLACK_HOVER', 'WHITE': 'WHITE_HOVER' };
+    var currentPlayer = widget.controller.getCurrentPlayer();
+    var intersections = widget.display.intersections();
+    var iconName = widget.iconBar.getIcon('multiopen').getActive().iconName;
+
+    if (placementMap[iconName] !== undefined) {
+      var colorKey = placementMap[iconName];
+      if (widget.controller.canAddStone(pt, currentPlayer)) {
+        intersections.setStoneColor(pt, hoverColors[colorKey]);
+      }
+    } else if (iconName === 'twostones') {
+      var colorKey = widget.controller.getCurrentPlayer();
+      if (widget.controller.canAddStone(pt, currentPlayer)) {
+        intersections.setStoneColor(pt, hoverColors[colorKey]);
+      }
+    } else if (iconToMark[iconName] && !intersections.hasMark(pt)) {
+      var markType = iconToMark[iconName];
+      if (markType === marks.LABEL_NUMERIC) {
+        intersections.addTempMark(
+            pt, markType, widget.controller.currentNumericMark());
+      } else if (markType === marks.LABEL_ALPHA) {
+        intersections.addTempMark(
+            pt, markType, widget.controller.currentAlphaMark());
+      } else {
+        intersections.addTempMark(pt, markType);
+      }
+    }
+  },
+
+  stoneMouseout: function(event, widget, pt) {
+    var currentPlayer = widget.controller.getCurrentPlayer();
+    var iconName = widget.iconBar.getIcon('multiopen').getActive().iconName;
+    var intersections = widget.display.intersections();
+    if (iconName === 'twostones' ||
+        iconName === 'bstone' ||
+        iconName === 'wstone') {
+      currentPlayer = widget.controller.getCurrentPlayer();
+      if (widget.controller.canAddStone(pt, currentPlayer)) {
+        intersections.setStoneColor(pt, 'EMPTY');
+      }
+    }
+    intersections.clearTempMarks();
+  },
+};
+
+})();
+
+/**
+ * Additional Options for the GameViewers
+ */
+glift.api.widgetopt[glift.enums.widgetTypes.CORRECT_VARIATIONS_PROBLEM] = {
+  markLastMove: undefined, // rely on defaults
+  keyMappings: undefined, // rely on defaults
+
+  problemConditions: undefined, // rely on defaults
+
+  controllerFunc: glift.controllers.staticProblem,
+
+  icons: [
+    'refresh',
+    'problem-explanation',
+    'multiopen-boxonly'
+  ],
+
+  showVariations: glift.enums.showVariations.NEVER,
+
+  statusBarIcons: [
+    'fullscreen'
+  ],
+
+  stoneClick: function(event, widget, pt) {
+    var currentPlayer = widget.controller.getCurrentPlayer();
+    var data = widget.controller.addStone(pt, currentPlayer);
+    var problemResults = glift.enums.problemResults;
+    if (data.result === problemResults.FAILURE) {
+      // Illegal move -- nothing to do.  Don't make the player fail based on
+      // an illegal move.
+      return;
+    }
+    var hooks = widget.hooks();
+    widget.applyBoardData(data);
+    if (widget.correctness === undefined) {
+      if (data.result === problemResults.CORRECT) {
+        widget.iconBar.destroyTempIcons();
+        if (widget.correctNextSet[pt.toString()] === undefined) {
+          widget.correctNextSet[pt.toString()] = true;
+          widget.numCorrectAnswers++;
+          if (widget.numCorrectAnswers === widget.totalCorrectAnswers) {
+            widget.correctness = problemResults.CORRECT;
+            widget.iconBar.addTempText(
+                'multiopen-boxonly',
+                widget.numCorrectAnswers + '/' + widget.totalCorrectAnswers,
+                { fill: '#0CC', stroke: '#0CC'});
+            hooks.problemCorrect && hooks.problemCorrect();
+          } else {
+            widget.iconBar.addTempText(
+                'multiopen-boxonly',
+                widget.numCorrectAnswers + '/' + widget.totalCorrectAnswers,
+                { fill: '#000', stroke: '#000'});
+            setTimeout(function() {
+              widget.controller.initialize();
+              widget.applyBoardData(widget.controller.getEntireBoardState());
+            }, widget.sgfOptions.correctVariationsResetTime);
+          }
+        }
+      } else if (data.result == problemResults.INCORRECT) {
+        widget.iconBar.destroyTempIcons();
+        widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
+        widget.iconBar.clearTempText('multiopen-boxonly');
+        widget.correctness = problemResults.INCORRECT;
+        hooks.problemIncorrect && hooks.problemIncorrect();
+      }
+    }
+  },
+
+  stoneMouseover: undefined, // rely on defaults
+  stoneMouseout: undefined, // rely on defaults
+};
+
+/**
+ * Additional Options for EXAMPLEs
+ */
+glift.api.widgetopt[glift.enums.widgetTypes.EXAMPLE] = {
+  markLastMove: undefined, // rely on defaults
+  keyMappings: undefined, // rely on defaults
+
+  problemConditions: {},
+
+  controllerFunc: glift.controllers.gameViewer,
+
+  icons: [],
+
+  showVariations: glift.enums.showVariations.NEVER,
+
+  statusBarIcons: [
+    // 'game-info',
+    'fullscreen'
+  ],
+
+  stoneClick: function(event, widget, pt) {},
+  // We disable mouseover and mouseout to make it clear you can't interact with
+  // the example widget.
+  stoneMouseover: function() {},
+  stoneMouseout: function() {},
+};
+
+/**
+ * Game Figure type.
+ */
+// TODO(kashomon):  Temporary testing type. Complete or delete. Should probably
+// be combined with example or deleted.
+glift.api.widgetopt[glift.enums.widgetTypes.GAME_FIGURE] = {
+  markLastMove: undefined, // rely on defaults
+  keyMappings: undefined, // rely on defaults
+
+  problemConditions: {}, // Disable problem evaluations
+
+  controllerFunc: glift.controllers.gameFigure,
+
+  icons: [],
+
+  showVariations: glift.enums.showVariations.NEVER,
+
+  statusBarIcons: [
+    'fullscreen'
+  ],
+
+  stoneClick: function(event, widget, pt) {},
+  // We disable mouseover and mouseout to make it clear you can't interact with
+  // the example widget.
+  stoneMouseover: function() {},
+  stoneMouseout: function() {},
+};
+
+/**
+ * Additional Options for the GameViewers
+ */
+glift.api.widgetopt[glift.enums.widgetTypes.GAME_VIEWER] = {
+  markLastMove: true,
+
+  keyMappings: {
+    ARROW_LEFT: 'iconActions.arrowleft.click',
+    ARROW_RIGHT: 'iconActions.arrowright.click',
+    ',': 'iconActions.arrowleft.click',
+    '.': 'iconActions.arrowright.click',
+    '<': 'iconActions.jump-left-arrow.click',
+    '>': 'iconActions.jump-right-arrow.click',
+    /** Toggle the selected variation. */
+    ']': function(widget) {
+      widget.controller.moveUpVariations();
+      widget.applyBoardData(widget.controller.getNextBoardState())
+    },
+    /** Toggle the selected variation. */
+    '[': function(widget) {
+      widget.controller.moveDownVariations();
+      widget.applyBoardData(widget.controller.getNextBoardState())
+    }
+  },
+
+  problemConditions: {}, // Disable problem evaluations
+
+  controllerFunc: glift.controllers.gameViewer,
+
+  icons: ['jump-left-arrow', 'jump-right-arrow', 'arrowleft', 'arrowright'],
+
+  showVariations: glift.enums.showVariations.MORE_THAN_ONE,
+
+  statusBarIcons: [
+    'game-info',
+    'move-indicator',
+    'fullscreen'
+  ],
+
+  stoneClick: function(event, widget, pt) {
+    var currentPlayer = widget.controller.getCurrentPlayer();
+    var partialData = widget.controller.addStone(pt, currentPlayer);
+    widget.applyBoardData(partialData);
+  },
+  stoneMouseover: undefined, // rely on defaults
+  stoneMouseout: undefined, // rely on defaults
+};
+
+/**
+ * Game Viewer options for when used as part of a widget
+ */
+glift.api.widgetopt[glift.enums.widgetTypes.REDUCED_GAME_VIEWER] = {
+  markLastMove: undefined, // rely on defaults
+  keyMappings: undefined, // rely on defaults
+
+  problemConditions: {},
+
+  controllerFunc: glift.controllers.gameViewer,
+
+  icons: ['arrowleft', 'arrowright'],
+
+  showVariations: glift.enums.showVariations.MORE_THAN_ONE,
+
+  statusBarIcons: [
+    'game-info',
+    'move-indicator',
+    'fullscreen'
+  ],
+
+  stoneClick: function(event, widget, pt) {
+    var currentPlayer = widget.controller.getCurrentPlayer();
+    var partialData = widget.controller.addStone(pt, currentPlayer);
+    widget.applyBoardData(partialData);
+  },
+
+  stoneMouseover: undefined, // rely on defaults
+  stoneMouseout: undefined, // rely on defaults
+};
+
+/**
+ * Additional Options for the GameViewers
+ */
+glift.api.widgetopt[glift.enums.widgetTypes.STANDARD_PROBLEM] = {
+  markLastMove: undefined, // rely on defaults
+  keyMappings: undefined, // rely on defaults
+
+  problemConditions: {},
+
+  controllerFunc: glift.controllers.staticProblem,
+
+  // TODO(kashomon): Consider using multiopen-boxonly instead of checkbox
+  icons: [
+    'undo-problem-move',
+    'problem-explanation',
+    'multiopen-boxonly'
+  ],
+
+  showVariations: glift.enums.showVariations.NEVER,
+
+  statusBarIcons: [
+    'fullscreen'
+  ],
+
+  stoneClick: function(event, widget, pt) {
+    var hooks = widget.hooks();
+    var currentPlayer = widget.controller.getCurrentPlayer();
+    var data = widget.controller.addStone(pt, currentPlayer);
+    var problemResults = glift.enums.problemResults;
+    if (data.result === problemResults.FAILURE) {
+      // Illegal move -- nothing to do.  Don't make the player fail based on
+      // an illegal move.
+      return;
+    }
+    widget.applyBoardData(data);
+    if (data.result === problemResults.CORRECT) {
+        widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'check', '#0CC');
+        widget.correctness = problemResults.CORRECT;
+        hooks.problemCorrect && hooks.problemCorrect(pt, currentPlayer);
+    } else if (data.result === problemResults.INCORRECT) {
+      widget.iconBar.destroyTempIcons();
+      widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
+      widget.correctness = problemResults.INCORRECT;
+      hooks.problemIncorrect && hooks.problemCorrect(pt, currentPlayer);
+    }
+  },
+
+  stoneMouseover: undefined,
+  stoneMouseout: undefined,
+};

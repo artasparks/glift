@@ -1,4 +1,12 @@
 goog.provide('glift.controllers.BaseController');
+goog.provide('glift.controllers.ControllerFunc');
+
+/**
+ * A type used for SGF Options.
+ *
+ * @typedef {function(glift.api.SgfOptions):glift.controllers.BaseController}
+ */
+glift.controllers.ControllerFunc;
 
 /**
  * Creates a base controller implementation.
@@ -24,18 +32,19 @@ glift.controllers.BaseController = function() {
   // lifetime of the controller.
   /** @package {string} */
   this.sgfString = '';
-  /** @package {!glift.rules.Treepath} */
+
+  /** @package {string|!Array<number>} */
   this.initialPosition = [];
 
   /**
    * Used only for examples (see the Game Figure). Indicates how to create
    * numbers based on the 
-   * @package {!glift.rules.Treepath}
+   * @package {!string|!Array<number>}
    */
   this.nextMovesPath = [];
   /**
    * Used only for problem-types.
-   * @package {!Object<glift.rules.prop, string>}
+   * @package {!glift.rules.ProblemConditions}
    */
   this.problemConditions = {};
 
@@ -60,7 +69,7 @@ glift.controllers.BaseController.prototype = {
    * Note that these options should be protected by the options parsing (see
    * options.js in this same directory).  Thus, no special checks are made here.
    *
-   * @param {Object} sgfOptions Object containing SGF options.
+   * @param {!glift.api.SgfOptions} sgfOptions Object containing SGF options.
    */
   initOptions: function(sgfOptions) {
     if (sgfOptions === undefined) {
@@ -69,7 +78,7 @@ glift.controllers.BaseController.prototype = {
     this.parseType = sgfOptions.parseType || glift.parse.parseType.SGF;
     this.sgfString = sgfOptions.sgfString || '';
     this.initialPosition = sgfOptions.initialPosition || [];
-    this.problemConditions = sgfOptions.problemConditions || null;
+    this.problemConditions = sgfOptions.problemConditions || {};
     this.nextMovesPath = sgfOptions.nextMovesPath || [];
     this.initialize();
     return this;
@@ -117,7 +126,7 @@ glift.controllers.BaseController.prototype = {
   /**
    * It's expected that this will be implemented by those extending this base
    * class.  This is called during initOptions above.
-   * @param {Object=} opt_options
+   * @param {glift.api.SgfOptions=} opt_options
    */
   extraOptions: function(opt_options) { /* Implemented by other controllers. */ },
 
@@ -174,7 +183,10 @@ glift.controllers.BaseController.prototype = {
     return this;
   },
 
-  /** Gets the treepath to the current position */
+  /**
+   * Gets the treepath to the current position.
+   * @return {!glift.rules.Treepath}.
+   */
   pathToCurrentPosition: function() {
     return this.movetree.treepathToHere();
   },
@@ -183,6 +195,7 @@ glift.controllers.BaseController.prototype = {
    * Gets the game info key-value pairs. This consists of global data about the
    * game, such as the names of the players, the result of the game, the
    * name of the tournament, etc.
+   * @return {!Array<!glift.rules.PropDescriptor>}
    */
   getGameInfo: function() {
     return this.movetree.getTreeFromRoot().properties().getGameInfo();
@@ -223,7 +236,11 @@ glift.controllers.BaseController.prototype = {
         this.nextVariationNumber());
   },
 
-  /** Get the captures that occured for the current move. */
+  /**
+   * Get the captures that occured for the current move.
+   *
+   * @return {!glift.rules.CaptureResult}
+   */
   getCaptures: function() {
     if (this.captureHistory.length === 0) {
       return { BLACK: [], WHITE: [] };
@@ -237,6 +254,10 @@ glift.controllers.BaseController.prototype = {
    *    BLACK: <number>
    *    WHITE: <number>
    *  }
+   * @return {{
+   *  BLACK: number,
+   *  WHITE: number
+   * }}
    */
   // TODO(kashomon): Add tests
   getCaptureCount: function() {
@@ -256,6 +277,10 @@ glift.controllers.BaseController.prototype = {
    *
    * Note, this method isn't always totally accurate. This method must be very
    * fast since it's expected that this will be used for hover events.
+   *
+   * @param {!glift.Point} point
+   * @param {!glift.enums.states} color
+   * @return {boolean}
    */
   canAddStone: function(point, color) {
     return this.goban.placeable(point, color);
@@ -268,22 +293,24 @@ glift.controllers.BaseController.prototype = {
    * This will be undefined until initialize is called, so the clients of the
    * controller must make sure to always initialize the board position
    * first.
+   *
+   * @return {!glift.enums.states}
    */
   getCurrentPlayer: function() {
     return this.movetree.getCurrentPlayer();
   },
 
-  /** Get the current SGF string. */
+  /** @return {string} The current SGF string. */
   currentSgf: function() {
     return this.movetree.toSgf();
   },
 
-  /** Get the original SGF string. */
+  /** @return {string} The original SGF string. */
   originalSgf: function() {
     return this.sgfString;
   },
 
-  /** Returns the number of intersections.  Should be known at load time. */
+  /** @return {number} Returns the number of intersections. */
   getIntersections: function() {
     return this.movetree.getIntersections();
   },

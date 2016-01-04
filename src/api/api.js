@@ -1,7 +1,8 @@
 goog.provide('glift.api');
 
 /**
- * Namespace for API-related methods. Not all of these are meant to 
+ * Namespace for API-related methods. Not all of these are meant to be exposed
+ * as public methods.
  */
 glift.api = {
   /**
@@ -9,12 +10,13 @@ glift.api = {
    * method directly, instead peferring 'glift.create(<options>)'.
    *
    * @package
-   * @param {Object} options
+   * @param {!Object} inOptions A Glift's options obj (specified as an object
+   *    literal). See glift.api.Options.
    * @return {glift.widgets.WidgetManager}
    */
-  create: function(options) {
+  create: function(inOptions) {
     glift.util.perfInit();
-    var manager = glift.api.createNoDraw(options);
+    var manager = glift.api.createNoDraw(inOptions);
 
     glift.init(
         manager.displayOptions.disableZoomForMobile,
@@ -31,28 +33,16 @@ glift.api = {
    * Create a widgetManager without performing 'draw'.  This also has the
    * side effect of avoiding init code.
    *
-   * @package
-   * @param {Object} inOptions
+   * This is public because it's sometimes useful to create a Glift instance
+   * this way.
+   *
+   * @param {!Object} inOptions
    * @return {glift.widgets.WidgetManager}
    */
   createNoDraw: function(inOptions) {
-    var options = glift.widgets.options.setOptionDefaults(inOptions);
-    var actions = {};
-    actions.iconActions = options.iconActions;
-    actions.stoneActions = options.stoneActions;
-
-    return new glift.widgets.WidgetManager(
-        options.divId,
-        options.sgfCollection,
-        options.sgfMapping,
-        options.initialIndex,
-        options.allowWrapAround,
-        options.loadCollectionInBackground,
-        options.sgfDefaults,
-        options.display,
-        actions,
-        options.metadata,
-        options.hooks);
+    var options = new glift.api.Options(
+        /** @type {!glift.api.Options} */ (inOptions));
+    return new glift.widgets.WidgetManager(options);
   }
 };
 

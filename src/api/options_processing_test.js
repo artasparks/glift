@@ -1,5 +1,5 @@
 (function() {
-  module('glift.widgets.optionsProcessingTest');
+  module('glift.api.optionsProcessingTest');
   var createNoDraw = glift.api.createNoDraw;
 
   test('Test sgf and sgfList: Should throw an error', function() {

@@ -3,7 +3,7 @@ glift.keyMappings = {
    * Some keys must be bound with 'keydown' rather than key code
    * mappings.
    */
-  _nameToCodeKeyDown: {
+  specialChars: {
     BACKSPACE: 8,
     ESCAPE: 27,
     ARROW_LEFT:37,
@@ -18,7 +18,7 @@ glift.keyMappings = {
   nameToCode: function(name) {
     if (name.length !== 1) {
       if (/[A-Z](_[A-Z]+)*/.test(name)) {
-        return glift.keyMappings._nameToCodeKeyDown[name] || null
+        return glift.keyMappings.specialChars[name] || null
       } else {
         return null
       }
@@ -32,8 +32,8 @@ glift.keyMappings = {
     if (!glift.keyMappings._codeToNameKeyDown) {
       // Bite the bullet and define the map.
       var newmap = {};
-      for (var name in glift.keyMappings._nameToCodeKeyDown) {
-        var keycode = glift.keyMappings._nameToCodeKeyDown[name]
+      for (var name in glift.keyMappings.specialChars) {
+        var keycode = glift.keyMappings.specialChars[name]
         newmap[keycode] = name;
       }
       glift.keyMappings._codeToNameKeyDown = newmap;

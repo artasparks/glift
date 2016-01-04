@@ -70,6 +70,7 @@ JS_DIRECTORIES = [
 
     # Lastly: The API
     'api',
+    'api/widgetopt',
     ]
 
 EXCLUDE = set([

@@ -4,32 +4,16 @@ goog.provide('glift.widgets.WidgetManager');
  * The Widget Manager manages state across widgets.  When widgets are created,
  * they are always created in the context of a Widget Manager.
  *
- * @param {string} divId: the element id of the div without the selector hash (#)
- * @param {!Array<string>} sgfCollection: array of sgf objects or a string URL.
- *    At creation time of the manager, The param sgfCollection may either be an
- *    array or a string representing a URL.  If the sgfCollection is a string,
- *    then the JSON is requsted at draw-time and passed to this.sgfCollection.
- * @param {!Object<string>} sgfMapping An initial setup for the SGF cache. A map
- *    from SGF-ID to the sgf contents.
- * @param {number} sgfColIndex A numbered index into the sgfCollection.
- * @param {boolean} allowWrapAround Whether to allow wrap around
- *    in the SGF manager.
- * @param {boolean} loadColInBack: Whether or to load the SGFs in the background.
- * @param {!Object} sgfDefaults Filled-in sgf default options. See
- * @param {!Object} displayOptions: filled-in display options.
- * @param {!Object} actions: combination of stone actions and icon actions.
- * @param {!Object} metadata: metadata about the this instance of glift.
- * @param {!Object} hooks: user-provided functions.
+ * @param {glift.api.Options} options Options Template for Glift API Options.
  *
  * @constructor @final @struct
  */
-glift.widgets.WidgetManager = function(divId, sgfCollection, sgfMapping,
-    sgfColIndex, allowWrapAround, loadColInBack, sgfDefaults, displayOptions,
-    actions, metadata, hooks) {
+glift.widgets.WidgetManager = function(options) {
+
   // Globally unique ID, at least across all glift instances in the current
   // page. In theory, the divId should be globally unique, but might as well be
   // absolutely sure.
-  this.id = divId + '-glift-' + glift.util.idGenerator.next();
+  this.id = options.divId + '-glift-' + glift.util.idGenerator.next();
 
   // Register the instance. Maybe should be its own method.
   glift.global.instanceRegistry[this.id] = this;
@@ -42,7 +26,7 @@ glift.widgets.WidgetManager = function(divId, sgfCollection, sgfMapping,
    * The original div id.
    * @type {string}
    */
-  this.divId = divId;
+  this.divId = options.divId;
 
   // The fullscreen div id. Only set via the fullscreen button. Necessary to
   // have for problem collections.
@@ -54,35 +38,81 @@ glift.widgets.WidgetManager = function(divId, sgfCollection, sgfMapping,
   // we track the window-resizing function.
   this.oldWindowResize = null;
 
-  // Note: At creation time of the manager, The param sgfCollection may either
-  // be an array or a string representing a URL.  If the sgfCollection is a
-  // string, then the JSON is requsted at draw-time and passed to
-  // this.sgfCollection
+  /**
+   * Note: At creation time of the manager, The param sgfCollection may either
+   * be an array or a string representing a URL.  If the sgfCollection is a
+   * string, then the JSON is requsted at draw-time and passed to
+   * this.sgfCollection
+   *
+   * @type {!Array<!glift.api.SgfOptions|string>}
+   */
   this.sgfCollection = [];
 
-  // Cache of SGFs.  Useful for reducing the number AJAX calls.
-  //
-  // Map from SGF name to String contents.
-  this.sgfCache = sgfMapping || {};
+  /**
+   * Cache of SGFs.  Useful for reducing the number AJAX calls.
+   * Map from SGF name to String contents.
+   *
+   * @type {!Object<string>}
+   */
+  this.sgfCache = options.sgfMapping;
 
-  // URL for getting the entire SGF collection.
+  /**
+   * URL for getting the entire SGF collection.
+   *
+   * @type {?string}
+   */
   this.sgfCollectionUrl = null;
 
   // Suppert either explicit arrays or URLs for fetching JSON.
-  if (glift.util.typeOf(sgfCollection) === 'string') {
-    this.sgfCollectionUrl = sgfCollection;
+  if (glift.util.typeOf(options.sgfCollection) === 'string') {
+    this.sgfCollectionUrl = /** @type {string} */ (options.sgfCollection);
   } else {
-    this.sgfCollection = sgfCollection;
+    this.sgfCollection = /** @type {!Array<!glift.api.SgfOptions|string>} */ (
+        options.sgfCollection);
   }
 
-  this.sgfColIndex = sgfColIndex;
-  this.allowWrapAround = allowWrapAround
-  this.sgfDefaults = sgfDefaults;
-  this.displayOptions = displayOptions;
-  this.actions = actions;
+  /**
+   * Index into the SGF Collection, if it exists.
+   * @type {number}
+   */
+  this.sgfColIndex = options.initialIndex;
 
-  // True or false. Whether to load SGFs in the background.
-  this.loadColInBack = loadColInBack;
+  /** @type {boolean} */
+  this.allowWrapAround = options.allowWrapAround
+
+  /**
+   * The SGF Defaults template.
+   * @type {!glift.api.SgfOptions}
+   */
+  this.sgfDefaults = options.sgfDefaults;
+  /**
+   * Display options
+   * @type {!glift.api.DisplayOptions}
+   */
+  this.displayOptions = options.display;
+
+  /**
+   * Actions for the Icons and for stone defaults
+   * @typedef {{
+   *  iconActions: !glift.api.IconActions,
+   *  stoneActions: !glift.api.StoneActions
+   * }}
+   */
+  // TODO(kashomon): Break this apart. No need to squash these into one obj.
+  this.actions = {
+    iconActions: options.iconActions,
+    stoneActions: options.stoneActions,
+  };
+
+  /**
+   * Whether to load SGFs in the background.
+   * @type {boolean}
+   */
+  this.loadColInBack = options.loadCollectionInBackground;
+  /**
+   * Whether or not the background loading has begun.
+   * @type {boolean}
+   */
   this.initBackgroundLoading = false;
 
   /**
@@ -101,15 +131,17 @@ glift.widgets.WidgetManager = function(divId, sgfCollection, sgfMapping,
 
   /**
    * Global metadata for this manager instance.
+   * @type {!Object|undefined}
    */
-  this.metadata = metadata || undefined;
+  this.metadata = options.metadata;
 
   /**
    * External hooks provided by users.
    *
    * A map of hook-name to hook-function.
+   * @type {!glift.api.HookOptions}
    */
-  this.hooks = hooks;
+  this.hooks = options.hooks;
 };
 
 glift.widgets.WidgetManager.prototype = {
@@ -134,7 +166,8 @@ glift.widgets.WidgetManager.prototype = {
 
     if (this.sgfCollection.length === 0 && this.sgfCollectionUrl) {
       glift.ajax.get(this.sgfCollectionUrl, function(data) {
-        this.sgfCollection = JSON.parse(data);
+        this.sgfCollection = /** @type {!Array<string|!glift.api.SgfOptions>} */ (
+            JSON.parse(data));
         afterCollectionLoad();
       }.bind(this));
     } else {
@@ -167,6 +200,8 @@ glift.widgets.WidgetManager.prototype = {
 
   /** Modifies the SgfOptions by resetting the icons settings. */
   _resetIcons: function(processedObj) {
+    // TODO(kashomon): This seems really hacky and likely needs significant
+    // cleanup.
     if (this.sgfCollection.length > 1) {
       if (this.allowWrapAround) {
         processedObj.icons.push(this.displayOptions.nextSgfIcon);
@@ -197,17 +232,20 @@ glift.widgets.WidgetManager.prototype = {
     }
     var curSgfObj = this.sgfCollection[index];
     if (glift.util.typeOf(curSgfObj) === 'string') {
+      var str = /** @type {string} */ (curSgfObj);
       var out = {};
-      if (/^\s*\(;/.test(curSgfObj)) {
+      if (/^\s*\(;/.test(str)) {
         // We assume that this is a standard SGF String.
-        out.sgfString = curSgfObj;
+        out.sgfString = str;
       } else {
         // Assume a URL.
-        out.url = curSgfObj
+        out.url = str;
       }
-      curSgfObj = out;
+      var toProc = out;
+    } else {
+      var toProc = /** @type {!Object} */ (curSgfObj);
     }
-    var proc = glift.widgets.options.setSgfOptions(curSgfObj, this.sgfDefaults);
+    var proc = this.sgfDefaults.createSgfObj(toProc);
     return this._resetIcons(proc);
   },
 
@@ -353,7 +391,10 @@ glift.widgets.WidgetManager.prototype = {
     loader(this.sgfColIndex + 1);
   },
 
-  /** Whether or not the widget is currently fullscreened. */
+  /**
+   * Whether or not the widget is currently fullscreened.
+   * @return {boolean}
+   */
   isFullscreen: function() {
     return !!this.fullscreenDivId;
   },

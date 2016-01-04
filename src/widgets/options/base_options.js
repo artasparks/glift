@@ -17,10 +17,11 @@
  *    encompass other types go-data, like the Tygem .gib filetypes.
  *
  * API annotations:
- *  - @api(1.X) Indicates an option supported for the lifetime of the 1.X
+ *
+ *  - api:1.X Indicates an option supported for the lifetime of the 1.X
  *    release.
- *  - @api(beta) Indicates an option currently slated to become a 1.X option.
- *  - @api(experimental) Indicates an option in testing.
+ *  - api:beta Indicates an option currently slated to become a 1.X option.
+ *  - api:experimental Indicates an option in testing.
  */
 glift.widgets.options.baseOptions = {
   /**
@@ -39,7 +40,7 @@ glift.widgets.options.baseOptions = {
    * As you might expect, if the user sets sgf to a literal string form or to a
    * url, it is transformed into an SGF object internally.
    *
-   * @api(1.0)
+   * api:1.0
    */
   sgf: undefined,
 
@@ -50,19 +51,20 @@ glift.widgets.options.baseOptions = {
    * options are specified here, but should only be specified in the individual
    * SGF (sgfString, url).
    *
-   * @api(1.0)
+   * api:1.0
    */
   sgfDefaults: {
     /**
      * A literal SGF String.  Should not be specified in SGF defaults.
-     * @api(1.0)
+     * api:1.0
      */
     sgfString: undefined,
 
     /**
      * URL (usually relative) to an SGF. Once loaded, the resulting data is
      * cached to speed recall time.
-     * @api(1.0)
+     *
+     * api:1.0
      */
     url: undefined,
 
@@ -80,13 +82,15 @@ glift.widgets.options.baseOptions = {
      *  SGF
      *  TYGEM
      *  PANDANET
-     * @api(beta)
+     *
+     * api:beta
      */
     parseType: glift.parse.parseType.SGF,
 
     /**
      * The default widget type. Specifies what type of widget to create.
-     * @api(1.0)
+     *
+     * api:1.0
      */
     widgetType: glift.enums.widgetTypes.GAME_VIEWER,
 
@@ -107,7 +111,8 @@ glift.widgets.options.baseOptions = {
      *             traveling through the 3rd varition on the 2nd move
      * 0+        - Go to the end of the game
      * 2.3+      - Start at the 3rd variation on move 2, and go to the end
-     * @api(1.0)
+     *
+     * api:1.0
      */
     initialPosition: '',
 
@@ -131,20 +136,24 @@ glift.widgets.options.baseOptions = {
      *
      * These are not:
      *  2-3
+     *
+     * api:1.1
      */
     nextMovesPath: '',
 
     /**
      * The board region to display.  The boardRegion will be 'guessed' if it's set
      * to 'AUTO'.
-     * @api(1.0)
+     *
+     * api:1.0
      */
     boardRegion: glift.enums.boardRegions.AUTO,
 
     /**
      * What rotation to apply to -just- the display of the stones. Any of:
      * NO_ROTATION, CLOCKWISE_90, CLOCKWISE_180, CLOCKWISE_270, or undefined;
-     * @api(beta)
+     *
+     * api:beta
      */
     rotation: glift.enums.rotations.NO_ROTATION,
 
@@ -156,7 +165,8 @@ glift.widgets.options.baseOptions = {
      *
      * The default tests whether there is a 'GB' property or a 'C' (comment)
      * property containing 'Correct' or 'is correct'.
-     * @api(1.0)
+     *
+     * api:1.0
      */
     problemConditions: {
       GB: [],
@@ -167,7 +177,8 @@ glift.widgets.options.baseOptions = {
      * Specifies what action to perform based on a particular keystroke.  In
      * otherwords, a mapping from key-enum to action path.
      * See glift.keyMappings
-     * @api(beta)
+     *
+     * api:beta
      */
     keyMappings: {
       ARROW_LEFT: 'iconActions.chevron-left.click',
@@ -176,7 +187,8 @@ glift.widgets.options.baseOptions = {
 
     /**
      * The UI Components to use for this display.
-     * @api(1.0)
+     *
+     * api:1.0
      */
     uiComponents: [
       'BOARD',
@@ -187,7 +199,8 @@ glift.widgets.options.baseOptions = {
 
     /**
      * Convenience variables for disabling ui components.
-     * @api(experimental)
+     *
+     * api:experimental
      */
     disableStatusBar: false,
     disableBoard: false,
@@ -208,7 +221,7 @@ glift.widgets.options.baseOptions = {
      *   'settings-wrench'
      * ],
      *
-     * @api(1.0)
+     * api:1.0
      */
     statusBarIcons: undefined,
 
@@ -217,7 +230,7 @@ glift.widgets.options.baseOptions = {
      * meant to be used directly by Glift but by other programs utilizing Glift
      * and so the metadata has no expected structure.
      *
-     * @api(experimental)
+     * api:experimental
      */
     metadata: undefined,
 
@@ -261,20 +274,23 @@ glift.widgets.options.baseOptions = {
     /**
      * The function that creates the controller at widget-creation time.
      * See glift.controllers for more detail
-     * @api(1.0)
+     *
+     * api:1.0
      */
     controllerFunc: undefined,
 
     /**
      * The names of the icons to use in the icon-bar.  This is a list of
      * icon-names, which must be spceified in glift.displays.icons.svg.
-     * @api(1.0)
+     *
+     * api:1.0
      */
     icons: undefined,
 
     /**
      * The action that is performed when a sure clicks on an intersection.
-     * @api(1.0)
+     *
+     * api:1.0
      */
     stoneClick: undefined,
 
@@ -293,7 +309,8 @@ glift.widgets.options.baseOptions = {
   /**
    * The div id in which we create the go board.  The default is glift_display,
    * but this will almost certainly need to be set by the user.
-   * @api(1.0)
+   *
+   * api:1.0
    */
   divId: 'glift_display',
 
@@ -308,7 +325,8 @@ glift.widgets.options.baseOptions = {
    * Once an SGF Collection is loaded, Glift looks through each entry in the
    * collection.  If an SGF URL is found, the SGF is loaded in the background
    * and cached.
-   * @api(1.0)
+   *
+   * api:1.0
    */
   sgfCollection: undefined,
 
@@ -321,27 +339,30 @@ glift.widgets.options.baseOptions = {
    *    [name/alias]: <sgf string>
    *  }
    *
-   * @api(experimental)
+   * api:experimental
    */
   sgfMapping: undefined,
 
   /**
    * Index into the above collection.  This is mostly useful for remembering
    * someone's position in the sgf collection.
-   * @api(1.0)
+   *
+   * api:1.0
    */
   initialIndex: 0,
 
   /**
    * If there are multiple SGFs in the SGF list, this flag indicates whether or
    * not to allow the user to go back to the beginnig (or conversely, the end).
-   * @api(experimental)
+   *
+   * api:experimental
    */
   allowWrapAround: false,
 
   /**
    * Wether or not to load the the collection in the background via XHR requests.
-   * @api(beta)
+   *
+   * api:beta
    */
   loadCollectionInBackground: true,
 
@@ -351,7 +372,8 @@ glift.widgets.options.baseOptions = {
    * and so the metadata has no expected structure.
    *
    * Thus is currently (sometimes) used by GPub.
-   * @api(experimental)
+   *
+   * api:experimental
    */
   metadata: undefined,
 
@@ -359,7 +381,7 @@ glift.widgets.options.baseOptions = {
    * Hooks are places where users can provide custom functions to 'hook' into
    * Glift behavior.
    *
-   * @api(experimental)
+   * api:experimental
    */
   hooks: {
     /**
@@ -389,7 +411,7 @@ glift.widgets.options.baseOptions = {
 
   /**
    * Miscellaneous options for display.
-   * @api(1.0)
+   * api:1.0
    */
   display: {
     /**
@@ -401,7 +423,7 @@ glift.widgets.options.baseOptions = {
      *  'images/kaya.jpg'
      *  'http://www.mywebbie.com/images/kaya.jpg'
      *
-     * @api(1.0)
+     * api:1.0
      */
     goBoardBackground: '',
 
@@ -411,7 +433,7 @@ glift.widgets.options.baseOptions = {
      *  - MOODY (gray background, no stone outlines)
      *  - TRANSPARENT (board is transparent)
      *  - TEXTBOOK (Everything black and white)
-     * @api(1.0)
+     * api:1.0
      */
     theme: 'DEFAULT',
 
@@ -419,7 +441,7 @@ glift.widgets.options.baseOptions = {
      * On the edges of the board, draw the board coordinates.
      * - On the left, use the numbers 1-19
      * - On the bottom, use A-T (all letters minus I)
-     * @api(1.0)
+     * api:1.0
      */
     drawBoardCoords: false,
 
@@ -476,7 +498,7 @@ glift.widgets.options.baseOptions = {
   /**
    * Actions for stones.  If the user specifies his own actions, then the
    * actions specified by the user will take precedence.
-   * @api(1.0)
+   * api:1.0
    */
   stoneActions: {
     /**
@@ -518,7 +540,7 @@ glift.widgets.options.baseOptions = {
    */
   iconActions: {
     start: {
-      click:  function(event, widget, icon, iconBar) {
+      click: function(event, widget, icon, iconBar) {
         widget.applyBoardData(widget.controller.toBeginning());
       },
       tooltip: 'Go to the beginning'

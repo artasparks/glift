@@ -39,6 +39,14 @@ glift.rules.MarkCollection;
 
 
 /**
+ * Map of prop-to-values.
+ *
+ * @typedef {!Object<glift.rules.prop, !Array<string>>}
+ */
+glift.rules.ProblemConditions;
+
+
+/**
  * An object describing a property.
  *
  * Example:
@@ -444,7 +452,7 @@ glift.rules.Properties.prototype = {
    * Note: This is an O(lnm) ~ O(n^3).  But practice, you'll want to test
    * against singular properties, so it's more like O(n^2)
    *
-   * @param {!Object<glift.rules.prop, !Array<string>>} conditions Set of
+   * @param {!glift.rules.ProblemConditions} conditions Set of
    *    property-conditions to check.
    * @return {boolean}
    */
@@ -586,7 +594,7 @@ glift.rules.Properties.prototype = {
    *  value: 'Lee Sedol vs Gu Li'
    * },...
    * ]
-   * @return {!Array<glift.rules.PropDescriptor>}
+   * @return {!Array<!glift.rules.PropDescriptor>}
    */
   // TODO(kashomon): Add test
   getGameInfo: function() {

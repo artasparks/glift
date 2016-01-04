@@ -1,7 +1,26 @@
 /**
  * Additional Options for the GameViewers
  */
-glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
+glift.api.widgetopt[glift.enums.widgetTypes.CORRECT_VARIATIONS_PROBLEM] = {
+  markLastMove: undefined, // rely on defaults
+  keyMappings: undefined, // rely on defaults
+
+  problemConditions: undefined, // rely on defaults
+
+  controllerFunc: glift.controllers.staticProblem,
+
+  icons: [
+    'refresh',
+    'problem-explanation',
+    'multiopen-boxonly'
+  ],
+
+  showVariations: glift.enums.showVariations.NEVER,
+
+  statusBarIcons: [
+    'fullscreen'
+  ],
+
   stoneClick: function(event, widget, pt) {
     var currentPlayer = widget.controller.getCurrentPlayer();
     var data = widget.controller.addStone(pt, currentPlayer);
@@ -47,13 +66,6 @@ glift.widgets.options.CORRECT_VARIATIONS_PROBLEM = {
     }
   },
 
-  showVariations: glift.enums.showVariations.NEVER,
-
-  icons: ['refresh', 'problem-explanation', 'multiopen-boxonly'],
-
-  controllerFunc: glift.controllers.staticProblem,
-
-  statusBarIcons: [
-    'fullscreen'
-  ]
+  stoneMouseover: undefined, // rely on defaults
+  stoneMouseout: undefined, // rely on defaults
 };
