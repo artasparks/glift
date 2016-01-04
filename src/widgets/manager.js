@@ -323,11 +323,13 @@ glift.widgets.WidgetManager.prototype = {
   /**
    * Temporarily replace the current widget with another widget.  Used in the
    * case of the PROBLEM_SOLUTION_VIEWER.
+   *
+   * @type {!Object} sgfObj
    */
   createTemporaryWidget: function(sgfObj) {
     this.currentWidget && this.currentWidget.destroy();
-    sgfObj = glift.widgets.options.setSgfOptions(sgfObj, this.sgfDefaults);
-    this.temporaryWidget = this.createWidget(sgfObj).draw();
+    var obj = this.sgfDefaults.createSgfObj(sgfObj);
+    this.temporaryWidget = this.createWidget(obj).draw();
   },
 
   returnToOriginalWidget: function() {

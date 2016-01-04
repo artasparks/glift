@@ -66,7 +66,6 @@ JS_DIRECTORIES = [
     'orientation',
     'flattener',
     'widgets',
-    'widgets/options',
 
     # Lastly: The API
     'api',
