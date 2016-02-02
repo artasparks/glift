@@ -70,7 +70,7 @@ glift.widgets.BaseWidget.prototype = {
         parentDivBbox,
         boardRegion,
         intersections,
-        this._getUiComponents(this.sgfOptions),
+        this.getUiComponents_(this.sgfOptions),
         this.displayOptions.oneColumnSplits,
         this.displayOptions.twoColumnSplits).calcWidgetPositioning();
 
@@ -167,20 +167,32 @@ glift.widgets.BaseWidget.prototype = {
     return this;
   },
 
-  /** Gets the UI icons to use */
-  _getUiComponents: function(sgfOptions) {
+  /**
+   * Gets the UI icons to use
+   * @param {!glift.api.SgfOptions} sgfOptions
+   * @return {!Array<glift.enums.boardComponents>}
+   * @private
+   */
+  getUiComponents_: function(sgfOptions) {
+    /** @type {!Array<glift.enums.boardComponents>} */
     var base = sgfOptions.uiComponents;
     base = base.slice(0, base.length); // make a shallow copy.
+    /**
+     * Helper to remove items from the array.
+     * @param {!Array<glift.enums.boardComponents>} arr
+     * @param {glift.enums.boardComponents} key
+     */
     var rmItem = function(arr, key) {
       var idx = arr.indexOf(key);
       if (idx > -1) {
-        arr.shift(idx);
+        arr.splice(idx, 1);
       }
     }
-    sgfOptions.disableStatusBar && rmItem(base, 'STATUS_BAR');
-    sgfOptions.disableBoard && rmItem(base, 'BOARD');
-    sgfOptions.disableCommentBox && rmItem(base, 'COMMENT_BOX');
-    sgfOptions.disableIonBar && rmItem(base, 'ICONBAR');
+    var bc = glift.enums.boardComponents
+    sgfOptions.disableStatusBar && rmItem(base, bc.STATUS_BAR);
+    sgfOptions.disableBoard && rmItem(base, bc.BOARD);
+    sgfOptions.disableCommentBox && rmItem(base, bc.COMMENT_BOX);
+    sgfOptions.disableIconBar && rmItem(base, bc.ICONBAR);
     return base;
   },
 

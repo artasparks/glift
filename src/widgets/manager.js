@@ -6,6 +6,7 @@ goog.provide('glift.widgets.WidgetManager');
  *  stoneActions: !glift.api.StoneActions
  * }}
  */
+// TODO(kashomon): Remove this nonsense.
 glift.widgets.ActionsWrapper;
 
 /**
@@ -375,14 +376,19 @@ glift.widgets.WidgetManager.prototype = {
     this.temporaryWidget = this.createWidget(obj).draw();
   },
 
+  /** Returns from the temporary widget to the original widget. */
   returnToOriginalWidget: function() {
     this.temporaryWidget && this.temporaryWidget.destroy();
     this.temporaryWidget = undefined;
     this.currentWidget.draw();
   },
 
-  /** Internal implementation of nextSgf/previous sgf. */
-  _nextSgfInternal: function(indexChange) {
+  /**
+   * Internal implementation of nextSgf/previous sgf.
+   * @param {number} indexChange
+   * @private
+   */
+  nextSgfInternal_: function(indexChange) {
     if (!this.sgfCollection.length > 1) {
       return; // Nothing to do
     }
@@ -401,10 +407,10 @@ glift.widgets.WidgetManager.prototype = {
   },
 
   /** Get the next SGF.  Requires that the list be non-empty. */
-  nextSgf: function() { this._nextSgfInternal(1); },
+  nextSgf: function() { this.nextSgfInternal_(1); },
 
   /** Get the next SGF.  Requires that the list be non-empty. */
-  prevSgf: function() { this._nextSgfInternal(-1); },
+  prevSgf: function() { this.nextSgfInternal_(-1); },
 
   /**
    * Load a urlOrObject with AJAX.  If the urlOrObject is an object, then we

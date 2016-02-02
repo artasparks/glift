@@ -14571,7 +14571,7 @@ glift.widgets.BaseWidget.prototype = {
         parentDivBbox,
         boardRegion,
         intersections,
-        this._getUiComponents(this.sgfOptions),
+        this.getUiComponents_(this.sgfOptions),
         this.displayOptions.oneColumnSplits,
         this.displayOptions.twoColumnSplits).calcWidgetPositioning();
 
@@ -14604,14 +14604,13 @@ glift.widgets.BaseWidget.prototype = {
     }
     glift.util.majorPerfLog('CommentBox');
 
-      console.log('Text to log');
     if (divIds[glift.enums.boardComponents.ICONBAR]) {
       /** @type {!Array<string>} */
       var icons = glift.util.simpleClone(this.sgfOptions.icons || []);
       if (this.manager.hasNextSgf()) {
         icons.push(this.displayOptions.nextSgfIcon);
       }
-      if (this.manager.hasNextSgf()) {
+      if (this.manager.hasPrevSgf()) {
         icons.unshift(this.displayOptions.previousSgfIcon);
       }
       this.iconBar = glift.displays.icons.bar({
@@ -14669,20 +14668,32 @@ glift.widgets.BaseWidget.prototype = {
     return this;
   },
 
-  /** Gets the UI icons to use */
-  _getUiComponents: function(sgfOptions) {
+  /**
+   * Gets the UI icons to use
+   * @param {!glift.api.SgfOptions} sgfOptions
+   * @return {!Array<glift.enums.boardComponents>}
+   * @private
+   */
+  getUiComponents_: function(sgfOptions) {
+    /** @type {!Array<glift.enums.boardComponents>} */
     var base = sgfOptions.uiComponents;
     base = base.slice(0, base.length); // make a shallow copy.
+    /**
+     * Helper to remove items from the array.
+     * @param {!Array<glift.enums.boardComponents>} arr
+     * @param {glift.enums.boardComponents} key
+     */
     var rmItem = function(arr, key) {
       var idx = arr.indexOf(key);
       if (idx > -1) {
-        arr.shift(idx);
+        arr.splice(idx, 1);
       }
     }
-    sgfOptions.disableStatusBar && rmItem(base, 'STATUS_BAR');
-    sgfOptions.disableBoard && rmItem(base, 'BOARD');
-    sgfOptions.disableCommentBox && rmItem(base, 'COMMENT_BOX');
-    sgfOptions.disableIonBar && rmItem(base, 'ICONBAR');
+    var bc = glift.enums.boardComponents
+    sgfOptions.disableStatusBar && rmItem(base, bc.STATUS_BAR);
+    sgfOptions.disableBoard && rmItem(base, bc.BOARD);
+    sgfOptions.disableCommentBox && rmItem(base, bc.COMMENT_BOX);
+    sgfOptions.disableIconBar && rmItem(base, bc.ICONBAR);
     return base;
   },
 
@@ -14899,6 +14910,7 @@ goog.provide('glift.widgets.WidgetManager');
  *  stoneActions: !glift.api.StoneActions
  * }}
  */
+// TODO(kashomon): Remove this nonsense.
 glift.widgets.ActionsWrapper;
 
 /**
@@ -15143,7 +15155,7 @@ glift.widgets.WidgetManager.prototype = {
   hasPrevSgf: function() {
     if (this.sgfCollection.length &&
         this.sgfColIndex > 0 &&
-        this.sgfColIndex < this.sgfCollection.length - 1) {
+        this.sgfColIndex <= this.sgfCollection.length - 1) {
       return true;
     } else if (
         this.sgfCollection.length &&
@@ -15268,14 +15280,19 @@ glift.widgets.WidgetManager.prototype = {
     this.temporaryWidget = this.createWidget(obj).draw();
   },
 
+  /** Returns from the temporary widget to the original widget. */
   returnToOriginalWidget: function() {
     this.temporaryWidget && this.temporaryWidget.destroy();
     this.temporaryWidget = undefined;
     this.currentWidget.draw();
   },
 
-  /** Internal implementation of nextSgf/previous sgf. */
-  _nextSgfInternal: function(indexChange) {
+  /**
+   * Internal implementation of nextSgf/previous sgf.
+   * @param {number} indexChange
+   * @private
+   */
+  nextSgfInternal_: function(indexChange) {
     if (!this.sgfCollection.length > 1) {
       return; // Nothing to do
     }
@@ -15294,10 +15311,10 @@ glift.widgets.WidgetManager.prototype = {
   },
 
   /** Get the next SGF.  Requires that the list be non-empty. */
-  nextSgf: function() { this._nextSgfInternal(1); },
+  nextSgf: function() { this.nextSgfInternal_(1); },
 
   /** Get the next SGF.  Requires that the list be non-empty. */
-  prevSgf: function() { this._nextSgfInternal(-1); },
+  prevSgf: function() { this.nextSgfInternal_(-1); },
 
   /**
    * Load a urlOrObject with AJAX.  If the urlOrObject is an object, then we
