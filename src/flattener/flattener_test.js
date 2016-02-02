@@ -131,7 +131,7 @@
   });
 
   test('findStartingMoveNum', function() {
-    findNum = glift.flattener._findStartingMoveNum;
+    findNum = glift.flattener.findStartingMoveNum_;
     var sgf = '(;GB[1]' +
         ';B[aa]' +
         '(;W[ba](;B[cc])(;B[dd]))' +

@@ -80,7 +80,7 @@ glift.flattener.flatten = function(movetreeInitial, options) {
 
   // Find the starting move number before applying the next move path.
   if (startingMoveNum === null) {
-    startingMoveNum = glift.flattener._findStartingMoveNum(mt, nmtp);
+    startingMoveNum = glift.flattener.findStartingMoveNum_(mt, nmtp);
   }
 
   // The move number of the first mainline move in the parent-chain.
@@ -106,7 +106,7 @@ glift.flattener.flatten = function(movetreeInitial, options) {
   var applied = glift.rules.treepath.applyNextMoves(mt, goban, nmtp);
 
   // Map of ptString to stone obj.
-  var stoneMap = glift.flattener._stoneMap(goban, applied.stones);
+  var stoneMap = glift.flattener.stoneMap_(goban, applied.stones);
 
   // Replace the movetree reference with the new position.  This movetree
   // should be equivalent to applying the initial treepath and then applying
@@ -213,10 +213,10 @@ glift.flattener.getBoardRegion_ = function(mt, nmtp, options) {
  * @param {!glift.rules.Goban} goban
  * @param {!Array<glift.rules.Move>} nextStones that are the result of applying
  *    a next-moves path.
- *
  * @return {!Object<string, !glift.rules.Move>} Map from point string to stone.
+ * @private
  */
-glift.flattener._stoneMap = function(goban, nextStones) {
+glift.flattener.stoneMap_ = function(goban, nextStones) {
   var out = {};
   // Array of {color: <color>, point: <point>}
   var gobanStones = goban.getAllPlacedStones();
@@ -238,6 +238,18 @@ glift.flattener._stoneMap = function(goban, nextStones) {
 
 
 /**
+ * Example value:
+ * {
+ *  marks: {
+ *    "12,5": 13
+ *    "12,3": 23
+ *  },
+ *  labels: {
+ *    "12,3": "A"
+ *    "12,4": "B"
+ *  }
+ * }
+ *
  * @typedef{{
  *  marks: !Object<glift.PtStr, glift.flattener.symbols>,
  *  labels: !Object<glift.PtStr, string>
@@ -251,19 +263,10 @@ glift.flattener.MarkMap;
  * from ptString to text label.
  *
  * If there are two marks on the same intersection specified, the behavior is
- * undefined.  Either mark might succeed in being placed.
+ * undefined. Either mark might succeed in being placed. We consider this to be
+ * an incorrectly specified SGF/movetree.
  *
- * Example return value:
- * {
- *  marks: {
- *    "12,5": 13
- *    "12,3": 23
- *  },
- *  labels: {
- *    "12,3": "A"
- *    "12,4": "B"
- *  }
- * }
+ * @param {glift.rules.MoveTree} movetree
  * @return {!glift.flattener.MarkMap}
  * @private
  */
@@ -271,6 +274,7 @@ glift.flattener.markMap_ = function(movetree) {
   /** @type {!glift.flattener.MarkMap} */
   var out = { marks: {}, labels: {} };
   var symbols = glift.flattener.symbols;
+  /** @type {!Object<glift.rules.prop, !glift.flattener.symbols>} */
   var propertiesToSymbols = {
     CR: symbols.CIRCLE,
     LB: symbols.TEXTLABEL,
@@ -317,8 +321,13 @@ glift.flattener.markMap_ = function(movetree) {
  * Note: The starting move is only interesting in the case where there's a
  * next-moves-path. If there's no next-moves-path specified, this number is
  * effectively unused.
+ *
+ * @param {!glift.rules.MoveTree} mt
+ * @param {!glift.rules.Treepath} nextMovesPath
+ * @return {number}
+ * @private
  */
-glift.flattener._findStartingMoveNum = function(mt, nextMovesPath) {
+glift.flattener.findStartingMoveNum_ = function(mt, nextMovesPath) {
   mt = mt.newTreeRef();
   if (mt.onMainline()) {
     if (nextMovesPath.length > 0 && nextMovesPath[0] > 0) {
@@ -372,8 +381,7 @@ glift.flattener._createStoneLabels = function(
   var symb = glift.flattener.symbols;
   var collisions = []; // {color: <color>, mvnum: <number>, label: <lbl>}
 
-  // Remove any number labels currently existing in the marks map.  This
-  // method also numbers stones.
+  // Remove any number labels currently existing in the marks map.
   var digitRegex = /[0-9]/;
   for (var ptstr in labels) {
     if (digitRegex.test(labels[ptstr])) {
