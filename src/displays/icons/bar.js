@@ -1,56 +1,65 @@
 goog.provide('glift.displays.icons.bar');
 goog.provide('glift.displays.icons.IconBar');
+goog.provide('glift.displays.icons.IconBarOptions');
 
 /**
- * Options:
- *    - divId: the divId for this object
- *    - positioning: bounding box for the bar
- *    - parentBox: bounding box for the parent widget
- *    - icons: an array of icon names)
- *    - vertMargin: in pixels
- *    - horzMargin: in pixels
- *    - theme: The theme. default is the DEFAULT theme, of course
+ * Some Notes:
+ *  - divId: the divId for this object
+ *  - positioning: bounding box for the bar
+ *  - parentBox: bounding box for the parent widget
+ *  - icons: an array of icon names)
+ *  - vertMargin: in pixels
+ *  - horzMargin: in pixels
+ *  - theme: The theme. default is the DEFAULT theme, of course
+ *
+ * @typedef {{
+ *  divId: string,
+ *  icons: !Array<string>,
+ *  theme: !glift.themes.base,
+ *  positioning: !glift.orientation.BoundingBox,
+ *  parentBbox: !glift.orientation.BoundingBox,
+ *  allDivIds: !Object<string, string>,
+ *  allPositioning: !glift.displays.position.WidgetBoxes
+ * }}
+ */
+glift.displays.icons.IconBarOptions;
+
+
+/**
+ * @param {!glift.displays.icons.IconBarOptions} options
+ * @return {!glift.displays.icons.IconBar}
  */
 glift.displays.icons.bar = function(options) {
-  var divId = options.divId,
-      icons = options.icons || [],
-      theme = options.theme,
-      pbox = options.parentBbox,
-      position = options.positioning,
-      allDivIds = options.allDivIds,
-      allPositioning = options.allPositioning;
-  if (!theme) {
-    throw new Error("Theme undefined in iconbar");
-  }
-  if (!divId) {
-    throw new Error("Must define an options 'divId' as an option");
-  }
-  return new glift.displays.icons.IconBar(
-      divId, position, icons, pbox, theme, allDivIds, allPositioning);
+  return new glift.displays.icons.IconBar(options);
 };
 
 /**
  * IconBar Object
  *
  * @constructor
+ * @param {!glift.displays.icons.IconBarOptions} options
  */
-glift.displays.icons.IconBar = function(
-    divId, position, iconsRaw, parentBbox, theme,
-    allDivIds, allPositioning) {
-  this.divId = divId;
-  this.position = position;
+glift.displays.icons.IconBar = function(options) {
+  if (!options.theme) {
+    throw new Error("Theme undefined in iconbar");
+  }
+  if (!options.divId) {
+    throw new Error("Must define an options 'divId' as an option");
+  }
+  this.divId = options.divId;
+  this.position = options.positioning;
   this.divBbox = glift.orientation.bbox.fromPts(
       glift.util.point(0,0),
-      glift.util.point(position.width(), position.height()));
-  this.theme = theme;
+      glift.util.point(this.position.width(), this.position.height()));
+  this.theme = options.theme;
   // The parentBbox is useful for create a multiIconSelector.
-  this.parentBbox = parentBbox;
+  this.parentBbox = options.parentBbox;
   // Array of wrapped icons. See wrapped_icon.js.
-  this.icons = glift.displays.icons.wrapIcons(iconsRaw);
+  this.icons = glift.displays.icons.wrapIcons(options.icons);
 
   // The positioning information for all divs.
-  this.allDivIds = allDivIds;
-  this.allPositioning = allPositioning;
+  this.allDivIds = options.allDivIds;
+  this.allPositioning = options.allPositioning;
 
   // Map of icon name to icon object. initialized with _initNameMapping
   // TODO(kashomon): Make this non-side-affecting.

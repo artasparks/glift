@@ -52,8 +52,9 @@ glift.bridge.intersections = {
    *    displayDataType : <Either PARTIAL or FULL>.  Defaults to partial.
    *  }
    *
-   * @param {Object} movetree Glift movetree.
-   * @param {Object=} opt_problemConditions Optional problem conditions.
+   * @param {!glift.rules.MoveTree} movetree Glift movetree.
+   * @param {!glift.rules.ProblemConditions=} opt_problemConditions Optional
+   *    problem conditions.
    * @param {number=} opt_nextVarNumber Optional next variation number.
    */
   // TODO(kashomon): Make this a proper object constructor with accessors and
@@ -81,7 +82,8 @@ glift.bridge.intersections = {
     out.nextMoves = movetree.nextMoves();
     out.selectedNextMove = out.nextMoves[opt_nextVarNumber] || null;
     out.correctNextMoves = opt_problemConditions !== undefined
-        ? glift.rules.problems.correctNextMoves(movetree, opt_problemConditions)
+        ? glift.rules.problems.correctNextMoves(movetree,
+            /** @type {!glift.rules.ProblemConditions} */ (opt_problemConditions))
         : [];
     return out;
   },
@@ -109,7 +111,8 @@ glift.bridge.intersections = {
    *    WHITE: [..pts..]
    * }
    *
-   * @param {Object=} opt_problemConditions Optional problem conditions.
+   * @param {glift.rules.ProblemConditions=} opt_problemConditions Optional
+   *    problem conditions.
    * @param {number=} opt_nextVarNumber Optional next var number.
    */
   nextBoardData: function(

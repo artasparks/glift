@@ -34,7 +34,11 @@ glift.displays.position.WidgetBoxes.prototype = {
     return this._second;
   },
 
-  /** Get a component by ID. */
+  /**
+   * Get a component by ID.
+   * @param {glift.enums.boardComponents} key Component key
+   * @return {?glift.orientation.BoundingBox} A bounding box or null.
+   */
   getBbox: function(key) {
     if (this._first && this._first.mapping[key]) {
       return this._first.mapping[key]
@@ -43,6 +47,20 @@ glift.displays.position.WidgetBoxes.prototype = {
       return this._second.mapping[key]
     }
     return null;
+  },
+
+  /**
+   * Get the bbox of a component or throw an exception
+   *
+   * @param {glift.enums.boardComponents} key Component key
+   * @return {!glift.orientation.BoundingBox}.
+   */
+  mustGetBbox: function(key) {
+    var bbox = this.getBbox(key);
+    if (bbox == null) {
+      throw new Error('Column was null for component: ' + key);
+    }
+    return bbox;
   },
 
   /**
@@ -124,9 +142,28 @@ glift.displays.position.WidgetColumn.prototype = {
     return this;
   },
 
-  /** Get the bbox of a component or return null */
+  /**
+   * Get the bbox of a component or return null.
+   *
+   * @param {glift.enums.boardComponents} component Component key
+   * @return {?glift.orientation.BoundingBox} A bounding box or null.
+   */
   getBbox: function(component) {
     return this.mapping[component] || null;
+  },
+
+  /**
+   * Get the bbox of a component or throw an exception.
+   *
+   * @param {glift.enums.boardComponents} component Component key
+   * @return {!glift.orientation.BoundingBox}
+   */
+  mustGetBbox: function(component) {
+    var bbox = this.getBbox(component);
+    if (bbox == null) {
+      throw new Error('Bbox was null for component: ' + component);
+    }
+    return bbox;
   },
 
   /**

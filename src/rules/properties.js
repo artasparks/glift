@@ -39,14 +39,6 @@ glift.rules.MarkCollection;
 
 
 /**
- * Map of prop-to-values.
- *
- * @typedef {!Object<glift.rules.prop, !Array<string>>}
- */
-glift.rules.ProblemConditions;
-
-
-/**
  * An object describing a property.
  *
  * Example:

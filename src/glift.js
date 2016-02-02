@@ -9,7 +9,7 @@
 
 // Define some closure primitives for compatibility with dev mode. Closure
 // compiler works off of regular expressions, so this shouldn't be an issue.
-// Allows us to use goog.require and goog.provides in dev mode.
+// This allows us to use goog.require and goog.provides in dev mode.
 if (!window['goog']) {
   window['goog'] = {}
   window['goog']['provide'] = function(){};

@@ -8,7 +8,7 @@
   });
 
   test('Get', function() {
-    deepEqual(themes.get('DEFAULT'), themes.base, 'get');
+    deepEqual(themes.get('DEFAULT'), themes.baseTemplate, 'get');
     deepEqual(themes.get('FOO'), null, 'non-get');
   });
 

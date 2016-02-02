@@ -12,17 +12,19 @@
         'glift_display', // divId
         null, // board box -- get from divId
         theme, // theme
-        {
-          intersections: 9
-        });
+        glift.enums.boardRegions.ALL,
+        9, // intersections
+        glift.enums.rotations.NO_ROTATION,
+        false);
     ok(display !== undefined);
     ok(display.divId() !== undefined);
-    ok(display.intersectionPoints() !== undefined);
+    ok(display.intersections() !== undefined);
     deepEqual(display.divId(), 'glift_display', 'div id');
-    deepEqual(display.intersectionPoints(), 9, 'intersections');
+    deepEqual(display.numIntersections(), 9, 'intersections');
     deepEqual(display.boardRegion(), boardRegions.ALL, 'board region');
     deepEqual(display.rotation(),
         glift.enums.rotations.NO_ROTATION, 'rotation');
+    deepEqual(display.drawBoardCoords(), false, 'draw board coords');
     testUtil.assertFullDiv('glift_display')
     display.destroy();
     testUtil.assertEmptyDiv('glift_display')

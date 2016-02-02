@@ -13,8 +13,20 @@
       WIDTH = 300,
       HEIGHT = 400;
 
+  var createEnv = function(opt) {
+    var opt = opt || {};
+    var divId = opt.divId || 'zed';
+    var boardBox = opt.boardBox !== undefined ?
+        opt.boardBox :
+        bbox.fromPts(tl, pt(WIDTH, HEIGHT));
+    var boardRegion = opt.boardRegion || glift.enums.boardRegions.ALL;
+    var intersections = opt.intersections || 19;
+    var drawBoardCoords = opt.drawBoardCoords || false;
+    return env.get(divId, boardBox, boardRegion, intersections, drawBoardCoords);
+  };
+
   test('Creation of env object', function() {
-    var envObj = env.get(divId, bbox.fromPts(tl, pt(WIDTH, HEIGHT)), opts);
+    var envObj = createEnv();
     deepEqual(envObj.bbox.width(), WIDTH);
     deepEqual(envObj.bbox.height(), HEIGHT);
     deepEqual(envObj.divId, divId);
@@ -26,11 +38,15 @@
   });
 
   test('Creation of square go board box', function() {
-    var guiEnv = env.get(divId, bbox.fromPts(tl, pt(WIDTH, HEIGHT)), opts).init();
+    var guiEnv = createEnv({
+      boardBox: bbox.fromPts(tl, pt(WIDTH, HEIGHT))
+    }).init();
     deepEqual(guiEnv.goBoardBox.height(), guiEnv.goBoardBox.width(),
         'Must create a square board for a long box');
 
-    var guiEnv = env.get(divId, bbox.fromPts(tl, pt(HEIGHT, WIDTH)), opts).init();
+    var guiEnv = createEnv({
+      boardBox: bbox.fromPts(tl, pt(HEIGHT, WIDTH))
+    }).init();
     deepEqual(
         Math.round(guiEnv.goBoardBox.height()),
         Math.round(guiEnv.goBoardBox.width()),
@@ -38,7 +54,9 @@
   });
 
   test('Test creation: tall div, square board', function() {
-    var e = env.get(divId, bbox.fromPts(tl, pt(200, 400)), opts).init();
+    var e = createEnv({
+      boardBox: bbox.fromPts(tl, pt(200, 400))
+    }).init();
     deepEqual(e.divBox.width(), 200, 'divBox width');
     deepEqual(e.divBox.height(), 400, 'divBox height');
     deepEqual(e.goBoardBox.height(), 200, 'goBoardBox height');
@@ -50,7 +68,9 @@
   });
 
   test('Test creation: wide div, square board', function() {
-    var e = env.get(divId, bbox.fromPts(tl, pt(400, 200)), opts).init();
+    var e = createEnv({
+      boardBox: bbox.fromPts(tl, pt(400, 200))
+    }).init();
     deepEqual(e.divBox.width(), 400, 'divBox width');
     deepEqual(e.divBox.height(), 200, 'divBox height');
     deepEqual(e.goBoardBox.height(), 200, 'goBoardBox height');
@@ -62,8 +82,13 @@
   });
 
   test('Test with real (square) div', function() {
-    // Note: This relies an the glift_display div existing in the dom.
-    var env1 = env.get('glift_display', null, opts).init();
+    // Note: This relies an the glift_display div existing in the dom and thus
+    // is really more like an integration test.
+    // TODO(kashomon): Delete or move to an integration tests target.
+    var env1 = createEnv({
+      divId: 'glift_display',
+      boardBox: null
+    }).init();
     deepEqual(env1.divHeight, 400);
     deepEqual(env1.divWidth, 400);
     ok(env1.divBox !== undefined);

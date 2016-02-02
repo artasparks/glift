@@ -7,7 +7,7 @@ glift.displays.board = {};
 /**
  * Create a new display Board.
  *
- * @param {!Object} env Glift display environment.
+ * @param {!glift.displays.GuiEnvironment} env Glift display environment.
  * @param {!glift.themes.base} theme A Glift theme.
  * @param {!glift.enums.rotations} rotation Rotation enum
  */
@@ -23,7 +23,7 @@ glift.displays.board.create = function(env, theme, rotation) {
  * @param {glift.enums.rotations=} opt_rotation Optional rotation to rotate the
  *    points.
  *
- * @constructor
+ * @constructor @struct @final
  * @package
  */
 glift.displays.board.Display = function(environment, theme, opt_rotation) {
@@ -59,10 +59,14 @@ glift.displays.board.Display.prototype = {
   boardRegion: function() { return this._environment.boardRegion; },
   /** @return {string} */
   divId: function() { return this._environment.divId },
-  intersectionPoints: function() { return this._environment.intersections; },
+  /** @return {number} */
+  numIntersections: function() { return this._environment.intersections; },
+  /** @return {?glift.displays.board.Intersections} */
   intersections: function() { return this._intersections; },
   /** @return {!glift.enums.rotations} */
   rotation: function() { return this.rotation_; },
+  /** @return {boolean} */
+  drawBoardCoords: function() { return this._environment.drawBoardCoords; },
   width: function() { return this._environment.goBoardBox.width() },
   height: function() { return this._environment.goBoardBox.height() },
 

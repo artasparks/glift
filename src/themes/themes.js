@@ -14,14 +14,21 @@ glift.themes = {
    * Accepts a (case sensitive) ID and returns a COPY of the theme.
    *
    * Returns null if no such theme exists.
+   *
+   * @param {string} id ID of the theme.
+   * @return {!glift.themes.base} A theme templated by the relevant them
+   *    specified.
    */
   get: function(id) {
     var registered = glift.themes.registered;
+    if (!id in registered) {
+      throw new Error('No theme available for theme with name: ' + id);
+    }
     var rawTheme = !(id in registered) ? null : registered[id];
     if (rawTheme) {
-      return glift.themes.deepCopy({}, rawTheme, glift.themes.base);
+      return glift.themes.deepCopy({}, rawTheme, glift.themes.baseTemplate);
     } else {
-      return rawTheme; // null;
+      return rawTheme;
     }
   },
 
@@ -72,9 +79,11 @@ glift.themes = {
     return builder;
   },
 
-  /** 
+  /**
    * Accepts a (case sensitive) theme ID and true if the theme exists and false
    * otherwise.
+   * @param {string} id
+   * @return {boolean} Whether or not the theme is regestered.
    */
   has: function(id) {
     var registered = glift.themes.registered;
@@ -84,10 +93,13 @@ glift.themes = {
     return (id in registered);
   },
 
-  /** 
+  /**
    * Set the 'fill' for the go board to be an image
    * For a theme object. This generally assumes you're called 'get' so that you
    * have a copy of the base theme.
+   *
+   * @param {!glift.themes.base} theme
+   * @param {string} value
    */
   setGoBoardBackground: function(theme, value) {
     if (theme) {

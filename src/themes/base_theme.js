@@ -1,10 +1,16 @@
 goog.provide('glift.themes.base');
 
 /**
+ * @typedef {!Object}
+ */
+// TODO(kashomon): Provide real type
+glift.themes.base;
+
+/**
  * Base theme from which all others extend. All possible options should be
  * placed here.
  */
-glift.themes.base = {
+glift.themes.baseTemplate = {
   board: {
     fill: "#f5be7e",
     stroke: "#000000",

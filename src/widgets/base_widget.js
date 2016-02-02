@@ -3,15 +3,21 @@ goog.provide('glift.widgets.BaseWidget');
 /**
  * The base web UI widget.
  *
+ * @param {string} divId
+ * @param {!glift.api.SgfOptions} sgfOptions
+ * @param {!glift.api.DisplayOptions} displayOptions
+ * @param {!glift.widgets.ActionsWrapper} actions
+ * @param {!glift.widgets.WidgetManager} manager
+ * @param {!glift.api.HookOptions} hooks
+ *
  * @constructor @final @struct
  */
 glift.widgets.BaseWidget = function(
     divId, sgfOptions, displayOptions, actions, manager, hooks) {
   this.wrapperDivId = divId; // We split the wrapper div.
-  this.type = sgfOptions.type;
-  this.sgfOptions = glift.util.simpleClone(sgfOptions);
-  this.displayOptions = glift.util.simpleClone(displayOptions);
-  this.actions = actions; // deeply nested -- not worth cloning.
+  this.sgfOptions = sgfOptions;
+  this.displayOptions = displayOptions;
+  this.actions = actions;
   this.manager = manager;
   this.externalHooks = hooks;
 
@@ -39,18 +45,16 @@ glift.widgets.BaseWidget.prototype = {
   /** Draws the widget. */
   draw: function() {
     this.controller = this.sgfOptions.controllerFunc(this.sgfOptions);
-    this.initialMoveNumber = this.controller.movetree.node().getNodeNum();
+    this.initialMoveNumber = this.controller.currentMoveNumber();
     this.initialPlayerColor = this.controller.getCurrentPlayer();
     glift.util.majorPerfLog('Created controller');
 
-    this.displayOptions.intersections = this.controller.getIntersections();
-
-    this.displayOptions.boardRegion =
+    var intersections = this.controller.getIntersections();
+    var boardRegion =
         this.sgfOptions.boardRegion === glift.enums.boardRegions.AUTO
-        ? glift.orientation.getQuadCropFromMovetree(this.controller.movetree)
+        ? this.controller.getQuadCropFromBeginning()
         : this.sgfOptions.boardRegion;
 
-    this.displayOptions.rotation = this.sgfOptions.rotation;
     glift.util.majorPerfLog('Calculated board regions');
 
     // This should be the only time we get the base width and height, until the
@@ -64,8 +68,8 @@ glift.widgets.BaseWidget.prototype = {
 
     var positioning = glift.displays.position.positioner(
         parentDivBbox,
-        this.displayOptions.boardRegion,
-        this.displayOptions.intersections,
+        boardRegion,
+        intersections,
         this._getUiComponents(this.sgfOptions),
         this.displayOptions.oneColumnSplits,
         this.displayOptions.twoColumnSplits).calcWidgetPositioning();
@@ -73,45 +77,58 @@ glift.widgets.BaseWidget.prototype = {
     var divIds = this._createDivsForPositioning(positioning, this.wrapperDivId);
     glift.util.majorPerfLog('Created divs');
 
-    var theme = glift.themes.get(this.displayOptions.theme);
+    var displayTheme = glift.themes.get(this.displayOptions.theme);
+
     if (this.displayOptions.goBoardBackground) {
       glift.themes.setGoBoardBackground(
-          theme, this.displayOptions.goBoardBackground);
+          displayTheme, this.displayOptions.goBoardBackground);
     }
 
     this.display = glift.displays.create(
-        divIds.BOARD,
-        positioning.getBbox(glift.enums.boardComponents.BOARD),
-        theme,
-        this.displayOptions);
+        divIds[glift.enums.boardComponents.BOARD],
+        positioning.mustGetBbox(glift.enums.boardComponents.BOARD),
+        displayTheme,
+        boardRegion,
+        intersections,
+        this.sgfOptions.rotation,
+        this.displayOptions.drawBoardCoords);
     glift.util.majorPerfLog('Finish creating display');
 
-    if (divIds.COMMENT_BOX) {
+    if (divIds[glift.enums.boardComponents.COMMENT_BOX]) {
       this.commentBox = glift.displays.commentbox.create(
-          divIds.COMMENT_BOX,
-          positioning.getBbox(glift.enums.boardComponents.COMMENT_BOX),
-          theme,
+          divIds[glift.enums.boardComponents.COMMENT_BOX],
+          positioning.mustGetBbox(glift.enums.boardComponents.COMMENT_BOX),
+          displayTheme,
           this.displayOptions.useMarkdown);
     }
     glift.util.majorPerfLog('CommentBox');
 
-    if (divIds.ICONBAR) {
+    if (divIds[glift.enums.boardComponents.ICONBAR]) {
+      /** @type {!Array<string>} */
+      var icons = glift.util.simpleClone(this.sgfOptions.icons || []);
+      if (this.manager.hasNextSgf()) {
+        icons.push(this.displayOptions.nextSgfIcon);
+      }
+      if (this.manager.hasPrevSgf()) {
+        icons.unshift(this.displayOptions.previousSgfIcon);
+      }
       this.iconBar = glift.displays.icons.bar({
-          divId: divIds.ICONBAR,
-          positioning: positioning.getBbox(glift.enums.boardComponents.ICONBAR),
-          icons: this.sgfOptions.icons,
+          divId: divIds[glift.enums.boardComponents.ICONBAR],
+          positioning: positioning.mustGetBbox(glift.enums.boardComponents.ICONBAR),
+          icons: icons,
           parentBbox: parentDivBbox,
-          theme: theme,
+          theme: displayTheme,
           allDivIds: divIds,
-          allPositioning: positioning
+          allPositioning: positioning,
       }).draw();
     }
     glift.util.majorPerfLog('IconBar');
     divIds.ICONBAR && this.iconBar.initIconActions(
         this, this.actions.iconActions);
 
-    if (divIds.STATUS_BAR) {
+    if (divIds[glift.enums.boardComponents.STATUS_BAR]) {
       // TODO(kashomon): Move this logic into a helper.
+      /** @type {!Array<string>} */
       var statusBarIcons = glift.util.simpleClone(this.sgfOptions.statusBarIcons);
       if (this.manager.fullscreenDivId) {
         glift.array.replace(statusBarIcons, 'fullscreen', 'unfullscreen');
@@ -120,17 +137,18 @@ glift.widgets.BaseWidget.prototype = {
         statusBarIcons.splice(0, 0, 'widget-page');
       }
       var statusBarIconBar = glift.displays.icons.bar({
-          divId: divIds.STATUS_BAR,
-          positioning: positioning.getBbox(glift.enums.boardComponents.STATUS_BAR),
+          divId: divIds[glift.enums.boardComponents.STATUS_BAR],
+          positioning: positioning.mustGetBbox(
+              glift.enums.boardComponents.STATUS_BAR),
           icons: statusBarIcons,
           parentBbox: parentDivBbox,
-          theme: theme,
+          theme: displayTheme,
           allDivIds: divIds,
           allPositioning: positioning
       });
       this.statusBar = glift.displays.statusbar.create({
           iconBarPrototype: statusBarIconBar,
-          theme: theme,
+          theme: displayTheme,
           allPositioning: positioning,
           widget: this
       }).draw();
@@ -168,6 +186,8 @@ glift.widgets.BaseWidget.prototype = {
 
   /**
    * Create divs from positioning (WidgetBoxes) and the wrapper div id.
+   * @return {!Object<glift.enums.boardComponents, string>} a map from component
+   *    name to the div Id.
    */
   _createDivsForPositioning: function(positioning, wrapperDivId) {
     // Map from component to ID.
@@ -258,8 +278,7 @@ glift.widgets.BaseWidget.prototype = {
   _initProblemData: function() {
     if (this.sgfOptions.widgetType ===
         glift.enums.widgetTypes.CORRECT_VARIATIONS_PROBLEM) {
-      var correctNext = glift.rules.problems.correctNextMoves(
-          this.controller.movetree, this.sgfOptions.problemConditions);
+      var correctNext = this.controller.getCorrectNextMoves();
       // A Set: i.e., a map of points to true
       this.correctNextSet = this.correctNextSet || {};
       this.numCorrectAnswers = this.numCorrectAnswers || 0;

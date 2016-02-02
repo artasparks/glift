@@ -9,7 +9,7 @@
 
 // Define some closure primitives for compatibility with dev mode. Closure
 // compiler works off of regular expressions, so this shouldn't be an issue.
-// Allows us to use goog.require and goog.provides in dev mode.
+// This allows us to use goog.require and goog.provides in dev mode.
 if (!window['goog']) {
   window['goog'] = {}
   window['goog']['provide'] = function(){};
@@ -1662,14 +1662,21 @@ glift.themes = {
    * Accepts a (case sensitive) ID and returns a COPY of the theme.
    *
    * Returns null if no such theme exists.
+   *
+   * @param {string} id ID of the theme.
+   * @return {!glift.themes.base} A theme templated by the relevant them
+   *    specified.
    */
   get: function(id) {
     var registered = glift.themes.registered;
+    if (!id in registered) {
+      throw new Error('No theme available for theme with name: ' + id);
+    }
     var rawTheme = !(id in registered) ? null : registered[id];
     if (rawTheme) {
-      return glift.themes.deepCopy({}, rawTheme, glift.themes.base);
+      return glift.themes.deepCopy({}, rawTheme, glift.themes.baseTemplate);
     } else {
-      return rawTheme; // null;
+      return rawTheme;
     }
   },
 
@@ -1720,9 +1727,11 @@ glift.themes = {
     return builder;
   },
 
-  /** 
+  /**
    * Accepts a (case sensitive) theme ID and true if the theme exists and false
    * otherwise.
+   * @param {string} id
+   * @return {boolean} Whether or not the theme is regestered.
    */
   has: function(id) {
     var registered = glift.themes.registered;
@@ -1732,10 +1741,13 @@ glift.themes = {
     return (id in registered);
   },
 
-  /** 
+  /**
    * Set the 'fill' for the go board to be an image
    * For a theme object. This generally assumes you're called 'get' so that you
    * have a copy of the base theme.
+   *
+   * @param {!glift.themes.base} theme
+   * @param {string} value
    */
   setGoBoardBackground: function(theme, value) {
     if (theme) {
@@ -1750,10 +1762,16 @@ glift.themes = {
 goog.provide('glift.themes.base');
 
 /**
+ * @typedef {!Object}
+ */
+// TODO(kashomon): Provide real type
+glift.themes.base;
+
+/**
  * Base theme from which all others extend. All possible options should be
  * placed here.
  */
-glift.themes.base = {
+glift.themes.baseTemplate = {
   board: {
     fill: "#f5be7e",
     stroke: "#000000",
@@ -3475,17 +3493,43 @@ glift.displays = {
   /**
    * Create the display.  Delegates to board.create(...), which creates an SVG
    * based Go Board.
+   *
+   * @param {string} divId
+   * @param {!glift.orientation.BoundingBox} boardBox
+   * @param {!glift.themes.base} theme Glift theme.
+   * @param {glift.enums.boardRegions} boardRegion Board region to crop the
+   *    board to.
+   * @param {number} intersections Number of intersections for the Go
+   *    board. Usually 9, 13 or 19.
+   * @param {glift.enums.rotations} rotation Apply a rotation to the Go board
+   *    during the draw phase.
+   * @param {boolean} drawBoardCoords Whether or not to draw the board
+   *    coordinates.
+   *
+   * @return {glift.displays.board.Display} The display.
    */
-  create: function(divId, boardBox, theme, options) {
+  create: function(
+      divId,
+      boardBox,
+      theme,
+      boardRegion,
+      intersections,
+      rotation,
+      drawBoardCoords) {
     glift.util.majorPerfLog("Before environment creation");
 
-    var env = glift.displays.environment.get(divId, boardBox, options);
+    var env = glift.displays.environment.get(
+        divId, boardBox, boardRegion, intersections, drawBoardCoords);
 
     glift.util.majorPerfLog("After environment creation");
-    return glift.displays.board.create(env, theme, options.rotation);
+    return glift.displays.board.create(env, theme, rotation);
   },
 
-  /** Return the bounding box for a div. */
+  /**
+   * Return the bounding box for a div.
+   * @param {string} divId ID of a div.
+   * @return {!glift.orientation.BoundingBox}
+   */
   bboxFromDiv: function(divId) {
     var elem = glift.dom.elem(divId);
     return glift.orientation.bbox.fromSides(
@@ -3851,13 +3895,15 @@ glift.displays.environment = {
    * Gets the environment wrapper, passing in the display options. This is the
    * preferred method.  It's expected that the proper display code will
    */
-  get: function(divId, boardBox, options) {
+  get: function(
+      divId, boardBox, boardRegion, intersections, drawBoardCoords) {
     if (!divId) {
       throw new Error('No DivId Specified!')
     }
 
     // For speed and isolation purposes, it's preferred to define the boardBox
     // rather than to calculate the h/w by inspecting the div here.
+    // TODO(kashomon): Remove this now given the UI positioner stuff?
     if (divId && !boardBox) {
       boardBox = glift.displays.bboxFromDiv(divId);
     }
@@ -3865,19 +3911,23 @@ glift.displays.environment = {
     if (!boardBox) {
       throw new Error('No Bounding Box defined for display environment!')
     }
-    return new glift.displays.GuiEnvironment(divId, boardBox, options);
+    return new glift.displays.GuiEnvironment(
+        divId, boardBox, boardRegion, intersections, drawBoardCoords);
   }
 };
 
 /**
  * @param {string} divId
  * @param {!glift.orientation.BoundingBox} bbox
- * @param {!Object} options SGF Options.
+ * @param {!glift.enums.boardRegions} boardRegion
+ * @param {number} intersections Number of intersections (usu. 19).
+ * @param {boolean} drawBoardCoords Whether or not to draw the board
+ *    coordinates.
  *
- * @package
  * @constructor @final @struct
  */
-glift.displays.GuiEnvironment = function(divId, bbox, options) {
+glift.displays.GuiEnvironment = function(
+    divId, bbox, boardRegion, intersections, drawBoardCoords) {
   /** @type {string} */
   this.divId = divId;
   /** @type {!glift.orientation.BoundingBox} */
@@ -3887,11 +3937,11 @@ glift.displays.GuiEnvironment = function(divId, bbox, options) {
   /** @type {number} */
   this.divWidth = bbox.width();
   /** @type {!glift.enums.boardRegions} */
-  this.boardRegion = options.boardRegion || glift.enums.boardRegions.ALL;
+  this.boardRegion = boardRegion;
   /** @type {number} */
-  this.intersections = options.intersections || 19;
+  this.intersections = intersections;
   /** @type {boolean} */
-  this.drawBoardCoords = options.drawBoardCoords || false;
+  this.drawBoardCoords = drawBoardCoords;
 
   var cropNamespace = glift.displays.cropbox;
 
@@ -4237,7 +4287,7 @@ glift.displays.board = {};
 /**
  * Create a new display Board.
  *
- * @param {!Object} env Glift display environment.
+ * @param {!glift.displays.GuiEnvironment} env Glift display environment.
  * @param {!glift.themes.base} theme A Glift theme.
  * @param {!glift.enums.rotations} rotation Rotation enum
  */
@@ -4253,7 +4303,7 @@ glift.displays.board.create = function(env, theme, rotation) {
  * @param {glift.enums.rotations=} opt_rotation Optional rotation to rotate the
  *    points.
  *
- * @constructor
+ * @constructor @struct @final
  * @package
  */
 glift.displays.board.Display = function(environment, theme, opt_rotation) {
@@ -4289,10 +4339,14 @@ glift.displays.board.Display.prototype = {
   boardRegion: function() { return this._environment.boardRegion; },
   /** @return {string} */
   divId: function() { return this._environment.divId },
-  intersectionPoints: function() { return this._environment.intersections; },
+  /** @return {number} */
+  numIntersections: function() { return this._environment.intersections; },
+  /** @return {?glift.displays.board.Intersections} */
   intersections: function() { return this._intersections; },
   /** @return {!glift.enums.rotations} */
   rotation: function() { return this.rotation_; },
+  /** @return {boolean} */
+  drawBoardCoords: function() { return this._environment.drawBoardCoords; },
   width: function() { return this._environment.goBoardBox.width() },
   height: function() { return this._environment.goBoardBox.height() },
 
@@ -5489,57 +5543,66 @@ glift.displays.icons = {};
 
 goog.provide('glift.displays.icons.bar');
 goog.provide('glift.displays.icons.IconBar');
+goog.provide('glift.displays.icons.IconBarOptions');
 
 /**
- * Options:
- *    - divId: the divId for this object
- *    - positioning: bounding box for the bar
- *    - parentBox: bounding box for the parent widget
- *    - icons: an array of icon names)
- *    - vertMargin: in pixels
- *    - horzMargin: in pixels
- *    - theme: The theme. default is the DEFAULT theme, of course
+ * Some Notes:
+ *  - divId: the divId for this object
+ *  - positioning: bounding box for the bar
+ *  - parentBox: bounding box for the parent widget
+ *  - icons: an array of icon names)
+ *  - vertMargin: in pixels
+ *  - horzMargin: in pixels
+ *  - theme: The theme. default is the DEFAULT theme, of course
+ *
+ * @typedef {{
+ *  divId: string,
+ *  icons: !Array<string>,
+ *  theme: !glift.themes.base,
+ *  positioning: !glift.orientation.BoundingBox,
+ *  parentBbox: !glift.orientation.BoundingBox,
+ *  allDivIds: !Object<string, string>,
+ *  allPositioning: !glift.displays.position.WidgetBoxes
+ * }}
+ */
+glift.displays.icons.IconBarOptions;
+
+
+/**
+ * @param {!glift.displays.icons.IconBarOptions} options
+ * @return {!glift.displays.icons.IconBar}
  */
 glift.displays.icons.bar = function(options) {
-  var divId = options.divId,
-      icons = options.icons || [],
-      theme = options.theme,
-      pbox = options.parentBbox,
-      position = options.positioning,
-      allDivIds = options.allDivIds,
-      allPositioning = options.allPositioning;
-  if (!theme) {
-    throw new Error("Theme undefined in iconbar");
-  }
-  if (!divId) {
-    throw new Error("Must define an options 'divId' as an option");
-  }
-  return new glift.displays.icons.IconBar(
-      divId, position, icons, pbox, theme, allDivIds, allPositioning);
+  return new glift.displays.icons.IconBar(options);
 };
 
 /**
  * IconBar Object
  *
  * @constructor
+ * @param {!glift.displays.icons.IconBarOptions} options
  */
-glift.displays.icons.IconBar = function(
-    divId, position, iconsRaw, parentBbox, theme,
-    allDivIds, allPositioning) {
-  this.divId = divId;
-  this.position = position;
+glift.displays.icons.IconBar = function(options) {
+  if (!options.theme) {
+    throw new Error("Theme undefined in iconbar");
+  }
+  if (!options.divId) {
+    throw new Error("Must define an options 'divId' as an option");
+  }
+  this.divId = options.divId;
+  this.position = options.positioning;
   this.divBbox = glift.orientation.bbox.fromPts(
       glift.util.point(0,0),
-      glift.util.point(position.width(), position.height()));
-  this.theme = theme;
+      glift.util.point(this.position.width(), this.position.height()));
+  this.theme = options.theme;
   // The parentBbox is useful for create a multiIconSelector.
-  this.parentBbox = parentBbox;
+  this.parentBbox = options.parentBbox;
   // Array of wrapped icons. See wrapped_icon.js.
-  this.icons = glift.displays.icons.wrapIcons(iconsRaw);
+  this.icons = glift.displays.icons.wrapIcons(options.icons);
 
   // The positioning information for all divs.
-  this.allDivIds = allDivIds;
-  this.allPositioning = allPositioning;
+  this.allDivIds = options.allDivIds;
+  this.allPositioning = options.allPositioning;
 
   // Map of icon name to icon object. initialized with _initNameMapping
   // TODO(kashomon): Make this non-side-affecting.
@@ -7503,7 +7566,11 @@ glift.displays.position.WidgetBoxes.prototype = {
     return this._second;
   },
 
-  /** Get a component by ID. */
+  /**
+   * Get a component by ID.
+   * @param {glift.enums.boardComponents} key Component key
+   * @return {?glift.orientation.BoundingBox} A bounding box or null.
+   */
   getBbox: function(key) {
     if (this._first && this._first.mapping[key]) {
       return this._first.mapping[key]
@@ -7512,6 +7579,20 @@ glift.displays.position.WidgetBoxes.prototype = {
       return this._second.mapping[key]
     }
     return null;
+  },
+
+  /**
+   * Get the bbox of a component or throw an exception
+   *
+   * @param {glift.enums.boardComponents} key Component key
+   * @return {!glift.orientation.BoundingBox}.
+   */
+  mustGetBbox: function(key) {
+    var bbox = this.getBbox(key);
+    if (bbox == null) {
+      throw new Error('Column was null for component: ' + key);
+    }
+    return bbox;
   },
 
   /**
@@ -7593,9 +7674,28 @@ glift.displays.position.WidgetColumn.prototype = {
     return this;
   },
 
-  /** Get the bbox of a component or return null */
+  /**
+   * Get the bbox of a component or return null.
+   *
+   * @param {glift.enums.boardComponents} component Component key
+   * @return {?glift.orientation.BoundingBox} A bounding box or null.
+   */
   getBbox: function(component) {
     return this.mapping[component] || null;
+  },
+
+  /**
+   * Get the bbox of a component or throw an exception.
+   *
+   * @param {glift.enums.boardComponents} component Component key
+   * @return {!glift.orientation.BoundingBox}
+   */
+  mustGetBbox: function(component) {
+    var bbox = this.getBbox(component);
+    if (bbox == null) {
+      throw new Error('Bbox was null for component: ' + component);
+    }
+    return bbox;
   },
 
   /**
@@ -7701,7 +7801,7 @@ glift.displays.position.WidgetPositioner.prototype = {
    * Calculate the Widget Positioning.  This uses heuristics to determine if the
    * orientation should be horizontally oriented or vertically oriented.
    *
-   * Returns a WidgetBoxes instance.
+   * @return {!glift.displays.position.WidgetBoxes}
    */
   calcWidgetPositioning: function() {
     if (this.useHorzOrientation()) {
@@ -7738,6 +7838,8 @@ glift.displays.position.WidgetPositioner.prototype = {
   /**
    * Calculates the Widget Positioning for a vertical orientation. returns a
    * Widget Boxes
+   *
+   * @return {!glift.displays.position.WidgetBoxes}
    */
   calcVertPositioning: function() {
     var recalCol = this.recalcSplits(this.oneColSplits).first;
@@ -7763,6 +7865,8 @@ glift.displays.position.WidgetPositioner.prototype = {
    * Note, we should never position horizontally for TOP and BOTTOM board regions.
    *
    * returns: WidgetBoxes instance.
+   *
+   * @return {!glift.displays.position.WidgetBoxes}
    */
   calcHorzPositioning: function() {
     var splits = this.recalcSplits(this.twoColSplits);
@@ -9482,6 +9586,16 @@ glift.rules.MoveTree.prototype = {
   }
 };
 
+goog.provide('glift.rules.ProblemConditions');
+goog.provide('glift.rules.problems');
+
+/**
+ * Map of prop-to-values.
+ *
+ * @typedef {!Object<glift.rules.prop, !Array<string>>}
+ */
+glift.rules.ProblemConditions;
+
 glift.rules.problems = {
   /**
    * Determines if a 'move' is correct. Takes a movetree and a series of
@@ -9510,7 +9624,9 @@ glift.rules.problems = {
    *    Correct as long as there is a black stone (a strange condition).
    *    { B: [] }
    *
-   * Returns one of enum.problemResults (CORRECT, INDETERMINATE, INCORRECT).
+   * @param {!glift.rules.MoveTree} movetree
+   * @param {!glift.rules.ProblemConditions} conditions
+   * @return {glift.enums.problemResults}
    */
   isCorrectPosition: function(movetree, conditions) {
     var problemResults = glift.enums.problemResults;
@@ -9553,12 +9669,12 @@ glift.rules.problems = {
   },
 
   /**
-   * Get the correct next moves.
+   * Gets the correct next moves. This assumes the the SGF is a problem-like SGF
+   * with with right conditions specified somehow.
    *
-   * returns: the 'correct' next moves. In other words
-   *
-   * [{ point: <point>, color: <color>  },..
-   * ]
+   * @param {!glift.rules.MoveTree} movetree
+   * @param {!glift.rules.ProblemConditions} conditions
+   * @return {!Array<!glift.rules.Move>} An array of correct next moves.
    */
   correctNextMoves: function(movetree, conditions) {
     var nextMoves = movetree.nextMoves();
@@ -9614,14 +9730,6 @@ glift.rules.MarkValue;
  * @typedef {!Object<glift.enums.marks, !Array<glift.rules.MarkValue>>}
  */
 glift.rules.MarkCollection;
-
-
-/**
- * Map of prop-to-values.
- *
- * @typedef {!Object<glift.rules.prop, !Array<string>>}
- */
-glift.rules.ProblemConditions;
 
 
 /**
@@ -11188,7 +11296,7 @@ glift.controllers.BaseController = function() {
 
   /**
    * Used only for examples (see the Game Figure). Indicates how to create
-   * numbers based on the 
+   * move numbers.
    * @package {!string|!Array<number>}
    */
   this.nextMovesPath = [];
@@ -11301,7 +11409,10 @@ glift.controllers.BaseController.prototype = {
     return this;
   },
 
-  /** Get the current move number. */
+  /**
+   * Get the current move number.
+   * @return {number}
+   */
   currentMoveNumber: function() {
     return this.movetree.node().getNodeNum();
   },
@@ -11463,6 +11574,30 @@ glift.controllers.BaseController.prototype = {
   /** @return {number} Returns the number of intersections. */
   getIntersections: function() {
     return this.movetree.getIntersections();
+  },
+
+  /**
+   * Get the recommended quad-cropping for the bove tree. This is a display
+   * consideration, but the knowledge of how to crop is dependent on the
+   * movetree, so this method needs to live on the controller.
+   *
+   * @return {glift.enums.boardRegions} The recommend board region to use.
+   */
+  getQuadCropFromBeginning: function() {
+    return glift.orientation.getQuadCropFromMovetree(
+        /** @type {!glift.rules.MoveTree} */ (this.movetree));
+  },
+
+  /**
+   * Gets the set of correct next moves. This should only apply to problem-based
+   * widgets
+   *
+   * @return {!Array<!glift.rules.Move>}
+   */
+  getCorrectNextMoves: function() {
+    return glift.rules.problems.correctNextMoves(
+        /** @type {!glift.rules.MoveTree} */ (this.movetree),
+        this.problemConditions);
   },
 
   /**
@@ -12350,8 +12485,9 @@ glift.bridge.intersections = {
    *    displayDataType : <Either PARTIAL or FULL>.  Defaults to partial.
    *  }
    *
-   * @param {Object} movetree Glift movetree.
-   * @param {Object=} opt_problemConditions Optional problem conditions.
+   * @param {!glift.rules.MoveTree} movetree Glift movetree.
+   * @param {!glift.rules.ProblemConditions=} opt_problemConditions Optional
+   *    problem conditions.
    * @param {number=} opt_nextVarNumber Optional next variation number.
    */
   // TODO(kashomon): Make this a proper object constructor with accessors and
@@ -12379,7 +12515,8 @@ glift.bridge.intersections = {
     out.nextMoves = movetree.nextMoves();
     out.selectedNextMove = out.nextMoves[opt_nextVarNumber] || null;
     out.correctNextMoves = opt_problemConditions !== undefined
-        ? glift.rules.problems.correctNextMoves(movetree, opt_problemConditions)
+        ? glift.rules.problems.correctNextMoves(movetree,
+            /** @type {!glift.rules.ProblemConditions} */ (opt_problemConditions))
         : [];
     return out;
   },
@@ -12407,7 +12544,8 @@ glift.bridge.intersections = {
    *    WHITE: [..pts..]
    * }
    *
-   * @param {Object=} opt_problemConditions Optional problem conditions.
+   * @param {glift.rules.ProblemConditions=} opt_problemConditions Optional
+   *    problem conditions.
    * @param {number=} opt_nextVarNumber Optional next var number.
    */
   nextBoardData: function(
@@ -14366,15 +14504,21 @@ goog.provide('glift.widgets.BaseWidget');
 /**
  * The base web UI widget.
  *
+ * @param {string} divId
+ * @param {!glift.api.SgfOptions} sgfOptions
+ * @param {!glift.api.DisplayOptions} displayOptions
+ * @param {!glift.widgets.ActionsWrapper} actions
+ * @param {!glift.widgets.WidgetManager} manager
+ * @param {!glift.api.HookOptions} hooks
+ *
  * @constructor @final @struct
  */
 glift.widgets.BaseWidget = function(
     divId, sgfOptions, displayOptions, actions, manager, hooks) {
   this.wrapperDivId = divId; // We split the wrapper div.
-  this.type = sgfOptions.type;
-  this.sgfOptions = glift.util.simpleClone(sgfOptions);
-  this.displayOptions = glift.util.simpleClone(displayOptions);
-  this.actions = actions; // deeply nested -- not worth cloning.
+  this.sgfOptions = sgfOptions;
+  this.displayOptions = displayOptions;
+  this.actions = actions;
   this.manager = manager;
   this.externalHooks = hooks;
 
@@ -14402,18 +14546,16 @@ glift.widgets.BaseWidget.prototype = {
   /** Draws the widget. */
   draw: function() {
     this.controller = this.sgfOptions.controllerFunc(this.sgfOptions);
-    this.initialMoveNumber = this.controller.movetree.node().getNodeNum();
+    this.initialMoveNumber = this.controller.currentMoveNumber();
     this.initialPlayerColor = this.controller.getCurrentPlayer();
     glift.util.majorPerfLog('Created controller');
 
-    this.displayOptions.intersections = this.controller.getIntersections();
-
-    this.displayOptions.boardRegion =
+    var intersections = this.controller.getIntersections();
+    var boardRegion =
         this.sgfOptions.boardRegion === glift.enums.boardRegions.AUTO
-        ? glift.orientation.getQuadCropFromMovetree(this.controller.movetree)
+        ? this.controller.getQuadCropFromBeginning()
         : this.sgfOptions.boardRegion;
 
-    this.displayOptions.rotation = this.sgfOptions.rotation;
     glift.util.majorPerfLog('Calculated board regions');
 
     // This should be the only time we get the base width and height, until the
@@ -14427,8 +14569,8 @@ glift.widgets.BaseWidget.prototype = {
 
     var positioning = glift.displays.position.positioner(
         parentDivBbox,
-        this.displayOptions.boardRegion,
-        this.displayOptions.intersections,
+        boardRegion,
+        intersections,
         this._getUiComponents(this.sgfOptions),
         this.displayOptions.oneColumnSplits,
         this.displayOptions.twoColumnSplits).calcWidgetPositioning();
@@ -14436,45 +14578,59 @@ glift.widgets.BaseWidget.prototype = {
     var divIds = this._createDivsForPositioning(positioning, this.wrapperDivId);
     glift.util.majorPerfLog('Created divs');
 
-    var theme = glift.themes.get(this.displayOptions.theme);
+    var displayTheme = glift.themes.get(this.displayOptions.theme);
+
     if (this.displayOptions.goBoardBackground) {
       glift.themes.setGoBoardBackground(
-          theme, this.displayOptions.goBoardBackground);
+          displayTheme, this.displayOptions.goBoardBackground);
     }
 
     this.display = glift.displays.create(
-        divIds.BOARD,
-        positioning.getBbox(glift.enums.boardComponents.BOARD),
-        theme,
-        this.displayOptions);
+        divIds[glift.enums.boardComponents.BOARD],
+        positioning.mustGetBbox(glift.enums.boardComponents.BOARD),
+        displayTheme,
+        boardRegion,
+        intersections,
+        this.sgfOptions.rotation,
+        this.displayOptions.drawBoardCoords);
     glift.util.majorPerfLog('Finish creating display');
 
-    if (divIds.COMMENT_BOX) {
+    if (divIds[glift.enums.boardComponents.COMMENT_BOX]) {
       this.commentBox = glift.displays.commentbox.create(
-          divIds.COMMENT_BOX,
-          positioning.getBbox(glift.enums.boardComponents.COMMENT_BOX),
-          theme,
+          divIds[glift.enums.boardComponents.COMMENT_BOX],
+          positioning.mustGetBbox(glift.enums.boardComponents.COMMENT_BOX),
+          displayTheme,
           this.displayOptions.useMarkdown);
     }
     glift.util.majorPerfLog('CommentBox');
 
-    if (divIds.ICONBAR) {
+      console.log('Text to log');
+    if (divIds[glift.enums.boardComponents.ICONBAR]) {
+      /** @type {!Array<string>} */
+      var icons = glift.util.simpleClone(this.sgfOptions.icons || []);
+      if (this.manager.hasNextSgf()) {
+        icons.push(this.displayOptions.nextSgfIcon);
+      }
+      if (this.manager.hasNextSgf()) {
+        icons.unshift(this.displayOptions.previousSgfIcon);
+      }
       this.iconBar = glift.displays.icons.bar({
-          divId: divIds.ICONBAR,
-          positioning: positioning.getBbox(glift.enums.boardComponents.ICONBAR),
-          icons: this.sgfOptions.icons,
+          divId: divIds[glift.enums.boardComponents.ICONBAR],
+          positioning: positioning.mustGetBbox(glift.enums.boardComponents.ICONBAR),
+          icons: icons,
           parentBbox: parentDivBbox,
-          theme: theme,
+          theme: displayTheme,
           allDivIds: divIds,
-          allPositioning: positioning
+          allPositioning: positioning,
       }).draw();
     }
     glift.util.majorPerfLog('IconBar');
     divIds.ICONBAR && this.iconBar.initIconActions(
         this, this.actions.iconActions);
 
-    if (divIds.STATUS_BAR) {
+    if (divIds[glift.enums.boardComponents.STATUS_BAR]) {
       // TODO(kashomon): Move this logic into a helper.
+      /** @type {!Array<string>} */
       var statusBarIcons = glift.util.simpleClone(this.sgfOptions.statusBarIcons);
       if (this.manager.fullscreenDivId) {
         glift.array.replace(statusBarIcons, 'fullscreen', 'unfullscreen');
@@ -14483,17 +14639,18 @@ glift.widgets.BaseWidget.prototype = {
         statusBarIcons.splice(0, 0, 'widget-page');
       }
       var statusBarIconBar = glift.displays.icons.bar({
-          divId: divIds.STATUS_BAR,
-          positioning: positioning.getBbox(glift.enums.boardComponents.STATUS_BAR),
+          divId: divIds[glift.enums.boardComponents.STATUS_BAR],
+          positioning: positioning.mustGetBbox(
+              glift.enums.boardComponents.STATUS_BAR),
           icons: statusBarIcons,
           parentBbox: parentDivBbox,
-          theme: theme,
+          theme: displayTheme,
           allDivIds: divIds,
           allPositioning: positioning
       });
       this.statusBar = glift.displays.statusbar.create({
           iconBarPrototype: statusBarIconBar,
-          theme: theme,
+          theme: displayTheme,
           allPositioning: positioning,
           widget: this
       }).draw();
@@ -14531,6 +14688,8 @@ glift.widgets.BaseWidget.prototype = {
 
   /**
    * Create divs from positioning (WidgetBoxes) and the wrapper div id.
+   * @return {!Object<glift.enums.boardComponents, string>} a map from component
+   *    name to the div Id.
    */
   _createDivsForPositioning: function(positioning, wrapperDivId) {
     // Map from component to ID.
@@ -14621,8 +14780,7 @@ glift.widgets.BaseWidget.prototype = {
   _initProblemData: function() {
     if (this.sgfOptions.widgetType ===
         glift.enums.widgetTypes.CORRECT_VARIATIONS_PROBLEM) {
-      var correctNext = glift.rules.problems.correctNextMoves(
-          this.controller.movetree, this.sgfOptions.problemConditions);
+      var correctNext = this.controller.getCorrectNextMoves();
       // A Set: i.e., a map of points to true
       this.correctNextSet = this.correctNextSet || {};
       this.numCorrectAnswers = this.numCorrectAnswers || 0;
@@ -14736,6 +14894,14 @@ glift.widgets.BaseWidget.prototype = {
 goog.provide('glift.widgets.WidgetManager');
 
 /**
+ * @typedef {{
+ *  iconActions: !glift.api.IconActions,
+ *  stoneActions: !glift.api.StoneActions
+ * }}
+ */
+glift.widgets.ActionsWrapper;
+
+/**
  * The Widget Manager manages state across widgets.  When widgets are created,
  * they are always created in the context of a Widget Manager.
  *
@@ -14784,27 +14950,21 @@ glift.widgets.WidgetManager = function(options) {
   this.sgfCollection = [];
 
   /**
+   * URL for getting the entire SGF collection.
+   * @type {?string}
+   */
+  this.sgfCollectionUrl = null;
+
+  // Performs collection initialization (pre ajax-loading).
+  this.initSgfCollection_(options);
+
+  /**
    * Cache of SGFs.  Useful for reducing the number AJAX calls.
    * Map from SGF name to String contents.
    *
    * @type {!Object<string>}
    */
   this.sgfCache = options.sgfMapping;
-
-  /**
-   * URL for getting the entire SGF collection.
-   *
-   * @type {?string}
-   */
-  this.sgfCollectionUrl = null;
-
-  // Suppert either explicit arrays or URLs for fetching JSON.
-  if (glift.util.typeOf(options.sgfCollection) === 'string') {
-    this.sgfCollectionUrl = /** @type {string} */ (options.sgfCollection);
-  } else {
-    this.sgfCollection = /** @type {!Array<!glift.api.SgfOptions|string>} */ (
-        options.sgfCollection);
-  }
 
   /**
    * Index into the SGF Collection, if it exists.
@@ -14828,10 +14988,8 @@ glift.widgets.WidgetManager = function(options) {
 
   /**
    * Actions for the Icons and for stone defaults
-   * @typedef {{
-   *  iconActions: !glift.api.IconActions,
-   *  stoneActions: !glift.api.StoneActions
-   * }}
+   *
+   * @type {!glift.widgets.ActionsWrapper}
    */
   // TODO(kashomon): Break this apart. No need to squash these into one obj.
   this.actions = {
@@ -14930,35 +15088,79 @@ glift.widgets.WidgetManager.prototype = {
     }
   },
 
-  /** Gets the current SGF Object from the SGF collection. */
+  /**
+   * Initialize the SGF collection / collection URL
+   * @param {!glift.api.Options} options The input-options.
+   * @private
+   */
+  initSgfCollection_: function(options) {
+    // Process explicitly defined collection arrays.
+    if (glift.util.typeOf(options.sgfCollection) === 'array') {
+      var coll = /** @type {!Array<!glift.api.SgfOptions|string>} */ (
+          options.sgfCollection);
+      for (var i = 0; i < coll.length; i++) {
+        this.sgfCollection.push(coll[i]);
+      }
+      if (options.sgf && options.sgfCollection.length > 0) {
+        throw new Error('Illegal options configuration: you cannot define both ' +
+            'sgf and sgfCollection')
+      } else if (options.sgf && options.sgfCollection.length === 0) {
+        // Move the single SGF into the SGF collection.
+        this.sgfCollection.push(options.sgf);
+      } else if (!options.sgf && this.sgfCollection.length === 0) {
+        // Allow the possibility of specifying no sgf to indicate a blank SGF.
+        this.sgfCollection = [{}];
+      }
+    } else if (glift.util.typeOf(options.sgfCollection) === 'string') {
+      // If it's a string, we assume the SGF collection should be loaded via
+      // AJAX.
+      this.sgfCollectionUrl = /** @type {string} */ (options.sgfCollection);
+    }
+  },
+
+  /**
+   * Gets the current SGF Object from the SGF collection. 
+   */
   getCurrentSgfObj: function() { return this.getSgfObj(this.sgfColIndex); },
 
-  /** Modifies the SgfOptions by resetting the icons settings. */
-  _resetIcons: function(processedObj) {
-    // TODO(kashomon): This seems really hacky and likely needs significant
-    // cleanup.
-    if (this.sgfCollection.length > 1) {
-      if (this.allowWrapAround) {
-        processedObj.icons.push(this.displayOptions.nextSgfIcon);
-        processedObj.icons.splice(0, 0, this.displayOptions.previousSgfIcon);
-      } else {
-        if (this.sgfColIndex === 0) {
-          processedObj.icons.push(this.displayOptions.nextSgfIcon);
-        } else if (this.sgfColIndex === this.sgfCollection.length - 1) {
-          processedObj.icons.splice(0, 0, this.displayOptions.previousSgfIcon);
-        } else {
-          processedObj.icons.push(this.displayOptions.nextSgfIcon);
-          processedObj.icons.splice(0, 0, this.displayOptions.previousSgfIcon);
-        }
-      }
+  /** @return {boolean} Whether there's a 'next' sgf */
+  hasNextSgf: function() {
+    if (this.sgfCollection.length &&
+        this.sgfColIndex >= 0 &&
+        this.sgfColIndex < this.sgfCollection.length - 1) {
+      return true;
+    } else if (
+        this.sgfCollection.length &&
+        this.sgfColIndex === this.sgfCollection.length - 1 &&
+        this.allowWrapAround) {
+      return true;
+    } else {
+      return false;
     }
-    return processedObj;
+  },
+
+  /** @return {boolean} Whether there's a previous sgf */
+  hasPrevSgf: function() {
+    if (this.sgfCollection.length &&
+        this.sgfColIndex > 0 &&
+        this.sgfColIndex < this.sgfCollection.length - 1) {
+      return true;
+    } else if (
+        this.sgfCollection.length &&
+        this.sgfColIndex === 0 &&
+        this.allowWrapAround) {
+      return true;
+    } else {
+      return false;
+    }
   },
 
   /**
    * Get the current SGF Object from the sgfCollection. Note: If the item in the
    * array is a string, then we try to figure out whether we're looking at an
    * SGF or a URL and then we manufacture a simple sgf object.
+   *
+   * @return {!glift.api.SgfOptions}
    */
   getSgfObj: function(index) {
     if (index < 0 || index > this.sgfCollection.length) {
@@ -14980,8 +15182,7 @@ glift.widgets.WidgetManager.prototype = {
     } else {
       var toProc = /** @type {!Object} */ (curSgfObj);
     }
-    var proc = this.sgfDefaults.createSgfObj(toProc);
-    return this._resetIcons(proc);
+    return this.sgfDefaults.createSgfObj(toProc);
   },
 
   /**
@@ -15690,6 +15891,7 @@ glift.api.Options = function(opt_o) {
    * See: glift.api.sgfOptionDefaults and glift.api.SgfOptions
    * api:1.0
    *
+   * @const
    * @type {!glift.api.SgfOptions}
    */
   this.sgfDefaults = new glift.api.SgfOptions(o.sgfDefaults);
@@ -15699,6 +15901,7 @@ glift.api.Options = function(opt_o) {
    * but this will almost certainly need to be set by the user.
    * api:1.0
    *
+   * @const
    * @type {string}
    */
   this.divId = o.divId || 'glift_display';
@@ -15717,26 +15920,10 @@ glift.api.Options = function(opt_o) {
    * and cached.
    * api:1.0
    *
+   * @const
    * @type {!Array<!glift.api.SgfOptions|string>|string}
    */
   this.sgfCollection = o.sgfCollection || [];
-
-  if (this.sgf && this.sgfCollection.length > 0) {
-    throw new Error('Illegal options configuration: you cannot define both ' +
-        'sgf and sgfCollection')
-  }
-
-  if (this.sgf && this.sgfCollection.length === 0) {
-    this.sgfCollection.push(this.sgf);
-    // Remove the single SGF parameter now that it's stored in the SGF
-    // Collection.
-    this.sgf = undefined;
-  }
-
-  // Allow the possibility of specifying an EMPTY
-  if (!this.sgf && this.sgfCollection.length === 0) {
-    this.sgfCollection = [{}];
-  }
 
   /**
    * An experimental feature. Create an association between.  This defines the
@@ -15884,6 +16071,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:1.0
    *
    * @type {string|undefined}
+   * @const
    */
   this.sgfString = o.sgfString !== undefined ? o.sgfString : undefined;
 
@@ -15893,6 +16081,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:1.0
    *
    * @type {string|undefined}
+   * @const
    */
   this.url = o.url !== undefined ? o.url : undefined;
 
@@ -15904,6 +16093,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:experimental
    *
    * @type {string|undefined}
+   * @const
    */
   this.alias = o.alias !== undefined ? o.alias : undefined;
 
@@ -15916,6 +16106,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:beta
    *
    * @type {glift.parse.parseType}
+   * @const
    */
   this.parseType = o.parseType || glift.parse.parseType.SGF;
 
@@ -15925,6 +16116,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:1.0
    *
    * @type {glift.enums.widgetTypes}
+   * @const
    */
   this.widgetType = o.widgetType || glift.enums.widgetTypes.GAME_VIEWER;
 
@@ -15949,6 +16141,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:1.0
    *
    * @type {string|!Array<number>}
+   * @const
    */
   this.initialPosition = o.initialPosition || '';
 
@@ -15976,6 +16169,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:1.1
    *
    * @type {string|!Array<number>}
+   * @const
    */
   this.nextMovesPath = o.nextMovesPath || '';
 
@@ -15986,6 +16180,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:1.0
    *
    * @type {glift.enums.boardRegions}
+   * @const
    */
   this.boardRegion = o.boardRegion || glift.enums.boardRegions.AUTO;
 
@@ -15996,6 +16191,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:beta
    *
    * @type {glift.enums.rotations}
+   * @const
    */
   this.rotation = o.rotation || glift.enums.rotations.NO_ROTATION;
 
@@ -16005,6 +16201,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:1.0
    *
    * @type {!Array<glift.enums.boardComponents>}
+   * @const
    */
   this.uiComponents = o.uiComponents || [
     glift.enums.boardComponents.BOARD,
@@ -16018,13 +16215,23 @@ glift.api.SgfOptions = function(opt_o) {
    *
    * api:experimental
    * @type {boolean}
+   * @const
    */
   this.disableStatusBar = !!o.disableStatusBar || false;
-  /* @type {boolean} */
+  /**
+   * @type {boolean}
+   * @const
+   */
   this.disableBoard = !!o.disableBoard || false;
-  /* @type {boolean} */
+  /**
+   * @type {boolean}
+   * @const
+   */
   this.disableCommentBox = !!o.disableCommentBox || false;
-  /* @type {boolean} */
+  /**
+   * @type {boolean}
+   * @const
+   */
   this.disableIconBar = !!o.disableIconBar || false;
 
   /**
@@ -16035,6 +16242,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:experimental
    *
    * @type {!Object|undefined}
+   * @const
    */
   this.metadata = o.metadata || undefined;
 
@@ -16046,6 +16254,7 @@ glift.api.SgfOptions = function(opt_o) {
    * Should be overridden by the widget options.
    *
    * @type {number|undefined}
+   * @const
    */
   this.correctVariationsResetTime =
       o.correctVariationsResetTime !== undefined ?
@@ -16057,6 +16266,7 @@ glift.api.SgfOptions = function(opt_o) {
    * CORRECT_VARIATIONS_PROBLEM.
    *
    * @type {number|undefined}
+   * @const
    */
   this.totalCorrectVariationsOverride =
       o.totalCorrectVariationsOverride || undefined;
@@ -16087,6 +16297,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:1.0
    *
    * @type {!Array<string>|undefined}
+   * @const
    */
   this.statusBarIcons = o.statusBarIcons || undefined;
 
@@ -16098,6 +16309,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:beta
    *
    * @type {!Object<string>}
+   * @const
    */
   this.keyMappings = o.keyMappings || {
     ARROW_LEFT: 'iconActions.chevron-left.click',
@@ -16116,6 +16328,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:1.0
    *
    * @type {!glift.rules.ProblemConditions}
+   * @const
    */
   this.problemConditions = o.problemConditions || {
     GB: [],
@@ -16127,6 +16340,7 @@ glift.api.SgfOptions = function(opt_o) {
    * Values: NEVER, ALWAYS, MORE_THAN_ONE
    *
    * @type {glift.enums.showVariations}
+   * @const
    */
   this.showVariations = o.showVariations ||
       glift.enums.showVariations.MORE_THAN_ONE;
@@ -16136,6 +16350,7 @@ glift.api.SgfOptions = function(opt_o) {
    * defaults to true.
    *
    * @type {boolean}
+   * @const
    */
   this.markLastMove = o.markLastMove !== undefined ?
       o.markLastMove : true;
@@ -16147,6 +16362,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:1.0
    *
    * @type {!glift.controllers.ControllerFunc|undefined}
+   * @const
    */
   this.controllerFunc = o.controllerFunc || undefined;
 
@@ -16157,6 +16373,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:1.0
    *
    * @type {!Array<string>|undefined}
+   * @const
    */
   this.icons = o.icons || undefined;
 
@@ -16166,15 +16383,20 @@ glift.api.SgfOptions = function(opt_o) {
    * api:1.0
    *
    * @type {!glift.api.StoneFn|undefined}
+   * @const
    */
   this.stoneClick = o.stoneClick || undefined;
 
   /**
    * Mouseover/mouseout override for stones.
    * @type {!glift.api.StoneFn}
+   * @const
    */
   this.stoneMouseover = o.stoneMouseover || undefined;
-  /** @type {!glift.api.StoneFn} */
+  /**
+   * @type {!glift.api.StoneFn}
+   * @const
+   */
   this.stoneMouseout = o.stoneMouseout || undefined;
 };
 

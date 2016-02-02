@@ -68,7 +68,7 @@ glift.displays.position.WidgetPositioner.prototype = {
    * Calculate the Widget Positioning.  This uses heuristics to determine if the
    * orientation should be horizontally oriented or vertically oriented.
    *
-   * Returns a WidgetBoxes instance.
+   * @return {!glift.displays.position.WidgetBoxes}
    */
   calcWidgetPositioning: function() {
     if (this.useHorzOrientation()) {
@@ -105,6 +105,8 @@ glift.displays.position.WidgetPositioner.prototype = {
   /**
    * Calculates the Widget Positioning for a vertical orientation. returns a
    * Widget Boxes
+   *
+   * @return {!glift.displays.position.WidgetBoxes}
    */
   calcVertPositioning: function() {
     var recalCol = this.recalcSplits(this.oneColSplits).first;
@@ -130,6 +132,8 @@ glift.displays.position.WidgetPositioner.prototype = {
    * Note, we should never position horizontally for TOP and BOTTOM board regions.
    *
    * returns: WidgetBoxes instance.
+   *
+   * @return {!glift.displays.position.WidgetBoxes}
    */
   calcHorzPositioning: function() {
     var splits = this.recalcSplits(this.twoColSplits);

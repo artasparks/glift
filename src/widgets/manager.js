@@ -1,6 +1,14 @@
 goog.provide('glift.widgets.WidgetManager');
 
 /**
+ * @typedef {{
+ *  iconActions: !glift.api.IconActions,
+ *  stoneActions: !glift.api.StoneActions
+ * }}
+ */
+glift.widgets.ActionsWrapper;
+
+/**
  * The Widget Manager manages state across widgets.  When widgets are created,
  * they are always created in the context of a Widget Manager.
  *
@@ -49,27 +57,21 @@ glift.widgets.WidgetManager = function(options) {
   this.sgfCollection = [];
 
   /**
+   * URL for getting the entire SGF collection.
+   * @type {?string}
+   */
+  this.sgfCollectionUrl = null;
+
+  // Performs collection initialization (pre ajax-loading).
+  this.initSgfCollection_(options);
+
+  /**
    * Cache of SGFs.  Useful for reducing the number AJAX calls.
    * Map from SGF name to String contents.
    *
    * @type {!Object<string>}
    */
   this.sgfCache = options.sgfMapping;
-
-  /**
-   * URL for getting the entire SGF collection.
-   *
-   * @type {?string}
-   */
-  this.sgfCollectionUrl = null;
-
-  // Suppert either explicit arrays or URLs for fetching JSON.
-  if (glift.util.typeOf(options.sgfCollection) === 'string') {
-    this.sgfCollectionUrl = /** @type {string} */ (options.sgfCollection);
-  } else {
-    this.sgfCollection = /** @type {!Array<!glift.api.SgfOptions|string>} */ (
-        options.sgfCollection);
-  }
 
   /**
    * Index into the SGF Collection, if it exists.
@@ -93,10 +95,8 @@ glift.widgets.WidgetManager = function(options) {
 
   /**
    * Actions for the Icons and for stone defaults
-   * @typedef {{
-   *  iconActions: !glift.api.IconActions,
-   *  stoneActions: !glift.api.StoneActions
-   * }}
+   *
+   * @type {!glift.widgets.ActionsWrapper}
    */
   // TODO(kashomon): Break this apart. No need to squash these into one obj.
   this.actions = {
@@ -195,35 +195,79 @@ glift.widgets.WidgetManager.prototype = {
     }
   },
 
-  /** Gets the current SGF Object from the SGF collection. */
+  /**
+   * Initialize the SGF collection / collection URL
+   * @param {!glift.api.Options} options The input-options.
+   * @private
+   */
+  initSgfCollection_: function(options) {
+    // Process explicitly defined collection arrays.
+    if (glift.util.typeOf(options.sgfCollection) === 'array') {
+      var coll = /** @type {!Array<!glift.api.SgfOptions|string>} */ (
+          options.sgfCollection);
+      for (var i = 0; i < coll.length; i++) {
+        this.sgfCollection.push(coll[i]);
+      }
+      if (options.sgf && options.sgfCollection.length > 0) {
+        throw new Error('Illegal options configuration: you cannot define both ' +
+            'sgf and sgfCollection')
+      } else if (options.sgf && options.sgfCollection.length === 0) {
+        // Move the single SGF into the SGF collection.
+        this.sgfCollection.push(options.sgf);
+      } else if (!options.sgf && this.sgfCollection.length === 0) {
+        // Allow the possibility of specifying no sgf to indicate a blank SGF.
+        this.sgfCollection = [{}];
+      }
+    } else if (glift.util.typeOf(options.sgfCollection) === 'string') {
+      // If it's a string, we assume the SGF collection should be loaded via
+      // AJAX.
+      this.sgfCollectionUrl = /** @type {string} */ (options.sgfCollection);
+    }
+  },
+
+  /**
+   * Gets the current SGF Object from the SGF collection. 
+   */
   getCurrentSgfObj: function() { return this.getSgfObj(this.sgfColIndex); },
 
-  /** Modifies the SgfOptions by resetting the icons settings. */
-  _resetIcons: function(processedObj) {
-    // TODO(kashomon): This seems really hacky and likely needs significant
-    // cleanup.
-    if (this.sgfCollection.length > 1) {
-      if (this.allowWrapAround) {
-        processedObj.icons.push(this.displayOptions.nextSgfIcon);
-        processedObj.icons.splice(0, 0, this.displayOptions.previousSgfIcon);
-      } else {
-        if (this.sgfColIndex === 0) {
-          processedObj.icons.push(this.displayOptions.nextSgfIcon);
-        } else if (this.sgfColIndex === this.sgfCollection.length - 1) {
-          processedObj.icons.splice(0, 0, this.displayOptions.previousSgfIcon);
-        } else {
-          processedObj.icons.push(this.displayOptions.nextSgfIcon);
-          processedObj.icons.splice(0, 0, this.displayOptions.previousSgfIcon);
-        }
-      }
+  /** @return {boolean} Whether there's a 'next' sgf */
+  hasNextSgf: function() {
+    if (this.sgfCollection.length &&
+        this.sgfColIndex >= 0 &&
+        this.sgfColIndex < this.sgfCollection.length - 1) {
+      return true;
+    } else if (
+        this.sgfCollection.length &&
+        this.sgfColIndex === this.sgfCollection.length - 1 &&
+        this.allowWrapAround) {
+      return true;
+    } else {
+      return false;
     }
-    return processedObj;
+  },
+
+  /** @return {boolean} Whether there's a previous sgf */
+  hasPrevSgf: function() {
+    if (this.sgfCollection.length &&
+        this.sgfColIndex > 0 &&
+        this.sgfColIndex <= this.sgfCollection.length - 1) {
+      return true;
+    } else if (
+        this.sgfCollection.length &&
+        this.sgfColIndex === 0 &&
+        this.allowWrapAround) {
+      return true;
+    } else {
+      return false;
+    }
   },
 
   /**
    * Get the current SGF Object from the sgfCollection. Note: If the item in the
    * array is a string, then we try to figure out whether we're looking at an
    * SGF or a URL and then we manufacture a simple sgf object.
+   *
+   * @return {!glift.api.SgfOptions}
    */
   getSgfObj: function(index) {
     if (index < 0 || index > this.sgfCollection.length) {
@@ -245,8 +289,7 @@ glift.widgets.WidgetManager.prototype = {
     } else {
       var toProc = /** @type {!Object} */ (curSgfObj);
     }
-    var proc = this.sgfDefaults.createSgfObj(toProc);
-    return this._resetIcons(proc);
+    return this.sgfDefaults.createSgfObj(toProc);
   },
 
   /**

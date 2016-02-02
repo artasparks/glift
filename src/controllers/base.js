@@ -38,7 +38,7 @@ glift.controllers.BaseController = function() {
 
   /**
    * Used only for examples (see the Game Figure). Indicates how to create
-   * numbers based on the 
+   * move numbers.
    * @package {!string|!Array<number>}
    */
   this.nextMovesPath = [];
@@ -151,7 +151,10 @@ glift.controllers.BaseController.prototype = {
     return this;
   },
 
-  /** Get the current move number. */
+  /**
+   * Get the current move number.
+   * @return {number}
+   */
   currentMoveNumber: function() {
     return this.movetree.node().getNodeNum();
   },
@@ -313,6 +316,30 @@ glift.controllers.BaseController.prototype = {
   /** @return {number} Returns the number of intersections. */
   getIntersections: function() {
     return this.movetree.getIntersections();
+  },
+
+  /**
+   * Get the recommended quad-cropping for the bove tree. This is a display
+   * consideration, but the knowledge of how to crop is dependent on the
+   * movetree, so this method needs to live on the controller.
+   *
+   * @return {glift.enums.boardRegions} The recommend board region to use.
+   */
+  getQuadCropFromBeginning: function() {
+    return glift.orientation.getQuadCropFromMovetree(
+        /** @type {!glift.rules.MoveTree} */ (this.movetree));
+  },
+
+  /**
+   * Gets the set of correct next moves. This should only apply to problem-based
+   * widgets
+   *
+   * @return {!Array<!glift.rules.Move>}
+   */
+  getCorrectNextMoves: function() {
+    return glift.rules.problems.correctNextMoves(
+        /** @type {!glift.rules.MoveTree} */ (this.movetree),
+        this.problemConditions);
   },
 
   /**

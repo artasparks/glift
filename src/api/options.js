@@ -62,6 +62,7 @@ glift.api.Options = function(opt_o) {
    * See: glift.api.sgfOptionDefaults and glift.api.SgfOptions
    * api:1.0
    *
+   * @const
    * @type {!glift.api.SgfOptions}
    */
   this.sgfDefaults = new glift.api.SgfOptions(o.sgfDefaults);
@@ -71,6 +72,7 @@ glift.api.Options = function(opt_o) {
    * but this will almost certainly need to be set by the user.
    * api:1.0
    *
+   * @const
    * @type {string}
    */
   this.divId = o.divId || 'glift_display';
@@ -89,26 +91,10 @@ glift.api.Options = function(opt_o) {
    * and cached.
    * api:1.0
    *
+   * @const
    * @type {!Array<!glift.api.SgfOptions|string>|string}
    */
   this.sgfCollection = o.sgfCollection || [];
-
-  if (this.sgf && this.sgfCollection.length > 0) {
-    throw new Error('Illegal options configuration: you cannot define both ' +
-        'sgf and sgfCollection')
-  }
-
-  if (this.sgf && this.sgfCollection.length === 0) {
-    this.sgfCollection.push(this.sgf);
-    // Remove the single SGF parameter now that it's stored in the SGF
-    // Collection.
-    this.sgf = undefined;
-  }
-
-  // Allow the possibility of specifying an EMPTY
-  if (!this.sgf && this.sgfCollection.length === 0) {
-    this.sgfCollection = [{}];
-  }
 
   /**
    * An experimental feature. Create an association between.  This defines the

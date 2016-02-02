@@ -45,6 +45,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:1.0
    *
    * @type {string|undefined}
+   * @const
    */
   this.sgfString = o.sgfString !== undefined ? o.sgfString : undefined;
 
@@ -54,6 +55,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:1.0
    *
    * @type {string|undefined}
+   * @const
    */
   this.url = o.url !== undefined ? o.url : undefined;
 
@@ -65,6 +67,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:experimental
    *
    * @type {string|undefined}
+   * @const
    */
   this.alias = o.alias !== undefined ? o.alias : undefined;
 
@@ -77,6 +80,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:beta
    *
    * @type {glift.parse.parseType}
+   * @const
    */
   this.parseType = o.parseType || glift.parse.parseType.SGF;
 
@@ -86,6 +90,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:1.0
    *
    * @type {glift.enums.widgetTypes}
+   * @const
    */
   this.widgetType = o.widgetType || glift.enums.widgetTypes.GAME_VIEWER;
 
@@ -110,6 +115,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:1.0
    *
    * @type {string|!Array<number>}
+   * @const
    */
   this.initialPosition = o.initialPosition || '';
 
@@ -137,6 +143,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:1.1
    *
    * @type {string|!Array<number>}
+   * @const
    */
   this.nextMovesPath = o.nextMovesPath || '';
 
@@ -147,6 +154,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:1.0
    *
    * @type {glift.enums.boardRegions}
+   * @const
    */
   this.boardRegion = o.boardRegion || glift.enums.boardRegions.AUTO;
 
@@ -157,6 +165,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:beta
    *
    * @type {glift.enums.rotations}
+   * @const
    */
   this.rotation = o.rotation || glift.enums.rotations.NO_ROTATION;
 
@@ -166,6 +175,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:1.0
    *
    * @type {!Array<glift.enums.boardComponents>}
+   * @const
    */
   this.uiComponents = o.uiComponents || [
     glift.enums.boardComponents.BOARD,
@@ -179,13 +189,23 @@ glift.api.SgfOptions = function(opt_o) {
    *
    * api:experimental
    * @type {boolean}
+   * @const
    */
   this.disableStatusBar = !!o.disableStatusBar || false;
-  /* @type {boolean} */
+  /**
+   * @type {boolean}
+   * @const
+   */
   this.disableBoard = !!o.disableBoard || false;
-  /* @type {boolean} */
+  /**
+   * @type {boolean}
+   * @const
+   */
   this.disableCommentBox = !!o.disableCommentBox || false;
-  /* @type {boolean} */
+  /**
+   * @type {boolean}
+   * @const
+   */
   this.disableIconBar = !!o.disableIconBar || false;
 
   /**
@@ -196,6 +216,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:experimental
    *
    * @type {!Object|undefined}
+   * @const
    */
   this.metadata = o.metadata || undefined;
 
@@ -207,6 +228,7 @@ glift.api.SgfOptions = function(opt_o) {
    * Should be overridden by the widget options.
    *
    * @type {number|undefined}
+   * @const
    */
   this.correctVariationsResetTime =
       o.correctVariationsResetTime !== undefined ?
@@ -218,6 +240,7 @@ glift.api.SgfOptions = function(opt_o) {
    * CORRECT_VARIATIONS_PROBLEM.
    *
    * @type {number|undefined}
+   * @const
    */
   this.totalCorrectVariationsOverride =
       o.totalCorrectVariationsOverride || undefined;
@@ -248,6 +271,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:1.0
    *
    * @type {!Array<string>|undefined}
+   * @const
    */
   this.statusBarIcons = o.statusBarIcons || undefined;
 
@@ -259,6 +283,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:beta
    *
    * @type {!Object<string>}
+   * @const
    */
   this.keyMappings = o.keyMappings || {
     ARROW_LEFT: 'iconActions.chevron-left.click',
@@ -277,6 +302,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:1.0
    *
    * @type {!glift.rules.ProblemConditions}
+   * @const
    */
   this.problemConditions = o.problemConditions || {
     GB: [],
@@ -288,6 +314,7 @@ glift.api.SgfOptions = function(opt_o) {
    * Values: NEVER, ALWAYS, MORE_THAN_ONE
    *
    * @type {glift.enums.showVariations}
+   * @const
    */
   this.showVariations = o.showVariations ||
       glift.enums.showVariations.MORE_THAN_ONE;
@@ -297,6 +324,7 @@ glift.api.SgfOptions = function(opt_o) {
    * defaults to true.
    *
    * @type {boolean}
+   * @const
    */
   this.markLastMove = o.markLastMove !== undefined ?
       o.markLastMove : true;
@@ -308,6 +336,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:1.0
    *
    * @type {!glift.controllers.ControllerFunc|undefined}
+   * @const
    */
   this.controllerFunc = o.controllerFunc || undefined;
 
@@ -318,6 +347,7 @@ glift.api.SgfOptions = function(opt_o) {
    * api:1.0
    *
    * @type {!Array<string>|undefined}
+   * @const
    */
   this.icons = o.icons || undefined;
 
@@ -327,15 +357,20 @@ glift.api.SgfOptions = function(opt_o) {
    * api:1.0
    *
    * @type {!glift.api.StoneFn|undefined}
+   * @const
    */
   this.stoneClick = o.stoneClick || undefined;
 
   /**
    * Mouseover/mouseout override for stones.
    * @type {!glift.api.StoneFn}
+   * @const
    */
   this.stoneMouseover = o.stoneMouseover || undefined;
-  /** @type {!glift.api.StoneFn} */
+  /**
+   * @type {!glift.api.StoneFn}
+   * @const
+   */
   this.stoneMouseout = o.stoneMouseout || undefined;
 };
 

@@ -1,3 +1,13 @@
+goog.provide('glift.rules.ProblemConditions');
+goog.provide('glift.rules.problems');
+
+/**
+ * Map of prop-to-values.
+ *
+ * @typedef {!Object<glift.rules.prop, !Array<string>>}
+ */
+glift.rules.ProblemConditions;
+
 glift.rules.problems = {
   /**
    * Determines if a 'move' is correct. Takes a movetree and a series of
@@ -26,7 +36,9 @@ glift.rules.problems = {
    *    Correct as long as there is a black stone (a strange condition).
    *    { B: [] }
    *
-   * Returns one of enum.problemResults (CORRECT, INDETERMINATE, INCORRECT).
+   * @param {!glift.rules.MoveTree} movetree
+   * @param {!glift.rules.ProblemConditions} conditions
+   * @return {glift.enums.problemResults}
    */
   isCorrectPosition: function(movetree, conditions) {
     var problemResults = glift.enums.problemResults;
@@ -69,12 +81,12 @@ glift.rules.problems = {
   },
 
   /**
-   * Get the correct next moves.
+   * Gets the correct next moves. This assumes the the SGF is a problem-like SGF
+   * with with right conditions specified somehow.
    *
-   * returns: the 'correct' next moves. In other words
-   *
-   * [{ point: <point>, color: <color>  },..
-   * ]
+   * @param {!glift.rules.MoveTree} movetree
+   * @param {!glift.rules.ProblemConditions} conditions
+   * @return {!Array<!glift.rules.Move>} An array of correct next moves.
    */
   correctNextMoves: function(movetree, conditions) {
     var nextMoves = movetree.nextMoves();
