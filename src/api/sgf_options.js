@@ -275,6 +275,12 @@ glift.api.SgfOptions = function(opt_o) {
   this.statusBarIcons = o.statusBarIcons || undefined;
 
   /**
+   * Experiment for using the flattener in the controller.
+   * @const {boolean}
+   */
+  this.flattenerExperiment = o.flattenerExperiment || false;
+
+  /**
    * Specifies what action to perform based on a particular keystroke.  In
    * otherwords, a mapping from key-enum to action path.
    * See glift.keyMappings

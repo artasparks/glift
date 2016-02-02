@@ -90,7 +90,7 @@ glift.widgets.BaseWidget.prototype = {
         this.displayOptions.oneColumnSplits,
         this.displayOptions.twoColumnSplits).calcWidgetPositioning();
 
-    var divIds = this._createDivsForPositioning(positioning, this.wrapperDivId);
+    var divIds = this.createDivsForPositioning_(positioning, this.wrapperDivId);
     glift.util.majorPerfLog('Created divs');
 
     var displayTheme = glift.themes.get(this.displayOptions.theme);
@@ -173,11 +173,11 @@ glift.widgets.BaseWidget.prototype = {
         this, this.iconActions);
 
     glift.util.majorPerfLog('Before stone event creation');
-    this._initStoneActions(this.stoneActions);
-    this._initKeyHandlers();
+    this.initStoneActions_(this.stoneActions);
+    this.initKeyHandlers_();
     glift.util.majorPerfLog('After stone event creation');
 
-    this._initProblemData();
+    this.initProblemData_();
     this.applyBoardData(this.controller.getEntireBoardState());
     return this;
   },
@@ -215,8 +215,9 @@ glift.widgets.BaseWidget.prototype = {
    * Create divs from positioning (WidgetBoxes) and the wrapper div id.
    * @return {!Object<glift.enums.boardComponents, string>} a map from component
    *    name to the div Id.
+   * @private
    */
-  _createDivsForPositioning: function(positioning, wrapperDivId) {
+  createDivsForPositioning_: function(positioning, wrapperDivId) {
     // Map from component to ID.
     var out = {};
     var createDiv = function(bbox) {
@@ -241,8 +242,12 @@ glift.widgets.BaseWidget.prototype = {
     return out;
   },
 
-  /** Initialize the stone actions. */
-  _initStoneActions: function(baseActions) {
+  /**
+   * Initialize the stone actions.
+   * @param {!glift.api.StoneActions} baseActions
+   * @private
+   */
+  initStoneActions_: function(baseActions) {
     var actions = {};
     actions.mouseover = baseActions.mouseover;
     actions.mouseout = baseActions.mouseout;
@@ -278,10 +283,11 @@ glift.widgets.BaseWidget.prototype = {
     }
   },
 
-  /**
+  /*
    * Assign Key actions to some other action.
+   * @private
    */
-  _initKeyHandlers: function() {
+  initKeyHandlers_: function() {
     if (!this.displayOptions.enableKeyboardShortcuts) {
       return;
     }
@@ -303,8 +309,11 @@ glift.widgets.BaseWidget.prototype = {
     glift.keyMappings.initKeybindingListener();
   },
 
-  /** Initialize properties based on problem type. */
-  _initProblemData: function() {
+  /**
+   * Initialize properties based on problem type.
+   * @private
+   */
+  initProblemData_: function() {
     if (this.sgfOptions.widgetType ===
         glift.enums.widgetTypes.CORRECT_VARIATIONS_PROBLEM) {
       var correctNext = this.controller.getCorrectNextMoves();
@@ -323,7 +332,10 @@ glift.widgets.BaseWidget.prototype = {
     }
   },
 
-  /** Gets the initialized hooks or set them */
+  /**
+   * Gets the initialized hooks or set them.
+   * @return {!glift.api.HookOptions} the hooks.
+   */
   hooks: function() {
     return this.externalHooks;
   },
@@ -347,6 +359,8 @@ glift.widgets.BaseWidget.prototype = {
 
   /**
    * Set the CommentBox with some specified text, if the comment box exists.
+   * @param {string} text To set on the comment box.
+   * @return {!glift.widgets.BaseWidget} the current instance.
    */
   setCommentBox: function(text) {
     if (this.commentBox === undefined) {
