@@ -280,11 +280,11 @@ glift.rules.Goban.prototype = {
     // check to make sure we haven't already seen a stone
     // and that the point is not out of bounds.  If
     // either of these conditions fail, return immediately.
-    if (captures.seen[pt.hash()] !== undefined || this.outBounds(pt)) {
+    if (captures.seen[pt.toString()] !== undefined || this.outBounds(pt)) {
       // we're done -- there's no where to go.
     } else {
       // note that we've seen the point
-      captures.seen[pt.hash()] = true;
+      captures.seen[pt.toString()] = true;
       var stoneColor = this.getStone(pt);
       if (stoneColor === glift.enums.states.EMPTY)    {
         // add a liberty if the point is empty and return
@@ -412,10 +412,10 @@ glift.rules.initStones_ = function(ints) {
  * @constructor @final @struct
  */
 glift.rules.CaptureTracker_ = function() {
-  this.toCapture = {}; // set of points to capture (mapping pt.hash() -> true)
+  this.toCapture = {}; // set of points to capture (mapping pt str -> true)
   this.numCaptures = 0;
   this.considering = []; // list of points we're considering to capture
-  this.seen = {}; // set of points we've seen (mapping pt.hash() -> true)
+  this.seen = {}; // set of points we've seen (mapping pt str -> true)
   this.liberties = 0;
 };
 
@@ -431,8 +431,8 @@ glift.rules.CaptureTracker_.prototype = {
   consideringToCaptures: function() {
     for (var i = 0; i < this.considering.length; i++) {
       var value = this.considering[i];
-      if (this.toCapture[value.hash()] === undefined) {
-        this.toCapture[value.hash()] = true;
+      if (this.toCapture[value.toString()] === undefined) {
+        this.toCapture[value.toString()] = true;
         this.numCaptures++;
       }
     }
@@ -448,14 +448,14 @@ glift.rules.CaptureTracker_.prototype = {
 
   /** @param {!glift.Point} point add a point to the seen-map */
   addSeen: function(point) {
-    this.seen[point.hash()] = true;
+    this.seen[point.toString()] = true;
   },
 
   /** @return {!Array<!glift.Point>} */
   getCaptures: function() {
     var out = [];
     for (var key in this.toCapture) {
-      out.push(glift.util.pointFromHash(key));
+      out.push(glift.util.pointFromString(key));
     }
     return out;
   }

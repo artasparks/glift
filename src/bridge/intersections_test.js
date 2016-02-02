@@ -54,10 +54,10 @@
     var squareMarks = ptlistToMap(data.marks.SQUARE);
     //var triangleMarks = ptlistToMap(data.marks.TRIANGLE);
     ok(data.marks.TRIANGLE === undefined, "TRIANGLE must not exist");
-    ok(squareMarks[sqpt.hash()] !== undefined, "SQUARE must exist");
-    ok(blackStones[bstone.hash()], "BLAK stone must exist");
-    ok(whiteStones[wstone.hash()], "WHITE stone must exist");
-    ok(blackStones[abstone.hash()], "BLACK placement stone must exist");
+    ok(squareMarks[sqpt.toString()] !== undefined, "SQUARE must exist");
+    ok(blackStones[bstone.toString()], "BLAK stone must exist");
+    ok(whiteStones[wstone.toString()], "WHITE stone must exist");
+    ok(blackStones[abstone.toString()], "BLACK placement stone must exist");
     deepEqual(data.comment, "foo", "Comment must be foo");
   });
 

@@ -15,8 +15,7 @@
   test('hash and unhash', function() {
     var pt = point(1, 12);
     deepEqual(pt.toString(), '1,12', 'to string must be a comma-sep pair');
-    deepEqual(pt.hash(), pt.toString(), 'hash and string must be equal');
-    var newPt = glift.util.pointFromHash(pt.hash());
+    var newPt = glift.util.pointFromString(pt.toString());
     ok(newPt.equals(pt), 'pts must be equal')
   });
 

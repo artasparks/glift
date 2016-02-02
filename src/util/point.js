@@ -1,17 +1,40 @@
 goog.provide('glift.util.point');
 goog.provide('glift.Point');
+goog.provide('glift.PtStr');
+
+/**
+ * A point string is just a string with the format '<Number>,<Number>'. We use
+ * this special type as a reminder to the reader of the code.
+ *
+ * Example: '12,5'
+ *
+ * @typedef {string}
+ */
+glift.PtStr;
 
 /**
  * Create a point.  We no longer cache points
+ * @param {number} x
+ * @param {number} y
+ * return {!glift.Point}
  */
 glift.util.point = function(x, y) {
   return new glift.Point(x, y);
 };
 
+/**
+ * @param {number} x
+ * @param {number} y
+ * return {!glift.PtStr}
+ */
 glift.util.coordToString = function(x, y) {
   return x + ',' + y;
 };
 
+/**
+ * @param {glift.PtStr} str
+ * @return {!glift.Point}
+ */
 glift.util.pointFromString = function(str) {
   try {
     var split = str.split(",");
@@ -30,6 +53,9 @@ glift.util.pointFromString = function(str) {
  * and point data sets uniformly.
  *
  * Example: TR[aa][ab]... vs TR[aa:cc]
+ *
+ * @param {string} str The sgf string to pars.
+ * @return {!Array<!glift.Point>} An array of points.
  */
 glift.util.pointArrFromSgfProp = function(str) {
   if (str.length === 2) {
@@ -73,6 +99,8 @@ glift.util.pointArrFromSgfProp = function(str) {
  *   |.
  *   |.
  *   |.
+ * @param {string} str The SGF string point
+ * @return {!glift.Point} the finished point.
  */
 glift.util.pointFromSgfCoord = function(str) {
   if (str.length !== 2) {
@@ -81,11 +109,6 @@ glift.util.pointFromSgfCoord = function(str) {
   }
   var a = 'a'.charCodeAt(0)
   return glift.util.point(str.charCodeAt(0) - a, str.charCodeAt(1) - a);
-};
-
-
-glift.util.pointFromHash = function(str) {
-  return glift.util.pointFromString(str);
 };
 
 
@@ -105,27 +128,31 @@ glift.Point = function(xIn, yIn) {
    * @private {number}
    * @const
    */
-  this._x = xIn;
+  this.x_ = xIn;
   /**
    * @private {number}
    * @const
    */
-  this._y = yIn;
+  this.y_ = yIn;
 };
 
 glift.Point.prototype = {
-  x: function() { return this._x },
-  y: function() { return this._y },
+  /** @return {number} x value */
+  x: function() { return this.x_ },
+  /** @return {number} y value */
+  y: function() { return this.y_ },
+  /** @return {boolean} Whether this point equals another obj. */
   equals: function(pt) {
-    return this._x === pt.x() && this._y === pt.y();
+    return this.x_ === pt.x() && this.y_ === pt.y();
   },
 
+  /** @return {!glift.Point} */
   clone: function() {
     return glift.util.point(this.x(), this.y());
   },
 
   /**
-   * Returns an SGF coord, e.g., 'ab' for (0,1)
+   * @return {string}  an SGF coord, e.g., 'ab' for (0,1)
    */
   toSgfCoord: function() {
     var a = 'a'.charCodeAt(0);
@@ -134,23 +161,17 @@ glift.Point.prototype = {
   },
 
   /**
-   * Create the form used as a key in objects.
-   * TODO(kashomon): Replace with string form.  The term hash() is confusing and
-   * it makes it seem like I'm converting it to an int (which I was, long ago).
-   */
-  hash: function() {
-    return this.toString();
-  },
-
-  /**
    * Return a string representation of the coordinate.  I.e., "12,3".
+   * @return {!glift.PtStr}
    */
   toString: function() {
     return glift.util.coordToString(this.x(), this.y());
   },
 
   /**
-   * Return a new point that's a translation from this one
+   * @param {number} x
+   * @param {number} y
+   * @return {!glift.Point} a new point that's a translation from this one.
    */
   translate: function(x, y) {
     return glift.util.point(this.x() + x, this.y() + y);
@@ -158,10 +179,12 @@ glift.Point.prototype = {
 
   /**
    * Rotate an (integer) point based on the board size.
-   * boardsize: Typically 19, but 9 and 13 are possible.  Note that points are
-   * typically 0-indexed.
-   *
    * Note: This is an immutable transformation on the point.
+   *
+   * @param {number} maxIntersections The max intersections of the uncropped
+   *    board. Typically 19, 13, or 9.
+   * @param {glift.enums.rotations} rotation To perform on the point.
+   * @return {!glift.Point} A new point that has possibly been rotated.
    */
   rotate: function(maxIntersections, rotation) {
     var rotations = glift.enums.rotations;
@@ -195,6 +218,12 @@ glift.Point.prototype = {
     return point(mid + rotated.x(), -rotated.y() + mid);
   },
 
+  /**
+   * The inverse of rotate (see above)}
+   * @param {number} maxIntersections Usually 9, 13, or 19.
+   * @param {glift.enums.rotations} rotation Usually 9, 13, or 19.
+   * @return {!glift.Point} A rotated point.
+   */
   antirotate: function(maxIntersections, rotation) {
     var rotations = glift.enums.rotations
     if (rotation === rotations.CLOCKWISE_90) {
@@ -208,6 +237,7 @@ glift.Point.prototype = {
     }
   },
 
+  /** Log this point to the console. Should probably be deleted. */
   log: function() {
     glift.util.logz(this.toString());
   }

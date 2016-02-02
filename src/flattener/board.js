@@ -91,7 +91,8 @@ glift.flattener.Board.prototype = {
   getIntBoardPt: function(ptOrX, opt_y) {
     if (glift.util.typeOf(ptOrX) === 'number' &&
         glift.util.typeOf(opt_y) === 'number') {
-      var pt = glift.util.point(ptOrX, opt_y);
+      var pt = glift.util.point(
+          /** @type {number} */ (ptOrX), /** @type {number} */ (opt_y));
     } else {
       var pt = ptOrX;
     }
@@ -110,7 +111,8 @@ glift.flattener.Board.prototype = {
   getInt: function(ptOrX, opt_y) {
     if (glift.util.typeOf(ptOrX) === 'number' &&
         glift.util.typeOf(opt_y) === 'number') {
-      var pt = glift.util.point(ptOrX, opt_y);
+      var pt = glift.util.point(
+          /** @type {number} */ (ptOrX), /** @type {number} */ (opt_y));
     } else {
       var pt = ptOrX;
     }

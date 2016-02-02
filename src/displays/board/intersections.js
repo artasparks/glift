@@ -47,7 +47,7 @@ glift.displays.board.Intersections.prototype = {
    */
   setStoneColor: function(pt, color) {
     pt = pt.rotate(this.boardPoints.numIntersections, this.rotation);
-    var key = pt.hash();
+    var key = pt.toString();
     if (this.theme.stones[color] === undefined) {
       throw 'Unknown color key [' + color + ']';
     }

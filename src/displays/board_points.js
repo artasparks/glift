@@ -68,7 +68,7 @@ glift.displays.boardPoints = function(
           });
         } else {
           intPt = intPt.translate(-1, -1);
-          points[intPt.hash()] = {
+          points[intPt.toString()] = {
             intPt: intPt,
             coordPt: coordPt,
             bbox: glift.orientation.bbox.fromPts(
@@ -78,7 +78,7 @@ glift.displays.boardPoints = function(
         }
       } else {
         // Default case: Don't draw coordinates
-        points[intPt.hash()] = {
+        points[intPt.toString()] = {
           intPt: intPt,
           coordPt: coordPt,
           bbox: glift.orientation.bbox.fromPts(
@@ -112,7 +112,7 @@ glift.displays.boardPoints = function(
  */
 glift.displays.BoardPoints = function(
     points, spacing, numIntersections, edgeLabels) {
-  this.points = points; // int hash is 0 indexed, i.e., 0->18.
+  this.points = points; // string map 
   this.spacing = spacing;
   this.radius = spacing / 2;
   this.numIntersections = numIntersections; // 1 indexed (1->19)
@@ -134,7 +134,7 @@ glift.displays.BoardPoints.prototype = {
    *  }
    */
   getCoord: function(pt) {
-    return this.points[pt.hash()];
+    return this.points[pt.toString()];
   },
 
   /**
@@ -168,7 +168,7 @@ glift.displays.BoardPoints.prototype = {
    * integer points and float coordinates.
    */
   hasCoord: function(pt) {
-    return this.points[pt.hash()] !== undefined;
+    return this.points[pt.toString()] !== undefined;
   },
 
   /**

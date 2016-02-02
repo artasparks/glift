@@ -48,15 +48,13 @@ glift.flattener.Options;
  * Flatten the combination of movetree, goban, cropping, and treepath into an
  * array (really a 2D array) of symbols, (a Flattened object).
  *
- * Required parameters:
- *  - The movetree is used for extracting:
+ * @param {!glift.rules.MoveTree} movetreeInitial The movetree is used for
+ *    extracting:
  *    -> The marks
  *    -> The next moves
  *    -> The previous move
  *    -> subsequent stones, if a nextMovesTreepath is present.  These are
  *    given labels.
- *
- * @param {!glift.rules.MoveTree} movetreeInitial
  * @param {!glift.flattener.Options} options
  *
  * @return {!glift.flattener.Flattened}
@@ -127,7 +125,7 @@ glift.flattener.flatten = function(movetreeInitial, options) {
   }
 
   // Get the marks at the current position
-  var mksOut = glift.flattener._markMap(mt);
+  var mksOut = glift.flattener.markMap_(mt);
   var labels = mksOut.labels; // map of ptstr to label str
   var marks = mksOut.marks; // map of ptstr to symbol
 
@@ -240,6 +238,14 @@ glift.flattener._stoneMap = function(goban, nextStones) {
 
 
 /**
+ * @typedef{{
+ *  marks: !Object<glift.PtStr, glift.flattener.symbols>,
+ *  labels: !Object<glift.PtStr, string>
+ * }}
+ */
+glift.flattener.MarkMap;
+
+/**
  * Get the relevant marks.  Returns an object containing two fields: marks,
  * which is a map from ptString to Symbol ID. and labels, which is a map
  * from ptString to text label.
@@ -258,8 +264,11 @@ glift.flattener._stoneMap = function(goban, nextStones) {
  *    "12,4": "B"
  *  }
  * }
+ * @return {!glift.flattener.MarkMap}
+ * @private
  */
-glift.flattener._markMap = function(movetree) {
+glift.flattener.markMap_ = function(movetree) {
+  /** @type {!glift.flattener.MarkMap} */
   var out = { marks: {}, labels: {} };
   var symbols = glift.flattener.symbols;
   var propertiesToSymbols = {

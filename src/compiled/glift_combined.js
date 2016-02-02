@@ -928,18 +928,41 @@ glift.platform = {
 
 goog.provide('glift.util.point');
 goog.provide('glift.Point');
+goog.provide('glift.PtStr');
+
+/**
+ * A point string is just a string with the format '<Number>,<Number>'. We use
+ * this special type as a reminder to the reader of the code.
+ *
+ * Example: '12,5'
+ *
+ * @typedef {string}
+ */
+glift.PtStr;
 
 /**
  * Create a point.  We no longer cache points
+ * @param {number} x
+ * @param {number} y
+ * return {!glift.Point}
  */
 glift.util.point = function(x, y) {
   return new glift.Point(x, y);
 };
 
+/**
+ * @param {number} x
+ * @param {number} y
+ * return {!glift.PtStr}
+ */
 glift.util.coordToString = function(x, y) {
   return x + ',' + y;
 };
 
+/**
+ * @param {glift.PtStr} str
+ * @return {!glift.Point}
+ */
 glift.util.pointFromString = function(str) {
   try {
     var split = str.split(",");
@@ -958,6 +981,9 @@ glift.util.pointFromString = function(str) {
  * and point data sets uniformly.
  *
  * Example: TR[aa][ab]... vs TR[aa:cc]
+ *
+ * @param {string} str The sgf string to pars.
+ * @return {!Array<!glift.Point>} An array of points.
  */
 glift.util.pointArrFromSgfProp = function(str) {
   if (str.length === 2) {
@@ -1001,6 +1027,8 @@ glift.util.pointArrFromSgfProp = function(str) {
  *   |.
  *   |.
  *   |.
+ * @param {string} str The SGF string point
+ * @return {!glift.Point} the finished point.
  */
 glift.util.pointFromSgfCoord = function(str) {
   if (str.length !== 2) {
@@ -1009,11 +1037,6 @@ glift.util.pointFromSgfCoord = function(str) {
   }
   var a = 'a'.charCodeAt(0)
   return glift.util.point(str.charCodeAt(0) - a, str.charCodeAt(1) - a);
-};
-
-
-glift.util.pointFromHash = function(str) {
-  return glift.util.pointFromString(str);
 };
 
 
@@ -1033,27 +1056,31 @@ glift.Point = function(xIn, yIn) {
    * @private {number}
    * @const
    */
-  this._x = xIn;
+  this.x_ = xIn;
   /**
    * @private {number}
    * @const
    */
-  this._y = yIn;
+  this.y_ = yIn;
 };
 
 glift.Point.prototype = {
-  x: function() { return this._x },
-  y: function() { return this._y },
+  /** @return {number} x value */
+  x: function() { return this.x_ },
+  /** @return {number} y value */
+  y: function() { return this.y_ },
+  /** @return {boolean} Whether this point equals another obj. */
   equals: function(pt) {
-    return this._x === pt.x() && this._y === pt.y();
+    return this.x_ === pt.x() && this.y_ === pt.y();
   },
 
+  /** @return {!glift.Point} */
   clone: function() {
     return glift.util.point(this.x(), this.y());
   },
 
   /**
-   * Returns an SGF coord, e.g., 'ab' for (0,1)
+   * @return {string}  an SGF coord, e.g., 'ab' for (0,1)
    */
   toSgfCoord: function() {
     var a = 'a'.charCodeAt(0);
@@ -1062,23 +1089,17 @@ glift.Point.prototype = {
   },
 
   /**
-   * Create the form used as a key in objects.
-   * TODO(kashomon): Replace with string form.  The term hash() is confusing and
-   * it makes it seem like I'm converting it to an int (which I was, long ago).
-   */
-  hash: function() {
-    return this.toString();
-  },
-
-  /**
    * Return a string representation of the coordinate.  I.e., "12,3".
+   * @return {!glift.PtStr}
    */
   toString: function() {
     return glift.util.coordToString(this.x(), this.y());
   },
 
   /**
-   * Return a new point that's a translation from this one
+   * @param {number} x
+   * @param {number} y
+   * @return {!glift.Point} a new point that's a translation from this one.
    */
   translate: function(x, y) {
     return glift.util.point(this.x() + x, this.y() + y);
@@ -1086,10 +1107,12 @@ glift.Point.prototype = {
 
   /**
    * Rotate an (integer) point based on the board size.
-   * boardsize: Typically 19, but 9 and 13 are possible.  Note that points are
-   * typically 0-indexed.
-   *
    * Note: This is an immutable transformation on the point.
+   *
+   * @param {number} maxIntersections The max intersections of the uncropped
+   *    board. Typically 19, 13, or 9.
+   * @param {glift.enums.rotations} rotation To perform on the point.
+   * @return {!glift.Point} A new point that has possibly been rotated.
    */
   rotate: function(maxIntersections, rotation) {
     var rotations = glift.enums.rotations;
@@ -1123,6 +1146,12 @@ glift.Point.prototype = {
     return point(mid + rotated.x(), -rotated.y() + mid);
   },
 
+  /**
+   * The inverse of rotate (see above)}
+   * @param {number} maxIntersections Usually 9, 13, or 19.
+   * @param {glift.enums.rotations} rotation Usually 9, 13, or 19.
+   * @return {!glift.Point} A rotated point.
+   */
   antirotate: function(maxIntersections, rotation) {
     var rotations = glift.enums.rotations
     if (rotation === rotations.CLOCKWISE_90) {
@@ -1136,6 +1165,7 @@ glift.Point.prototype = {
     }
   },
 
+  /** Log this point to the console. Should probably be deleted. */
   log: function() {
     glift.util.logz(this.toString());
   }
@@ -3611,7 +3641,7 @@ glift.displays.boardPoints = function(
           });
         } else {
           intPt = intPt.translate(-1, -1);
-          points[intPt.hash()] = {
+          points[intPt.toString()] = {
             intPt: intPt,
             coordPt: coordPt,
             bbox: glift.orientation.bbox.fromPts(
@@ -3621,7 +3651,7 @@ glift.displays.boardPoints = function(
         }
       } else {
         // Default case: Don't draw coordinates
-        points[intPt.hash()] = {
+        points[intPt.toString()] = {
           intPt: intPt,
           coordPt: coordPt,
           bbox: glift.orientation.bbox.fromPts(
@@ -3655,7 +3685,7 @@ glift.displays.boardPoints = function(
  */
 glift.displays.BoardPoints = function(
     points, spacing, numIntersections, edgeLabels) {
-  this.points = points; // int hash is 0 indexed, i.e., 0->18.
+  this.points = points; // string map 
   this.spacing = spacing;
   this.radius = spacing / 2;
   this.numIntersections = numIntersections; // 1 indexed (1->19)
@@ -3677,7 +3707,7 @@ glift.displays.BoardPoints.prototype = {
    *  }
    */
   getCoord: function(pt) {
-    return this.points[pt.hash()];
+    return this.points[pt.toString()];
   },
 
   /**
@@ -3711,7 +3741,7 @@ glift.displays.BoardPoints.prototype = {
    * integer points and float coordinates.
    */
   hasCoord: function(pt) {
-    return this.points[pt.hash()] !== undefined;
+    return this.points[pt.toString()] !== undefined;
   },
 
   /**
@@ -4583,7 +4613,7 @@ glift.displays.board.Intersections.prototype = {
    */
   setStoneColor: function(pt, color) {
     pt = pt.rotate(this.boardPoints.numIntersections, this.rotation);
-    var key = pt.hash();
+    var key = pt.toString();
     if (this.theme.stones[color] === undefined) {
       throw 'Unknown color key [' + color + ']';
     }
@@ -4934,7 +4964,7 @@ goog.require('glift.displays.board');
  * @param {!glift.themes.base} theme The theme object
  */
 glift.displays.board.lines = function(svg, idGen, boardPoints, theme) {
-  // Mapping from int point (e.g., 3,3) hash to id;
+  // Mapping from int point (e.g., 3,3) pt string to id;
   var svglib = glift.displays.svg;
 
   var container = svglib.group().setId(idGen.lineGroup());
@@ -8620,11 +8650,11 @@ glift.rules.Goban.prototype = {
     // check to make sure we haven't already seen a stone
     // and that the point is not out of bounds.  If
     // either of these conditions fail, return immediately.
-    if (captures.seen[pt.hash()] !== undefined || this.outBounds(pt)) {
+    if (captures.seen[pt.toString()] !== undefined || this.outBounds(pt)) {
       // we're done -- there's no where to go.
     } else {
       // note that we've seen the point
-      captures.seen[pt.hash()] = true;
+      captures.seen[pt.toString()] = true;
       var stoneColor = this.getStone(pt);
       if (stoneColor === glift.enums.states.EMPTY)    {
         // add a liberty if the point is empty and return
@@ -8752,10 +8782,10 @@ glift.rules.initStones_ = function(ints) {
  * @constructor @final @struct
  */
 glift.rules.CaptureTracker_ = function() {
-  this.toCapture = {}; // set of points to capture (mapping pt.hash() -> true)
+  this.toCapture = {}; // set of points to capture (mapping pt str -> true)
   this.numCaptures = 0;
   this.considering = []; // list of points we're considering to capture
-  this.seen = {}; // set of points we've seen (mapping pt.hash() -> true)
+  this.seen = {}; // set of points we've seen (mapping pt str -> true)
   this.liberties = 0;
 };
 
@@ -8771,8 +8801,8 @@ glift.rules.CaptureTracker_.prototype = {
   consideringToCaptures: function() {
     for (var i = 0; i < this.considering.length; i++) {
       var value = this.considering[i];
-      if (this.toCapture[value.hash()] === undefined) {
-        this.toCapture[value.hash()] = true;
+      if (this.toCapture[value.toString()] === undefined) {
+        this.toCapture[value.toString()] = true;
         this.numCaptures++;
       }
     }
@@ -8788,14 +8818,14 @@ glift.rules.CaptureTracker_.prototype = {
 
   /** @param {!glift.Point} point add a point to the seen-map */
   addSeen: function(point) {
-    this.seen[point.hash()] = true;
+    this.seen[point.toString()] = true;
   },
 
   /** @return {!Array<!glift.Point>} */
   getCaptures: function() {
     var out = [];
     for (var key in this.toCapture) {
-      out.push(glift.util.pointFromHash(key));
+      out.push(glift.util.pointFromString(key));
     }
     return out;
   }
@@ -9324,13 +9354,13 @@ glift.rules.MoveTree.prototype = {
         if (node.properties().getOneValue(token) == "") {
           // This is a 'PASS'.  Ignore
         } else {
-          ptSet[node.properties().getAsPoint(token).hash()] =
+          ptSet[node.properties().getAsPoint(token).toString()] =
             node.getVarNum();
         }
       }
     }
-    if (ptSet[point.hash()] !== undefined) {
-      return ptSet[point.hash()];
+    if (ptSet[point.toString()] !== undefined) {
+      return ptSet[point.toString()];
     } else {
       return null;
     }
@@ -13449,15 +13479,13 @@ glift.flattener.Options;
  * Flatten the combination of movetree, goban, cropping, and treepath into an
  * array (really a 2D array) of symbols, (a Flattened object).
  *
- * Required parameters:
- *  - The movetree is used for extracting:
+ * @param {!glift.rules.MoveTree} movetreeInitial The movetree is used for
+ *    extracting:
  *    -> The marks
  *    -> The next moves
  *    -> The previous move
  *    -> subsequent stones, if a nextMovesTreepath is present.  These are
  *    given labels.
- *
- * @param {!glift.rules.MoveTree} movetreeInitial
  * @param {!glift.flattener.Options} options
  *
  * @return {!glift.flattener.Flattened}
@@ -13528,7 +13556,7 @@ glift.flattener.flatten = function(movetreeInitial, options) {
   }
 
   // Get the marks at the current position
-  var mksOut = glift.flattener._markMap(mt);
+  var mksOut = glift.flattener.markMap_(mt);
   var labels = mksOut.labels; // map of ptstr to label str
   var marks = mksOut.marks; // map of ptstr to symbol
 
@@ -13641,6 +13669,14 @@ glift.flattener._stoneMap = function(goban, nextStones) {
 
 
 /**
+ * @typedef{{
+ *  marks: !Object<glift.PtStr, glift.flattener.symbols>,
+ *  labels: !Object<glift.PtStr, string>
+ * }}
+ */
+glift.flattener.MarkMap;
+
+/**
  * Get the relevant marks.  Returns an object containing two fields: marks,
  * which is a map from ptString to Symbol ID. and labels, which is a map
  * from ptString to text label.
@@ -13659,8 +13695,11 @@ glift.flattener._stoneMap = function(goban, nextStones) {
  *    "12,4": "B"
  *  }
  * }
+ * @return {!glift.flattener.MarkMap}
+ * @private
  */
-glift.flattener._markMap = function(movetree) {
+glift.flattener.markMap_ = function(movetree) {
+  /** @type {!glift.flattener.MarkMap} */
   var out = { marks: {}, labels: {} };
   var symbols = glift.flattener.symbols;
   var propertiesToSymbols = {
@@ -13935,7 +13974,8 @@ glift.flattener.Board.prototype = {
   getIntBoardPt: function(ptOrX, opt_y) {
     if (glift.util.typeOf(ptOrX) === 'number' &&
         glift.util.typeOf(opt_y) === 'number') {
-      var pt = glift.util.point(ptOrX, opt_y);
+      var pt = glift.util.point(
+          /** @type {number} */ (ptOrX), /** @type {number} */ (opt_y));
     } else {
       var pt = ptOrX;
     }
@@ -13954,7 +13994,8 @@ glift.flattener.Board.prototype = {
   getInt: function(ptOrX, opt_y) {
     if (glift.util.typeOf(ptOrX) === 'number' &&
         glift.util.typeOf(opt_y) === 'number') {
-      var pt = glift.util.point(ptOrX, opt_y);
+      var pt = glift.util.point(
+          /** @type {number} */ (ptOrX), /** @type {number} */ (opt_y));
     } else {
       var pt = ptOrX;
     }

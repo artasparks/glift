@@ -5,9 +5,9 @@ var testUtil = {
     for (var i = 0; i < list.length; i++) {
       var item = list[i];
       if (item.value !== undefined) {
-        outMap[item.point.hash()] = item; // LABEL
+        outMap[item.point.toString()] = item; // LABEL
       } else {
-        outMap[item.hash()] = item; // point
+        outMap[item.toString()] = item; // point
       }
     }
     return outMap;

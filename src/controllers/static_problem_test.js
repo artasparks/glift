@@ -86,9 +86,9 @@
     deepEqual(result.result, problemResults.INDETERMINATE,
         'The result must be indeterminate');
     var pts = ptlistToMap(result.stones.WHITE);
-    ok(pts[possNext[0].hash()] !== undefined ||
-       pts[possNext[1].hash()] !== undefined ||
-       pts[possNext[2].hash()] !== undefined,
+    ok(pts[possNext[0].toString()] !== undefined ||
+       pts[possNext[1].toString()] !== undefined ||
+       pts[possNext[2].toString()] !== undefined,
        'Must show the next white piece in the data.');
   });
 

@@ -11,7 +11,7 @@ goog.require('glift.displays.board');
  * @param {!glift.themes.base} theme The theme object
  */
 glift.displays.board.lines = function(svg, idGen, boardPoints, theme) {
-  // Mapping from int point (e.g., 3,3) hash to id;
+  // Mapping from int point (e.g., 3,3) pt string to id;
   var svglib = glift.displays.svg;
 
   var container = svglib.group().setId(idGen.lineGroup());

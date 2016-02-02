@@ -346,13 +346,13 @@ glift.rules.MoveTree.prototype = {
         if (node.properties().getOneValue(token) == "") {
           // This is a 'PASS'.  Ignore
         } else {
-          ptSet[node.properties().getAsPoint(token).hash()] =
+          ptSet[node.properties().getAsPoint(token).toString()] =
             node.getVarNum();
         }
       }
     }
-    if (ptSet[point.hash()] !== undefined) {
-      return ptSet[point.hash()];
+    if (ptSet[point.toString()] !== undefined) {
+      return ptSet[point.toString()];
     } else {
       return null;
     }
