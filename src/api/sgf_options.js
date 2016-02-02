@@ -41,11 +41,10 @@ glift.api.SgfOptions = function(opt_o) {
   var o = opt_o || {};
 
   /**
-   * A literal SGF String.  Should not be specified in SGF defaults.
-   * api:1.0
+   * A literal SGF String. This is often overwritten when the SGF String is
+   * retrived via an AJAX call and so thus cannot be const.
    *
    * @type {string|undefined}
-   * @const
    */
   this.sgfString = o.sgfString !== undefined ? o.sgfString : undefined;
 

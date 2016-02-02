@@ -6,19 +6,36 @@ goog.provide('glift.widgets.BaseWidget');
  * @param {string} divId
  * @param {!glift.api.SgfOptions} sgfOptions
  * @param {!glift.api.DisplayOptions} displayOptions
- * @param {!glift.widgets.ActionsWrapper} actions
+ * @param {!glift.api.IconActions} iconActions
+ * @param {!glift.api.StoneActions} stoneActions
  * @param {!glift.widgets.WidgetManager} manager
  * @param {!glift.api.HookOptions} hooks
  *
  * @constructor @final @struct
  */
 glift.widgets.BaseWidget = function(
-    divId, sgfOptions, displayOptions, actions, manager, hooks) {
-  this.wrapperDivId = divId; // We split the wrapper div.
+    divId, sgfOptions, displayOptions, iconActions, stoneActions, manager, hooks) {
+  /** @type {string} */
+  // We split the wrapper div, but here we record the original reference.
+  this.wrapperDivId = divId;
+
+  /** @type {!glift.api.SgfOptions} */
   this.sgfOptions = sgfOptions;
+  console.log(this.sgfOptions);
+
+  /** @type {!glift.api.IconActions} */
   this.displayOptions = displayOptions;
-  this.actions = actions;
+
+  /** @type {!glift.api.IconActions} */
+  this.iconActions = iconActions;
+
+  /** @type {!glift.api.StoneActions} */
+  this.stoneActions = stoneActions;
+
+  /** @type {!glift.widgets.WidgetManager} */
   this.manager = manager;
+
+  /** @type {!glift.api.HookOptions} */
   this.externalHooks = hooks;
 
   // These variables are initialized by draw
@@ -123,8 +140,7 @@ glift.widgets.BaseWidget.prototype = {
       }).draw();
     }
     glift.util.majorPerfLog('IconBar');
-    divIds.ICONBAR && this.iconBar.initIconActions(
-        this, this.actions.iconActions);
+    divIds.ICONBAR && this.iconBar.initIconActions(this, this.iconActions);
 
     if (divIds[glift.enums.boardComponents.STATUS_BAR]) {
       // TODO(kashomon): Move this logic into a helper.
@@ -155,10 +171,10 @@ glift.widgets.BaseWidget.prototype = {
     }
     glift.util.majorPerfLog('StatusBar');
     divIds.STATUS_BAR && this.statusBar.iconBar.initIconActions(
-        this, this.actions.iconActions);
+        this, this.iconActions);
 
     glift.util.majorPerfLog('Before stone event creation');
-    this._initStoneActions(this.actions.stoneActions);
+    this._initStoneActions(this.stoneActions);
     this._initKeyHandlers();
     glift.util.majorPerfLog('After stone event creation');
 

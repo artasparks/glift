@@ -14507,19 +14507,36 @@ goog.provide('glift.widgets.BaseWidget');
  * @param {string} divId
  * @param {!glift.api.SgfOptions} sgfOptions
  * @param {!glift.api.DisplayOptions} displayOptions
- * @param {!glift.widgets.ActionsWrapper} actions
+ * @param {!glift.api.IconActions} iconActions
+ * @param {!glift.api.StoneActions} stoneActions
  * @param {!glift.widgets.WidgetManager} manager
  * @param {!glift.api.HookOptions} hooks
  *
  * @constructor @final @struct
  */
 glift.widgets.BaseWidget = function(
-    divId, sgfOptions, displayOptions, actions, manager, hooks) {
-  this.wrapperDivId = divId; // We split the wrapper div.
+    divId, sgfOptions, displayOptions, iconActions, stoneActions, manager, hooks) {
+  /** @type {string} */
+  // We split the wrapper div, but here we record the original reference.
+  this.wrapperDivId = divId;
+
+  /** @type {!glift.api.SgfOptions} */
   this.sgfOptions = sgfOptions;
+  console.log(this.sgfOptions);
+
+  /** @type {!glift.api.IconActions} */
   this.displayOptions = displayOptions;
-  this.actions = actions;
+
+  /** @type {!glift.api.IconActions} */
+  this.iconActions = iconActions;
+
+  /** @type {!glift.api.StoneActions} */
+  this.stoneActions = stoneActions;
+
+  /** @type {!glift.widgets.WidgetManager} */
   this.manager = manager;
+
+  /** @type {!glift.api.HookOptions} */
   this.externalHooks = hooks;
 
   // These variables are initialized by draw
@@ -14624,8 +14641,7 @@ glift.widgets.BaseWidget.prototype = {
       }).draw();
     }
     glift.util.majorPerfLog('IconBar');
-    divIds.ICONBAR && this.iconBar.initIconActions(
-        this, this.actions.iconActions);
+    divIds.ICONBAR && this.iconBar.initIconActions(this, this.iconActions);
 
     if (divIds[glift.enums.boardComponents.STATUS_BAR]) {
       // TODO(kashomon): Move this logic into a helper.
@@ -14656,10 +14672,10 @@ glift.widgets.BaseWidget.prototype = {
     }
     glift.util.majorPerfLog('StatusBar');
     divIds.STATUS_BAR && this.statusBar.iconBar.initIconActions(
-        this, this.actions.iconActions);
+        this, this.iconActions);
 
     glift.util.majorPerfLog('Before stone event creation');
-    this._initStoneActions(this.actions.stoneActions);
+    this._initStoneActions(this.stoneActions);
     this._initKeyHandlers();
     glift.util.majorPerfLog('After stone event creation');
 
@@ -14905,15 +14921,6 @@ glift.widgets.BaseWidget.prototype = {
 goog.provide('glift.widgets.WidgetManager');
 
 /**
- * @typedef {{
- *  iconActions: !glift.api.IconActions,
- *  stoneActions: !glift.api.StoneActions
- * }}
- */
-// TODO(kashomon): Remove this nonsense.
-glift.widgets.ActionsWrapper;
-
-/**
  * The Widget Manager manages state across widgets.  When widgets are created,
  * they are always created in the context of a Widget Manager.
  *
@@ -14941,14 +14948,23 @@ glift.widgets.WidgetManager = function(options) {
    */
   this.divId = options.divId;
 
-  // The fullscreen div id. Only set via the fullscreen button. Necessary to
-  // have for problem collections.
+  /**
+   * The fullscreen div id. Only set via the fullscreen button. Necessary to
+   * have for problem collections.
+   * @type {?string}
+   */
   this.fullscreenDivId = null;
-  // The fullscreen div will always be at the top. So we jump up to the top
-  // during fullscreen and jump back afterwards.
+  /**
+   * The fullscreen div will always be at the top. So we jump up to the top
+   * during fullscreen and jump back afterwards.
+   * @type {?number}
+   */
   this.prevScrollTop = null;
-  // If we set the window resize (done, for ex. in the case of full-screening),
-  // we track the window-resizing function.
+  /**
+   * If we set the window resize (done, for ex. in the case of full-screening),
+   * we track the window-resizing function.
+   * @type {?function(?Event)}
+   */
   this.oldWindowResize = null;
 
   /**
@@ -14999,15 +15015,16 @@ glift.widgets.WidgetManager = function(options) {
   this.displayOptions = options.display;
 
   /**
-   * Actions for the Icons and for stone defaults
-   *
-   * @type {!glift.widgets.ActionsWrapper}
+   * Actions for the Icons
+   * @type {!glift.api.IconActions}
    */
-  // TODO(kashomon): Break this apart. No need to squash these into one obj.
-  this.actions = {
-    iconActions: options.iconActions,
-    stoneActions: options.stoneActions,
-  };
+  this.iconActions = options.iconActions;
+
+  /**
+   * Actions for the Stones
+   * @type {!glift.api.StoneActions}
+   */
+  this.stoneActions = options.stoneActions;
 
   /**
    * Whether to load SGFs in the background.
@@ -15052,6 +15069,7 @@ glift.widgets.WidgetManager = function(options) {
 glift.widgets.WidgetManager.prototype = {
   /**
    * Creates a BaseWidget instance, and calls draw on the base widget.
+   * @return {!glift.widgets.WidgetManager} The manager object.
    */
   draw: function() {
     var that = this;
@@ -15235,6 +15253,9 @@ glift.widgets.WidgetManager.prototype = {
    * Like the above function, but doesn't do XHR -- returns the input SGF object
    * if no SGF exists in the sgf cache. Convenient for contexts where you are
    * certain that the SGF has already been loaded.
+   * @param {!glift.api.SgfOptions} sgfObj
+   * @return {!glift.api.SgfOptions} Now we ensure that the SGF object has the
+   *    sgf finished.
    */
   loadSgfStringSync: function(sgfObj) {
     var alias = sgfObj.alias;
@@ -15252,7 +15273,10 @@ glift.widgets.WidgetManager.prototype = {
     }
   },
 
-  /** Get the currentDivId */
+  /**
+   * Get the currentDivId. This is only interesting because the 
+   * @return {string}
+   */
   getDivId: function() {
     if (this.fullscreenDivId) {
       return this.fullscreenDivId;
@@ -15261,18 +15285,23 @@ glift.widgets.WidgetManager.prototype = {
     }
   },
 
-  /** Create a Sgf Widget. */
+  /**
+   * Create a Sgf Widget that actually does the work of fitting together the
+   * board and icons.
+   * @param {!glift.api.SgfOptions} sgfObj
+   * @return {!glift.widgets.BaseWidget} The construct widget. Note: at this
+   *    point, the widget has not yet been 'drawn'.
+   */
   createWidget: function(sgfObj) {
     return new glift.widgets.BaseWidget(
-        this.getDivId(), sgfObj, this.displayOptions, this.actions, this,
-        this.hooks);
+        this.getDivId(), sgfObj, this.displayOptions, this.iconActions,
+        this.stoneActions, this, this.hooks);
   },
 
   /**
    * Temporarily replace the current widget with another widget.  Used in the
    * case of the PROBLEM_SOLUTION_VIEWER.
-   *
-   * @type {!Object} sgfObj
+   * @param {!glift.api.SgfOptions} sgfObj
    */
   createTemporaryWidget: function(sgfObj) {
     this.currentWidget && this.currentWidget.destroy();
@@ -15319,6 +15348,10 @@ glift.widgets.WidgetManager.prototype = {
   /**
    * Load a urlOrObject with AJAX.  If the urlOrObject is an object, then we
    * assume that the caller is trying to set some objects in the widget.
+   * @param {string} url
+   * @param {!glift.api.SgfOptions} sgfObj
+   * @param {!function(glift.api.SgfOptions)} callback For when the ajax request
+   *    completes.
    */
   loadSgfWithAjax: function(url, sgfObj, callback) {
     glift.ajax.get(url, function(data) {
@@ -16084,11 +16117,10 @@ glift.api.SgfOptions = function(opt_o) {
   var o = opt_o || {};
 
   /**
-   * A literal SGF String.  Should not be specified in SGF defaults.
-   * api:1.0
+   * A literal SGF String. This is often overwritten when the SGF String is
+   * retrived via an AJAX call and so thus cannot be const.
    *
    * @type {string|undefined}
-   * @const
    */
   this.sgfString = o.sgfString !== undefined ? o.sgfString : undefined;
 
@@ -16866,13 +16898,15 @@ glift.api.widgetopt[glift.enums.widgetTypes.REDUCED_GAME_VIEWER] = {
 };
 
 /**
- * Additional Options for the GameViewers
+ * Additional options for the standard problems, where the entire problem is
+ * stored client-side.
  */
 glift.api.widgetopt[glift.enums.widgetTypes.STANDARD_PROBLEM] = {
   markLastMove: undefined, // rely on defaults
   keyMappings: undefined, // rely on defaults
 
-  problemConditions: {},
+  problemConditions: undefined, // rely on defaults, which are set up to work
+      // for the Standard problem.
 
   controllerFunc: glift.controllers.staticProblem,
 

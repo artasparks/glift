@@ -1,11 +1,13 @@
 /**
- * Additional Options for the GameViewers
+ * Additional options for the standard problems, where the entire problem is
+ * stored client-side.
  */
 glift.api.widgetopt[glift.enums.widgetTypes.STANDARD_PROBLEM] = {
   markLastMove: undefined, // rely on defaults
   keyMappings: undefined, // rely on defaults
 
-  problemConditions: {},
+  problemConditions: undefined, // rely on defaults, which are set up to work
+      // for the Standard problem.
 
   controllerFunc: glift.controllers.staticProblem,
 

@@ -1,15 +1,6 @@
 goog.provide('glift.widgets.WidgetManager');
 
 /**
- * @typedef {{
- *  iconActions: !glift.api.IconActions,
- *  stoneActions: !glift.api.StoneActions
- * }}
- */
-// TODO(kashomon): Remove this nonsense.
-glift.widgets.ActionsWrapper;
-
-/**
  * The Widget Manager manages state across widgets.  When widgets are created,
  * they are always created in the context of a Widget Manager.
  *
@@ -37,14 +28,23 @@ glift.widgets.WidgetManager = function(options) {
    */
   this.divId = options.divId;
 
-  // The fullscreen div id. Only set via the fullscreen button. Necessary to
-  // have for problem collections.
+  /**
+   * The fullscreen div id. Only set via the fullscreen button. Necessary to
+   * have for problem collections.
+   * @type {?string}
+   */
   this.fullscreenDivId = null;
-  // The fullscreen div will always be at the top. So we jump up to the top
-  // during fullscreen and jump back afterwards.
+  /**
+   * The fullscreen div will always be at the top. So we jump up to the top
+   * during fullscreen and jump back afterwards.
+   * @type {?number}
+   */
   this.prevScrollTop = null;
-  // If we set the window resize (done, for ex. in the case of full-screening),
-  // we track the window-resizing function.
+  /**
+   * If we set the window resize (done, for ex. in the case of full-screening),
+   * we track the window-resizing function.
+   * @type {?function(?Event)}
+   */
   this.oldWindowResize = null;
 
   /**
@@ -95,15 +95,16 @@ glift.widgets.WidgetManager = function(options) {
   this.displayOptions = options.display;
 
   /**
-   * Actions for the Icons and for stone defaults
-   *
-   * @type {!glift.widgets.ActionsWrapper}
+   * Actions for the Icons
+   * @type {!glift.api.IconActions}
    */
-  // TODO(kashomon): Break this apart. No need to squash these into one obj.
-  this.actions = {
-    iconActions: options.iconActions,
-    stoneActions: options.stoneActions,
-  };
+  this.iconActions = options.iconActions;
+
+  /**
+   * Actions for the Stones
+   * @type {!glift.api.StoneActions}
+   */
+  this.stoneActions = options.stoneActions;
 
   /**
    * Whether to load SGFs in the background.
@@ -148,6 +149,7 @@ glift.widgets.WidgetManager = function(options) {
 glift.widgets.WidgetManager.prototype = {
   /**
    * Creates a BaseWidget instance, and calls draw on the base widget.
+   * @return {!glift.widgets.WidgetManager} The manager object.
    */
   draw: function() {
     var that = this;
@@ -331,6 +333,9 @@ glift.widgets.WidgetManager.prototype = {
    * Like the above function, but doesn't do XHR -- returns the input SGF object
    * if no SGF exists in the sgf cache. Convenient for contexts where you are
    * certain that the SGF has already been loaded.
+   * @param {!glift.api.SgfOptions} sgfObj
+   * @return {!glift.api.SgfOptions} Now we ensure that the SGF object has the
+   *    sgf finished.
    */
   loadSgfStringSync: function(sgfObj) {
     var alias = sgfObj.alias;
@@ -348,7 +353,10 @@ glift.widgets.WidgetManager.prototype = {
     }
   },
 
-  /** Get the currentDivId */
+  /**
+   * Get the currentDivId. This is only interesting because the 
+   * @return {string}
+   */
   getDivId: function() {
     if (this.fullscreenDivId) {
       return this.fullscreenDivId;
@@ -357,18 +365,23 @@ glift.widgets.WidgetManager.prototype = {
     }
   },
 
-  /** Create a Sgf Widget. */
+  /**
+   * Create a Sgf Widget that actually does the work of fitting together the
+   * board and icons.
+   * @param {!glift.api.SgfOptions} sgfObj
+   * @return {!glift.widgets.BaseWidget} The construct widget. Note: at this
+   *    point, the widget has not yet been 'drawn'.
+   */
   createWidget: function(sgfObj) {
     return new glift.widgets.BaseWidget(
-        this.getDivId(), sgfObj, this.displayOptions, this.actions, this,
-        this.hooks);
+        this.getDivId(), sgfObj, this.displayOptions, this.iconActions,
+        this.stoneActions, this, this.hooks);
   },
 
   /**
    * Temporarily replace the current widget with another widget.  Used in the
    * case of the PROBLEM_SOLUTION_VIEWER.
-   *
-   * @type {!Object} sgfObj
+   * @param {!glift.api.SgfOptions} sgfObj
    */
   createTemporaryWidget: function(sgfObj) {
     this.currentWidget && this.currentWidget.destroy();
@@ -415,6 +428,10 @@ glift.widgets.WidgetManager.prototype = {
   /**
    * Load a urlOrObject with AJAX.  If the urlOrObject is an object, then we
    * assume that the caller is trying to set some objects in the widget.
+   * @param {string} url
+   * @param {!glift.api.SgfOptions} sgfObj
+   * @param {!function(glift.api.SgfOptions)} callback For when the ajax request
+   *    completes.
    */
   loadSgfWithAjax: function(url, sgfObj, callback) {
     glift.ajax.get(url, function(data) {
