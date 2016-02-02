@@ -767,7 +767,11 @@ glift.keyMappings = {
       // Assume it's an icon-action-path
       // icon namespaces look like: icons.arrowleft.mouseup
       var actionNamespace = funcOrIcon.split('.');
-      var action = widget.actions[actionNamespace[0]];
+      if (actionNamespace[0] !== 'iconActions' &&
+          actionNamespace[0] !== 'stoneActions') {
+        throw new Error('Unexpected action namespace: ' + actionNamespace[0]);
+      }
+      var action = widget[actionNamespace[0]];
       for (var i = 1; i < actionNamespace.length; i++) {
         action = action[actionNamespace[i]];
       }
@@ -9029,7 +9033,7 @@ glift.rules.movetree = {
    * @param {string} sgfString
    * @param {(string|number|!Array<number>)=} opt_initPosition
    * @param {glift.parse.parseType=} opt_parseType
-   * @return {glift.rules.MoveTree}
+   * @return {!glift.rules.MoveTree}
    */
   getFromSgf: function(sgfString, opt_initPosition, opt_parseType) {
     var initPosition = opt_initPosition || []; // treepath.
@@ -9040,7 +9044,7 @@ glift.rules.movetree = {
       initPosition = glift.rules.treepath.parsePath(initPosition);
     }
 
-    var initTreepath = /** @type {glift.rules.Treepath} */ (initPosition);
+    var initTreepath = /** @type {!glift.rules.Treepath} */ (initPosition);
 
     if (sgfString === undefined || sgfString === '') {
       return glift.rules.movetree.getInstance(19);
@@ -11260,7 +11264,7 @@ goog.provide('glift.controllers.BaseController');
 goog.provide('glift.controllers.ControllerFunc');
 
 /**
- * A type used for SGF Options.
+ * A controller function which indicates how to consturct a BaseController.
  *
  * @typedef {function(glift.api.SgfOptions):glift.controllers.BaseController}
  */
@@ -11281,42 +11285,56 @@ glift.controllers.base = function() {
  * extending this base class will implement addStone and [optionally]
  * extraOptions.
  *
- * The options are generall set either with initOptions or initialize;
- *
  * @constructor
  */
 glift.controllers.BaseController = function() {
-  // Options set with initOptions and intended to be immutable during the
-  // lifetime of the controller.
   /** @package {string} */
-  this.sgfString = '';
-
-  /** @package {string|!Array<number>} */
-  this.initialPosition = [];
+  this.sgfString = ''
 
   /**
-   * Used only for examples (see the Game Figure). Indicates how to create
-   * move numbers.
+   * The raw initial position.
+   * @package {string|!Array<number>}
+   */
+  this.rawInitialPosition = [];
+
+  /**
+   * The raw next moves path. Used only for examples (see the Game Figure).
+   * Indicates how to create move numbers.
    * @package {!string|!Array<number>}
    */
-  this.nextMovesPath = [];
+  this.rawNextMovesPath = [];
   /**
    * Used only for problem-types.
    * @package {!glift.rules.ProblemConditions}
    */
   this.problemConditions = {};
 
-  // State variables that are defined on initialize and that could are
-  // necessarily mutable.
-  /** @package {?glift.parse.parseType} */
-  this.parseType = null;
-  /** @package {?glift.rules.Treepath} */
-  this.treepath = null;
-  /** @package {glift.rules.MoveTree} */
-  this.movetree = null;
-  /** @package {glift.rules.Goban} goban */
-  this.goban = null;
-  /** @package {!Array<!glift.rules.CaptureResult>} */
+  /** @package {glift.parse.parseType} */
+  this.parseType = glift.parse.parseType.SGF;
+
+  /**
+   * The treepath representing the pth to the current position.
+   * @package {glift.rules.Treepath}
+   */
+  this.treepath = [];
+
+  /**
+   * The full tree of moves constructed from the SGF.
+   * @package {!glift.rules.MoveTree}
+   */
+  this.movetree = glift.rules.movetree.getInstance();
+
+  /**
+   * The Goban representing the current state of the board. Here, we construct a
+   * dummy Goban to ensure that the goban is non-nullable.
+   * @package {!glift.rules.Goban} goban
+   */
+  this.goban = glift.rules.goban.getInstance(1);
+
+  /**
+   * The history of the captures so we can go backwards in time.
+   * @package {!Array<!glift.rules.CaptureResult>}
+   */
   this.captureHistory = [];
 };
 
@@ -11333,11 +11351,12 @@ glift.controllers.BaseController.prototype = {
     if (sgfOptions === undefined) {
       throw 'Options is undefined!  Can\'t create controller'
     }
-    this.parseType = sgfOptions.parseType || glift.parse.parseType.SGF;
     this.sgfString = sgfOptions.sgfString || '';
-    this.initialPosition = sgfOptions.initialPosition || [];
+    this.rawNextMovesPath = sgfOptions.nextMovesPath || [];
+    this.rawInitialPosition = sgfOptions.initialPosition || [];
+
+    this.parseType = sgfOptions.parseType || glift.parse.parseType.SGF;
     this.problemConditions = sgfOptions.problemConditions || {};
-    this.nextMovesPath = sgfOptions.nextMovesPath || [];
     this.initialize();
     return this;
   },
@@ -11353,14 +11372,13 @@ glift.controllers.BaseController.prototype = {
    *    what stones were captured.
    *  - capture history -- The history of the captures.
    *
-   * treepath: Optionally pass in the treepath from the beginning and use that
-   * instead of the initialPosition treepath.
-   *
-   * @param {string=} opt_treepath
+   * @param {string=} opt_treepath Because we may want to reinitialize the
+   *    GoBoard, we optionally pass in the treepath from the beginning and use
+   *    that instead of the initialPosition treepath.
    */
   initialize: function(opt_treepath) {
     var rules = glift.rules;
-    var initTreepath = opt_treepath || this.initialPosition;
+    var initTreepath = opt_treepath || this.rawInitialPosition;
     this.treepath = rules.treepath.parsePath(initTreepath);
 
     // TODO(kashomon): Appending the nextmoves path is hack until the UI
@@ -11685,7 +11703,7 @@ goog.require('glift.controllers.BaseController');
 /**
  * Creates a BoardEditor controller.
  *
- * @return {glift.controllers.BoardEditor}
+ * @type {!glift.controllers.ControllerFunc}
  */
 glift.controllers.boardEditor = function(sgfOptions) {
   var ctrl = glift.controllers;
@@ -11984,7 +12002,7 @@ goog.require('glift.controllers.BaseController');
 /**
  * A GameFigure encapsulates the idea of a read-only SGF.
  *
- * @return glift.controllers
+ * @type {!glift.controllers.ControllerFunc}
  */
 glift.controllers.gameFigure = function(sgfOptions) {
   var baseController = glift.util.beget(
@@ -12051,6 +12069,8 @@ glift.controllers.GameFigure.prototype = {
 
 /**
  * A GameViewer encapsulates the idea of traversing a read-only SGF.
+ *
+ * @type {!glift.controllers.ControllerFunc}
  */
 glift.controllers.gameViewer = function(sgfOptions) {
   var ctrl = glift.controllers;
@@ -12186,6 +12206,8 @@ glift.controllers.GameViewerMethods = {
  *  - There is actually a variation with that position / color.
  *  - There is actually a node somewhere beneath the variation that results in a
  *  'correct' outcome.
+ *
+ * @type {!glift.controllers.ControllerFunc}
  */
 glift.controllers.staticProblem = function(sgfOptions) {
   var controllers = glift.controllers;
@@ -14522,7 +14544,6 @@ glift.widgets.BaseWidget = function(
 
   /** @type {!glift.api.SgfOptions} */
   this.sgfOptions = sgfOptions;
-  console.log(this.sgfOptions);
 
   /** @type {!glift.api.IconActions} */
   this.displayOptions = displayOptions;
@@ -14780,7 +14801,9 @@ glift.widgets.BaseWidget.prototype = {
     }
   },
 
-  /** Assign Key actions to some other action. */
+  /**
+   * Assign Key actions to some other action.
+   */
   _initKeyHandlers: function() {
     if (!this.displayOptions.enableKeyboardShortcuts) {
       return;
@@ -15421,8 +15444,10 @@ glift.api = {
    * method directly, instead peferring 'glift.create(<options>)'.
    *
    * @package
-   * @param {!Object} inOptions A Glift's options obj (specified as an object
-   *    literal). See glift.api.Options.
+   * @param {!Object} inOptions A Glift's options obj (typically specified as an object
+   *    literal). See glift.api.Options. We don't technically specify the type
+   *    her as glift.api.Options because the expectation is that the object will
+   *    be an object literal rather than a constructed obj.
    * @return {glift.widgets.WidgetManager}
    */
   create: function(inOptions) {
@@ -15459,7 +15484,7 @@ glift.api = {
 
 
 /**
- * The primary entry point for Glift. Creates a glift instance.
+ * The primary entry point for Glift. Creates and draws a glift instance.
  *
  * api:1.0
  */

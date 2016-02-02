@@ -21,7 +21,6 @@ glift.widgets.BaseWidget = function(
 
   /** @type {!glift.api.SgfOptions} */
   this.sgfOptions = sgfOptions;
-  console.log(this.sgfOptions);
 
   /** @type {!glift.api.IconActions} */
   this.displayOptions = displayOptions;
@@ -279,7 +278,9 @@ glift.widgets.BaseWidget.prototype = {
     }
   },
 
-  /** Assign Key actions to some other action. */
+  /**
+   * Assign Key actions to some other action.
+   */
   _initKeyHandlers: function() {
     if (!this.displayOptions.enableKeyboardShortcuts) {
       return;

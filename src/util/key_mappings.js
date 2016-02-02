@@ -158,7 +158,11 @@ glift.keyMappings = {
       // Assume it's an icon-action-path
       // icon namespaces look like: icons.arrowleft.mouseup
       var actionNamespace = funcOrIcon.split('.');
-      var action = widget.actions[actionNamespace[0]];
+      if (actionNamespace[0] !== 'iconActions' &&
+          actionNamespace[0] !== 'stoneActions') {
+        throw new Error('Unexpected action namespace: ' + actionNamespace[0]);
+      }
+      var action = widget[actionNamespace[0]];
       for (var i = 1; i < actionNamespace.length; i++) {
         action = action[actionNamespace[i]];
       }

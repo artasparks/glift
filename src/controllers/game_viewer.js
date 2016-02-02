@@ -1,5 +1,7 @@
 /**
  * A GameViewer encapsulates the idea of traversing a read-only SGF.
+ *
+ * @type {!glift.controllers.ControllerFunc}
  */
 glift.controllers.gameViewer = function(sgfOptions) {
   var ctrl = glift.controllers;

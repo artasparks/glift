@@ -6,7 +6,7 @@ goog.require('glift.controllers.BaseController');
 /**
  * A GameFigure encapsulates the idea of a read-only SGF.
  *
- * @return glift.controllers
+ * @type {!glift.controllers.ControllerFunc}
  */
 glift.controllers.gameFigure = function(sgfOptions) {
   var baseController = glift.util.beget(

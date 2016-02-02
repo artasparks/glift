@@ -5,7 +5,7 @@ goog.require('glift.controllers.BaseController');
 /**
  * Creates a BoardEditor controller.
  *
- * @return {glift.controllers.BoardEditor}
+ * @type {!glift.controllers.ControllerFunc}
  */
 glift.controllers.boardEditor = function(sgfOptions) {
   var ctrl = glift.controllers;

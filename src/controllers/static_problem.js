@@ -6,6 +6,8 @@
  *  - There is actually a variation with that position / color.
  *  - There is actually a node somewhere beneath the variation that results in a
  *  'correct' outcome.
+ *
+ * @type {!glift.controllers.ControllerFunc}
  */
 glift.controllers.staticProblem = function(sgfOptions) {
   var controllers = glift.controllers;

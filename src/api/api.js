@@ -10,8 +10,10 @@ glift.api = {
    * method directly, instead peferring 'glift.create(<options>)'.
    *
    * @package
-   * @param {!Object} inOptions A Glift's options obj (specified as an object
-   *    literal). See glift.api.Options.
+   * @param {!Object} inOptions A Glift's options obj (typically specified as an object
+   *    literal). See glift.api.Options. We don't technically specify the type
+   *    her as glift.api.Options because the expectation is that the object will
+   *    be an object literal rather than a constructed obj.
    * @return {glift.widgets.WidgetManager}
    */
   create: function(inOptions) {
@@ -48,7 +50,7 @@ glift.api = {
 
 
 /**
- * The primary entry point for Glift. Creates a glift instance.
+ * The primary entry point for Glift. Creates and draws a glift instance.
  *
  * api:1.0
  */

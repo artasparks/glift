@@ -55,7 +55,7 @@ glift.rules.movetree = {
    * @param {string} sgfString
    * @param {(string|number|!Array<number>)=} opt_initPosition
    * @param {glift.parse.parseType=} opt_parseType
-   * @return {glift.rules.MoveTree}
+   * @return {!glift.rules.MoveTree}
    */
   getFromSgf: function(sgfString, opt_initPosition, opt_parseType) {
     var initPosition = opt_initPosition || []; // treepath.
@@ -66,7 +66,7 @@ glift.rules.movetree = {
       initPosition = glift.rules.treepath.parsePath(initPosition);
     }
 
-    var initTreepath = /** @type {glift.rules.Treepath} */ (initPosition);
+    var initTreepath = /** @type {!glift.rules.Treepath} */ (initPosition);
 
     if (sgfString === undefined || sgfString === '') {
       return glift.rules.movetree.getInstance(19);
