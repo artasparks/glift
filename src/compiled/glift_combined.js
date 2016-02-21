@@ -13812,8 +13812,7 @@ glift.flattener._createStoneLabels = function(
   var symb = glift.flattener.symbols;
   var collisions = []; // {color: <color>, mvnum: <number>, label: <lbl>}
 
-  // Remove any number labels currently existing in the marks map.  This
-  // method also numbers stones.
+  // Remove any number labels currently existing in the marks map.
   var digitRegex = /[0-9]/;
   for (var ptstr in labels) {
     if (digitRegex.test(labels[ptstr])) {
