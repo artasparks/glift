@@ -1,3 +1,4 @@
+goog.provide('glift.rules.AppliedTreepath');
 goog.provide('glift.rules.Treepath');
 goog.provide('glift.rules.treepath');
 
@@ -5,6 +6,16 @@ goog.provide('glift.rules.treepath');
  * @typedef {!Array<number>}
  */
 glift.rules.Treepath;
+
+/**
+ * The result of a treepath applied to a movetree.
+ *
+ * @typedef {{
+ *  movetree: !glift.rules.MoveTree,
+ *  stones: !Array<!glift.rules.Move>
+ * }}
+ */
+glift.rules.AppliedTreepath;
 
 /**
  * The treepath is specified by a String, which tells how to get to particular
@@ -323,10 +334,8 @@ glift.rules.treepath = {
    * @param {!glift.rules.MoveTree} movetree A rules.movetree.
    * @param {!glift.rules.Goban} goban A rules.goban array.
    * @param {!glift.rules.Treepath} nextMoves A next-moves treepath (fragment).
-   * @return {{
-   *  movetree: !glift.rules.MoveTree,
-   *  stones: !Array<!glift.rules.Move>
-   * }}
+   *
+   * @return {!glift.rules.AppliedTreepath} The result of applying the treepath
    *
    * - movetree: The updated movetree after applying the nextmoves
    * - stones: Array of 'augmented' stone objects

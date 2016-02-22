@@ -80,7 +80,7 @@ glift.bridge.intersections = {
     out.lastMove = movetree.getLastMove();
     out.marks = glift.bridge.intersections.getCurrentMarks(movetree);
     out.nextMoves = movetree.nextMoves();
-    out.selectedNextMove = out.nextMoves[opt_nextVarNumber] || null;
+    out.selectedNextMove = opt_nextVarNumber ? out.nextMoves[opt_nextVarNumber] : null;
     out.correctNextMoves = opt_problemConditions !== undefined
         ? glift.rules.problems.correctNextMoves(movetree,
             /** @type {!glift.rules.ProblemConditions} */ (opt_problemConditions))

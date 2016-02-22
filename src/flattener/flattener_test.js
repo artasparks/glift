@@ -79,11 +79,11 @@
     deepEqual(f.collisions().length, 2);
     var col = f.collisions();
     deepEqual(col[0].color, 'WHITE');
-    deepEqual(col[0].mvnum, '4');
+    deepEqual(col[0].mvnum, 4);
     deepEqual(col[0].label, '2');
 
     deepEqual(col[1].color, 'BLACK');
-    deepEqual(col[1].mvnum, '5');
+    deepEqual(col[1].mvnum, 5);
     deepEqual(col[1].label, 'a');
   });
 
@@ -98,7 +98,7 @@
     deepEqual(f.collisions().length, 1);
     var col = f.collisions();
     deepEqual(col[0].color, 'WHITE');
-    deepEqual(col[0].mvnum, '2');
+    deepEqual(col[0].mvnum, 2);
     deepEqual(col[0].label, 'X');
   });
 

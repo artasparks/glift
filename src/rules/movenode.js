@@ -82,7 +82,7 @@ glift.rules.MoveNode.prototype = {
 
   getIntersection: function() {
     var colors = ['B', 'W'];
-    for (var i in colors) {
+    for (var i = 0; i < colors.length; i++) {
       var color = colors[i];
       if(this._properties.propMap[color] != undefined) {
         return this._properties.propMap[color];

@@ -45,6 +45,17 @@ glift.flattener.Options;
 
 
 /**
+ * @typedef {{
+ *  color: glift.enums.states,
+ *  mvnum: number,
+ *  label: (string|undefined),
+ *  collisionStoneColor:  (glift.enums.states|undefined)
+ * }}
+ */
+glift.flattener.Collision;
+
+
+/**
  * Flatten the combination of movetree, goban, cropping, and treepath into an
  * array (really a 2D array) of symbols, (a Flattened object).
  *
@@ -133,12 +144,12 @@ glift.flattener.flatten = function(movetreeInitial, options) {
   var sv = glift.enums.showVariations
   if (showVars === sv.ALWAYS || (
       showVars === sv.MORE_THAN_ONE && mt.node().numChildren() > 1)) {
-    glift.flattener._updateLabelsWithVariations(mt, marks, labels);
+    glift.flattener.updateLabelsWithVariations_(mt, marks, labels);
   }
 
   // Calculate the collision stones and update the marks / labels maps if
   // necessary.
-  var collisions = glift.flattener._createStoneLabels(
+  var collisions = glift.flattener.createStoneLabels_(
       applied.stones, stoneMap, marks, labels, startingMoveNum);
 
   // Finally! Generate the intersections double-array.
@@ -150,6 +161,7 @@ glift.flattener.flatten = function(movetreeInitial, options) {
   // - selectedNextMove
   // - correctNextMoves
   var comment = mt.properties().getComment() || '';
+
   return new glift.flattener.Flattened(
       board, collisions, comment, boardRegion, cropping, mt.onMainline(),
       startingMoveNum, endingMoveNum, mainlineMoveNum, mainlineMove,
@@ -210,10 +222,10 @@ glift.flattener.getBoardRegion_ = function(mt, nmtp, options) {
 /**
  * Note: This contains ALL stones for a given position.
  *
- * @param {!glift.rules.Goban} goban
+ * @param {!glift.rules.Goban} goban The current-state of the goban.
  * @param {!Array<glift.rules.Move>} nextStones that are the result of applying
  *    a next-moves path.
- * @return {!Object<string, !glift.rules.Move>} Map from point string to stone.
+ * @return {!Object<!glift.PtStr, !glift.rules.Move>} Map from point string to stone.
  * @private
  */
 glift.flattener.stoneMap_ = function(goban, nextStones) {
@@ -251,8 +263,8 @@ glift.flattener.stoneMap_ = function(goban, nextStones) {
  * }
  *
  * @typedef{{
- *  marks: !Object<glift.PtStr, glift.flattener.symbols>,
- *  labels: !Object<glift.PtStr, string>
+ *  marks: !Object<!glift.PtStr, !glift.flattener.symbols>,
+ *  labels: !Object<!glift.PtStr, string>
  * }}
  */
 glift.flattener.MarkMap;
@@ -347,9 +359,6 @@ glift.flattener.findStartingMoveNum_ = function(mt, nextMovesPath) {
 /**
  * Create or apply labels to identify collisions that occurred during apply.
  *
- * stones: stones that exist on the next moves path.
- * marks: map from ptstring to Mark symbol int.
- *    see -- glift.lattener.symbols.
  * labels: map from ptstring to label string.
  * startingMoveNum: The number at which to start creating labels
  *
@@ -367,10 +376,22 @@ glift.flattener.findStartingMoveNum_ = function(mt, nextMovesPath) {
  * as in this example:
  *    'Black 13 at White 2'
  *
- * Sadly, this has has the side effect of altering the marks / labels maps.
+ * Sadly, this has has the side effect of altering the marks / labels maps --
+ * not in the underlying movetree, but in the ultimate representation.
+ *
+ * @param {!Array<!glift.rules.Move>} appliedStones The result of applying the
+ *    treepath.
+ * @param {!Object<!glift.PtStr, !glift.rules.Move>} stoneMap Map of ptstring
+ *    to the move.
+ * @param {!Object<!glift.PtStr, !glift.flattener.symbols>} marks
+ * @param {!Object<!glift.PtStr, string>} labels
+ * @param {number} startingMoveNum
+ *
+ * @return {!Array<!glift.flattener.Collision>}
+ * @private
  */
 // TODO(kashomon): Guard this with a autoLabelMoves flag.
-glift.flattener._createStoneLabels = function(
+glift.flattener.createStoneLabels_ = function(
     appliedStones, stoneMap, marks, labels, startingMoveNum) {
   if (!appliedStones || appliedStones.length === 0) {
     return []; // Don't perform relabeling if no stones are found.
@@ -408,7 +429,7 @@ glift.flattener._createStoneLabels = function(
     if (stone.hasOwnProperty('collision')) {
       var col = {
         color: stone.color,
-        mvnum: (nextMoveNum) + '',
+        mvnum: (nextMoveNum),
         label: undefined,
         collisionStoneColor: colStoneColor
       };
@@ -441,10 +462,12 @@ glift.flattener._createStoneLabels = function(
  * usually isn't done for diagrams-for-print.
  *
  * @param {!glift.rules.MoveTree} mt
- * @param {!Object} marks
- * @param {!Object} labels
+ * @param {!Object<!glift.PtStr, !glift.flattener.symbols>} marks Map of ptstring
+ *    to the move.
+ * @param {!Object<!glift.PtStr, string>} labels
+ * @private
  */
-glift.flattener._updateLabelsWithVariations = function(mt, marks, labels) {
+glift.flattener.updateLabelsWithVariations_ = function(mt, marks, labels) {
   for (var i = 0; i < mt.node().numChildren(); i++) {
     var move = mt.node().getChild(i).properties().getMove();
     if (move && move.point) {
