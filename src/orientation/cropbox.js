@@ -61,6 +61,10 @@ glift.orientation.cropbox = {
    *   - the ragged top/bottom/right/eft are +/- 1
    *
    * For board sizes < 19, the cropbox is the whole board.
+   *
+   * @param {glift.enums.boardRegions} region
+   * @param {number} intersects
+   * @return {!glift.orientation.Cropbox}
    */
   get: function(region, intersects) {
     var point = glift.util.point,

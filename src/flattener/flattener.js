@@ -45,6 +45,19 @@ glift.flattener.Options;
 
 
 /**
+ * This data is meant to be used like the following:
+ *    '<color> <mvnum> at <collisionStoneColor> <label>'
+ * as in this example:
+ *    'Black 13 at White 2'
+ *
+ * Description:
+ *  {
+ *    color: <color of the move to be played>,
+ *    mvnum: <move number>,
+ *    label: <label where the collision occured>,
+ *    collisionStoneColor: <color of the stone under the label>
+ *  }
+ *
  * @typedef {{
  *  color: glift.enums.states,
  *  mvnum: number,
@@ -83,16 +96,19 @@ glift.flattener.flatten = function(movetreeInitial, options) {
       options.showNextVariationsType  || glift.enums.showVariations.NEVER;
   var nmtp = glift.rules.treepath.parseFragment(options.nextMovesTreepath || '');
 
-  var startingMoveNum = options.startingMoveNum || null;
+  var optStartingMoveNum = options.startingMoveNum || null;
+  // Find the starting move number before applying the next move path.
+  if (optStartingMoveNum === null) {
+    optStartingMoveNum = glift.flattener.findStartingMoveNum_(mt, nmtp);
+  }
+
+  // Starting move num must be defined, so let's get the types right.
+  var startingMoveNum = /** @type {number} */ (optStartingMoveNum);
 
   var boardRegion = glift.flattener.getBoardRegion_(mt, nmtp, options);
   var cropping = glift.orientation.cropbox.get(
       boardRegion, mt.getIntersections());
 
-  // Find the starting move number before applying the next move path.
-  if (startingMoveNum === null) {
-    startingMoveNum = glift.flattener.findStartingMoveNum_(mt, nmtp);
-  }
 
   // The move number of the first mainline move in the parent-chain.
   var mainlineMoveNum = mt.getMainlineNode().getNodeNum();
@@ -162,10 +178,19 @@ glift.flattener.flatten = function(movetreeInitial, options) {
   // - correctNextMoves
   var comment = mt.properties().getComment() || '';
 
-  return new glift.flattener.Flattened(
-      board, collisions, comment, boardRegion, cropping, mt.onMainline(),
-      startingMoveNum, endingMoveNum, mainlineMoveNum, mainlineMove,
-      nextMainlineMove, stoneMap, marks, labels);
+  return new glift.flattener.Flattened({
+      board: board,
+      collisions: collisions,
+      comment: comment,
+      isOnMainPath: mt.onMainline(),
+      startingMoveNum: startingMoveNum,
+      endMoveNum: endingMoveNum,
+      mainlineMoveNum: mainlineMoveNum,
+      mainlineMove: mainlineMove,
+      nextMainlineMove: nextMainlineMove,
+      stoneMap: stoneMap,
+      markMap: marks,
+      labelMap: labels});
 };
 
 
@@ -364,17 +389,7 @@ glift.flattener.findStartingMoveNum_ = function(mt, nextMovesPath) {
  *
  * returns: an array of collision objects:
  *
- *  {
- *    color: <color of the move to be played>,
- *    mvnum: <move number>,
- *    label: <label>,
-      collisionStoneColor: <color of the stone under the label>
- *  }
  *
- * This data is meant to be used like the following:
- *    '<color> <mvnum> at <collisionStoneColor> <label>'
- * as in this example:
- *    'Black 13 at White 2'
  *
  * Sadly, this has has the side effect of altering the marks / labels maps --
  * not in the underlying movetree, but in the ultimate representation.

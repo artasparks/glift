@@ -69,7 +69,7 @@ glift.flattener.Board = function(boardArray, bbox, maxBoardSize) {
   this.bbox_ = bbox;
 
   /**
-   * Maximum board size.  Generally 9, 13, or 19. 
+   * Maximum board size.  Generally 9, 13, or 19.
    *
    * @private {number}
    */

@@ -1,172 +1,198 @@
 goog.provide('glift.flattener.Flattened');
+goog.provide('glift.flattener.FlattenedParams');
+
+/**
+ * The Flattened object is complex. We pass in a strongly parameter object for
+ * convenience.
+ *
+ * @typedef {{
+ *  board: !glift.flattener.Board,
+ *  collisions: !Array<!glift.flattener.Collision>,
+ *  comment: string,
+ *  isOnMainPath: boolean,
+ *  startingMoveNum: number,
+ *  endMoveNum: number,
+ *  mainlineMoveNum: number,
+ *  mainlineMove: ?glift.rules.Move,
+ *  nextMainlineMove: ?glift.rules.Move,
+ *  stoneMap: !Object<glift.PtStr, !glift.rules.Move>,
+ *  markMap: !Object<glift.PtStr, !glift.flattener.symbols>,
+ *  labelMap: !Object<glift.PtStr, string>
+ * }}
+ */
+glift.flattener.FlattenedParams;
 
 /**
  * Data used to populate either a display or diagram.
  *
+ * @param {!glift.flattener.FlattenedParams} params
  * @constructor @final @struct
  */
-glift.flattener.Flattened = function(
-    board, collisions, comment, boardRegion, cropping, isOnMainPath,
-    startMoveNum, endMoveNum, mainlineMoveNum, mainlineMove,
-    nextMainlineMove, stoneMap, markMap, labelMap) {
+glift.flattener.Flattened = function(params) {
   /**
    * Board wrapper. Essentially a double array of intersection objects.
+   * @private {!glift.flattener.Board}
    */
-  this._board = board;
+  this.board_ = params.board;
 
   /**
-   * Array of collisions objects.  In other words, we record stones that
-   * couldn't be placed on the board.
-   *
-   * Each object in the collisions array looks like:
-   * {color: <color>, mvnum: <number>, label: <label>}
+   * @private {!Array<glift.flattener.Collision>}
    */
-  this._collisions = collisions;
+  this.collisions_ = params.collisions;
 
-  /** Comment string. */
-  this._comment = comment;
+  /** @private {string} */
+  this.comment_ = params.comment;
 
-  /** The board region this flattened representation is meant to display. */
-  this._boardRegion = boardRegion;
-
-  /** The cropping object. Probably shouldn't be accessed directly. */
-  this._cropping = cropping;
-
-  /** Whether or not the position is on the 'top' (zeroth) variation. */
-  this._isOnMainPath = isOnMainPath;
+  /**
+   * Whether or not the position is on the 'top' (zeroth) variation.
+   * @private {boolean}
+   */
+  this.isOnMainPath_ = params.isOnMainPath;
 
   /**
    * The starting and ending move numbers. These are typically used for
    * labeling diagrams.
+   * @private {number}
    */
-  this._startMoveNum = startMoveNum;
-  this._endMoveNum = endMoveNum;
-  this._mainlineMoveNum = mainlineMoveNum;
+  this.startMoveNum_ = params.startingMoveNum;
+  /** @private {number} */
+  this.endMoveNum_ = params.endMoveNum;
+  /** @private {number} */
+  this.mainlineMoveNum_ = params.mainlineMoveNum;
 
   /**
    * The move -- {color: <color>, point: <pt>} at the first mainline move in the
    * parent tree. Can be null if no move exists at the node.
+   * @private {?glift.rules.Move}
    */
-  this._mainlineMove = mainlineMove;
+  this.mainlineMove_ = params.mainlineMove;
   /**
    * The next mainline move after the mainline move above.. Usually variations
    * are variations on the _next_ move, so it's usually useful to reference the
    * next move.
+   * @private {?glift.rules.Move}
    */
-  this._nextMainlineMove = nextMainlineMove;
+  this.nextMainlineMove_ = params.nextMainlineMove;
 
   /**
-   * All the stones!
-   *
-   * A map from the point string to a stone object:
-   *    {point: <point>, color: <color>}
+   * All the stones for O(1) convenience =D.
+   * @private {!Object<glift.PtStr, !glift.rules.Move>}
    */
-  this._stoneMap = stoneMap;
+  this.stoneMap_ = params.stoneMap;
 
   /**
    * All the marks!
-   *
-   * A map with the following structure:
-   *  {
-   *    "12,5": 13
-   *    "12,3": 23
-   *  }
-   * }
+   * @private {!Object<glift.PtStr, !glift.flattener.symbols>}
    */
-  this._markMap = markMap;
+  this.markMap_ = params.markMap;
 
-  /** 
+  /**
    * All the labels!
-   *
-   *  labels: {
-   *    "12,3": "A"
-   *    "12,4": "B"
-   *  }
+   * @private {!Object<glift.PtStr, string>}
    */
-  this._labelMap = labelMap;
+  this.labelMap_ = params.labelMap;
 };
 
 glift.flattener.Flattened.prototype = {
-  /** Returns the board wrapper. */
-  board: function() { return this._board; },
+  /** @return {!glift.flattener.Board} */
+  board: function() { return this.board_; },
 
-  /** Returns the comment. */
-  comment: function() { return this._comment; },
+  /**
+   * The comment C[...] for the position.
+   * @return {string}
+   */
+  comment: function() { return this.comment_; },
 
-  /** Returns the collisions. */
-  collisions: function() { return this._collisions; },
+  /**
+   * A structure illustrating the board collisions. Only relevant for positions
+   * with a next moves path.
+   *
+   * Array of collisions objects.  In other words, we record stones that
+   * couldn't be placed on the board.
+   *
+   * Each object in the collisions array looks like:
+   *    {color: <color>, mvnum: <number>, label: <label>}
+   * (although the source of truth is in the typedef).
+   *
+   * @return {!Array<!glift.flattener.Collision>}
+   */
+  collisions: function() { return this.collisions_; },
 
   /**
    * Whether or not this position is on the main line or path variation.  For
    * game review diagrams, it's usually nice to distinguish between diagrams for
    * the real game and diagrams for exploratory variations.
+   *
+   * @return {boolean}
    */
-  isOnMainPath: function() { return this._isOnMainPath; },
+  isOnMainPath: function() { return this.isOnMainPath_; },
 
-  /** Returns the starting move number. */
-  startingMoveNum: function() { return this._startMoveNum; },
+  /**
+   * Returns the starting move number.
+   * @return {number}
+   */
+  startingMoveNum: function() { return this.startMoveNum_; },
 
-  /** Returns the ending move number. */
-  endingMoveNum: function() { return this._endMoveNum; },
+  /**
+   * Returns the ending move number.
+   * @return {number}
+   */
+  endingMoveNum: function() { return this.endMoveNum_; },
 
   /**
    * Returns the first mainline move number in the parent-chain. This will be
    * equal to the startingMoveNum if isOnMainPath = true.
+   * @return {number}
    */
-  mainlineMoveNum: function() { return this._mainlineMoveNum; },
+  mainlineMoveNum: function() { return this.mainlineMoveNum_; },
 
   /**
    * Returns the move number of the nextMainlineMove (regardless of whether or
    * not it exists.
+   * @return {number}
    */
   nextMainlineMoveNum: function() { return this.mainlineMoveNum() + 1; },
 
   /**
    * Returns the first mainline move in the parent-chain. Can be null if no move
    * exists and has the form {color: <color>, pt: <pt>} if defined.
+   * @return {?glift.rules.Move}
    */
-  mainlineMove: function() { return this._mainlineMove; },
+  mainlineMove: function() { return this.mainlineMove_; },
 
   /**
    * Returns the next mainline move after the mainline move in the parent-chain.
    * Can be null if no move exists and has the form {color: <color>, pt: <pt>}
    * if defined.
+   * @return {?glift.rules.Move}
    */
-  nextMainlineMove: function() { return this._nextMainlineMove; },
+  nextMainlineMove: function() { return this.nextMainlineMove_; },
 
   /**
    * Returns the stone map. An object with the following structure:
-   * {
-   *   '12,3': {point: <point>, color: <color>} (stone object)
-   * }
+   * @return {!Object<glift.PtStr, !glift.rules.Move>}
    */
-  stoneMap: function() { return this._stoneMap; },
+  stoneMap: function() { return this.stoneMap_; },
 
   /**
    * Returns the labels map. An object with the following structure:
-   *  {
-   *    "12,3": "A"
-   *    "12,4": "B"
-   *  }
+   * @return {!Object<glift.PtStr, string>}
    */
   labelMap: function() {
-    return this._labelMap;
+    return this.labelMap_;
   },
 
   /**
    * Returns the marks map. An object with the following structure:
-   *  {
-   *    "12,5": 30
-   *    "12,3": 31
-   *  }
-   *
    * where the numbers correspond to an entry in glift.flattener.symbols.
    *
    * Note: This will include the TEXTLABEL symbol, even though the labels map
    * duplicates this information to some degree.
+   *
+   * @return {!Object<glift.PtStr, glift.flattener.symbols>}
    */
   markMap: function() {
-    return this._markMap;
+    return this.markMap_;
   },
 
   /**
@@ -178,9 +204,9 @@ glift.flattener.Flattened.prototype = {
    * Note: This helper only truncates when branchLength = endNum - startNum <
    * 100.
    *
-   * numOrString: The number represented either as a string or a number
-   *    (probably the former, but who are we to judge?).
-   * return: The processed string label.
+   * @param {(number|string)} numOrString: The number represented either as a
+   *    string or a number (probably the former, but who are we to judge?).
+   * @return {string} The processed string label.
    */
   autoTruncateLabel: function(numOrString) {
     var num = numOrString;
