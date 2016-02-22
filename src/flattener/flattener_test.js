@@ -102,14 +102,6 @@
     deepEqual(col[0].label, 'X');
   });
 
-  test('Test ensure cropping exists', function() {
-    var sgf = '(;GB[1]AW[aa][ba]AB[ab][bb])';
-    var mt = glift.rules.movetree.getFromSgf(sgf);
-    var f = flattener.flatten(mt, { boardRegion: 'TOP_LEFT' });
-    deepEqual(glift.util.typeOf(f._cropping), 'object');
-    deepEqual(f._cropping, glift.orientation.cropbox.get('TOP_LEFT', 19));
-  });
-
   test('isOnMainPath', function() {
     var sgf = '(;GB[1](;B[aa])(;B[ab]))';
     var mt = glift.rules.movetree.getFromSgf(sgf);
