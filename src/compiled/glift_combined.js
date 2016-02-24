@@ -13942,6 +13942,8 @@ glift.flattener.updateLabelsWithVariations_ = function(mt, marks, labels) {
 
 goog.provide('glift.flattener.board');
 goog.provide('glift.flattener.Board');
+goog.provide('glift.flattener.DiffPt');
+
 
 glift.flattener.board = {
   /**
@@ -14020,9 +14022,21 @@ glift.flattener.Board = function(boardArray, bbox, maxBoardSize) {
 
 glift.flattener.Board.prototype = {
   /**
-   * Provide a SGF Point (intersection-point) and retrieve the relevant
-   * intersection.  Note, this uses the board indexing as opposed to the indexing
-   * in the array.
+   * Provide a SGF Point (indexed from upper left) and retrieve the relevant
+   * intersection.  This  takes into account cropping that could be indicated by
+   * the bounding box.
+   *
+   * In other words, in many diagrams, we may wish to show only
+   * a small fraction of the board. Thus, this board will be cropping
+   * accordingly.  However, getIntBoardPt allows the user to pass in the normal
+   * board coordinates, but indexed from the upper left as SGF coordinates are.
+   *
+   * Example: For
+   * [[ a, b, c, d],
+   *  [ e, f, g, h],
+   *  [ i, j, k, l]]
+   * and this is the upper-right corner of a 19x19, if we getIntBoardPt(17, 2),
+   * this would return 'k'. (17=2nd to last column, 2=3rd row down);
    *
    * @param {!glift.Point|number} ptOrX a Point object or, optionaly, a number.
    * @param {number=} opt_y If the first param is a number.
@@ -14042,8 +14056,18 @@ glift.flattener.Board.prototype = {
   },
 
   /**
-   * Get an intersection from a the intersection table. Uses the absolute array
-   * positioning. Returns undefined if the pt doesn't exist on the board.
+   * Get an intersection from the board array. Uses the absolute array
+   * positioning. Returns null if the pt doesn't exist on the board.
+   *
+   * If other words, the first parameter is a column (x), the second parameter
+   * is the row (y). Optionally, a glift.Point can be passed in instead of the
+   * first parameter
+   *
+   * Example: getInt(1,2) for
+   * [[ a, b, c, d],
+   *  [ e, f, g, h],
+   *  [ i, j, k, l]]
+   * returns j
    *
    * @param {!glift.Point|number} ptOrX a Point object or, optionaly, a number.
    * @param {number=} opt_y If the first param is a number.
@@ -14064,7 +14088,9 @@ glift.flattener.Board.prototype = {
   },
 
   /**
-   * Turns a 0 indexed pt to a point that's board-indexed.
+   * Turns a 0 indexed pt to a point that's board-indexed (i.e., that's offset
+   * according to the bounding box).
+   *
    * @param {!glift.Point} pt
    * @return {!glift.Point} The translated point
    */
@@ -14073,7 +14099,10 @@ glift.flattener.Board.prototype = {
   },
 
   /**
-   * Turns a 0 indexed pt to a point that's board-indexed.
+   * Turns a 0 indexed pt to a point that's board-indexed. What this means, is
+   * that we take into account the cropping that could be provided by the
+   * bounding box. This could return the IntPt, but it could be different.
+   *
    * @param {!glift.Point} pt
    * @return {!glift.Point} The translated point
    */
@@ -14145,7 +14174,73 @@ glift.flattener.Board.prototype = {
       outArray.push(row);
     }
     return new glift.flattener.Board(outArray, this.bbox_, this.maxBoardSize_);
+  },
+
+  /**
+   * Create a diff between this board and another board. Obviously for the board
+   * diff to make sense, the boards must have the same type
+   *
+   * It is required that the boards be the same dimensions, or else an error is
+   * thrown.
+   *
+   * @param {!glift.flattener.Board<T>} that
+   * @return {!Array<!glift.flattener.DiffPt<T>>}
+   */
+  diff: function(that) {
+    if (!that || that.boardArray_ || !that.bbox_ || !that.maxBoardSize_) {
+      throw new Error('Diff board not defined or not a flattener board');
+    }
+    if (this.height() !== that.height() || this.width() !== that.width()) {
+      throw new Error('Boards do not have the same dimensions.' +
+        ' This: h:' + this.height() + ' w:' + this.width() +
+        ' That: h:' + that.height() + ' w:' + that.width());
+    }
+    var out = [];
+    for (var i = 0; i < this.boardArray_.length; i++) {
+      var row = this.boardArray_[i];
+      var thatrow = that.boardArray_[i];
+
+      for (var j = 0; j < row.length; j++) {
+        var intp = row[j];
+        var thatintp = thatrow[j];
+        if (!thatintp) { break; }
+
+        var ptsEqual = false;
+        if (intp.equals && typeof intp.equals === 'function') {
+          // Equals is defined, let's use it.
+          ptsEqual = intp.equals(thatintp);
+        } else {
+          // Use regular ===, since equals isn't defined
+          ptsEqual = intp === thatintp;
+        }
+        if (!ptsEqual) {
+          var pt = new glift.Point(j, i);
+          out.push(new glift.flattener.DiffPt(
+            intp, thatintp, pt, this.ptToBoardPt(pt)));
+        }
+      }
+    }
+    return out;
   }
+};
+
+/**
+ * Container for a diff'd intersection
+ *
+ * @param {T} prevValue
+ * @param {T} newValue
+ * @param {!glift.Point} colRowPt
+ * @param {!glift.Point} boardPt
+ *
+ * @template T
+ *
+ * @constructor @final @struct
+ */
+glift.flattener.DiffPt = function(prevValue, newValue, colRowPt, boardPt) {
+  this.prevValue = prevValue;
+  this.newValue = newValue;
+  this.colRowPt = colRowPt;
+  this.boardPt = boardPt;
 };
 
 goog.provide('glift.flattener.Flattened');
@@ -14474,18 +14569,28 @@ glift.flattener.intersection = {
  *
  * Shouldn't be constructed directly outside of this file.
  *
+ * @param {!glift.Point} pt
+ *
  * @constructor @final @struct
  */
 glift.flattener.Intersection = function(pt) {
   var EMPTY = glift.flattener.symbols.EMPTY;
-  this._pt = pt;
-  this._baseLayer = EMPTY;
-  this._stoneLayer = EMPTY;
-  this._markLayer = EMPTY;
 
-  // Optional text label. Should only be set when the mark layer symbol is some
-  // sort of text-symbol (e.g., TEXTLABEL, NEXTVARIATION)
-  this._textLabel = null;
+  /** @private {!glift.Point} */
+  this.pt_ = pt;
+  /** @private {glift.flattener.symbols} */
+  this.baseLayer_ = EMPTY;
+  /** @private {glift.flattener.symbols} */
+  this.stoneLayer_ = EMPTY;
+  /** @private {glift.flattener.symbols} */
+  this.markLayer_ = EMPTY;
+
+  /**
+   * Optional text label. Should only be set when the mark layer symbol is some
+   * sort of text-symbol (e.g., TEXTLABEL, NEXTVARIATION)
+   * @private {?string}
+   */
+  this.textLabel_ = null;
 };
 
 glift.flattener.Intersection.prototype = {
@@ -14516,49 +14621,66 @@ glift.flattener.Intersection.prototype = {
     return s;
   },
 
+  /**
+   * Test whether this intersection is equal to another intersection.
+   * @param {!Object} thatint
+   * @return {boolean}
+   */
+  equals: function(thatint) {
+    if (thatint == null) {
+      return false;
+    }
+    var that = /** @type {!glift.flattener.Intersection} */ (thatint);
+    return this.pt_.equals(that.pt_) &&
+        this.baseLayer_ === that.baseLayer_ &&
+        this.stoneLayer_ === that.stoneLayer_ &&
+        this.markLayer_ === that.markLayer_ &&
+        this.textLabel_ === that.textLabel_;
+  },
+
   /** Sets or gets the base layer. */
   base: function(s) {
     if (s !== undefined) {
-      this._baseLayer = this._validateSymbol(s, 'base');
+      this.baseLayer_ = this._validateSymbol(s, 'base');
       return this;
     } else {
-      return this._baseLayer;
+      return this.baseLayer_;
     }
   },
 
   /** Sets or gets the stone layer. */
   stone: function(s) {
     if (s !== undefined) {
-      this._stoneLayer = this._validateSymbol(s, 'stone');
+      this.stoneLayer_ = this._validateSymbol(s, 'stone');
       return this;
     } else {
-      return this._stoneLayer;
+      return this.stoneLayer_;
     }
   },
 
   /** Sets or gets the mark layer. */
   mark: function(s) {
     if (s !== undefined) {
-      this._markLayer = this._validateSymbol(s, 'mark');
+      this.markLayer_ = this._validateSymbol(s, 'mark');
       return this;
     } else {
-      return this._markLayer;
+      return this.markLayer_;
     }
   },
 
   /** Sets or gets the text label. */
   textLabel: function(t) {
     if (t != null) {
-      this._textLabel = t + '';
+      this.textLabel_ = t + '';
       return this;
     } else {
-      return this._textLabel;
+      return this.textLabel_;
     }
   },
 
   /** Clear the text label */
   clearTextLabel: function() {
-    this._textLabel = null;
+    this.textLabel_ = null;
     return this;
   }
 };
@@ -14619,7 +14741,7 @@ glift.flattener.symbols = {
  *
  * @private {Object<number, string>}
  */
-glift.flattener._reverseSymbol = null;
+glift.flattener.reverseSymbol_ = null;
 
 /**
  * Convert a symbol number to a symbol string.
@@ -14627,16 +14749,16 @@ glift.flattener._reverseSymbol = null;
  * @return {string} Symbol name
  */
 glift.flattener.symbolStr = function(num) {
-  if (glift.flattener._reverseSymbol == null) {
+  if (glift.flattener.reverseSymbol_ == null) {
     // Create and store a reverse mapping.
     var reverse = {};
     var symb = glift.flattener.symbols;
     for (var key in glift.flattener.symbols) {
       reverse[symb[key]] = key;
     }
-    glift.flattener._reverseSymbol = reverse;
+    glift.flattener.reverseSymbol_ = reverse;
   }
-  return glift.flattener._reverseSymbol[num];
+  return glift.flattener.reverseSymbol_[num];
 };
 
 goog.provide('glift.widgets');

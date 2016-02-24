@@ -54,7 +54,7 @@ glift.flattener.symbols = {
  *
  * @private {Object<number, string>}
  */
-glift.flattener._reverseSymbol = null;
+glift.flattener.reverseSymbol_ = null;
 
 /**
  * Convert a symbol number to a symbol string.
@@ -62,14 +62,14 @@ glift.flattener._reverseSymbol = null;
  * @return {string} Symbol name
  */
 glift.flattener.symbolStr = function(num) {
-  if (glift.flattener._reverseSymbol == null) {
+  if (glift.flattener.reverseSymbol_ == null) {
     // Create and store a reverse mapping.
     var reverse = {};
     var symb = glift.flattener.symbols;
     for (var key in glift.flattener.symbols) {
       reverse[symb[key]] = key;
     }
-    glift.flattener._reverseSymbol = reverse;
+    glift.flattener.reverseSymbol_ = reverse;
   }
-  return glift.flattener._reverseSymbol[num];
+  return glift.flattener.reverseSymbol_[num];
 };

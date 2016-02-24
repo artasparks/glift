@@ -1,5 +1,7 @@
 goog.provide('glift.flattener.board');
 goog.provide('glift.flattener.Board');
+goog.provide('glift.flattener.DiffPt');
+
 
 glift.flattener.board = {
   /**
@@ -78,9 +80,21 @@ glift.flattener.Board = function(boardArray, bbox, maxBoardSize) {
 
 glift.flattener.Board.prototype = {
   /**
-   * Provide a SGF Point (intersection-point) and retrieve the relevant
-   * intersection.  Note, this uses the board indexing as opposed to the indexing
-   * in the array.
+   * Provide a SGF Point (indexed from upper left) and retrieve the relevant
+   * intersection.  This  takes into account cropping that could be indicated by
+   * the bounding box.
+   *
+   * In other words, in many diagrams, we may wish to show only
+   * a small fraction of the board. Thus, this board will be cropping
+   * accordingly.  However, getIntBoardPt allows the user to pass in the normal
+   * board coordinates, but indexed from the upper left as SGF coordinates are.
+   *
+   * Example: For
+   * [[ a, b, c, d],
+   *  [ e, f, g, h],
+   *  [ i, j, k, l]]
+   * and this is the upper-right corner of a 19x19, if we getIntBoardPt(17, 2),
+   * this would return 'k'. (17=2nd to last column, 2=3rd row down);
    *
    * @param {!glift.Point|number} ptOrX a Point object or, optionaly, a number.
    * @param {number=} opt_y If the first param is a number.
@@ -100,8 +114,18 @@ glift.flattener.Board.prototype = {
   },
 
   /**
-   * Get an intersection from a the intersection table. Uses the absolute array
-   * positioning. Returns undefined if the pt doesn't exist on the board.
+   * Get an intersection from the board array. Uses the absolute array
+   * positioning. Returns null if the pt doesn't exist on the board.
+   *
+   * If other words, the first parameter is a column (x), the second parameter
+   * is the row (y). Optionally, a glift.Point can be passed in instead of the
+   * first parameter
+   *
+   * Example: getInt(1,2) for
+   * [[ a, b, c, d],
+   *  [ e, f, g, h],
+   *  [ i, j, k, l]]
+   * returns j
    *
    * @param {!glift.Point|number} ptOrX a Point object or, optionaly, a number.
    * @param {number=} opt_y If the first param is a number.
@@ -122,7 +146,9 @@ glift.flattener.Board.prototype = {
   },
 
   /**
-   * Turns a 0 indexed pt to a point that's board-indexed.
+   * Turns a 0 indexed pt to a point that's board-indexed (i.e., that's offset
+   * according to the bounding box).
+   *
    * @param {!glift.Point} pt
    * @return {!glift.Point} The translated point
    */
@@ -131,7 +157,10 @@ glift.flattener.Board.prototype = {
   },
 
   /**
-   * Turns a 0 indexed pt to a point that's board-indexed.
+   * Turns a 0 indexed pt to a point that's board-indexed. What this means, is
+   * that we take into account the cropping that could be provided by the
+   * bounding box. This could return the IntPt, but it could be different.
+   *
    * @param {!glift.Point} pt
    * @return {!glift.Point} The translated point
    */
@@ -203,5 +232,71 @@ glift.flattener.Board.prototype = {
       outArray.push(row);
     }
     return new glift.flattener.Board(outArray, this.bbox_, this.maxBoardSize_);
+  },
+
+  /**
+   * Create a diff between this board and another board. Obviously for the board
+   * diff to make sense, the boards must have the same type
+   *
+   * It is required that the boards be the same dimensions, or else an error is
+   * thrown.
+   *
+   * @param {!glift.flattener.Board<T>} that
+   * @return {!Array<!glift.flattener.DiffPt<T>>}
+   */
+  diff: function(that) {
+    if (!that || that.boardArray_ || !that.bbox_ || !that.maxBoardSize_) {
+      throw new Error('Diff board not defined or not a flattener board');
+    }
+    if (this.height() !== that.height() || this.width() !== that.width()) {
+      throw new Error('Boards do not have the same dimensions.' +
+        ' This: h:' + this.height() + ' w:' + this.width() +
+        ' That: h:' + that.height() + ' w:' + that.width());
+    }
+    var out = [];
+    for (var i = 0; i < this.boardArray_.length; i++) {
+      var row = this.boardArray_[i];
+      var thatrow = that.boardArray_[i];
+
+      for (var j = 0; j < row.length; j++) {
+        var intp = row[j];
+        var thatintp = thatrow[j];
+        if (!thatintp) { break; }
+
+        var ptsEqual = false;
+        if (intp.equals && typeof intp.equals === 'function') {
+          // Equals is defined, let's use it.
+          ptsEqual = intp.equals(thatintp);
+        } else {
+          // Use regular ===, since equals isn't defined
+          ptsEqual = intp === thatintp;
+        }
+        if (!ptsEqual) {
+          var pt = new glift.Point(j, i);
+          out.push(new glift.flattener.DiffPt(
+            intp, thatintp, pt, this.ptToBoardPt(pt)));
+        }
+      }
+    }
+    return out;
   }
+};
+
+/**
+ * Container for a diff'd intersection
+ *
+ * @param {T} prevValue
+ * @param {T} newValue
+ * @param {!glift.Point} colRowPt
+ * @param {!glift.Point} boardPt
+ *
+ * @template T
+ *
+ * @constructor @final @struct
+ */
+glift.flattener.DiffPt = function(prevValue, newValue, colRowPt, boardPt) {
+  this.prevValue = prevValue;
+  this.newValue = newValue;
+  this.colRowPt = colRowPt;
+  this.boardPt = boardPt;
 };

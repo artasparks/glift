@@ -96,18 +96,28 @@ glift.flattener.intersection = {
  *
  * Shouldn't be constructed directly outside of this file.
  *
+ * @param {!glift.Point} pt
+ *
  * @constructor @final @struct
  */
 glift.flattener.Intersection = function(pt) {
   var EMPTY = glift.flattener.symbols.EMPTY;
-  this._pt = pt;
-  this._baseLayer = EMPTY;
-  this._stoneLayer = EMPTY;
-  this._markLayer = EMPTY;
 
-  // Optional text label. Should only be set when the mark layer symbol is some
-  // sort of text-symbol (e.g., TEXTLABEL, NEXTVARIATION)
-  this._textLabel = null;
+  /** @private {!glift.Point} */
+  this.pt_ = pt;
+  /** @private {glift.flattener.symbols} */
+  this.baseLayer_ = EMPTY;
+  /** @private {glift.flattener.symbols} */
+  this.stoneLayer_ = EMPTY;
+  /** @private {glift.flattener.symbols} */
+  this.markLayer_ = EMPTY;
+
+  /**
+   * Optional text label. Should only be set when the mark layer symbol is some
+   * sort of text-symbol (e.g., TEXTLABEL, NEXTVARIATION)
+   * @private {?string}
+   */
+  this.textLabel_ = null;
 };
 
 glift.flattener.Intersection.prototype = {
@@ -138,49 +148,66 @@ glift.flattener.Intersection.prototype = {
     return s;
   },
 
+  /**
+   * Test whether this intersection is equal to another intersection.
+   * @param {!Object} thatint
+   * @return {boolean}
+   */
+  equals: function(thatint) {
+    if (thatint == null) {
+      return false;
+    }
+    var that = /** @type {!glift.flattener.Intersection} */ (thatint);
+    return this.pt_.equals(that.pt_) &&
+        this.baseLayer_ === that.baseLayer_ &&
+        this.stoneLayer_ === that.stoneLayer_ &&
+        this.markLayer_ === that.markLayer_ &&
+        this.textLabel_ === that.textLabel_;
+  },
+
   /** Sets or gets the base layer. */
   base: function(s) {
     if (s !== undefined) {
-      this._baseLayer = this._validateSymbol(s, 'base');
+      this.baseLayer_ = this._validateSymbol(s, 'base');
       return this;
     } else {
-      return this._baseLayer;
+      return this.baseLayer_;
     }
   },
 
   /** Sets or gets the stone layer. */
   stone: function(s) {
     if (s !== undefined) {
-      this._stoneLayer = this._validateSymbol(s, 'stone');
+      this.stoneLayer_ = this._validateSymbol(s, 'stone');
       return this;
     } else {
-      return this._stoneLayer;
+      return this.stoneLayer_;
     }
   },
 
   /** Sets or gets the mark layer. */
   mark: function(s) {
     if (s !== undefined) {
-      this._markLayer = this._validateSymbol(s, 'mark');
+      this.markLayer_ = this._validateSymbol(s, 'mark');
       return this;
     } else {
-      return this._markLayer;
+      return this.markLayer_;
     }
   },
 
   /** Sets or gets the text label. */
   textLabel: function(t) {
     if (t != null) {
-      this._textLabel = t + '';
+      this.textLabel_ = t + '';
       return this;
     } else {
-      return this._textLabel;
+      return this.textLabel_;
     }
   },
 
   /** Clear the text label */
   clearTextLabel: function() {
-    this._textLabel = null;
+    this.textLabel_ = null;
     return this;
   }
 };
