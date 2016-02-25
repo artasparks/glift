@@ -99,4 +99,21 @@
     deepEqual(int1.mark(), sym.NEXTVARIATION);
   });
 
+  test('That equals works', function() {
+    var int1 = create();
+    var int2 = create();
+    ok(int1.equals(int2), 'Intersections must be equal');
+
+    var diff = create({pt: pt(1, 1)});
+    ok(!int1.equals(diff), 'Intersections must be not equal');
+
+    diff = create({stoneColor: WHITE});
+    ok(!int1.equals(diff), 'Color changes: Ints must be not equal');
+
+    diff = create({mark: sym.SQUARE});
+    ok(!int1.equals(diff), 'Mark changes: Ints must be not equal');
+
+    diff = create({textLabel: 'foo'});
+    ok(!int1.equals(diff), 'Label changes: Ints must be not equal');
+  });
 })();
