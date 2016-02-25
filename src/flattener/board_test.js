@@ -102,4 +102,122 @@
     deepEqual(newBoard.getIntBoardPt(pt(14, 1)), 'SQUARE');
     deepEqual(newBoard.getIntBoardPt(pt(13, 3)), 'BSTONE');
   });
+
+  test('diff', function() {
+    var board = defaultCreate({
+      stoneMap: {
+        '15,1':  {
+          point: pt(15,1),
+          color: glift.enums.states.BLACK
+        }
+      }
+    });
+    var diffBoard = defaultCreate({
+      stoneMap: {
+        '1,1':  {
+          point: pt(1,1),
+          color: glift.enums.states.BLACK
+        },
+        '15,1':  {
+          point: pt(15,1),
+          color: glift.enums.states.BLACK
+        },
+        '16,2':  {
+          point: pt(16,2),
+          color: glift.enums.states.WHITE
+        },
+        '16,3':  {
+          point: pt(16,3),
+          color: glift.enums.states.WHITE
+        }
+      }
+    });
+    var diff = board.diff(diffBoard);
+    deepEqual(diff.length, 2, 'Should only have two elements');
+    deepEqual(diff[0].boardPt, pt(16,2), 'Should have diffed 16,2');
+    ok(diff[0].prevValue.equals(board.getIntBoardPt(16, 2)), 'Should be equal');
+    ok(diff[0].newValue.equals(diffBoard.getIntBoardPt(16, 2)), 'Should be equal');
+  });
+
+  test('diff: Marks', function() {
+    var board = defaultCreate({
+      markMap: {},
+      stoneMap: {
+        '15,1':  {
+          point: pt(15,1),
+          color: glift.enums.states.BLACK
+        }
+      }
+    });
+    var diffBoard = defaultCreate({
+      markMap: {
+        '14,1': glift.flattener.symbols.TRIANGLE
+      },
+      stoneMap: {
+        '15,1':  {
+          point: pt(15,1),
+          color: glift.enums.states.BLACK
+        },
+      }
+    });
+    var diff = board.diff(diffBoard);
+    deepEqual(diff.length, 1, 'Should only have two elements');
+    deepEqual(diff[0].boardPt, pt(14,1), 'Should have diffed 14,1');
+    ok(diff[0].prevValue.equals(board.getIntBoardPt(14, 1)),
+        'Prev values: Should be equal');
+    ok(diff[0].newValue.equals(diffBoard.getIntBoardPt(14, 1)),
+        'New Values: Should be equal');
+  });
+
+  test('diff: non-intersection', function() {
+    var BLACK = glift.enums.states.BLACK;
+    var WHITE = glift.enums.states.WHITE;
+    var EMPTY = glift.enums.states.EMPTY;
+    var transf = function(i, x, y) {
+      if (i.stone() === glift.flattener.symbols.BSTONE)  {
+        return BLACK;
+      } else if (i.stone() === glift.flattener.symbols.WSTONE)  {
+        return WHITE;
+      } else {
+        return EMPTY;
+      }
+    }
+    var board = defaultCreate({
+      stoneMap: {
+        '15,1':  {
+          point: pt(15,1),
+          color: glift.enums.states.BLACK
+        }
+      }
+    }).transform(transf);
+
+    var diffBoard = defaultCreate({
+      stoneMap: {
+        '15,1':  {
+          point: pt(15,1),
+          color: glift.enums.states.BLACK
+        },
+        '16,2':  {
+          point: pt(16,2),
+          color: glift.enums.states.WHITE
+        },
+        '16,3':  {
+          point: pt(16,3),
+          color: glift.enums.states.WHITE
+        }
+      }
+    }).transform(transf);
+
+    var diff = board.diff(diffBoard);
+    deepEqual(diff.length, 2, 'Should have two elements');
+    deepEqual(diff[0].boardPt, pt(16,2), 'Should have diffed 16,2');
+
+    deepEqual(diff[0].prevValue, board.getIntBoardPt(16, 2),
+        'Prev values: Should be equal');
+    deepEqual(diff[0].prevValue, EMPTY, 'Prev values: Should be equal');
+
+    deepEqual(diff[0].newValue, diffBoard.getIntBoardPt(16, 2),
+        'New values: Should be equal');
+    deepEqual(diff[0].newValue, WHITE, 'Prev values: Should be equal');
+  });
 })();

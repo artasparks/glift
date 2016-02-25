@@ -13942,7 +13942,7 @@ glift.flattener.updateLabelsWithVariations_ = function(mt, marks, labels) {
 
 goog.provide('glift.flattener.board');
 goog.provide('glift.flattener.Board');
-goog.provide('glift.flattener.DiffPt');
+goog.provide('glift.flattener.BoardDiffPt');
 
 
 glift.flattener.board = {
@@ -14044,6 +14044,8 @@ glift.flattener.Board.prototype = {
    * @return {T} Intersection or null if the
    *    coordinate is out of bounds.
    */
+  // TODO(kashomon): Replace with getBoardPt. It's too confusing to have getInt
+  // and getBoardPt (and that is already extremely confusing).
   getIntBoardPt: function(ptOrX, opt_y) {
     if (glift.util.typeOf(ptOrX) === 'number' &&
         glift.util.typeOf(opt_y) === 'number') {
@@ -14184,7 +14186,7 @@ glift.flattener.Board.prototype = {
    * thrown.
    *
    * @param {!glift.flattener.Board<T>} that
-   * @return {!Array<!glift.flattener.DiffPt<T>>}
+   * @return {!Array<!glift.flattener.BoardDiffPt<T>>}
    */
   diff: function(that) {
     if (!that || that.boardArray_ || !that.bbox_ || !that.maxBoardSize_) {
@@ -14215,7 +14217,7 @@ glift.flattener.Board.prototype = {
         }
         if (!ptsEqual) {
           var pt = new glift.Point(j, i);
-          out.push(new glift.flattener.DiffPt(
+          out.push(new glift.flattener.BoardDiffPt(
             intp, thatintp, pt, this.ptToBoardPt(pt)));
         }
       }
@@ -14225,7 +14227,8 @@ glift.flattener.Board.prototype = {
 };
 
 /**
- * Container for a diff'd intersection
+ * Container that indicates a place in the board where there was a difference
+ * between two different boards.
  *
  * @param {T} prevValue
  * @param {T} newValue
@@ -14236,7 +14239,7 @@ glift.flattener.Board.prototype = {
  *
  * @constructor @final @struct
  */
-glift.flattener.DiffPt = function(prevValue, newValue, colRowPt, boardPt) {
+glift.flattener.BoardDiffPt = function(prevValue, newValue, colRowPt, boardPt) {
   this.prevValue = prevValue;
   this.newValue = newValue;
   this.colRowPt = colRowPt;
