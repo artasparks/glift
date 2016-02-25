@@ -13969,7 +13969,7 @@ glift.flattener.board = {
         var pt = point(x, y);
         var ptStr = pt.toString();
         var stone = stoneMap[ptStr];
-        var stoneColor = stone ? stone.color : undefined;
+        var stoneColor = stone ? stone.color : glift.enums.states.EMPTY;
         var mark = markMap[ptStr];
         var label = labelMap[ptStr]
         row.push(glift.flattener.intersection.create(
@@ -14478,14 +14478,19 @@ glift.flattener.intersection = {
   /**
    * Creates an intersection obj.
    *
-   * pt: A glift point. 0-indexed and bounded by the number of intersections.
-   *    Thus, typically between 0 and 18. Note, the zero for this point is the
-   *    top-left rather than the more traditional bottom-right, as it is for
-   *    kifus.
-   * stoneColor: A stone state. Member of glift.enums.states.
-   * mark: Mark element from glift.flattener.symbols.
-   * textLabel: text label for the stone.
-   * maxInts: The maximum number of intersections on the board.
+   * @param {!glift.Point} pt 0-indexed and bounded by the number
+   *    of intersections.  Thus, typically between 0 and 18. Note, the zero for
+   *    this point is the top-left rather than the more traditional
+   *    bottom-right, as it is for kifus.
+   * @param {glift.enums.states} stoneColor EMPTY here is used to indicate that
+   *    we don't want to set the stone.
+   * @param {!glift.flattener.symbols} mark Mark for the stone
+   * @param {string} textLabel text label for the stone. Should really only be
+   *    set when the mark is TEXTLABEL.
+   * @param {number} maxInts The maximum number of intersections on the board.
+   *    Typically 9, 13 or 19.
+   *
+   * @return {!glift.flattener.Intersection}
    */
   create: function(pt, stoneColor, mark, textLabel, maxInts) {
     var sym = glift.flattener.symbols;
@@ -14514,25 +14519,25 @@ glift.flattener.intersection = {
       baseSymb = sym.RIGHT_EDGE;
     } else if (pt.y() === intz) {
       baseSymb = sym.BOT_EDGE;
-    } else if (this._isStarpoint(pt, maxInts)) {
+    } else if (this.isStarpoint_(pt, maxInts)) {
       baseSymb = sym.CENTER_STARPOINT;
     } else {
       baseSymb = sym.CENTER;
     }
-    intsect.base(baseSymb);
+    intsect.setBase(baseSymb);
 
     if (stoneColor === glift.enums.states.BLACK) {
-      intsect.stone(sym.BSTONE);
+      intsect.setStone(sym.BSTONE);
     } else if (stoneColor === glift.enums.states.WHITE) {
-      intsect.stone(sym.WSTONE);
+      intsect.setStone(sym.WSTONE);
     }
 
     if (mark !== undefined) {
-      intsect.mark(mark);
+      intsect.setMark(mark);
     }
 
     if (textLabel !== undefined) {
-      intsect.textLabel(textLabel);
+      intsect.setTextLabel(textLabel);
     }
 
     return intsect;
@@ -14548,8 +14553,13 @@ glift.flattener.intersection = {
   /**
    * Determine whether a pt is a starpoint.  Intersections is 1-indexed, but the
    * pt is 0-indexed.
+   *
+   * @param {!glift.Point} pt
+   * @param {!number} maxInts
+   * @return {boolean} whether the point should be a star point.
+   * @private
    */
-  _isStarpoint: function(pt, maxInts) {
+  isStarpoint_: function(pt, maxInts) {
     var starPointSets = glift.flattener.intersection._starPointSets[maxInts];
     for (var i = 0; i < starPointSets.length; i++) {
       var set = starPointSets[i];
@@ -14594,7 +14604,12 @@ glift.flattener.Intersection = function(pt) {
 };
 
 glift.flattener.Intersection.prototype = {
-  _validateSymbol: function(s, layer) {
+  /**
+   * @param {glift.flattener.symbols} s Symbol to validate
+   * @param {string} layer
+   * @private
+   */
+  validateSymbol_: function(s, layer) {
     var sym = glift.flattener.symbols;
     var layerMapping = {
       base: {
@@ -14638,47 +14653,62 @@ glift.flattener.Intersection.prototype = {
         this.textLabel_ === that.textLabel_;
   },
 
-  /** Sets or gets the base layer. */
-  base: function(s) {
-    if (s !== undefined) {
-      this.baseLayer_ = this._validateSymbol(s, 'base');
-      return this;
-    } else {
-      return this.baseLayer_;
-    }
+  /** @return {glift.flattener.symbols} Returns the base layer. */
+  base: function() { return this.baseLayer_; },
+
+  /** @return {glift.flattener.symbols} Returns the stone layer. */
+  stone: function() { return this.stoneLayer_; },
+
+  /** @return {glift.flattener.symbols} Returns the mark layer. */
+  mark: function() { return this.markLayer_; },
+
+  /** @return {?string} Returns the text label. */
+  textLabel: function() { return this.textLabel_; },
+
+  /**
+   * Sets the base layer.
+   * @param {!glift.flattener.symbols} s
+   * @return {!glift.flattener.Intersection} this
+   */
+  setBase: function(s) {
+    this.baseLayer_ = this.validateSymbol_(s, 'base');
+    return this;
   },
 
-  /** Sets or gets the stone layer. */
-  stone: function(s) {
-    if (s !== undefined) {
-      this.stoneLayer_ = this._validateSymbol(s, 'stone');
-      return this;
-    } else {
-      return this.stoneLayer_;
-    }
+  /**
+   * Sets the stone layer.
+   * @param {!glift.flattener.symbols} s
+   * @return {!glift.flattener.Intersection} this
+   */
+  setStone: function(s) {
+    this.stoneLayer_ = this.validateSymbol_(s, 'stone');
+    return this;
   },
 
-  /** Sets or gets the mark layer. */
-  mark: function(s) {
-    if (s !== undefined) {
-      this.markLayer_ = this._validateSymbol(s, 'mark');
-      return this;
-    } else {
-      return this.markLayer_;
-    }
+  /**
+   * Sets the mark layer.
+   * @param {!glift.flattener.symbols} s
+   * @return {!glift.flattener.Intersection} this
+   */
+  setMark: function(s) {
+    this.markLayer_ = this.validateSymbol_(s, 'mark');
+    return this;
   },
 
-  /** Sets or gets the text label. */
-  textLabel: function(t) {
-    if (t != null) {
-      this.textLabel_ = t + '';
-      return this;
-    } else {
-      return this.textLabel_;
-    }
+  /**
+   * Sets the text label.
+   * @param {string} t
+   * @return {!glift.flattener.Intersection} this
+   */
+  setTextLabel: function(t) {
+    this.textLabel_ = t + '';
+    return this;
   },
 
-  /** Clear the text label */
+  /**
+   * Clears the text label
+   * @return {!glift.flattener.Intersection} this
+   */
   clearTextLabel: function() {
     this.textLabel_ = null;
     return this;

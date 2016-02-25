@@ -82,20 +82,20 @@
   });
 
   test('Setting marks', function() {
-    deepEqual(create().mark(sym.SQUARE).mark(), sym.SQUARE);
-    deepEqual(create().mark(sym.CIRCLE).mark(), sym.CIRCLE);
-    deepEqual(create().mark(sym.TRIANGLE).mark(), sym.TRIANGLE);
+    deepEqual(create().setMark(sym.SQUARE).mark(), sym.SQUARE);
+    deepEqual(create().setMark(sym.CIRCLE).mark(), sym.CIRCLE);
+    deepEqual(create().setMark(sym.TRIANGLE).mark(), sym.TRIANGLE);
   });
 
   test('Setting text label', function() {
-    deepEqual(create().textLabel('z').textLabel(), 'z');
+    deepEqual(create().setTextLabel('z').textLabel(), 'z');
   });
 
   test('Setting text marks', function() {
-    var int1 = create().mark(sym.TEXTLABEL, 1)
+    var int1 = create().setMark(sym.TEXTLABEL);
     deepEqual(int1.mark(), sym.TEXTLABEL);
 
-    var int1 = create().mark(sym.NEXTVARIATION, 'Z')
+    var int1 = create().setMark(sym.NEXTVARIATION);
     deepEqual(int1.mark(), sym.NEXTVARIATION);
   });
 

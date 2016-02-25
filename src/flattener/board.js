@@ -27,7 +27,7 @@ glift.flattener.board = {
         var pt = point(x, y);
         var ptStr = pt.toString();
         var stone = stoneMap[ptStr];
-        var stoneColor = stone ? stone.color : undefined;
+        var stoneColor = stone ? stone.color : glift.enums.states.EMPTY;
         var mark = markMap[ptStr];
         var label = labelMap[ptStr]
         row.push(glift.flattener.intersection.create(
