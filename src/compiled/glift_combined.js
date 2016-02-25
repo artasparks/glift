@@ -14189,7 +14189,7 @@ glift.flattener.Board.prototype = {
    * @return {!Array<!glift.flattener.BoardDiffPt<T>>}
    */
   diff: function(that) {
-    if (!that || that.boardArray_ || !that.bbox_ || !that.maxBoardSize_) {
+    if (!that || !that.boardArray_ || !that.bbox_ || !that.maxBoardSize_) {
       throw new Error('Diff board not defined or not a flattener board');
     }
     if (this.height() !== that.height() || this.width() !== that.width()) {
