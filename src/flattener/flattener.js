@@ -79,14 +79,14 @@ glift.flattener.Collision;
  *    -> The previous move
  *    -> subsequent stones, if a nextMovesTreepath is present.  These are
  *    given labels.
- * @param {!glift.flattener.Options} options
+ * @param {!glift.flattener.Options=} opt_options
  *
  * @return {!glift.flattener.Flattened}
  */
-glift.flattener.flatten = function(movetreeInitial, options) {
+glift.flattener.flatten = function(movetreeInitial, opt_options) {
   // Create a new ref to avoid changing original tree ref.
   var mt = movetreeInitial.newTreeRef();
-  options = options || {};
+  var options = opt_options || {};
 
   // Use the provided goban, or reclaculate it.  This is somewhat inefficient,
   // so it's recommended that the goban be provided.

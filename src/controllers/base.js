@@ -27,7 +27,7 @@ glift.controllers.base = function() {
  */
 glift.controllers.BaseController = function() {
   /** @package {string} */
-  this.sgfString = ''
+  this.sgfString = '';
 
   /**
    * The raw initial position.
@@ -60,6 +60,8 @@ glift.controllers.BaseController = function() {
    * The full tree of moves constructed from the SGF.
    * @package {!glift.rules.MoveTree}
    */
+  // Here we create a dummy movetree to ensure that the movetree is always
+  // initialized.
   this.movetree = glift.rules.movetree.getInstance();
 
   /**
@@ -74,6 +76,11 @@ glift.controllers.BaseController = function() {
    * @package {!Array<!glift.rules.CaptureResult>}
    */
   this.captureHistory = [];
+
+  /**
+   * @package the flattened representation.
+   */
+  this.flattened = glift.flattener.flatten(this.movetree);
 };
 
 glift.controllers.BaseController.prototype = {
@@ -131,6 +138,7 @@ glift.controllers.BaseController.prototype = {
 
     var gobanData = rules.goban.getFromMoveTree(
         /** @type {!glift.rules.MoveTree} */ (this.movetree), this.treepath);
+
     this.goban = gobanData.goban;
     this.captureHistory = gobanData.captures;
     this.extraOptions(); // Overridden by implementers
@@ -148,6 +156,19 @@ glift.controllers.BaseController.prototype = {
    * Add a stone.  This is intended to be overwritten.
    */
   addStone: function(point, color) { throw "Not Implemented"; },
+
+  /**
+   * Creates a flattener state.
+   * @return {!glift.flattener.Flattened}
+   */
+  flattenedState: function() {
+    var newFlat = glift.flattener.flatten(this.movetree, {
+      goban: this.goban
+    });
+    var diff = newFlat.board().diff(this.flattened.board());
+    this.flattened = newFlat;
+    return this.flattened;
+  },
 
   /**
    * Applies captures and increments the move number
@@ -236,6 +257,7 @@ glift.controllers.BaseController.prototype = {
    *  }
    */
   getEntireBoardState: function() {
+    this.flattenedState();
     return glift.bridge.intersections.getFullBoardData(
         this.movetree,
         this.goban,
@@ -246,6 +268,7 @@ glift.controllers.BaseController.prototype = {
   /** Return only the necessary information to update the board. */
   // TODO(kashomon): Rename to getCurrentBoardState
   getNextBoardState: function() {
+    this.flattenedState();
     return glift.bridge.intersections.nextBoardData(
         this.movetree,
         this.getCaptures(),
@@ -390,6 +413,7 @@ glift.controllers.BaseController.prototype = {
     }
     var captures = this.goban.loadStonesFromMovetree(this.movetree)
     this.recordCaptures(captures);
+
     return this.getNextBoardState();
   },
 
@@ -414,6 +438,7 @@ glift.controllers.BaseController.prototype = {
         captures,
         this.problemConditions,
         this.nextVariationNumber());
+    this.flattenedState();
     return displayData;
   },
 

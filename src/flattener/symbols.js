@@ -1,3 +1,5 @@
+goog.provide('glift.flattener.symbols');
+
 /**
  * Symbolic representation of a Go Board display.
  * @enum {number}
