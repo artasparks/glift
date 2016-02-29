@@ -8535,7 +8535,7 @@ glift.rules.Goban.prototype = {
    * @param {!glift.Point} point
    */
   clearStone: function(point) {
-    this._setColor(point, glift.enums.states.EMPTY);
+    this.setColor_(point, glift.enums.states.EMPTY);
   },
 
   /**
@@ -8553,7 +8553,7 @@ glift.rules.Goban.prototype = {
    * @param {glift.enums.states} color
    * @private
    */
-  _setColor: function(point, color) {
+  setColor_: function(point, color) {
     this.stones[point.y()][point.x()] = color;
   },
 
@@ -8573,7 +8573,7 @@ glift.rules.Goban.prototype = {
     this.clearStone(point);
     var oppositeColor = glift.util.colors.oppositeColor(color);
     for (var i = 0; i < addStoneResult.captures.length; i++) {
-      this._setColor(addStoneResult.captures[i], oppositeColor);
+      this.setColor_(addStoneResult.captures[i], oppositeColor);
     }
     return addStoneResult.successful;
   },
@@ -8596,20 +8596,21 @@ glift.rules.Goban.prototype = {
     if (this.outBounds(pt) || !this.placeable(pt))
       return new glift.rules.StoneResult(false);
 
-    this._setColor(pt, color); // set stone as active
+    this.setColor_(pt, color); // set stone as active
     var captures = new glift.rules.CaptureTracker_();
     var oppColor = glift.util.colors.oppositeColor(color);
 
-    this._getCaptures(captures, glift.util.point(pt.x() + 1, pt.y()), oppColor);
-    this._getCaptures(captures, glift.util.point(pt.x() - 1, pt.y()), oppColor);
-    this._getCaptures(captures, glift.util.point(pt.x(), pt.y() - 1), oppColor);
-    this._getCaptures(captures, glift.util.point(pt.x(), pt.y() + 1), oppColor);
+    // Stack of points to consider.
+    this.getCaptures_(captures, glift.util.point(pt.x() + 1, pt.y()), oppColor);
+    this.getCaptures_(captures, glift.util.point(pt.x() - 1, pt.y()), oppColor);
+    this.getCaptures_(captures, glift.util.point(pt.x(), pt.y() - 1), oppColor);
+    this.getCaptures_(captures, glift.util.point(pt.x(), pt.y() + 1), oppColor);
 
     if (captures.numCaptures <= 0) {
       // We are now in a state where placing this stone results in 0 liberties.
       // Now, we check if move is self capture -- i.e., if the move doesn't
       // capture any stones.
-      this._getCaptures(captures, pt, color);
+      this.getCaptures_(captures, pt, color);
       if (captures.numCaptures > 0) {
         // Onos! The move is self capture.
         this.clearStone(pt);
@@ -8624,14 +8625,40 @@ glift.rules.Goban.prototype = {
   },
 
   /**
+   * Get the inbound neighbors
+   * @param {!glift.Point} pt
+   * @return {!Array<!glift.Point>}
+   * @private
+   */
+  neighbors_: function(pt) {
+    var newpt = glift.util.point;
+    var cardinals = {
+      left: newpt(-1, 0),
+      right: newpt(1, 0),
+      up: newpt(0, -1),  // because arrays
+      down: newpt(0, 1)
+    };
+
+    var out = [];
+    for (var ckey in cardinals) {
+      var c = cardinals[ckey];
+      var outp = newpt(pt.x() + c.x(), pt.y() + c.y());
+      if (this.inBounds(outp)) {
+        out.push(outp);
+      }
+    }
+    return out;
+  },
+
+  /**
    * Get the captures.  We return nothing because state is stored in 'captures'
    *
    * @param {!glift.rules.CaptureTracker_} captures
    * @param {!glift.Point} pt
    * @param {glift.enums.states} color
    */
-  _getCaptures: function(captures, pt, color) {
-    this._findConnected(captures, pt, color);
+  getCaptures_: function(captures, pt, color) {
+    this.findConnected_(captures, pt, color);
     if (captures.liberties <= 0) captures.consideringToCaptures();
     captures.clearExceptCaptures();
   },
@@ -8645,7 +8672,7 @@ glift.rules.Goban.prototype = {
    * @param {!glift.Point} pt
    * @param {glift.enums.states} color
    */
-  _findConnected: function(captures, pt, color) {
+  findConnected_: function(captures, pt, color) {
     var util = glift.util;
     // check to make sure we haven't already seen a stone
     // and that the point is not out of bounds.  If
@@ -8666,10 +8693,10 @@ glift.rules.Goban.prototype = {
       } else if (stoneColor === color) {
         // recursively add connected stones
         captures.considering.push(pt);
-        this._findConnected(captures, util.point(pt.x() + 1, pt.y()), color);
-        this._findConnected(captures, util.point(pt.x() - 1, pt.y()), color);
-        this._findConnected(captures, util.point(pt.x(), pt.y() + 1), color);
-        this._findConnected(captures, util.point(pt.x(), pt.y() - 1), color);
+        this.findConnected_(captures, util.point(pt.x() + 1, pt.y()), color);
+        this.findConnected_(captures, util.point(pt.x() - 1, pt.y()), color);
+        this.findConnected_(captures, util.point(pt.x(), pt.y() + 1), color);
+        this.findConnected_(captures, util.point(pt.x(), pt.y() - 1), color);
       } else {
         // Sanity check.
         throw "Unknown color error: " + stoneColor;

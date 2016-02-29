@@ -95,4 +95,29 @@
     deepEqual(goban.getStone(glift.util.point(6,6)), glift.enums.states.EMPTY,
         'Must get EMPTY');
   });
+
+  test('Get Neigbors', function() {
+    var pt = glift.util.point;
+    var goban = glift.rules.goban.getInstance()
+    // Corner
+    var arr = goban.neighbors_(pt(0,0));
+    deepEqual(arr.length, 2);
+    deepEqual(arr[0].toString(),'1,0');
+    deepEqual(arr[1].toString(),'0,1');
+
+    // Right Edge
+    var arr = goban.neighbors_(pt(18,15));
+    deepEqual(arr.length, 3);
+    deepEqual(arr[0].toString(),'17,15');
+    deepEqual(arr[1].toString(),'18,14');
+    deepEqual(arr[2].toString(),'18,16');
+
+    // Middle
+    var arr = goban.neighbors_(pt(10,11));
+    deepEqual(arr.length, 4);
+    deepEqual(arr[0].toString(),'9,11');
+    deepEqual(arr[1].toString(),'11,11');
+    deepEqual(arr[2].toString(),'10,10');
+    deepEqual(arr[3].toString(),'10,12');
+  });
 })();
