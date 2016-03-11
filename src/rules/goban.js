@@ -84,8 +84,9 @@ glift.rules.Goban = function(ints) {
   if (!ints || ints <= 0) {
     throw new Error("Invalid Intersections. Was: " + ints)
   }
+
   /** @private {number} */
-  this.ints = ints || 19;
+  this.ints_ = ints;
 
   /** @private {!Array<glift.enums.states>} */
   this.stones = glift.rules.initStones_(ints);
@@ -94,40 +95,70 @@ glift.rules.Goban = function(ints) {
 glift.rules.Goban.prototype = {
   /** @return {number} The number of intersections. */
   intersections: function() {
-    return this.ints;
+    return this.ints_;
   },
 
   /**
-   * getStone helps abstract the nastiness and trickiness of having to use the x/y
-   * indices in the reverse order.
+   * Retrieves a state (color) from the board. Accepts either a point object or
+   * an X and Y.
    *
-   * @param {!glift.Point} point
+   * @param {!glift.Point|number} pointOrX
+   * @param {!number=} opt_y
    * @return {!glift.enums.states} the state of the intersection
    */
-  getStone: function(point) {
-    return this.stones[point.y()][point.x()];
+  getStone: function(pointOrX, opt_y) {
+    if (typeof pointOrX === 'number' && typeof opt_y === 'number') {
+      var x = /** @type {number} */ (pointOrX);
+      var y = /** @type {number} */ (opt_y);
+      return this.stones[y][x];
+    } else if (typeof pointOrX === 'object') {
+      var pt = /** @type {!glift.Point} */ (pointOrX);
+      return this.stones[pt.y()][pt.x()];
+    } else {
+      throw new Error('Invalid arguments: pointOrX: ' + pointOrX + ', opt_y:' + opt_y);
+    }
+  },
+
+  /**
+   * Set a color without performing any validation. Accepts either a point
+   * object or an X and Y.
+   *
+   * @param {glift.enums.states} color
+   * @param {!glift.Point|number} pointOrX
+   * @param {!number=} opt_y
+   * @private
+   */
+  setColor_: function(color, pointOrX, opt_y) {
+    if (typeof pointOrX === 'number' && typeof opt_y === 'number') {
+      var x = /** @type {number} */ (pointOrX);
+      var y = /** @type {number} */ (opt_y);
+      this.stones[y][x] = color;
+    } else if (typeof pointOrX === 'object') {
+      var pt = /** @type {!glift.Point} */ (pointOrX);
+      this.stones[pt.y()][pt.x()] = color;
+    } else {
+      throw new Error('Invalid arguments: pointOrX: ' + pointOrX + ', opt_y:' + opt_y);
+    }
   },
 
   /**
    * Get all the placed stones on the board (BLACK or WHITE)
-   *
    * @return {!Array<!glift.rules.Move>}
    */
   getAllPlacedStones: function() {
     var out = [];
-    for (var i = 0; i < this.stones.length; i++) {
-      var row = this.stones[i];
-      for (var j = 0; j < row.length; j++) {
-        var point = glift.util.point(j, i);
-        var color = this.getStone(point);
+    for (var i = 0; i < this.intersections(); i++) {
+      for (var j = 0; j < this.intersections(); j++) {
+        var color = this.getStone(j, i);
         if (color === glift.enums.states.BLACK ||
             color === glift.enums.states.WHITE) {
-          out.push({point:point, color:color});
+          out.push({point: glift.util.point(j, i), color:color});
         }
       }
     }
     return out;
   },
+
 
   /**
    * @param {!glift.Point} point
@@ -147,8 +178,8 @@ glift.rules.Goban.prototype = {
    * @return {boolean} True if the point is out-of-bounds.
    */
   outBounds: function(point) {
-    return glift.util.outBounds(point.x(), this.ints)
-        || glift.util.outBounds(point.y(), this.ints);
+    return glift.util.outBounds(point.x(), this.intersections())
+        || glift.util.outBounds(point.y(), this.intersections());
   },
 
   /**
@@ -156,8 +187,8 @@ glift.rules.Goban.prototype = {
    * @return {boolean} True if the point is in-bounds.
    */
   inBounds: function(point) {
-    return glift.util.inBounds(point.x(), this.ints)
-        && glift.util.inBounds(point.y(), this.ints);
+    return glift.util.inBounds(point.x(), this.intersections())
+        && glift.util.inBounds(point.y(), this.intersections());
   },
 
   /**
@@ -165,7 +196,7 @@ glift.rules.Goban.prototype = {
    * @param {!glift.Point} point
    */
   clearStone: function(point) {
-    this.setColor_(point, glift.enums.states.EMPTY);
+    this.setColor_(glift.enums.states.EMPTY, point);
   },
 
   /**
@@ -176,15 +207,6 @@ glift.rules.Goban.prototype = {
     for (var i = 0; i < points.length; i++) {
       this.clearStone(points[i]);
     }
-  },
-
-  /**
-   * @param {!glift.Point} point
-   * @param {glift.enums.states} color
-   * @private
-   */
-  setColor_: function(point, color) {
-    this.stones[point.y()][point.x()] = color;
   },
 
   /**
@@ -199,11 +221,11 @@ glift.rules.Goban.prototype = {
   testAddStone: function(point, color) {
     var addStoneResult = this.addStone(point, color);
 
-    // Undo our changes.
+    // Undo our changes. First remove the stone and then add the captures back.
     this.clearStone(point);
     var oppositeColor = glift.util.colors.oppositeColor(color);
     for (var i = 0; i < addStoneResult.captures.length; i++) {
-      this.setColor_(addStoneResult.captures[i], oppositeColor);
+      this.setColor_(oppositeColor, addStoneResult.captures[i]);
     }
     return addStoneResult.successful;
   },
@@ -226,7 +248,7 @@ glift.rules.Goban.prototype = {
     if (this.outBounds(pt) || !this.placeable(pt))
       return new glift.rules.StoneResult(false);
 
-    this.setColor_(pt, color); // set stone as active
+    this.setColor_(color, pt); // set stone as active
 
     // First attempt to capture neighboring stones.
     var captures = new glift.rules.CaptureTracker_();
