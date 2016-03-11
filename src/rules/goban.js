@@ -227,6 +227,8 @@ glift.rules.Goban.prototype = {
       return new glift.rules.StoneResult(false);
 
     this.setColor_(pt, color); // set stone as active
+
+    // First attempt to capture neighboring stones.
     var captures = new glift.rules.CaptureTracker_();
     var oppColor = glift.util.colors.oppositeColor(color);
 
@@ -255,6 +257,17 @@ glift.rules.Goban.prototype = {
   },
 
   /**
+   * Cardinal points. Because arrays are indexed from upper left.
+   * @private {!Object<string, !glift.Point>}
+   */
+  cardinals_:  {
+    left: glift.util.point(-1, 0),
+    right: glift.util.point(1, 0),
+    up: glift.util.point(0, -1),
+    down: glift.util.point(0, 1)
+  },
+
+  /**
    * Get the inbound neighbors
    * @param {!glift.Point} pt
    * @return {!Array<!glift.Point>}
@@ -262,16 +275,9 @@ glift.rules.Goban.prototype = {
    */
   neighbors_: function(pt) {
     var newpt = glift.util.point;
-    var cardinals = {
-      left: newpt(-1, 0),
-      right: newpt(1, 0),
-      up: newpt(0, -1),  // because arrays
-      down: newpt(0, 1)
-    };
-
     var out = [];
-    for (var ckey in cardinals) {
-      var c = cardinals[ckey];
+    for (var ckey in this.cardinals_) {
+      var c = this.cardinals_[ckey];
       var outp = newpt(pt.x() + c.x(), pt.y() + c.y());
       if (this.inBounds(outp)) {
         out.push(outp);
