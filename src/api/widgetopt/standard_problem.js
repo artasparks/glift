@@ -43,7 +43,7 @@ glift.api.widgetopt[glift.enums.widgetTypes.STANDARD_PROBLEM] = {
       widget.iconBar.destroyTempIcons();
       widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
       widget.correctness = problemResults.INCORRECT;
-      hooks.problemIncorrect && hooks.problemCorrect(pt, currentPlayer);
+      hooks.problemIncorrect && hooks.problemIncorrect(pt, currentPlayer);
     }
   },
 
