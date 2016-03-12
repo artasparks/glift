@@ -96,7 +96,7 @@
         'Must get EMPTY');
   });
 
-  test('Get Neigbors', function() {
+  test('Get Neighbors', function() {
     var pt = glift.util.point;
     var goban = glift.rules.goban.getInstance()
     // Corner
@@ -119,5 +119,33 @@
     deepEqual(arr[1].toString(),'11,11');
     deepEqual(arr[2].toString(),'10,10');
     deepEqual(arr[3].toString(),'10,12');
+  });
+
+  test('testAddStone', function() {
+    var goban = glift.rules.goban.getInstance();
+    var pt = glift.util.point;
+    // .OX.
+    // OX..
+    // .O..
+    // O...
+    goban.addStone(pt(1,0), WHITE);
+    goban.addStone(pt(2,0), BLACK);
+    goban.addStone(pt(0,1), WHITE);
+    goban.addStone(pt(1,1), BLACK);
+    goban.addStone(pt(1,2), WHITE);
+    goban.addStone(pt(3,0), WHITE);
+
+    ok(goban.testAddStone(pt(0,0), WHITE));
+    ok(goban.testAddStone(pt(0,0), BLACK));
+
+    // Collisions
+    ok(!goban.testAddStone(pt(0,1), BLACK));
+    ok(!goban.testAddStone(pt(0,1), WHITE));
+    ok(!goban.testAddStone(pt(1,0), BLACK));
+    ok(!goban.testAddStone(pt(1,0), WHITE));
+
+    // Self capture spot
+    ok(!goban.testAddStone(pt(2,0), BLACK));
+    ok(goban.testAddStone(pt(2,0), WHITE));
   });
 })();

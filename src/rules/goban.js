@@ -221,11 +221,14 @@ glift.rules.Goban.prototype = {
   testAddStone: function(point, color) {
     var addStoneResult = this.addStone(point, color);
 
-    // Undo our changes. First remove the stone and then add the captures back.
-    this.clearStone(point);
-    var oppositeColor = glift.util.colors.oppositeColor(color);
-    for (var i = 0; i < addStoneResult.captures.length; i++) {
-      this.setColor_(oppositeColor, addStoneResult.captures[i]);
+    // Undo our changes (this is pretty icky). First remove the stone and then
+    // add the captures back.
+    if (addStoneResult.successful) {
+      this.clearStone(point);
+      var oppositeColor = glift.util.colors.oppositeColor(color);
+      for (var i = 0; i < addStoneResult.captures.length; i++) {
+        this.setColor_(oppositeColor, addStoneResult.captures[i]);
+      }
     }
     return addStoneResult.successful;
   },
@@ -245,10 +248,12 @@ glift.rules.Goban.prototype = {
     if (!glift.util.colors.isLegalColor(color)) throw "Unknown color: " + color;
 
     // Add stone fail.  Return a failed StoneResult.
-    if (this.outBounds(pt) || !this.placeable(pt))
+    if (this.outBounds(pt) || !this.placeable(pt)) {
       return new glift.rules.StoneResult(false);
+    }
 
-    this.setColor_(color, pt); // set stone as active
+    // Set the stone as active and see what happens!
+    this.setColor_(color, pt);
 
     // First attempt to capture neighboring stones.
     var captures = new glift.rules.CaptureTracker_();
