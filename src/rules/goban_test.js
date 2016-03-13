@@ -133,7 +133,8 @@
     goban.addStone(pt(0,1), WHITE);
     goban.addStone(pt(1,1), BLACK);
     goban.addStone(pt(1,2), WHITE);
-    goban.addStone(pt(3,0), WHITE);
+    goban.addStone(pt(0,3), WHITE);
+    var allStones = goban.getAllPlacedStones();
 
     ok(goban.testAddStone(pt(0,0), WHITE));
     ok(goban.testAddStone(pt(0,0), BLACK));
@@ -143,9 +144,27 @@
     ok(!goban.testAddStone(pt(0,1), WHITE));
     ok(!goban.testAddStone(pt(1,0), BLACK));
     ok(!goban.testAddStone(pt(1,0), WHITE));
-
-    // Self capture spot
     ok(!goban.testAddStone(pt(2,0), BLACK));
-    ok(goban.testAddStone(pt(2,0), WHITE));
+    ok(!goban.testAddStone(pt(2,0), WHITE));
+
+    // Self Capture
+    ok(!goban.testAddStone(pt(0,2), BLACK));
+    // Fill
+    ok(goban.testAddStone(pt(0,2), WHITE));
+
+    var tharAllStones = goban.getAllPlacedStones();
+    var moveToString = function(mv) {
+      return mv.point.toString() + '::' + mv.color;
+    }
+
+    var out = [];
+    for (var i = 0; i < allStones.length; i++) {
+      out.push(moveToString(allStones[i]));
+    }
+    var outr = [];
+    for (var i = 0; i < tharAllStones.length; i++) {
+      outr.push(moveToString(tharAllStones[i]));
+    }
+    deepEqual(out, outr, 'Should not change state');
   });
 })();

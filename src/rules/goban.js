@@ -217,7 +217,6 @@ glift.rules.Goban.prototype = {
    * @param {!glift.Point} point
    * @param {glift.enums.states} color
    */
-  // TODO(kashomon): Itself needs a test.
   testAddStone: function(point, color) {
     var addStoneResult = this.addStone(point, color);
 
