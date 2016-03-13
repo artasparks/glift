@@ -395,6 +395,9 @@ glift.rules.Goban.prototype = {
   },
 
   /**
+   * Add a Move to the go board. Intended to be used from
+   * loadStonesFromMovetree.
+   *
    * @param {?glift.rules.Move} mv
    * @param {!glift.rules.CaptureResult} captures
    * @private

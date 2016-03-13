@@ -21,6 +21,7 @@ EXAMPLE_FILES_TO_AUTOGEN = {
   'htmltests/KogosTester.html',
   'htmltests/MarksTester.html',
   'htmltests/MoveNumberCircleTester.html',
+  'htmltests/PerfTester.html',
   'htmltests/PositionTester.html',
   'htmltests/ProblemTester.html',
   'htmltests/ProblemServerTester.html',
