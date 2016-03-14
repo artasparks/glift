@@ -325,7 +325,7 @@ glift.controllers.BaseController.prototype = {
    * @return {boolean}
    */
   canAddStone: function(point, color) {
-    return this.goban.placeable(point, color);
+    return this.goban.placeable(point);
   },
 
   /**

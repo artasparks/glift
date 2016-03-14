@@ -100,6 +100,18 @@ glift.rules.Goban.prototype = {
   },
 
   /**
+   * @param {!glift.Point} point
+   * @return {boolean} True if the board is empty at particular point and the
+   *    point is within the bounds of the board.
+   */
+  placeable: function(point) {
+    // Currently, color is unused, but there are plans to use it because
+    // self-capture is disallowed. Add-stone will still fail.
+    return this.inBounds_(point)
+        && this.getStone(point) === glift.enums.states.EMPTY;
+  },
+
+  /**
    * Retrieves a state (color) from the board.
    *
    * @param {!glift.Point} pt
@@ -107,17 +119,6 @@ glift.rules.Goban.prototype = {
    */
   getStone: function(pt) {
     return this.stones[pt.y()][pt.x()];
-  },
-
-  /**
-   * Set a color without performing any validation.
-   *
-   * @param {glift.enums.states} color
-   * @param {!glift.Point} pt
-   * @private
-   */
-  setColor_: function(color, pt) {
-    this.stones[pt.y()][pt.x()] = color;
   },
 
   /**
@@ -136,38 +137,6 @@ glift.rules.Goban.prototype = {
       }
     }
     return out;
-  },
-
-
-  /**
-   * @param {!glift.Point} point
-   * @param {!glift.enums.states=} opt_color Optional (currently unused) color.
-   * @return {boolean} True if the board is empty at particular point and the
-   *    point is within the bounds of the board.
-   */
-  placeable: function(point, opt_color) {
-    // Currently, color is unused, but there are plans to use it because
-    // self-capture is disallowed. Add-stone will still fail.
-    return this.inBounds(point)
-        && this.getStone(point) === glift.enums.states.EMPTY;
-  },
-
-  /**
-   * @param {!glift.Point} point
-   * @return {boolean} True if the point is out-of-bounds.
-   */
-  outBounds: function(point) {
-    return glift.util.outBounds(point.x(), this.intersections())
-        || glift.util.outBounds(point.y(), this.intersections());
-  },
-
-  /**
-   * @param {!glift.Point} point
-   * @return {boolean} True if the point is in-bounds.
-   */
-  inBounds: function(point) {
-    return glift.util.inBounds(point.x(), this.intersections())
-        && glift.util.inBounds(point.y(), this.intersections());
   },
 
   /**
@@ -226,7 +195,7 @@ glift.rules.Goban.prototype = {
     if (!glift.util.colors.isLegalColor(color)) throw "Unknown color: " + color;
 
     // Add stone fail.  Return a failed StoneResult.
-    if (this.outBounds(pt) || !this.placeable(pt)) {
+    if (this.outBounds_(pt) || !this.placeable(pt)) {
       return new glift.rules.StoneResult(false);
     }
 
@@ -289,6 +258,161 @@ glift.rules.Goban.prototype = {
   },
 
   /**
+   * Gets the captures at a point with a given color.
+   *
+   * @param {!glift.Point} inPoint
+   * @param {!glift.enums.states} color
+   * @return {!glift.rules.ConnectedGroup} A connected group, with an
+   *    associated number of liberties.
+   */
+  findConnected: function(inPoint, color) {
+    var group = new glift.rules.ConnectedGroup(color);
+    var stack = [inPoint];
+    while (stack.length > 0) {
+      var pt = stack.pop();
+      if (group.hasSeen(pt)) {
+        continue;
+      }
+      var stone = this.getStone(pt);
+      if (stone === color) {
+        group.addStone(pt, color);
+        var nbors = this.neighbors_(pt);
+        for (var n = 0; n < nbors.length; n++) {
+          stack.push(nbors[n]);
+        }
+      }
+      if (stone === glift.enums.states.EMPTY) {
+        group.addLiberty();
+      }
+    }
+    return group;
+  },
+
+  /**
+   * For the current position in the movetree, load all the stone values into
+   * the goban. This includes placements [AW,AB] and moves [B,W].
+   *
+   * returns captures -- an object that looks like the following
+   * {
+   *    WHITE: [{point},{point},{point},...],
+   *    BLACK: [{point},{point},{point},...]
+   * }
+   *
+   * @param {!glift.rules.MoveTree} movetree
+   * @return {!glift.rules.CaptureResult}
+   */
+  loadStonesFromMovetree: function(movetree) {
+    /** @type {!Array<glift.enums.states>} */
+    var colors = [ glift.enums.states.BLACK, glift.enums.states.WHITE ];
+    var captures = { BLACK : [], WHITE : [] };
+    for (var i = 0; i < colors.length; i++) {
+      var color = colors[i]
+      var placements = movetree.properties().getPlacementsAsPoints(color);
+      for (var j = 0, len = placements.length; j < len; j++) {
+        this.loadStone_({point: placements[j], color: color}, captures);
+      }
+    }
+    this.loadStone_(movetree.properties().getMove(), captures);
+    return captures;
+  },
+
+  /**
+   * Back out a movetree addition (used for going back a move).
+   *
+   * Recall that stones and captures both have the form:
+   *  { BLACK: [..move..], WHITE: [..move..] };
+   *
+   * @param {!glift.rules.MoveCollection} stones
+   * @param {!glift.rules.CaptureResult} captures
+   */
+  // TODO(kashomon): Add testing for this in goban_test
+  unloadStones: function(stones, captures) {
+    for (var color in stones) {
+      var c = /** @type {glift.enums.states} */ (color);
+      var arr = /** @type {!Array<!glift.rules.Move>} */ (stones[c]);
+      for (var j = 0; j < arr.length; j++) {
+        var move = arr[j];
+        if (move.point) {
+          this.clearStone(move.point);
+        }
+      }
+    }
+    for (var color in captures) {
+      var c = /** @type {glift.enums.states} */ (color);
+      var arr = /** @type {!Array<!glift.Point>} */ (captures[c]);
+      for (var i = 0; i < arr.length; i++) {
+        this.addStone(arr[i], c);
+      }
+    }
+  },
+
+  /////////////////////
+  // Private Methods //
+  /////////////////////
+
+  /**
+   * Set a color without performing any validation.
+   *
+   * @param {glift.enums.states} color
+   * @param {!glift.Point} pt
+   * @private
+   */
+  setColor_: function(color, pt) {
+    this.stones[pt.y()][pt.x()] = color;
+  },
+
+  /**
+   * @param {!glift.Point} point
+   * @return {boolean} True if the point is out-of-bounds.
+   * @private
+   */
+  outBounds_: function(point) {
+    return glift.util.outBounds(point.x(), this.intersections())
+        || glift.util.outBounds(point.y(), this.intersections());
+  },
+
+  /**
+   * @param {!glift.Point} point
+   * @return {boolean} True if the point is in-bounds.
+   * @private
+   */
+  inBounds_: function(point) {
+    return glift.util.inBounds(point.x(), this.intersections())
+        && glift.util.inBounds(point.y(), this.intersections());
+  },
+
+  /**
+   * Cardinal points. Because arrays are indexed from upper left.
+   * @private {!Object<string, !glift.Point>}
+   */
+  cardinals_:  {
+    left: glift.util.point(-1, 0),
+    right: glift.util.point(1, 0),
+    up: glift.util.point(0, -1),
+    down: glift.util.point(0, 1)
+  },
+
+  /**
+   * Get the inbound neighbors. Thus, can return 2, 3, or 4 points.
+   *
+   * @param {!glift.Point} pt
+   * @return {!Array<!glift.Point>}
+   * @private
+   */
+  neighbors_: function(pt) {
+    var newpt = glift.util.point;
+    var out = [];
+    for (var ckey in this.cardinals_) {
+      var c = this.cardinals_[ckey];
+      var outp = newpt(pt.x() + c.x(), pt.y() + c.y());
+      if (this.inBounds_(outp)) {
+        out.push(outp);
+      }
+    }
+    return out;
+  },
+
+  /**
    * Find the captured groups resulting from the placing of a stone of a color
    * at a point pt. This assumes the original point has already been placed.
    *
@@ -331,96 +455,6 @@ glift.rules.Goban.prototype = {
   },
 
   /**
-   * Cardinal points. Because arrays are indexed from upper left.
-   * @private {!Object<string, !glift.Point>}
-   */
-  cardinals_:  {
-    left: glift.util.point(-1, 0),
-    right: glift.util.point(1, 0),
-    up: glift.util.point(0, -1),
-    down: glift.util.point(0, 1)
-  },
-
-  /**
-   * Gets the captures at a point with a given color.
-   *
-   * @param {!glift.Point} inPoint
-   * @param {!glift.enums.states} color
-   * @return {!glift.rules.ConnectedGroup} A connected group, with an
-   *    associated number of liberties.
-   */
-  findConnected: function(inPoint, color) {
-    var group = new glift.rules.ConnectedGroup(color);
-    var stack = [inPoint];
-    while (stack.length > 0) {
-      var pt = stack.pop();
-      if (group.hasSeen(pt)) {
-        continue;
-      }
-      var stone = this.getStone(pt);
-      if (stone === color) {
-        group.addStone(pt, color);
-        var nbors = this.neighbors_(pt);
-        for (var n = 0; n < nbors.length; n++) {
-          stack.push(nbors[n]);
-        }
-      }
-      if (stone === glift.enums.states.EMPTY) {
-        group.addLiberty();
-      }
-    }
-    return group;
-  },
-
-  /**
-   * Get the inbound neighbors. Thus, can return 2, 3, or 4 points.
-   *
-   * @param {!glift.Point} pt
-   * @return {!Array<!glift.Point>}
-   * @private
-   */
-  neighbors_: function(pt) {
-    var newpt = glift.util.point;
-    var out = [];
-    for (var ckey in this.cardinals_) {
-      var c = this.cardinals_[ckey];
-      var outp = newpt(pt.x() + c.x(), pt.y() + c.y());
-      if (this.inBounds(outp)) {
-        out.push(outp);
-      }
-    }
-    return out;
-  },
-
-  /**
-   * For the current position in the movetree, load all the stone values into
-   * the goban. This includes placements [AW,AB] and moves [B,W].
-   *
-   * returns captures -- an object that looks like the following
-   * {
-   *    WHITE: [{point},{point},{point},...],
-   *    BLACK: [{point},{point},{point},...]
-   * }
-   *
-   * @param {!glift.rules.MoveTree} movetree
-   * @return {!glift.rules.CaptureResult}
-   */
-  loadStonesFromMovetree: function(movetree) {
-    /** @type {!Array<glift.enums.states>} */
-    var colors = [ glift.enums.states.BLACK, glift.enums.states.WHITE ];
-    var captures = { BLACK : [], WHITE : [] };
-    for (var i = 0; i < colors.length; i++) {
-      var color = colors[i]
-      var placements = movetree.properties().getPlacementsAsPoints(color);
-      for (var j = 0, len = placements.length; j < len; j++) {
-        this.loadStone_({point: placements[j], color: color}, captures);
-      }
-    }
-    this.loadStone_(movetree.properties().getMove(), captures);
-    return captures;
-  },
-
-  /**
    * Add a Move to the go board. Intended to be used from
    * loadStonesFromMovetree.
    *
@@ -440,36 +474,6 @@ glift.rules.Goban.prototype = {
       }
     }
   },
-
-  /**
-   * Back out a movetree addition (used for going back a move).
-   *
-   * Recall that stones and captures both have the form:
-   *  { BLACK: [..move..], WHITE: [..move..] };
-   *
-   * @param {!glift.rules.MoveCollection} stones
-   * @param {!glift.rules.CaptureResult} captures
-   */
-  // TODO(kashomon): Add testing for this in goban_test
-  unloadStones: function(stones, captures) {
-    for (var color in stones) {
-      var c = /** @type {glift.enums.states} */ (color);
-      var arr = /** @type {!Array<!glift.rules.Move>} */ (stones[c]);
-      for (var j = 0; j < arr.length; j++) {
-        var move = arr[j];
-        if (move.point) {
-          this.clearStone(move.point);
-        }
-      }
-    }
-    for (var color in captures) {
-      var c = /** @type {glift.enums.states} */ (color);
-      var arr = /** @type {!Array<!glift.Point>} */ (captures[c]);
-      for (var i = 0; i < arr.length; i++) {
-        this.addStone(arr[i], c);
-      }
-    }
-  }
 };
 
 /**
