@@ -272,12 +272,11 @@
           keyGoban.loadStonesFromMovetree(mt);
           perfTest('Create a string key for a go board', 10000, function() {
             var out = '';
-            for (var i = 0; i < keyGoban.stones.length; i++) {
-              var row = keyGoban.stones[i];
-              for (var j = 0; j < row.length; j++) {
+            for (var i = 0; i < keyGoban.intersections(); i++) {
+              for (var j = 0; j < keyGoban.intersections(); j++) {
                 // Note that string concatenation is much faster than using
                 // arrays as buffers. Oh, javascript...
-                out += '-' + row[j];
+                out += '-' + keyGoban.getStone(glift.util.point(i, j));
               }
             }
           });
