@@ -178,18 +178,18 @@
     // .....
 
     // Row 1
-    goban.setColor_(WHITE, 1, 0);
-    goban.setColor_(BLACK, 2, 0);
+    goban.setColor_(WHITE, pt(1, 0));
+    goban.setColor_(BLACK, pt(2, 0));
     // Row 2
-    goban.setColor_(WHITE, 0, 1);
-    goban.setColor_(BLACK, 1, 1);
-    goban.setColor_(WHITE, 2, 1);
+    goban.setColor_(WHITE, pt(0, 1));
+    goban.setColor_(BLACK, pt(1, 1));
+    goban.setColor_(WHITE, pt(2, 1));
     // Row 3
-    goban.setColor_(WHITE, 1, 2);
-    goban.setColor_(WHITE, 2, 2);
+    goban.setColor_(WHITE, pt(1, 2));
+    goban.setColor_(WHITE, pt(2, 2));
     // Row 4
-    goban.setColor_(WHITE, 0, 3);
-    goban.setColor_(WHITE, 3, 3);
+    goban.setColor_(WHITE, pt(0, 3));
+    goban.setColor_(WHITE, pt(3, 3));
 
     var g = goban.findConnected(pt(2,2), WHITE);
     deepEqual(g.liberties, 5);
@@ -226,5 +226,41 @@
     g = goban.findConnected(pt(3,3), WHITE);
     deepEqual(g.group.length, 1);
     deepEqual(g.liberties, 4);
+  });
+
+  test('Add Stone + Ko!', function() {
+    var goban = glift.rules.goban.getInstance();
+    var pt = glift.util.point;
+    // .OX.
+    // OX.X
+    // .OX.
+    // O...
+    goban.addStone(pt(1,0), WHITE);
+    goban.addStone(pt(2,0), BLACK);
+
+    goban.addStone(pt(0,1), WHITE);
+    goban.addStone(pt(1,1), BLACK);
+    goban.addStone(pt(3,1), BLACK);
+
+    goban.addStone(pt(1,2), WHITE);
+    goban.addStone(pt(2,2), BLACK);
+
+    goban.addStone(pt(0,3), WHITE);
+
+    var result = goban.addStone(pt(0,0), BLACK);
+    ok(result.successful);
+    deepEqual(result.koPt, pt(1,0));
+
+    var result = goban.addStone(pt(1,0), WHITE);
+    ok(result.successful);
+    deepEqual(result.koPt, pt(0,0));
+
+    var result = goban.addStone(pt(2,1), WHITE);
+    ok(result.successful);
+    deepEqual(result.koPt, pt(1,1));
+
+    var result = goban.addStone(pt(1,1), BLACK);
+    ok(result.successful);
+    deepEqual(result.koPt, pt(2,1));
   });
 })();
