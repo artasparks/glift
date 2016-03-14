@@ -36,6 +36,7 @@ glift.rules.goban = {
    * @param {!glift.rules.Treepath=} opt_treepath Optional treepath If the
    *    treepath is undefined, we craft a treepath to the current location in
    *    the movetree.
+   *
    * @return {{
    *   goban: !glift.rules.Goban,
    *   captures: !Array<!glift.rules.CaptureResult>
@@ -61,19 +62,28 @@ glift.rules.goban = {
 };
 
 /**
- * The Goban tracks the state of the stones.
- *
- * Note that, for our purposes,
- * x: refers to the column.
- * y: refers to the row.
- *
- * Thus, to get a particular "stone" you must do
- * stones[y][x]. Also, stones are 0-indexed.
+ * The Goban tracks the state of the stones, because the state is stored in a
+ * double array, the board positions are indexed from the upper left corner:
  *
  * 0,0    : Upper Left
  * 0,19   : Lower Left
  * 19,0   : Upper Right
  * 19,19  : Lower Right
+ *
+ * Currently, the Goban has rudimentary support for Ko. Ko is currently
+ * supported in the simple case where a move causing a cappture can be
+ * immediately recaptured:
+ *
+ * ......
+ * ..OX..
+ * .OX.X.
+ * ..OX..
+ * .....
+ *
+ * Currently, all other repeateding board situations are ignored. Worrying about
+ * hashing the board position and checking the current position against past
+ * positions is beyond this class, since this class contains no state except for
+ * stones and possibly a single Ko point.
  *
  * As a historical note, this is the oldest part of Glift.
  *
@@ -90,7 +100,13 @@ glift.rules.Goban = function(ints) {
   this.ints_ = ints;
 
   /** @private {!Array<glift.enums.states>} */
-  this.stones = glift.rules.initStones_(ints);
+  this.stones_ = glift.rules.initStones_(ints);
+
+  /**
+   * The Ko Point, if it exists. Null if there is no Ko.
+   * @private {?glift.Point}
+   */
+  this.koPoint_ = null;
 };
 
 glift.rules.Goban.prototype = {
@@ -98,6 +114,26 @@ glift.rules.Goban.prototype = {
   intersections: function() {
     return this.ints_;
   },
+
+  /**
+   * Sets the Ko point. Normally, this should be set by addStone. However, users
+   * may want to set this when going backwards through a game.
+   * @param {!glift.Point} pt
+   */
+  setKo: function(pt) {
+    if (pt && this.inBounds_(pt)) {
+      this.koPoint_ = pt;
+    }
+  },
+
+  /**
+   * Clears the Ko point. Note that the Ko point is cleared automatically by
+   * some operations (clearStone, addStone).
+   */
+  clearKo: function() { this.koPoint_ = null; },
+
+  /** @return {?glift.Point} The ko point or null if it doesn't exist. */
+  getKo: function() { return this.koPoint_; },
 
   /**
    * @param {!glift.Point} point
@@ -114,11 +150,18 @@ glift.rules.Goban.prototype = {
   /**
    * Retrieves a state (color) from the board.
    *
+   * Note that, for our purposes,
+   * x: refers to the column.
+   * y: refers to the row.
+   *
+   * Thus, to get a particular "stone" you must do
+   * stones[y][x]. Also, stones are 0-indexed.
+   *
    * @param {!glift.Point} pt
    * @return {!glift.enums.states} the state of the intersection
    */
   getStone: function(pt) {
-    return this.stones[pt.y()][pt.x()];
+    return this.stones_[pt.y()][pt.x()];
   },
 
   /**
@@ -140,15 +183,17 @@ glift.rules.Goban.prototype = {
   },
 
   /**
-   * Clear a stone from an intersection
+   * Clear a stone from an intersection. Clears the Ko point.
    * @param {!glift.Point} point
    */
   clearStone: function(point) {
+    this.clearKo();
     this.setColor_(glift.enums.states.EMPTY, point);
   },
 
   /**
-   * Clear an array of stones on the board.
+   * Clear an array of stones on the board. Clears the Ko point (since it calls
+   * clearStone).
    * @param {!Array<!glift.Point>} points
    */
   clearSome: function(points) {
@@ -160,13 +205,16 @@ glift.rules.Goban.prototype = {
   /**
    * Try to add a stone on a new go board instance, but don't change state.
    *
-   * Returns true / false depending on whether the 'add' was successful.
-   *
    * @param {!glift.Point} point
    * @param {glift.enums.states} color
+   * @return {boolean} true / false depending on whether the 'add' was successful.
    */
   testAddStone: function(point, color) {
+    var ko = this.getKo();
     var addStoneResult = this.addStone(point, color);
+    if (ko !== null ) {
+      this.setKo(ko);
+    }
 
     // Undo our changes (this is pretty icky). First remove the stone and then
     // add the captures back.
@@ -181,15 +229,17 @@ glift.rules.Goban.prototype = {
   },
 
   /**
-   * addStone: Add a stone to the GoBoard (0-indexed).  Requires the
-   * intersection (a point) where the stone is to be placed, and the color of
-   * the stone to be placed.
+   * Add a stone to the GoBoard (0-indexed).  Requires the intersection (a
+   * point) where the stone is to be placed, and the color of the stone to be
+   * placed.
    *
-   * addStone always returns a StoneResult object.
+   * The goban also tracks where the last Ko occurred. Subsequent calls to this
+   * method invalidate the previous Ko.
    *
    * @param {!glift.Point} pt A point
    * @param {glift.enums.states} color The State to add.
-   * @return {!glift.rules.StoneResult}
+   * @return {!glift.rules.StoneResult} The result of the placement, and whether
+   *    the placement was successful.
    */
   addStone: function(pt, color) {
     if (!glift.util.colors.isLegalColor(color)) throw "Unknown color: " + color;
@@ -211,13 +261,16 @@ glift.rules.Goban.prototype = {
       // capture. If there are captured groups, this is not an issue.
       //
       // So, let's find the connected group for the stone placed.
-      var g = this.findConnected(pt, color);
+      var g = this.findConnected_(pt, color);
       if (g.liberties === 0) {
         // Onos! The move is self capture.
         this.clearStone(pt);
         return new glift.rules.StoneResult(false);
       }
     }
+
+    // This move is going to be successful, so we now invalidate the Ko point.
+    this.clearKo();
 
     // Remove the captures from the board.
     var capturedPoints = [];
@@ -249,43 +302,14 @@ glift.rules.Goban.prototype = {
         var g = koCapturedGroups[0];
         if (g.group.length === 1 && g.group[0].point.equals(pt)) {
           // It's a Ko!!
+          this.setKo(capPt);
           return new glift.rules.StoneResult(true, capturedPoints, capPt);
         }
       }
     }
 
+    // No ko, but it's a go!
     return new glift.rules.StoneResult(true, capturedPoints);
-  },
-
-  /**
-   * Gets the captures at a point with a given color.
-   *
-   * @param {!glift.Point} inPoint
-   * @param {!glift.enums.states} color
-   * @return {!glift.rules.ConnectedGroup} A connected group, with an
-   *    associated number of liberties.
-   */
-  findConnected: function(inPoint, color) {
-    var group = new glift.rules.ConnectedGroup(color);
-    var stack = [inPoint];
-    while (stack.length > 0) {
-      var pt = stack.pop();
-      if (group.hasSeen(pt)) {
-        continue;
-      }
-      var stone = this.getStone(pt);
-      if (stone === color) {
-        group.addStone(pt, color);
-        var nbors = this.neighbors_(pt);
-        for (var n = 0; n < nbors.length; n++) {
-          stack.push(nbors[n]);
-        }
-      }
-      if (stone === glift.enums.states.EMPTY) {
-        group.addLiberty();
-      }
-    }
-    return group;
   },
 
   /**
@@ -316,36 +340,6 @@ glift.rules.Goban.prototype = {
     return captures;
   },
 
-  /**
-   * Back out a movetree addition (used for going back a move).
-   *
-   * Recall that stones and captures both have the form:
-   *  { BLACK: [..move..], WHITE: [..move..] };
-   *
-   * @param {!glift.rules.MoveCollection} stones
-   * @param {!glift.rules.CaptureResult} captures
-   */
-  // TODO(kashomon): Add testing for this in goban_test
-  unloadStones: function(stones, captures) {
-    for (var color in stones) {
-      var c = /** @type {glift.enums.states} */ (color);
-      var arr = /** @type {!Array<!glift.rules.Move>} */ (stones[c]);
-      for (var j = 0; j < arr.length; j++) {
-        var move = arr[j];
-        if (move.point) {
-          this.clearStone(move.point);
-        }
-      }
-    }
-    for (var color in captures) {
-      var c = /** @type {glift.enums.states} */ (color);
-      var arr = /** @type {!Array<!glift.Point>} */ (captures[c]);
-      for (var i = 0; i < arr.length; i++) {
-        this.addStone(arr[i], c);
-      }
-    }
-  },
-
   /////////////////////
   // Private Methods //
   /////////////////////
@@ -358,7 +352,7 @@ glift.rules.Goban.prototype = {
    * @private
    */
   setColor_: function(color, pt) {
-    this.stones[pt.y()][pt.x()] = color;
+    this.stones_[pt.y()][pt.x()] = color;
   },
 
   /**
@@ -413,6 +407,38 @@ glift.rules.Goban.prototype = {
   },
 
   /**
+   * Gets the captures at a point with a given color.
+   *
+   * @param {!glift.Point} inPoint
+   * @param {!glift.enums.states} color
+   * @return {!glift.rules.ConnectedGroup} A connected group, with an
+   *    associated number of liberties.
+   * @private
+   */
+  findConnected_: function(inPoint, color) {
+    var group = new glift.rules.ConnectedGroup(color);
+    var stack = [inPoint];
+    while (stack.length > 0) {
+      var pt = stack.pop();
+      if (group.hasSeen(pt)) {
+        continue;
+      }
+      var stone = this.getStone(pt);
+      if (stone === color) {
+        group.addStone(pt, color);
+        var nbors = this.neighbors_(pt);
+        for (var n = 0; n < nbors.length; n++) {
+          stack.push(nbors[n]);
+        }
+      }
+      if (stone === glift.enums.states.EMPTY) {
+        group.addLiberty();
+      }
+    }
+    return group;
+  },
+
+  /**
    * Find the captured groups resulting from the placing of a stone of a color
    * at a point pt. This assumes the original point has already been placed.
    *
@@ -437,7 +463,7 @@ glift.rules.Goban.prototype = {
         }
       }
       if (!alreadySeen) {
-        var newGroup = this.findConnected(nborPt, oppColor);
+        var newGroup = this.findConnected_(nborPt, oppColor);
         if (newGroup.group.length) {
           groups.push(newGroup);
         }

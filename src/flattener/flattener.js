@@ -62,7 +62,7 @@ glift.flattener.Options;
  *  color: glift.enums.states,
  *  mvnum: number,
  *  label: (string|undefined),
- *  collisionStoneColor:  (glift.enums.states|undefined)
+ *  collisionStoneColor: (glift.enums.states|undefined)
  * }}
  */
 glift.flattener.Collision;

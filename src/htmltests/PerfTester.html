@@ -252,7 +252,7 @@
           // -------------------------- Tests -------------------------- //
           /////////////////////////////////////////////////////////////////
 
-          perfTest('Iterate over all characters in a raw SGF', 500, function() {
+          perfTest('Iterate over all characters in a raw SGF', 1000, function() {
             for (var i = 0; i < commentary.length; i++) {
               var char = commentary.charAt(0);
             }
@@ -266,6 +266,20 @@
           perfTest('Add stones to goban from movetree', 10000, function() {
             var goban = glift.rules.goban.getInstance();
             goban.loadStonesFromMovetree(mt);
+          });
+
+          var keyGoban = glift.rules.goban.getInstance();
+          keyGoban.loadStonesFromMovetree(mt);
+          perfTest('Create a string key for a go board', 10000, function() {
+            var out = '';
+            for (var i = 0; i < keyGoban.stones.length; i++) {
+              var row = keyGoban.stones[i];
+              for (var j = 0; j < row.length; j++) {
+                // Note that string concatenation is much faster than using
+                // arrays as buffers. Oh, javascript...
+                out += '-' + row[j];
+              }
+            }
           });
         })();
       </script>

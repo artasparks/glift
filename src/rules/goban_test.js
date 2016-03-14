@@ -191,39 +191,39 @@
     goban.setColor_(WHITE, pt(0, 3));
     goban.setColor_(WHITE, pt(3, 3));
 
-    var g = goban.findConnected(pt(2,2), WHITE);
+    var g = goban.findConnected_(pt(2,2), WHITE);
     deepEqual(g.liberties, 5);
     deepEqual(g.color, WHITE);
     deepEqual(g.group.length, 3);
 
-    var otherg = goban.findConnected(pt(1,2), WHITE);
+    var otherg = goban.findConnected_(pt(1,2), WHITE);
     deepEqual(g.seen, otherg.seen);
 
-    g = goban.findConnected(pt(2,2), BLACK);
+    g = goban.findConnected_(pt(2,2), BLACK);
     deepEqual(g.group.length, 0);
 
-    g = goban.findConnected(pt(1,0), WHITE);
+    g = goban.findConnected_(pt(1,0), WHITE);
     deepEqual(g.group.length, 1);
     deepEqual(g.group[0].point.toString(), '1,0');
     deepEqual(g.liberties, 1);
 
-    g = goban.findConnected(pt(2,0), BLACK);
+    g = goban.findConnected_(pt(2,0), BLACK);
     deepEqual(g.group.length, 1);
     deepEqual(g.liberties, 1);
 
-    g = goban.findConnected(pt(0,1), WHITE);
+    g = goban.findConnected_(pt(0,1), WHITE);
     deepEqual(g.group.length, 1);
     deepEqual(g.liberties, 2);
 
-    g = goban.findConnected(pt(1,1), BLACK);
+    g = goban.findConnected_(pt(1,1), BLACK);
     deepEqual(g.group.length, 1);
     deepEqual(g.liberties, 0);
 
-    g = goban.findConnected(pt(0,3), WHITE);
+    g = goban.findConnected_(pt(0,3), WHITE);
     deepEqual(g.group.length, 1);
     deepEqual(g.liberties, 3);
 
-    g = goban.findConnected(pt(3,3), WHITE);
+    g = goban.findConnected_(pt(3,3), WHITE);
     deepEqual(g.group.length, 1);
     deepEqual(g.liberties, 4);
   });
@@ -250,17 +250,29 @@
     var result = goban.addStone(pt(0,0), BLACK);
     ok(result.successful);
     deepEqual(result.koPt, pt(1,0));
+    deepEqual(goban.getKo(), pt(1,0));
 
     var result = goban.addStone(pt(1,0), WHITE);
     ok(result.successful);
     deepEqual(result.koPt, pt(0,0));
+    deepEqual(goban.getKo(), pt(0,0));
 
     var result = goban.addStone(pt(2,1), WHITE);
     ok(result.successful);
     deepEqual(result.koPt, pt(1,1));
+    deepEqual(goban.getKo(), pt(1,1));
+
+    // Invalidated by clearStone
+    goban.clearStone(pt(4,4))
+    deepEqual(goban.getKo(), null);
 
     var result = goban.addStone(pt(1,1), BLACK);
     ok(result.successful);
     deepEqual(result.koPt, pt(2,1));
+    deepEqual(goban.getKo(), pt(2,1));
+
+    // Invalidated by addStone
+    goban.addStone(pt(4,4), BLACK)
+    deepEqual(goban.getKo(), null);
   });
 })();

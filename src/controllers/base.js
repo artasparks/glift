@@ -432,7 +432,7 @@ glift.controllers.BaseController.prototype = {
     var allCurrentStones = this.movetree.properties().getAllStones();
     this.captureHistory = this.captureHistory.slice(
         0, this.currentMoveNumber() - 1);
-    this.goban.unloadStones(allCurrentStones, captures);
+    this.unloadStonesFromGoban_(allCurrentStones, captures);
     this.movetree.moveUp();
     var displayData = glift.bridge.intersections.previousBoardData(
         this.movetree,
@@ -458,5 +458,41 @@ glift.controllers.BaseController.prototype = {
       // All the action happens in nextMoveNoState.
     }
     return this.getEntireBoardState();
-  }
+  },
+
+  /////////////////////
+  // Private Methods //
+  /////////////////////
+
+  /**
+   * Back out a movetree addition (used for going back a move).
+   *
+   * Recall that stones and captures both have the form:
+   *  { BLACK: [..move..], WHITE: [..move..] };
+   *
+   * @param {!glift.rules.MoveCollection} stones
+   * @param {!glift.rules.CaptureResult} captures
+   *
+   * @private
+   */
+  // TODO(kashomon): Add testing for this.
+  unloadStonesFromGoban_: function(stones, captures) {
+    for (var color in stones) {
+      var c = /** @type {glift.enums.states} */ (color);
+      var arr = /** @type {!Array<!glift.rules.Move>} */ (stones[c]);
+      for (var j = 0; j < arr.length; j++) {
+        var move = arr[j];
+        if (move.point) {
+          this.goban.clearStone(move.point);
+        }
+      }
+    }
+    for (var color in captures) {
+      var c = /** @type {glift.enums.states} */ (color);
+      var arr = /** @type {!Array<!glift.Point>} */ (captures[c]);
+      for (var i = 0; i < arr.length; i++) {
+        this.goban.addStone(arr[i], c);
+      }
+    }
+  },
 };
