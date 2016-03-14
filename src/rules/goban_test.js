@@ -167,4 +167,64 @@
     }
     deepEqual(out, outr, 'Should not change state');
   });
+
+  test('New findConnected', function() {
+    var pt = glift.util.point;
+    var goban = glift.rules.goban.getInstance();
+    // .OX..
+    // OXO..
+    // .OO..
+    // O..O.
+    // .....
+
+    // Row 1
+    goban.setColor_(WHITE, 1, 0);
+    goban.setColor_(BLACK, 2, 0);
+    // Row 2
+    goban.setColor_(WHITE, 0, 1);
+    goban.setColor_(BLACK, 1, 1);
+    goban.setColor_(WHITE, 2, 1);
+    // Row 3
+    goban.setColor_(WHITE, 1, 2);
+    goban.setColor_(WHITE, 2, 2);
+    // Row 4
+    goban.setColor_(WHITE, 0, 3);
+    goban.setColor_(WHITE, 3, 3);
+
+    var g = goban.findConnected(pt(2,2), WHITE);
+    deepEqual(g.liberties, 5);
+    deepEqual(g.color, WHITE);
+    deepEqual(g.group.length, 3);
+
+    var otherg = goban.findConnected(pt(1,2), WHITE);
+    deepEqual(g.seen, otherg.seen);
+
+    g = goban.findConnected(pt(2,2), BLACK);
+    deepEqual(g.group.length, 0);
+
+    g = goban.findConnected(pt(1,0), WHITE);
+    deepEqual(g.group.length, 1);
+    deepEqual(g.group[0].point.toString(), '1,0');
+    deepEqual(g.liberties, 1);
+
+    g = goban.findConnected(pt(2,0), BLACK);
+    deepEqual(g.group.length, 1);
+    deepEqual(g.liberties, 1);
+
+    g = goban.findConnected(pt(0,1), WHITE);
+    deepEqual(g.group.length, 1);
+    deepEqual(g.liberties, 2);
+
+    g = goban.findConnected(pt(1,1), BLACK);
+    deepEqual(g.group.length, 1);
+    deepEqual(g.liberties, 0);
+
+    g = goban.findConnected(pt(0,3), WHITE);
+    deepEqual(g.group.length, 1);
+    deepEqual(g.liberties, 3);
+
+    g = goban.findConnected(pt(3,3), WHITE);
+    deepEqual(g.group.length, 1);
+    deepEqual(g.liberties, 4);
+  });
 })();

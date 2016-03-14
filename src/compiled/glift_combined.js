@@ -8372,6 +8372,7 @@ goog.provide('glift.rules.CaptureResult');
 goog.provide('glift.rules.Goban');
 goog.provide('glift.rules.StoneResult');
 goog.provide('glift.rules.goban');
+goog.provide('glift.rules.ConnectedGroup');
 
 /**
  * Result of a Capture
@@ -8477,10 +8478,10 @@ glift.rules.Goban.prototype = {
    * @return {!glift.enums.states} the state of the intersection
    */
   getStone: function(pointOrX, opt_y) {
-    if (typeof pointOrX === 'number' && opt_y) {
+    if (typeof pointOrX === 'number' && typeof opt_y === 'number') {
       var x = /** @type {number} */ (pointOrX);
       var y = /** @type {number} */ (opt_y);
-      return this.stones[x][y];
+      return this.stones[y][x];
     } else if (typeof pointOrX === 'object') {
       var pt = /** @type {!glift.Point} */ (pointOrX);
       return this.stones[pt.y()][pt.x()];
@@ -8499,10 +8500,10 @@ glift.rules.Goban.prototype = {
    * @private
    */
   setColor_: function(color, pointOrX, opt_y) {
-    if (typeof pointOrX === 'number' && opt_y) {
+    if (typeof pointOrX === 'number' && typeof opt_y === 'number') {
       var x = /** @type {number} */ (pointOrX);
       var y = /** @type {number} */ (opt_y);
-      this.stones[x][y] = color;
+      this.stones[y][x] = color;
     } else if (typeof pointOrX === 'object') {
       var pt = /** @type {!glift.Point} */ (pointOrX);
       this.stones[pt.y()][pt.x()] = color;
@@ -8587,15 +8588,17 @@ glift.rules.Goban.prototype = {
    * @param {!glift.Point} point
    * @param {glift.enums.states} color
    */
-  // TODO(kashomon): Itself needs a test.
   testAddStone: function(point, color) {
     var addStoneResult = this.addStone(point, color);
 
-    // Undo our changes. First remove the stone and then add the captures back.
-    this.clearStone(point);
-    var oppositeColor = glift.util.colors.oppositeColor(color);
-    for (var i = 0; i < addStoneResult.captures.length; i++) {
-      this.setColor_(oppositeColor, addStoneResult.captures[i]);
+    // Undo our changes (this is pretty icky). First remove the stone and then
+    // add the captures back.
+    if (addStoneResult.successful) {
+      this.clearStone(point);
+      var oppositeColor = glift.util.colors.oppositeColor(color);
+      for (var i = 0; i < addStoneResult.captures.length; i++) {
+        this.setColor_(oppositeColor, addStoneResult.captures[i]);
+      }
     }
     return addStoneResult.successful;
   },
@@ -8615,37 +8618,78 @@ glift.rules.Goban.prototype = {
     if (!glift.util.colors.isLegalColor(color)) throw "Unknown color: " + color;
 
     // Add stone fail.  Return a failed StoneResult.
-    if (this.outBounds(pt) || !this.placeable(pt))
+    if (this.outBounds(pt) || !this.placeable(pt)) {
       return new glift.rules.StoneResult(false);
+    }
 
-    this.setColor_(color, pt); // set stone as active
+    // Set the stone as active and see what happens!
+    this.setColor_(color, pt);
 
-    // First attempt to capture neighboring stones.
+    // First find the connected groups on each of the cardinal directions.
     var captures = new glift.rules.CaptureTracker_();
     var oppColor = glift.util.colors.oppositeColor(color);
+    /** @type {!Array<!glift.rules.ConnectedGroup>} */
+    var groups = [];
+    var nbors = this.neighbors_(pt);
+    for (var i = 0; i < nbors.length; i++) {
+      var nborPt = nbors[i];
+      var alreadySeen = false;
+      for (var j = 0; j < groups.length; j++) {
+        var g = groups[j];
+        if (g.hasSeen(nborPt)) {
+          alreadySeen = true;
+          break;
+        }
+      }
+      if (!alreadySeen) {
+        var newGroup = this.findConnected(nborPt, oppColor);
+        if (newGroup.group.length) {
+          groups.push(newGroup);
+        }
+      }
+    }
 
-    // Stack of points to consider.
-    this.getCaptures_(captures, glift.util.point(pt.x() + 1, pt.y()), oppColor);
-    this.getCaptures_(captures, glift.util.point(pt.x() - 1, pt.y()), oppColor);
-    this.getCaptures_(captures, glift.util.point(pt.x(), pt.y() - 1), oppColor);
-    this.getCaptures_(captures, glift.util.point(pt.x(), pt.y() + 1), oppColor);
+    var capturedGroups = [];
+    for (var i = 0; i < groups.length; i++) {
+      var g = groups[i];
+      if (g.liberties === 0) {
+        capturedGroups.push(g);
+      }
+    }
 
-    if (captures.numCaptures <= 0) {
-      // We are now in a state where placing this stone results in 0 liberties.
-      // Now, we check if move is self capture -- i.e., if the move doesn't
-      // capture any stones.
-      this.getCaptures_(captures, pt, color);
-      if (captures.numCaptures > 0) {
+    if (capturedGroups.length === 0) {
+      // If a move doesn't capture, then it's possible that the move is self
+      // capture. If there are captured groups, this is not an issue.
+      //
+      // So, let's find the connected group for the stone placed.
+      var g = this.findConnected(pt, color);
+      if (g.liberties === 0) {
         // Onos! The move is self capture.
         this.clearStone(pt);
         return new glift.rules.StoneResult(false);
       }
     }
 
-    var actualCaptures = captures.getCaptures();
     // Remove the captures from the board.
-    this.clearSome(actualCaptures);
-    return new glift.rules.StoneResult(true, actualCaptures);
+    var capturedPoints = [];
+    for (var i = 0; i < capturedGroups.length; i++) {
+      var g = capturedGroups[i];
+      for (var j = 0; j < g.group.length; j++) {
+        var capPoint = g.group[j].point;
+        capturedPoints.push(capPoint);
+        this.clearStone(capPoint);
+      }
+    }
+
+    // Finally, test for Ko. Some rulesets specify that repeating board
+    // positions are not allowed. This is too expensive and generally unnecesary
+    // except in rare cases.
+    // if (actualCaptures.length === 1) {
+      // var pt = actualCaptures[0]
+      // var captures = this.getCaptures_(newglift.rules.CaptureTracker_
+    // }
+
+    return new glift.rules.StoneResult(true, capturedPoints);
   },
 
   /**
@@ -8660,7 +8704,39 @@ glift.rules.Goban.prototype = {
   },
 
   /**
-   * Get the inbound neighbors
+   * Gets the captures at a point with a given color.
+   *
+   * @param {!glift.Point} inPoint
+   * @param {!glift.enums.states} color
+   * @return {!glift.rules.ConnectedGroup} A connected group, with an
+   *    associated number of liberties.
+   */
+  findConnected: function(inPoint, color) {
+    var group = new glift.rules.ConnectedGroup(color);
+    var stack = [inPoint];
+    while (stack.length > 0) {
+      var pt = stack.pop();
+      if (group.hasSeen(pt)) {
+        continue;
+      }
+      var stone = this.getStone(pt);
+      if (stone === color) {
+        group.addStone(pt, color);
+        var nbors = this.neighbors_(pt);
+        for (var n = 0; n < nbors.length; n++) {
+          stack.push(nbors[n]);
+        }
+      }
+      if (stone === glift.enums.states.EMPTY) {
+        group.addLiberty();
+      }
+    }
+    return group;
+  },
+
+  /**
+   * Get the inbound neighbors. Thus, can return 2, 3, or 4 points.
+   *
    * @param {!glift.Point} pt
    * @return {!Array<!glift.Point>}
    * @private
@@ -8676,60 +8752,6 @@ glift.rules.Goban.prototype = {
       }
     }
     return out;
-  },
-
-  /**
-   * Get the captures.  We return nothing because state is stored in 'captures'
-   *
-   * @param {!glift.rules.CaptureTracker_} captures
-   * @param {!glift.Point} pt
-   * @param {glift.enums.states} color
-   */
-  getCaptures_: function(captures, pt, color) {
-    this.findConnected_(captures, pt, color);
-    if (captures.liberties <= 0) captures.consideringToCaptures();
-    captures.clearExceptCaptures();
-  },
-
-  /**
-   * Find the stones of the same color connected to eachother.  The color to
-   * find is the param color. We return nothing because state is stored in
-   * 'captures'.
-   *
-   * @param {!glift.rules.CaptureTracker_} captures
-   * @param {!glift.Point} pt
-   * @param {glift.enums.states} color
-   */
-  findConnected_: function(captures, pt, color) {
-    var util = glift.util;
-    // check to make sure we haven't already seen a stone
-    // and that the point is not out of bounds.  If
-    // either of these conditions fail, return immediately.
-    if (captures.seen[pt.toString()] !== undefined || this.outBounds(pt)) {
-      // we're done -- there's no where to go.
-    } else {
-      // note that we've seen the point
-      captures.seen[pt.toString()] = true;
-      var stoneColor = this.getStone(pt);
-      if (stoneColor === glift.enums.states.EMPTY)    {
-        // add a liberty if the point is empty and return
-        captures.liberties++;
-      } else if (stoneColor === util.colors.oppositeColor(color)) {
-        // return and don't add liberties.  This works because we assume that
-        // the stones start out with 0 liberties, and then we go along and add
-        // the liberties as we see them.
-      } else if (stoneColor === color) {
-        // recursively add connected stones
-        captures.considering.push(pt);
-        this.findConnected_(captures, util.point(pt.x() + 1, pt.y()), color);
-        this.findConnected_(captures, util.point(pt.x() - 1, pt.y()), color);
-        this.findConnected_(captures, util.point(pt.x(), pt.y() + 1), color);
-        this.findConnected_(captures, util.point(pt.x(), pt.y() - 1), color);
-      } else {
-        // Sanity check.
-        throw "Unknown color error: " + stoneColor;
-      }
-    }
   },
 
   /**
@@ -8761,6 +8783,9 @@ glift.rules.Goban.prototype = {
   },
 
   /**
+   * Add a Move to the go board. Intended to be used from
+   * loadStonesFromMovetree.
+   *
    * @param {?glift.rules.Move} mv
    * @param {!glift.rules.CaptureResult} captures
    * @private
@@ -8871,7 +8896,9 @@ glift.rules.CaptureTracker_.prototype = {
     this.liberties += x;
   },
 
-  /** @param {!glift.Point} point add a point to the seen-map */
+  /**
+   * @param {!glift.Point} point add a point to the seen-map
+   */
   addSeen: function(point) {
     this.seen[point.toString()] = true;
   },
@@ -8884,6 +8911,62 @@ glift.rules.CaptureTracker_.prototype = {
     }
     return out;
   }
+};
+
+/**
+ * A connected group
+ * @param {glift.enums.states} color
+ *
+ * @constructor @final @struct
+ */
+glift.rules.ConnectedGroup = function(color) {
+  /** @private {glift.enums.states} */
+  this.color = color;
+  /** @private {number} */
+  this.liberties = 0;
+  /** @private {!Object<glift.PtStr, boolean>} */
+  this.seen = {};
+  /** @private {!Array<glift.rules.Move>} */
+  this.group = [];
+};
+
+glift.rules.ConnectedGroup.prototype = {
+  /**
+   * Add some liberties to the group.
+   * @param {!glift.Point} pt
+   * @return {boolean} Whether the point has been seen
+   */
+  hasSeen: function(pt) {
+    return this.seen[pt.toString()];
+  },
+
+  /**
+   * Add a stone to the group. Note that the point must not have been seen and
+   * the color must be equal to the group's color.
+   *
+   * @param {!glift.Point} pt
+   * @param {glift.enums.states} color
+   * @return {!glift.rules.ConnectedGroup} this
+   */
+  addStone: function(pt, color) {
+    if (!this.seen[pt.toString()] && this.color === color) {
+      this.seen[pt.toString()] = true;
+      this.group.push({
+        point: pt,
+        color: color
+      });
+    }
+    return this;
+  },
+
+  /**
+   * Add some liberties to the group.
+   * @return {!glift.rules.ConnectedGroup} this
+   */
+  addLiberty: function() {
+    this.liberties += 1;
+    return this;
+  },
 };
 
 /**
@@ -11510,6 +11593,8 @@ glift.controllers.BaseController.prototype = {
 
   /**
    * Add a stone.  This is intended to be overwritten.
+   * @param {!glift.Point} point
+   * @param {!glift.enums.states} color
    */
   addStone: function(point, color) { throw "Not Implemented"; },
 

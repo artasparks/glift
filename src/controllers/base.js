@@ -154,6 +154,8 @@ glift.controllers.BaseController.prototype = {
 
   /**
    * Add a stone.  This is intended to be overwritten.
+   * @param {!glift.Point} point
+   * @param {!glift.enums.states} color
    */
   addStone: function(point, color) { throw "Not Implemented"; },
 
