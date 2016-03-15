@@ -190,7 +190,9 @@ glift.flattener.flatten = function(movetreeInitial, opt_options) {
       nextMainlineMove: nextMainlineMove,
       stoneMap: stoneMap,
       markMap: marks,
-      labelMap: labels});
+      labelMap: labels,
+      ko: goban.getKo()
+  });
 };
 
 

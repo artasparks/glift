@@ -312,4 +312,23 @@
     deepEqual(f.nextMainlineMove(), null, 'next mainline pt end');
     deepEqual(f.nextMainlineMoveNum(), 7, 'mainline num end');
   });
+
+  test('Ko', function() {
+    var initPos = [0,0,0,0,0,0];
+    var kosgf =
+        '(;GM[1]SZ[19]' +
+        ';B[ba];W[ca];B[ab];W[bb];B[bc];W[aa])';
+    var mt = glift.rules.movetree.getFromSgf(kosgf, initPos);
+    var f = flattener.flatten(mt, {});
+    ok(f);
+    deepEqual(f.ko(), toPt('ba'));
+
+    // This doesn't work yet for some reason:
+    // mt = glift.rules.movetree.getFromSgf(kosgf)
+    // var f = flattener.flatten(mt, {
+      // nextMovesPath: initPos
+    // });
+    // ok(f);
+    // deepEqual(f.ko(), toPt('ba'));
+  });
 })();

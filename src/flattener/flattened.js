@@ -17,7 +17,8 @@ goog.provide('glift.flattener.FlattenedParams');
  *  nextMainlineMove: ?glift.rules.Move,
  *  stoneMap: !Object<glift.PtStr, !glift.rules.Move>,
  *  markMap: !Object<glift.PtStr, !glift.flattener.symbols>,
- *  labelMap: !Object<glift.PtStr, string>
+ *  labelMap: !Object<glift.PtStr, string>,
+ *  ko: ?glift.Point
  * }}
  */
 glift.flattener.FlattenedParams;
@@ -91,6 +92,12 @@ glift.flattener.Flattened = function(params) {
    * @private {!Object<glift.PtStr, string>}
    */
   this.labelMap_ = params.labelMap;
+
+  /**
+   * The Ko point. Will be null if there is currently no Ko.
+   * @private {?glift.Point}
+   */
+  this.ko_ = params.ko;
 };
 
 glift.flattener.Flattened.prototype = {
@@ -102,6 +109,12 @@ glift.flattener.Flattened.prototype = {
    * @return {string}
    */
   comment: function() { return this.comment_; },
+
+  /**
+   * Returns the Ko point, if it exists.
+   * @return {?glift.Point}
+   */
+  ko: function() { return this.ko_; },
 
   /**
    * A structure illustrating the board collisions. Only relevant for positions
