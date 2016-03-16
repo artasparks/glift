@@ -105,13 +105,17 @@ glift.flattener.Flattened.prototype = {
   board: function() { return this.board_; },
 
   /**
-   * The comment C[...] for the position.
+   * The comment for the position.
    * @return {string}
    */
   comment: function() { return this.comment_; },
 
   /**
-   * Returns the Ko point, if it exists.
+   * Returns the Ko point, if it exists, and null otherwise.
+   *
+   * Note that Ko will not be specified when the flattened object was created
+   * with a nextMovesTreepath, since this means a stone must have been captured
+   * at the ko point.
    * @return {?glift.Point}
    */
   ko: function() { return this.ko_; },

@@ -323,12 +323,13 @@
     ok(f);
     deepEqual(f.ko(), toPt('ba'));
 
-    // This doesn't work yet for some reason:
-    // mt = glift.rules.movetree.getFromSgf(kosgf)
-    // var f = flattener.flatten(mt, {
-      // nextMovesPath: initPos
-    // });
-    // ok(f);
-    // deepEqual(f.ko(), toPt('ba'));
+    // Ko doesn't make sense when a nextMovesPath is specified, and so must be
+    // null.
+    mt = glift.rules.movetree.getFromSgf(kosgf)
+    var f = flattener.flatten(mt, {
+      nextMovesTreepath: initPos
+    });
+    ok(f);
+    deepEqual(f.ko(), null);
   });
 })();

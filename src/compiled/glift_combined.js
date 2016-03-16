@@ -13809,6 +13809,11 @@ glift.flattener.flatten = function(movetreeInitial, opt_options) {
   // - correctNextMoves
   var comment = mt.properties().getComment() || '';
 
+  // We don't mark Ko for when the nextMovesTreepath is specified. If there's a
+  // Ko, then stones will be captured and there's no point in putting a mark or
+  // indicator on the location.
+  var ko = nmtp ? null : goban.getKo();
+
   return new glift.flattener.Flattened({
       board: board,
       collisions: collisions,
@@ -13993,14 +13998,14 @@ glift.flattener.markMap_ = function(movetree) {
  * effectively unused.
  *
  * @param {!glift.rules.MoveTree} mt
- * @param {!glift.rules.Treepath} nextMovesPath
+ * @param {!glift.rules.Treepath} nextMovesTreepath
  * @return {number}
  * @private
  */
-glift.flattener.findStartingMoveNum_ = function(mt, nextMovesPath) {
+glift.flattener.findStartingMoveNum_ = function(mt, nextMovesTreepath) {
   mt = mt.newTreeRef();
   if (mt.onMainline()) {
-    if (nextMovesPath.length > 0 && nextMovesPath[0] > 0) {
+    if (nextMovesTreepath.length > 0 && nextMovesTreepath[0] > 0) {
       return 1;
     } else {
       return mt.node().getNodeNum() + 1;
@@ -14542,13 +14547,17 @@ glift.flattener.Flattened.prototype = {
   board: function() { return this.board_; },
 
   /**
-   * The comment C[...] for the position.
+   * The comment for the position.
    * @return {string}
    */
   comment: function() { return this.comment_; },
 
   /**
-   * Returns the Ko point, if it exists.
+   * Returns the Ko point, if it exists, and null otherwise.
+   *
+   * Note that Ko will not be specified when the flattened object was created
+   * with a nextMovesTreepath, since this means a stone must have been captured
+   * at the ko point.
    * @return {?glift.Point}
    */
   ko: function() { return this.ko_; },
