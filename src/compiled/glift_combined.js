@@ -15036,6 +15036,13 @@ glift.widgets.BaseWidget = function(
   // We split the wrapper div, but here we record the original reference.
   this.wrapperDivId = divId;
 
+  /**
+   * The internal wrapper is a box nested just inside the wrapperDivId with the
+   * intention of adding a glift-specific class and position: relative.
+   * @type {string}
+   */
+  this.internalWrapperDivId = divId + '-internal-wrapper';
+
   /** @type {!glift.api.SgfOptions} */
   this.sgfOptions = sgfOptions;
 
@@ -15087,14 +15094,15 @@ glift.widgets.BaseWidget.prototype = {
         this.sgfOptions.boardRegion === glift.enums.boardRegions.AUTO
         ? this.controller.getQuadCropFromBeginning()
         : this.sgfOptions.boardRegion;
-
     glift.util.majorPerfLog('Calculated board regions');
 
+    this.createInternalWrapperDiv_();
     // This should be the only time we get the base width and height, until the
     // entire widget is re-drawn.
-    var parentDivBbox = glift.displays.bboxFromDiv(this.wrapperDivId);
+    var parentDivBbox = glift.displays.bboxFromDiv(this.internalWrapperDivId);
     if (parentDivBbox.width() === 0 || parentDivBbox.height() === 0) {
-      throw new Error('Div has has invalid dimensions. Bounding box had ' +
+      throw new Error('Div for Glift has has invalid dimensions. ' +
+          'Bounding box had ' +
           'width: ' + parentDivBbox.width() +
           ', height: ' + parentDivBbox.height());
     }
@@ -15107,7 +15115,8 @@ glift.widgets.BaseWidget.prototype = {
         this.displayOptions.oneColumnSplits,
         this.displayOptions.twoColumnSplits).calcWidgetPositioning();
 
-    var divIds = this.createDivsForPositioning_(positioning, this.wrapperDivId);
+    var divIds = this.createDivsForPositioning_(
+        positioning, this.internalWrapperDivId);
     glift.util.majorPerfLog('Created divs');
 
     var displayTheme = glift.themes.get(this.displayOptions.theme);
@@ -15228,17 +15237,34 @@ glift.widgets.BaseWidget.prototype = {
     return base;
   },
 
+
+  /**
+   * Create an internal wrapper div to contain the whole go board. This sets
+   * position relative on the internal div.
+   * @private
+   */
+  createInternalWrapperDiv_: function() {
+    var wrapDiv = glift.dom.newDiv(this.internalWrapperDivId);
+    var cssObj = {
+      height: '100%',
+      width: '100%',
+      position: 'relative'
+    };
+    wrapDiv.css(cssObj);
+    glift.dom.elem(this.wrapperDivId).append(wrapDiv);
+  },
+
   /**
    * Create divs from positioning (WidgetBoxes) and the wrapper div id.
    * @return {!Object<glift.enums.boardComponents, string>} a map from component
    *    name to the div Id.
    * @private
    */
-  createDivsForPositioning_: function(positioning, wrapperDivId) {
+  createDivsForPositioning_: function(positioning, intWrapperDivId) {
     // Map from component to ID.
     var out = {};
     var createDiv = function(bbox) {
-      var newId = wrapperDivId + '_internal_div_' + glift.util.idGenerator.next();
+      var newId = intWrapperDivId + '_internal_div_' + glift.util.idGenerator.next();
       var newDiv = glift.dom.newDiv(newId);
       var cssObj = {
         top: bbox.top() + 'px',
@@ -15249,7 +15275,7 @@ glift.widgets.BaseWidget.prototype = {
         cursor: 'default'
       };
       newDiv.css(cssObj);
-      glift.dom.elem(wrapperDivId).append(newDiv);
+      glift.dom.elem(intWrapperDivId).append(newDiv);
       glift.dom.ux.setNotSelectable(newId);
       return newId;
     };
