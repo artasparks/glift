@@ -98,6 +98,13 @@ glift.flattener.Flattened = function(params) {
    * @private {?glift.Point}
    */
   this.ko_ = params.ko;
+
+  /**
+   * Problem result. Whether or not a particular problem position should be
+   * considered correct or incorret.
+   * @private {glift.enums.problemResults}
+   */
+  this.problemResult_ = null;
 };
 
 glift.flattener.Flattened.prototype = {
@@ -151,7 +158,9 @@ glift.flattener.Flattened.prototype = {
   startingMoveNum: function() { return this.startMoveNum_; },
 
   /**
-   * Returns the ending move number.
+   * Returns the ending move number. Should be tha same as the starting move
+   * number if no nextMovesTreepath is specified.
+   *
    * @return {number}
    */
   endingMoveNum: function() { return this.endMoveNum_; },
@@ -211,6 +220,23 @@ glift.flattener.Flattened.prototype = {
   markMap: function() {
     return this.markMap_;
   },
+
+  /**
+   * Currently, the flattener does not compute problem correctness, so it is up
+   * to the user to manually set problem correctness.
+   *
+   * @param {glift.enums.problemResults} result
+   */
+  // TODO(kashomon): Compute problem correctness in flattener land.
+  setProblemResult: function(result) {
+    this.problemResult_ = result;
+  },
+
+  /**
+   * @return {?glift.enums.problemResults} The problem correctness or null if
+   *    the correctness isn't set (true for most flattened representations).
+   */
+  setProblemResult: function() { return this.problemResult_ },
 
   /**
    * Helper for truncating labels if the labels are numbers > 100, which

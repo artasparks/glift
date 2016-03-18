@@ -369,17 +369,18 @@ glift.widgets.BaseWidget.prototype = {
   /**
    * Apply the BoardData to both the comments box and the board. Uses
    * glift.bridge to communicate with the display.
+   *
+   * @param {?glift.flattener.flattened) flattened
    */
-  applyBoardData: function(boardData) {
-    if (boardData) {
-      this.setCommentBox(boardData.comment);
+  applyBoardData: function(flattened) {
+    if (flattened) {
+      this.setCommentBox(flattened.comment());
       this.statusBar &&
-          this.statusBar.setMoveNumber(this.controller.currentMoveNumber())
-      glift.bridge.setDisplayState(
-          boardData,
-          this.display,
-          this.sgfOptions.showVariations,
-          this.sgfOptions.markLastMove);
+          this.statusBar.setMoveNumber(this.controller.endingMoveNum())
+      this.display.updateBoard(flattened, {
+        showVariations: this.sgfOptions.showVariations,
+        markLastMove: this.sgfOptions.markLastMove
+      });
     }
   },
 

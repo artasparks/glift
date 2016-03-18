@@ -67,7 +67,6 @@ glift.flattener.Options;
  */
 glift.flattener.Collision;
 
-
 /**
  * Flatten the combination of movetree, goban, cropping, and treepath into an
  * array (really a 2D array) of symbols, (a Flattened object).
@@ -501,4 +500,22 @@ glift.flattener.updateLabelsWithVariations_ = function(mt, marks, labels) {
       marks[ptStr] = glift.flattener.symbols.NEXTVARIATION;
     }
   }
+};
+
+/** @private {!Object<number, glift.flattener.flattened>} */
+glift.flattener.emptyFlattenedCache_ = {};
+
+/**
+ * Sometimes it's useful to have an empty flattened board
+ * @param {number}
+ * @return {!glift.flattener.flattened}
+ */
+glift.flattener.emptyFlattened = function(size) {
+  if (glift.flattener.emptyFlattenedCache_[size]) {
+    return glift.flattener.emptyFlattenedCache_[size];
+  }
+  var mt = glift.rules.movetree.getInstance(size);
+  var flattened = glift.flattener.flatten(mt);
+  glift.flattener.emptyFlattenedCache_[size] = flattened;
+  return flattened;
 };

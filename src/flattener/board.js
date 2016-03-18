@@ -2,7 +2,6 @@ goog.provide('glift.flattener.board');
 goog.provide('glift.flattener.Board');
 goog.provide('glift.flattener.BoardDiffPt');
 
-
 glift.flattener.board = {
   /**
    * Constructs a board object: a 2D array of intersections.

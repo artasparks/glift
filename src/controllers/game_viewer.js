@@ -61,7 +61,7 @@ glift.controllers.GameViewerMethods = {
     } while (displayData && !comment && numChildern <= 1);
     // It's more expected to reset the 'next' variation to zero.
     this.setNextVariation(0);
-    return this.getEntireBoardState();
+    return this.flattenedState();
   },
 
   /**
@@ -85,7 +85,7 @@ glift.controllers.GameViewerMethods = {
         break;
       }
     } while (displayData && !comment && numChildern <= 1); 
-    return this.getEntireBoardState();
+    return this.flattenedState();
   },
 
   /**

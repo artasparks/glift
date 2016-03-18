@@ -154,8 +154,10 @@ glift.controllers.BaseController.prototype = {
 
   /**
    * Add a stone.  This is intended to be overwritten.
+   *
    * @param {!glift.Point} point
    * @param {!glift.enums.states} color
+   * @return {?glift.flatttener.flattened} The flattened representation.
    */
   addStone: function(point, color) { throw "Not Implemented"; },
 
@@ -397,6 +399,9 @@ glift.controllers.BaseController.prototype = {
    *   - We need to update the current move number.
    *
    * @param {number=} opt_varNum
+   *
+   * @return {?glift.flattener.flattened} The flattened representation or null
+   *    if there is no next move.
    */
   nextMove: function(opt_varNum) {
     if (this.treepath[this.currentMoveNumber()] !== undefined &&
@@ -415,14 +420,13 @@ glift.controllers.BaseController.prototype = {
     }
     var captures = this.goban.loadStonesFromMovetree(this.movetree)
     this.recordCaptures(captures);
-
-    return this.getNextBoardState();
+    return this.flattenedState();
   },
 
   /**
    * Go back a move.
-   *
-   * Returns null in the case that there is no previous move.
+   * @return {?glift.flattener.flattened} The flattened representation or null
+   *    if there is no previous move.
    */
   prevMove: function() {
     if (this.currentMoveNumber() === 0) {
@@ -434,30 +438,29 @@ glift.controllers.BaseController.prototype = {
         0, this.currentMoveNumber() - 1);
     this.unloadStonesFromGoban_(allCurrentStones, captures);
     this.movetree.moveUp();
-    var displayData = glift.bridge.intersections.previousBoardData(
-        this.movetree,
-        allCurrentStones,
-        captures,
-        this.problemConditions,
-        this.nextVariationNumber());
-    this.flattenedState();
-    return displayData;
+    return this.flattenedState();
   },
 
-  /** Go back to the beginning. */
+  /**
+   * Go back to the beginning.
+   * @return {!glift.flattener.flattened} The flattened representation.
+   */
   toBeginning: function() {
     this.movetree = this.movetree.getTreeFromRoot();
     this.goban = glift.rules.goban.getFromMoveTree(this.movetree, []).goban;
     this.captureHistory = []
-    return this.getEntireBoardState();
+    return this.flattenedState();
   },
 
-  /** Go to the end. */
+  /**
+   * Go to the end.
+   * @return {!glift.flattener.flattened} The flattened representation
+   */
   toEnd: function() {
     while (this.nextMove()) {
       // All the action happens in nextMoveNoState.
     }
-    return this.getEntireBoardState();
+    return this.flattenedState();
   },
 
   /////////////////////

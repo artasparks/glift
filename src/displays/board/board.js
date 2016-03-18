@@ -18,7 +18,7 @@ glift.displays.board.create = function(env, theme, rotation) {
 /**
  * The core Display object returned to the user.
  *
- * @param {!Object} environment Gui environment object.
+ * @param {!glift.displays.GuiEnvironment} environment Gui environment object.
  * @param {!glift.themes.base} theme A Glift theme.
  * @param {glift.enums.rotations=} opt_rotation Optional rotation to rotate the
  *    points.
@@ -27,13 +27,11 @@ glift.displays.board.create = function(env, theme, rotation) {
  * @package
  */
 glift.displays.board.Display = function(environment, theme, opt_rotation) {
-  // Due layering issues, we need to keep track of the order in which we
-  // created the objects.
-  this._objectHistory = [];
+  /** @private {glift.displays.GuiEnvironment} */
+  this.environment_ = environment;
 
-  this._environment = environment;
-
-  this._theme = theme;
+  /** @private {!glift.themes.base} */
+  this.theme_ = theme;
 
   /**
    * Rotation indicates whether we should rotate by stones/marks in the display
@@ -44,43 +42,49 @@ glift.displays.board.Display = function(environment, theme, opt_rotation) {
 
   // Variables defined during draw()
   /** @private {glift.displays.svg.SvgObj} svgBase Root SVG object. */
-  this._svgBase = null;
-  this._svg = null;
-  this._intersections = null;
+  this.svg_ = null;
 
-  // All objects are stuffed into the buffer and are only added to the dom
-  // during flushes.
-  this._buffer = [];
+  /** @private {?glift.displays.board.Intersections} */
+  this.intersections_ = null;
+
+  /**
+   * The flattened representation of the Go board. This should exactly
+   * correspond to the data rendered in the SGF.
+   *
+   * @private {!glift.flattener.flattened}
+   */
+  this.flattened_ = glift.flattener.emptyFlattened(this.numIntersections());
 };
 
 glift.displays.board.Display.prototype = {
-  boardPoints: function() { return this._environment.boardPoints; },
+  boardPoints: function() { return this.environment_.boardPoints; },
   /** @return {string} */
-  boardRegion: function() { return this._environment.boardRegion; },
+  boardRegion: function() { return this.environment_.boardRegion; },
   /** @return {string} */
-  divId: function() { return this._environment.divId },
+  divId: function() { return this.environment_.divId },
   /** @return {number} */
-  numIntersections: function() { return this._environment.intersections; },
+  numIntersections: function() { return this.environment_.intersections; },
   /** @return {?glift.displays.board.Intersections} */
-  intersections: function() { return this._intersections; },
+  intersections: function() { return this.intersections_; },
   /** @return {!glift.enums.rotations} */
   rotation: function() { return this.rotation_; },
   /** @return {boolean} */
-  drawBoardCoords: function() { return this._environment.drawBoardCoords; },
-  width: function() { return this._environment.goBoardBox.width() },
-  height: function() { return this._environment.goBoardBox.height() },
+  drawBoardCoords: function() { return this.environment_.drawBoardCoords; },
+  /** @return {number} */
+  width: function() { return this.environment_.goBoardBox.width() },
+  /** @return {number} */
+  height: function() { return this.environment_.goBoardBox.height() },
 
   /**
-   * Initialize the SVG
-   * This allows us to create a base display object without creating all drawing
-   * all the parts.
+   * Initialize the SVG This allows us to create a base display object without
+   * creating all drawing all the parts.
    *
    * @return {!glift.displays.board.Display}
    */
   init: function() {
-    if (!this._svg) {
+    if (!this.svg_) {
       this.destroy(); // make sure everything is cleared out of the div.
-      this._svg = glift.displays.svg.svg({
+      this.svg_ = glift.displays.svg.svg({
         height: '100%',
         width: '100%',
         position: 'float',
@@ -88,20 +92,21 @@ glift.displays.board.Display.prototype = {
         id: this.divId() + '_svgboard'
       });
     }
-    this._environment.init();
+    this.environment_.init();
     return this;
   },
 
   /**
-   * Draw the GoBoard!
+   * Draws the GoBoard!
+   * @return {!glift.displays.board.Display}
    */
   draw:  function() {
     this.init();
     var board = glift.displays.board,
-        env = this._environment,
+        env = this.environment_,
         boardPoints = env.boardPoints,
-        theme = this._theme,
-        svg = this._svg,
+        theme = this.theme_,
+        svg = this.svg_,
         divId = this.divId(),
         svglib = glift.displays.svg,
         idGen = glift.displays.ids.generator(divId);
@@ -122,7 +127,7 @@ glift.displays.board.Display.prototype = {
     board.markContainer(intGrp, idGen);
     board.buttons(intGrp, idGen, boardPoints);
 
-    this._intersections = new glift.displays.board.Intersections(
+    this.intersections_ = new glift.displays.board.Intersections(
         divId, intGrp, boardPoints, theme, this.rotation());
     glift.util.majorPerfLog("After display object creation");
 
@@ -131,20 +136,33 @@ glift.displays.board.Display.prototype = {
     return this; // required
   },
 
+  /**
+   * Update the board with a new flattened object.
+   * @param {!glift.flattener.flattened}
+   * @return {!glift.displays.board.Display} this
+   */
+  updateBoard: function(flattened) {
+    this.intersections().clearMarks();
+    var diff = flattened.board().diff(this.flattened_.board());
+  },
+
+  /** @return {!glift.displays.board.Display} this */
   flush: function() {
-    this._svg.attachToParent(this.divId());
+    this.svg_.attachToParent(this.divId());
     return this;
   },
 
   /**
    * Destory the GUI portion of the GoBoard.  We just remove the SVG element.
    * This makes redrawing the GoBoard much quicker.
+   *
+   * @return {!glift.displays.board.Display} this
    */
   destroy: function() {
     glift.dom.elem(this.divId()).empty();
-    this._svg = null;
-    this._svgBase = null;
-    this._intersections = null;
+    this.svg_ = null;
+    this.svgBase_ = null;
+    this.intersections_ = null;
     return this;
   }
 };

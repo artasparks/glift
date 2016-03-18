@@ -12,13 +12,21 @@
 glift.controllers.staticProblem = function(sgfOptions) {
   var controllers = glift.controllers;
   var baseController = glift.util.beget(controllers.base());
-  var newController = glift.util.setMethods(baseController,
-          glift.controllers.StaticProblemMethods);
-  newController.initOptions(sgfOptions);
+  glift.util.setMethods(baseController, ctrl.StaticProblem.prototype);
+  baseController.initOptions(sgfOptions);
   return newController;
 };
 
-glift.controllers.StaticProblemMethods = {
+/**
+ * Stub class to be used for inheritance.
+ *
+ * @extends {glift.controllers.BaseController}
+ * @constructor
+ */
+glift.controllers.StaticProblem = function() {
+};
+
+glift.controllers.StaticProblem.prototype = {
   /** Override extra options */
   extraOptions: function() {
     // Rebase the movetree, if we're not at the zeroth move
@@ -85,7 +93,7 @@ glift.controllers.StaticProblemMethods = {
         this.movetree, this.problemConditions);
     if (correctness === CORRECT) {
       // Don't play out variations for CORRECT>
-      outData.result = correctness;
+      outData.setProblemResult(correctness);
       return outData;
     } else if (correctness === CORRECT ||
         correctness === INCORRECT ||
@@ -97,8 +105,8 @@ glift.controllers.StaticProblemMethods = {
       // We return the entire board state because we've just moved two moves.
       // In theory, we could combine the output of the next moves, but it's a
       // little tricky and it doesn't seem to be worth the effort at the moment.
-      outData = this.getEntireBoardState();
-      outData.result = correctness;
+      outData = this.flattenedState();
+      outData.setProblemResult(correctness);
       return outData;
     }
     else {
