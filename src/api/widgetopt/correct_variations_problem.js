@@ -52,7 +52,7 @@ glift.api.widgetopt[glift.enums.widgetTypes.CORRECT_VARIATIONS_PROBLEM] = {
                 { fill: '#000', stroke: '#000'});
             setTimeout(function() {
               widget.controller.initialize();
-              widget.applyBoardData(widget.controller.getEntireBoardState());
+              widget.applyBoardData(controller.flattenedState());
             }, widget.sgfOptions.correctVariationsResetTime);
           }
         }

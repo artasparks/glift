@@ -24,21 +24,28 @@
     var wstones = glift.sgf.convertFromLabelArray(
         ['sa', 'qb', 'rb', 'qc', 'rc']);
 
-    var data = base.nextMove();
+    var flattened = base.nextMove();
     deepEqual(base.currentMoveNumber(), 1, 'Must number must be 1');
 
     var captures = base.getCaptures();
     deepEqual(captures.WHITE.length, 5, 'There must be 5 captures');
-    var foundPts = ptlistToMap(data.stones.EMPTY);
-    deepEqual(data.stones.BLACK[0].toString(), bstone.toString());
+
+    var stoneMap = flattened.stoneMap();
+    deepEqual(stoneMap[bstone.toString()], {
+      point: bstone,
+      color: glift.enums.states.BLACK,
+    });
+
     for (var i = 0; i < wstones.length; i++) {
-      ok(foundPts[wstones[i].point.toString()] !== undefined, 'Must be defined');
+      var stonePtStr = wstones[i].point.toString();
+      ok(stoneMap[wstones[i].point.toString()] === undefined, 
+          'Must be *not* be defined since they\'ve been captured');
     }
 
-    var data = base.prevMove();
-    var foundPts = ptlistToMap(data.stones.WHITE);
+    flattened = base.prevMove();
+    stoneMap = flattened.stoneMap();
     for (var i = 0; i < wstones.length; i++) {
-      ok(foundPts[wstones[i].point.toString()] !== undefined, 'Must be defined');
+      ok(stoneMap[wstones[i].point.toString()] !== undefined, 'Must be defined');
     }
   });
 

@@ -78,9 +78,16 @@ glift.controllers.BaseController = function() {
   this.captureHistory = [];
 
   /**
-   * @package the flattened representation.
+   * Enum indicating the show-variations preference
+   * @private {glift.enums.showVariations|undefined}
    */
-  this.flattened = glift.flattener.flatten(this.movetree);
+  this.showVariations_ = undefined;
+
+  /**
+   * Boolean indicating whether or not to mark the last move.
+   * @private {boolean}
+   */
+  this.markLastMove_ = false;
 };
 
 glift.controllers.BaseController.prototype = {
@@ -102,6 +109,13 @@ glift.controllers.BaseController.prototype = {
 
     this.parseType = sgfOptions.parseType || glift.parse.parseType.SGF;
     this.problemConditions = sgfOptions.problemConditions || {};
+
+    // A controller may not be the best place for these next few, since they're
+    // display only; However, this is currenly the best place to put these since
+    // the controller is in charge of creating the flattened representation.
+    this.showVariations_ = sgfOptions.showVariations || undefined;
+    this.markLastMove_ = sgfOptions.markLastMove || false;
+
     this.initialize();
     return this;
   },
@@ -167,11 +181,11 @@ glift.controllers.BaseController.prototype = {
    */
   flattenedState: function() {
     var newFlat = glift.flattener.flatten(this.movetree, {
-      goban: this.goban
+      goban: this.goban,
+      showNextVariationsType: this.showVariations_,
+      markLastMove: this.markLastMove_,
     });
-    var diff = newFlat.board().diff(this.flattened.board());
-    this.flattened = newFlat;
-    return this.flattened;
+    return newFlat;
   },
 
   /**
@@ -241,43 +255,6 @@ glift.controllers.BaseController.prototype = {
    */
   getGameInfo: function() {
     return this.movetree.getTreeFromRoot().properties().getGameInfo();
-  },
-
-  /**
-   * Return the entire intersection data, including all stones, marks, and
-   * comments.  This format allows the user to completely populate some UI of
-   * some sort.
-   *
-   * The output looks like:
-   *  {
-   *    points: {
-   *      "1,2" : {
-   *        point: {1, 2},
-   *        STONE: "WHITE"
-   *      },
-   *      ... etc ...
-   *    },
-   *    comment : "foo"
-   *  }
-   */
-  getEntireBoardState: function() {
-    this.flattenedState();
-    return glift.bridge.intersections.getFullBoardData(
-        this.movetree,
-        this.goban,
-        this.problemConditions,
-        this.nextVariationNumber());
-  },
-
-  /** Return only the necessary information to update the board. */
-  // TODO(kashomon): Rename to getCurrentBoardState
-  getNextBoardState: function() {
-    this.flattenedState();
-    return glift.bridge.intersections.nextBoardData(
-        this.movetree,
-        this.getCaptures(),
-        this.problemConditions,
-        this.nextVariationNumber());
   },
 
   /**

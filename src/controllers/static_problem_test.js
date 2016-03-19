@@ -18,12 +18,11 @@
     ok(c.problemConditions !== undefined, 'problemConditions must be defined');
     ok(c.problemConditions['GB'] !== undefined, 'GB must be specified');
     // deepEqual(c.sgfString, sgfs.realproblem); -- no longer true
-    var data = c.initialize().getEntireBoardState();
-    var whiteStones = ptlistToMap(data.stones.WHITE)
-    var blackStones = ptlistToMap(data.stones.BLACK)
-    ok(whiteStones[wstone.toString()] !== undefined,
+    var flattened = c.initialize().flattenedState();
+
+    ok(flattened.stoneMap()[wstone.toString()] !== undefined,
         'Must find a white stone where expected');
-    ok(blackStones[bstone.toString()] !== undefined,
+    ok(flattened.stoneMap()[bstone.toString()] !== undefined,
         'Must find a black stone where expected');
   });
 

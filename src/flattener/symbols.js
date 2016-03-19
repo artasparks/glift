@@ -51,6 +51,32 @@ glift.flattener.symbols = {
 };
 
 /**
+ * Mapping between flattener stone symbol and a glift color-state enum.
+ * @type {!Object<glift.flattener.symbols, glift.enums.states}
+ */
+glift.flattener.symbolStoneToState = {
+  0: glift.enums.states.EMPTY,
+  20: glift.enums.states.BLACK,  // BSTONE,
+  21: glift.enums.states.WHITE, // WSTONE
+};
+
+/**
+ * Mapping between flattener mark symbol and a glift mark enum.
+ * @type {!Object<glift.flattener.symbols, glift.enums.marks}
+ */
+glift.flattener.symbolMarkToMark = {
+  30: glift.enums.marks.TRIANGLE,
+  31: glift.enums.marks.SQUARE,
+  32: glift.enums.marks.CIRCLE,
+  33: glift.enums.marks.XMARK,
+
+  34: glift.enums.marks.LABEL, // TEXTLABEL
+
+  35: glift.enums.marks.STONE_MARKER, // LASTMOVE
+  36: glift.enums.marks.VARIATION_MARKER, // NEXTVARIATION
+};
+
+/**
  * Look-up map that allows us to determine a string key for a symbol number.
  * Lazily initialized via symbolStr.
  *

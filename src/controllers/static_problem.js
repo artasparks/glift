@@ -12,9 +12,9 @@
 glift.controllers.staticProblem = function(sgfOptions) {
   var controllers = glift.controllers;
   var baseController = glift.util.beget(controllers.base());
-  glift.util.setMethods(baseController, ctrl.StaticProblem.prototype);
+  glift.util.setMethods(baseController, glift.controllers.StaticProblem.prototype);
   baseController.initOptions(sgfOptions);
-  return newController;
+  return baseController;
 };
 
 /**

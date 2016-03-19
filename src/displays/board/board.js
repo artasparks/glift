@@ -137,13 +137,44 @@ glift.displays.board.Display.prototype = {
   },
 
   /**
-   * Update the board with a new flattened object.
+   * Update the board with a new flattened object. The board stores the previous
+   * flattened object and just updates based on the diff between the two.
+   *
    * @param {!glift.flattener.flattened}
    * @return {!glift.displays.board.Display} this
    */
   updateBoard: function(flattened) {
     this.intersections().clearMarks();
-    var diff = flattened.board().diff(this.flattened_.board());
+    var diffArr = this.flattened_.board().diff(flattened.board());
+
+    var symb = glift.flattener.symbols;
+    var marks = glift.enums.marks
+    var symbolStoneToState = glift.flattener.symbolStoneToState;
+    var symbolMarkToMark = glift.flattener.symbolMarkToMark;
+
+    for (var i = 0; i < diffArr.length; i++) {
+      /** @type {!glift.flattener.BoardDiffPt<glift.flattener.Intersection>} */
+      var diffPt = diffArr[i];
+      if (diffPt.newValue.stone() !== diffPt.prevValue.stone()) {
+        var newStoneStr = diffPt.newValue.stone();
+        this.intersections().setStoneColor(
+            diffPt.boardPt, symbolStoneToState[newStoneStr]);
+      }
+      if (diffPt.newValue.mark() !== diffPt.prevValue.mark() &&
+          diffPt.newValue.mark() !== 0) { // We've already cleared empty marks.
+        var newMark = diffPt.newValue.mark();
+        var enumMark = symbolMarkToMark[newMark];
+        var lbl = undefined;
+        if (enumMark === marks.LABEL ||
+            enumMark === marks.VARIATION_MARKER ||
+            enumMark === marks.CORRECT_VARIATIONS_PROBLEM) {
+          lbl = diffPt.newValue.textLabel();
+        }
+        this.intersections().addMarkPt(
+            diffPt.boardPt, enumMark, lbl);
+      }
+    }
+    this.flattened_ = flattened;
   },
 
   /** @return {!glift.displays.board.Display} this */

@@ -242,40 +242,40 @@ glift.flattener.Board.prototype = {
    * It is required that the boards be the same dimensions, or else an error is
    * thrown.
    *
-   * @param {!glift.flattener.Board<T>} that
+   * @param {!glift.flattener.Board<T>} newBorad
    * @return {!Array<!glift.flattener.BoardDiffPt<T>>}
    */
-  diff: function(that) {
-    if (!that || !that.boardArray_ || !that.bbox_ || !that.maxBoardSize_) {
+  diff: function(newBoard) {
+    if (!newBoard|| !newBoard.boardArray_ || !newBoard.bbox_ || !newBoard.maxBoardSize_) {
       throw new Error('Diff board not defined or not a flattener board');
     }
-    if (this.height() !== that.height() || this.width() !== that.width()) {
+    if (this.height() !== newBoard.height() || this.width() !== newBoard.width()) {
       throw new Error('Boards do not have the same dimensions.' +
         ' This: h:' + this.height() + ' w:' + this.width() +
-        ' That: h:' + that.height() + ' w:' + that.width());
+        ' That: h:' + newBoard.height() + ' w:' + newBoard.width());
     }
     var out = [];
     for (var i = 0; i < this.boardArray_.length; i++) {
       var row = this.boardArray_[i];
-      var thatrow = that.boardArray_[i];
+      var thatrow = newBoard.boardArray_[i];
 
       for (var j = 0; j < row.length; j++) {
         var intp = row[j];
-        var thatintp = thatrow[j];
-        if (!thatintp) { break; }
+        var newIntp = thatrow[j];
+        if (!newIntp) { break; }
 
         var ptsEqual = false;
         if (intp.equals && typeof intp.equals === 'function') {
           // Equals is defined, let's use it.
-          ptsEqual = intp.equals(thatintp);
+          ptsEqual = intp.equals(newIntp);
         } else {
           // Use regular ===, since equals isn't defined
-          ptsEqual = intp === thatintp;
+          ptsEqual = intp === newIntp;
         }
         if (!ptsEqual) {
           var pt = new glift.Point(j, i);
           out.push(new glift.flattener.BoardDiffPt(
-            intp, thatintp, pt, this.ptToBoardPt(pt)));
+            intp, newIntp, pt, this.ptToBoardPt(pt)));
         }
       }
     }
@@ -289,8 +289,10 @@ glift.flattener.Board.prototype = {
  *
  * @param {T} prevValue
  * @param {T} newValue
- * @param {!glift.Point} colRowPt
- * @param {!glift.Point} boardPt
+ * @param {!glift.Point} colRowPt. A pt from the original array, where the x and
+ *    and y are the col and row respectively.
+ * @param {!glift.Point} boardPt. A point that's board-indexed (i.e., that's
+ *    offset according to the bounding box).
  *
  * @template T
  *

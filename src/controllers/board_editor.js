@@ -221,7 +221,7 @@ glift.controllers.BoardEditor.prototype = {
       curProps.add(prop, point.toSgfCoord());
     }
     this._ptTolabelMap[point.toString()] = markData;
-    return this.getNextBoardState();
+    return this.flattenedState();
   },
 
   /** Remove a mark from the board. */
@@ -246,7 +246,7 @@ glift.controllers.BoardEditor.prototype = {
       this.movetree.properties()
           .removeOneValue(sgfProp, point.toSgfCoord());
     }
-    return this.getNextBoardState();
+    return this.flattenedState();
   },
 
   /**
@@ -266,7 +266,7 @@ glift.controllers.BoardEditor.prototype = {
     this.movetree.properties().add(
         glift.sgf.colorToToken(color),
         point.toSgfCoord());
-    return this.getNextBoardState();
+    return this.flattenedState();
   },
 
   /**
@@ -289,7 +289,7 @@ glift.controllers.BoardEditor.prototype = {
       return glift.bridge.intersections.nextBoardData(
           this.movetree, captures);
     }
-    return null;
+    return this.flattenedState();
   },
 
   pass: function() { throw new Error('Not implemented'); },

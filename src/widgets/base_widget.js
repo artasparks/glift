@@ -187,7 +187,7 @@ glift.widgets.BaseWidget.prototype = {
     glift.util.majorPerfLog('After stone event creation');
 
     this.initProblemData_();
-    this.applyBoardData(this.controller.getEntireBoardState());
+    this.applyBoardData(this.controller.flattenedState());
     return this;
   },
 
@@ -370,17 +370,15 @@ glift.widgets.BaseWidget.prototype = {
    * Apply the BoardData to both the comments box and the board. Uses
    * glift.bridge to communicate with the display.
    *
-   * @param {?glift.flattener.flattened) flattened
+   * @param {?glift.flattener.flattened) flattened The flattened representation
+   *    of the board.
    */
   applyBoardData: function(flattened) {
     if (flattened) {
       this.setCommentBox(flattened.comment());
       this.statusBar &&
-          this.statusBar.setMoveNumber(this.controller.endingMoveNum())
-      this.display.updateBoard(flattened, {
-        showVariations: this.sgfOptions.showVariations,
-        markLastMove: this.sgfOptions.markLastMove
-      });
+          this.statusBar.setMoveNumber(flattened.startingMoveNum())
+      this.display.updateBoard(flattened);
     }
   },
 

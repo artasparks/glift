@@ -38,7 +38,8 @@ glift.flattener = {};
  *  boardRegion: (glift.enums.boardRegions|undefined),
  *  regionRestrictions: (!Array<glift.enums.boardRegions>|undefined),
  *  showNextVariationsType: (glift.enums.showVariations|undefined),
- *  autoBoxCropOnNextMoves: (boolean|undefined)
+ *  autoBoxCropOnNextMoves: (boolean|undefined),
+ *  markLastMove: (boolean|undefined)
  * }}
  */
 glift.flattener.Options;

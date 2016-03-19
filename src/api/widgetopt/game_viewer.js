@@ -14,12 +14,12 @@ glift.api.widgetopt[glift.enums.widgetTypes.GAME_VIEWER] = {
     /** Toggle the selected variation. */
     ']': function(widget) {
       widget.controller.moveUpVariations();
-      widget.applyBoardData(widget.controller.getNextBoardState())
+      widget.applyBoardData(widget.controller.flattenedState())
     },
     /** Toggle the selected variation. */
     '[': function(widget) {
       widget.controller.moveDownVariations();
-      widget.applyBoardData(widget.controller.getNextBoardState())
+      widget.applyBoardData(widget.controller.flattenedState())
     }
   },
 
