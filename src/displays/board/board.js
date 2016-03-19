@@ -51,7 +51,7 @@ glift.displays.board.Display = function(environment, theme, opt_rotation) {
    * The flattened representation of the Go board. This should exactly
    * correspond to the data rendered in the SGF.
    *
-   * @private {!glift.flattener.flattened}
+   * @private {!glift.flattener.Flattened}
    */
   this.flattened_ = glift.flattener.emptyFlattened(this.numIntersections());
 };
@@ -140,7 +140,7 @@ glift.displays.board.Display.prototype = {
    * Update the board with a new flattened object. The board stores the previous
    * flattened object and just updates based on the diff between the two.
    *
-   * @param {!glift.flattener.flattened}
+   * @param {!glift.flattener.Flattened} flattened
    * @return {!glift.displays.board.Display} this
    */
   updateBoard: function(flattened) {
@@ -167,7 +167,7 @@ glift.displays.board.Display.prototype = {
         var lbl = undefined;
         if (enumMark === marks.LABEL ||
             enumMark === marks.VARIATION_MARKER ||
-            enumMark === marks.CORRECT_VARIATIONS_PROBLEM) {
+            enumMark === marks.CORRECT_VARIATION) {
           lbl = diffPt.newValue.textLabel();
         }
         this.intersections().addMarkPt(
@@ -175,6 +175,7 @@ glift.displays.board.Display.prototype = {
       }
     }
     this.flattened_ = flattened;
+    return this;
   },
 
   /** @return {!glift.displays.board.Display} this */
@@ -192,7 +193,7 @@ glift.displays.board.Display.prototype = {
   destroy: function() {
     glift.dom.elem(this.divId()).empty();
     this.svg_ = null;
-    this.svgBase_ = null;
+    this.flattened_ = glift.flattener.emptyFlattened(this.numIntersections());
     this.intersections_ = null;
     return this;
   }

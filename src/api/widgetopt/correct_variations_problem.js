@@ -23,17 +23,18 @@ glift.api.widgetopt[glift.enums.widgetTypes.CORRECT_VARIATIONS_PROBLEM] = {
 
   stoneClick: function(event, widget, pt) {
     var currentPlayer = widget.controller.getCurrentPlayer();
-    var data = widget.controller.addStone(pt, currentPlayer);
+    var flattened = widget.controller.addStone(pt, currentPlayer);
     var problemResults = glift.enums.problemResults;
-    if (data.result === problemResults.FAILURE) {
+    if (flattened.problemResult() === problemResults.FAILURE) {
       // Illegal move -- nothing to do.  Don't make the player fail based on
       // an illegal move.
       return;
     }
     var hooks = widget.hooks();
-    widget.applyBoardData(data);
+    widget.applyBoardData(flattened);
+
     if (widget.correctness === undefined) {
-      if (data.result === problemResults.CORRECT) {
+      if (flattened.problemResult()=== problemResults.CORRECT) {
         widget.iconBar.destroyTempIcons();
         if (widget.correctNextSet[pt.toString()] === undefined) {
           widget.correctNextSet[pt.toString()] = true;
@@ -52,11 +53,11 @@ glift.api.widgetopt[glift.enums.widgetTypes.CORRECT_VARIATIONS_PROBLEM] = {
                 { fill: '#000', stroke: '#000'});
             setTimeout(function() {
               widget.controller.initialize();
-              widget.applyBoardData(controller.flattenedState());
+              widget.applyBoardData(widget.controller.flattenedState());
             }, widget.sgfOptions.correctVariationsResetTime);
           }
         }
-      } else if (data.result == problemResults.INCORRECT) {
+      } else if (flattened.problemResult() == problemResults.INCORRECT) {
         widget.iconBar.destroyTempIcons();
         widget.iconBar.setCenteredTempIcon('multiopen-boxonly', 'cross', 'red');
         widget.iconBar.clearTempText('multiopen-boxonly');

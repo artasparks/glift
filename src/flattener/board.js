@@ -242,7 +242,7 @@ glift.flattener.Board.prototype = {
    * It is required that the boards be the same dimensions, or else an error is
    * thrown.
    *
-   * @param {!glift.flattener.Board<T>} newBorad
+   * @param {!glift.flattener.Board<T>} newBoard
    * @return {!Array<!glift.flattener.BoardDiffPt<T>>}
    */
   diff: function(newBoard) {

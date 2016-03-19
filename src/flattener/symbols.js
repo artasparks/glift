@@ -52,7 +52,7 @@ glift.flattener.symbols = {
 
 /**
  * Mapping between flattener stone symbol and a glift color-state enum.
- * @type {!Object<glift.flattener.symbols, glift.enums.states}
+ * @type {!Object<glift.flattener.symbols, glift.enums.states>}
  */
 glift.flattener.symbolStoneToState = {
   0: glift.enums.states.EMPTY,
@@ -62,7 +62,7 @@ glift.flattener.symbolStoneToState = {
 
 /**
  * Mapping between flattener mark symbol and a glift mark enum.
- * @type {!Object<glift.flattener.symbols, glift.enums.marks}
+ * @type {!Object<glift.flattener.symbols, glift.enums.marks>}
  */
 glift.flattener.symbolMarkToMark = {
   30: glift.enums.marks.TRIANGLE,

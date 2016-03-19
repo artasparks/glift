@@ -171,7 +171,7 @@ glift.controllers.BaseController.prototype = {
    *
    * @param {!glift.Point} point
    * @param {!glift.enums.states} color
-   * @return {?glift.flatttener.flattened} The flattened representation.
+   * @return {?glift.flattener.Flattened} The flattened representation.
    */
   addStone: function(point, color) { throw "Not Implemented"; },
 
@@ -377,7 +377,7 @@ glift.controllers.BaseController.prototype = {
    *
    * @param {number=} opt_varNum
    *
-   * @return {?glift.flattener.flattened} The flattened representation or null
+   * @return {?glift.flattener.Flattened} The flattened representation or null
    *    if there is no next move.
    */
   nextMove: function(opt_varNum) {
@@ -402,7 +402,7 @@ glift.controllers.BaseController.prototype = {
 
   /**
    * Go back a move.
-   * @return {?glift.flattener.flattened} The flattened representation or null
+   * @return {?glift.flattener.Flattened} The flattened representation or null
    *    if there is no previous move.
    */
   prevMove: function() {
@@ -420,7 +420,7 @@ glift.controllers.BaseController.prototype = {
 
   /**
    * Go back to the beginning.
-   * @return {!glift.flattener.flattened} The flattened representation.
+   * @return {!glift.flattener.Flattened} The flattened representation.
    */
   toBeginning: function() {
     this.movetree = this.movetree.getTreeFromRoot();
@@ -431,7 +431,7 @@ glift.controllers.BaseController.prototype = {
 
   /**
    * Go to the end.
-   * @return {!glift.flattener.flattened} The flattened representation
+   * @return {!glift.flattener.Flattened} The flattened representation
    */
   toEnd: function() {
     while (this.nextMove()) {

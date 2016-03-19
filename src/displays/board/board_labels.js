@@ -1,6 +1,19 @@
 goog.require('glift.displays.board');
 
+/**
+ * Create the background lines. These are create at each individual intersection
+ * rather than as a whole so that we can clear theme out when we to draw marks
+ * on the raw board (rather than on stones).
+ *
+ * @param {glift.displays.svg.SvgObj} svg Base svg obj
+ * @param {!glift.displays.ids.Generator} idGen The ID generator for SVG.
+ * @param {?glift.displays.BoardPoints} boardPoints Board points object.
+ * @param {!glift.themes.base} theme The theme object
+ */
 glift.displays.board.boardLabels = function(svg, idGen, boardPoints, theme) {
+  if (boardPoints === null) {
+    throw new Error('boardPoints null: Gui Environment obj not initialized');
+  }
   var svglib = glift.displays.svg;
   var container = svglib.group().setId(idGen.boardCoordLabelGroup());
   svg.append(container);

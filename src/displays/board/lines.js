@@ -7,10 +7,14 @@ goog.require('glift.displays.board');
  *
  * @param {glift.displays.svg.SvgObj} svg Base svg obj
  * @param {!glift.displays.ids.Generator} idGen The ID generator for SVG.
- * @param {!glift.displays.BoardPoints} boardPoints Board points object.
+ * @param {?glift.displays.BoardPoints} boardPoints Board points object.
  * @param {!glift.themes.base} theme The theme object
  */
 glift.displays.board.lines = function(svg, idGen, boardPoints, theme) {
+  if (boardPoints === null) {
+    throw new Error('boardPoints null: Gui Environment obj not initialized');
+  }
+
   // Mapping from int point (e.g., 3,3) pt string to id;
   var svglib = glift.displays.svg;
 

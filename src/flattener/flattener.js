@@ -522,12 +522,12 @@ glift.flattener.updateLabelsWithVariations_ = function(mt, marks, labels) {
  * or other such display-handling.
  *
  * @param {!glift.rules.MoveTree} mt
- * @param {!glift.rules.ProblemConditions} conditions
- * @return {!Object<glift.PtStr, glift.Move>} object of correct next moves.
+ * @param {!glift.rules.ProblemConditions|undefined} conditions
+ * @return {!Object<glift.PtStr, glift.rules.Move>} object of correct next moves.
  * @private
  */
 glift.flattener.getCorrectNextMoves_ = function(mt, conditions) {
-  var correctNextMap = {}; 
+  var correctNextMap = {};
   if (conditions) {
     var correctNextArr = glift.rules.problems.correctNextMoves(mt, conditions);
     for (var i = 0; i < correctNextArr.length; i++) {
@@ -538,25 +538,4 @@ glift.flattener.getCorrectNextMoves_ = function(mt, conditions) {
     }
   }
   return correctNextMap;
-};
-
-/** @private {!Object<number, glift.flattener.flattened>} */
-glift.flattener.emptyFlattenedCache_ = {};
-
-/**
- * Public method for returning an empty flattened object of a specific size.
- * Sometimes it's useful to have an empty flattened board, especially if one is
- * doing a 'diff' operation.
- *
- * @param {number}
- * @return {!glift.flattener.flattened}
- */
-glift.flattener.emptyFlattened = function(size) {
-  if (glift.flattener.emptyFlattenedCache_[size]) {
-    return glift.flattener.emptyFlattenedCache_[size];
-  }
-  var mt = glift.rules.movetree.getInstance(size);
-  var flattened = glift.flattener.flatten(mt);
-  glift.flattener.emptyFlattenedCache_[size] = flattened;
-  return flattened;
 };

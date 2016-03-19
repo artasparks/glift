@@ -370,7 +370,7 @@ glift.widgets.BaseWidget.prototype = {
    * Apply the BoardData to both the comments box and the board. Uses
    * glift.bridge to communicate with the display.
    *
-   * @param {?glift.flattener.flattened) flattened The flattened representation
+   * @param {?glift.flattener.Flattened} flattened The flattened representation
    *    of the board.
    */
   applyBoardData: function(flattened) {
@@ -430,7 +430,7 @@ glift.widgets.BaseWidget.prototype = {
         this.sgfOptions.widgetType === types.GAME_VIEWER) {
       var treepath = stateObj.currentTreepath;
       this.controller.initialize(treepath);
-      this.applyBoardData(this.controller.getEntireBoardState());
+      this.applyBoardData(this.controller.flattenedState());
     }
     // TODO(kashomon): Support problems here.
   },

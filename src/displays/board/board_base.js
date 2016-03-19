@@ -7,10 +7,13 @@ goog.require('glift.displays.svg');
  *
  * @param {glift.displays.svg.SvgObj} svg Base svg obj
  * @param {!glift.displays.ids.Generator} idGen The ID generator for SVG.
- * @param {!glift.orientation.BoundingBox} goBox The bounding box of the go board.
+ * @param {?glift.orientation.BoundingBox} goBox The bounding box of the go board.
  * @param {!glift.themes.base} theme The theme object
  */
 glift.displays.board.boardBase = function(svg, idGen, goBox, theme) {
+  if (goBox === null) {
+    throw new Error('goBox null: Gui Environment obj not initialized');
+  }
   if (theme.board.imagefill) {
     svg.append(glift.displays.svg.image()
       .setAttr('x', goBox.topLeft().x())

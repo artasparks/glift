@@ -25,6 +25,28 @@ goog.provide('glift.flattener.FlattenedParams');
  */
 glift.flattener.FlattenedParams;
 
+
+/** @private {!Object<number, !glift.flattener.Flattened>} */
+glift.flattener.emptyFlattenedCache_ = {};
+
+/**
+ * Public method for returning an empty flattened object of a specific size.
+ * Sometimes it's useful to have an empty flattened board, especially if one is
+ * doing a 'diff' operation.
+ *
+ * @param {number} size
+ * @return {!glift.flattener.Flattened}
+ */
+glift.flattener.emptyFlattened = function(size) {
+  if (glift.flattener.emptyFlattenedCache_[size]) {
+    return glift.flattener.emptyFlattenedCache_[size];
+  }
+  var mt = glift.rules.movetree.getInstance(size);
+  var flattened = glift.flattener.flatten(mt);
+  glift.flattener.emptyFlattenedCache_[size] = flattened;
+  return flattened;
+};
+
 /**
  * Data used to populate either a display or diagram.
  *
@@ -124,7 +146,7 @@ glift.flattener.Flattened = function(params) {
   /**
    * Problem result. Whether or not a particular problem position should be
    * considered correct or incorret.
-   * @private {glift.enums.problemResults}
+   * @private {?glift.enums.problemResults}
    */
   this.problemResult_ = params.problemResult;
 };

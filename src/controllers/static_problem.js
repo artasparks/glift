@@ -1,3 +1,7 @@
+goog.provide('glift.controllers.StaticProblem');
+
+goog.require('glift.controllers.BaseController');
+
 /**
  * The static problem controller encapsulates the idea of trying to solve a
  * problem.  Thus, when a player adds a stone, the controller checks to make
@@ -63,7 +67,7 @@ glift.controllers.StaticProblem.prototype = {
    * shorter and easier to understand.
    * @param {!glift.Point} point
    * @param {!glift.enums.states} color
-   * @return {!glift.flattener.flattened} flattened obj
+   * @return {!glift.flattener.Flattened} flattened obj
    */
   addStone: function(point, color) {
     var problemResults = glift.enums.problemResults;
