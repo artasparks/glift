@@ -61,6 +61,9 @@ glift.controllers.StaticProblem.prototype = {
    *
    * TODO(kashomon): Refactor this into something less ridiculous -- i.e.,
    * shorter and easier to understand.
+   * @param {!glift.Point} point
+   * @param {!glift.enums.states} color
+   * @return {!glift.flattener.flattened} flattened obj
    */
   addStone: function(point, color) {
     var problemResults = glift.enums.problemResults;
@@ -71,7 +74,9 @@ glift.controllers.StaticProblem.prototype = {
 
     if (!this.goban.placeable(point) ||
         !this.goban.testAddStone(point, color)) {
-      return { result: FAILURE };
+      var flattened = this.flattenedState();
+      flattened.setProblemResult(FAILURE);
+      return flattened
     }
 
     var nextVarNum = this.movetree.findNextMove(point, color);

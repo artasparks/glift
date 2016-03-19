@@ -55,22 +55,22 @@
   test('Test Add Stone: Failure', function() {
     var c = cont.staticProblem(options),
         pt = conv('pb');
-    var result = c.addStone(pt, states.BLACK);
-    deepEqual(result.result, problemResults.FAILURE, 'Must be a failure');
+    var flattened = c.addStone(pt, states.BLACK);
+    deepEqual(flattened.problemResult(), problemResults.FAILURE, 'Must be a failure');
   });
 
   test('Test Add Stone: Incorrect - no variation', function() {
     var c = cont.staticProblem(options),
         pt = conv('aa');
-    var result = c.addStone(pt, states.BLACK);
-    deepEqual(result.result, problemResults.INCORRECT, 'Must be incorrect');
+    var flattened = c.addStone(pt, states.BLACK);
+    deepEqual(flattened.problemResult(), problemResults.INCORRECT, 'Must be incorrect');
   });
 
   test('Test Add Stone: Incorrect - variation', function() {
     var c = cont.staticProblem(options),
         pt = conv('ob');
-    var result = c.addStone(pt, states.BLACK);
-    deepEqual(result.result, problemResults.INCORRECT, 'Must be incorrect');
+    var flattened = c.addStone(pt, states.BLACK);
+    deepEqual(flattened.problemResult(), problemResults.INCORRECT, 'Must be incorrect');
   });
 
   //13,3; 12,2 Black
@@ -81,10 +81,10 @@
     });
     var pt = conv('ma');
     var possNext = [conv('oa'), conv('mc'), conv('nd')];
-    var result = c.addStone(pt, states.BLACK);
-    deepEqual(result.result, problemResults.INDETERMINATE,
+    var flattened = c.addStone(pt, states.BLACK);
+    deepEqual(flattened.problemResult(), problemResults.INDETERMINATE,
         'The result must be indeterminate');
-    var pts = ptlistToMap(result.stones.WHITE);
+    var pts = flattened.stoneMap();
     ok(pts[possNext[0].toString()] !== undefined ||
        pts[possNext[1].toString()] !== undefined ||
        pts[possNext[2].toString()] !== undefined,
@@ -95,11 +95,12 @@
     var c = cont.staticProblem(options),
         pt = conv('nc'),
         nextPt  = conv('md');
-    var result = c.addStone(pt, states.BLACK);
-    deepEqual(result.result, problemResults.INDETERMINATE,
+    var flattened = c.addStone(pt, states.BLACK);
+    deepEqual(flattened.problemResult(), problemResults.INDETERMINATE,
         'Must be indeterminate: all children correct but position is not');
-    var result = c.addStone(nextPt, states.BLACK);
-    deepEqual(result.result, problemResults.CORRECT,
+
+    flattened = c.addStone(nextPt, states.BLACK);
+    deepEqual(flattened.problemResult(), problemResults.CORRECT,
         'Must be correct: at correct position');
   });
 
@@ -109,12 +110,12 @@
         pt1 = conv('pd'),
         pt2 = conv('qe');
 
-    var result = c.addStone(pt2, states.BLACK);
-    deepEqual(result.result, problemResults.CORRECT, 'Must be correct');
+    var flattened = c.addStone(pt2, states.BLACK);
+    deepEqual(flattened.problemResult(), problemResults.CORRECT, 'Must be correct');
 
     c.initialize(); // restart
-    var result = c.addStone(pt1, states.BLACK);
-    deepEqual(result.result, problemResults.CORRECT, 'Must be correct');
+    flattened = c.addStone(pt1, states.BLACK);
+    deepEqual(flattened.problemResult(), problemResults.CORRECT, 'Must be correct');
   });
 
   test('Test Play Through', function() {
@@ -123,22 +124,22 @@
         problemConditions: {C: ['Correct']}};
     var c = cont.staticProblem(opts),
         pt = conv('sq');
-    var result = c.addStone(pt, states.BLACK);
-    deepEqual(result.result, problemResults.INCORRECT);
+    var flattened = c.addStone(pt, states.BLACK);
+    deepEqual(flattened.problemResult(), problemResults.INCORRECT);
     deepEqual(c.movetree.node().getNodeNum(), 2,
         'Must have moved down two moves');
 
     c.initialize(); // restart
     var indPt = conv('sr');
-    var result = c.addStone(indPt, states.BLACK);
-    deepEqual(result.result, problemResults.INDETERMINATE);
+    flattened = c.addStone(indPt, states.BLACK);
+    deepEqual(flattened.problemResult(), problemResults.INDETERMINATE);
     deepEqual(c.movetree.node().getNodeNum(), 2,
         'Must have moved down two moves');
 
     c.initialize(); // restart
-    var indPt = conv('bb');
-    var result = c.addStone(indPt, states.BLACK);
-    deepEqual(result.result, problemResults.INCORRECT);
+    indPt = conv('bb');
+    flattened = c.addStone(indPt, states.BLACK);
+    deepEqual(flattened.problemResult(), problemResults.INCORRECT);
     deepEqual(c.movetree.node().getNodeNum(), 1,
         'Must have moved down one move: no variation');
   });

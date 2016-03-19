@@ -18,7 +18,9 @@ goog.provide('glift.flattener.FlattenedParams');
  *  stoneMap: !Object<glift.PtStr, !glift.rules.Move>,
  *  markMap: !Object<glift.PtStr, !glift.flattener.symbols>,
  *  labelMap: !Object<glift.PtStr, string>,
- *  ko: ?glift.Point
+ *  ko: ?glift.Point,
+ *  correctNextMoves: !Object<glift.PtStr, !glift.rules.Move>,
+ *  problemResult: ?glift.enums.problemResults
  * }}
  */
 glift.flattener.FlattenedParams;
@@ -38,15 +40,20 @@ glift.flattener.Flattened = function(params) {
 
   /**
    * @private {!Array<glift.flattener.Collision>}
+   * @const
    */
   this.collisions_ = params.collisions;
 
-  /** @private {string} */
+  /**
+   * @private {string}
+   * @const
+   */
   this.comment_ = params.comment;
 
   /**
    * Whether or not the position is on the 'top' (zeroth) variation.
    * @private {boolean}
+   * @const
    */
   this.isOnMainPath_ = params.isOnMainPath;
 
@@ -54,17 +61,19 @@ glift.flattener.Flattened = function(params) {
    * The starting and ending move numbers. These are typically used for
    * labeling diagrams.
    * @private {number}
+   * @const
    */
   this.startMoveNum_ = params.startingMoveNum;
-  /** @private {number} */
+  /** @const @private {number} */
   this.endMoveNum_ = params.endMoveNum;
-  /** @private {number} */
+  /** @const @private {number} */
   this.mainlineMoveNum_ = params.mainlineMoveNum;
 
   /**
    * The move -- {color: <color>, point: <pt>} at the first mainline move in the
    * parent tree. Can be null if no move exists at the node.
    * @private {?glift.rules.Move}
+   * @const
    */
   this.mainlineMove_ = params.mainlineMove;
   /**
@@ -72,39 +81,52 @@ glift.flattener.Flattened = function(params) {
    * are variations on the _next_ move, so it's usually useful to reference the
    * next move.
    * @private {?glift.rules.Move}
+   * @const
    */
   this.nextMainlineMove_ = params.nextMainlineMove;
 
   /**
    * All the stones for O(1) convenience =D.
    * @private {!Object<glift.PtStr, !glift.rules.Move>}
+   * @const
    */
   this.stoneMap_ = params.stoneMap;
 
   /**
    * All the marks!
    * @private {!Object<glift.PtStr, !glift.flattener.symbols>}
+   * @const
    */
   this.markMap_ = params.markMap;
 
   /**
    * All the labels!
    * @private {!Object<glift.PtStr, string>}
+   * @const
    */
   this.labelMap_ = params.labelMap;
 
   /**
    * The Ko point. Will be null if there is currently no Ko.
    * @private {?glift.Point}
+   * @const
    */
   this.ko_ = params.ko;
+
+  /**
+   * The variations that, according to the problem conditions supplied are
+   * correct. By default, variations are considered incorrect.
+   * @private {!Object<glift.PtStr, !glift.rules.Move>}
+   * @const
+   */
+  this.correctNextMoves_ = params.correctNextMoves;
 
   /**
    * Problem result. Whether or not a particular problem position should be
    * considered correct or incorret.
    * @private {glift.enums.problemResults}
    */
-  this.problemResult_ = null;
+  this.problemResult_ = params.problemResult;
 };
 
 glift.flattener.Flattened.prototype = {
@@ -227,7 +249,7 @@ glift.flattener.Flattened.prototype = {
    *
    * @param {glift.enums.problemResults} result
    */
-  // TODO(kashomon): Compute problem correctness in flattener land.
+  // TODO(kashomon): Remove once this is set from the flattener.
   setProblemResult: function(result) {
     this.problemResult_ = result;
   },
@@ -236,7 +258,7 @@ glift.flattener.Flattened.prototype = {
    * @return {?glift.enums.problemResults} The problem correctness or null if
    *    the correctness isn't set (true for most flattened representations).
    */
-  setProblemResult: function() { return this.problemResult_ },
+  problemResult: function() { return this.problemResult_ },
 
   /**
    * Helper for truncating labels if the labels are numbers > 100, which

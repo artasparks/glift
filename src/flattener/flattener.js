@@ -20,7 +20,7 @@ glift.flattener = {};
  *    automatically determined based on whether the position is on the
  *    mainpath or a variation.
  *
- *  // Optional cropping params.
+ *  Optional cropping params.
  *  - boardRegion: indicates what region to crop on.
  *  - autoBoxCropOnNextMoves. If set, will automatically crop based on the
  *    nextmoves path.
@@ -28,8 +28,12 @@ glift.flattener = {};
  *    region is not an member of this set, default to using 'ALL'.
  *  - autoBoxCropOnNextMoves. Whether or not to perform auto-box cropping.
  *
- *  // Options for marks
+ *  Options for marks
  *  - showNextVariationsType
+ *  - markLastMove
+ *
+ *  Options for problems
+ *  - problemConditions
  *
  * @typedef {{
  *  goban: (!glift.rules.Goban|undefined),
@@ -39,9 +43,11 @@ glift.flattener = {};
  *  regionRestrictions: (!Array<glift.enums.boardRegions>|undefined),
  *  showNextVariationsType: (glift.enums.showVariations|undefined),
  *  autoBoxCropOnNextMoves: (boolean|undefined),
- *  markLastMove: (boolean|undefined)
+ *  markLastMove: (boolean|undefined),
+ *  problemConditions: (!glift.rules.ProblemConditions|undefined)
  * }}
  */
+// TODO(kashomon): Add support for markLastMove and problemConditions
 glift.flattener.Options;
 
 
@@ -151,6 +157,9 @@ glift.flattener.flatten = function(movetreeInitial, opt_options) {
     endingMoveNum = startingMoveNum;
   }
 
+  var correctNextMoves = glift.flattener.getCorrectNextMoves_(
+      mt, options.problemConditions);
+
   // Get the marks at the current position
   var mksOut = glift.flattener.markMap_(mt);
   var labels = mksOut.labels; // map of ptstr to label str
@@ -178,6 +187,7 @@ glift.flattener.flatten = function(movetreeInitial, opt_options) {
   // - correctNextMoves
   var comment = mt.properties().getComment() || '';
 
+
   // We don't mark Ko for when the nextMovesTreepath is specified. If there's a
   // Ko, then stones will be captured and there's no point in putting a mark or
   // indicator on the location.
@@ -196,7 +206,11 @@ glift.flattener.flatten = function(movetreeInitial, opt_options) {
       stoneMap: stoneMap,
       markMap: marks,
       labelMap: labels,
-      ko: goban.getKo()
+      ko: goban.getKo(),
+      // ProblemSpecific:
+      correctNextMoves: correctNextMoves,
+      // TODO(kashomon): Add support directly in the flattener.
+      problemResult: null,
   });
 };
 
@@ -503,11 +517,37 @@ glift.flattener.updateLabelsWithVariations_ = function(mt, marks, labels) {
   }
 };
 
+/**
+ * Returns a map of ptstr to correct next moves. Usually used for creating marks
+ * or other such display-handling.
+ *
+ * @param {!glift.rules.MoveTree} mt
+ * @param {!glift.rules.ProblemConditions} conditions
+ * @return {!Object<glift.PtStr, glift.Move>} object of correct next moves.
+ * @private
+ */
+glift.flattener.getCorrectNextMoves_ = function(mt, conditions) {
+  var correctNextMap = {}; 
+  if (conditions) {
+    var correctNextArr = glift.rules.problems.correctNextMoves(mt, conditions);
+    for (var i = 0; i < correctNextArr.length; i++) {
+      var move = correctNextArr[i];
+      if (move.point) {
+        correctNextMap[move.point.toString()] = move;
+      }
+    }
+  }
+  return correctNextMap;
+};
+
 /** @private {!Object<number, glift.flattener.flattened>} */
 glift.flattener.emptyFlattenedCache_ = {};
 
 /**
- * Sometimes it's useful to have an empty flattened board
+ * Public method for returning an empty flattened object of a specific size.
+ * Sometimes it's useful to have an empty flattened board, especially if one is
+ * doing a 'diff' operation.
+ *
  * @param {number}
  * @return {!glift.flattener.flattened}
  */
