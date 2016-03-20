@@ -6,7 +6,6 @@
     glift.enums.widgetTypes.BOARD_EDITOR,
     glift.enums.widgetTypes.CORRECT_VARIATIONS_PROBLEM,
     glift.enums.widgetTypes.EXAMPLE,
-    glift.enums.widgetTypes.GAME_FIGURE,
     glift.enums.widgetTypes.GAME_VIEWER,
     glift.enums.widgetTypes.REDUCED_GAME_VIEWER,
     glift.enums.widgetTypes.STANDARD_PROBLEM,

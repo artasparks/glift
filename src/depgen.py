@@ -16,6 +16,7 @@ EXAMPLE_FILES_TO_AUTOGEN = {
   'htmltests/BboxFinder.html',
   'htmltests/BoardEditorTester.html',
   'htmltests/ExampleTester.html',
+  'htmltests/GameFigureTester.html',
   'htmltests/GameViewerTester.html',
   'htmltests/IconBarTester.html',
   'htmltests/KogosTester.html',

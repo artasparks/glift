@@ -152,7 +152,7 @@ glift.rules.treepath = {
     }
     var vartype = glift.util.typeOf(pathStr);
     if (vartype === 'array') {
-      // Assume the array is in the correct format
+      // Assume the array is in the correct format.
       return /** @type {glift.rules.Treepath} */ (pathStr);
     }
     if (vartype !== 'string') {

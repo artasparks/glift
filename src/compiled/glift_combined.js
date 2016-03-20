@@ -533,7 +533,6 @@ glift.enums.showVariations = {
 glift.enums.widgetTypes = {
   CORRECT_VARIATIONS_PROBLEM: 'CORRECT_VARIATIONS_PROBLEM',
   EXAMPLE: 'EXAMPLE',
-  GAME_FIGURE: 'GAME_FIGURE',
   GAME_VIEWER: 'GAME_VIEWER',
   REDUCED_GAME_VIEWER: 'REDUCED_GAME_VIEWER',
   STANDARD_PROBLEM: 'STANDARD_PROBLEM',
@@ -10730,7 +10729,7 @@ glift.rules.treepath = {
     }
     var vartype = glift.util.typeOf(pathStr);
     if (vartype === 'array') {
-      // Assume the array is in the correct format
+      // Assume the array is in the correct format.
       return /** @type {glift.rules.Treepath} */ (pathStr);
     }
     if (vartype !== 'string') {
@@ -11521,29 +11520,58 @@ glift.controllers.base = function() {
  * @constructor
  */
 glift.controllers.BaseController = function() {
-  /** @package {string} */
+  //////////////////////////////////////////////////////////////
+  // Variables set during initialization but const afterwards //
+  //////////////////////////////////////////////////////////////
+
+  /**
+   * The initial SGF String.
+   * @package {string}
+   */
   this.sgfString = '';
 
   /**
    * The raw initial position.
+   *
    * @package {string|!Array<number>}
    */
   this.rawInitialPosition = [];
 
   /**
-   * The raw next moves path. Used only for examples (see the Game Figure).
-   * Indicates how to create move numbers.
-   * @package {!string|!Array<number>}
-   */
-  this.rawNextMovesPath = [];
-  /**
    * Used only for problem-types.
+   *
    * @package {!glift.rules.ProblemConditions}
    */
   this.problemConditions = {};
 
-  /** @package {glift.parse.parseType} */
+  /**
+   * @package {glift.parse.parseType}
+   */
   this.parseType = glift.parse.parseType.SGF;
+
+  /**
+   * The raw next moves path. Used only for examples (see the Game Figure).
+   * Indicates how to create move numbers.
+   *
+   * @private {glift.rules.Treepath|undefined}
+   */
+  this.nextMovesPath_ = undefined;
+
+  /**
+   * Enum indicating the show-variations preference
+   * @private {glift.enums.showVariations|undefined}
+   */
+  this.showVariations_ = undefined;
+
+  /**
+   * Boolean indicating whether or not to mark the last move.
+   * @private {boolean}
+   */
+  this.markLastMove_ = false;
+
+  /////////////////////////////////////////
+  // Variables set during initialization //
+  /////////////////////////////////////////
 
   /**
    * The treepath representing the pth to the current position.
@@ -11571,18 +11599,6 @@ glift.controllers.BaseController = function() {
    * @package {!Array<!glift.rules.CaptureResult>}
    */
   this.captureHistory = [];
-
-  /**
-   * Enum indicating the show-variations preference
-   * @private {glift.enums.showVariations|undefined}
-   */
-  this.showVariations_ = undefined;
-
-  /**
-   * Boolean indicating whether or not to mark the last move.
-   * @private {boolean}
-   */
-  this.markLastMove_ = false;
 };
 
 glift.controllers.BaseController.prototype = {
@@ -11599,7 +11615,12 @@ glift.controllers.BaseController.prototype = {
       throw 'Options is undefined!  Can\'t create controller'
     }
     this.sgfString = sgfOptions.sgfString || '';
-    this.rawNextMovesPath = sgfOptions.nextMovesPath || [];
+
+    if (sgfOptions.nextMovesPath) {
+      this.nextMovesPath_ = glift.rules.treepath.parseFragment(
+          sgfOptions.nextMovesPath);
+    }
+
     this.rawInitialPosition = sgfOptions.initialPosition || [];
 
     this.parseType = sgfOptions.parseType || glift.parse.parseType.SGF;
@@ -11634,13 +11655,6 @@ glift.controllers.BaseController.prototype = {
     var rules = glift.rules;
     var initTreepath = opt_treepath || this.rawInitialPosition;
     this.treepath = rules.treepath.parsePath(initTreepath);
-
-    // TODO(kashomon): Appending the nextmoves path is hack until the UI
-    // supports passing using true flattened data representation.
-    if (this.nextMovesPath) {
-      this.treepath = this.treepath.concat(
-          rules.treepath.parseFragment(this.nextMovesPath));
-    }
 
     this.movetree = rules.movetree.getFromSgf(
         this.sgfString, this.treepath, this.parseType);
@@ -11679,6 +11693,7 @@ glift.controllers.BaseController.prototype = {
       goban: this.goban,
       showNextVariationsType: this.showVariations_,
       markLastMove: this.markLastMove_,
+      nextMovesTreepath: this.nextMovesPath_,
     });
     return newFlat;
   },
@@ -12270,78 +12285,6 @@ glift.controllers.BoardEditor.prototype = {
   clearStone: function() { throw new Error('Not implemented'); }
 };
 
-goog.provide('glift.controllers.GameFigure');
-goog.provide('glift.controllers.gameFigure');
-
-goog.require('glift.controllers.BaseController');
-
-/**
- * A GameFigure encapsulates the idea of a read-only SGF.
- *
- * @type {!glift.controllers.ControllerFunc}
- */
-glift.controllers.gameFigure = function(sgfOptions) {
-  var baseController = glift.util.beget(
-      glift.controllers.base());
-  var newController = glift.util.setMethods(baseController,
-      glift.controllers.GameFigure.prototype);
-  newController.initOptions(sgfOptions);
-  return newController;
-};
-
-/**
- * Stub class to be used for inheritance.
- *
- * @extends {glift.controllers.BaseController}
- * @constructor
- * @final
- */
-glift.controllers.GameFigure = function() {
-};
-
-glift.controllers.GameFigure.prototype = {
-  /**
-   * Additional setup for the gamefigure.
-   * @override
-   */
-  extraOptions: function() {
-    // TODO(kashomon): Add this back in once the Flattener is the source of
-    // truth for the UI.
-
-    // var rules = glift.rules;
-    // var initTreepath = treepath || this.initialPosition;
-    // this.treepath = rules.treepath.parsePath(initTreepath);
-
-    // var initialPosition = this.treepath.length; // used later
-    // var nextTreepath = this.drawTo - this.treepath.length;
-    // if (this.nextMovesPath.length > 0) {
-      // nextTreepath = this.nextMovesPath;
-    // }
-    // nextTreepath = rules.treepath.parsePath(nextTreepath);
-    // this.treepath = this.treepath.concat(nextTreepath);
-
-    // this.movetree = rules.movetree.getFromSgf(
-        // this.sgfString,
-        // this.treepath,
-        // this.parseType);
-    // var gobanData = rules.goban.getFromMoveTree(this.movetree, this.treepath);
-    // this.goban = gobanData.goban;
-
-    // this.captureHistory = gobanData.captures;
-
-    // // calculate marks, by going backwards through the movetree
-    // var curnode = this.movetree.node();
-    // var labels = [];
-    // for (var i = this.treepath.length; i > initialPosition; i--) {
-      // labels.push(curnode.getIntersection() + ":" + i);
-      // curnode = curnode.getParent();
-    // }
-
-    // // add marks
-    // var prop = glift.rules.prop;
-    // this.movetree.properties().add(prop.LB, labels);
-  }
-};
 
 /**
  * A GameViewer encapsulates the idea of traversing a read-only SGF.
@@ -17595,34 +17538,6 @@ glift.api.widgetopt[glift.enums.widgetTypes.EXAMPLE] = {
 
   statusBarIcons: [
     // 'game-info',
-    'fullscreen'
-  ],
-
-  stoneClick: function(event, widget, pt) {},
-  // We disable mouseover and mouseout to make it clear you can't interact with
-  // the example widget.
-  stoneMouseover: function() {},
-  stoneMouseout: function() {},
-};
-
-/**
- * Game Figure type.
- */
-// TODO(kashomon):  Temporary testing type. Complete or delete. Should probably
-// be combined with example or deleted.
-glift.api.widgetopt[glift.enums.widgetTypes.GAME_FIGURE] = {
-  markLastMove: undefined, // rely on defaults
-  keyMappings: undefined, // rely on defaults
-
-  problemConditions: {}, // Disable problem evaluations
-
-  controllerFunc: glift.controllers.gameFigure,
-
-  icons: [],
-
-  showVariations: glift.enums.showVariations.NEVER,
-
-  statusBarIcons: [
     'fullscreen'
   ],
 

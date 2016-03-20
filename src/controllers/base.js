@@ -26,29 +26,58 @@ glift.controllers.base = function() {
  * @constructor
  */
 glift.controllers.BaseController = function() {
-  /** @package {string} */
+  //////////////////////////////////////////////////////////////
+  // Variables set during initialization but const afterwards //
+  //////////////////////////////////////////////////////////////
+
+  /**
+   * The initial SGF String.
+   * @package {string}
+   */
   this.sgfString = '';
 
   /**
    * The raw initial position.
+   *
    * @package {string|!Array<number>}
    */
   this.rawInitialPosition = [];
 
   /**
-   * The raw next moves path. Used only for examples (see the Game Figure).
-   * Indicates how to create move numbers.
-   * @package {!string|!Array<number>}
-   */
-  this.rawNextMovesPath = [];
-  /**
    * Used only for problem-types.
+   *
    * @package {!glift.rules.ProblemConditions}
    */
   this.problemConditions = {};
 
-  /** @package {glift.parse.parseType} */
+  /**
+   * @package {glift.parse.parseType}
+   */
   this.parseType = glift.parse.parseType.SGF;
+
+  /**
+   * The raw next moves path. Used only for examples (see the Game Figure).
+   * Indicates how to create move numbers.
+   *
+   * @private {glift.rules.Treepath|undefined}
+   */
+  this.nextMovesPath_ = undefined;
+
+  /**
+   * Enum indicating the show-variations preference
+   * @private {glift.enums.showVariations|undefined}
+   */
+  this.showVariations_ = undefined;
+
+  /**
+   * Boolean indicating whether or not to mark the last move.
+   * @private {boolean}
+   */
+  this.markLastMove_ = false;
+
+  /////////////////////////////////////////
+  // Variables set during initialization //
+  /////////////////////////////////////////
 
   /**
    * The treepath representing the pth to the current position.
@@ -76,18 +105,6 @@ glift.controllers.BaseController = function() {
    * @package {!Array<!glift.rules.CaptureResult>}
    */
   this.captureHistory = [];
-
-  /**
-   * Enum indicating the show-variations preference
-   * @private {glift.enums.showVariations|undefined}
-   */
-  this.showVariations_ = undefined;
-
-  /**
-   * Boolean indicating whether or not to mark the last move.
-   * @private {boolean}
-   */
-  this.markLastMove_ = false;
 };
 
 glift.controllers.BaseController.prototype = {
@@ -104,7 +121,12 @@ glift.controllers.BaseController.prototype = {
       throw 'Options is undefined!  Can\'t create controller'
     }
     this.sgfString = sgfOptions.sgfString || '';
-    this.rawNextMovesPath = sgfOptions.nextMovesPath || [];
+
+    if (sgfOptions.nextMovesPath) {
+      this.nextMovesPath_ = glift.rules.treepath.parseFragment(
+          sgfOptions.nextMovesPath);
+    }
+
     this.rawInitialPosition = sgfOptions.initialPosition || [];
 
     this.parseType = sgfOptions.parseType || glift.parse.parseType.SGF;
@@ -139,13 +161,6 @@ glift.controllers.BaseController.prototype = {
     var rules = glift.rules;
     var initTreepath = opt_treepath || this.rawInitialPosition;
     this.treepath = rules.treepath.parsePath(initTreepath);
-
-    // TODO(kashomon): Appending the nextmoves path is hack until the UI
-    // supports passing using true flattened data representation.
-    if (this.nextMovesPath) {
-      this.treepath = this.treepath.concat(
-          rules.treepath.parseFragment(this.nextMovesPath));
-    }
 
     this.movetree = rules.movetree.getFromSgf(
         this.sgfString, this.treepath, this.parseType);
@@ -184,6 +199,7 @@ glift.controllers.BaseController.prototype = {
       goban: this.goban,
       showNextVariationsType: this.showVariations_,
       markLastMove: this.markLastMove_,
+      nextMovesTreepath: this.nextMovesPath_,
     });
     return newFlat;
   },
