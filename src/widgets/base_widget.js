@@ -377,7 +377,7 @@ glift.widgets.BaseWidget.prototype = {
     if (flattened) {
       this.setCommentBox(flattened.comment());
       this.statusBar &&
-          this.statusBar.setMoveNumber(flattened.startingMoveNum())
+          this.statusBar.setMoveNumber(flattened.baseMoveNum())
       this.display.updateBoard(flattened);
     }
   },

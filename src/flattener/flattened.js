@@ -10,6 +10,7 @@ goog.provide('glift.flattener.FlattenedParams');
  *  collisions: !Array<!glift.flattener.Collision>,
  *  comment: string,
  *  isOnMainPath: boolean,
+ *  baseMoveNum: number,
  *  startingMoveNum: number,
  *  endMoveNum: number,
  *  mainlineMoveNum: number,
@@ -80,15 +81,31 @@ glift.flattener.Flattened = function(params) {
   this.isOnMainPath_ = params.isOnMainPath;
 
   /**
-   * The starting and ending move numbers. These are typically used for
-   * labeling diagrams.
+   * The base move number before applying the next moves path. Equivalent to the
+   * nodeNum of the movetree before applying the next move path.
+   *
+   * @private {number}
+   * @const
+   */
+  this.baseMoveNum_ = params.baseMoveNum;
+
+  /**
+   * The starting and ending move numbers. These should be used for labeling
+   * diagrams, and is only relevant in the context of a next-moves-path diagram.
+   *
    * @private {number}
    * @const
    */
   this.startMoveNum_ = params.startingMoveNum;
+
   /** @const @private {number} */
   this.endMoveNum_ = params.endMoveNum;
-  /** @const @private {number} */
+
+  /**
+   * The move number of the first mainline move in the parent-chain. Can be
+   * useful for print-diagram creation, when referencing the mainlinemove.
+   * @const @private {number}
+   */
   this.mainlineMoveNum_ = params.mainlineMoveNum;
 
   /**
@@ -98,6 +115,7 @@ glift.flattener.Flattened = function(params) {
    * @const
    */
   this.mainlineMove_ = params.mainlineMove;
+
   /**
    * The next mainline move after the mainline move above.. Usually variations
    * are variations on the _next_ move, so it's usually useful to reference the
@@ -152,7 +170,10 @@ glift.flattener.Flattened = function(params) {
 };
 
 glift.flattener.Flattened.prototype = {
-  /** @return {!glift.flattener.Board} */
+  /**
+   * Return the constructed board.
+   * @return {!glift.flattener.Board}
+   */
   board: function() { return this.board_; },
 
   /**
@@ -196,7 +217,23 @@ glift.flattener.Flattened.prototype = {
   isOnMainPath: function() { return this.isOnMainPath_; },
 
   /**
-   * Returns the starting move number.
+   * Returns the base move number before applying the next moves path. In an
+   * interactive viewer, this would be considered the current move number.
+   *
+   * @return {number}
+   */
+  baseMoveNum: function() { return this.baseMoveNum_; },
+
+  /**
+   * Returns the starting move number. Should only be used in the context of a
+   * next-moves-path diagram.
+   *
+   * Note that the starting move number (and ending move numbers) are labeled
+   * based on whether or not the variation is on the 'main path'. If on the main
+   * path, the starting/ending move numbers are equivalent to the move-node
+   * number. If on a variation, counting starts over based from 1, where 1 is
+   * the first move off the main line.
+   *
    * @return {number}
    */
   startingMoveNum: function() { return this.startMoveNum_; },
@@ -212,6 +249,7 @@ glift.flattener.Flattened.prototype = {
   /**
    * Returns the first mainline move number in the parent-chain. This will be
    * equal to the startingMoveNum if isOnMainPath = true.
+   *
    * @return {number}
    */
   mainlineMoveNum: function() { return this.mainlineMoveNum_; },
@@ -219,6 +257,7 @@ glift.flattener.Flattened.prototype = {
   /**
    * Returns the move number of the nextMainlineMove (regardless of whether or
    * not it exists.
+   *
    * @return {number}
    */
   nextMainlineMoveNum: function() { return this.mainlineMoveNum() + 1; },
@@ -226,6 +265,7 @@ glift.flattener.Flattened.prototype = {
   /**
    * Returns the first mainline move in the parent-chain. Can be null if no move
    * exists and has the form {color: <color>, pt: <pt>} if defined.
+   *
    * @return {?glift.rules.Move}
    */
   mainlineMove: function() { return this.mainlineMove_; },
@@ -234,18 +274,21 @@ glift.flattener.Flattened.prototype = {
    * Returns the next mainline move after the mainline move in the parent-chain.
    * Can be null if no move exists and has the form {color: <color>, pt: <pt>}
    * if defined.
+   *
    * @return {?glift.rules.Move}
    */
   nextMainlineMove: function() { return this.nextMainlineMove_; },
 
   /**
    * Returns the stone map. An object with the following structure:
+   *
    * @return {!Object<glift.PtStr, !glift.rules.Move>}
    */
   stoneMap: function() { return this.stoneMap_; },
 
   /**
    * Returns the labels map. An object with the following structure:
+   *
    * @return {!Object<glift.PtStr, string>}
    */
   labelMap: function() {
@@ -277,8 +320,10 @@ glift.flattener.Flattened.prototype = {
   },
 
   /**
-   * @return {?glift.enums.problemResults} The problem correctness or null if
-   *    the correctness isn't set (true for most flattened representations).
+   * The problem-status. One of correct, incorrect, or indeterminate, if
+   * specified; null, otherwise.
+   *
+   * @return {?glift.enums.problemResults} The problem correctness.
    */
   problemResult: function() { return this.problemResult_ },
 

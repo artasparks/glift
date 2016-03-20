@@ -116,6 +116,9 @@ glift.flattener.flatten = function(movetreeInitial, opt_options) {
       boardRegion, mt.getIntersections());
 
 
+  // The move number before applying the next move path.
+  var baseMoveNum = mt.node().getNodeNum();
+
   // The move number of the first mainline move in the parent-chain.
   var mainlineMoveNum = mt.getMainlineNode().getNodeNum();
 
@@ -198,6 +201,7 @@ glift.flattener.flatten = function(movetreeInitial, opt_options) {
       collisions: collisions,
       comment: comment,
       isOnMainPath: mt.onMainline(),
+      baseMoveNum: baseMoveNum,
       startingMoveNum: startingMoveNum,
       endMoveNum: endingMoveNum,
       mainlineMoveNum: mainlineMoveNum,

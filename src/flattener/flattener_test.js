@@ -151,6 +151,7 @@
 
     // Note: the next move should be the current position + 1 since it's design
     // for auto-labeling of next-move-paths.
+    deepEqual(f.baseMoveNum(), 2, 'At 2 move before next moves');
     deepEqual(f.startingMoveNum(), 3, 'no next path, start');
     deepEqual(f.endingMoveNum(), 3, 'no next path, end');
     deepEqual(f.mainlineMoveNum(), 2, 'mainline move num');
@@ -160,6 +161,7 @@
     f = flattener.flatten(mt, {
       nextMovesTreepath: [0,0,0,0]
     });
+    deepEqual(f.baseMoveNum(), 1, 'At move 1 before next moves');
     deepEqual(f.startingMoveNum(), 2, 'next path on main line');
     deepEqual(f.endingMoveNum(), 5, 'next path on main line');
     deepEqual(f.mainlineMoveNum(), 1, 'mainline move num');
@@ -170,7 +172,18 @@
     f = flattener.flatten(mt, {
       nextMovesTreepath: [1,0,0,0]
     });
-    deepEqual(f.startingMoveNum(), 1);
+    deepEqual(f.baseMoveNum(), 2, 'At move 2 before next moves');
+    deepEqual(f.startingMoveNum(), 1, '1st move into the variation');
+    deepEqual(f.endingMoveNum(), 4);
+    deepEqual(f.mainlineMoveNum(), 2, 'mainline move num');
+    deepEqual(f.isOnMainPath(), false);
+
+    mt = glift.rules.movetree.getFromSgf(variationSgf, '2.1');
+    f = flattener.flatten(mt, {
+      nextMovesTreepath: [0,0,0]
+    });
+    deepEqual(f.baseMoveNum(), 3, 'At move 3 before next moves');
+    deepEqual(f.startingMoveNum(), 2, '2nd move into the variation');
     deepEqual(f.endingMoveNum(), 4);
     deepEqual(f.mainlineMoveNum(), 2, 'mainline move num');
     deepEqual(f.isOnMainPath(), false);
