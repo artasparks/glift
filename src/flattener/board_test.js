@@ -3,9 +3,12 @@
   var pt = glift.util.point;
   var ints = 19
 
-  var markMap = {};
-  markMap[pt(2,2).toString()] = glift.flattener.symbols.TRIANGLE;
-  markMap[pt(14,1).toString()] = glift.flattener.symbols.SQUARE;
+  var markMap = {
+    marks: {},
+    labels: {}
+  };
+  markMap.marks[pt(2,2).toString()] = glift.flattener.symbols.TRIANGLE;
+  markMap.marks[pt(14,1).toString()] = glift.flattener.symbols.SQUARE;
 
   var cropbox = glift.orientation.cropbox.get(
       glift.enums.boardRegions.TOP_RIGHT,
@@ -25,14 +28,12 @@
     color: glift.enums.states.BLACK
   };
 
-  var labelMap = {};
   var defaultCreate = function(opts) {
     opts = opts || {};
     return glift.flattener.board.create(
       opts.cropbox || cropbox,
       opts.stoneMap || stoneMap,
       opts.markMap || markMap,
-      opts.labelMap || labelMap,
       opts.ints || 19
     );
   };
@@ -141,7 +142,9 @@
 
   test('diff: Marks', function() {
     var board = defaultCreate({
-      markMap: {},
+      markMap: {
+        marks: {}, labels: {},
+      },
       stoneMap: {
         '15,1':  {
           point: pt(15,1),
@@ -151,7 +154,8 @@
     });
     var diffBoard = defaultCreate({
       markMap: {
-        '14,1': glift.flattener.symbols.TRIANGLE
+        marks: {},
+        labels: {'14,1': glift.flattener.symbols.TRIANGLE},
       },
       stoneMap: {
         '15,1':  {

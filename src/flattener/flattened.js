@@ -17,8 +17,7 @@ goog.provide('glift.flattener.FlattenedParams');
  *  mainlineMove: ?glift.rules.Move,
  *  nextMainlineMove: ?glift.rules.Move,
  *  stoneMap: !Object<glift.PtStr, !glift.rules.Move>,
- *  markMap: !Object<glift.PtStr, !glift.flattener.symbols>,
- *  labelMap: !Object<glift.PtStr, string>,
+ *  markMap: !glift.flattener.MarkMap,
  *  ko: ?glift.Point,
  *  correctNextMoves: !Object<glift.PtStr, !glift.rules.Move>,
  *  problemResult: ?glift.enums.problemResults
@@ -43,9 +42,9 @@ glift.flattener.emptyFlattened = function(size) {
     return glift.flattener.emptyFlattenedCache_[size];
   }
   var mt = glift.rules.movetree.getInstance(size);
-  var flattened = glift.flattener.flatten(mt);
-  glift.flattener.emptyFlattenedCache_[size] = flattened;
-  return flattened;
+  var flat = glift.flattener.flatten(mt);
+  glift.flattener.emptyFlattenedCache_[size] = flat;
+  return flat;
 };
 
 /**
@@ -134,17 +133,10 @@ glift.flattener.Flattened = function(params) {
 
   /**
    * All the marks!
-   * @private {!Object<glift.PtStr, !glift.flattener.symbols>}
+   * @private {!glift.flattener.MarkMap}
    * @const
    */
   this.markMap_ = params.markMap;
-
-  /**
-   * All the labels!
-   * @private {!Object<glift.PtStr, string>}
-   * @const
-   */
-  this.labelMap_ = params.labelMap;
 
   /**
    * The Ko point. Will be null if there is currently no Ko.
@@ -291,8 +283,8 @@ glift.flattener.Flattened.prototype = {
    *
    * @return {!Object<glift.PtStr, string>}
    */
-  labelMap: function() {
-    return this.labelMap_;
+  labels: function() {
+    return this.markMap_.labels;
   },
 
   /**
@@ -304,8 +296,8 @@ glift.flattener.Flattened.prototype = {
    *
    * @return {!Object<glift.PtStr, glift.flattener.symbols>}
    */
-  markMap: function() {
-    return this.markMap_;
+  marks: function() {
+    return this.markMap_.marks;
   },
 
   /**

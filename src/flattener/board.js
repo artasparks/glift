@@ -10,13 +10,12 @@ glift.flattener.board = {
    *    how to crop the board.
    * @param {!Object<!glift.rules.Move>} stoneMap A map from pt-string to
    *    move.
-   * @param {!Object<glift.flattener.symbols>} markMap A map from pt-string to
-   *    mark symbol.
-   * @param {!Object<string>} labelMap A map from pt-string to label string
+   * @param {!glift.flattener.MarkMap} markMap A map from pt-string to
+   *    mark symbol, and a map from pt-string to label string.
    *
    * @return {!glift.flattener.Board<Intersection>}
    */
-  create: function(cropping, stoneMap, markMap, labelMap) {
+  create: function(cropping, stoneMap, markMap) {
     var point = glift.util.point;
     var board = [];
     var bbox = cropping.bbox;
@@ -27,8 +26,8 @@ glift.flattener.board = {
         var ptStr = pt.toString();
         var stone = stoneMap[ptStr];
         var stoneColor = stone ? stone.color : glift.enums.states.EMPTY;
-        var mark = markMap[ptStr];
-        var label = labelMap[ptStr]
+        var mark = markMap.marks[ptStr];
+        var label = markMap.labels[ptStr]
         row.push(glift.flattener.intersection.create(
             pt, stoneColor, mark, label, cropping.size));
       }

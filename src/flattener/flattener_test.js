@@ -31,9 +31,9 @@
     deepEqual(f.board().width(), 19);
     deepEqual(f.board().height(), 19);
 
-    deepEqual(f.markMap()[toPt('cc').toString()], symb.SQUARE);
-    deepEqual(f.markMap()[toPt('ab').toString()], symb.TEXTLABEL);
-    deepEqual(f.labelMap()[toPt('ab').toString()], 'z');
+    deepEqual(f.marks()[toPt('cc').toString()], symb.SQUARE);
+    deepEqual(f.marks()[toPt('ab').toString()], symb.TEXTLABEL);
+    deepEqual(f.labels()[toPt('ab').toString()], 'z');
   });
 
   test('Goban auto-recalculation', function() {

@@ -164,28 +164,27 @@ glift.flattener.flatten = function(movetreeInitial, opt_options) {
       mt, options.problemConditions);
 
   // Get the marks at the current position
-  var mksOut = glift.flattener.markMap_(mt);
-  var labels = mksOut.labels; // map of ptstr to label str
-  var marks = mksOut.marks; // map of ptstr to symbol
+  var markMap = glift.flattener.markMap_(mt);
 
   // Optionally update the labels with labels used to indicate variations.
   var sv = glift.enums.showVariations
   if (showVars === sv.ALWAYS || (
       showVars === sv.MORE_THAN_ONE && mt.node().numChildren() > 1)) {
-    glift.flattener.updateLabelsWithVariations_(mt, marks, labels);
+    glift.flattener.updateLabelsWithVariations_(mt, markMap);
   }
 
   // Calculate the collision stones and update the marks / labels maps if
   // necessary.
   var collisions = glift.flattener.createStoneLabels_(
-      applied.stones, stoneMap, marks, labels, startingMoveNum);
+      applied.stones, stoneMap, markMap, startingMoveNum);
+
+  // Optionally mark the last move played. Existing labels get preference.
+  glift.flattener.markLastMove_(markMap, mt.getLastMove(), options.markLastMove);
 
   // Finally! Generate the intersections double-array.
-  var board = glift.flattener.board.create(cropping, stoneMap, marks, labels);
+  var board = glift.flattener.board.create(cropping, stoneMap, markMap);
 
   // TODO(kashomon): Support
-  // - lastMove
-  // - nextPossibleMoves
   // - selectedNextMove
   // - correctNextMoves
   var comment = mt.properties().getComment() || '';
@@ -208,8 +207,7 @@ glift.flattener.flatten = function(movetreeInitial, opt_options) {
       mainlineMove: mainlineMove,
       nextMainlineMove: nextMainlineMove,
       stoneMap: stoneMap,
-      markMap: marks,
-      labelMap: labels,
+      markMap: markMap,
       ko: goban.getKo(),
       // ProblemSpecific:
       correctNextMoves: correctNextMoves,
@@ -407,6 +405,51 @@ glift.flattener.findStartingMoveNum_ = function(mt, nextMovesTreepath) {
 };
 
 /**
+ * Returns a map of ptstr to correct next moves. Usually used for creating marks
+ * or other such display-handling.
+ *
+ * @param {!glift.rules.MoveTree} mt
+ * @param {!glift.rules.ProblemConditions|undefined} conditions
+ * @return {!Object<glift.PtStr, glift.rules.Move>} object of correct next moves.
+ * @private
+ */
+glift.flattener.getCorrectNextMoves_ = function(mt, conditions) {
+  var correctNextMap = {};
+  if (conditions) {
+    var correctNextArr = glift.rules.problems.correctNextMoves(mt, conditions);
+    for (var i = 0; i < correctNextArr.length; i++) {
+      var move = correctNextArr[i];
+      if (move.point) {
+        correctNextMap[move.point.toString()] = move;
+      }
+    }
+  }
+  return correctNextMap;
+};
+
+/**
+ * Update the labels with variations numbers of the next movez. This is an
+ * optional step and usually isn't done for diagrams-for-print.
+ *
+ * @param {!glift.rules.MoveTree} mt
+ * @param {!glift.flattener.MarkMap} markMap
+ * @private
+ */
+glift.flattener.updateLabelsWithVariations_ = function(mt, markMap) {
+  for (var i = 0; i < mt.node().numChildren(); i++) {
+    var move = mt.node().getChild(i).properties().getMove();
+    if (move && move.point) {
+      var pt = move.point;
+      var ptStr = pt.toString();
+      if (markMap.labels[ptStr] === undefined) {
+        markMap.labels[ptStr] = '' + (i + 1);
+      }
+      markMap.marks[ptStr] = glift.flattener.symbols.NEXTVARIATION;
+    }
+  }
+};
+
+/**
  * Create or apply labels to identify collisions that occurred during apply.
  *
  * labels: map from ptstring to label string.
@@ -414,17 +457,15 @@ glift.flattener.findStartingMoveNum_ = function(mt, nextMovesTreepath) {
  *
  * returns: an array of collision objects:
  *
- *
- *
  * Sadly, this has has the side effect of altering the marks / labels maps --
- * not in the underlying movetree, but in the ultimate representation.
+ * not in the underlying movetree, but in the ultimate representation in the
+ * board.
  *
  * @param {!Array<!glift.rules.Move>} appliedStones The result of applying the
  *    treepath.
  * @param {!Object<!glift.PtStr, !glift.rules.Move>} stoneMap Map of ptstring
  *    to the move.
- * @param {!Object<!glift.PtStr, !glift.flattener.symbols>} marks
- * @param {!Object<!glift.PtStr, string>} labels
+ * @param {!glift.flattener.MarkMap} markMap
  * @param {number} startingMoveNum
  *
  * @return {!Array<!glift.flattener.Collision>}
@@ -432,7 +473,7 @@ glift.flattener.findStartingMoveNum_ = function(mt, nextMovesTreepath) {
  */
 // TODO(kashomon): Guard this with a autoLabelMoves flag.
 glift.flattener.createStoneLabels_ = function(
-    appliedStones, stoneMap, marks, labels, startingMoveNum) {
+    appliedStones, stoneMap, markMap, startingMoveNum) {
   if (!appliedStones || appliedStones.length === 0) {
     return []; // Don't perform relabeling if no stones are found.
   }
@@ -444,10 +485,10 @@ glift.flattener.createStoneLabels_ = function(
 
   // Remove any number labels currently existing in the marks map.
   var digitRegex = /[0-9]/;
-  for (var ptstr in labels) {
-    if (digitRegex.test(labels[ptstr])) {
-      delete labels[ptstr];
-      delete marks[ptstr];
+  for (var ptstr in markMap.labels) {
+    if (digitRegex.test(markMap.labels[ptstr])) {
+      delete markMap.labels[ptstr];
+      delete markMap.marks[ptstr];
     }
   }
 
@@ -473,8 +514,8 @@ glift.flattener.createStoneLabels_ = function(
         label: undefined,
         collisionStoneColor: colStoneColor
       };
-      if (labels[ptStr]) { // First see if there are any available labels.
-        col.label = labels[ptStr];
+      if (markMap.labels[ptStr]) { // First see if there are any available labels.
+        col.label = markMap.labels[ptStr];
       } else if (glift.util.typeOf(stone.collision) === 'number') {
         var collisionNum = stone.collision + startingMoveNum;
         col.label = (collisionNum) + ''; // label is idx.
@@ -482,64 +523,37 @@ glift.flattener.createStoneLabels_ = function(
         var lbl = extraLabs.charAt(labsIdx);
         labsIdx++;
         col.label = lbl;
-        marks[ptStr] = symb.TEXTLABEL;
-        labels[ptStr] = lbl;
+        markMap.marks[ptStr] = symb.TEXTLABEL;
+        markMap.labels[ptStr] = lbl;
       }
       collisions.push(col);
 
     // This is not a collision stone. Perform standard move-labeling.
     } else {
       // Create new labels for our move number.
-      marks[ptStr] = symb.TEXTLABEL; // Override labels.
-      labels[ptStr] = (nextMoveNum) + ''
+      markMap.marks[ptStr] = symb.TEXTLABEL; // Override labels.
+      markMap.labels[ptStr] = (nextMoveNum) + ''
     }
   }
   return collisions;
 };
 
 /**
- * Update the labels with variations numbers. This is an optional step and
- * usually isn't done for diagrams-for-print.
+ * Optionally mark the last move (by updating the mark map) if:
  *
- * @param {!glift.rules.MoveTree} mt
- * @param {!Object<!glift.PtStr, !glift.flattener.symbols>} marks Map of ptstring
- *    to the move.
- * @param {!Object<!glift.PtStr, string>} labels
- * @private
+ * 0. The last move is defined.
+ * 1. There is no existing mark in the markMap at the location.
+ * 2. The markLastMove option is true.
+ *
+ * @param {!glift.flattener.MarkMap} markMap
+ * @param {?glift.rules.Move} lastMove
+ * @param {boolean|undefined} markLast
  */
-glift.flattener.updateLabelsWithVariations_ = function(mt, marks, labels) {
-  for (var i = 0; i < mt.node().numChildren(); i++) {
-    var move = mt.node().getChild(i).properties().getMove();
-    if (move && move.point) {
-      var pt = move.point;
-      var ptStr = pt.toString();
-      if (labels[ptStr] === undefined) {
-        labels[ptStr] = '' + (i + 1);
-      }
-      marks[ptStr] = glift.flattener.symbols.NEXTVARIATION;
+glift.flattener.markLastMove_ = function(markMap, lastMove, markLast) {
+  if (lastMove && lastMove.point) {
+    var ptstr = lastMove.point.toString();
+    if (!markMap.marks[ptstr] && markLast) {
+      markMap.marks[ptstr] = glift.flattener.symbols.LASTMOVE;
     }
   }
-};
-
-/**
- * Returns a map of ptstr to correct next moves. Usually used for creating marks
- * or other such display-handling.
- *
- * @param {!glift.rules.MoveTree} mt
- * @param {!glift.rules.ProblemConditions|undefined} conditions
- * @return {!Object<glift.PtStr, glift.rules.Move>} object of correct next moves.
- * @private
- */
-glift.flattener.getCorrectNextMoves_ = function(mt, conditions) {
-  var correctNextMap = {};
-  if (conditions) {
-    var correctNextArr = glift.rules.problems.correctNextMoves(mt, conditions);
-    for (var i = 0; i < correctNextArr.length; i++) {
-      var move = correctNextArr[i];
-      if (move.point) {
-        correctNextMap[move.point.toString()] = move;
-      }
-    }
-  }
-  return correctNextMap;
 };
