@@ -6,6 +6,7 @@
  *
  * @param {string} gibString
  * @retutrn {!glift.rules.MoveTree}
+ * @package
  */
 glift.parse.tygem = function(gibString) {
   var states = {

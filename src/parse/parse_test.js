@@ -5,18 +5,9 @@
   var sgfs = testdata.sgfs
 
   test('fromFileName', function() {
-    var oldFromString = glift.parse.fromString;
-    glift.parse.fromString = function(str, ttype) {
-      return ttype;
-    };
-
-    deepEqual(fromFileName('z', 'foo.sgf'), parseType.SGF);
-    deepEqual(fromFileName('z', 'foo.gib'), parseType.TYGEM);
-    deepEqual(fromFileName('PANDANET', 'foo.sgf'), parseType.PANDANET);
-    deepEqual(fromFileName('PANDANET', 'foo.gib'), parseType.TYGEM);
-    deepEqual(fromFileName('z', 'foo.zed'), parseType.SGF);
-
-    glift.parse.fromString = oldFromString;
+    ok(fromFileName('(;GB[1])', 'foo.sgf'), parseType.SGF);
+    ok(fromFileName('(;GB[1]CoPyright[PANDANET])', 'foo.sgf'), parseType.SGF);
+    ok(fromFileName('STO 0 6 1 2 14 ', 'foo.gib'));
   });
 
   test('from string: SGF, escaped comment', function() {

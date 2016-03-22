@@ -49,7 +49,7 @@
     // Patch in a testing logger.
     glift.util.logz = testLogger;
 
-    var f = glift.parse.pandanet(testfile);
+    var f = glift.parse.fromString(testfile, glift.parse.parseType.PANDANET);
     ok(f);
     f.moveDown();
     deepEqual(f.properties().getOneValue('B'), 'qd');

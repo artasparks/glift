@@ -1,7 +1,7 @@
 goog.provide('glift.parse');
 
 /**
- * Glift parsing
+ * Glift parsing for strings.
  */
 glift.parse = {
   /**
@@ -9,13 +9,21 @@ glift.parse = {
    * @enum {string}
    */
   parseType: {
-    /** FF4 Parse Type */
+    /**
+     * FF1-FF4 Parse Type.
+     */
     SGF: 'SGF',
+
     /** Tygem .gib files. */
     TYGEM: 'TYGEM',
-    /** 
-     * Really, this is FF3.
-     * TODO(kashomon): Support FF3 as first class citizen
+
+    /**
+     * DEPRECATED.
+     *
+     * This was created when I didn't understand the destinction between the
+     * various FF versions.
+     *
+     * Prefer SGF.
      */
     PANDANET: 'PANDANET'
   },
@@ -31,11 +39,7 @@ glift.parse = {
     var parseType = glift.parse.parseType;
     var ttype = parseType.SGF;
     if (filename.indexOf('.sgf') > -1) {
-      if (str.indexOf('PANDANET') > -1) {
-        ttype = parseType.PANDANET;
-      } else {
-        ttype = parseType.SGF;
-      }
+      ttype = parseType.SGF;
     } else if (filename.indexOf('.gib') > -1) {
       ttype = parseType.TYGEM;
     }
@@ -51,6 +55,10 @@ glift.parse = {
    */
   fromString: function(str, opt_ttype) {
     var ttype = opt_ttype || glift.parse.parseType.SGF;
+    if (ttype === glift.parse.parseType.PANDANET) {
+      // PANDANET type is now equivalent to SGF.
+      ttype = glift.parse.parseType.SGF;
+    }
     var methodName = glift.enums.toCamelCase(ttype);
     var func = glift.parse[methodName];
     var movetree = func(str);

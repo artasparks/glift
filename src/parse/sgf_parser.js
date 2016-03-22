@@ -27,6 +27,7 @@ glift.parse.sgfMetadataProperty = 'GC';
  *
  * @param {string} sgfString
  * @return {!glift.rules.MoveTree}
+ * @package
  */
 glift.parse.sgf = function(sgfString) {
   var states = {
@@ -55,6 +56,7 @@ glift.parse.sgf = function(sgfString) {
 
   var wsRegex = /\s|\n/;
   var propRegex = /[A-Z]/;
+  var oldStyleProp = /[a-z]/;
 
   var curstate = states.BEGINNING_BEFORE_PAREN;
   var movetree = glift.rules.movetree.getInstance();
@@ -149,6 +151,9 @@ glift.parse.sgf = function(sgfString) {
             charBuffer.push(curchar);
             // In the SGF Specification, SGF properties can be of arbitrary
             // lengths, even though all standard SGF properties are 1-2 chars.
+          } else if (oldStyleProp.test(curchar)) {
+            // Do nothing. This is an FF1 - FF3 style property. For
+            // compatibility, we just ignore it and move on.
           } else if (curchar === syn.LBRACE) {
             curProp = flushCharBuffer();
             if (glift.rules.prop[curProp] === undefined) {
@@ -239,6 +244,7 @@ glift.parse.sgf = function(sgfString) {
  * @param {string} curchar
  * @param {string} message
  * @param {boolean} isWarning
+ * @package
  */
 glift.parse.sgfParseError = function(lineNum, colNum, curchar, message, isWarning) {
   var header = 'SGF Parsing ' + (isWarning ? 'Warning' : 'Error');

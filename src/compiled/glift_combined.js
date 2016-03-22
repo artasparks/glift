@@ -11091,7 +11091,7 @@ glift.sgf = {
 goog.provide('glift.parse');
 
 /**
- * Glift parsing
+ * Glift parsing for strings.
  */
 glift.parse = {
   /**
@@ -11099,13 +11099,21 @@ glift.parse = {
    * @enum {string}
    */
   parseType: {
-    /** FF4 Parse Type */
+    /**
+     * FF1-FF4 Parse Type.
+     */
     SGF: 'SGF',
+
     /** Tygem .gib files. */
     TYGEM: 'TYGEM',
-    /** 
-     * Really, this is FF3.
-     * TODO(kashomon): Support FF3 as first class citizen
+
+    /**
+     * DEPRECATED.
+     *
+     * This was created when I didn't understand the destinction between the
+     * various FF versions.
+     *
+     * Prefer SGF.
      */
     PANDANET: 'PANDANET'
   },
@@ -11121,11 +11129,7 @@ glift.parse = {
     var parseType = glift.parse.parseType;
     var ttype = parseType.SGF;
     if (filename.indexOf('.sgf') > -1) {
-      if (str.indexOf('PANDANET') > -1) {
-        ttype = parseType.PANDANET;
-      } else {
-        ttype = parseType.SGF;
-      }
+      ttype = parseType.SGF;
     } else if (filename.indexOf('.gib') > -1) {
       ttype = parseType.TYGEM;
     }
@@ -11141,23 +11145,15 @@ glift.parse = {
    */
   fromString: function(str, opt_ttype) {
     var ttype = opt_ttype || glift.parse.parseType.SGF;
+    if (ttype === glift.parse.parseType.PANDANET) {
+      // PANDANET type is now equivalent to SGF.
+      ttype = glift.parse.parseType.SGF;
+    }
     var methodName = glift.enums.toCamelCase(ttype);
     var func = glift.parse[methodName];
     var movetree = func(str);
     return glift.rules.movetree.initRootProperties(movetree);
   }
-};
-
-/**
- * Parse a pandanet SGF.  Pandanet SGFs, are the same as normal SGFs except that
- * they contain invalid SGF properties.
- */
-// TODO(kashomon): Delete and fold into SGF parsing. this is really a special
-// case of FF3, which should be supported by Glift.
-glift.parse.pandanet = function(string) {
-  var replaceRegex = /CoPyright\[[^\]]*\]/;
-  var repl = string.replace(replaceRegex, '');
-  return glift.parse.sgf(repl);
 };
 
 /**
@@ -11189,6 +11185,7 @@ glift.parse.sgfMetadataProperty = 'GC';
  *
  * @param {string} sgfString
  * @return {!glift.rules.MoveTree}
+ * @package
  */
 glift.parse.sgf = function(sgfString) {
   var states = {
@@ -11217,6 +11214,7 @@ glift.parse.sgf = function(sgfString) {
 
   var wsRegex = /\s|\n/;
   var propRegex = /[A-Z]/;
+  var oldStyleProp = /[a-z]/;
 
   var curstate = states.BEGINNING_BEFORE_PAREN;
   var movetree = glift.rules.movetree.getInstance();
@@ -11311,6 +11309,9 @@ glift.parse.sgf = function(sgfString) {
             charBuffer.push(curchar);
             // In the SGF Specification, SGF properties can be of arbitrary
             // lengths, even though all standard SGF properties are 1-2 chars.
+          } else if (oldStyleProp.test(curchar)) {
+            // Do nothing. This is an FF1 - FF3 style property. For
+            // compatibility, we just ignore it and move on.
           } else if (curchar === syn.LBRACE) {
             curProp = flushCharBuffer();
             if (glift.rules.prop[curProp] === undefined) {
@@ -11401,6 +11402,7 @@ glift.parse.sgf = function(sgfString) {
  * @param {string} curchar
  * @param {string} message
  * @param {boolean} isWarning
+ * @package
  */
 glift.parse.sgfParseError = function(lineNum, colNum, curchar, message, isWarning) {
   var header = 'SGF Parsing ' + (isWarning ? 'Warning' : 'Error');
@@ -11421,6 +11423,7 @@ glift.parse.sgfParseError = function(lineNum, colNum, curchar, message, isWarnin
  *
  * @param {string} gibString
  * @retutrn {!glift.rules.MoveTree}
+ * @package
  */
 glift.parse.tygem = function(gibString) {
   var states = {
