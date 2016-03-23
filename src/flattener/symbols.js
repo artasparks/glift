@@ -47,7 +47,10 @@ glift.flattener.symbols = {
 
   // It's useful to destinguish between standard TEXTLABELs and NEXTVARIATION
   // labels.
-  NEXTVARIATION: 36
+  NEXTVARIATION: 36,
+
+  // Variation identified as correct
+  CORRECT_VARIATION: 37
 };
 
 /**
@@ -74,6 +77,7 @@ glift.flattener.symbolMarkToMark = {
 
   35: glift.enums.marks.STONE_MARKER, // LASTMOVE
   36: glift.enums.marks.VARIATION_MARKER, // NEXTVARIATION
+  37: glift.enums.marks.CORRECT_VARIATION, // CORRECT_VARIATION
 };
 
 /**

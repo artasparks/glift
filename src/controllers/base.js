@@ -200,6 +200,8 @@ glift.controllers.BaseController.prototype = {
       showNextVariationsType: this.showVariations_,
       markLastMove: this.markLastMove_,
       nextMovesTreepath: this.nextMovesPath_,
+      problemConditions: this.problemConditions,
+      selectedNextMove: this.selectedNextMove(),
     });
     return newFlat;
   },
@@ -237,6 +239,20 @@ glift.controllers.BaseController.prototype = {
    */
   nextVariationNumber: function() {
     return this.treepath[this.currentMoveNumber()] || 0;
+  },
+
+  /**
+   * Return the next 'selected' move equivalent to the using the next variation
+   * number correlated with the next moves in the movetree.
+   * @return {?glift.rules.Move}
+   */
+  selectedNextMove: function() {
+    var nextVar = this.nextVariationNumber();
+    var nextMoves = this.movetree.nextMoves();
+    if (nextMoves.length) {
+      return nextMoves[nextVar] || null;
+    }
+    return null;
   },
 
   /**

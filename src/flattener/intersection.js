@@ -149,7 +149,8 @@ glift.flattener.Intersection.prototype = {
       },
       mark: {
         EMPTY: true, TRIANGLE: true, SQUARE: true, CIRCLE: true, XMARK: true,
-        TEXTLABEL: true, LASTMOVE: true, NEXTVARIATION: true
+        TEXTLABEL: true, LASTMOVE: true, NEXTVARIATION: true,
+        CORRECT_VARIATION: true,
       }
     };
     if (!glift.flattener.symbolStr(s)) {

@@ -29,8 +29,9 @@ glift.flattener = {};
  *  - autoBoxCropOnNextMoves. Whether or not to perform auto-box cropping.
  *
  *  Options for marks
- *  - showNextVariationsType
- *  - markLastMove
+ *  - showNextVariationsType: Whether or not to show variations.
+ *  - markLastMove: Whether or not to put a special mark on the last move
+ *  - problemConditions: Whether
  *
  *  Options for problems
  *  - problemConditions
@@ -44,10 +45,10 @@ glift.flattener = {};
  *  showNextVariationsType: (glift.enums.showVariations|undefined),
  *  autoBoxCropOnNextMoves: (boolean|undefined),
  *  markLastMove: (boolean|undefined),
- *  problemConditions: (!glift.rules.ProblemConditions|undefined)
+ *  problemConditions: (!glift.rules.ProblemConditions|undefined),
+ *  selectedNextMove: (?glift.rules.Move|undefined)
  * }}
  */
-// TODO(kashomon): Add support for markLastMove and problemConditions
 glift.flattener.Options;
 
 
@@ -170,7 +171,8 @@ glift.flattener.flatten = function(movetreeInitial, opt_options) {
   var sv = glift.enums.showVariations
   if (showVars === sv.ALWAYS || (
       showVars === sv.MORE_THAN_ONE && mt.node().numChildren() > 1)) {
-    glift.flattener.updateLabelsWithVariations_(mt, markMap);
+    glift.flattener.updateLabelsWithVariations_(
+        mt, markMap, correctNextMoves, options.selectedNextMove);
   }
 
   // Calculate the collision stones and update the marks / labels maps if
@@ -184,11 +186,7 @@ glift.flattener.flatten = function(movetreeInitial, opt_options) {
   // Finally! Generate the intersections double-array.
   var board = glift.flattener.board.create(cropping, stoneMap, markMap);
 
-  // TODO(kashomon): Support
-  // - selectedNextMove
-  // - correctNextMoves
   var comment = mt.properties().getComment() || '';
-
 
   // We don't mark Ko for when the nextMovesTreepath is specified. If there's a
   // Ko, then stones will be captured and there's no point in putting a mark or
@@ -209,9 +207,9 @@ glift.flattener.flatten = function(movetreeInitial, opt_options) {
       stoneMap: stoneMap,
       markMap: markMap,
       ko: goban.getKo(),
-      // ProblemSpecific:
+      // ProblemSpecific fields.
       correctNextMoves: correctNextMoves,
-      // TODO(kashomon): Add support directly in the flattener.
+      // TODO(kashomon): Add support directly in the flattener params.
       problemResult: null,
   });
 };
@@ -415,7 +413,7 @@ glift.flattener.findStartingMoveNum_ = function(mt, nextMovesTreepath) {
  */
 glift.flattener.getCorrectNextMoves_ = function(mt, conditions) {
   var correctNextMap = {};
-  if (conditions) {
+  if (conditions && !glift.obj.isEmpty(conditions)) {
     var correctNextArr = glift.rules.problems.correctNextMoves(mt, conditions);
     for (var i = 0; i < correctNextArr.length; i++) {
       var move = correctNextArr[i];
@@ -433,18 +431,43 @@ glift.flattener.getCorrectNextMoves_ = function(mt, conditions) {
  *
  * @param {!glift.rules.MoveTree} mt
  * @param {!glift.flattener.MarkMap} markMap
+ * @param {!Object<glift.PtStr, glift.rules.Move>} correctNext Map of
+ *    point-string to move, where the moves are moves identified as 'correct'
+ *    variations. Will be empty unless problemConditions is defined in the input
+ *    options.
+ * @param {?glift.rules.Move|undefined} selectedNext For UIs: the selected next
+ *    move. If defined, we'll mark the selected next move (somehow).
  * @private
  */
-glift.flattener.updateLabelsWithVariations_ = function(mt, markMap) {
+glift.flattener.updateLabelsWithVariations_ = function(
+    mt, markMap, correctNext, selectedNext) {
   for (var i = 0; i < mt.node().numChildren(); i++) {
     var move = mt.node().getChild(i).properties().getMove();
     if (move && move.point) {
       var pt = move.point;
       var ptStr = pt.toString();
       if (markMap.labels[ptStr] === undefined) {
-        markMap.labels[ptStr] = '' + (i + 1);
+         var markValue = '' + (i + 1);
+        if (selectedNext &&
+            selectedNext.point &&
+            ptStr == selectedNext.point.toString()) {
+          // Mark the 'selected' variation as active.
+          markValue += '.';
+          //'\u02D9';
+          // -- some options
+          // '\u02C8' => ˈ simple
+          // '\u02D1' => ˑ kinda cool
+          // '\u02D9' => ˙ dot above (actually goes to the right)
+          // '\u00B4' => ´
+          // '\u0332' => underline
+        }
+        markMap.labels[ptStr] = markValue;
       }
-      markMap.marks[ptStr] = glift.flattener.symbols.NEXTVARIATION;
+      if (correctNext[ptStr]) {
+        markMap.marks[ptStr] = glift.flattener.symbols.CORRECT_VARIATION;
+      } else {
+        markMap.marks[ptStr] = glift.flattener.symbols.NEXTVARIATION;
+      }
     }
   }
 };
@@ -471,7 +494,6 @@ glift.flattener.updateLabelsWithVariations_ = function(mt, markMap) {
  * @return {!Array<!glift.flattener.Collision>}
  * @private
  */
-// TODO(kashomon): Guard this with a autoLabelMoves flag.
 glift.flattener.createStoneLabels_ = function(
     appliedStones, stoneMap, markMap, startingMoveNum) {
   if (!appliedStones || appliedStones.length === 0) {
