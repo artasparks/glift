@@ -286,8 +286,7 @@ glift.controllers.BoardEditor.prototype = {
       }
       var captures = {};
       captures[oppColor] = result.captures;
-      return glift.bridge.intersections.nextBoardData(
-          this.movetree, captures);
+      return this.flattenedState();
     }
     return this.flattenedState();
   },

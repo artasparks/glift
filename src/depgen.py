@@ -57,14 +57,13 @@ JS_DIRECTORIES = [
     'displays/position',
 
     # Rules and display are intentionally not linked, except via
-    # bridge and the controllers.
+    # the controllers and the flattener
     'rules',
 
     # Tertiary packages
     'sgf',
     'parse',
     'controllers',
-    'bridge',
     'orientation',
     'flattener',
     'widgets',
