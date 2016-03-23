@@ -77,7 +77,7 @@ EXCLUDE = set([
   'util/test_util.js',
 ])
 
-OUTPUT_DIRECTORY = 'compiled'
+OUTPUT_DIRECTORY = '../compiled'
 CONCAT_OUT = 'glift_combined.js'
 COMPILED_OUT = 'glift.js'
 
