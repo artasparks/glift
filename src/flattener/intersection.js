@@ -130,6 +130,23 @@ glift.flattener.Intersection = function(pt) {
   this.textLabel_ = null;
 };
 
+// Statics
+glift.flattener.intersection.layerMapping = {
+  base: {
+    EMPTY: true, TL_CORNER: true, TR_CORNER: true, BL_CORNER: true,
+    BR_CORNER: true, TOP_EDGE: true, BOT_EDGE: true, LEFT_EDGE: true,
+    RIGHT_EDGE: true, CENTER: true, CENTER_STARPOINT: true
+  },
+  stone: {
+    EMPTY: true, BSTONE: true, WSTONE: true
+  },
+  mark: {
+    EMPTY: true, TRIANGLE: true, SQUARE: true, CIRCLE: true, XMARK: true,
+    TEXTLABEL: true, LASTMOVE: true, NEXTVARIATION: true,
+    CORRECT_VARIATION: true,
+  }
+};
+
 glift.flattener.Intersection.prototype = {
   /**
    * @param {glift.flattener.symbols} s Symbol to validate
@@ -137,27 +154,11 @@ glift.flattener.Intersection.prototype = {
    * @private
    */
   validateSymbol_: function(s, layer) {
-    var sym = glift.flattener.symbols;
-    var layerMapping = {
-      base: {
-        EMPTY: true, TL_CORNER: true, TR_CORNER: true, BL_CORNER: true,
-        BR_CORNER: true, TOP_EDGE: true, BOT_EDGE: true, LEFT_EDGE: true,
-        RIGHT_EDGE: true, CENTER: true, CENTER_STARPOINT: true
-      },
-      stone: {
-        EMPTY: true, BSTONE: true, WSTONE: true
-      },
-      mark: {
-        EMPTY: true, TRIANGLE: true, SQUARE: true, CIRCLE: true, XMARK: true,
-        TEXTLABEL: true, LASTMOVE: true, NEXTVARIATION: true,
-        CORRECT_VARIATION: true,
-      }
-    };
-    if (!glift.flattener.symbolStr(s)) {
+    var str = glift.flattener.symbolStr(s);
+    if (!str) {
       throw new Error('Symbol Val: ' + s + ' is not a defined symbol.');
     }
-    var str = glift.flattener.symbolStr(s);
-    if (!layerMapping[layer][str]) {
+    if (!glift.flattener.intersection.layerMapping[layer][str]) {
       throw new Error('Incorrect layer for: ' + str + ',' + s +
           '. Layer was ' + layer);
     }
