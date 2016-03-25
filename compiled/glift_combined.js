@@ -7487,13 +7487,20 @@ glift.displays.statusbar.StatusBar = function(
 };
 
 glift.displays.statusbar.StatusBar.prototype = {
+  /**
+   * Draws the statusbar.
+   * @return {!glift.displays.statusbar.StatusBar} this
+   */
   draw: function() {
     this.iconBar.draw();
     this.setPageNumber(this.pageIndex, this.totalPages);
     return this;
   },
 
-  /** Sets the move number for the current move */
+  /**
+   * Sets the move number for the current move.
+   * @param {number} number
+   */
   setMoveNumber: function(number) {
     // TODO(kashomon): Note: This hardcodes the move-indicator name.
     if (!this.iconBar.hasIcon('move-indicator')) { return; }
@@ -7507,7 +7514,11 @@ glift.displays.statusbar.StatusBar.prototype = {
         null /* size modifier, as float */);
   },
 
-  /** Sets the page number for the current move */
+  /**
+   * Sets the page number for the current move
+   * @param {number} number
+   * @param {number} denominator
+   */
   setPageNumber: function(number, denominator) {
     if (!this.iconBar.hasIcon('widget-page')) { return; }
     var num = (number || '0') + ''; // Force to be a string.
