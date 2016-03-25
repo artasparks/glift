@@ -5,8 +5,14 @@ goog.require('glift.displays.board');
 /**
  * The backing data for the display.
  *
- * @package
- * @constructor
+ * @param {string} divId
+ * @param {!glift.displays.svg.SvgObj} svg Base svg obj
+ * @param {!glift.displays.BoardPoints} boardPoints Board points object from the
+ *    gui environment.
+ * @param {!glift.themes.base} theme The theme object
+ * @param {!glift.enums.rotations} rotation An optional rotation.
+ *
+ * @package @constructor @final @struct
  */
 glift.displays.board.Intersections = function(
     divId, svg, boardPoints, theme, rotation) {
@@ -18,25 +24,9 @@ glift.displays.board.Intersections = function(
   this.idGen = glift.displays.ids.generator(this.divId);
 
   /**
-   * Defined during events, the lastHoverPoint allows us to
+   * Defined during events.
    */
   this.lastHoverPoint = null;
-
-  // Object of objects of the form
-  //  {
-  //    <buttonId>#<eventName>: {
-  //      pt: <pt>,
-  //      func: func
-  //    }
-  //  }
-  // Note that the funcs take two parameters: event and icon.
-  // TODO(kashomon): delete
-  this.events = {};
-
-  /**
-   * Tracking for which intersections have been modified with marks.
-   */
-  this.markPts = [];
 };
 
 glift.displays.board.Intersections.prototype = {
@@ -44,6 +34,9 @@ glift.displays.board.Intersections.prototype = {
    * Sets the color of a stone.  Note: the 'color' is really a key into the
    * Theme, so it should always be BLACK or WHITE, which can then point to any
    * color.
+   * @param {!glift.Point} pt
+   * @param {glift.enums.states} color
+   * @return {!glift.displays.board.Intersections} this
    */
   setStoneColor: function(pt, color) {
     pt = pt.rotate(this.boardPoints.numIntersections, this.rotation);
@@ -70,23 +63,26 @@ glift.displays.board.Intersections.prototype = {
         }
       }
     }
-    this._flushStone(pt);
+    this.flushStone_(pt);
     return this;
   },
 
   /**
    * Flush any stone changes to the board.
+   * @param {!glift.Point} pt
+   * @private
    */
-  _flushStone: function(pt) {
+  flushStone_: function(pt) {
     var stone = this.svg.child(this.idGen.stoneGroup())
         .child(this.idGen.stone(pt));
     if (stone) {
       // A stone might not exist if the board is cropped.
-      glift.dom.elem(stone.id()).setAttrObj(stone.attrObj());
+      glift.dom.elem(/** @type {string} */ (stone.id())).setAttrObj(stone.attrObj());
       var stoneShadowGroup = this.svg.child(this.idGen.stoneShadowGroup());
       if (stoneShadowGroup !== undefined) {
         var stoneShadow = stoneShadowGroup.child(this.idGen.stoneShadow(pt));
-        glift.dom.elem(stoneShadow.id()).setAttrObj(stoneShadow.attrObj());
+        glift.dom.elem(/** @type {string} */ (stoneShadow.id()))
+            .setAttrObj(stoneShadow.attrObj());
       }
     }
     return this;
@@ -94,15 +90,22 @@ glift.displays.board.Intersections.prototype = {
 
   /**
    * Add a mark to the display.
+   * @param {!glift.Point} pt
+   * @param {!glift.enums.marks} mark
+   * @param {string} label
+   * @return {!glift.displays.board.Intersections} this
    */
   addMarkPt: function(pt, mark, label) {
     pt = pt.rotate(this.boardPoints.numIntersections, this.rotation);
     var container = this.svg.child(this.idGen.markGroup());
-    return this._addMarkInternal(container, pt, mark, label);
+    this.addMarkInternal_(container, pt, mark, label);
+    return this;
   },
 
   /**
    * Test whether the board has a mark at the point.
+   * @param {!glift.Point} pt
+   * @return {boolean}
    */
   hasMark: function(pt) {
     pt = pt.rotate(this.boardPoints.numIntersections, this.rotation);
@@ -117,26 +120,40 @@ glift.displays.board.Intersections.prototype = {
    * Add a temporary mark.  This is meant for display situations (like mousover)
    * where the user is displayed the state before it is recorded in a movetree
    * or goban.
+   * @param {!glift.Point} pt
+   * @param {!glift.enums.marks} mark
+   * @param {string} label
+   * @return {!glift.displays.board.Intersections} this
    */
   addTempMark: function(pt, mark, label) {
     pt = pt.rotate(this.boardPoints.numIntersections, this.rotation);
     var container = this.svg.child(this.idGen.tempMarkGroup());
-    return this._addMarkInternal(container, pt, mark, label);
+    return this.addMarkInternal_(container, pt, mark, label);
   },
 
   /**
    * Like the name says, remove the temporary marks from the backing svg (empty
    * the group container) and remove them from the display.
+   *
+   * @return {!glift.displays.board.Intersections} this
    */
   clearTempMarks: function() {
     this.clearMarks(this.svg.child(this.idGen.tempMarkGroup()));
     return this;
   },
 
-  _addMarkInternal: function(container, pt, mark, label) {
+  /**
+   * @param {!glift.displays.svg.SvgObj} container
+   * @param {!glift.Point} pt
+   * @param {!glift.enums.marks} mark
+   * @param {!string} label
+   * @return {!glift.displays.board.Intersections} this
+   * @private
+   */
+  addMarkInternal_: function(container, pt, mark, label) {
     // If necessary, clear out intersection lines and starpoints.  This only
     // applies when a stone hasn't yet been set (stoneColor === 'EMPTY').
-    this._reqClearForMark(pt, mark) && this._clearForMark(pt);
+    this.reqClearForMark_(pt, mark) && this.clearForMark_(pt);
     var stone = this.svg.child(this.idGen.stoneGroup())
         .child(this.idGen.stone(pt));
     if (stone) {
@@ -145,7 +162,7 @@ glift.displays.board.Intersections.prototype = {
       var marksTheme = stonesTheme[stoneColor].marks;
       glift.displays.board.addMark(container, this.idGen, this.boardPoints,
           marksTheme, stonesTheme, pt, mark, label);
-      this._flushMark(pt, mark, container);
+      this.flushMark_(pt, mark, container);
     }
     return this;
   },
@@ -153,19 +170,23 @@ glift.displays.board.Intersections.prototype = {
   /**
    * Determine whether an intersection (pt) needs be cleared of lines /
    * starpoints.
+   *
+   * @param {!glift.Point} pt
+   * @param {!glift.enums.marks} mark
+   * @return {boolean}
    */
-  _reqClearForMark: function(pt, mark) {
+  reqClearForMark_: function(pt, mark) {
     var marks = glift.enums.marks;
     var stone = this.svg.child(this.idGen.stoneGroup())
         .child(this.idGen.stone(pt));
     if (stone) {
       // A stone might not exist at a point if the board is cropped.
       var stoneColor = stone.attr('stone_color');
-      return stoneColor === 'EMPTY' && (mark === marks.LABEL
+      return !!(stoneColor === 'EMPTY' && (mark === marks.LABEL
           || mark === marks.VARIATION_MARKER
           || mark === marks.CORRECT_VARIATION
           || mark === marks.LABEL_NUMERIC
-          || mark === marks.LABEL_ALPHA);
+          || mark === marks.LABEL_ALPHA));
     } else {
       return false;
     }
@@ -174,8 +195,12 @@ glift.displays.board.Intersections.prototype = {
   /**
    * Clear a pt of lines / starpoints so that we can place a mark (typically a
    * text-mark) without obstruction.
+   *
+   * @param {!glift.Point} pt
+   * @return {!glift.displays.board.Intersections} the current obj.
+   * @private
    */
-  _clearForMark: function(pt) {
+  clearForMark_: function(pt) {
     var starpoint = this.svg.child(this.idGen.starpointGroup())
         .child(this.idGen.starpoint(pt))
     if (starpoint) {
@@ -187,25 +212,36 @@ glift.displays.board.Intersections.prototype = {
     return this;
   },
 
-  _flushMark: function(pt, mark, markGroup) {
+  /**
+   * @param {!glift.Point} pt
+   * @param {!glift.enums.marks} mark
+   * @param {!glift.displays.svg.SvgObj} markGroup
+   * @return {!glift.displays.board.Intersections} the current obj.
+   * @private
+   */
+  flushMark_: function(pt, mark, markGroup) {
     var svg = this.svg;
     var idGen = this.idGen;
-    if (this._reqClearForMark(pt, mark)) {
+    if (this.reqClearForMark_(pt, mark)) {
       var starp  = svg.child(idGen.starpointGroup()).child(idGen.starpoint(pt))
       if (starp) {
-        glift.dom.elem(starp.id()).setAttr('opacity', starp.attr('opacity'));
+        glift.dom.elem(/** @type {string} */ (starp.id()))
+            .setAttr('opacity', /** @type {string} */ (starp.attr('opacity')));
       }
       var linept = svg.child(idGen.lineGroup()).child(idGen.line(pt))
-      glift.dom.elem(linept.id()).setAttr('opacity', linept.attr('opacity'));
+      glift.dom.elem(/** @type {string} */ (linept.id()))
+          .setAttr('opacity', /** @type {string} */ (linept.attr('opacity')));
     }
-    markGroup.child(idGen.mark(pt)).attachToParent(markGroup.id());
-    this.markPts.push(pt);
+    markGroup.child(idGen.mark(pt))
+        .attachToParent(/** @type {string} */ (markGroup.id()));
     return this;
   },
 
   /**
    * Clear marks (optionally) from a group.
-   * @param {string=} opt_markGroup Specify a mark group ID, or generate one.
+   *
+   * @param {glift.displays.svg.SvgObj=} opt_markGroup
+   *    Specify a mark group, or generate one.
    * @return {glift.displays.board.Intersections} the current obj.
    */
   clearMarks: function(opt_markGroup) {
@@ -226,12 +262,14 @@ glift.displays.board.Intersections.prototype = {
       }
     }
     markGroup.emptyChildren();
-    glift.dom.elem(markGroup.id()).empty();
+    glift.dom.elem(/** @type {string} */ (markGroup.id())).empty();
     return this;
   },
 
   /**
    * Currently unused. Add guideLines for mobile devices.
+   * @param {!glift.Point} pt
+   * @return {glift.displays.board.Intersections} this
    */
   addGuideLines: function(pt) {
     var elems = glift.enums.svgElements;
@@ -247,8 +285,12 @@ glift.displays.board.Intersections.prototype = {
       .setAttr('stroke-width', 3)
       .setAttr('stroke', 'blue')
       .setId(this.idGen.guideLine()))
+    return this;
   },
 
+  /**
+   * @return {glift.displays.board.Intersections} this
+   */
   clearGuideLines: function() {
     var elems = glift.enums.svgElements;
     var container = this.svg.child(this.idGen.markGroup())
@@ -256,6 +298,11 @@ glift.displays.board.Intersections.prototype = {
     return this;
   },
 
+  /**
+   * @param {string} groupId
+   * @param {!Object} attrObj
+   * @return {glift.displays.board.Intersections} this
+   */
   setGroupAttr: function(groupId, attrObj) {
     var g = this.svg.child(groupId);
     if (g !== undefined) {
@@ -271,6 +318,7 @@ glift.displays.board.Intersections.prototype = {
 
   /**
    * Clear all the stones and stone shadows.
+   * @return {glift.displays.board.Intersections} this
    */
   clearStones: function() {
     var stoneAttrs = {opacity: 0, stone_color: "EMPTY"};
@@ -280,46 +328,60 @@ glift.displays.board.Intersections.prototype = {
 
     var stones = this.svg.child(this.idGen.stoneGroup()).children();
     for (var i = 0, len = stones.length; i < len; i++) {
-      glift.dom.elem(stones[i].id()).setAttrObj(stoneAttrs);
+      glift.dom.elem(/** @type {string} */ (stones[i].id())).setAttrObj(stoneAttrs);
     }
 
     var shadowGroup = this.svg.child(this.idGen.stoneShadowGroup());
     if (shadowGroup) {
       var shadows = shadowGroup.children();
       for (var i = 0, len = shadows.length; i < len; i++) {
-        glift.dom.elem(shadows[i].id()).setAttrObj(shadowAttrs);
+        glift.dom.elem(/** @type {string} */ (shadows[i].id())).setAttrObj(shadowAttrs);
       }
     }
     return this;
   },
 
+  /**
+   * Clear all the marks and the stones.
+   * @return {glift.displays.board.Intersections} this
+   */
   clearAll: function() {
     this.clearMarks().clearStones();
     return this;
   },
 
-  /** Set events for the button rectangle. */
+  /**
+   * Set events for the button rectangle.
+   * @param {string} eventName
+   * @param {function(!Event, !glift.Point)} func
+   * @return {glift.displays.board.Intersections} this
+   */
   setEvent: function(eventName, func) {
     var that = this;
     var id = this.svg.child(this.idGen.buttonGroup())
         .child(this.idGen.fullBoardButton())
         .id();
-    glift.dom.elem(id).on(eventName, function(e) {
-      var pt = that._buttonEventPt(e);
+    glift.dom.elem(/** @type {string} */ (id)).on(eventName, function(e) {
+      var pt = that.buttonEventPt_(e);
       pt && func(e, pt);
     });
     return this;
   },
 
-  /** Set events for the button rectangle. */
+  /**
+   * Set events for the button rectangle.
+   * @param {function(!Event, !glift.Point)} hoverInFunc
+   * @param {function(!Event, !glift.Point)} hoverOutFunc
+   * @return {glift.displays.board.Intersections} this
+   */
   setHover: function(hoverInFunc, hoverOutFunc) {
     var that = this;
     var id = this.svg.child(this.idGen.buttonGroup())
         .child(this.idGen.fullBoardButton())
         .id();
-    glift.dom.elem(id).on('mousemove', function(e) {
+    glift.dom.elem(/** @type {string} */ (id)).on('mousemove', function(e) {
       var lastpt = that.lastHoverPoint;
-      var curpt = that._buttonEventPt(e);
+      var curpt = that.buttonEventPt_(e);
       if (curpt && lastpt && !lastpt.equals(curpt)) {
         hoverOutFunc(e, lastpt);
         hoverInFunc(e, curpt);
@@ -328,17 +390,23 @@ glift.displays.board.Intersections.prototype = {
       }
       that.lastHoverPoint = curpt;
     });
-    glift.dom.elem(id).on('mouseout', function(e) {
+    glift.dom.elem(/** @type {string} */ (id)).on('mouseout', function(e) {
       var lastpt = that.lastHoverPoint;
       that.lastHoverPoint = null;
       if (lastpt) {
         hoverOutFunc(e, lastpt);
       }
     });
+    return this;
   },
 
-  /** Get the point from an event on the button rectangle. */
-  _buttonEventPt: function(e) {
+  /**
+   * Get the point from an event on the button rectangle.
+   * @param {Event} e The event.
+   * @return {!glift.Point}
+   * @private
+   */
+  buttonEventPt_: function(e) {
     var data = this.svg.child(this.idGen.buttonGroup())
         .child(this.idGen.fullBoardButton())
         .data();

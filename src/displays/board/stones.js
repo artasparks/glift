@@ -1,6 +1,11 @@
 /**
  * Create the Go stones.  They are initially invisible to the user, but they
  * all exist at the time of GoBoard creation.
+ *
+ * @param {!glift.displays.svg.SvgObj} svg Base svg obj
+ * @param {!glift.displays.ids.Generator} idGen The ID generator for SVG.
+ * @param {!glift.displays.BoardPoints} boardPoints Board points object.
+ * @param {!glift.themes.base} theme The theme object
  */
 glift.displays.board.stones = function(svg, idGen, boardPoints, theme) {
   var svglib = glift.displays.svg;
@@ -25,6 +30,11 @@ glift.displays.board.stones = function(svg, idGen, boardPoints, theme) {
  * Create the shadows for the Go stones.  They are initially invisible to the
  * user, but they may become visible later (e.g., via mousover).  Shadows are
  * only created if the theme has a shadow.
+ *
+ * @param {!glift.displays.svg.SvgObj} svg Base svg obj
+ * @param {!glift.displays.ids.Generator} idGen The ID generator for SVG.
+ * @param {!glift.displays.BoardPoints} boardPoints Board points object.
+ * @param {!glift.themes.base} theme The theme object
  */
 glift.displays.board.shadows = function(svg, idGen, boardPoints, theme) {
   if (theme.stones.shadows === undefined) { return {}; }

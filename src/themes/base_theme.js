@@ -75,7 +75,11 @@ glift.themes.baseTemplate = {
         STONE_MARKER : {
           fill: '#CCF',
           opacity: 0.6
-        }
+        },
+        VARIATION_MARKER : {
+          stroke: '#A22',
+          fill: '#A22'
+        },
       }
     },
     BLACK_HOVER : {
@@ -93,7 +97,11 @@ glift.themes.baseTemplate = {
         STONE_MARKER : {
           fill: '#33F',
           opacity: 0.6
-        }
+        },
+        VARIATION_MARKER : {
+          stroke: '#A22',
+          fill: '#A22'
+        },
       }
     },
     WHITE_HOVER : {

@@ -1869,7 +1869,11 @@ glift.themes.baseTemplate = {
         STONE_MARKER : {
           fill: '#CCF',
           opacity: 0.6
-        }
+        },
+        VARIATION_MARKER : {
+          stroke: '#A22',
+          fill: '#A22'
+        },
       }
     },
     BLACK_HOVER : {
@@ -1887,7 +1891,11 @@ glift.themes.baseTemplate = {
         STONE_MARKER : {
           fill: '#33F',
           opacity: 0.6
-        }
+        },
+        VARIATION_MARKER : {
+          stroke: '#A22',
+          fill: '#A22'
+        },
       }
     },
     WHITE_HOVER : {
@@ -4415,17 +4423,28 @@ glift.displays.board.Display.prototype = {
    */
   draw:  function() {
     this.init();
-    var board = glift.displays.board,
-        env = this.environment_,
-        boardPoints = env.boardPoints,
-        theme = this.theme_,
-        svg = this.svg_,
-        divId = this.divId(),
-        svglib = glift.displays.svg,
-        idGen = glift.displays.ids.generator(divId);
+    var board = glift.displays.board;
+    var env = this.environment_;
+    var boardPoints = env.boardPoints;
+    var theme = this.theme_;
+    var svg = this.svg_;
+    var divId = this.divId();
+    var svglib = glift.displays.svg;
+    var idGen = glift.displays.ids.generator(divId);
+    var goBox = env.goBoardBox;
+    if (svg === null) {
+      throw new Error('Base SVG object not initialized.');
+    }
+    if (goBox === null) {
+      throw new Error('goBox null: Gui Environment obj not initialized.');
+    }
+    if (boardPoints === null) {
+      throw new Error('boardPoints null: Gui Environment obj not initialized.');
+    }
 
-    board.boardBase(svg, idGen, env.goBoardBox, theme);
+    board.boardBase(svg, idGen, goBox, theme);
     board.initBlurFilter(divId, svg); // in boardBase.  Should be moved.
+
 
     var intGrp = svglib.group().setId(idGen.intersections());
     svg.append(intGrp);
@@ -4473,8 +4492,7 @@ glift.displays.board.Display.prototype = {
         this.intersections().setStoneColor(
             diffPt.boardPt, symbolStoneToState[newStoneStr]);
       }
-      if (diffPt.newValue.mark() !== diffPt.prevValue.mark() &&
-          diffPt.newValue.mark() !== 0) { // We've already cleared empty marks.
+      if (diffPt.newValue.mark() !== 0) { // We've already cleared empty marks.
         var newMark = diffPt.newValue.mark();
         var enumMark = symbolMarkToMark[newMark];
         var lbl = undefined;
@@ -4519,15 +4537,12 @@ goog.require('glift.displays.svg');
  * Create the background GoBoard object.  Essentially just a rectangle with a
  * fill color and a border.
  *
- * @param {glift.displays.svg.SvgObj} svg Base svg obj
+ * @param {!glift.displays.svg.SvgObj} svg Base svg obj
  * @param {!glift.displays.ids.Generator} idGen The ID generator for SVG.
- * @param {?glift.orientation.BoundingBox} goBox The bounding box of the go board.
+ * @param {!glift.orientation.BoundingBox} goBox The bounding box of the go board.
  * @param {!glift.themes.base} theme The theme object
  */
 glift.displays.board.boardBase = function(svg, idGen, goBox, theme) {
-  if (goBox === null) {
-    throw new Error('goBox null: Gui Environment obj not initialized');
-  }
   if (theme.board.imagefill) {
     svg.append(glift.displays.svg.image()
       .setAttr('x', goBox.topLeft().x())
@@ -4570,15 +4585,12 @@ goog.require('glift.displays.board');
  * rather than as a whole so that we can clear theme out when we to draw marks
  * on the raw board (rather than on stones).
  *
- * @param {glift.displays.svg.SvgObj} svg Base svg obj
+ * @param {!glift.displays.svg.SvgObj} svg Base svg obj
  * @param {!glift.displays.ids.Generator} idGen The ID generator for SVG.
- * @param {?glift.displays.BoardPoints} boardPoints Board points object.
+ * @param {!glift.displays.BoardPoints} boardPoints Board points object.
  * @param {!glift.themes.base} theme The theme object
  */
 glift.displays.board.boardLabels = function(svg, idGen, boardPoints, theme) {
-  if (boardPoints === null) {
-    throw new Error('boardPoints null: Gui Environment obj not initialized');
-  }
   var svglib = glift.displays.svg;
   var container = svglib.group().setId(idGen.boardCoordLabelGroup());
   svg.append(container);
@@ -4604,6 +4616,10 @@ goog.require('glift.displays.board');
 
 /**
  * Create transparent buttons that overlay each intersection.
+ *
+ * @param {!glift.displays.svg.SvgObj} svg Base svg obj
+ * @param {!glift.displays.ids.Generator} idGen The ID generator for SVG.
+ * @param {!glift.displays.BoardPoints} boardPoints Board points object.
  */
 glift.displays.board.buttons = function(svg, idGen, boardPoints) {
   var svglib = glift.displays.svg;
@@ -4636,8 +4652,14 @@ goog.require('glift.displays.board');
 /**
  * The backing data for the display.
  *
- * @package
- * @constructor
+ * @param {string} divId
+ * @param {!glift.displays.svg.SvgObj} svg Base svg obj
+ * @param {!glift.displays.BoardPoints} boardPoints Board points object from the
+ *    gui environment.
+ * @param {!glift.themes.base} theme The theme object
+ * @param {!glift.enums.rotations} rotation An optional rotation.
+ *
+ * @package @constructor @final @struct
  */
 glift.displays.board.Intersections = function(
     divId, svg, boardPoints, theme, rotation) {
@@ -4649,25 +4671,9 @@ glift.displays.board.Intersections = function(
   this.idGen = glift.displays.ids.generator(this.divId);
 
   /**
-   * Defined during events, the lastHoverPoint allows us to
+   * Defined during events.
    */
   this.lastHoverPoint = null;
-
-  // Object of objects of the form
-  //  {
-  //    <buttonId>#<eventName>: {
-  //      pt: <pt>,
-  //      func: func
-  //    }
-  //  }
-  // Note that the funcs take two parameters: event and icon.
-  // TODO(kashomon): delete
-  this.events = {};
-
-  /**
-   * Tracking for which intersections have been modified with marks.
-   */
-  this.markPts = [];
 };
 
 glift.displays.board.Intersections.prototype = {
@@ -4675,6 +4681,9 @@ glift.displays.board.Intersections.prototype = {
    * Sets the color of a stone.  Note: the 'color' is really a key into the
    * Theme, so it should always be BLACK or WHITE, which can then point to any
    * color.
+   * @param {!glift.Point} pt
+   * @param {glift.enums.states} color
+   * @return {!glift.displays.board.Intersections} this
    */
   setStoneColor: function(pt, color) {
     pt = pt.rotate(this.boardPoints.numIntersections, this.rotation);
@@ -4701,23 +4710,26 @@ glift.displays.board.Intersections.prototype = {
         }
       }
     }
-    this._flushStone(pt);
+    this.flushStone_(pt);
     return this;
   },
 
   /**
    * Flush any stone changes to the board.
+   * @param {!glift.Point} pt
+   * @private
    */
-  _flushStone: function(pt) {
+  flushStone_: function(pt) {
     var stone = this.svg.child(this.idGen.stoneGroup())
         .child(this.idGen.stone(pt));
     if (stone) {
       // A stone might not exist if the board is cropped.
-      glift.dom.elem(stone.id()).setAttrObj(stone.attrObj());
+      glift.dom.elem(/** @type {string} */ (stone.id())).setAttrObj(stone.attrObj());
       var stoneShadowGroup = this.svg.child(this.idGen.stoneShadowGroup());
       if (stoneShadowGroup !== undefined) {
         var stoneShadow = stoneShadowGroup.child(this.idGen.stoneShadow(pt));
-        glift.dom.elem(stoneShadow.id()).setAttrObj(stoneShadow.attrObj());
+        glift.dom.elem(/** @type {string} */ (stoneShadow.id()))
+            .setAttrObj(stoneShadow.attrObj());
       }
     }
     return this;
@@ -4725,15 +4737,22 @@ glift.displays.board.Intersections.prototype = {
 
   /**
    * Add a mark to the display.
+   * @param {!glift.Point} pt
+   * @param {!glift.enums.marks} mark
+   * @param {string} label
+   * @return {!glift.displays.board.Intersections} this
    */
   addMarkPt: function(pt, mark, label) {
     pt = pt.rotate(this.boardPoints.numIntersections, this.rotation);
     var container = this.svg.child(this.idGen.markGroup());
-    return this._addMarkInternal(container, pt, mark, label);
+    this.addMarkInternal_(container, pt, mark, label);
+    return this;
   },
 
   /**
    * Test whether the board has a mark at the point.
+   * @param {!glift.Point} pt
+   * @return {boolean}
    */
   hasMark: function(pt) {
     pt = pt.rotate(this.boardPoints.numIntersections, this.rotation);
@@ -4748,26 +4767,40 @@ glift.displays.board.Intersections.prototype = {
    * Add a temporary mark.  This is meant for display situations (like mousover)
    * where the user is displayed the state before it is recorded in a movetree
    * or goban.
+   * @param {!glift.Point} pt
+   * @param {!glift.enums.marks} mark
+   * @param {string} label
+   * @return {!glift.displays.board.Intersections} this
    */
   addTempMark: function(pt, mark, label) {
     pt = pt.rotate(this.boardPoints.numIntersections, this.rotation);
     var container = this.svg.child(this.idGen.tempMarkGroup());
-    return this._addMarkInternal(container, pt, mark, label);
+    return this.addMarkInternal_(container, pt, mark, label);
   },
 
   /**
    * Like the name says, remove the temporary marks from the backing svg (empty
    * the group container) and remove them from the display.
+   *
+   * @return {!glift.displays.board.Intersections} this
    */
   clearTempMarks: function() {
     this.clearMarks(this.svg.child(this.idGen.tempMarkGroup()));
     return this;
   },
 
-  _addMarkInternal: function(container, pt, mark, label) {
+  /**
+   * @param {!glift.displays.svg.SvgObj} container
+   * @param {!glift.Point} pt
+   * @param {!glift.enums.marks} mark
+   * @param {!string} label
+   * @return {!glift.displays.board.Intersections} this
+   * @private
+   */
+  addMarkInternal_: function(container, pt, mark, label) {
     // If necessary, clear out intersection lines and starpoints.  This only
     // applies when a stone hasn't yet been set (stoneColor === 'EMPTY').
-    this._reqClearForMark(pt, mark) && this._clearForMark(pt);
+    this.reqClearForMark_(pt, mark) && this.clearForMark_(pt);
     var stone = this.svg.child(this.idGen.stoneGroup())
         .child(this.idGen.stone(pt));
     if (stone) {
@@ -4776,7 +4809,7 @@ glift.displays.board.Intersections.prototype = {
       var marksTheme = stonesTheme[stoneColor].marks;
       glift.displays.board.addMark(container, this.idGen, this.boardPoints,
           marksTheme, stonesTheme, pt, mark, label);
-      this._flushMark(pt, mark, container);
+      this.flushMark_(pt, mark, container);
     }
     return this;
   },
@@ -4784,19 +4817,23 @@ glift.displays.board.Intersections.prototype = {
   /**
    * Determine whether an intersection (pt) needs be cleared of lines /
    * starpoints.
+   *
+   * @param {!glift.Point} pt
+   * @param {!glift.enums.marks} mark
+   * @return {boolean}
    */
-  _reqClearForMark: function(pt, mark) {
+  reqClearForMark_: function(pt, mark) {
     var marks = glift.enums.marks;
     var stone = this.svg.child(this.idGen.stoneGroup())
         .child(this.idGen.stone(pt));
     if (stone) {
       // A stone might not exist at a point if the board is cropped.
       var stoneColor = stone.attr('stone_color');
-      return stoneColor === 'EMPTY' && (mark === marks.LABEL
+      return !!(stoneColor === 'EMPTY' && (mark === marks.LABEL
           || mark === marks.VARIATION_MARKER
           || mark === marks.CORRECT_VARIATION
           || mark === marks.LABEL_NUMERIC
-          || mark === marks.LABEL_ALPHA);
+          || mark === marks.LABEL_ALPHA));
     } else {
       return false;
     }
@@ -4805,8 +4842,12 @@ glift.displays.board.Intersections.prototype = {
   /**
    * Clear a pt of lines / starpoints so that we can place a mark (typically a
    * text-mark) without obstruction.
+   *
+   * @param {!glift.Point} pt
+   * @return {!glift.displays.board.Intersections} the current obj.
+   * @private
    */
-  _clearForMark: function(pt) {
+  clearForMark_: function(pt) {
     var starpoint = this.svg.child(this.idGen.starpointGroup())
         .child(this.idGen.starpoint(pt))
     if (starpoint) {
@@ -4818,25 +4859,36 @@ glift.displays.board.Intersections.prototype = {
     return this;
   },
 
-  _flushMark: function(pt, mark, markGroup) {
+  /**
+   * @param {!glift.Point} pt
+   * @param {!glift.enums.marks} mark
+   * @param {!glift.displays.svg.SvgObj} markGroup
+   * @return {!glift.displays.board.Intersections} the current obj.
+   * @private
+   */
+  flushMark_: function(pt, mark, markGroup) {
     var svg = this.svg;
     var idGen = this.idGen;
-    if (this._reqClearForMark(pt, mark)) {
+    if (this.reqClearForMark_(pt, mark)) {
       var starp  = svg.child(idGen.starpointGroup()).child(idGen.starpoint(pt))
       if (starp) {
-        glift.dom.elem(starp.id()).setAttr('opacity', starp.attr('opacity'));
+        glift.dom.elem(/** @type {string} */ (starp.id()))
+            .setAttr('opacity', /** @type {string} */ (starp.attr('opacity')));
       }
       var linept = svg.child(idGen.lineGroup()).child(idGen.line(pt))
-      glift.dom.elem(linept.id()).setAttr('opacity', linept.attr('opacity'));
+      glift.dom.elem(/** @type {string} */ (linept.id()))
+          .setAttr('opacity', /** @type {string} */ (linept.attr('opacity')));
     }
-    markGroup.child(idGen.mark(pt)).attachToParent(markGroup.id());
-    this.markPts.push(pt);
+    markGroup.child(idGen.mark(pt))
+        .attachToParent(/** @type {string} */ (markGroup.id()));
     return this;
   },
 
   /**
    * Clear marks (optionally) from a group.
-   * @param {string=} opt_markGroup Specify a mark group ID, or generate one.
+   *
+   * @param {glift.displays.svg.SvgObj=} opt_markGroup
+   *    Specify a mark group, or generate one.
    * @return {glift.displays.board.Intersections} the current obj.
    */
   clearMarks: function(opt_markGroup) {
@@ -4857,12 +4909,14 @@ glift.displays.board.Intersections.prototype = {
       }
     }
     markGroup.emptyChildren();
-    glift.dom.elem(markGroup.id()).empty();
+    glift.dom.elem(/** @type {string} */ (markGroup.id())).empty();
     return this;
   },
 
   /**
    * Currently unused. Add guideLines for mobile devices.
+   * @param {!glift.Point} pt
+   * @return {glift.displays.board.Intersections} this
    */
   addGuideLines: function(pt) {
     var elems = glift.enums.svgElements;
@@ -4878,8 +4932,12 @@ glift.displays.board.Intersections.prototype = {
       .setAttr('stroke-width', 3)
       .setAttr('stroke', 'blue')
       .setId(this.idGen.guideLine()))
+    return this;
   },
 
+  /**
+   * @return {glift.displays.board.Intersections} this
+   */
   clearGuideLines: function() {
     var elems = glift.enums.svgElements;
     var container = this.svg.child(this.idGen.markGroup())
@@ -4887,6 +4945,11 @@ glift.displays.board.Intersections.prototype = {
     return this;
   },
 
+  /**
+   * @param {string} groupId
+   * @param {!Object} attrObj
+   * @return {glift.displays.board.Intersections} this
+   */
   setGroupAttr: function(groupId, attrObj) {
     var g = this.svg.child(groupId);
     if (g !== undefined) {
@@ -4902,6 +4965,7 @@ glift.displays.board.Intersections.prototype = {
 
   /**
    * Clear all the stones and stone shadows.
+   * @return {glift.displays.board.Intersections} this
    */
   clearStones: function() {
     var stoneAttrs = {opacity: 0, stone_color: "EMPTY"};
@@ -4911,46 +4975,60 @@ glift.displays.board.Intersections.prototype = {
 
     var stones = this.svg.child(this.idGen.stoneGroup()).children();
     for (var i = 0, len = stones.length; i < len; i++) {
-      glift.dom.elem(stones[i].id()).setAttrObj(stoneAttrs);
+      glift.dom.elem(/** @type {string} */ (stones[i].id())).setAttrObj(stoneAttrs);
     }
 
     var shadowGroup = this.svg.child(this.idGen.stoneShadowGroup());
     if (shadowGroup) {
       var shadows = shadowGroup.children();
       for (var i = 0, len = shadows.length; i < len; i++) {
-        glift.dom.elem(shadows[i].id()).setAttrObj(shadowAttrs);
+        glift.dom.elem(/** @type {string} */ (shadows[i].id())).setAttrObj(shadowAttrs);
       }
     }
     return this;
   },
 
+  /**
+   * Clear all the marks and the stones.
+   * @return {glift.displays.board.Intersections} this
+   */
   clearAll: function() {
     this.clearMarks().clearStones();
     return this;
   },
 
-  /** Set events for the button rectangle. */
+  /**
+   * Set events for the button rectangle.
+   * @param {string} eventName
+   * @param {function(!Event, !glift.Point)} func
+   * @return {glift.displays.board.Intersections} this
+   */
   setEvent: function(eventName, func) {
     var that = this;
     var id = this.svg.child(this.idGen.buttonGroup())
         .child(this.idGen.fullBoardButton())
         .id();
-    glift.dom.elem(id).on(eventName, function(e) {
-      var pt = that._buttonEventPt(e);
+    glift.dom.elem(/** @type {string} */ (id)).on(eventName, function(e) {
+      var pt = that.buttonEventPt_(e);
       pt && func(e, pt);
     });
     return this;
   },
 
-  /** Set events for the button rectangle. */
+  /**
+   * Set events for the button rectangle.
+   * @param {function(!Event, !glift.Point)} hoverInFunc
+   * @param {function(!Event, !glift.Point)} hoverOutFunc
+   * @return {glift.displays.board.Intersections} this
+   */
   setHover: function(hoverInFunc, hoverOutFunc) {
     var that = this;
     var id = this.svg.child(this.idGen.buttonGroup())
         .child(this.idGen.fullBoardButton())
         .id();
-    glift.dom.elem(id).on('mousemove', function(e) {
+    glift.dom.elem(/** @type {string} */ (id)).on('mousemove', function(e) {
       var lastpt = that.lastHoverPoint;
-      var curpt = that._buttonEventPt(e);
+      var curpt = that.buttonEventPt_(e);
       if (curpt && lastpt && !lastpt.equals(curpt)) {
         hoverOutFunc(e, lastpt);
         hoverInFunc(e, curpt);
@@ -4959,17 +5037,23 @@ glift.displays.board.Intersections.prototype = {
       }
       that.lastHoverPoint = curpt;
     });
-    glift.dom.elem(id).on('mouseout', function(e) {
+    glift.dom.elem(/** @type {string} */ (id)).on('mouseout', function(e) {
       var lastpt = that.lastHoverPoint;
       that.lastHoverPoint = null;
       if (lastpt) {
         hoverOutFunc(e, lastpt);
       }
     });
+    return this;
   },
 
-  /** Get the point from an event on the button rectangle. */
-  _buttonEventPt: function(e) {
+  /**
+   * Get the point from an event on the button rectangle.
+   * @param {Event} e The event.
+   * @return {!glift.Point}
+   * @private
+   */
+  buttonEventPt_: function(e) {
     var data = this.svg.child(this.idGen.buttonGroup())
         .child(this.idGen.fullBoardButton())
         .data();
@@ -5023,16 +5107,12 @@ goog.require('glift.displays.board');
  * rather than as a whole so that we can clear theme out when we to draw marks
  * on the raw board (rather than on stones).
  *
- * @param {glift.displays.svg.SvgObj} svg Base svg obj
+ * @param {!glift.displays.svg.SvgObj} svg Base svg obj
  * @param {!glift.displays.ids.Generator} idGen The ID generator for SVG.
- * @param {?glift.displays.BoardPoints} boardPoints Board points object.
+ * @param {!glift.displays.BoardPoints} boardPoints Board points object.
  * @param {!glift.themes.base} theme The theme object
  */
 glift.displays.board.lines = function(svg, idGen, boardPoints, theme) {
-  if (boardPoints === null) {
-    throw new Error('boardPoints null: Gui Environment obj not initialized');
-  }
-
   // Mapping from int point (e.g., 3,3) pt string to id;
   var svglib = glift.displays.svg;
 
@@ -5053,7 +5133,7 @@ glift.displays.board.lines = function(svg, idGen, boardPoints, theme) {
 };
 
 /**
- * @param {glift.displays.BoardPt} boardPt A
+ * @param {!glift.displays.BoardPt} boardPt A
  * @param {!number} radius Size of the space between the lines
  * @param {!number} numIntersections Number of intersecitons on the board.
  */
@@ -5090,6 +5170,9 @@ glift.displays.board.intersectionLine = function(
  * dummy mark container is once as a place holder. Unlike all other elements,
  * the Marks are created / destroyed on demand, which is why we need a g
  * container.
+ *
+ * @param {!glift.displays.svg.SvgObj} svg Base svg obj
+ * @param {!glift.displays.ids.Generator} idGen The ID generator for SVG.
  */
 glift.displays.board.markContainer = function(svg, idGen) {
   svg.append(glift.displays.svg.group().setId(idGen.markGroup()));
@@ -5224,9 +5307,13 @@ glift.displays.board.addMark = function(
 /**
  * Create the star points.  See boardPoints.starPoints() for details about which
  * points are used
+ *
+ * @param {!glift.displays.svg.SvgObj} svg Base svg obj
+ * @param {!glift.displays.ids.Generator} idGen The ID generator for SVG.
+ * @param {!glift.displays.BoardPoints} boardPoints Board points object.
+ * @param {!glift.themes.base} theme The theme object
  */
-glift.displays.board.starpoints = function(
-    svg, idGen, boardPoints, theme) {
+glift.displays.board.starpoints = function(svg, idGen, boardPoints, theme) {
   var svglib = glift.displays.svg;
   var container = svglib.group().setId(idGen.starpointGroup());
   svg.append(container);
@@ -5249,6 +5336,11 @@ glift.displays.board.starpoints = function(
 /**
  * Create the Go stones.  They are initially invisible to the user, but they
  * all exist at the time of GoBoard creation.
+ *
+ * @param {!glift.displays.svg.SvgObj} svg Base svg obj
+ * @param {!glift.displays.ids.Generator} idGen The ID generator for SVG.
+ * @param {!glift.displays.BoardPoints} boardPoints Board points object.
+ * @param {!glift.themes.base} theme The theme object
  */
 glift.displays.board.stones = function(svg, idGen, boardPoints, theme) {
   var svglib = glift.displays.svg;
@@ -5273,6 +5365,11 @@ glift.displays.board.stones = function(svg, idGen, boardPoints, theme) {
  * Create the shadows for the Go stones.  They are initially invisible to the
  * user, but they may become visible later (e.g., via mousover).  Shadows are
  * only created if the theme has a shadow.
+ *
+ * @param {!glift.displays.svg.SvgObj} svg Base svg obj
+ * @param {!glift.displays.ids.Generator} idGen The ID generator for SVG.
+ * @param {!glift.displays.BoardPoints} boardPoints Board points object.
+ * @param {!glift.themes.base} theme The theme object
  */
 glift.displays.board.shadows = function(svg, idGen, boardPoints, theme) {
   if (theme.stones.shadows === undefined) { return {}; }
@@ -7063,7 +7160,7 @@ glift.displays.svg.SvgObj = function(type, opt_attrObj) {
   this.idMap_ = {};
   /** @private {string} */
   this.text_ = '';
-  /** @private {Object} */
+  /** @private {?Object} */
   this.data_ = null;
 };
 
@@ -7220,8 +7317,8 @@ glift.displays.svg.SvgObj.prototype = {
     return this;
   },
 
-  /** @return {Object} The node's data */
-  data: function(data) {
+  /** @return {?Object} The node's data */
+  data: function() {
     return this.data_
   },
 
@@ -9244,7 +9341,7 @@ glift.rules.movetree = {
   getInstance: function(opt_intersections) {
     var mt = new glift.rules.MoveTree(glift.rules.movenode());
     if (opt_intersections !== undefined) {
-      mt._setIntersections(opt_intersections);
+      mt.setIntersections_(opt_intersections);
     }
     return mt;
   },
@@ -9734,7 +9831,7 @@ glift.rules.MoveTree.prototype = {
    * @return {string}
    */
   toSgf: function() {
-    return this._toSgfBuffer(this.getTreeFromRoot().node(), []).join("");
+    return this.toSgfBuffer_(this.getTreeFromRoot().node(), []).join("");
   },
 
   /**
@@ -9760,8 +9857,9 @@ glift.rules.MoveTree.prototype = {
    *
    * @param {number} intersections
    * @return {glift.rules.MoveTree} this object.
+   * @private
    */
-  _setIntersections: function(intersections) {
+  setIntersections_: function(intersections) {
     var mt = this.getTreeFromRoot(),
         prop = glift.rules.prop;
     if (!mt.properties().contains(prop.SZ)) {
@@ -9775,8 +9873,9 @@ glift.rules.MoveTree.prototype = {
    * @param {!glift.rules.MoveNode} node A MoveNode instance.
    * @param {!Array<string>} builder String buffer
    * @return {!Array<string>} the built buffer
+   * @private
    */
-  _toSgfBuffer: function(node, builder) {
+  toSgfBuffer_: function(node, builder) {
     if (node.getParent()) {
       // Don't add a \n if we're at the root node
       builder.push('\n');
@@ -9793,7 +9892,7 @@ glift.rules.MoveTree.prototype = {
       if (values.length > 0) {
         for (var i = 0; i < values.length; i++) {
           // Ensure a string and escape right brackets.
-          var val = node.properties().escape(values[i]);
+          var val = glift.parse.sgfEscape(values[i]);
           out += '[' + val + ']'
         }
       } else {
@@ -9803,7 +9902,7 @@ glift.rules.MoveTree.prototype = {
     }
 
     for (var i = 0, len = node.numChildren(); i < len; i++) {
-      this._toSgfBuffer(node.getChild(i), builder);
+      this.toSgfBuffer_(node.getChild(i), builder);
     }
 
     if (!node.getParent() || node.getParent().numChildren() > 1) {
@@ -9979,7 +10078,8 @@ glift.rules.PropDescriptor;
 
 /**
  * Properties that accept point values. This is here mostly for full-board
- * modifications (e.g., rotations). It may also be useful for identifying boards
+ * modifications (e.g., rotations). It may also be useful for identifying
+ * boards.
  *
  * Notes: There are several ways to represent points in SGFs.
  *  [ab] - Simple point at 0,1 (origin=upper left. oriented down-right)
@@ -10021,20 +10121,16 @@ glift.rules.Properties.prototype = {
   /**
    * Add an SGF Property to the current move.
    *
-   * Prop: An SGF Property
-   * Value: Either of:
-   *  A string.
-   *  An array of strings.
-   *
-   * Eventually, each sgf property should be matched to a datatype.  For now,
-   * the user is allowed to put arbitrary data into a property.
-   *
    * Note that this does not overwrite an existing property - for that, the user
    * has to delete the existing property. If the property already exists, we add
    * another data element onto the array.
    *
-   * @param {glift.rules.prop} prop
-   * @param {string|!Array<string>} value
+   * We also assume that all point-rectangles have been converted by the parser
+   * into lists of points. http://www.red-bean.com/sgf/sgf4.html#3.5.1
+   *
+   * @param {glift.rules.prop} prop An sgf property in it's FF4 form (ex: AB).
+   * @param {string|!Array<string>} value Either a string or an array of
+   *    strings.
    * @return {!glift.rules.Properties} this
    */
   add: function(prop, value) {
@@ -10045,37 +10141,13 @@ glift.rules.Properties.prototype = {
           ' Thus, this property will be ignored');
       return this;
     }
-    var valueType = glift.util.typeOf(value);
 
-    if (valueType !== 'string' && valueType !== 'array') {
-      throw new Error('Unsupported type "' + valueType + '" for prop ' + prop);
-    } else if (valueType === 'array') {
-      // Force all array values to be of type string.
-      for (var i = 0, len = value.length; i < len; i++) {
-        // Ensure properties are strings
-        value[i] = this.unescape(value[i]);
-      }
-    } else if (valueType === 'string') {
-      value = [ this.unescape(/** @type {string} */ (value)) ];
-    } else {
-      throw new Error('Unexpected type ' +
-          glift.util.typeOf(value) + ' for prop ' + prop);
-    }
-
-    // Convert any point rectangles. We do not allow point rectangles in our
-    // SGF property data, since it makes everything much more complex.
-    var pointRectangleRegex = /^[a-z][a-z]:[a-z][a-z]$/;
     var finished = [];
-    for (var i = 0; i < value.length; i++) {
-      if (pointRectangleRegex.test(value[i])) {
-        // This is a rectangle of points. Sigh.
-        var pts = glift.util.pointArrFromSgfProp(value[i]);
-        for (var j = 0; j < pts.length; j++) {
-          finished.push(pts[j].toSgfCoord());
-        }
-      } else {
-        finished.push(value[i]);
-      }
+    if (typeof value === 'string') {
+      var zet = /** @type {string} */ (value);
+      finished = [value];
+    } else {
+      finished = /** @type {!Array<string>} */ (value);
     }
 
     // If the type is a string, make into an array or concat.
@@ -10258,19 +10330,10 @@ glift.rules.Properties.prototype = {
    * @return {glift.rules.Properties} this
    */
   set: function(prop, value) {
-    if (prop !== undefined && value !== undefined) {
+    if (prop && value && glift.rules.prop[prop]) {
       if (glift.util.typeOf(value) === 'string') {
-        this.propMap[prop] = [
-            this.unescape(/** @type {string} */ (value)) ];
+        this.propMap[prop] = [/** @type {string} */ (value)];
       } else if (glift.util.typeOf(value) === 'array') {
-        for (var i = 0; i < value.length; i++) {
-          if (glift.util.typeOf(value[i]) !== 'string') {
-            throw new Error('When setting via an array, all values ' +
-              'must be strings. was [' + glift.util.typeOf(value[i]) +
-              '], for value ' + value[i]);
-          }
-          value[i] = this.unescape(value[i]);
-        }
         this.propMap[prop] = /** @type {!Array<string>} */ (value);
       }
     }
@@ -10555,24 +10618,6 @@ glift.rules.Properties.prototype = {
     }
     return gameInfoArr;
   },
-
-  /**
-   * Escapes some text by converting ] to \\] 
-   * @param {string} text
-   * @return {string}
-   */
-  escape: function(text) {
-    return text.toString().replace(/]/g, '\\]');
-  },
-
-  /**
-   * Unescapes some text by converting \\] to ] 
-   * @param {string} text
-   * @return {string}
-   */
-  unescape: function(text) {
-    return text.toString().replace(/\\]/g, ']');
-  }
 };
 
 goog.provide('glift.rules.AppliedTreepath');
@@ -11177,6 +11222,24 @@ glift.parse.sgfMetadataProperty = 'GC';
 
 
 /**
+ * Escapes some text by converting ] to \\]
+ * @param {string} text
+ * @return {string}
+ */
+glift.parse.sgfEscape = function(text) {
+  return text.toString().replace(/]/g, '\\]');
+};
+
+/**
+ * Unescapes some text by converting \\] to ]
+ * @param {string} text
+ * @return {string}
+ */
+glift.parse.sgfUnescape = function(text) {
+  return text.toString().replace(/\\]/g, ']');
+};
+
+/**
  * The new Glift SGF parser!
  * Takes a string, returns a movetree.  Easy =).
  *
@@ -11218,7 +11281,7 @@ glift.parse.sgf = function(sgfString) {
 
   var curstate = states.BEGINNING_BEFORE_PAREN;
   var movetree = glift.rules.movetree.getInstance();
-  var charBuffer = []; // List of characters.
+  var charBuffer = ''; // List of characters.
   var propData = []; // List of Strings.
   var branchMoveNums = []; // used for when we pop up.
   var curProp = '';
@@ -11229,6 +11292,13 @@ glift.parse.sgf = function(sgfString) {
   // SGF.
   var parenDepth = 0;
 
+  // A simple boolean to track whether property data could be considered a point
+  // rectangle (by the existence of :). Processing point rectangles is
+  // relatively costly, so we try to be conservative about point-rectangle
+  // processing.
+  var possiblePointRectangle = false;
+  var pointRectangleRegex = /^[a-z][a-z]:[a-z][a-z]$/;
+
   var perror = function(msg) {
     glift.parse.sgfParseError(lineNum, colNum, curchar, msg, false /* iswarn */);
   };
@@ -11238,11 +11308,10 @@ glift.parse.sgf = function(sgfString) {
   };
 
   var flushCharBuffer = function() {
-    var strOut = charBuffer.join("");
-    charBuffer = [];
+    var strOut = charBuffer;
+    charBuffer = '';
     return strOut;
   };
-
 
   /** Flush the property data to the movetree's properties. */
   var flushPropDataIfNecessary = function() {
@@ -11254,17 +11323,39 @@ glift.parse.sgf = function(sgfString) {
           var pdata = propData[0].replace(/\\]/g, ']');
           var mdata = JSON.parse(pdata);
           if (glift.util.typeOf(mdata) === 'object') {
-            movetree.setMetdata(/** @type {Object} */ (mdata));
+            movetree.setMetdata(/** @type {!Object} */ (mdata));
           }
         } catch (e) {
           glift.util.logz('For property: ' + curProp + ' unable to parse ' +
-              ': ' + propData + ' as JSON for SGF metadata');
+              'as JSON for Glift SGF metadata: : ' + propData );
         }
       }
       movetree.properties().add(curProp, propData);
       propData = [];
       curProp = '';
     }
+  };
+
+  /**
+   * Flush characters to the prop data. All relevant property process occurs
+   * here. In particular, this is where we process point rectangles.
+   */
+  var flushCharBufferToPropData = function() {
+    var charz = flushCharBuffer();
+    if (possiblePointRectangle &&
+        pointRectangleRegex.test(charz) &&
+        (curProp === 'AB' || curProp === 'AW' || curProp === 'AE' || 
+            curProp === 'CR' || curProp === 'DD' ||
+            curProp === 'MA' || curProp === 'SL' ||
+            curProp === 'SQ' || curProp === 'TR')) {
+      var pts = glift.util.pointArrFromSgfProp(charz);
+      for (var j = 0; j < pts.length; j++) {
+        propData.push(pts[j].toSgfCoord());
+      }
+    } else {
+      propData.push(charz);
+    }
+    possiblePointRectangle = false;
   };
 
   // Run everything inside an anonymous function so we can use 'return' as a
@@ -11306,7 +11397,7 @@ glift.parse.sgf = function(sgfString) {
           break;
         case states.PROPERTY:
           if (propRegex.test(curchar)) {
-            charBuffer.push(curchar);
+            charBuffer += curchar;
             // In the SGF Specification, SGF properties can be of arbitrary
             // lengths, even though all standard SGF properties are 1-2 chars.
           } else if (oldStyleProp.test(curchar)) {
@@ -11327,19 +11418,25 @@ glift.parse.sgf = function(sgfString) {
           break;
         case states.PROP_DATA:
           if (curchar === syn.RBRACE
-              && charBuffer[charBuffer.length - 1] === '\\') {
-            charBuffer.push(curchar);
+              && charBuffer.charAt(charBuffer.length - 1) === '\\') {
+            // Remove the \
+            charBuffer = charBuffer.substring(0, charBuffer.length - 1);
+            // And add the brace as a normal character
+            charBuffer += curchar;
           } else if (curchar === syn.RBRACE) {
-            propData.push(flushCharBuffer());
+            flushCharBufferToPropData();
             curstate = states.BETWEEN;
           } else {
-            charBuffer.push(curchar);
+            if (curchar === ':') {
+              possiblePointRectangle = true;
+            }
+            charBuffer += curchar;
           }
           break;
         case states.BETWEEN:
           if (propRegex.test(curchar)) {
             flushPropDataIfNecessary();
-            charBuffer.push(curchar);
+            charBuffer += curchar;
             curstate = states.PROPERTY;
           } else if (curchar === syn.LBRACE) {
             if (curProp.length > 0) {
@@ -13768,7 +13865,7 @@ glift.flattener.updateLabelsWithVariations_ = function(
       var pt = move.point;
       var ptStr = pt.toString();
       if (markMap.labels[ptStr] === undefined) {
-         var markValue = '' + (i + 1);
+        var markValue = '' + (i + 1);
         if (selectedNext &&
             selectedNext.point &&
             ptStr == selectedNext.point.toString()) {
@@ -14691,6 +14788,23 @@ glift.flattener.Intersection = function(pt) {
   this.textLabel_ = null;
 };
 
+// Statics
+glift.flattener.intersection.layerMapping = {
+  base: {
+    EMPTY: true, TL_CORNER: true, TR_CORNER: true, BL_CORNER: true,
+    BR_CORNER: true, TOP_EDGE: true, BOT_EDGE: true, LEFT_EDGE: true,
+    RIGHT_EDGE: true, CENTER: true, CENTER_STARPOINT: true
+  },
+  stone: {
+    EMPTY: true, BSTONE: true, WSTONE: true
+  },
+  mark: {
+    EMPTY: true, TRIANGLE: true, SQUARE: true, CIRCLE: true, XMARK: true,
+    TEXTLABEL: true, LASTMOVE: true, NEXTVARIATION: true,
+    CORRECT_VARIATION: true,
+  }
+};
+
 glift.flattener.Intersection.prototype = {
   /**
    * @param {glift.flattener.symbols} s Symbol to validate
@@ -14698,27 +14812,11 @@ glift.flattener.Intersection.prototype = {
    * @private
    */
   validateSymbol_: function(s, layer) {
-    var sym = glift.flattener.symbols;
-    var layerMapping = {
-      base: {
-        EMPTY: true, TL_CORNER: true, TR_CORNER: true, BL_CORNER: true,
-        BR_CORNER: true, TOP_EDGE: true, BOT_EDGE: true, LEFT_EDGE: true,
-        RIGHT_EDGE: true, CENTER: true, CENTER_STARPOINT: true
-      },
-      stone: {
-        EMPTY: true, BSTONE: true, WSTONE: true
-      },
-      mark: {
-        EMPTY: true, TRIANGLE: true, SQUARE: true, CIRCLE: true, XMARK: true,
-        TEXTLABEL: true, LASTMOVE: true, NEXTVARIATION: true,
-        CORRECT_VARIATION: true,
-      }
-    };
-    if (!glift.flattener.symbolStr(s)) {
+    var str = glift.flattener.symbolStr(s);
+    if (!str) {
       throw new Error('Symbol Val: ' + s + ' is not a defined symbol.');
     }
-    var str = glift.flattener.symbolStr(s);
-    if (!layerMapping[layer][str]) {
+    if (!glift.flattener.intersection.layerMapping[layer][str]) {
       throw new Error('Incorrect layer for: ' + str + ',' + s +
           '. Layer was ' + layer);
     }
@@ -16992,7 +17090,7 @@ glift.api.StoneActions = function(opt_o) {
    * @type {!glift.api.StoneFn}
    */
   this.mouseover = o.mouseover || function(event, widget, pt) {
-    var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
+    var hoverColors = { 'BLACK': 'BLACK_HOVER', 'WHITE': 'WHITE_HOVER' };
     var currentPlayer = widget.controller.getCurrentPlayer();
     if (widget.controller.canAddStone(pt, currentPlayer)) {
       widget.display.intersections()
@@ -17009,7 +17107,7 @@ glift.api.StoneActions = function(opt_o) {
     var currentPlayer = widget.controller.getCurrentPlayer();
     if (widget.controller.canAddStone(pt, currentPlayer)) {
       widget.display && widget.display.intersections()
-          .setStoneColor(pt, 'EMPTY');
+          .setStoneColor(pt, glift.enums.states.EMPTY);
     }
   };
 

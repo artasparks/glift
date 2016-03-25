@@ -19,6 +19,24 @@ glift.parse.sgfMetadataProperty = 'GC';
 
 
 /**
+ * Escapes some text by converting ] to \\]
+ * @param {string} text
+ * @return {string}
+ */
+glift.parse.sgfEscape = function(text) {
+  return text.toString().replace(/]/g, '\\]');
+};
+
+/**
+ * Unescapes some text by converting \\] to ]
+ * @param {string} text
+ * @return {string}
+ */
+glift.parse.sgfUnescape = function(text) {
+  return text.toString().replace(/\\]/g, ']');
+};
+
+/**
  * The new Glift SGF parser!
  * Takes a string, returns a movetree.  Easy =).
  *
@@ -60,7 +78,7 @@ glift.parse.sgf = function(sgfString) {
 
   var curstate = states.BEGINNING_BEFORE_PAREN;
   var movetree = glift.rules.movetree.getInstance();
-  var charBuffer = []; // List of characters.
+  var charBuffer = ''; // List of characters.
   var propData = []; // List of Strings.
   var branchMoveNums = []; // used for when we pop up.
   var curProp = '';
@@ -71,6 +89,13 @@ glift.parse.sgf = function(sgfString) {
   // SGF.
   var parenDepth = 0;
 
+  // A simple boolean to track whether property data could be considered a point
+  // rectangle (by the existence of :). Processing point rectangles is
+  // relatively costly, so we try to be conservative about point-rectangle
+  // processing.
+  var possiblePointRectangle = false;
+  var pointRectangleRegex = /^[a-z][a-z]:[a-z][a-z]$/;
+
   var perror = function(msg) {
     glift.parse.sgfParseError(lineNum, colNum, curchar, msg, false /* iswarn */);
   };
@@ -80,11 +105,10 @@ glift.parse.sgf = function(sgfString) {
   };
 
   var flushCharBuffer = function() {
-    var strOut = charBuffer.join("");
-    charBuffer = [];
+    var strOut = charBuffer;
+    charBuffer = '';
     return strOut;
   };
-
 
   /** Flush the property data to the movetree's properties. */
   var flushPropDataIfNecessary = function() {
@@ -96,17 +120,39 @@ glift.parse.sgf = function(sgfString) {
           var pdata = propData[0].replace(/\\]/g, ']');
           var mdata = JSON.parse(pdata);
           if (glift.util.typeOf(mdata) === 'object') {
-            movetree.setMetdata(/** @type {Object} */ (mdata));
+            movetree.setMetdata(/** @type {!Object} */ (mdata));
           }
         } catch (e) {
           glift.util.logz('For property: ' + curProp + ' unable to parse ' +
-              ': ' + propData + ' as JSON for SGF metadata');
+              'as JSON for Glift SGF metadata: : ' + propData );
         }
       }
       movetree.properties().add(curProp, propData);
       propData = [];
       curProp = '';
     }
+  };
+
+  /**
+   * Flush characters to the prop data. All relevant property process occurs
+   * here. In particular, this is where we process point rectangles.
+   */
+  var flushCharBufferToPropData = function() {
+    var charz = flushCharBuffer();
+    if (possiblePointRectangle &&
+        pointRectangleRegex.test(charz) &&
+        (curProp === 'AB' || curProp === 'AW' || curProp === 'AE' || 
+            curProp === 'CR' || curProp === 'DD' ||
+            curProp === 'MA' || curProp === 'SL' ||
+            curProp === 'SQ' || curProp === 'TR')) {
+      var pts = glift.util.pointArrFromSgfProp(charz);
+      for (var j = 0; j < pts.length; j++) {
+        propData.push(pts[j].toSgfCoord());
+      }
+    } else {
+      propData.push(charz);
+    }
+    possiblePointRectangle = false;
   };
 
   // Run everything inside an anonymous function so we can use 'return' as a
@@ -148,7 +194,7 @@ glift.parse.sgf = function(sgfString) {
           break;
         case states.PROPERTY:
           if (propRegex.test(curchar)) {
-            charBuffer.push(curchar);
+            charBuffer += curchar;
             // In the SGF Specification, SGF properties can be of arbitrary
             // lengths, even though all standard SGF properties are 1-2 chars.
           } else if (oldStyleProp.test(curchar)) {
@@ -169,19 +215,25 @@ glift.parse.sgf = function(sgfString) {
           break;
         case states.PROP_DATA:
           if (curchar === syn.RBRACE
-              && charBuffer[charBuffer.length - 1] === '\\') {
-            charBuffer.push(curchar);
+              && charBuffer.charAt(charBuffer.length - 1) === '\\') {
+            // Remove the \
+            charBuffer = charBuffer.substring(0, charBuffer.length - 1);
+            // And add the brace as a normal character
+            charBuffer += curchar;
           } else if (curchar === syn.RBRACE) {
-            propData.push(flushCharBuffer());
+            flushCharBufferToPropData();
             curstate = states.BETWEEN;
           } else {
-            charBuffer.push(curchar);
+            if (curchar === ':') {
+              possiblePointRectangle = true;
+            }
+            charBuffer += curchar;
           }
           break;
         case states.BETWEEN:
           if (propRegex.test(curchar)) {
             flushPropDataIfNecessary();
-            charBuffer.push(curchar);
+            charBuffer += curchar;
             curstate = states.PROPERTY;
           } else if (curchar === syn.LBRACE) {
             if (curProp.length > 0) {

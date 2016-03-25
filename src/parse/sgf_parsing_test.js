@@ -15,6 +15,18 @@
     deepEqual(props.getOneValue('C'), '[Mark Test]');
   });
 
+  test('Another escaped bracket test', function() {
+    var mt = glift.parse.sgf('(;GM[1]C[Kashomon [1k\\]])');
+    var props = mt.properties();
+    deepEqual(props.getOneValue('C'), 'Kashomon [1k]');
+  });
+
+  test('Pre-process point rectangle', function() {
+    var mt = glift.parse.sgf('(;GM[1]AW[aa:bb])');
+    var props = mt.properties();
+    deepEqual(props.getAllValues('AW'), ['aa', 'ba', 'ab', 'bb']);
+  });
+
   test('Parse pass', function() {
     var sgf = '(;GM[1]C[It begins];B[]C[pass])';
     var mt = glift.parse.sgf(sgf);

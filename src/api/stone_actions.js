@@ -33,7 +33,7 @@ glift.api.StoneActions = function(opt_o) {
    * @type {!glift.api.StoneFn}
    */
   this.mouseover = o.mouseover || function(event, widget, pt) {
-    var hoverColors = { "BLACK": "BLACK_HOVER", "WHITE": "WHITE_HOVER" };
+    var hoverColors = { 'BLACK': 'BLACK_HOVER', 'WHITE': 'WHITE_HOVER' };
     var currentPlayer = widget.controller.getCurrentPlayer();
     if (widget.controller.canAddStone(pt, currentPlayer)) {
       widget.display.intersections()
@@ -50,7 +50,7 @@ glift.api.StoneActions = function(opt_o) {
     var currentPlayer = widget.controller.getCurrentPlayer();
     if (widget.controller.canAddStone(pt, currentPlayer)) {
       widget.display && widget.display.intersections()
-          .setStoneColor(pt, 'EMPTY');
+          .setStoneColor(pt, glift.enums.states.EMPTY);
     }
   };
 

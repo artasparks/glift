@@ -43,7 +43,7 @@ glift.rules.movetree = {
   getInstance: function(opt_intersections) {
     var mt = new glift.rules.MoveTree(glift.rules.movenode());
     if (opt_intersections !== undefined) {
-      mt._setIntersections(opt_intersections);
+      mt.setIntersections_(opt_intersections);
     }
     return mt;
   },
@@ -533,7 +533,7 @@ glift.rules.MoveTree.prototype = {
    * @return {string}
    */
   toSgf: function() {
-    return this._toSgfBuffer(this.getTreeFromRoot().node(), []).join("");
+    return this.toSgfBuffer_(this.getTreeFromRoot().node(), []).join("");
   },
 
   /**
@@ -559,8 +559,9 @@ glift.rules.MoveTree.prototype = {
    *
    * @param {number} intersections
    * @return {glift.rules.MoveTree} this object.
+   * @private
    */
-  _setIntersections: function(intersections) {
+  setIntersections_: function(intersections) {
     var mt = this.getTreeFromRoot(),
         prop = glift.rules.prop;
     if (!mt.properties().contains(prop.SZ)) {
@@ -574,8 +575,9 @@ glift.rules.MoveTree.prototype = {
    * @param {!glift.rules.MoveNode} node A MoveNode instance.
    * @param {!Array<string>} builder String buffer
    * @return {!Array<string>} the built buffer
+   * @private
    */
-  _toSgfBuffer: function(node, builder) {
+  toSgfBuffer_: function(node, builder) {
     if (node.getParent()) {
       // Don't add a \n if we're at the root node
       builder.push('\n');
@@ -592,7 +594,7 @@ glift.rules.MoveTree.prototype = {
       if (values.length > 0) {
         for (var i = 0; i < values.length; i++) {
           // Ensure a string and escape right brackets.
-          var val = node.properties().escape(values[i]);
+          var val = glift.parse.sgfEscape(values[i]);
           out += '[' + val + ']'
         }
       } else {
@@ -602,7 +604,7 @@ glift.rules.MoveTree.prototype = {
     }
 
     for (var i = 0, len = node.numChildren(); i < len; i++) {
-      this._toSgfBuffer(node.getChild(i), builder);
+      this.toSgfBuffer_(node.getChild(i), builder);
     }
 
     if (!node.getParent() || node.getParent().numChildren() > 1) {

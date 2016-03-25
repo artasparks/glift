@@ -92,7 +92,7 @@ glift.displays.svg.SvgObj = function(type, opt_attrObj) {
   this.idMap_ = {};
   /** @private {string} */
   this.text_ = '';
-  /** @private {Object} */
+  /** @private {?Object} */
   this.data_ = null;
 };
 
@@ -249,8 +249,8 @@ glift.displays.svg.SvgObj.prototype = {
     return this;
   },
 
-  /** @return {Object} The node's data */
-  data: function(data) {
+  /** @return {?Object} The node's data */
+  data: function() {
     return this.data_
   },
 

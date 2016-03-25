@@ -3,6 +3,9 @@
  * dummy mark container is once as a place holder. Unlike all other elements,
  * the Marks are created / destroyed on demand, which is why we need a g
  * container.
+ *
+ * @param {!glift.displays.svg.SvgObj} svg Base svg obj
+ * @param {!glift.displays.ids.Generator} idGen The ID generator for SVG.
  */
 glift.displays.board.markContainer = function(svg, idGen) {
   svg.append(glift.displays.svg.group().setId(idGen.markGroup()));

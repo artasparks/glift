@@ -447,7 +447,7 @@ glift.flattener.updateLabelsWithVariations_ = function(
       var pt = move.point;
       var ptStr = pt.toString();
       if (markMap.labels[ptStr] === undefined) {
-         var markValue = '' + (i + 1);
+        var markValue = '' + (i + 1);
         if (selectedNext &&
             selectedNext.point &&
             ptStr == selectedNext.point.toString()) {

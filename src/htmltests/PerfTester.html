@@ -253,7 +253,7 @@
             }
           });
 
-          perfTest('Parse a movetree for a real game', 500, function() {
+          perfTest('Parse a movetree for a real game', 1000, function() {
             glift.parse.fromString(commentary);
           });
 
@@ -282,7 +282,8 @@
               nextMovesTreepath: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
             });
           });
-        })();
+
+        })(); // End Perf Tests
 
       </script>
     </div>

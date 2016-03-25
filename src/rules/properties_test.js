@@ -54,25 +54,26 @@
     deepEqual(props.getAllValues('TR'), ['aa', 'cc']);
   });
 
-  test('Test preprocess', function() {
-    var props = properties();
-    props.add('C', '[8k\\] Zed');
-    deepEqual(props.getOneValue('C'), '[8k] Zed')
+  // This is now done in the parser
+  // test('Test preprocess', function() {
+    // var props = properties();
+    // props.add('C', '[8k\\] Zed');
+    // deepEqual(props.getOneValue('C'), '[8k] Zed')
 
-    props.remove('C');
-    props.add('C', '[8k] Dob');
-    deepEqual(props.getOneValue('C'), '[8k] Dob')
+    // props.remove('C');
+    // props.add('C', '[8k] Dob');
+    // deepEqual(props.getOneValue('C'), '[8k] Dob')
 
-    props.remove('C');
-    props.add('C', '[8k] Zed');
-    deepEqual(props.getOneValue('C'), '[8k] Zed')
+    // props.remove('C');
+    // props.add('C', '[8k] Zed');
+    // deepEqual(props.getOneValue('C'), '[8k] Zed')
 
-    props.set('C', '[8k\\] Zod [9k\\] bod');
-    deepEqual(props.getOneValue('C'), '[8k] Zod [9k] bod')
+    // props.set('C', '[8k\\] Zod [9k\\] bod');
+    // deepEqual(props.getOneValue('C'), '[8k] Zod [9k] bod')
 
-    props.set('C', '[8k] Zod');
-    deepEqual(props.getOneValue('C'), '[8k] Zod')
-  });
+    // props.set('C', '[8k] Zod');
+    // deepEqual(props.getOneValue('C'), '[8k] Zod')
+  // });
 
   test('Test game info: simple', function() {
     var props = properties();

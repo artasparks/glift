@@ -102,17 +102,28 @@ glift.displays.board.Display.prototype = {
    */
   draw:  function() {
     this.init();
-    var board = glift.displays.board,
-        env = this.environment_,
-        boardPoints = env.boardPoints,
-        theme = this.theme_,
-        svg = this.svg_,
-        divId = this.divId(),
-        svglib = glift.displays.svg,
-        idGen = glift.displays.ids.generator(divId);
+    var board = glift.displays.board;
+    var env = this.environment_;
+    var boardPoints = env.boardPoints;
+    var theme = this.theme_;
+    var svg = this.svg_;
+    var divId = this.divId();
+    var svglib = glift.displays.svg;
+    var idGen = glift.displays.ids.generator(divId);
+    var goBox = env.goBoardBox;
+    if (svg === null) {
+      throw new Error('Base SVG object not initialized.');
+    }
+    if (goBox === null) {
+      throw new Error('goBox null: Gui Environment obj not initialized.');
+    }
+    if (boardPoints === null) {
+      throw new Error('boardPoints null: Gui Environment obj not initialized.');
+    }
 
-    board.boardBase(svg, idGen, env.goBoardBox, theme);
+    board.boardBase(svg, idGen, goBox, theme);
     board.initBlurFilter(divId, svg); // in boardBase.  Should be moved.
+
 
     var intGrp = svglib.group().setId(idGen.intersections());
     svg.append(intGrp);
@@ -160,8 +171,7 @@ glift.displays.board.Display.prototype = {
         this.intersections().setStoneColor(
             diffPt.boardPt, symbolStoneToState[newStoneStr]);
       }
-      if (diffPt.newValue.mark() !== diffPt.prevValue.mark() &&
-          diffPt.newValue.mark() !== 0) { // We've already cleared empty marks.
+      if (diffPt.newValue.mark() !== 0) { // We've already cleared empty marks.
         var newMark = diffPt.newValue.mark();
         var enumMark = symbolMarkToMark[newMark];
         var lbl = undefined;

@@ -58,7 +58,8 @@ glift.rules.PropDescriptor;
 
 /**
  * Properties that accept point values. This is here mostly for full-board
- * modifications (e.g., rotations). It may also be useful for identifying boards
+ * modifications (e.g., rotations). It may also be useful for identifying
+ * boards.
  *
  * Notes: There are several ways to represent points in SGFs.
  *  [ab] - Simple point at 0,1 (origin=upper left. oriented down-right)
@@ -100,20 +101,16 @@ glift.rules.Properties.prototype = {
   /**
    * Add an SGF Property to the current move.
    *
-   * Prop: An SGF Property
-   * Value: Either of:
-   *  A string.
-   *  An array of strings.
-   *
-   * Eventually, each sgf property should be matched to a datatype.  For now,
-   * the user is allowed to put arbitrary data into a property.
-   *
    * Note that this does not overwrite an existing property - for that, the user
    * has to delete the existing property. If the property already exists, we add
    * another data element onto the array.
    *
-   * @param {glift.rules.prop} prop
-   * @param {string|!Array<string>} value
+   * We also assume that all point-rectangles have been converted by the parser
+   * into lists of points. http://www.red-bean.com/sgf/sgf4.html#3.5.1
+   *
+   * @param {glift.rules.prop} prop An sgf property in it's FF4 form (ex: AB).
+   * @param {string|!Array<string>} value Either a string or an array of
+   *    strings.
    * @return {!glift.rules.Properties} this
    */
   add: function(prop, value) {
@@ -124,37 +121,13 @@ glift.rules.Properties.prototype = {
           ' Thus, this property will be ignored');
       return this;
     }
-    var valueType = glift.util.typeOf(value);
 
-    if (valueType !== 'string' && valueType !== 'array') {
-      throw new Error('Unsupported type "' + valueType + '" for prop ' + prop);
-    } else if (valueType === 'array') {
-      // Force all array values to be of type string.
-      for (var i = 0, len = value.length; i < len; i++) {
-        // Ensure properties are strings
-        value[i] = this.unescape(value[i]);
-      }
-    } else if (valueType === 'string') {
-      value = [ this.unescape(/** @type {string} */ (value)) ];
-    } else {
-      throw new Error('Unexpected type ' +
-          glift.util.typeOf(value) + ' for prop ' + prop);
-    }
-
-    // Convert any point rectangles. We do not allow point rectangles in our
-    // SGF property data, since it makes everything much more complex.
-    var pointRectangleRegex = /^[a-z][a-z]:[a-z][a-z]$/;
     var finished = [];
-    for (var i = 0; i < value.length; i++) {
-      if (pointRectangleRegex.test(value[i])) {
-        // This is a rectangle of points. Sigh.
-        var pts = glift.util.pointArrFromSgfProp(value[i]);
-        for (var j = 0; j < pts.length; j++) {
-          finished.push(pts[j].toSgfCoord());
-        }
-      } else {
-        finished.push(value[i]);
-      }
+    if (typeof value === 'string') {
+      var zet = /** @type {string} */ (value);
+      finished = [value];
+    } else {
+      finished = /** @type {!Array<string>} */ (value);
     }
 
     // If the type is a string, make into an array or concat.
@@ -337,19 +310,10 @@ glift.rules.Properties.prototype = {
    * @return {glift.rules.Properties} this
    */
   set: function(prop, value) {
-    if (prop !== undefined && value !== undefined) {
+    if (prop && value && glift.rules.prop[prop]) {
       if (glift.util.typeOf(value) === 'string') {
-        this.propMap[prop] = [
-            this.unescape(/** @type {string} */ (value)) ];
+        this.propMap[prop] = [/** @type {string} */ (value)];
       } else if (glift.util.typeOf(value) === 'array') {
-        for (var i = 0; i < value.length; i++) {
-          if (glift.util.typeOf(value[i]) !== 'string') {
-            throw new Error('When setting via an array, all values ' +
-              'must be strings. was [' + glift.util.typeOf(value[i]) +
-              '], for value ' + value[i]);
-          }
-          value[i] = this.unescape(value[i]);
-        }
         this.propMap[prop] = /** @type {!Array<string>} */ (value);
       }
     }
@@ -634,22 +598,4 @@ glift.rules.Properties.prototype = {
     }
     return gameInfoArr;
   },
-
-  /**
-   * Escapes some text by converting ] to \\] 
-   * @param {string} text
-   * @return {string}
-   */
-  escape: function(text) {
-    return text.toString().replace(/]/g, '\\]');
-  },
-
-  /**
-   * Unescapes some text by converting \\] to ] 
-   * @param {string} text
-   * @return {string}
-   */
-  unescape: function(text) {
-    return text.toString().replace(/\\]/g, ']');
-  }
 };

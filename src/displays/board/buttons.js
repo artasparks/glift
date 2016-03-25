@@ -2,6 +2,10 @@ goog.require('glift.displays.board');
 
 /**
  * Create transparent buttons that overlay each intersection.
+ *
+ * @param {!glift.displays.svg.SvgObj} svg Base svg obj
+ * @param {!glift.displays.ids.Generator} idGen The ID generator for SVG.
+ * @param {!glift.displays.BoardPoints} boardPoints Board points object.
  */
 glift.displays.board.buttons = function(svg, idGen, boardPoints) {
   var svglib = glift.displays.svg;
