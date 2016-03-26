@@ -15,7 +15,7 @@ glift.api.widgetopt[glift.enums.widgetTypes.STANDARD_PROBLEM] = {
   icons: [
     'undo-problem-move',
     'problem-explanation',
-    'multiopen-boxonly'
+    'multiopen-boxonly' // Problem Status
   ],
 
   showVariations: glift.enums.showVariations.NEVER,

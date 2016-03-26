@@ -12,6 +12,7 @@ import subprocess
 EXAMPLE_FILES_TO_AUTOGEN = {
   ### Manual Tests
   'htmltests/AjaxProblemTester.html',
+  'htmltests/AnimationTester.html',
   'htmltests/BaseWidgetTest.html',
   'htmltests/BboxFinder.html',
   'htmltests/BoardEditorTester.html',
