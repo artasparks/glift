@@ -77,6 +77,9 @@ glift.displays.icons.IconBar = function(options) {
   // Post constructor initializiation
   this.initIconIds_(); // Set the ids for the icons above.
   this.initNameMapping_(); // Init the name mapping.
+
+  /** @type {?glift.orientation.BoundingBox} */
+  this.bbox = null;
 };
 
 glift.displays.icons.IconBar.prototype = {
@@ -441,7 +444,7 @@ glift.displays.icons.IconBar.prototype = {
       clearTimeout(this.tooltipTimer);
       this.tooltipTimer = null;
     }
-    this.bbox = undefined;
+    this.bbox = null
     return this;
   }
 };

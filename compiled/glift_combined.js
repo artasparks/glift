@@ -5820,6 +5820,9 @@ glift.displays.icons.IconBar = function(options) {
   // Post constructor initializiation
   this.initIconIds_(); // Set the ids for the icons above.
   this.initNameMapping_(); // Init the name mapping.
+
+  /** @type {?glift.orientation.BoundingBox} */
+  this.bbox = null;
 };
 
 glift.displays.icons.IconBar.prototype = {
@@ -6184,7 +6187,7 @@ glift.displays.icons.IconBar.prototype = {
       clearTimeout(this.tooltipTimer);
       this.tooltipTimer = null;
     }
-    this.bbox = undefined;
+    this.bbox = null
     return this;
   }
 };
@@ -7181,9 +7184,9 @@ glift.displays.svg.SvgObj.prototype = {
    * @param {!Element|!glift.dom.Element} elem
    */
   attachToElem: function(elem) {
-    if (elem && elem['ATTRIBUTE_NODE']) {
-      var el = /** @type {!Element} */ (elem);
-      el.appendChild(this.asElement());
+    var possibleElem = /** @type {!Element} */ (elem);
+    if (possibleElem && possibleElem.ATTRIBUTE_NODE) {
+      possibleElem.appendChild(this.asElement());
     } else {
       var domEl = /** @type {!glift.dom.Element} */ (elem);
       domEl.el.appendChild(this.asElement());
