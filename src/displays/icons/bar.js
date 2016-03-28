@@ -36,7 +36,7 @@ glift.displays.icons.bar = function(options) {
 /**
  * IconBar Object
  *
- * @constructor
+ * @constructor @struct @final
  * @param {!glift.displays.icons.IconBarOptions} options
  */
 glift.displays.icons.IconBar = function(options) {

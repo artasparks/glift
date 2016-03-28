@@ -5779,7 +5779,7 @@ glift.displays.icons.bar = function(options) {
 /**
  * IconBar Object
  *
- * @constructor
+ * @constructor @struct @final
  * @param {!glift.displays.icons.IconBarOptions} options
  */
 glift.displays.icons.IconBar = function(options) {
@@ -7167,12 +7167,26 @@ glift.displays.svg.SvgObj = function(type, opt_attrObj) {
 glift.displays.svg.SvgObj.prototype = {
   /**
    * Attach content to a div.
-   * @param {string} divId}
+   * @param {string} divId
    */
   attachToParent: function(divId) {
     var svgContainer = document.getElementById(divId);
     if (svgContainer) {
-      svgContainer.appendChild(this.asElement());
+      this.attachToElem(svgContainer);
+    }
+  },
+
+  /**
+   * Attach content to an already defined element.
+   * @param {!Element|!glift.dom.Element} elem
+   */
+  attachToElem: function(elem) {
+    if (elem && elem['ATTRIBUTE_NODE']) {
+      var el = /** @type {!Element} */ (elem);
+      el.appendChild(this.asElement());
+    } else {
+      var domEl = /** @type {!glift.dom.Element} */ (elem);
+      domEl.el.appendChild(this.asElement());
     }
   },
 
@@ -17465,7 +17479,7 @@ glift.api.widgetopt[glift.enums.widgetTypes.STANDARD_PROBLEM] = {
   icons: [
     'undo-problem-move',
     'problem-explanation',
-    'multiopen-boxonly'
+    'multiopen-boxonly' // Problem Status
   ],
 
   showVariations: glift.enums.showVariations.NEVER,
