@@ -8,6 +8,8 @@ goog.provide('glift.displays.commentbox.CommentBox');
  *    (expensive to recompute)
  * @param {!glift.themes.base} theme The theme object.
  * @param {boolean} useMarkdown Whether or not to use markdown
+ *
+ * @return {!glift.displays.commentbox.CommentBox}
  */
 glift.displays.commentbox.create = function(
     divId, posBbox, theme, useMarkdown) {
@@ -22,8 +24,7 @@ glift.displays.commentbox.create = function(
 /**
  * Comment box object.
  *
- * @package
- * @constructor
+ * @package @constructor @struct @final
  */
 glift.displays.commentbox.CommentBox = function(
     divId, positioningBbox, theme, useMarkdown) {
