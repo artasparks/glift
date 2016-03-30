@@ -114,7 +114,7 @@ glift.displays.svg.SvgObj.prototype = {
    */
   attachToElem: function(elem) {
     var possibleElem = /** @type {!Element} */ (elem);
-    if (possibleElem && possibleElem.ATTRIBUTE_NODE) {
+    if (possibleElem && possibleElem.nodeType) {
       possibleElem.appendChild(this.asElement());
     } else {
       var domEl = /** @type {!glift.dom.Element} */ (elem);

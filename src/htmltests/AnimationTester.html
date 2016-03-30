@@ -145,45 +145,68 @@
 </head>
 
 <style>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
+  * {
+    margin: 0;
+    padding: 0;
+  }
+  #boxen {
+    height:200px;
+    width:200px;
+    position:relative;
+  }
+  p {
+    margin: 10px;
+    padding: 10px;
+  }
+  #animate-button {
+    padding: 10px;
+  }
+
+  #animation-container {
+  }
+
+  #animation-container {
+    animation-duration: 3s;
+    animation-name: animatrar;
+    animation-iteration-count: 3;
+    animation-direction: alternate;
+  }
+
+  @keyframes animatrar {
+    from {
+      margin-left:100%;
+      width:300%
     }
-    #boxen {
-      height:200px;
-      width:200px;
-      position:relative;
+    to {
+      margin-left:0%;
+      width:100%;
     }
-    p {
-      margin: 10px;
-      padding: 10px;
-    }
-    #animate-button {
-      padding: 10px;
-    }
-  </style>
+  }
 </style>
 <body>
 
   <!-- Create a div as a place holder just so we can create a Raphael paper. -->
-  <div id="boxen"></div>
+  <div id="boxen">
+  <!-- Animation container goes here -->
+  </div>
   <button id="animate-button" onclick="animatar()">Animate!</button>
   <script type="text/javascript">
     var animatar = function() {
       var boxen = glift.dom.elem(document.getElementById('boxen'));
       boxen.empty();
 
+      var animationContainer = glift.dom.newDiv('animation-container');
+
       var svg = glift.displays.svg;
-      var root = svg.svg();
-          //.setAttr('style', 'visibility:hidden;');
-      root.append(svg.path({
+      var rootSvg = svg.svg();
+      rootSvg.append(svg.path({
         d: glift.displays.icons.svg.check.string,
         fill: 'black',
         transform: 'scale(3,3)',
       }));
-      console.log(boxen);
-      root.attachToElem(boxen);
+      rootSvg.attachToElem(animationContainer);
+
+      boxen.append(animationContainer);
     };
   </script>
 </body>

@@ -1202,7 +1202,6 @@ glift.util.regions = {
 goog.provide('glift.dom');
 goog.provide('glift.dom.Element');
 
-/** @namespace */
 glift.dom = {
   /**
    * Constructs a glift dom element. If arg is a string, assume an ID is being
@@ -1225,6 +1224,7 @@ glift.dom = {
         return new glift.dom.Element(/* @type {!Element} */ (el), arg);
       };
     } else if (argtype === 'object' && arg.nodeType && arg.nodeType === 1) {
+      console.log(arg);
       // Assume an HTML node.
       // Note: nodeType of 1 => ELEMENT_NODE.
       return new glift.dom.Element(/** @type {!Element} */ (arg));
@@ -1329,28 +1329,46 @@ glift.dom.Element = function(el, opt_id) {
 }
 
 glift.dom.Element.prototype = {
-  /** Prepends an element, but only if it's a glift dom element. */
+  /**
+   * Prepends an element, but only if it's a glift dom element.
+   * @param {!glift.dom.Element|!Element} that
+   */
   prepend: function(that) {
-    if (that.constructor === this.constructor) {
+    var possibleElem = /** @type {!Element} */ (that);
+    if (possibleElem && possibleElem.nodeType) {
+      this.el.appendChild(possibleElem);
+    } else if (that && that.el) {
+      var thar = /** @type {!glift.dom.Element} */ (that);
       // It's ok if firstChild is null;
-      this.el.insertBefore(that.el, this.el.firstChild);
+      this.el.insertBefore(thar.el, this.el.firstChild);
     } else {
       throw new Error('Could not append unknown element: ' + that);
     }
     return this;
   },
 
-  /** Appends an element, but only if it's a glift dom element. */
+  /**
+   * Appends an element, but only if it's a glift dom element.
+   * @param {!glift.dom.Element|!Element} that
+   */
   append: function(that) {
-    if (that.constructor === this.constructor) {
-      this.el.appendChild(that.el);
+    var possibleElem = /** @type {!Element} */ (that);
+    console.log(possibleElem);
+    if (possibleElem && possibleElem.nodeType) {
+      this.el.appendChild(possibleElem);
+    } else if (that && that.el) {
+      var thar = /** @type {!glift.dom.Element} */ (that);
+      this.el.appendChild(thar.el);
     } else {
       throw new Error('Could not append unknown element: ' + that);
     }
     return this;
   },
 
-  /** Sets a text node under this element. */
+  /**
+   * Sets a text node under this element.
+   * @param {string} text
+   */
   appendText: function(text) {
     if (text) {
       var newNode = this.el.ownerDocument.createTextNode(text);
@@ -1383,7 +1401,7 @@ glift.dom.Element.prototype = {
 
   /**
    * Set several attributes using an attribute object.
-   * @param {Object} attrObj A object with multiple attributes.
+   * @param {!Object} attrObj A object with multiple attributes.
    */
   setAttrObj: function(attrObj) {
     for (var attrObjKey in attrObj) {
@@ -1394,7 +1412,7 @@ glift.dom.Element.prototype = {
 
   /**
    * Gets all the attributes of the element, but as an object.
-   * @return {Object} Attribute object.
+   * @return {!Object} Attribute object.
    */
   attrs: function() {
     var out = {};
@@ -1407,6 +1425,7 @@ glift.dom.Element.prototype = {
 
   /**
    * Sets the CSS with a CSS object. Note this converts foo-bar to fooBar.
+   * @param {!Object} obj Attribute obj
    */
   css: function(obj) {
     for (var key in obj) {
@@ -1418,7 +1437,10 @@ glift.dom.Element.prototype = {
     return this;
   },
 
-  /** Add a CSS class. */
+  /**
+   * Add a CSS class.
+   * @param {string} className
+   */
   addClass: function(className) {
     if (!this.el.className) {
       this.el.className = className;
@@ -1428,19 +1450,32 @@ glift.dom.Element.prototype = {
     return this;
   },
 
-  /** Remove a CSS class. */
+  /**
+   * Remove a CSS class.
+   * @param {string} className
+   */
   removeClass: function(className) {
     this.el.className = this.el.className.replace(
         new RegExp('(?:^|\\s)' + className + '(?!\\S)', 'g'), '');
   },
 
-  /** Get the client height of the element */
+  /**
+   * Get the client height of the element
+   * @return {number}
+   */
   height: function() { return this.el.clientHeight; },
 
-  /** Get the client width of the element */
+  /**
+   * Get the client width of the element
+   * @return {number}
+   */
   width: function() { return this.el.clientWidth; },
 
-  /** Set an event on the element */
+  /**
+   * Set an event on the element
+   * @param {string} eventName}
+   * @param {function(!Event)} func
+   */
   on: function(eventName, func) {
     func.bind(this);
     this.el.addEventListener(eventName, func);
@@ -4722,14 +4757,16 @@ glift.displays.board.Intersections.prototype = {
   flushStone_: function(pt) {
     var stone = this.svg.child(this.idGen.stoneGroup())
         .child(this.idGen.stone(pt));
-    if (stone) {
+    var attrObj = stone.attrObj();
+    var id = stone.id();
+    if (stone && attrObj && id) {
       // A stone might not exist if the board is cropped.
-      glift.dom.elem(/** @type {string} */ (stone.id())).setAttrObj(stone.attrObj());
+      glift.dom.elem(id).setAttrObj(attrObj);
       var stoneShadowGroup = this.svg.child(this.idGen.stoneShadowGroup());
       if (stoneShadowGroup !== undefined) {
         var stoneShadow = stoneShadowGroup.child(this.idGen.stoneShadow(pt));
         glift.dom.elem(/** @type {string} */ (stoneShadow.id()))
-            .setAttrObj(stoneShadow.attrObj());
+            .setAttrObj(/** @type {!Object} */ (stoneShadow.attrObj()));
       }
     }
     return this;
@@ -7186,7 +7223,7 @@ glift.displays.svg.SvgObj.prototype = {
    */
   attachToElem: function(elem) {
     var possibleElem = /** @type {!Element} */ (elem);
-    if (possibleElem && possibleElem.ATTRIBUTE_NODE) {
+    if (possibleElem && possibleElem.nodeType) {
       possibleElem.appendChild(this.asElement());
     } else {
       var domEl = /** @type {!glift.dom.Element} */ (elem);
