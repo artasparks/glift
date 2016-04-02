@@ -23,7 +23,6 @@ glift.dom = {
         return new glift.dom.Element(/* @type {!Element} */ (el), arg);
       };
     } else if (argtype === 'object' && arg.nodeType && arg.nodeType === 1) {
-      console.log(arg);
       // Assume an HTML node.
       // Note: nodeType of 1 => ELEMENT_NODE.
       return new glift.dom.Element(/** @type {!Element} */ (arg));
@@ -152,7 +151,6 @@ glift.dom.Element.prototype = {
    */
   append: function(that) {
     var possibleElem = /** @type {!Element} */ (that);
-    console.log(possibleElem);
     if (possibleElem && possibleElem.nodeType) {
       this.el.appendChild(possibleElem);
     } else if (that && that.el) {
