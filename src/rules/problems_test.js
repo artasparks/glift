@@ -3,7 +3,7 @@
   test('IsCorrectPosition: trivial correctness', function() {
     var movt = glift.rules.movetree.getFromSgf(testdata.sgfs.trivialproblem),
         problemResults = glift.enums.problemResults;
-    deepEqual(glift.rules.problems.isCorrectPosition(movt, {GB: []}),
+    deepEqual(glift.rules.problems.positionCorrectness(movt, {GB: []}),
         problemResults.CORRECT, 'Starting position must be correct');
   });
 
@@ -11,22 +11,22 @@
     var movt = glift.rules.movetree.getFromSgf(testdata.sgfs.realproblem),
         problemResults = glift.enums.problemResults;
     movt.moveDown(0);
-    deepEqual(glift.rules.problems.isCorrectPosition(movt, {GB: []}),
+    deepEqual(glift.rules.problems.positionCorrectness(movt, {GB: []}),
         problemResults.INCORRECT, 'Must return incorrect');
 
     movt.moveUp().moveDown(1);
-    deepEqual(glift.rules.problems.isCorrectPosition(movt, {GB: []}),
+    deepEqual(glift.rules.problems.positionCorrectness(movt, {GB: []}),
         problemResults.INDETERMINATE,
         'Must return indeterminate if a move on a correct path but not at the end');
     movt.moveDown().moveDown();
-    deepEqual(glift.rules.problems.isCorrectPosition(movt, {GB: []}),
+    deepEqual(glift.rules.problems.positionCorrectness(movt, {GB: []}),
         problemResults.CORRECT);
   });
 
   test('IsCorrectPosition: Indeterminate first position', function() {
     var movt = glift.rules.movetree.getFromSgf(testdata.sgfs.realproblem),
         problemResults = glift.enums.problemResults;
-    deepEqual(glift.rules.problems.isCorrectPosition(movt, {GB: []}),
+    deepEqual(glift.rules.problems.positionCorrectness(movt, {GB: []}),
         problemResults.INDETERMINATE,
         'Starting position must be indeterminate');
   });
@@ -41,22 +41,22 @@
   test('Complex problem', function() {
     var problemResults = glift.enums.problemResults;
     var movt = glift.rules.movetree.getFromSgf(testdata.sgfs.complexproblem);
-    deepEqual(glift.rules.problems.isCorrectPosition(movt, {GB: []}),
+    deepEqual(glift.rules.problems.positionCorrectness(movt, {GB: []}),
         problemResults.INDETERMINATE, 'Should be Indeterminate at beginning');
     movt.moveDown(1); // B's move
-    deepEqual(glift.rules.problems.isCorrectPosition(movt, {GB: []}),
+    deepEqual(glift.rules.problems.positionCorrectness(movt, {GB: []}),
         problemResults.INDETERMINATE, 'Should be Indeterminate still');
     movt.moveDown(1); // W's Move
-    deepEqual(glift.rules.problems.isCorrectPosition(movt, {GB: []}),
+    deepEqual(glift.rules.problems.positionCorrectness(movt, {GB: []}),
         problemResults.INDETERMINATE, 'Still Indeterminate ');
     movt.moveDown(1); // B's Move
-    deepEqual(glift.rules.problems.isCorrectPosition(movt, {GB: []}),
+    deepEqual(glift.rules.problems.positionCorrectness(movt, {GB: []}),
         problemResults.INDETERMINATE,
         'Still indeterminate although all children are correct');
 
     movt.moveDown(); // W's Move
     movt.moveDown(); // B's Move
-    deepEqual(glift.rules.problems.isCorrectPosition(movt, {GB: []}),
+    deepEqual(glift.rules.problems.positionCorrectness(movt, {GB: []}),
         problemResults.CORRECT,
         'Now at a correct position');
   });
@@ -64,12 +64,12 @@
   test('GoGameGuru Problem', function() {
     var problemResults = glift.enums.problemResults;
     var movt = glift.rules.movetree.getFromSgf(testdata.sgfs.gogameguruHard);
-    deepEqual(glift.rules.problems.isCorrectPosition(movt,
+    deepEqual(glift.rules.problems.positionCorrectness(movt,
           {GB: [], C: ['Correct', 'is correct']}),
         problemResults.INDETERMINATE,
         'Should be Indeterminate at beginning');
     movt.moveDown();
-    deepEqual(glift.rules.problems.isCorrectPosition(movt,
+    deepEqual(glift.rules.problems.positionCorrectness(movt,
           {GB: [], C: ['Correct', 'is correct']}),
         problemResults.INDETERMINATE,
         'Still indeterminate although all children correct');
@@ -78,7 +78,7 @@
     movt.moveDown(); // B
     movt.moveDown(); // W
     movt.moveDown(); // B
-    deepEqual(glift.rules.problems.isCorrectPosition(movt,
+    deepEqual(glift.rules.problems.positionCorrectness(movt,
           {GB: [], C: ['Correct', 'is correct']}),
         problemResults.CORRECT,
         'Position now correct');
@@ -89,11 +89,11 @@
     var movt = glift.rules.movetree.getFromSgf(testdata.sgfs.twoOptions);
 
     movt.moveDown(0);
-    deepEqual(glift.rules.problems.isCorrectPosition(movt, {C: ['Correct']}),
+    deepEqual(glift.rules.problems.positionCorrectness(movt, {C: ['Correct']}),
         problemResults.CORRECT,
         'Should be correct');
     movt.moveUp().moveDown(1);
-    deepEqual(glift.rules.problems.isCorrectPosition(movt, {C: ['Correct']}),
+    deepEqual(glift.rules.problems.positionCorrectness(movt, {C: ['Correct']}),
         problemResults.CORRECT,
         'Should be also correct');
   });

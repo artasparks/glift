@@ -63,8 +63,6 @@ glift.controllers.StaticProblem.prototype = {
    *
    * Note: color must be one of enums.states (either BLACK or WHITE).
    *
-   * TODO(kashomon): Refactor this into something less ridiculous -- i.e.,
-   * shorter and easier to understand.
    * @param {!glift.Point} point
    * @param {!glift.enums.states} color
    * @return {!glift.flattener.Flattened} flattened obj
@@ -98,7 +96,7 @@ glift.controllers.StaticProblem.prototype = {
     }
 
     var outData = this.nextMove(nextVarNum);
-    var correctness = glift.rules.problems.isCorrectPosition(
+    var correctness = glift.rules.problems.positionCorrectness(
         this.movetree, this.problemConditions);
     if (correctness === CORRECT) {
       // Don't play out variations for CORRECT>
@@ -111,9 +109,11 @@ glift.controllers.StaticProblem.prototype = {
       // but randomness is confusing.
       var nextVariation = 0;
       this.nextMove(nextVariation);
-      // We return the entire board state because we've just moved two moves.
-      // In theory, we could combine the output of the next moves, but it's a
-      // little tricky and it doesn't seem to be worth the effort at the moment.
+      // It's possible that *this* move is correct, so we do another correctness
+      // check.
+      // (see https://github.com/Kashomon/glift/issues/122).
+      correctness = glift.rules.problems.positionCorrectness(
+          this.movetree, this.problemConditions);
       outData = this.flattenedState();
       outData.setProblemResult(correctness);
       return outData;

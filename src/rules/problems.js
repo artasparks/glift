@@ -40,17 +40,22 @@ glift.rules.problems = {
    * @param {!glift.rules.ProblemConditions} conditions
    * @return {glift.enums.problemResults}
    */
-  isCorrectPosition: function(movetree, conditions) {
+  positionCorrectness: function(movetree, conditions) {
     var problemResults = glift.enums.problemResults;
     if (movetree.properties().matches(conditions)) {
       return problemResults.CORRECT;
     } else {
       var flatPaths = glift.rules.treepath.flattenMoveTree(movetree);
+
+      /** @type {!Object<glift.enums.problemResults, true>} */
       var successTracker = {};
+
+      // For each path, we evaluate if each path has the possibility of being
+      // correct.
       for (var i = 0; i < flatPaths.length; i++) {
         var path = flatPaths[i];
         var newmt = movetree.getFromNode(movetree.node());
-        var pathCorrect = false
+        var pathCorrect = false;
         for (var j = 0; j < path.length; j++) {
           newmt.moveDown(path[j]);
           if (newmt.properties().matches(conditions)) {
@@ -60,9 +65,12 @@ glift.rules.problems = {
         if (pathCorrect) {
           successTracker[problemResults.CORRECT] = true;
         } else {
+          // If no problem conditions are matched, path (variation) is
+          // considered incorrect.
           successTracker[problemResults.INCORRECT] = true;
         }
       }
+
       if (successTracker[problemResults.CORRECT] &&
           !successTracker[problemResults.INCORRECT]) {
         if (movetree.properties().matches(conditions)) {
@@ -82,7 +90,7 @@ glift.rules.problems = {
 
   /**
    * Gets the correct next moves. This assumes the the SGF is a problem-like SGF
-   * with with right conditions specified somehow.
+   * with with right conditions specified.
    *
    * @param {!glift.rules.MoveTree} movetree
    * @param {!glift.rules.ProblemConditions} conditions
@@ -94,7 +102,7 @@ glift.rules.problems = {
     var correctNextMoves = [];
     for (var i = 0; i < nextMoves.length; i++) {
       movetree.moveDown(i);
-      if (glift.rules.problems.isCorrectPosition(movetree, conditions)
+      if (glift.rules.problems.positionCorrectness(movetree, conditions)
           !== INCORRECT) {
         correctNextMoves.push(nextMoves[i]);
       }
