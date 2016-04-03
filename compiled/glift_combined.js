@@ -457,7 +457,10 @@ glift.enums.marks = {
   VARIATION_MARKER: 'VARIATION_MARKER',
 
   // We color 'correct' variations differently in problems,
-  CORRECT_VARIATION: 'CORRECT_VARIATION'
+  CORRECT_VARIATION: 'CORRECT_VARIATION',
+
+  // We color 'correct' variations differently in problems,
+  KO_LOCATION: 'KO_LOCATION'
 };
 
 /**
@@ -1224,7 +1227,6 @@ glift.dom = {
         return new glift.dom.Element(/* @type {!Element} */ (el), arg);
       };
     } else if (argtype === 'object' && arg.nodeType && arg.nodeType === 1) {
-      console.log(arg);
       // Assume an HTML node.
       // Note: nodeType of 1 => ELEMENT_NODE.
       return new glift.dom.Element(/** @type {!Element} */ (arg));
@@ -1353,7 +1355,6 @@ glift.dom.Element.prototype = {
    */
   append: function(that) {
     var possibleElem = /** @type {!Element} */ (that);
-    console.log(possibleElem);
     if (possibleElem && possibleElem.nodeType) {
       this.el.appendChild(possibleElem);
     } else if (that && that.el) {
@@ -8743,8 +8744,6 @@ glift.rules.Goban.prototype = {
    *    point is within the bounds of the board.
    */
   placeable: function(point) {
-    // Currently, color is unused, but there are plans to use it because
-    // self-capture is disallowed. Add-stone will still fail.
     return this.inBounds_(point)
         && this.getStone(point) === glift.enums.states.EMPTY;
   },
@@ -10020,17 +10019,22 @@ glift.rules.problems = {
    * @param {!glift.rules.ProblemConditions} conditions
    * @return {glift.enums.problemResults}
    */
-  isCorrectPosition: function(movetree, conditions) {
+  positionCorrectness: function(movetree, conditions) {
     var problemResults = glift.enums.problemResults;
     if (movetree.properties().matches(conditions)) {
       return problemResults.CORRECT;
     } else {
       var flatPaths = glift.rules.treepath.flattenMoveTree(movetree);
+
+      /** @type {!Object<glift.enums.problemResults, boolean>} */
       var successTracker = {};
+
+      // For each path, we evaluate if each path has the possibility of being
+      // correct.
       for (var i = 0; i < flatPaths.length; i++) {
         var path = flatPaths[i];
         var newmt = movetree.getFromNode(movetree.node());
-        var pathCorrect = false
+        var pathCorrect = false;
         for (var j = 0; j < path.length; j++) {
           newmt.moveDown(path[j]);
           if (newmt.properties().matches(conditions)) {
@@ -10040,9 +10044,12 @@ glift.rules.problems = {
         if (pathCorrect) {
           successTracker[problemResults.CORRECT] = true;
         } else {
+          // If no problem conditions are matched, path (variation) is
+          // considered incorrect.
           successTracker[problemResults.INCORRECT] = true;
         }
       }
+
       if (successTracker[problemResults.CORRECT] &&
           !successTracker[problemResults.INCORRECT]) {
         if (movetree.properties().matches(conditions)) {
@@ -10062,7 +10069,7 @@ glift.rules.problems = {
 
   /**
    * Gets the correct next moves. This assumes the the SGF is a problem-like SGF
-   * with with right conditions specified somehow.
+   * with with right conditions specified.
    *
    * @param {!glift.rules.MoveTree} movetree
    * @param {!glift.rules.ProblemConditions} conditions
@@ -10074,7 +10081,7 @@ glift.rules.problems = {
     var correctNextMoves = [];
     for (var i = 0; i < nextMoves.length; i++) {
       movetree.moveDown(i);
-      if (glift.rules.problems.isCorrectPosition(movetree, conditions)
+      if (glift.rules.problems.positionCorrectness(movetree, conditions)
           !== INCORRECT) {
         correctNextMoves.push(nextMoves[i]);
       }
@@ -12646,12 +12653,7 @@ glift.controllers.StaticProblem.prototype = {
     }
   },
 
-  /**
-   * Reload the problems.
-   *
-   * TODO(kashomon): Remove this?  Or perhaps rename initialize() to load() or
-   * reload() or something.
-   */
+  /** Reload the problems. */
   reload: function() {
     this.initialize();
   },
@@ -12663,8 +12665,6 @@ glift.controllers.StaticProblem.prototype = {
    *
    * Note: color must be one of enums.states (either BLACK or WHITE).
    *
-   * TODO(kashomon): Refactor this into something less ridiculous -- i.e.,
-   * shorter and easier to understand.
    * @param {!glift.Point} point
    * @param {!glift.enums.states} color
    * @return {!glift.flattener.Flattened} flattened obj
@@ -12698,7 +12698,7 @@ glift.controllers.StaticProblem.prototype = {
     }
 
     var outData = this.nextMove(nextVarNum);
-    var correctness = glift.rules.problems.isCorrectPosition(
+    var correctness = glift.rules.problems.positionCorrectness(
         this.movetree, this.problemConditions);
     if (correctness === CORRECT) {
       // Don't play out variations for CORRECT>
@@ -12711,9 +12711,11 @@ glift.controllers.StaticProblem.prototype = {
       // but randomness is confusing.
       var nextVariation = 0;
       this.nextMove(nextVariation);
-      // We return the entire board state because we've just moved two moves.
-      // In theory, we could combine the output of the next moves, but it's a
-      // little tricky and it doesn't seem to be worth the effort at the moment.
+      // It's possible that *this* move is correct, so we do another correctness
+      // check.
+      // (see https://github.com/Kashomon/glift/issues/122).
+      correctness = glift.rules.problems.positionCorrectness(
+          this.movetree, this.problemConditions);
       outData = this.flattenedState();
       outData.setProblemResult(correctness);
       return outData;
@@ -12723,9 +12725,12 @@ glift.controllers.StaticProblem.prototype = {
     }
   },
 
-  /** Get the current correctness status */
+  /**
+   * Get the current correctness status.
+   * @return {glift.enums.problemResults}
+   */
   correctnessStatus: function() {
-    return glift.rules.problems.isCorrectPosition(
+    return glift.rules.problems.positionCorrectness(
         this.movetree, this.problemConditions);
   }
 };
@@ -13515,10 +13520,12 @@ glift.flattener = {};
  *  Options for marks
  *  - showNextVariationsType: Whether or not to show variations.
  *  - markLastMove: Whether or not to put a special mark on the last move
- *  - problemConditions: Whether
+ *  - markKoLocation: Whether or not to show the Ko location with a mark.
  *
  *  Options for problems
- *  - problemConditions
+ *  - problemConditions: determine how to evaluate whether or not a position is
+ *    considered 'correct'. Obviously, only useful for problems. Currently only
+ *    for showing correct/incorrect moves in the explorer.
  *
  * @typedef {{
  *  goban: (!glift.rules.Goban|undefined),
@@ -13529,8 +13536,9 @@ glift.flattener = {};
  *  showNextVariationsType: (glift.enums.showVariations|undefined),
  *  autoBoxCropOnNextMoves: (boolean|undefined),
  *  markLastMove: (boolean|undefined),
- *  problemConditions: (!glift.rules.ProblemConditions|undefined),
- *  selectedNextMove: (?glift.rules.Move|undefined)
+ *  selectedNextMove: (?glift.rules.Move|undefined),
+ *  showKoLocation: (boolean|undefined),
+ *  problemConditions: (!glift.rules.ProblemConditions|undefined)
  * }}
  */
 glift.flattener.Options;
@@ -13585,6 +13593,9 @@ glift.flattener.flatten = function(movetreeInitial, opt_options) {
       mt.getTreeFromRoot(), mt.treepathToHere()).goban;
   var showVars =
       options.showNextVariationsType  || glift.enums.showVariations.NEVER;
+
+  // Note: NMTP is always defined and will, at the very least, be an empty
+  // array.
   var nmtp = glift.rules.treepath.parseFragment(options.nextMovesTreepath || '');
 
   var optStartingMoveNum = options.startingMoveNum || null;
@@ -13665,17 +13676,23 @@ glift.flattener.flatten = function(movetreeInitial, opt_options) {
       applied.stones, stoneMap, markMap, startingMoveNum);
 
   // Optionally mark the last move played. Existing labels get preference.
-  glift.flattener.markLastMove_(markMap, mt.getLastMove(), options.markLastMove);
+  if (options.markLastMove) {
+    glift.flattener.markLastMove_(markMap, mt.getLastMove());
+  }
+
+  if (options.markKoLocation && !nmtp.length) {
+    // We don't mark Ko for when the nextMovesTreepath (nmtp) is specified. If
+    // there's a Ko & nmtp is defined, then stones will be captured but the
+    // stones will be left on the board. So there's no point in putting a mark
+    // or indicator at that location.
+    glift.flattener.markKo_(markMap, goban.getKo());
+  }
+
 
   // Finally! Generate the intersections double-array.
   var board = glift.flattener.board.create(cropping, stoneMap, markMap);
 
   var comment = mt.properties().getComment() || '';
-
-  // We don't mark Ko for when the nextMovesTreepath is specified. If there's a
-  // Ko, then stones will be captured and there's no point in putting a mark or
-  // indicator on the location.
-  var ko = nmtp ? null : goban.getKo();
 
   return new glift.flattener.Flattened({
       board: board,
@@ -13690,7 +13707,6 @@ glift.flattener.flatten = function(movetreeInitial, opt_options) {
       nextMainlineMove: nextMainlineMove,
       stoneMap: stoneMap,
       markMap: markMap,
-      ko: goban.getKo(),
       // ProblemSpecific fields.
       correctNextMoves: correctNextMoves,
       // TODO(kashomon): Add support directly in the flattener params.
@@ -14045,22 +14061,36 @@ glift.flattener.createStoneLabels_ = function(
 };
 
 /**
- * Optionally mark the last move (by updating the mark map) if:
+ * Update the mark map with the last move if:
  *
  * 0. The last move is defined.
  * 1. There is no existing mark in the markMap at the location.
- * 2. The markLastMove option is true.
  *
  * @param {!glift.flattener.MarkMap} markMap
  * @param {?glift.rules.Move} lastMove
- * @param {boolean|undefined} markLast
  */
-glift.flattener.markLastMove_ = function(markMap, lastMove, markLast) {
+glift.flattener.markLastMove_ = function(markMap, lastMove) {
   if (lastMove && lastMove.point) {
     var ptstr = lastMove.point.toString();
-    if (!markMap.marks[ptstr] && markLast) {
+    if (!markMap.marks[ptstr]) {
       markMap.marks[ptstr] = glift.flattener.symbols.LASTMOVE;
     }
+  }
+};
+
+/**
+ * Optionally mark the Ko move. This only updates the map if:
+ *
+ * 0. The ko is defined
+ * 1. There is no existing mark in the markMap at the location.
+ *
+ * @param {!glift.flattener.MarkMap} markMap
+ * @param {?glift.Point} koLocation
+ */
+glift.flattener.markKo_ = function(markMap, koLocation) {
+  var ptstr = koLocation.toString();
+  if (!markMap.marks[ptstr]) {
+    markMap.marks[ptstr] = glift.flattener.symbols.KO_LOCATION;
   }
 };
 
@@ -14390,7 +14420,6 @@ goog.provide('glift.flattener.FlattenedParams');
  *  nextMainlineMove: ?glift.rules.Move,
  *  stoneMap: !Object<glift.PtStr, !glift.rules.Move>,
  *  markMap: !glift.flattener.MarkMap,
- *  ko: ?glift.Point,
  *  correctNextMoves: !Object<glift.PtStr, !glift.rules.Move>,
  *  problemResult: ?glift.enums.problemResults
  * }}
@@ -14511,13 +14540,6 @@ glift.flattener.Flattened = function(params) {
   this.markMap_ = params.markMap;
 
   /**
-   * The Ko point. Will be null if there is currently no Ko.
-   * @private {?glift.Point}
-   * @const
-   */
-  this.ko_ = params.ko;
-
-  /**
    * The variations that, according to the problem conditions supplied are
    * correct. By default, variations are considered incorrect.
    * @private {!Object<glift.PtStr, !glift.rules.Move>}
@@ -14545,16 +14567,6 @@ glift.flattener.Flattened.prototype = {
    * @return {string}
    */
   comment: function() { return this.comment_; },
-
-  /**
-   * Returns the Ko point, if it exists, and null otherwise.
-   *
-   * Note that Ko will not be specified when the flattened object was created
-   * with a nextMovesTreepath, since this means a stone must have been captured
-   * at the ko point.
-   * @return {?glift.Point}
-   */
-  ko: function() { return this.ko_; },
 
   /**
    * A structure illustrating the board collisions. Only relevant for positions
@@ -14854,7 +14866,9 @@ glift.flattener.Intersection = function(pt) {
   this.textLabel_ = null;
 };
 
-// Statics
+/**
+ * Static maps to evaluate symbol validity.
+ */
 glift.flattener.intersection.layerMapping = {
   base: {
     EMPTY: true, TL_CORNER: true, TR_CORNER: true, BL_CORNER: true,
@@ -14867,7 +14881,7 @@ glift.flattener.intersection.layerMapping = {
   mark: {
     EMPTY: true, TRIANGLE: true, SQUARE: true, CIRCLE: true, XMARK: true,
     TEXTLABEL: true, LASTMOVE: true, NEXTVARIATION: true,
-    CORRECT_VARIATION: true,
+    CORRECT_VARIATION: true, KO_LOCATION: true,
   }
 };
 
@@ -15020,7 +15034,10 @@ glift.flattener.symbols = {
   NEXTVARIATION: 36,
 
   // Variation identified as correct
-  CORRECT_VARIATION: 37
+  CORRECT_VARIATION: 37,
+
+  // Location for a Ko
+  KO_LOCATION: 38,
 };
 
 /**
@@ -15048,6 +15065,7 @@ glift.flattener.symbolMarkToMark = {
   35: glift.enums.marks.STONE_MARKER, // LASTMOVE
   36: glift.enums.marks.VARIATION_MARKER, // NEXTVARIATION
   37: glift.enums.marks.CORRECT_VARIATION, // CORRECT_VARIATION
+  38: glift.enums.marks.KO_LOCATION,
 };
 
 /**

@@ -46,12 +46,7 @@ glift.controllers.StaticProblem.prototype = {
     }
   },
 
-  /**
-   * Reload the problems.
-   *
-   * TODO(kashomon): Remove this?  Or perhaps rename initialize() to load() or
-   * reload() or something.
-   */
+  /** Reload the problems. */
   reload: function() {
     this.initialize();
   },
@@ -123,9 +118,12 @@ glift.controllers.StaticProblem.prototype = {
     }
   },
 
-  /** Get the current correctness status */
+  /**
+   * Get the current correctness status.
+   * @return {glift.enums.problemResults}
+   */
   correctnessStatus: function() {
-    return glift.rules.problems.isCorrectPosition(
+    return glift.rules.problems.positionCorrectness(
         this.movetree, this.problemConditions);
   }
 };

@@ -47,7 +47,7 @@ glift.rules.problems = {
     } else {
       var flatPaths = glift.rules.treepath.flattenMoveTree(movetree);
 
-      /** @type {!Object<glift.enums.problemResults, true>} */
+      /** @type {!Object<glift.enums.problemResults, boolean>} */
       var successTracker = {};
 
       // For each path, we evaluate if each path has the possibility of being
