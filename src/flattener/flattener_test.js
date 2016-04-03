@@ -332,9 +332,18 @@
         '(;GM[1]SZ[19]' +
         ';B[ba];W[ca];B[ab];W[bb];B[bc];W[aa])';
     var mt = glift.rules.movetree.getFromSgf(kosgf, initPos);
+    var f = flattener.flatten(mt, {
+      markKoLocation: true,
+    });
+    ok(f);
+    deepEqual(f.marks()[toPt('ba').toString()], glift.flattener.symbols.KO_LOCATION,
+      'Ko Location');
+
+    // Now, without othe option set
+    var mt = glift.rules.movetree.getFromSgf(kosgf, initPos);
     var f = flattener.flatten(mt, {});
     ok(f);
-    deepEqual(f.ko(), toPt('ba'));
+    deepEqual(f.marks()[toPt('ba').toString()], undefined)
 
     // Ko doesn't make sense when a nextMovesPath is specified, and so must be
     // null.
@@ -343,6 +352,6 @@
       nextMovesTreepath: initPos
     });
     ok(f);
-    deepEqual(f.ko(), null);
+    deepEqual(f.marks()[toPt('ba').toString()], glift.flattener.symbols.TEXTLABEL);
   });
 })();

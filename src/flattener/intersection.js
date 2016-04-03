@@ -130,7 +130,9 @@ glift.flattener.Intersection = function(pt) {
   this.textLabel_ = null;
 };
 
-// Statics
+/**
+ * Static maps to evaluate symbol validity.
+ */
 glift.flattener.intersection.layerMapping = {
   base: {
     EMPTY: true, TL_CORNER: true, TR_CORNER: true, BL_CORNER: true,
@@ -143,7 +145,7 @@ glift.flattener.intersection.layerMapping = {
   mark: {
     EMPTY: true, TRIANGLE: true, SQUARE: true, CIRCLE: true, XMARK: true,
     TEXTLABEL: true, LASTMOVE: true, NEXTVARIATION: true,
-    CORRECT_VARIATION: true,
+    CORRECT_VARIATION: true, KO_LOCATION: true,
   }
 };
 

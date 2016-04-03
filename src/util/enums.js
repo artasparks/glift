@@ -107,7 +107,10 @@ glift.enums.marks = {
   VARIATION_MARKER: 'VARIATION_MARKER',
 
   // We color 'correct' variations differently in problems,
-  CORRECT_VARIATION: 'CORRECT_VARIATION'
+  CORRECT_VARIATION: 'CORRECT_VARIATION',
+
+  // We color 'correct' variations differently in problems,
+  KO_LOCATION: 'KO_LOCATION'
 };
 
 /**

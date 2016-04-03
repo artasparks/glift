@@ -31,10 +31,12 @@ glift.flattener = {};
  *  Options for marks
  *  - showNextVariationsType: Whether or not to show variations.
  *  - markLastMove: Whether or not to put a special mark on the last move
- *  - problemConditions: Whether
+ *  - markKoLocation: Whether or not to show the Ko location with a mark.
  *
  *  Options for problems
- *  - problemConditions
+ *  - problemConditions: determine how to evaluate whether or not a position is
+ *    considered 'correct'. Obviously, only useful for problems. Currently only
+ *    for showing correct/incorrect moves in the explorer.
  *
  * @typedef {{
  *  goban: (!glift.rules.Goban|undefined),
@@ -45,8 +47,9 @@ glift.flattener = {};
  *  showNextVariationsType: (glift.enums.showVariations|undefined),
  *  autoBoxCropOnNextMoves: (boolean|undefined),
  *  markLastMove: (boolean|undefined),
- *  problemConditions: (!glift.rules.ProblemConditions|undefined),
- *  selectedNextMove: (?glift.rules.Move|undefined)
+ *  selectedNextMove: (?glift.rules.Move|undefined),
+ *  showKoLocation: (boolean|undefined),
+ *  problemConditions: (!glift.rules.ProblemConditions|undefined)
  * }}
  */
 glift.flattener.Options;
@@ -101,6 +104,9 @@ glift.flattener.flatten = function(movetreeInitial, opt_options) {
       mt.getTreeFromRoot(), mt.treepathToHere()).goban;
   var showVars =
       options.showNextVariationsType  || glift.enums.showVariations.NEVER;
+
+  // Note: NMTP is always defined and will, at the very least, be an empty
+  // array.
   var nmtp = glift.rules.treepath.parseFragment(options.nextMovesTreepath || '');
 
   var optStartingMoveNum = options.startingMoveNum || null;
@@ -181,17 +187,23 @@ glift.flattener.flatten = function(movetreeInitial, opt_options) {
       applied.stones, stoneMap, markMap, startingMoveNum);
 
   // Optionally mark the last move played. Existing labels get preference.
-  glift.flattener.markLastMove_(markMap, mt.getLastMove(), options.markLastMove);
+  if (options.markLastMove) {
+    glift.flattener.markLastMove_(markMap, mt.getLastMove());
+  }
+
+  if (options.markKoLocation && !nmtp.length) {
+    // We don't mark Ko for when the nextMovesTreepath (nmtp) is specified. If
+    // there's a Ko & nmtp is defined, then stones will be captured but the
+    // stones will be left on the board. So there's no point in putting a mark
+    // or indicator at that location.
+    glift.flattener.markKo_(markMap, goban.getKo());
+  }
+
 
   // Finally! Generate the intersections double-array.
   var board = glift.flattener.board.create(cropping, stoneMap, markMap);
 
   var comment = mt.properties().getComment() || '';
-
-  // We don't mark Ko for when the nextMovesTreepath is specified. If there's a
-  // Ko, then stones will be captured and there's no point in putting a mark or
-  // indicator on the location.
-  var ko = nmtp ? null : goban.getKo();
 
   return new glift.flattener.Flattened({
       board: board,
@@ -206,7 +218,6 @@ glift.flattener.flatten = function(movetreeInitial, opt_options) {
       nextMainlineMove: nextMainlineMove,
       stoneMap: stoneMap,
       markMap: markMap,
-      ko: goban.getKo(),
       // ProblemSpecific fields.
       correctNextMoves: correctNextMoves,
       // TODO(kashomon): Add support directly in the flattener params.
@@ -561,21 +572,35 @@ glift.flattener.createStoneLabels_ = function(
 };
 
 /**
- * Optionally mark the last move (by updating the mark map) if:
+ * Update the mark map with the last move if:
  *
  * 0. The last move is defined.
  * 1. There is no existing mark in the markMap at the location.
- * 2. The markLastMove option is true.
  *
  * @param {!glift.flattener.MarkMap} markMap
  * @param {?glift.rules.Move} lastMove
- * @param {boolean|undefined} markLast
  */
-glift.flattener.markLastMove_ = function(markMap, lastMove, markLast) {
+glift.flattener.markLastMove_ = function(markMap, lastMove) {
   if (lastMove && lastMove.point) {
     var ptstr = lastMove.point.toString();
-    if (!markMap.marks[ptstr] && markLast) {
+    if (!markMap.marks[ptstr]) {
       markMap.marks[ptstr] = glift.flattener.symbols.LASTMOVE;
     }
+  }
+};
+
+/**
+ * Optionally mark the Ko move. This only updates the map if:
+ *
+ * 0. The ko is defined
+ * 1. There is no existing mark in the markMap at the location.
+ *
+ * @param {!glift.flattener.MarkMap} markMap
+ * @param {?glift.Point} koLocation
+ */
+glift.flattener.markKo_ = function(markMap, koLocation) {
+  var ptstr = koLocation.toString();
+  if (!markMap.marks[ptstr]) {
+    markMap.marks[ptstr] = glift.flattener.symbols.KO_LOCATION;
   }
 };

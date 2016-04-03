@@ -50,7 +50,10 @@ glift.flattener.symbols = {
   NEXTVARIATION: 36,
 
   // Variation identified as correct
-  CORRECT_VARIATION: 37
+  CORRECT_VARIATION: 37,
+
+  // Location for a Ko
+  KO_LOCATION: 38,
 };
 
 /**
@@ -78,6 +81,7 @@ glift.flattener.symbolMarkToMark = {
   35: glift.enums.marks.STONE_MARKER, // LASTMOVE
   36: glift.enums.marks.VARIATION_MARKER, // NEXTVARIATION
   37: glift.enums.marks.CORRECT_VARIATION, // CORRECT_VARIATION
+  38: glift.enums.marks.KO_LOCATION,
 };
 
 /**

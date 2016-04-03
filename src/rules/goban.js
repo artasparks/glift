@@ -141,8 +141,6 @@ glift.rules.Goban.prototype = {
    *    point is within the bounds of the board.
    */
   placeable: function(point) {
-    // Currently, color is unused, but there are plans to use it because
-    // self-capture is disallowed. Add-stone will still fail.
     return this.inBounds_(point)
         && this.getStone(point) === glift.enums.states.EMPTY;
   },

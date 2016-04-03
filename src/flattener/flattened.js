@@ -18,7 +18,6 @@ goog.provide('glift.flattener.FlattenedParams');
  *  nextMainlineMove: ?glift.rules.Move,
  *  stoneMap: !Object<glift.PtStr, !glift.rules.Move>,
  *  markMap: !glift.flattener.MarkMap,
- *  ko: ?glift.Point,
  *  correctNextMoves: !Object<glift.PtStr, !glift.rules.Move>,
  *  problemResult: ?glift.enums.problemResults
  * }}
@@ -139,13 +138,6 @@ glift.flattener.Flattened = function(params) {
   this.markMap_ = params.markMap;
 
   /**
-   * The Ko point. Will be null if there is currently no Ko.
-   * @private {?glift.Point}
-   * @const
-   */
-  this.ko_ = params.ko;
-
-  /**
    * The variations that, according to the problem conditions supplied are
    * correct. By default, variations are considered incorrect.
    * @private {!Object<glift.PtStr, !glift.rules.Move>}
@@ -173,16 +165,6 @@ glift.flattener.Flattened.prototype = {
    * @return {string}
    */
   comment: function() { return this.comment_; },
-
-  /**
-   * Returns the Ko point, if it exists, and null otherwise.
-   *
-   * Note that Ko will not be specified when the flattened object was created
-   * with a nextMovesTreepath, since this means a stone must have been captured
-   * at the ko point.
-   * @return {?glift.Point}
-   */
-  ko: function() { return this.ko_; },
 
   /**
    * A structure illustrating the board collisions. Only relevant for positions
