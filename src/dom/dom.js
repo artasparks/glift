@@ -53,8 +53,7 @@ glift.dom = {
       text = glift.markdown.render(text);
     }
     var wrapper = glift.dom.newElem('div');
-    // TODO(kashomon): It's so hacky to use the comment box css here.
-    wrapper.setAttr('class', glift.dom.classes.commentBox);
+    wrapper.setAttr('class', glift.themes.classes.TEXT_BOX);
 
     if (useMarkdown) {
       wrapper.html(text);
@@ -78,6 +77,7 @@ glift.dom = {
 
   /**
    * Produces an absolutely positioned div from a bounding box.
+   * @return {!glift.dom.Element} A new absolutely positioned div.
    */
   absBboxDiv: function(bbox, id) {
     var newDiv  = this.newDiv(id);

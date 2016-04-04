@@ -12,8 +12,8 @@ glift.themes.base;
  */
 glift.themes.baseTemplate = {
   board: {
-    fill: "#f5be7e",
-    stroke: "#000000",
+    fill: '#f5be7e',
+    stroke: '#000000',
     // imagefill -- defined on loading
     'stroke-width': 1
   },

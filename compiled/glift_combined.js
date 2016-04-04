@@ -1258,8 +1258,7 @@ glift.dom = {
       text = glift.markdown.render(text);
     }
     var wrapper = glift.dom.newElem('div');
-    // TODO(kashomon): It's so hacky to use the comment box css here.
-    wrapper.setAttr('class', glift.dom.classes.commentBox);
+    wrapper.setAttr('class', glift.themes.classes.TEXT_BOX);
 
     if (useMarkdown) {
       wrapper.html(text);
@@ -1283,6 +1282,7 @@ glift.dom = {
 
   /**
    * Produces an absolutely positioned div from a bounding box.
+   * @return {!glift.dom.Element} A new absolutely positioned div.
    */
   absBboxDiv: function(bbox, id) {
     var newDiv  = this.newDiv(id);
@@ -1530,17 +1530,6 @@ glift.dom.Element.prototype = {
   boundingClientRect: function() {
     return this.el.getBoundingClientRect();
   }
-};
-
-goog.provide('glift.dom.clasess');
-
-/**
- * Built-in clases used to style Glift.
- */
-// TODO(kashomon): Move to a more appropriate API location. Or just delete this
-// nonsense.
-glift.dom.classes = {
-  commentBox: 'glift-comment-box'
 };
 
 goog.require('glift.dom');
@@ -1841,8 +1830,8 @@ glift.themes.base;
  */
 glift.themes.baseTemplate = {
   board: {
-    fill: "#f5be7e",
-    stroke: "#000000",
+    fill: '#f5be7e',
+    stroke: '#000000',
     // imagefill -- defined on loading
     'stroke-width': 1
   },
@@ -2035,6 +2024,37 @@ glift.themes.baseTemplate = {
   }
 };
 
+goog.provide('glift.themes.clasess');
+
+
+/**
+ * Built-in classes used to style Glift.
+ *
+ * Q: Should glift ever be styled in two different ways in the page? My gut says
+ * that should be allowed, but I can't think of a counter example.
+ *
+ * @enum{string}
+ */
+glift.themes.classes = {
+  /** Css container for generic text boxes. */
+  TEXT_BOX: 'glift-text-box',
+
+  /** An elem that's absolutely positioned */
+  ABSOLUTE_ELEM: 'glift-absolute-elem',
+
+  //////////////////////////
+  // Basic board elements //
+  //////////////////////////
+
+  BOARD: 'glift-board',
+  STARPOINTS: 'glift-starpoints',
+  BOARD_LINES: 'glift-board-lines',
+  BOARD_COORD_LABELS: 'glift-board-coord-labels',
+
+  STONE_SHADOWS: 'glift-stone-shadows',
+  STONE_MARKS: 'glift-stone-marks',
+};
+
 goog.provide('glift.themes.registered.COLORFUL');
 
 /**
@@ -2065,6 +2085,81 @@ glift.themes.registered.COLORFUL = {
     }
   }
 };
+
+goog.provide('glift.themes.cssBaseTheme');
+goog.provide('glift.themes.CssDef');
+
+goog.scope(function() {
+
+/**
+ * @param {!Object<string>} css Core css
+ * @param {!Object<(string|number)>} extra Extra properties
+ * @constructor @struct @final
+ */
+glift.themes.CssDef = function(css, extra) {
+  /**
+   * @type {!Object<string>} Base CSS Properties 
+   */
+  this.css = css;
+  /**
+   * @type {!Object<string, (string|number)>} Extra properties sometimes
+   *    necessary for construction.
+   */
+  this.extra = extra;
+};
+
+/**
+ * @type {!Object<glift.themes.classes, !glift.themes.CssDef>}
+ */
+glift.themes.cssBaseTheme = {};
+
+var base = glift.themes.cssBaseTheme;
+var classes = glift.themes.classes;
+/**
+ * @param {!Object<string>} css
+ * @param {!Object<string, (string|number)>=} opt_extra
+ * Helper for construction css definitions
+ */
+var cssDef = function(css, opt_extra) {
+  return new glift.themes.CssDef(css, opt_extra || {});
+}
+
+// CSS For the bas board.
+base[classes.BOARD] = cssDef({
+  fill: '#f5be7e',
+  stroke: '#000000',
+  'stroke-width': '1'
+});
+
+base[classes.STARPOINTS] = cssDef({
+  fill: 'black',
+}, {
+  // extra propetries //
+  sizeFraction: 0.15 // As a fraction of spacing
+});
+
+base[classes.BOARD_LINES] = cssDef({
+  stroke: "black",
+  'stroke-width': 0.5
+});
+
+base[classes.BOARD_COORD_LABELS] = cssDef({
+  fill: 'black',
+  stroke: 'black',
+  opacity: '0.6',
+  'font-family': 'sans-serif',
+  'font-size': '0.6'
+});
+
+base[classes.BOARD_COORD_LABELS] = cssDef({
+  fill: 'black',
+  stroke: 'black',
+  opacity: '0.6',
+  'font-family': 'sans-serif',
+  'font-size': '0.6'
+});
+
+});
 
 goog.provide('glift.themes.registered.DEFAULT');
 
