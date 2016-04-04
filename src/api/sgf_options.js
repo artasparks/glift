@@ -331,8 +331,16 @@ glift.api.SgfOptions = function(opt_o) {
    * @type {boolean}
    * @const
    */
-  this.markLastMove = o.markLastMove !== undefined ?
-      o.markLastMove : true;
+  this.markLastMove = o.markLastMove !== undefined ? !!o.markLastMove : true;
+
+  /**
+   * Whether or not to mark ko locations.  Either true or false, but
+   * defaults to true.
+   *
+   * @type {boolean}
+   * @const
+   */
+  this.markKo = o.markKo !== undefined ? !!o.markKo: true;
 
   /**
    * The function that creates the controller at widget-creation time.

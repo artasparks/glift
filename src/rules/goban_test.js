@@ -178,18 +178,18 @@
     // .....
 
     // Row 1
-    goban.setColor_(WHITE, pt(1, 0));
-    goban.setColor_(BLACK, pt(2, 0));
+    goban.setColor_(pt(1, 0), WHITE);
+    goban.setColor_(pt(2, 0), BLACK);
     // Row 2
-    goban.setColor_(WHITE, pt(0, 1));
-    goban.setColor_(BLACK, pt(1, 1));
-    goban.setColor_(WHITE, pt(2, 1));
+    goban.setColor_(pt(0, 1), WHITE);
+    goban.setColor_(pt(1, 1), BLACK);
+    goban.setColor_(pt(2, 1), WHITE);
     // Row 3
-    goban.setColor_(WHITE, pt(1, 2));
-    goban.setColor_(WHITE, pt(2, 2));
+    goban.setColor_(pt(1, 2), WHITE);
+    goban.setColor_(pt(2, 2), WHITE);
     // Row 4
-    goban.setColor_(WHITE, pt(0, 3));
-    goban.setColor_(WHITE, pt(3, 3));
+    goban.setColor_(pt(0, 3), WHITE);
+    goban.setColor_(pt(3, 3), WHITE);
 
     var g = goban.findConnected_(pt(2,2), WHITE);
     deepEqual(g.liberties, 5);
@@ -235,44 +235,48 @@
     // OX.X
     // .OX.
     // O...
-    goban.addStone(pt(1,0), WHITE);
-    goban.addStone(pt(2,0), BLACK);
+    goban.setColor_(pt(1,0), WHITE);
+    goban.setColor_(pt(2,0), BLACK);
 
-    goban.addStone(pt(0,1), WHITE);
-    goban.addStone(pt(1,1), BLACK);
-    goban.addStone(pt(3,1), BLACK);
+    goban.setColor_(pt(0,1), WHITE);
+    goban.setColor_(pt(1,1), BLACK);
+    goban.setColor_(pt(3,1), BLACK);
 
-    goban.addStone(pt(1,2), WHITE);
-    goban.addStone(pt(2,2), BLACK);
+    goban.setColor_(pt(1,2), WHITE);
+    goban.setColor_(pt(2,2), BLACK);
 
-    goban.addStone(pt(0,3), WHITE);
+    goban.setColor_(pt(0,3), WHITE);
 
     var result = goban.addStone(pt(0,0), BLACK);
     ok(result.successful);
     deepEqual(result.koPt, pt(1,0));
     deepEqual(goban.getKo(), pt(1,0));
 
-    var result = goban.addStone(pt(1,0), WHITE);
+    ok(!goban.placeable(pt(1,0)))
+
+    goban.clearKo();
+
+    result = goban.addStone(pt(1,0), WHITE);
     ok(result.successful);
     deepEqual(result.koPt, pt(0,0));
     deepEqual(goban.getKo(), pt(0,0));
 
-    var result = goban.addStone(pt(2,1), WHITE);
+    goban.clearKo();
+
+    result = goban.addStone(pt(2,1), WHITE);
     ok(result.successful);
     deepEqual(result.koPt, pt(1,1));
     deepEqual(goban.getKo(), pt(1,1));
 
-    // Invalidated by clearStone
     goban.clearStone(pt(4,4))
-    deepEqual(goban.getKo(), null);
+    deepEqual(goban.getKo(), null, 'Must be invalidated by clearStone');
 
-    var result = goban.addStone(pt(1,1), BLACK);
+    result = goban.addStone(pt(1,1), BLACK);
     ok(result.successful);
     deepEqual(result.koPt, pt(2,1));
     deepEqual(goban.getKo(), pt(2,1));
 
-    // Invalidated by addStone
     goban.addStone(pt(4,4), BLACK)
-    deepEqual(goban.getKo(), null);
+    deepEqual(goban.getKo(), null, 'Must be invalidated by addStone');
   });
 })();

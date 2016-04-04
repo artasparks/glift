@@ -142,6 +142,7 @@ glift.rules.Goban.prototype = {
    */
   placeable: function(point) {
     return this.inBounds_(point)
+        && !point.equals(this.koPoint_)
         && this.getStone(point) === glift.enums.states.EMPTY;
   },
 
@@ -186,7 +187,7 @@ glift.rules.Goban.prototype = {
    */
   clearStone: function(point) {
     this.clearKo();
-    this.setColor_(glift.enums.states.EMPTY, point);
+    this.setColor_(point, glift.enums.states.EMPTY);
   },
 
   /**
@@ -220,7 +221,7 @@ glift.rules.Goban.prototype = {
       this.clearStone(point);
       var oppositeColor = glift.util.colors.oppositeColor(color);
       for (var i = 0; i < addStoneResult.captures.length; i++) {
-        this.setColor_(oppositeColor, addStoneResult.captures[i]);
+        this.setColor_(addStoneResult.captures[i], oppositeColor);
       }
     }
     return addStoneResult.successful;
@@ -243,12 +244,12 @@ glift.rules.Goban.prototype = {
     if (!glift.util.colors.isLegalColor(color)) throw "Unknown color: " + color;
 
     // Add stone fail.  Return a failed StoneResult.
-    if (this.outBounds_(pt) || !this.placeable(pt)) {
+    if (!this.placeable(pt)) {
       return new glift.rules.StoneResult(false);
     }
 
     // Set the stone as active and see what happens!
-    this.setColor_(color, pt);
+    this.setColor_(pt, color);
 
     // First find the oppositely-colored connected groups on each of the
     // cardinal directions.
@@ -292,7 +293,7 @@ glift.rules.Goban.prototype = {
       var capPt = capturedPoints[0];
 
       // Try to recapture, and see what happen.
-      this.setColor_(oppColor, capPt);
+      this.setColor_(capPt, oppColor);
       var koCapturedGroups = this.findCapturedGroups_(capPt, oppColor);
       // Undo our damage to the board.
       this.clearStone(capPt);
@@ -349,7 +350,7 @@ glift.rules.Goban.prototype = {
    * @param {!glift.Point} pt
    * @private
    */
-  setColor_: function(color, pt) {
+  setColor_: function(pt, color) {
     this.stones_[pt.y()][pt.x()] = color;
   },
 

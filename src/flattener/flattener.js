@@ -31,7 +31,7 @@ glift.flattener = {};
  *  Options for marks
  *  - showNextVariationsType: Whether or not to show variations.
  *  - markLastMove: Whether or not to put a special mark on the last move
- *  - markKoLocation: Whether or not to show the Ko location with a mark.
+ *  - markKo: Whether or not to show the Ko location with a mark.
  *
  *  Options for problems
  *  - problemConditions: determine how to evaluate whether or not a position is
@@ -191,7 +191,7 @@ glift.flattener.flatten = function(movetreeInitial, opt_options) {
     glift.flattener.markLastMove_(markMap, mt.getLastMove());
   }
 
-  if (options.markKoLocation && !nmtp.length) {
+  if (options.markKo && !nmtp.length) {
     // We don't mark Ko for when the nextMovesTreepath (nmtp) is specified. If
     // there's a Ko & nmtp is defined, then stones will be captured but the
     // stones will be left on the board. So there's no point in putting a mark
@@ -599,8 +599,10 @@ glift.flattener.markLastMove_ = function(markMap, lastMove) {
  * @param {?glift.Point} koLocation
  */
 glift.flattener.markKo_ = function(markMap, koLocation) {
-  var ptstr = koLocation.toString();
-  if (!markMap.marks[ptstr]) {
-    markMap.marks[ptstr] = glift.flattener.symbols.KO_LOCATION;
+  if (koLocation) {
+    var ptstr = koLocation.toString();
+    if (!markMap.marks[ptstr]) {
+      markMap.marks[ptstr] = glift.flattener.symbols.KO_LOCATION;
+    }
   }
 };

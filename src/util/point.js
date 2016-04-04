@@ -141,8 +141,14 @@ glift.Point.prototype = {
   x: function() { return this.x_ },
   /** @return {number} y value */
   y: function() { return this.y_ },
-  /** @return {boolean} Whether this point equals another obj. */
-  equals: function(pt) {
+  /**
+   * @param {?Object} inpt
+   * @return {boolean} Whether this point equals another obj.
+   */
+  equals: function(inpt) {
+    if (!inpt) { return false; };
+    if (!inpt.x && !inpt.y) { return false; }
+    var pt = /** @type {!glift.Point} */ (inpt);
     return this.x_ === pt.x() && this.y_ === pt.y();
   },
 
@@ -236,9 +242,4 @@ glift.Point.prototype = {
       return this.rotate(maxIntersections, rotation);
     }
   },
-
-  /** Log this point to the console. Should probably be deleted. */
-  log: function() {
-    glift.util.logz(this.toString());
-  }
 };

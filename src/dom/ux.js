@@ -36,8 +36,6 @@ glift.dom.ux = {
       var positiveDelta = deltaY > 0; // for IE
 
       var actualScroll = scrollTop + height;
-      // console.log('dy:' + deltaY + ',h:' + height
-          // + ',scrollTop:' + scrollTop + ',scrollHeight:' + scrollHeight);
       if (!positiveDelta && deltaY + scrollTop < 0) {
         el.scrollTop = 0;
         preventScroll(e);

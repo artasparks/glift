@@ -1071,8 +1071,14 @@ glift.Point.prototype = {
   x: function() { return this.x_ },
   /** @return {number} y value */
   y: function() { return this.y_ },
-  /** @return {boolean} Whether this point equals another obj. */
-  equals: function(pt) {
+  /**
+   * @param {?Object} inpt
+   * @return {boolean} Whether this point equals another obj.
+   */
+  equals: function(inpt) {
+    if (!inpt) { return false; };
+    if (!inpt.x && !inpt.y) { return false; }
+    var pt = /** @type {!glift.Point} */ (inpt);
     return this.x_ === pt.x() && this.y_ === pt.y();
   },
 
@@ -1166,11 +1172,6 @@ glift.Point.prototype = {
       return this.rotate(maxIntersections, rotation);
     }
   },
-
-  /** Log this point to the console. Should probably be deleted. */
-  log: function() {
-    glift.util.logz(this.toString());
-  }
 };
 
 glift.util.regions = {
@@ -1658,8 +1659,6 @@ glift.dom.ux = {
       var positiveDelta = deltaY > 0; // for IE
 
       var actualScroll = scrollTop + height;
-      // console.log('dy:' + deltaY + ',h:' + height
-          // + ',scrollTop:' + scrollTop + ',scrollHeight:' + scrollHeight);
       if (!positiveDelta && deltaY + scrollTop < 0) {
         el.scrollTop = 0;
         preventScroll(e);
@@ -1702,7 +1701,7 @@ glift.ajax = {
           callback(request.responseText);
         } else {
           // We reached our target server, but it returned an error
-          console.log('(' + request.status + ') Error retrieving ' + url);
+          console.error('(' + request.status + ') Error retrieving ' + url);
         }
       }
     };
@@ -5336,6 +5335,16 @@ glift.displays.board.addMark = function(
         .setAttr('stroke-width', 2)
         .setAttr('stroke', marksTheme.stroke)
         .setId(markId));
+  } else if (mark === marks.KO_LOCATION) {
+    container.append(svglib.circle()
+        .setData(pt)
+        .setAttr('cx', coordPt.x())
+        .setAttr('cy', coordPt.y())
+        .setAttr('r', boardPoints.radius / 2)
+        .setAttr('opacity', 0.5)
+        .setAttr('fill', 'none')
+        .setAttr('stroke', marksTheme.stroke)
+        .setId(markId));
   } else {
     // do nothing.  I suppose we could throw an exception here.
   }
@@ -8745,6 +8754,7 @@ glift.rules.Goban.prototype = {
    */
   placeable: function(point) {
     return this.inBounds_(point)
+        && !point.equals(this.koPoint_)
         && this.getStone(point) === glift.enums.states.EMPTY;
   },
 
@@ -8789,7 +8799,7 @@ glift.rules.Goban.prototype = {
    */
   clearStone: function(point) {
     this.clearKo();
-    this.setColor_(glift.enums.states.EMPTY, point);
+    this.setColor_(point, glift.enums.states.EMPTY);
   },
 
   /**
@@ -8823,7 +8833,7 @@ glift.rules.Goban.prototype = {
       this.clearStone(point);
       var oppositeColor = glift.util.colors.oppositeColor(color);
       for (var i = 0; i < addStoneResult.captures.length; i++) {
-        this.setColor_(oppositeColor, addStoneResult.captures[i]);
+        this.setColor_(addStoneResult.captures[i], oppositeColor);
       }
     }
     return addStoneResult.successful;
@@ -8846,12 +8856,12 @@ glift.rules.Goban.prototype = {
     if (!glift.util.colors.isLegalColor(color)) throw "Unknown color: " + color;
 
     // Add stone fail.  Return a failed StoneResult.
-    if (this.outBounds_(pt) || !this.placeable(pt)) {
+    if (!this.placeable(pt)) {
       return new glift.rules.StoneResult(false);
     }
 
     // Set the stone as active and see what happens!
-    this.setColor_(color, pt);
+    this.setColor_(pt, color);
 
     // First find the oppositely-colored connected groups on each of the
     // cardinal directions.
@@ -8895,7 +8905,7 @@ glift.rules.Goban.prototype = {
       var capPt = capturedPoints[0];
 
       // Try to recapture, and see what happen.
-      this.setColor_(oppColor, capPt);
+      this.setColor_(capPt, oppColor);
       var koCapturedGroups = this.findCapturedGroups_(capPt, oppColor);
       // Undo our damage to the board.
       this.clearStone(capPt);
@@ -8952,7 +8962,7 @@ glift.rules.Goban.prototype = {
    * @param {!glift.Point} pt
    * @private
    */
-  setColor_: function(color, pt) {
+  setColor_: function(pt, color) {
     this.stones_[pt.y()][pt.x()] = color;
   },
 
@@ -11742,6 +11752,12 @@ glift.controllers.BaseController = function() {
    */
   this.markLastMove_ = false;
 
+  /**
+   * Boolean indicating whether or not to mark the ko.
+   * @private {boolean}
+   */
+  this.markKo_ = true;
+
   /////////////////////////////////////////
   // Variables set during initialization //
   /////////////////////////////////////////
@@ -11772,6 +11788,13 @@ glift.controllers.BaseController = function() {
    * @package {!Array<!glift.rules.CaptureResult>}
    */
   this.captureHistory = [];
+
+  /**
+   * Array of ko-history so that when we go backwards, we can reset the ko
+   * correctly.
+   * @package {!Array<?glift.Point>}
+   */
+  this.koHistory = [];
 };
 
 glift.controllers.BaseController.prototype = {
@@ -11803,7 +11826,8 @@ glift.controllers.BaseController.prototype = {
     // display only; However, this is currenly the best place to put these since
     // the controller is in charge of creating the flattened representation.
     this.showVariations_ = sgfOptions.showVariations || undefined;
-    this.markLastMove_ = sgfOptions.markLastMove || false;
+    this.markLastMove_ = sgfOptions.markLastMove;
+    this.markKo_ = sgfOptions.markKo;
 
     this.initialize();
     return this;
@@ -11866,6 +11890,7 @@ glift.controllers.BaseController.prototype = {
       goban: this.goban,
       showNextVariationsType: this.showVariations_,
       markLastMove: this.markLastMove_,
+      markKo: this.markKo_,
       nextMovesTreepath: this.nextMovesPath_,
       problemConditions: this.problemConditions,
       selectedNextMove: this.selectedNextMove(),
@@ -12095,6 +12120,7 @@ glift.controllers.BaseController.prototype = {
       }
     }
     var captures = this.goban.loadStonesFromMovetree(this.movetree)
+    this.koHistory.push(this.goban.getKo());
     this.recordCaptures(captures);
     return this.flattenedState();
   },
@@ -12114,6 +12140,13 @@ glift.controllers.BaseController.prototype = {
         0, this.currentMoveNumber() - 1);
     this.unloadStonesFromGoban_(allCurrentStones, captures);
     this.movetree.moveUp();
+    this.koHistory.pop();
+    if (this.koHistory.length) {
+      var ko = this.koHistory[this.koHistory.length -1];
+      if (ko) {
+        this.goban.setKo(ko);
+      }
+    }
     return this.flattenedState();
   },
 
@@ -12124,7 +12157,8 @@ glift.controllers.BaseController.prototype = {
   toBeginning: function() {
     this.movetree = this.movetree.getTreeFromRoot();
     this.goban = glift.rules.goban.getFromMoveTree(this.movetree, []).goban;
-    this.captureHistory = []
+    this.captureHistory = [];
+    this.koHistory = [];
     return this.flattenedState();
   },
 
@@ -13520,7 +13554,7 @@ glift.flattener = {};
  *  Options for marks
  *  - showNextVariationsType: Whether or not to show variations.
  *  - markLastMove: Whether or not to put a special mark on the last move
- *  - markKoLocation: Whether or not to show the Ko location with a mark.
+ *  - markKo: Whether or not to show the Ko location with a mark.
  *
  *  Options for problems
  *  - problemConditions: determine how to evaluate whether or not a position is
@@ -13680,7 +13714,7 @@ glift.flattener.flatten = function(movetreeInitial, opt_options) {
     glift.flattener.markLastMove_(markMap, mt.getLastMove());
   }
 
-  if (options.markKoLocation && !nmtp.length) {
+  if (options.markKo && !nmtp.length) {
     // We don't mark Ko for when the nextMovesTreepath (nmtp) is specified. If
     // there's a Ko & nmtp is defined, then stones will be captured but the
     // stones will be left on the board. So there's no point in putting a mark
@@ -14088,9 +14122,11 @@ glift.flattener.markLastMove_ = function(markMap, lastMove) {
  * @param {?glift.Point} koLocation
  */
 glift.flattener.markKo_ = function(markMap, koLocation) {
-  var ptstr = koLocation.toString();
-  if (!markMap.marks[ptstr]) {
-    markMap.marks[ptstr] = glift.flattener.symbols.KO_LOCATION;
+  if (koLocation) {
+    var ptstr = koLocation.toString();
+    if (!markMap.marks[ptstr]) {
+      markMap.marks[ptstr] = glift.flattener.symbols.KO_LOCATION;
+    }
   }
 };
 
@@ -17052,8 +17088,16 @@ glift.api.SgfOptions = function(opt_o) {
    * @type {boolean}
    * @const
    */
-  this.markLastMove = o.markLastMove !== undefined ?
-      o.markLastMove : true;
+  this.markLastMove = o.markLastMove !== undefined ? !!o.markLastMove : true;
+
+  /**
+   * Whether or not to mark ko locations.  Either true or false, but
+   * defaults to true.
+   *
+   * @type {boolean}
+   * @const
+   */
+  this.markKo = o.markKo !== undefined ? !!o.markKo: true;
 
   /**
    * The function that creates the controller at widget-creation time.

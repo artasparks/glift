@@ -131,6 +131,16 @@ glift.displays.board.addMark = function(
         .setAttr('stroke-width', 2)
         .setAttr('stroke', marksTheme.stroke)
         .setId(markId));
+  } else if (mark === marks.KO_LOCATION) {
+    container.append(svglib.circle()
+        .setData(pt)
+        .setAttr('cx', coordPt.x())
+        .setAttr('cy', coordPt.y())
+        .setAttr('r', boardPoints.radius / 2)
+        .setAttr('opacity', 0.5)
+        .setAttr('fill', 'none')
+        .setAttr('stroke', marksTheme.stroke)
+        .setId(markId));
   } else {
     // do nothing.  I suppose we could throw an exception here.
   }

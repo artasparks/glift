@@ -333,7 +333,7 @@
         ';B[ba];W[ca];B[ab];W[bb];B[bc];W[aa])';
     var mt = glift.rules.movetree.getFromSgf(kosgf, initPos);
     var f = flattener.flatten(mt, {
-      markKoLocation: true,
+      markKo: true,
     });
     ok(f);
     deepEqual(f.marks()[toPt('ba').toString()], glift.flattener.symbols.KO_LOCATION,

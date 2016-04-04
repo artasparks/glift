@@ -12,6 +12,10 @@
     ok(pt.equals(pt2), 'equals');
   });
 
+  test('equals -- nulls', function() {
+    ok(!point(1, 5).equals(null), 'Should return false for null points');
+  });
+
   test('hash and unhash', function() {
     var pt = point(1, 12);
     deepEqual(pt.toString(), '1,12', 'to string must be a comma-sep pair');

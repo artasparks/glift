@@ -153,13 +153,12 @@
 <script type="text/javascript">
 
 (function() {
-  console.log("foom!");
   var paper = Raphael('glift_display1', 1000, 1000);
   for (var key in glift.displays.icons.svg) {
     var pathobj = paper.path(glift.displays.icons.svg[key].string);
     var bbox = pathobj.getBBox();
-    glift.util.logz(key)
-    glift.util.logz(JSON.stringify(bbox));
+    console.log(key)
+    console.log(JSON.stringify(bbox));
   };
 })();
 </script>

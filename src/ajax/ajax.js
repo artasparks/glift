@@ -12,7 +12,7 @@ glift.ajax = {
           callback(request.responseText);
         } else {
           // We reached our target server, but it returned an error
-          console.log('(' + request.status + ') Error retrieving ' + url);
+          console.error('(' + request.status + ') Error retrieving ' + url);
         }
       }
     };

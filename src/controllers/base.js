@@ -75,6 +75,12 @@ glift.controllers.BaseController = function() {
    */
   this.markLastMove_ = false;
 
+  /**
+   * Boolean indicating whether or not to mark the ko.
+   * @private {boolean}
+   */
+  this.markKo_ = true;
+
   /////////////////////////////////////////
   // Variables set during initialization //
   /////////////////////////////////////////
@@ -105,6 +111,13 @@ glift.controllers.BaseController = function() {
    * @package {!Array<!glift.rules.CaptureResult>}
    */
   this.captureHistory = [];
+
+  /**
+   * Array of ko-history so that when we go backwards, we can reset the ko
+   * correctly.
+   * @package {!Array<?glift.Point>}
+   */
+  this.koHistory = [];
 };
 
 glift.controllers.BaseController.prototype = {
@@ -136,7 +149,8 @@ glift.controllers.BaseController.prototype = {
     // display only; However, this is currenly the best place to put these since
     // the controller is in charge of creating the flattened representation.
     this.showVariations_ = sgfOptions.showVariations || undefined;
-    this.markLastMove_ = sgfOptions.markLastMove || false;
+    this.markLastMove_ = sgfOptions.markLastMove;
+    this.markKo_ = sgfOptions.markKo;
 
     this.initialize();
     return this;
@@ -199,6 +213,7 @@ glift.controllers.BaseController.prototype = {
       goban: this.goban,
       showNextVariationsType: this.showVariations_,
       markLastMove: this.markLastMove_,
+      markKo: this.markKo_,
       nextMovesTreepath: this.nextMovesPath_,
       problemConditions: this.problemConditions,
       selectedNextMove: this.selectedNextMove(),
@@ -428,6 +443,7 @@ glift.controllers.BaseController.prototype = {
       }
     }
     var captures = this.goban.loadStonesFromMovetree(this.movetree)
+    this.koHistory.push(this.goban.getKo());
     this.recordCaptures(captures);
     return this.flattenedState();
   },
@@ -447,6 +463,13 @@ glift.controllers.BaseController.prototype = {
         0, this.currentMoveNumber() - 1);
     this.unloadStonesFromGoban_(allCurrentStones, captures);
     this.movetree.moveUp();
+    this.koHistory.pop();
+    if (this.koHistory.length) {
+      var ko = this.koHistory[this.koHistory.length -1];
+      if (ko) {
+        this.goban.setKo(ko);
+      }
+    }
     return this.flattenedState();
   },
 
@@ -457,7 +480,8 @@ glift.controllers.BaseController.prototype = {
   toBeginning: function() {
     this.movetree = this.movetree.getTreeFromRoot();
     this.goban = glift.rules.goban.getFromMoveTree(this.movetree, []).goban;
-    this.captureHistory = []
+    this.captureHistory = [];
+    this.koHistory = [];
     return this.flattenedState();
   },
 
