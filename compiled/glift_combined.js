@@ -11996,17 +11996,10 @@ glift.controllers.BaseController.prototype = {
   /**
    * Applies captures and increments the move number
    *
-   * Captures is expected to have the form
-   *
-   * {
-   *  WHITE: []
-   *  BLACK: []
-   * }
+   * @param {!glift.rules.CaptureResult} captures
    */
-  // TODO(kashomon): Maybe this shouldn't increment move number?
   recordCaptures: function(captures) {
     this.captureHistory.push(captures)
-    return this;
   },
 
   /**
@@ -16620,8 +16613,6 @@ glift.api.iconActionDefaults = {
     tooltip: 'Show the game info'
   },
 
-  // TODO(kashomon): The 'move-indicator' is harded somewhere and needs to be
-  // fixed.
   'move-indicator': {
     click: function() {},
     mouseover: function() {},
@@ -17363,7 +17354,6 @@ glift.api.widgetopt = {};
  * Board Editor options.
  */
 glift.api.widgetopt[glift.enums.widgetTypes.BOARD_EDITOR] = {
-  // TODO(kashomon): Move these options to local vars above.
   _markMap: {
     bstone_a: glift.enums.marks.LABEL_ALPHA,
     bstone_1: glift.enums.marks.LABEL_NUMERIC,

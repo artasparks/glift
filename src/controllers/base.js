@@ -224,17 +224,10 @@ glift.controllers.BaseController.prototype = {
   /**
    * Applies captures and increments the move number
    *
-   * Captures is expected to have the form
-   *
-   * {
-   *  WHITE: []
-   *  BLACK: []
-   * }
+   * @param {!glift.rules.CaptureResult} captures
    */
-  // TODO(kashomon): Maybe this shouldn't increment move number?
   recordCaptures: function(captures) {
     this.captureHistory.push(captures)
-    return this;
   },
 
   /**
