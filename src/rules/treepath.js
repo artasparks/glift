@@ -18,54 +18,95 @@ glift.rules.Treepath;
 glift.rules.AppliedTreepath;
 
 /**
- * The treepath is specified by a String, which tells how to get to particular
- * position in a game / problem. This implies that the treepaths discussed below
- * are initial treepaths.
+ * # Treepath
  *
- * Note: Both moves and and variations are 0 indexed.
+ * A treepath is a list of variations that says how to travel through a tree of
+ * moves. So,
+ *
+ *    [0,1,0]
+ *
+ * Means we will first take the 0th variation, then we will take the 1ist
+ * variation, and lastly we will take the 0th variation again. For
+ * convenience, the treepath can also be specified by a string, which is where
+ * the fun begins. At it's simpliest,
+ *
+ *    [0,0,0] becomes 0.0.0
+ *
+ * but there are a couple different short-hands that make using treepaths a
+ * little easier
+ *
+ *    0.1+    Take the 0th variation, then the 1st variation, then go to the end
+ *    0.1x2   Take the 0th variation, then repeat taking the 1st varation twice
+ *
+ * There are two types of treepaths discussed below -- A *treepath fragment*
+ * (which is what we have been describing) and an *initial treepath*.
+ *
+ * ## Treepath Fragments
+ *
+ * Treepaths say how to get from position n to position m.  Thus the numbers are
+ * always variations except in the case of AxB syntax, where B is a multiplier
+ * for a variation.
+ *
+ * This is how fragment strings are parsed:
+ *
+ *    0       becomes [0]
+ *    1       becomes [1]
+ *    53      becomes [53] (the 53rd variation
+ *    2.3     becomes [2,3]
+ *    0.0.0.0 becomes [0,0,0]
+ *    0x4     becomes [0,0,0,0]
+ *    1+      becomes [1,0...(500 times)]
+ *
+ * ## Initial tree paths.
+ *
+ * The initial treepath always treats the first number as a 'move number'
+ * instead of a variation. Thus
+ *
+ *    3.1.0
+ *
+ * means start at move 3 (always taking the 0th path) and then take the path
+ * fragment [1,0]
  *
  * Some examples:
- * 0         - Start at the 0th move (the root node)
- * 53        - Start at the 53rd move, taking the primary path
- * 2.3       - Start at the 3rd variation on move 2 (actually move 3)
- * 3         - Start at the 3rd move
- * 2.0       - Start at the 3rd move
- * 0.0.0.0   - Start at the 3rd move
- * 2.3-4.1   - Start at the 1st variation of the 4th move, arrived at by traveling
- *             through the 3rd varition of the 2nd move
  *
- * Note: '+' is a special symbol which means "go to the end via the first
- * variation." This is implemented with a by appending 500 0s to the path array.
- * This is a hack, but in practice games don't go over 500 moves.
+ *    0         - Start at the 0th move (the root node)
+ *    53        - Start at the 53rd move (taking the 0th variation)
+ *    2.3       - Start at the 3rd variation on move 2 (actually move 3)
+ *    3         - Start at the 3rd move
+ *    2.0       - Start at the 3rd move
+ *    0.0.0.0   - Start at the 3rd move
+ *    0x4       - Start at the 3rd move
+ *
+ * Deprecated syntax:
+ *
+ *    2.3-4.1   - Start at the 1st variation of the 4th move, arrived at by traveling
+ *              through the 3rd varition of the 2nd move
+ *
+ * ### Parsing Initial Treepaths
+ *
+ * As mentioned before, '+' is a special symbol which means "go to the end via
+ * the first variation." This is implemented with a by appending 500 0s to the
+ * path array.  This is a hack, but in practice games don't go over 500 moves.
  *
  * The init position returned is an array of variation numbers traversed through.
  * The move number is precisely the length of the array.
  *
  * So:
- * 0       becomes []
- * 1       becomes [0]
- * 0.1     becomes [1]
- * 53      becomes [0,0,0,...,0] (53 times)
- * 2.3     becomes [0,0,3]
- * 0.0.0.0 becomes [0,0,0]
- * 2.3-4.1 becomes [0,0,3,0,1]
- * 1+      becomes [0,0,...(500 times)]
- * 0.1+    becomes [1,0,...(500 times)]
- * 0.2.6+  becomes [2,6,0,...(500 times)]
  *
- * Treepath Fragments
+ *    0       becomes []
+ *    1       becomes [0]
+ *    0.1     becomes [1]
+ *    53      becomes [0,0,0,...,0] (53 times)
+ *    2.3     becomes [0,0,3]
+ *    0.0.0.0 becomes [0,0,0]
+ *    1+      becomes [0,0,...(500 times)]
+ *    0.1+    becomes [1,0,...(500 times)]
+ *    0.2.6+  becomes [2,6,0,...(500 times)]
+ *    0x4.1x3 becomes [0,0,0,1,1,1]
  *
- * In contrast to initial treepaths, treepaths can also be fragments that say
- * how to get from position n to position m.  Thus treepath fragments only
- * allow variation numbers and disallow the 3-10 syntax.
+ * Deprecated Syntax:
  *
- * This is how fragment strings are parsed:
- * 0       becomes [0]
- * 1       becomes [1]
- * 53      becomes [53]
- * 2.3     becomes [2,3]
- * 0.0.0.0 becomes [0,0,0]
- * 1+      becomes [1,0...(500 times)]
+ *    2.3-4.1 becomes [0,0,3,0,1]
  */
 glift.rules.treepath = {
   /**
