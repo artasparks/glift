@@ -9531,7 +9531,7 @@ glift.rules.movetree = {
 
     if (glift.util.typeOf(initPosition) === 'string' ||
         glift.util.typeOf(initPosition) === 'number') {
-      initPosition = glift.rules.treepath.parsePath(initPosition);
+      initPosition = glift.rules.treepath.parseInitialPath(initPosition);
     }
 
     var initTreepath = /** @type {!glift.rules.Treepath} */ (initPosition);
@@ -10818,69 +10818,108 @@ glift.rules.Treepath;
 glift.rules.AppliedTreepath;
 
 /**
- * The treepath is specified by a String, which tells how to get to particular
- * position in a game / problem. This implies that the treepaths discussed below
- * are initial treepaths.
+ * # Treepath
  *
- * Note: Both moves and and variations are 0 indexed.
+ * A treepath is a list of variations that says how to travel through a tree of
+ * moves. So,
+ *
+ *    [0,1,0]
+ *
+ * Means we will first take the 0th variation, then we will take the 1ist
+ * variation, and lastly we will take the 0th variation again. For
+ * convenience, the treepath can also be specified by a string, which is where
+ * the fun begins. At it's simpliest,
+ *
+ *    [0,0,0] becomes 0.0.0
+ *
+ * but there are a couple different short-hands that make using treepaths a
+ * little easier
+ *
+ *    0.1+    Take the 0th variation, then the 1st variation, then go to the end
+ *    0.1x2   Take the 0th variation, then repeat taking the 1st varation twice
+ *
+ * There are two types of treepaths discussed below -- A *treepath fragment*
+ * (which is what we have been describing) and an *initial treepath*.
+ *
+ * ## Treepath Fragments
+ *
+ * Treepaths say how to get from position n to position m.  Thus the numbers are
+ * always variations except in the case of AxB syntax, where B is a multiplier
+ * for a variation.
+ *
+ * This is how fragment strings are parsed:
+ *
+ *    0       becomes [0]
+ *    1       becomes [1]
+ *    53      becomes [53] (the 53rd variation
+ *    2.3     becomes [2,3]
+ *    0.0.0.0 becomes [0,0,0]
+ *    0x4     becomes [0,0,0,0]
+ *    1+      becomes [1,0...(500 times)]
+ *
+ * ## Initial tree paths.
+ *
+ * The initial treepath always treats the first number as a 'move number'
+ * instead of a variation. Thus
+ *
+ *    3.1.0
+ *
+ * means start at move 3 (always taking the 0th path) and then take the path
+ * fragment [1,0]
  *
  * Some examples:
- * 0         - Start at the 0th move (the root node)
- * 53        - Start at the 53rd move, taking the primary path
- * 2.3       - Start at the 3rd variation on move 2 (actually move 3)
- * 3         - Start at the 3rd move
- * 2.0       - Start at the 3rd move
- * 0.0.0.0   - Start at the 3rd move
- * 2.3-4.1   - Start at the 1st variation of the 4th move, arrived at by traveling
- *             through the 3rd varition of the 2nd move
  *
- * Note: '+' is a special symbol which means "go to the end via the first
- * variation." This is implemented with a by appending 500 0s to the path array.
- * This is a hack, but in practice games don't go over 500 moves.
+ *    0         - Start at the 0th move (the root node)
+ *    53        - Start at the 53rd move (taking the 0th variation)
+ *    2.3       - Start at the 3rd variation on move 2 (actually move 3)
+ *    3         - Start at the 3rd move
+ *    2.0       - Start at the 3rd move
+ *    0.0.0.0   - Start at the 3rd move
+ *    0x4       - Start at the 3rd move
+ *
+ * Obsolete syntax (no longer worksg)
+ *    2.3-4.1   - Start at the 1st variation of the 4th move, arrived at by traveling
+ *              through the 3rd varition of the 2nd move
+ *
+ * ### Parsing Initial Treepaths
+ *
+ * As mentioned before, '+' is a special symbol which means "go to the end via
+ * the first variation." This is implemented with a by appending 500 0s to the
+ * path array.  This is a hack, but in practice games don't go over 500 moves.
  *
  * The init position returned is an array of variation numbers traversed through.
  * The move number is precisely the length of the array.
  *
  * So:
- * 0       becomes []
- * 1       becomes [0]
- * 0.1     becomes [1]
- * 53      becomes [0,0,0,...,0] (53 times)
- * 2.3     becomes [0,0,3]
- * 0.0.0.0 becomes [0,0,0]
- * 2.3-4.1 becomes [0,0,3,0,1]
- * 1+      becomes [0,0,...(500 times)]
- * 0.1+    becomes [1,0,...(500 times)]
- * 0.2.6+  becomes [2,6,0,...(500 times)]
  *
- * Treepath Fragments
+ *    0       becomes []
+ *    1       becomes [0]
+ *    0.1     becomes [1]
+ *    53      becomes [0,0,0,...,0] (53 times)
+ *    2.3     becomes [0,0,3]
+ *    0.0.0.0 becomes [0,0,0]
+ *    1+      becomes [0,0,...(500 times)]
+ *    0.1+    becomes [1,0,...(500 times)]
+ *    0.2.6+  becomes [2,6,0,...(500 times)]
+ *    0x4.1x3 becomes [0,0,0,1,1,1]
  *
- * In contrast to initial treepaths, treepaths can also be fragments that say
- * how to get from position n to position m.  Thus treepath fragments only
- * allow variation numbers and disallow the 3-10 syntax.
- *
- * This is how fragment strings are parsed:
- * 0       becomes [0]
- * 1       becomes [1]
- * 53      becomes [53]
- * 2.3     becomes [2,3]
- * 0.0.0.0 becomes [0,0,0]
- * 1+      becomes [1,0...(500 times)]
+ * Obsolete syntax (no longer works)
+ *    2.3-4.1 becomes [0,0,3,0,1]
  */
 glift.rules.treepath = {
   /**
-   * Parse a treepath
+   * Parse an initial treepath
    *
    * @param {number|string|!Array<number>|undefined} initPos The initial
    *    position, which can be defined as a variety of types.
    * @return {!glift.rules.Treepath}
    */
-  parsePath: function(initPos) {
+  parseInitialPath: function(initPos) {
     var errors = glift.errors
     if (initPos === undefined) {
       return [];
     } else if (glift.util.typeOf(initPos) === 'number') {
-      initPos = '' + initPos;
+      initPos = parseInt(initPos, 10) + '';
     } else if (glift.util.typeOf(initPos) === 'array') {
       return /** @type {glift.rules.Treepath} */ (initPos);
     } else if (glift.util.typeOf(initPos) === 'string') {
@@ -10890,52 +10929,30 @@ glift.rules.treepath = {
     }
 
     if (initPos === '+') {
+      // Should this syntax even be allowed?
       return glift.rules.treepath.toEnd_();
     }
 
     var out = [];
-    var lastNum = 0;
-    // "2.3-4.1+"
-    var sect = initPos.split('-');
-    // [2.3, 4.1+]
-    for (var i = 0; i < sect.length; i++) {
-      // 4.1 => [4,1+]
-      var v = sect[i].split('\.');
-      // Handle the first number (e.g., 4); We necessitate this to be a move
-      // number, so we push 0s until we get to the move number.
-      var firstNum = parseInt(v[0], 10)
-      for (var j = 0; j < firstNum - lastNum; j++) {
-        out.push(0);
-      }
-
-      // If there's only one number, we add 500 those zeroes and break.
-      if (/\+/.test(v[0])) {
-        if (v.length !== 1 || i !== sect.length - 1) {
-          throw new Error('Improper use of + at ' + v[0] + 
-              ':  The + character can only occur at the end.');
-        }
-        out = out.concat(glift.rules.treepath.toEnd_());
-        return out;
-      }
-
-      lastNum = firstNum;
-      // Handle the rest of the numbers. These must be variations.
-      for (var j = 1; j < v.length; j++) {
-        var testNum = v[j];
-        // Handle the last number. 1+
-        if (testNum.charAt(testNum.length - 1) === '+') {
-          testNum = testNum.slice(0, testNum.length - 1);
-          out.push(parseInt(testNum, 10));
-          // + must be the last character.
-          out = out.concat(glift.rules.treepath.toEnd_());
-          return out;
-        } else {
-          out.push(parseInt(testNum, 10));
-        }
-        lastNum++;
-      }
+    var firstNum = parseInt(initPos, 10);
+    for (var j = 0; j < firstNum; j++) {
+      out.push(0);
     }
-    return out;
+
+    // The only valid next characters are . or +.
+    var rest = initPos.replace(firstNum + '', '');
+    if (rest == '') {
+      return out;
+    }
+
+    var next = rest.charAt(0);
+    if (next === '.') {
+      return out.concat(glift.rules.treepath.parseFragment(rest.substring(1)));
+    } else if (next === '+') {
+      return out.concat(glift.rules.treepath.toEnd_());
+    } else {
+      throw new Error('Unknown character [' + next + '] for path ' + initPos)
+    }
   },
 
   /**
@@ -10959,16 +10976,51 @@ glift.rules.treepath = {
       throw new Error('When parsing fragments, type should be string. was: ' + 
           vartype);
     }
-    var splat = pathStr.split('.');
+    var splat = pathStr.split(/([\.x+])/);
+    var numre = /^\d+$/;
     var out = [];
+
+    var states = {
+      VARIATION: 1,
+      SEPARATOR: 2,
+      MULTIPLIER: 3,
+    };
+    var curstate = states.VARIATION;
+    var prevVariation = null;
     for (var i = 0; i < splat.length; i++) {
-      var num = splat[i];
-      if (num.charAt(num.length - 1) === '+') {
-        num = num.slice(0, num.length - 1);
-        out.push(parseInt(num, 10))
-        out = out.concat(glift.rules.treepath.toEnd_());
+      var token = splat[i];
+      if (curstate === states.SEPARATOR) {
+        if (token === '.') {
+          curstate = states.VARIATION;
+        } else if (token === 'x') {
+          curstate = states.MULTIPLIER;
+        } else if (token === '+') {
+          // There could be more characters after this. Maybe throw an error.
+          return out.concat(glift.rules.treepath.toEnd_());
+        } else {
+          throw new Error('Unexpected token ' + token + ' for path ' + pathStr);
+        }
       } else {
-        out.push(parseInt(num, 10));
+        if (!numre.test(token)) {
+          throw new Error('Was expecting number but found ' + token
+              + ' for path: ' + pathStr);
+        }
+        var num = parseInt(token, 10);
+        if (curstate === states.VARIATION) {
+          out.push(num);
+          prevVariation = num;
+          curstate = states.SEPARATOR;
+        } else if (curstate === states.MULTIPLIER) {
+          if (prevVariation === null) {
+            throw new Error('Error using variation multiplier for path: '
+                + pathStr);
+          }
+          for (var j = 0; j < num - 1; j++) {
+            out.push(prevVariation);
+          }
+          prevVariation = null;
+          curstate = states.SEPARATOR;
+        }
       }
     }
     return out;
@@ -11946,7 +11998,7 @@ glift.controllers.BaseController.prototype = {
   initialize: function(opt_treepath) {
     var rules = glift.rules;
     var initTreepath = opt_treepath || this.rawInitialPosition;
-    this.treepath = rules.treepath.parsePath(initTreepath);
+    this.treepath = rules.treepath.parseInitialPath(initTreepath);
 
     this.movetree = rules.movetree.getFromSgf(
         this.sgfString, this.treepath, this.parseType);

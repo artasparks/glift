@@ -174,7 +174,7 @@ glift.controllers.BaseController.prototype = {
   initialize: function(opt_treepath) {
     var rules = glift.rules;
     var initTreepath = opt_treepath || this.rawInitialPosition;
-    this.treepath = rules.treepath.parsePath(initTreepath);
+    this.treepath = rules.treepath.parseInitialPath(initTreepath);
 
     this.movetree = rules.movetree.getFromSgf(
         this.sgfString, this.treepath, this.parseType);

@@ -63,7 +63,7 @@ glift.rules.movetree = {
 
     if (glift.util.typeOf(initPosition) === 'string' ||
         glift.util.typeOf(initPosition) === 'number') {
-      initPosition = glift.rules.treepath.parsePath(initPosition);
+      initPosition = glift.rules.treepath.parseInitialPath(initPosition);
     }
 
     var initTreepath = /** @type {!glift.rules.Treepath} */ (initPosition);

@@ -77,8 +77,7 @@ glift.rules.AppliedTreepath;
  *    0.0.0.0   - Start at the 3rd move
  *    0x4       - Start at the 3rd move
  *
- * Deprecated syntax:
- *
+ * Obsolete syntax (no longer worksg)
  *    2.3-4.1   - Start at the 1st variation of the 4th move, arrived at by traveling
  *              through the 3rd varition of the 2nd move
  *
@@ -104,24 +103,23 @@ glift.rules.AppliedTreepath;
  *    0.2.6+  becomes [2,6,0,...(500 times)]
  *    0x4.1x3 becomes [0,0,0,1,1,1]
  *
- * Deprecated Syntax:
- *
+ * Obsolete syntax (no longer works)
  *    2.3-4.1 becomes [0,0,3,0,1]
  */
 glift.rules.treepath = {
   /**
-   * Parse a treepath
+   * Parse an initial treepath
    *
    * @param {number|string|!Array<number>|undefined} initPos The initial
    *    position, which can be defined as a variety of types.
    * @return {!glift.rules.Treepath}
    */
-  parsePath: function(initPos) {
+  parseInitialPath: function(initPos) {
     var errors = glift.errors
     if (initPos === undefined) {
       return [];
     } else if (glift.util.typeOf(initPos) === 'number') {
-      initPos = '' + initPos;
+      initPos = parseInt(initPos, 10) + '';
     } else if (glift.util.typeOf(initPos) === 'array') {
       return /** @type {glift.rules.Treepath} */ (initPos);
     } else if (glift.util.typeOf(initPos) === 'string') {
@@ -131,52 +129,30 @@ glift.rules.treepath = {
     }
 
     if (initPos === '+') {
+      // Should this syntax even be allowed?
       return glift.rules.treepath.toEnd_();
     }
 
     var out = [];
-    var lastNum = 0;
-    // "2.3-4.1+"
-    var sect = initPos.split('-');
-    // [2.3, 4.1+]
-    for (var i = 0; i < sect.length; i++) {
-      // 4.1 => [4,1+]
-      var v = sect[i].split('\.');
-      // Handle the first number (e.g., 4); We necessitate this to be a move
-      // number, so we push 0s until we get to the move number.
-      var firstNum = parseInt(v[0], 10)
-      for (var j = 0; j < firstNum - lastNum; j++) {
-        out.push(0);
-      }
-
-      // If there's only one number, we add 500 those zeroes and break.
-      if (/\+/.test(v[0])) {
-        if (v.length !== 1 || i !== sect.length - 1) {
-          throw new Error('Improper use of + at ' + v[0] + 
-              ':  The + character can only occur at the end.');
-        }
-        out = out.concat(glift.rules.treepath.toEnd_());
-        return out;
-      }
-
-      lastNum = firstNum;
-      // Handle the rest of the numbers. These must be variations.
-      for (var j = 1; j < v.length; j++) {
-        var testNum = v[j];
-        // Handle the last number. 1+
-        if (testNum.charAt(testNum.length - 1) === '+') {
-          testNum = testNum.slice(0, testNum.length - 1);
-          out.push(parseInt(testNum, 10));
-          // + must be the last character.
-          out = out.concat(glift.rules.treepath.toEnd_());
-          return out;
-        } else {
-          out.push(parseInt(testNum, 10));
-        }
-        lastNum++;
-      }
+    var firstNum = parseInt(initPos, 10);
+    for (var j = 0; j < firstNum; j++) {
+      out.push(0);
     }
-    return out;
+
+    // The only valid next characters are . or +.
+    var rest = initPos.replace(firstNum + '', '');
+    if (rest == '') {
+      return out;
+    }
+
+    var next = rest.charAt(0);
+    if (next === '.') {
+      return out.concat(glift.rules.treepath.parseFragment(rest.substring(1)));
+    } else if (next === '+') {
+      return out.concat(glift.rules.treepath.toEnd_());
+    } else {
+      throw new Error('Unknown character [' + next + '] for path ' + initPos)
+    }
   },
 
   /**
@@ -200,16 +176,51 @@ glift.rules.treepath = {
       throw new Error('When parsing fragments, type should be string. was: ' + 
           vartype);
     }
-    var splat = pathStr.split('.');
+    var splat = pathStr.split(/([\.x+])/);
+    var numre = /^\d+$/;
     var out = [];
+
+    var states = {
+      VARIATION: 1,
+      SEPARATOR: 2,
+      MULTIPLIER: 3,
+    };
+    var curstate = states.VARIATION;
+    var prevVariation = null;
     for (var i = 0; i < splat.length; i++) {
-      var num = splat[i];
-      if (num.charAt(num.length - 1) === '+') {
-        num = num.slice(0, num.length - 1);
-        out.push(parseInt(num, 10))
-        out = out.concat(glift.rules.treepath.toEnd_());
+      var token = splat[i];
+      if (curstate === states.SEPARATOR) {
+        if (token === '.') {
+          curstate = states.VARIATION;
+        } else if (token === 'x') {
+          curstate = states.MULTIPLIER;
+        } else if (token === '+') {
+          // There could be more characters after this. Maybe throw an error.
+          return out.concat(glift.rules.treepath.toEnd_());
+        } else {
+          throw new Error('Unexpected token ' + token + ' for path ' + pathStr);
+        }
       } else {
-        out.push(parseInt(num, 10));
+        if (!numre.test(token)) {
+          throw new Error('Was expecting number but found ' + token
+              + ' for path: ' + pathStr);
+        }
+        var num = parseInt(token, 10);
+        if (curstate === states.VARIATION) {
+          out.push(num);
+          prevVariation = num;
+          curstate = states.SEPARATOR;
+        } else if (curstate === states.MULTIPLIER) {
+          if (prevVariation === null) {
+            throw new Error('Error using variation multiplier for path: '
+                + pathStr);
+          }
+          for (var j = 0; j < num - 1; j++) {
+            out.push(prevVariation);
+          }
+          prevVariation = null;
+          curstate = states.SEPARATOR;
+        }
       }
     }
     return out;

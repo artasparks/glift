@@ -80,7 +80,7 @@
   test('Init from MoveTree', function() {
     var movetree = glift.rules.movetree.getFromSgf(testdata.sgfs.veryeasy),
         conv = glift.util.pointFromSgfCoord,
-        initPos = glift.rules.treepath.parsePath('3'),
+        initPos = glift.rules.treepath.parseInitialPath('3'),
         goban = glift.rules.goban.getFromMoveTree(movetree, initPos).goban,
         expPoint_pm = conv('ef'),
         expPoint_w = conv('cc'),
