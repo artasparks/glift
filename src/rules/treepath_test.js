@@ -58,6 +58,31 @@
 
   test('Parse a fragment: Multiplier', function() {
     deepEqual(parseFragment('1.2x1.0.2x3'), [1,2,0,2,2,2]);
+    deepEqual(parseFragment('0x10'), [0,0,0,0,0,0,0,0,0,0]);
+  });
+
+  test('Double wMultiplier: fail', function() {
+    try {
+      deepEqual(parseFragment('0x10x2'), [0,0,0,0,0,0,0,0,0,0,0,0]);
+      ok(false, 'Shouldn\'t get here');
+    } catch (e) {
+      ok(/Error using variation multiplier/.test(e.message), 'exception message');
+    }
+  });
+
+  test('Parse a init path: Multiplier', function() {
+    deepEqual(parseInit('0.0x3.1x3'), [0,0,0,1,1,1]);
+    deepEqual(parseInit('1.2x1.0.2x3'), [0,2,0,2,2,2]);
+    deepEqual(parseInit('0.0x10'), [0,0,0,0,0,0,0,0,0,0]);
+  });
+
+  test('Parse a init path: Multiplier fail', function() {
+    try {
+      parseInit('0x10');
+      ok(false, 'Shouldn\'t get here');
+    } catch (e) {
+      ok(/Unexpected token \[x\]/.test(e.message), 'exception message');
+    }
   });
 
   test('Convert back to an path fragment string', function() {

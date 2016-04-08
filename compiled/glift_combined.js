@@ -10849,13 +10849,15 @@ glift.rules.AppliedTreepath;
  *
  * This is how fragment strings are parsed:
  *
- *    0       becomes [0]
- *    1       becomes [1]
- *    53      becomes [53] (the 53rd variation
- *    2.3     becomes [2,3]
- *    0.0.0.0 becomes [0,0,0]
- *    0x4     becomes [0,0,0,0]
- *    1+      becomes [1,0...(500 times)]
+ *    0             becomes [0]
+ *    1             becomes [1]
+ *    53            becomes [53] (the 53rd variation)
+ *    2.3           becomes [2,3]
+ *    0.0.0.0       becomes [0,0,0]
+ *    0x4           becomes [0,0,0,0]
+ *    1+            becomes [1,0...(500 times)]
+ *    1x4           becomes [1,1,1,1]
+ *    1.2x1.0.2x3'  becomes [1,2,0,2,2,2]
  *
  * ## Initial tree paths.
  *
@@ -10864,8 +10866,8 @@ glift.rules.AppliedTreepath;
  *
  *    3.1.0
  *
- * means start at move 3 (always taking the 0th path) and then take the path
- * fragment [1,0]
+ * means start at move 3 (always taking the 0th variation path) and then take
+ * the path fragment [1,0].
  *
  * Some examples:
  *
@@ -10875,33 +10877,28 @@ glift.rules.AppliedTreepath;
  *    3         - Start at the 3rd move
  *    2.0       - Start at the 3rd move
  *    0.0.0.0   - Start at the 3rd move
- *    0x4       - Start at the 3rd move
+ *    0.0x3     - Start at the 3rd move
  *
- * Obsolete syntax (no longer worksg)
- *    2.3-4.1   - Start at the 1st variation of the 4th move, arrived at by traveling
- *              through the 3rd varition of the 2nd move
+ * As with fragments, the init position returned is an array of variation
+ * numbers traversed through.  The move number is precisely the length of the
+ * array.
  *
- * ### Parsing Initial Treepaths
+ * So, for parsing
+ *
+ *    0         becomes []
+ *    1         becomes [0]
+ *    0.1       becomes [1]
+ *    53        becomes [0,0,0,...,0] (53 times)
+ *    2.3       becomes [0,0,3]
+ *    0.0.0.0   becomes [0,0,0]
+ *    1+        becomes [0,0,...(500 times)]
+ *    0.1+      becomes [1,0,...(500 times)]
+ *    0.2.6+    becomes [2,6,0,...(500 times)]
+ *    0.0x3.1x3 becomes [0,0,0,1,1,1]
  *
  * As mentioned before, '+' is a special symbol which means "go to the end via
  * the first variation." This is implemented with a by appending 500 0s to the
  * path array.  This is a hack, but in practice games don't go over 500 moves.
- *
- * The init position returned is an array of variation numbers traversed through.
- * The move number is precisely the length of the array.
- *
- * So:
- *
- *    0       becomes []
- *    1       becomes [0]
- *    0.1     becomes [1]
- *    53      becomes [0,0,0,...,0] (53 times)
- *    2.3     becomes [0,0,3]
- *    0.0.0.0 becomes [0,0,0]
- *    1+      becomes [0,0,...(500 times)]
- *    0.1+    becomes [1,0,...(500 times)]
- *    0.2.6+  becomes [2,6,0,...(500 times)]
- *    0x4.1x3 becomes [0,0,0,1,1,1]
  *
  * Obsolete syntax (no longer works)
  *    2.3-4.1 becomes [0,0,3,0,1]
@@ -10951,7 +10948,7 @@ glift.rules.treepath = {
     } else if (next === '+') {
       return out.concat(glift.rules.treepath.toEnd_());
     } else {
-      throw new Error('Unknown character [' + next + '] for path ' + initPos)
+      throw new Error('Unexpected token [' + next + '] for path ' + initPos)
     }
   },
 
