@@ -244,6 +244,15 @@ glift.api.SgfOptions = function(opt_o) {
   this.totalCorrectVariationsOverride =
       o.totalCorrectVariationsOverride || undefined;
 
+  /**
+   * Whether or not to mark ko locations.  Either true or false, but
+   * defaults to true.
+   *
+   * @type {boolean}
+   * @const
+   */
+  this.markKo = o.markKo !== undefined ? !!o.markKo: true;
+
   //-------------------------------------------------------------------------
   // These options must always be overriden by the widget type overrides.
   //
@@ -273,12 +282,6 @@ glift.api.SgfOptions = function(opt_o) {
    * @const
    */
   this.statusBarIcons = o.statusBarIcons || undefined;
-
-  /**
-   * Experiment for using the flattener in the controller.
-   * @const {boolean}
-   */
-  this.flattenerExperiment = o.flattenerExperiment || false;
 
   /**
    * Specifies what action to perform based on a particular keystroke.  In
@@ -333,14 +336,14 @@ glift.api.SgfOptions = function(opt_o) {
    */
   this.markLastMove = o.markLastMove !== undefined ? !!o.markLastMove : true;
 
+
   /**
-   * Whether or not to mark ko locations.  Either true or false, but
-   * defaults to true.
-   *
+   * Whether or not to enable the mousewheel for game viewing. Scrolling up
+   * advances the game and scrolling down goes backwards.
    * @type {boolean}
    * @const
    */
-  this.markKo = o.markKo !== undefined ? !!o.markKo: true;
+  this.enableMousewheel = o.enableMousewheel || false;
 
   /**
    * The function that creates the controller at widget-creation time.

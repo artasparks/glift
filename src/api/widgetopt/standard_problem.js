@@ -5,6 +5,7 @@
 glift.api.widgetopt[glift.enums.widgetTypes.STANDARD_PROBLEM] = {
   markLastMove: undefined, // rely on defaults
   keyMappings: undefined, // rely on defaults
+  enableMousewheel: undefined, // rely on defaults (false)
 
   problemConditions: undefined, // rely on defaults, which are set up to work
       // for the Standard problem.

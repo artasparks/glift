@@ -3,6 +3,7 @@
  */
 glift.api.widgetopt[glift.enums.widgetTypes.GAME_VIEWER] = {
   markLastMove: true,
+  enableMousewheel: true,
 
   keyMappings: {
     ARROW_LEFT: 'iconActions.arrowleft.click',

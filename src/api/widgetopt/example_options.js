@@ -4,6 +4,7 @@
 glift.api.widgetopt[glift.enums.widgetTypes.EXAMPLE] = {
   markLastMove: undefined, // rely on defaults
   keyMappings: undefined, // rely on defaults
+  enableMousewheel: undefined, // rely on defaults (false)
 
   problemConditions: {},
 

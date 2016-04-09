@@ -4,6 +4,7 @@
 glift.api.widgetopt[glift.enums.widgetTypes.CORRECT_VARIATIONS_PROBLEM] = {
   markLastMove: undefined, // rely on defaults
   keyMappings: undefined, // rely on defaults
+  enableMousewheel: undefined, // rely on defaults (false)
 
   problemConditions: undefined, // rely on defaults
 

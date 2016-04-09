@@ -12,16 +12,17 @@
   ];
 
   var keys = [
-   'markLastMove',
-   'problemConditions',
    'controllerFunc',
+   'enableMousewheel',
    'icons',
    'keyMappings',
+   'markLastMove',
+   'problemConditions',
    'showVariations',
    'statusBarIcons',
    'stoneClick',
-   'stoneMouseover',
    'stoneMouseout',
+   'stoneMouseover',
   ];
 
   test('widgetopt: Testing availability', function() {

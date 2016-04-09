@@ -18,6 +18,7 @@ glift.api.widgetopt[glift.enums.widgetTypes.BOARD_EDITOR] = {
   },
 
   markLastMove: undefined, // rely on defaults
+  enableMousewheel: undefined, // rely on defaults
   keyMappings: undefined, // rely on defaults
 
   problemConditions: {},

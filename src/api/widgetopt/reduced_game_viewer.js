@@ -4,6 +4,7 @@
 glift.api.widgetopt[glift.enums.widgetTypes.REDUCED_GAME_VIEWER] = {
   markLastMove: undefined, // rely on defaults
   keyMappings: undefined, // rely on defaults
+  enableMousewheel: true,
 
   problemConditions: {},
 

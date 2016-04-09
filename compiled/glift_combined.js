@@ -16309,6 +16309,7 @@ glift.api.DisplayOptions = function(opt_o) {
    * api:1.0
    *
    * @type {string}
+   * @const
    */
   this.goBoardBackground = o.goBoardBackground || '';
 
@@ -16321,6 +16322,7 @@ glift.api.DisplayOptions = function(opt_o) {
    * api:1.0
    *
    * @type {string}
+   * @const
    */
   // TODO(kashomon): Make a proper enum for this.
   this.theme = o.theme || 'DEFAULT';
@@ -16332,6 +16334,7 @@ glift.api.DisplayOptions = function(opt_o) {
    * api:1.0
    *
    * @type {boolean}
+   * @const
    */
   this.drawBoardCoords = !!o.drawBoardCoords || false;
 
@@ -16339,6 +16342,7 @@ glift.api.DisplayOptions = function(opt_o) {
    * Split percentages to use for a one-column widget format.
    *
    * @type {!Object}
+   * @const
    */
   // TODO(kashomon): Define proper type for this.
   this.oneColumnSplits = o.oneColumnSplits || {
@@ -16354,6 +16358,7 @@ glift.api.DisplayOptions = function(opt_o) {
    * Split percentages to use for a two-column widget format.
    *
    * @type {!Object}
+   * @const
    */
   // TODO(kashomon): Define a proper type for this.
   this.twoColumnSplits = o.twoColumnSplits || {
@@ -16370,26 +16375,31 @@ glift.api.DisplayOptions = function(opt_o) {
   /**
    * Previous SGF icon.
    * @type {string}
+   * @const
    */
   this.previousSgfIcon = o.previousSgfIcon || 'chevron-left';
 
   /**
    * Next SGF Icon.
    * @type {string}
+   * @const
    */
   this.nextSgfIcon = o.nextSgfIcon || 'chevron-right';
 
   /**
    * For convenience: Disable zoom for mobile users.
    * @type {boolean}
+   * @const
    */
   this.disableZoomForMobile = !!o.disableZoomForMobile || false;
 
   /**
    * Whether or not to enable keyboard shortcuts. This currently binds
    * keypress events to document.body, so it's not unlikely this could
-   * conflict with other applications' keybindings.
+   * conflict with other applications' keybindings. 
+   * Defaults to enabled.
    * @type {boolean}
+   * @const
    */
   this.enableKeyboardShortcuts =
       o.enableKeyboardShortcuts !== undefined ?
@@ -16398,9 +16408,10 @@ glift.api.DisplayOptions = function(opt_o) {
   /**
    * Use Markdown for the comment box.  This requires that marked.js be
    * installed in the global scope. (https://github.com/chjj/marked)
-   * @api(experimental)
+   * api:experimental
    *
    * @type {boolean}
+   * @const
    */
   this.useMarkdown = !!o.useMarkdown || false;
 };
@@ -17136,6 +17147,15 @@ glift.api.SgfOptions = function(opt_o) {
   this.totalCorrectVariationsOverride =
       o.totalCorrectVariationsOverride || undefined;
 
+  /**
+   * Whether or not to mark ko locations.  Either true or false, but
+   * defaults to true.
+   *
+   * @type {boolean}
+   * @const
+   */
+  this.markKo = o.markKo !== undefined ? !!o.markKo: true;
+
   //-------------------------------------------------------------------------
   // These options must always be overriden by the widget type overrides.
   //
@@ -17165,12 +17185,6 @@ glift.api.SgfOptions = function(opt_o) {
    * @const
    */
   this.statusBarIcons = o.statusBarIcons || undefined;
-
-  /**
-   * Experiment for using the flattener in the controller.
-   * @const {boolean}
-   */
-  this.flattenerExperiment = o.flattenerExperiment || false;
 
   /**
    * Specifies what action to perform based on a particular keystroke.  In
@@ -17225,14 +17239,14 @@ glift.api.SgfOptions = function(opt_o) {
    */
   this.markLastMove = o.markLastMove !== undefined ? !!o.markLastMove : true;
 
+
   /**
-   * Whether or not to mark ko locations.  Either true or false, but
-   * defaults to true.
-   *
+   * Whether or not to enable the mousewheel for game viewing. Scrolling up
+   * advances the game and scrolling down goes backwards.
    * @type {boolean}
    * @const
    */
-  this.markKo = o.markKo !== undefined ? !!o.markKo: true;
+  this.enableMousewheel = o.enableMousewheel || false;
 
   /**
    * The function that creates the controller at widget-creation time.
@@ -17417,6 +17431,7 @@ glift.api.widgetopt[glift.enums.widgetTypes.BOARD_EDITOR] = {
   },
 
   markLastMove: undefined, // rely on defaults
+  enableMousewheel: undefined, // rely on defaults
   keyMappings: undefined, // rely on defaults
 
   problemConditions: {},
@@ -17526,6 +17541,7 @@ glift.api.widgetopt[glift.enums.widgetTypes.BOARD_EDITOR] = {
 glift.api.widgetopt[glift.enums.widgetTypes.CORRECT_VARIATIONS_PROBLEM] = {
   markLastMove: undefined, // rely on defaults
   keyMappings: undefined, // rely on defaults
+  enableMousewheel: undefined, // rely on defaults (false)
 
   problemConditions: undefined, // rely on defaults
 
@@ -17599,6 +17615,7 @@ glift.api.widgetopt[glift.enums.widgetTypes.CORRECT_VARIATIONS_PROBLEM] = {
 glift.api.widgetopt[glift.enums.widgetTypes.EXAMPLE] = {
   markLastMove: undefined, // rely on defaults
   keyMappings: undefined, // rely on defaults
+  enableMousewheel: undefined, // rely on defaults (false)
 
   problemConditions: {},
 
@@ -17625,6 +17642,7 @@ glift.api.widgetopt[glift.enums.widgetTypes.EXAMPLE] = {
  */
 glift.api.widgetopt[glift.enums.widgetTypes.GAME_VIEWER] = {
   markLastMove: true,
+  enableMousewheel: true,
 
   keyMappings: {
     ARROW_LEFT: 'iconActions.arrowleft.click',
@@ -17674,6 +17692,7 @@ glift.api.widgetopt[glift.enums.widgetTypes.GAME_VIEWER] = {
 glift.api.widgetopt[glift.enums.widgetTypes.REDUCED_GAME_VIEWER] = {
   markLastMove: undefined, // rely on defaults
   keyMappings: undefined, // rely on defaults
+  enableMousewheel: true,
 
   problemConditions: {},
 
@@ -17706,6 +17725,7 @@ glift.api.widgetopt[glift.enums.widgetTypes.REDUCED_GAME_VIEWER] = {
 glift.api.widgetopt[glift.enums.widgetTypes.STANDARD_PROBLEM] = {
   markLastMove: undefined, // rely on defaults
   keyMappings: undefined, // rely on defaults
+  enableMousewheel: undefined, // rely on defaults (false)
 
   problemConditions: undefined, // rely on defaults, which are set up to work
       // for the Standard problem.

@@ -24,6 +24,7 @@ glift.api.DisplayOptions = function(opt_o) {
    * api:1.0
    *
    * @type {string}
+   * @const
    */
   this.goBoardBackground = o.goBoardBackground || '';
 
@@ -36,6 +37,7 @@ glift.api.DisplayOptions = function(opt_o) {
    * api:1.0
    *
    * @type {string}
+   * @const
    */
   // TODO(kashomon): Make a proper enum for this.
   this.theme = o.theme || 'DEFAULT';
@@ -47,6 +49,7 @@ glift.api.DisplayOptions = function(opt_o) {
    * api:1.0
    *
    * @type {boolean}
+   * @const
    */
   this.drawBoardCoords = !!o.drawBoardCoords || false;
 
@@ -54,6 +57,7 @@ glift.api.DisplayOptions = function(opt_o) {
    * Split percentages to use for a one-column widget format.
    *
    * @type {!Object}
+   * @const
    */
   // TODO(kashomon): Define proper type for this.
   this.oneColumnSplits = o.oneColumnSplits || {
@@ -69,6 +73,7 @@ glift.api.DisplayOptions = function(opt_o) {
    * Split percentages to use for a two-column widget format.
    *
    * @type {!Object}
+   * @const
    */
   // TODO(kashomon): Define a proper type for this.
   this.twoColumnSplits = o.twoColumnSplits || {
@@ -85,26 +90,31 @@ glift.api.DisplayOptions = function(opt_o) {
   /**
    * Previous SGF icon.
    * @type {string}
+   * @const
    */
   this.previousSgfIcon = o.previousSgfIcon || 'chevron-left';
 
   /**
    * Next SGF Icon.
    * @type {string}
+   * @const
    */
   this.nextSgfIcon = o.nextSgfIcon || 'chevron-right';
 
   /**
    * For convenience: Disable zoom for mobile users.
    * @type {boolean}
+   * @const
    */
   this.disableZoomForMobile = !!o.disableZoomForMobile || false;
 
   /**
    * Whether or not to enable keyboard shortcuts. This currently binds
    * keypress events to document.body, so it's not unlikely this could
-   * conflict with other applications' keybindings.
+   * conflict with other applications' keybindings. 
+   * Defaults to enabled.
    * @type {boolean}
+   * @const
    */
   this.enableKeyboardShortcuts =
       o.enableKeyboardShortcuts !== undefined ?
@@ -113,9 +123,10 @@ glift.api.DisplayOptions = function(opt_o) {
   /**
    * Use Markdown for the comment box.  This requires that marked.js be
    * installed in the global scope. (https://github.com/chjj/marked)
-   * @api(experimental)
+   * api:experimental
    *
    * @type {boolean}
+   * @const
    */
   this.useMarkdown = !!o.useMarkdown || false;
 };
