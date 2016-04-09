@@ -25,8 +25,15 @@ glift.displays.board.Intersections = function(
 
   /**
    * Defined during events.
+   * @private {?glift.Point}
    */
-  this.lastHoverPoint = null;
+  this.lastHoverPoint_ = null;
+
+  /**
+   * Function for handling the hover-out.
+   * @private {?function(!Event)}
+   */
+  this.hoverOutFunc_ = null;
 };
 
 glift.displays.board.Intersections.prototype = {
@@ -371,34 +378,49 @@ glift.displays.board.Intersections.prototype = {
   },
 
   /**
+   * Clears the hover point, if necessary, by running the hover out function.
+   */
+  clearHover: function() {
+    var dummyEvent = /** @type {!Event} */ ({});
+    this.hoverOutFunc_ && this.hoverOutFunc_(dummyEvent);
+  },
+
+  /**
    * Set events for the button rectangle.
    * @param {function(!Event, !glift.Point)} hoverInFunc
    * @param {function(!Event, !glift.Point)} hoverOutFunc
    * @return {glift.displays.board.Intersections} this
    */
-  setHover: function(hoverInFunc, hoverOutFunc) {
-    var that = this;
+  setHoverHandlers: function(hoverInFunc, hoverOutFunc) {
     var id = this.svg.child(this.idGen.buttonGroup())
         .child(this.idGen.fullBoardButton())
         .id();
     glift.dom.elem(/** @type {string} */ (id)).on('mousemove', function(e) {
-      var lastpt = that.lastHoverPoint;
-      var curpt = that.buttonEventPt_(e);
+      var lastpt = this.lastHoverPoint_;
+      var curpt = this.buttonEventPt_(e);
       if (curpt && lastpt && !lastpt.equals(curpt)) {
         hoverOutFunc(e, lastpt);
         hoverInFunc(e, curpt);
       } else if (!lastpt && curpt) {
         hoverInFunc(e, curpt);
       }
-      that.lastHoverPoint = curpt;
-    });
-    glift.dom.elem(/** @type {string} */ (id)).on('mouseout', function(e) {
-      var lastpt = that.lastHoverPoint;
-      that.lastHoverPoint = null;
+      this.lastHoverPoint_ = curpt;
+    }.bind(this));
+
+    /**
+     * Handler for the hover-out. It's useful to be able to access this during.
+     * @type {function(!Event)}
+     */
+    var outHandler = function(e) {
+      var lastpt = this.lastHoverPoint_;
+      this.lastHoverPoint_ = null;
       if (lastpt) {
         hoverOutFunc(e, lastpt);
       }
-    });
+    }.bind(this);
+
+    glift.dom.elem(/** @type {string} */ (id)).on('mouseout', outHandler)
+    this.hoverOutFunc_ = outHandler;
     return this;
   },
 

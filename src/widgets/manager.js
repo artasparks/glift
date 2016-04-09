@@ -10,9 +10,12 @@ goog.provide('glift.widgets.WidgetManager');
  */
 glift.widgets.WidgetManager = function(options) {
 
-  // Globally unique ID, at least across all glift instances in the current
-  // page. In theory, the divId should be globally unique, but might as well be
-  // absolutely sure.
+  /**
+   * Globally unique ID, at least across all glift instances in the current
+   * page. In theory, the divId should be globally unique, but might as well be
+   * absolutely sure.
+   * @type {string}
+   */
   this.id = options.divId + '-glift-' + glift.util.idGenerator.next();
 
   // Register the instance. Maybe should be its own method.

@@ -156,6 +156,8 @@ glift.displays.board.Display.prototype = {
    */
   updateBoard: function(flattened) {
     this.intersections().clearMarks();
+    this.intersections().clearHover();
+
     var diffArr = this.flattened_.board().diff(flattened.board());
 
     var symb = glift.flattener.symbols;

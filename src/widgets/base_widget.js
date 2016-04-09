@@ -184,6 +184,7 @@ glift.widgets.BaseWidget.prototype = {
     glift.util.majorPerfLog('Before stone event creation');
     this.initStoneActions_(this.stoneActions);
     this.initKeyHandlers_();
+    this.initMousewheel_(divIds[glift.enums.boardComponents.BOARD]);
     glift.util.majorPerfLog('After stone event creation');
 
     this.initProblemData_();
@@ -294,7 +295,7 @@ glift.widgets.BaseWidget.prototype = {
     if (actions.mouseover &&
         actions.mouseout &&
         !glift.platform.isMobile()) {
-      this.display.intersections().setHover(
+      this.display.intersections().setHoverHandlers(
           wrapAction(actions.mouseover),
           wrapAction(actions.mouseout));
     }
@@ -333,6 +334,53 @@ glift.widgets.BaseWidget.prototype = {
     }
     // Lazy initialize the key mappings. Only really runs once.
     glift.keyMappings.initKeybindingListener();
+  },
+
+  /**
+   * Initialize the mousewheel for going through a game.
+   *
+   * See: https://developer.mozilla.org/en-US/docs/Web/Events/wheel -- not to be
+   * confused with the deprecated:
+   * https://developer.mozilla.org/en-US/docs/Web/Events/mousewheel
+   *
+   * @param {string} boardId The id of the board div, which we'll apply the
+   *    listener to.
+   */
+  initMousewheel_: function(boardId) {
+    if (!this.sgfOptions.enableMousewheel) {
+      return;
+    }
+    var testElem = document.createElement('div');
+    if (!'onwheel' in testElem) {
+      // wheel is the standard event. Since it's supported in all major browsers
+      // now, it's now worth the caveats here; Mousewheel support is an
+      // incremental improvement anyway.
+      console.warn('Glift: Standard mouse wheel not supported. ' +
+          'Not adding wheel functionality.');
+      return;
+    }
+
+    /**
+     * Simple handler that goes forward/backward in the gam.
+     * @param {!WheelEvent} e Standard dom event.
+     */
+    var handler = function(e) {
+      if (!this.controller) {
+        // It's possible that we should make sure that the widget type is only 
+        return;
+      }
+      var delta = e.deltaY;
+      if (delta < 0) {
+        this.applyBoardData(this.controller.prevMove());
+        e.preventDefault();
+      } else if (delta > 0) {
+        this.applyBoardData(this.controller.nextMove());
+        e.preventDefault();
+      }
+    }.bind(this);
+
+    var elem = document.getElementById(boardId);
+    elem.addEventListener('wheel', handler)
   },
 
   /**
@@ -416,7 +464,10 @@ glift.widgets.BaseWidget.prototype = {
    * widget.
    */
   getCurrentState: function() {
+    // TODO(kashomon): Type this.
     return {
+      // For games, the treepath is the only state information that's necessary.
+      // We can reconstruct all other data.
       currentTreepath: this.controller.pathToCurrentPosition()
     };
   },

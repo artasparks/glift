@@ -9,7 +9,7 @@
     ok(baseWidget, 'must be defined');
   });
 
-  test('Remove ui components', function() {
+  test('Get UI components', function() {
     var uic = glift.enums.boardComponents;
     var comp = baseWidget.getUiComponents_(defaultSgfOptions)
     deepEqual(defaultSgfOptions.uiComponents, [

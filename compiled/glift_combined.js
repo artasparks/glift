@@ -1676,6 +1676,16 @@ glift.dom.ux = {
   }
 };
 
+/**
+ * The canonical mousewheel reference.
+ * https://developer.mozilla.org/en-US/docs/Web/Events/wheel
+ */
+glift.dom.wheel = {
+  attachHandler: function() {
+
+  }
+};
+
 goog.provide('glift.ajax');
 
 /**
@@ -4607,6 +4617,8 @@ glift.displays.board.Display.prototype = {
    */
   updateBoard: function(flattened) {
     this.intersections().clearMarks();
+    this.intersections().clearHover();
+
     var diffArr = this.flattened_.board().diff(flattened.board());
 
     var symb = glift.flattener.symbols;
@@ -4802,8 +4814,15 @@ glift.displays.board.Intersections = function(
 
   /**
    * Defined during events.
+   * @private {?glift.Point}
    */
-  this.lastHoverPoint = null;
+  this.lastHoverPoint_ = null;
+
+  /**
+   * Function for handling the hover-out.
+   * @private {?function(!Event)}
+   */
+  this.hoverOutFunc_ = null;
 };
 
 glift.displays.board.Intersections.prototype = {
@@ -5148,34 +5167,49 @@ glift.displays.board.Intersections.prototype = {
   },
 
   /**
+   * Clears the hover point, if necessary, by running the hover out function.
+   */
+  clearHover: function() {
+    var dummyEvent = /** @type {!Event} */ ({});
+    this.hoverOutFunc_ && this.hoverOutFunc_(dummyEvent);
+  },
+
+  /**
    * Set events for the button rectangle.
    * @param {function(!Event, !glift.Point)} hoverInFunc
    * @param {function(!Event, !glift.Point)} hoverOutFunc
    * @return {glift.displays.board.Intersections} this
    */
-  setHover: function(hoverInFunc, hoverOutFunc) {
-    var that = this;
+  setHoverHandlers: function(hoverInFunc, hoverOutFunc) {
     var id = this.svg.child(this.idGen.buttonGroup())
         .child(this.idGen.fullBoardButton())
         .id();
     glift.dom.elem(/** @type {string} */ (id)).on('mousemove', function(e) {
-      var lastpt = that.lastHoverPoint;
-      var curpt = that.buttonEventPt_(e);
+      var lastpt = this.lastHoverPoint_;
+      var curpt = this.buttonEventPt_(e);
       if (curpt && lastpt && !lastpt.equals(curpt)) {
         hoverOutFunc(e, lastpt);
         hoverInFunc(e, curpt);
       } else if (!lastpt && curpt) {
         hoverInFunc(e, curpt);
       }
-      that.lastHoverPoint = curpt;
-    });
-    glift.dom.elem(/** @type {string} */ (id)).on('mouseout', function(e) {
-      var lastpt = that.lastHoverPoint;
-      that.lastHoverPoint = null;
+      this.lastHoverPoint_ = curpt;
+    }.bind(this));
+
+    /**
+     * Handler for the hover-out. It's useful to be able to access this during.
+     * @type {function(!Event)}
+     */
+    var outHandler = function(e) {
+      var lastpt = this.lastHoverPoint_;
+      this.lastHoverPoint_ = null;
       if (lastpt) {
         hoverOutFunc(e, lastpt);
       }
-    });
+    }.bind(this);
+
+    glift.dom.elem(/** @type {string} */ (id)).on('mouseout', outHandler)
+    this.hoverOutFunc_ = outHandler;
     return this;
   },
 
@@ -15461,6 +15495,7 @@ glift.widgets.BaseWidget.prototype = {
     glift.util.majorPerfLog('Before stone event creation');
     this.initStoneActions_(this.stoneActions);
     this.initKeyHandlers_();
+    this.initMousewheel_(divIds[glift.enums.boardComponents.BOARD]);
     glift.util.majorPerfLog('After stone event creation');
 
     this.initProblemData_();
@@ -15571,7 +15606,7 @@ glift.widgets.BaseWidget.prototype = {
     if (actions.mouseover &&
         actions.mouseout &&
         !glift.platform.isMobile()) {
-      this.display.intersections().setHover(
+      this.display.intersections().setHoverHandlers(
           wrapAction(actions.mouseover),
           wrapAction(actions.mouseout));
     }
@@ -15610,6 +15645,53 @@ glift.widgets.BaseWidget.prototype = {
     }
     // Lazy initialize the key mappings. Only really runs once.
     glift.keyMappings.initKeybindingListener();
+  },
+
+  /**
+   * Initialize the mousewheel for going through a game.
+   *
+   * See: https://developer.mozilla.org/en-US/docs/Web/Events/wheel -- not to be
+   * confused with the deprecated:
+   * https://developer.mozilla.org/en-US/docs/Web/Events/mousewheel
+   *
+   * @param {string} boardId The id of the board div, which we'll apply the
+   *    listener to.
+   */
+  initMousewheel_: function(boardId) {
+    if (!this.sgfOptions.enableMousewheel) {
+      return;
+    }
+    var testElem = document.createElement('div');
+    if (!'onwheel' in testElem) {
+      // wheel is the standard event. Since it's supported in all major browsers
+      // now, it's now worth the caveats here; Mousewheel support is an
+      // incremental improvement anyway.
+      console.warn('Glift: Standard mouse wheel not supported. ' +
+          'Not adding wheel functionality.');
+      return;
+    }
+
+    /**
+     * Simple handler that goes forward/backward in the gam.
+     * @param {!WheelEvent} e Standard dom event.
+     */
+    var handler = function(e) {
+      if (!this.controller) {
+        // It's possible that we should make sure that the widget type is only 
+        return;
+      }
+      var delta = e.deltaY;
+      if (delta < 0) {
+        this.applyBoardData(this.controller.prevMove());
+        e.preventDefault();
+      } else if (delta > 0) {
+        this.applyBoardData(this.controller.nextMove());
+        e.preventDefault();
+      }
+    }.bind(this);
+
+    var elem = document.getElementById(boardId);
+    elem.addEventListener('wheel', handler)
   },
 
   /**
@@ -15693,7 +15775,10 @@ glift.widgets.BaseWidget.prototype = {
    * widget.
    */
   getCurrentState: function() {
+    // TODO(kashomon): Type this.
     return {
+      // For games, the treepath is the only state information that's necessary.
+      // We can reconstruct all other data.
       currentTreepath: this.controller.pathToCurrentPosition()
     };
   },
@@ -15746,9 +15831,12 @@ goog.provide('glift.widgets.WidgetManager');
  */
 glift.widgets.WidgetManager = function(options) {
 
-  // Globally unique ID, at least across all glift instances in the current
-  // page. In theory, the divId should be globally unique, but might as well be
-  // absolutely sure.
+  /**
+   * Globally unique ID, at least across all glift instances in the current
+   * page. In theory, the divId should be globally unique, but might as well be
+   * absolutely sure.
+   * @type {string}
+   */
   this.id = options.divId + '-glift-' + glift.util.idGenerator.next();
 
   // Register the instance. Maybe should be its own method.

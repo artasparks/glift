@@ -22,6 +22,24 @@
     deepEqual(mgr.sgfCollection.length, 2);
   });
 
+  test('Test processing game viewer', function() {
+    var mgr = createNoDraw({
+      sgf: {},
+      divId: 'glift_display1',
+      sgfDefaults: { widgetType: 'GAME_VIEWER' },
+      display: {
+        theme: 'DEPTH',
+        goBoardBackground: '../themes/assets/bambootile_warm.jpg'
+      }
+    });
+    deepEqual(mgr.divId, 'glift_display1');
+    deepEqual(mgr.getCurrentSgfObj().widgetType, 'GAME_VIEWER');
+    deepEqual(mgr.getCurrentSgfObj().enableMousewheel, true);
+    deepEqual(mgr.getCurrentSgfObj().showVariations,
+        glift.enums.showVariations.MORE_THAN_ONE);
+    deepEqual(mgr.getCurrentSgfObj().markLastMove, true);
+  });
+
   test('Test processing editor options', function() {
     var mgr = createNoDraw({
       sgf: {},
@@ -33,7 +51,8 @@
       }
     });
     deepEqual(mgr.divId, 'glift_display1');
-    deepEqual(mgr.sgfDefaults.widgetType, 'BOARD_EDITOR');
+    deepEqual(mgr.getCurrentSgfObj().widgetType, 'BOARD_EDITOR');
+    deepEqual(mgr.getCurrentSgfObj().enableMousewheel, false);
     deepEqual(mgr.displayOptions.theme, 'DEPTH');
     deepEqual(mgr.displayOptions.goBoardBackground,
         '../themes/assets/bambootile_warm.jpg');
