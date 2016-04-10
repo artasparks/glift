@@ -58,6 +58,28 @@
         '../themes/assets/bambootile_warm.jpg');
   });
 
+  test('Test processing example options', function() {
+    var mgr = createNoDraw({
+      sgf: {},
+      divId: 'glift_display1',
+      sgfDefaults: {
+        widgetType: 'EXAMPLE',
+        nextMovesPath: '0x11'
+      },
+      display: {
+        theme: 'TEXTBOOK',
+        goBoardBackground: '../themes/assets/bambootile_warm.jpg'
+      }
+    });
+    deepEqual(mgr.divId, 'glift_display1');
+    deepEqual(mgr.getCurrentSgfObj().widgetType, 'EXAMPLE');
+    deepEqual(mgr.getCurrentSgfObj().enableMousewheel, false);
+    deepEqual(mgr.getCurrentSgfObj().nextMovesPath, '0x11');
+    deepEqual(mgr.displayOptions.theme, 'TEXTBOOK');
+    deepEqual(mgr.displayOptions.goBoardBackground,
+        '../themes/assets/bambootile_warm.jpg');
+  });
+
   test('Test processing metadata ', function() {
     var mgr = createNoDraw({
       sgf: {},
