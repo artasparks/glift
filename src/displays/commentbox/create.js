@@ -52,7 +52,25 @@ glift.displays.commentbox.CommentBox.prototype = {
     // TODO(kashomon): Maybe add this in.
     // glift.dom.ux.onlyInnerVertScroll(this.el, this.bbox);
     this.el.addClass('glift-comment-box');
+    this.scrollFix();
     return this;
+  },
+
+  /**
+   * Fix the scrolling when user gets to the bottom of a div, so that the user
+   * doesn't scroll off into no mans land.
+   */
+  scrollFix: function() {
+    var elem = document.getElementById(this.divId);
+    if ('onwheel' in elem) {
+      elem.addEventListener('wheel', function(e) {
+        var deltaY = e.deltaY;
+        var pixelsPerTick = 30;
+        // Manually move the scroll box
+        this.scrollTop += deltaY * pixelsPerTick;
+        e.preventDefault();
+      });
+    }
   },
 
   /**

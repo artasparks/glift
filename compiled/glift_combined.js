@@ -1676,16 +1676,6 @@ glift.dom.ux = {
   }
 };
 
-/**
- * The canonical mousewheel reference.
- * https://developer.mozilla.org/en-US/docs/Web/Events/wheel
- */
-glift.dom.wheel = {
-  attachHandler: function() {
-
-  }
-};
-
 goog.provide('glift.ajax');
 
 /**
@@ -5626,7 +5616,25 @@ glift.displays.commentbox.CommentBox.prototype = {
     // TODO(kashomon): Maybe add this in.
     // glift.dom.ux.onlyInnerVertScroll(this.el, this.bbox);
     this.el.addClass('glift-comment-box');
+    this.scrollFix();
     return this;
+  },
+
+  /**
+   * Fix the scrolling when user gets to the bottom of a div, so that the user
+   * doesn't scroll off into no mans land.
+   */
+  scrollFix: function() {
+    var elem = document.getElementById(this.divId);
+    if ('onwheel' in elem) {
+      elem.addEventListener('wheel', function(e) {
+        var deltaY = e.deltaY;
+        var pixelsPerTick = 30;
+        // Manually move the scroll box
+        this.scrollTop += deltaY * pixelsPerTick;
+        e.preventDefault();
+      });
+    }
   },
 
   /**
@@ -15677,16 +15685,17 @@ glift.widgets.BaseWidget.prototype = {
      */
     var handler = function(e) {
       if (!this.controller) {
-        // It's possible that we should make sure that the widget type is only 
+        // It's possible that we should make sure that the widget type is only
         return;
       }
+
       var delta = e.deltaY;
       if (delta < 0) {
         this.applyBoardData(this.controller.prevMove());
-        e.preventDefault();
+        e.preventDefault(); // Prevents scrolling through the page
       } else if (delta > 0) {
         this.applyBoardData(this.controller.nextMove());
-        e.preventDefault();
+        e.preventDefault(); // Prevents scrolling through the page
       }
     }.bind(this);
 

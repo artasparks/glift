@@ -366,16 +366,17 @@ glift.widgets.BaseWidget.prototype = {
      */
     var handler = function(e) {
       if (!this.controller) {
-        // It's possible that we should make sure that the widget type is only 
+        // It's possible that we should make sure that the widget type is only
         return;
       }
+
       var delta = e.deltaY;
       if (delta < 0) {
         this.applyBoardData(this.controller.prevMove());
-        e.preventDefault();
+        e.preventDefault(); // Prevents scrolling through the page
       } else if (delta > 0) {
         this.applyBoardData(this.controller.nextMove());
-        e.preventDefault();
+        e.preventDefault(); // Prevents scrolling through the page
       }
     }.bind(this);
 
