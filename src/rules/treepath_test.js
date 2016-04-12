@@ -57,13 +57,13 @@
   });
 
   test('Parse a fragment: Multiplier', function() {
-    deepEqual(parseFragment('1.2x1.0.2x3'), [1,2,0,2,2,2]);
-    deepEqual(parseFragment('0x10'), [0,0,0,0,0,0,0,0,0,0]);
+    deepEqual(parseFragment('1.2:1.0.2:3'), [1,2,0,2,2,2]);
+    deepEqual(parseFragment('0:10'), [0,0,0,0,0,0,0,0,0,0]);
   });
 
   test('Double wMultiplier: fail', function() {
     try {
-      deepEqual(parseFragment('0x10x2'), [0,0,0,0,0,0,0,0,0,0,0,0]);
+      parseFragment('0:10:2');
       ok(false, 'Shouldn\'t get here');
     } catch (e) {
       ok(/Error using variation multiplier/.test(e.message), 'exception message');
@@ -71,9 +71,9 @@
   });
 
   test('Parse a init path: Multiplier', function() {
-    deepEqual(parseInit('0.0x3.1x3'), [0,0,0,1,1,1]);
-    deepEqual(parseInit('1.2x1.0.2x3'), [0,2,0,2,2,2]);
-    deepEqual(parseInit('0.0x10'), [0,0,0,0,0,0,0,0,0,0]);
+    deepEqual(parseInit('0.0:3.1:3'), [0,0,0,1,1,1]);
+    deepEqual(parseInit('1.2:1.0.2:3'), [0,2,0,2,2,2]);
+    deepEqual(parseInit('0.0:10'), [0,0,0,0,0,0,0,0,0,0]);
   });
 
   test('Parse a init path: Multiplier fail', function() {

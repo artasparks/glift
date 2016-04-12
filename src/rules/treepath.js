@@ -173,7 +173,7 @@ glift.rules.treepath = {
       throw new Error('When parsing fragments, type should be string. was: ' + 
           vartype);
     }
-    var splat = pathStr.split(/([\.x+])/);
+    var splat = pathStr.split(/([\.:+])/);
     var numre = /^\d+$/;
     var out = [];
 
@@ -189,7 +189,7 @@ glift.rules.treepath = {
       if (curstate === states.SEPARATOR) {
         if (token === '.') {
           curstate = states.VARIATION;
-        } else if (token === 'x') {
+        } else if (token === ':') {
           curstate = states.MULTIPLIER;
         } else if (token === '+') {
           // There could be more characters after this. Maybe throw an error.
@@ -212,6 +212,9 @@ glift.rules.treepath = {
             throw new Error('Error using variation multiplier for path: '
                 + pathStr);
           }
+          // We should have already added the variation once, so we add num-1
+          // more times. This has the side effect that 0:0 is equivalent to 0:1
+          // and also equivalent to just 0. Probably ok.
           for (var j = 0; j < num - 1; j++) {
             out.push(prevVariation);
           }
