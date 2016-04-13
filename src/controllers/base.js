@@ -410,7 +410,7 @@ glift.controllers.BaseController.prototype = {
    * Proceed to the next move.  This is slightly trickier than you might
    * imagine:
    *   - We need to either add to the Movetree or, if the movetree is readonly,
-   *   we need to make sure the move exists.
+   *     we need to make sure the move/node exists.
    *   - We need to update the Goban.
    *   - We need to store the captures.
    *   - We need to update the current move number.
@@ -423,16 +423,27 @@ glift.controllers.BaseController.prototype = {
   nextMove: function(opt_varNum) {
     if (this.treepath[this.currentMoveNumber()] !== undefined &&
         (opt_varNum === undefined || this.nextVariationNumber() === opt_varNum)) {
-      // Don't mess with the treepath, if we're 'on variation'.
+      // If possible, we prefer taking the route defined by a previously
+      // traversed treepath. In otherwords, don't mess with the treepath, if
+      // we're 'on variation'.
       this.movetree.moveDown(this.nextVariationNumber());
     } else {
+      // There is no existing treepath.
       var varNum = opt_varNum === undefined ? 0 : opt_varNum;
       if (varNum >= 0 &&
           varNum <= this.movetree.nextMoves().length - 1) {
+        // We prefer taking 'move' nodes over nonmove nodes.
         this.setNextVariation(varNum);
         this.movetree.moveDown(varNum);
       } else {
-        return null; // No moves available
+        // There were no 'moves' available. However, it's possible there is some
+        // node next that doesn't have a move.
+        if (this.movetree.node().numChildren() > 0) {
+          this.setNextVariation(varNum);
+          this.movetree.moveDown(varNum);
+        } else {
+          return null; // No moves available
+        }
       }
     }
     var captures = this.goban.loadStonesFromMovetree(this.movetree)
