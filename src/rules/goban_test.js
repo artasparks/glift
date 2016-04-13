@@ -178,18 +178,18 @@
     // .....
 
     // Row 1
-    goban.setColor_(pt(1, 0), WHITE);
-    goban.setColor_(pt(2, 0), BLACK);
+    goban.setColor(pt(1, 0), WHITE);
+    goban.setColor(pt(2, 0), BLACK);
     // Row 2
-    goban.setColor_(pt(0, 1), WHITE);
-    goban.setColor_(pt(1, 1), BLACK);
-    goban.setColor_(pt(2, 1), WHITE);
+    goban.setColor(pt(0, 1), WHITE);
+    goban.setColor(pt(1, 1), BLACK);
+    goban.setColor(pt(2, 1), WHITE);
     // Row 3
-    goban.setColor_(pt(1, 2), WHITE);
-    goban.setColor_(pt(2, 2), WHITE);
+    goban.setColor(pt(1, 2), WHITE);
+    goban.setColor(pt(2, 2), WHITE);
     // Row 4
-    goban.setColor_(pt(0, 3), WHITE);
-    goban.setColor_(pt(3, 3), WHITE);
+    goban.setColor(pt(0, 3), WHITE);
+    goban.setColor(pt(3, 3), WHITE);
 
     var g = goban.findConnected_(pt(2,2), WHITE);
     deepEqual(g.liberties, 5);
@@ -235,17 +235,17 @@
     // OX.X
     // .OX.
     // O...
-    goban.setColor_(pt(1,0), WHITE);
-    goban.setColor_(pt(2,0), BLACK);
+    goban.setColor(pt(1,0), WHITE);
+    goban.setColor(pt(2,0), BLACK);
 
-    goban.setColor_(pt(0,1), WHITE);
-    goban.setColor_(pt(1,1), BLACK);
-    goban.setColor_(pt(3,1), BLACK);
+    goban.setColor(pt(0,1), WHITE);
+    goban.setColor(pt(1,1), BLACK);
+    goban.setColor(pt(3,1), BLACK);
 
-    goban.setColor_(pt(1,2), WHITE);
-    goban.setColor_(pt(2,2), BLACK);
+    goban.setColor(pt(1,2), WHITE);
+    goban.setColor(pt(2,2), BLACK);
 
-    goban.setColor_(pt(0,3), WHITE);
+    goban.setColor(pt(0,3), WHITE);
 
     var result = goban.addStone(pt(0,0), BLACK);
     ok(result.successful);
@@ -279,4 +279,59 @@
     goban.addStone(pt(4,4), BLACK)
     deepEqual(goban.getKo(), null, 'Must be invalidated by addStone');
   });
+
+  test('Load stones and apply clear locations from movetree', function() {
+    var mt = glift.rules.movetree.getInstance();
+    var pt = glift.util.point;
+    var goban = glift.rules.goban.getInstance();
+    mt.properties()
+      .add('AB', 'ba')
+      .add('AB', 'ab')
+      .add('AB', 'bc')
+      .add('AB', 'ac')
+      .add('AW', 'bb')
+      .add('AW', 'cc');
+    mt.addNode();
+    mt.properties()
+      .add('B', 'cb') // should capture 'bb'
+    mt.addNode();
+    mt.properties()
+      .add('AE', 'ac')
+      .add('AE', 'ad')
+      .add('AE', 'bb')
+      .add('AE', 'cc');
+
+    var defaultCaps  = {WHITE: [], BLACK: []};
+
+    var mt = mt.getTreeFromRoot();
+    goban.loadStonesFromMovetree(mt);
+    goban.applyClearLocationsFromMovetree(mt);
+    deepEqual(goban.getStone(pt(1,0)), BLACK);
+    deepEqual(goban.getStone(pt(0,1)), BLACK);
+    deepEqual(goban.getStone(pt(1,2)), BLACK);
+    deepEqual(goban.getStone(pt(1,1)), WHITE);
+    deepEqual(goban.getStone(pt(2,2)), WHITE);
+
+    mt.moveDown();
+
+    var expectedCaptures = {WHITE: [pt(1,1)], BLACK: []};
+    var captures = goban.loadStonesFromMovetree(mt);
+    var clears = goban.applyClearLocationsFromMovetree(mt);
+    deepEqual(captures, expectedCaptures);
+    deepEqual(clears, []);
+
+    mt.moveDown();
+    var expectedClears = [
+        {point: pt(0, 2), color: BLACK},
+        {point: pt(2,2), color: WHITE}];
+    captures = goban.loadStonesFromMovetree(mt);
+    clears = goban.applyClearLocationsFromMovetree(mt);
+    deepEqual(captures, {WHITE: [], BLACK: []});
+    deepEqual(clears, expectedClears);
+
+    var output = glift.rules.goban.getFromMoveTree(mt);
+    deepEqual(output.captures, [expectedCaptures, defaultCaps], 'captures');
+    deepEqual(output.clearHistory, [[], expectedClears], 'clears');
+  });
 })();
+

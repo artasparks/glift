@@ -93,4 +93,20 @@
     deepEqual(base.currentMoveNumber(), 2);
     deepEqual(base.treepath, [0,0]);
   });
+
+  test('Test NextMove / Prev Move: Clear Locations', function() {
+    var base = glift.controllers.base().initOptions({
+        sgfString: '(;AB[ba][ab][bc][ac]AW[bb][cc]'
+            + ';B[cb]'
+            + ';AE[ac][ad][bb][cc])'
+    });
+    base.nextMove();
+    base.nextMove();
+    deepEqual(base.goban.getStone(conv('ac')), glift.enums.states.EMPTY);
+    deepEqual(base.goban.getStone(conv('cc')), glift.enums.states.EMPTY);
+
+    base.prevMove();
+    deepEqual(base.goban.getStone(conv('ac')), glift.enums.states.BLACK);
+    deepEqual(base.goban.getStone(conv('cc')), glift.enums.states.WHITE);
+  });
 })();

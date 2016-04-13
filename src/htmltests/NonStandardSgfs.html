@@ -176,9 +176,10 @@
           // glift.global.performanceDebugLevel = 'INFO';
           gameViewer = glift.create({
             divId: 'glift_display1',
-            sgf: {
-              sgfString: nonstandard.emptyNodes,
-            },
+            sgfCollection: [
+              nonstandard.emptyNodes,
+              nonstandard.clearLocations,
+            ],
             display: {
               theme: 'DEPTH',
               goBoardBackground: '../themes/assets/bambootile_warm.jpg',

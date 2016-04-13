@@ -161,7 +161,7 @@
 
   test('getAllMarks', function() {
     var pt = glift.util.pointFromSgfCoord;
-    var defaultProps = properties()
+    var defaultProps = properties();
     deepEqual(defaultProps.getAllMarks(), {});
 
     var props = properties()
@@ -183,5 +183,16 @@
       {point: pt('cb'), value: 'Z'},
       {point: pt('cf'), value: 'A'}
     ]);
-  })
+  });
+
+  test('Getting clear locations', function() {
+    var sgfPt = glift.util.pointFromSgfCoord;
+    var props = properties()
+      .add('AE', 'ab')
+      .add('AE', 'ac');
+    deepEqual(props.getClearLocationsAsPoints(), [sgfPt('ab'), sgfPt('ac')]);
+
+    props = properties();
+    deepEqual(props.getClearLocationsAsPoints(), []);
+  });
 })();

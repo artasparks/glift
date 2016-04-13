@@ -8788,24 +8788,31 @@ glift.rules.goban = {
    *
    * @return {{
    *   goban: !glift.rules.Goban,
-   *   captures: !Array<!glift.rules.CaptureResult>
+   *   captures: !Array<!glift.rules.CaptureResult>,
+   *   clearHistory: !Array<!Array<!glift.rules.Move>>
    * }}
    */
   getFromMoveTree: function(mt, opt_treepath) {
     var treepath = opt_treepath || mt.treepathToHere();
     var goban = new glift.rules.Goban(mt.getIntersections()),
         movetree = mt.getTreeFromRoot(),
+        clearHistory = [],
         captures = []; // array of captures.
     goban.loadStonesFromMovetree(movetree); // Load root placements.
+    // We don't consider clear-locations (AE) properties at the root because why
+    // the heck would you do that?
+
     for (var i = 0;
         i < treepath.length && movetree.node().numChildren() > 0;
         i++) {
       movetree.moveDown(treepath[i]);
+      clearHistory.push(goban.applyClearLocationsFromMovetree(movetree));
       captures.push(goban.loadStonesFromMovetree(movetree));
     }
     return {
       goban: goban,
-      captures: captures
+      captures: captures,
+      clearHistory: clearHistory,
     };
   }
 };
@@ -8933,10 +8940,13 @@ glift.rules.Goban.prototype = {
   /**
    * Clear a stone from an intersection. Clears the Ko point.
    * @param {!glift.Point} point
+   * @return {glift.enums.states} color of the location cleared
    */
   clearStone: function(point) {
     this.clearKo();
-    this.setColor_(point, glift.enums.states.EMPTY);
+    var color = this.getStone(point);
+    this.setColor(point, glift.enums.states.EMPTY);
+    return color;
   },
 
   /**
@@ -8970,7 +8980,7 @@ glift.rules.Goban.prototype = {
       this.clearStone(point);
       var oppositeColor = glift.util.colors.oppositeColor(color);
       for (var i = 0; i < addStoneResult.captures.length; i++) {
-        this.setColor_(addStoneResult.captures[i], oppositeColor);
+        this.setColor(addStoneResult.captures[i], oppositeColor);
       }
     }
     return addStoneResult.successful;
@@ -8998,7 +9008,7 @@ glift.rules.Goban.prototype = {
     }
 
     // Set the stone as active and see what happens!
-    this.setColor_(pt, color);
+    this.setColor(pt, color);
 
     // First find the oppositely-colored connected groups on each of the
     // cardinal directions.
@@ -9042,7 +9052,7 @@ glift.rules.Goban.prototype = {
       var capPt = capturedPoints[0];
 
       // Try to recapture, and see what happen.
-      this.setColor_(capPt, oppColor);
+      this.setColor(capPt, oppColor);
       var koCapturedGroups = this.findCapturedGroups_(capPt, oppColor);
       // Undo our damage to the board.
       this.clearStone(capPt);
@@ -9064,21 +9074,15 @@ glift.rules.Goban.prototype = {
    * For the current position in the movetree, load all the stone values into
    * the goban. This includes placements [AW,AB] and moves [B,W].
    *
-   * returns captures -- an object that looks like the following
-   * {
-   *    WHITE: [{point},{point},{point},...],
-   *    BLACK: [{point},{point},{point},...]
-   * }
-   *
    * @param {!glift.rules.MoveTree} movetree
-   * @return {!glift.rules.CaptureResult}
+   * @return {!glift.rules.CaptureResult} The black and white captures.
    */
   loadStonesFromMovetree: function(movetree) {
     /** @type {!Array<glift.enums.states>} */
     var colors = [ glift.enums.states.BLACK, glift.enums.states.WHITE ];
     var captures = { BLACK : [], WHITE : [] };
     for (var i = 0; i < colors.length; i++) {
-      var color = colors[i]
+      var color = colors[i];
       var placements = movetree.properties().getPlacementsAsPoints(color);
       for (var j = 0, len = placements.length; j < len; j++) {
         this.loadStone_({point: placements[j], color: color}, captures);
@@ -9088,18 +9092,38 @@ glift.rules.Goban.prototype = {
     return captures;
   },
 
+  /**
+   * For the current position in the movetree, apply the clear-locations (AE),
+   * returning any intersections that were actually cleared. Returns an empty
+   * array if AE doesn't exist or no locations were cleared.
+   *
+   * @param {!glift.rules.MoveTree} movetree
+   * @return {!Array<!glift.rules.Move>} the cleared stones.
+   */
+  applyClearLocationsFromMovetree: function(movetree) {
+    var clearLocations = movetree.properties().getClearLocationsAsPoints();
+    var outMoves = [];
+    for (var i = 0; i < clearLocations.length; i++) {
+      var pt = clearLocations[i];
+      var color = this.clearStone(pt);
+      if (color !== glift.enums.states.EMPTY) {
+        outMoves.push({point: pt, color: color});
+      }
+    }
+    return outMoves;
+  },
+
   /////////////////////
   // Private Methods //
   /////////////////////
 
   /**
-   * Set a color without performing any validation.
+   * Set a color without performing any validation. Use with Caution!!
    *
    * @param {glift.enums.states} color
    * @param {!glift.Point} pt
-   * @private
    */
-  setColor_: function(pt, color) {
+  setColor: function(pt, color) {
     this.stones_[pt.y()][pt.x()] = color;
   },
 
@@ -10567,7 +10591,8 @@ glift.rules.Properties.prototype = {
   /**
    * Get all the placements for a color.  Return as an array.
    * @param {glift.enums.states} color
-   * @return {!Array<!glift.Point>} points.
+   * @return {!Array<!glift.Point>} points. If no placements are found, returns
+   *    an empty array.
    */
   getPlacementsAsPoints: function(color) {
     var prop;
@@ -10583,6 +10608,23 @@ glift.rules.Properties.prototype = {
       return [];
     }
     return glift.sgf.allSgfCoordsToPoints(this.getAllValues(prop));
+  },
+
+  /**
+   * Get all the clear-locations as points. Clear locations are indicated by AE.
+   * The SGF spec is unclear about how to handle clear-locations when there are
+   * other stone properties (B,W,AB,AW). Generally, it probably makes the most
+   * sense to apply the clear-locations first.
+   *
+   * @return {!Array<!glift.Point>} the points. If the AE property isn't found,
+   *    returns an empty array.
+   */
+  getClearLocationsAsPoints: function() {
+    var AE = glift.rules.prop.AE;
+    if (!this.contains(AE)) {
+      return [];
+    }
+    return glift.sgf.allSgfCoordsToPoints(this.getAllValues(AE));
   },
 
   /**
@@ -11979,6 +12021,13 @@ glift.controllers.BaseController = function() {
   this.captureHistory = [];
 
   /**
+   * The history of cleared-location-points (i.e., the AE property). We need to
+   * keep a full history to back-out the changes.
+   * @package {!Array<!Array<!glift.rules.Move>>}
+   */
+  this.clearHistory = [];
+
+  /**
    * Array of ko-history so that when we go backwards, we can reset the ko
    * correctly.
    * @package {!Array<?glift.Point>}
@@ -12050,6 +12099,7 @@ glift.controllers.BaseController.prototype = {
 
     this.goban = gobanData.goban;
     this.captureHistory = gobanData.captures;
+    this.clearHistory = gobanData.clearHistory;
     this.extraOptions(); // Overridden by implementers
     return this;
   },
@@ -12085,15 +12135,6 @@ glift.controllers.BaseController.prototype = {
       selectedNextMove: this.selectedNextMove(),
     });
     return newFlat;
-  },
-
-  /**
-   * Applies captures and increments the move number
-   *
-   * @param {!glift.rules.CaptureResult} captures
-   */
-  recordCaptures: function(captures) {
-    this.captureHistory.push(captures)
   },
 
   /**
@@ -12177,10 +12218,6 @@ glift.controllers.BaseController.prototype = {
 
   /**
    * Get the captures count. Returns an object of the form
-   *  {
-   *    BLACK: <number>
-   *    WHITE: <number>
-   *  }
    * @return {{
    *  BLACK: number,
    *  WHITE: number
@@ -12276,7 +12313,7 @@ glift.controllers.BaseController.prototype = {
    * Proceed to the next move.  This is slightly trickier than you might
    * imagine:
    *   - We need to either add to the Movetree or, if the movetree is readonly,
-   *   we need to make sure the move exists.
+   *     we need to make sure the move/node exists.
    *   - We need to update the Goban.
    *   - We need to store the captures.
    *   - We need to update the current move number.
@@ -12289,21 +12326,34 @@ glift.controllers.BaseController.prototype = {
   nextMove: function(opt_varNum) {
     if (this.treepath[this.currentMoveNumber()] !== undefined &&
         (opt_varNum === undefined || this.nextVariationNumber() === opt_varNum)) {
-      // Don't mess with the treepath, if we're 'on variation'.
+      // If possible, we prefer taking the route defined by a previously
+      // traversed treepath. In otherwords, don't mess with the treepath, if
+      // we're 'on variation'.
       this.movetree.moveDown(this.nextVariationNumber());
     } else {
+      // There is no existing treepath.
       var varNum = opt_varNum === undefined ? 0 : opt_varNum;
       if (varNum >= 0 &&
           varNum <= this.movetree.nextMoves().length - 1) {
+        // We prefer taking 'move' nodes over nonmove nodes.
         this.setNextVariation(varNum);
         this.movetree.moveDown(varNum);
       } else {
-        return null; // No moves available
+        // There were no 'moves' available. However, it's possible there is some
+        // node next that doesn't have a move.
+        if (this.movetree.node().numChildren() > 0) {
+          this.setNextVariation(varNum);
+          this.movetree.moveDown(varNum);
+        } else {
+          return null; // No moves available
+        }
       }
     }
-    var captures = this.goban.loadStonesFromMovetree(this.movetree)
+    var clears = this.goban.applyClearLocationsFromMovetree(this.movetree);
+    var captures = this.goban.loadStonesFromMovetree(this.movetree);
     this.koHistory.push(this.goban.getKo());
-    this.recordCaptures(captures);
+    this.captureHistory.push(captures);
+    this.clearHistory.push(clears);
     return this.flattenedState();
   },
 
@@ -12317,10 +12367,21 @@ glift.controllers.BaseController.prototype = {
       return null;
     }
     var captures = this.getCaptures();
+    var clears = this.clearHistory[this.clearHistory.length - 1] || [];
     var allCurrentStones = this.movetree.properties().getAllStones();
     this.captureHistory = this.captureHistory.slice(
-        0, this.currentMoveNumber() - 1);
+        0, this.captureHistory.length - 1);
+    this.clearHistory = this.clearHistory.slice(
+        0, this.clearHistory.length - 1);
     this.unloadStonesFromGoban_(allCurrentStones, captures);
+    for (var i = 0; i < clears.length; i++) {
+      var move = clears[i];
+      if (move.point === undefined) {
+        throw new Error('Unexpected error! Clear history moves must have points.');
+      }
+      this.goban.setColor(move.point, move.color);
+    }
+
     this.movetree.moveUp();
     this.koHistory.pop();
     if (this.koHistory.length) {
@@ -12340,6 +12401,7 @@ glift.controllers.BaseController.prototype = {
     this.movetree = this.movetree.getTreeFromRoot();
     this.goban = glift.rules.goban.getFromMoveTree(this.movetree, []).goban;
     this.captureHistory = [];
+    this.clearHistory = [];
     this.koHistory = [];
     return this.flattenedState();
   },

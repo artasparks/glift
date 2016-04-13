@@ -327,7 +327,8 @@ glift.rules.Properties.prototype = {
   /**
    * Get all the placements for a color.  Return as an array.
    * @param {glift.enums.states} color
-   * @return {!Array<!glift.Point>} points.
+   * @return {!Array<!glift.Point>} points. If no placements are found, returns
+   *    an empty array.
    */
   getPlacementsAsPoints: function(color) {
     var prop;
@@ -343,6 +344,23 @@ glift.rules.Properties.prototype = {
       return [];
     }
     return glift.sgf.allSgfCoordsToPoints(this.getAllValues(prop));
+  },
+
+  /**
+   * Get all the clear-locations as points. Clear locations are indicated by AE.
+   * The SGF spec is unclear about how to handle clear-locations when there are
+   * other stone properties (B,W,AB,AW). Generally, it probably makes the most
+   * sense to apply the clear-locations first.
+   *
+   * @return {!Array<!glift.Point>} the points. If the AE property isn't found,
+   *    returns an empty array.
+   */
+  getClearLocationsAsPoints: function() {
+    var AE = glift.rules.prop.AE;
+    if (!this.contains(AE)) {
+      return [];
+    }
+    return glift.sgf.allSgfCoordsToPoints(this.getAllValues(AE));
   },
 
   /**

@@ -113,6 +113,13 @@ glift.controllers.BaseController = function() {
   this.captureHistory = [];
 
   /**
+   * The history of cleared-location-points (i.e., the AE property). We need to
+   * keep a full history to back-out the changes.
+   * @package {!Array<!Array<!glift.rules.Move>>}
+   */
+  this.clearHistory = [];
+
+  /**
    * Array of ko-history so that when we go backwards, we can reset the ko
    * correctly.
    * @package {!Array<?glift.Point>}
@@ -184,6 +191,7 @@ glift.controllers.BaseController.prototype = {
 
     this.goban = gobanData.goban;
     this.captureHistory = gobanData.captures;
+    this.clearHistory = gobanData.clearHistory;
     this.extraOptions(); // Overridden by implementers
     return this;
   },
@@ -219,15 +227,6 @@ glift.controllers.BaseController.prototype = {
       selectedNextMove: this.selectedNextMove(),
     });
     return newFlat;
-  },
-
-  /**
-   * Applies captures and increments the move number
-   *
-   * @param {!glift.rules.CaptureResult} captures
-   */
-  recordCaptures: function(captures) {
-    this.captureHistory.push(captures)
   },
 
   /**
@@ -311,10 +310,6 @@ glift.controllers.BaseController.prototype = {
 
   /**
    * Get the captures count. Returns an object of the form
-   *  {
-   *    BLACK: <number>
-   *    WHITE: <number>
-   *  }
    * @return {{
    *  BLACK: number,
    *  WHITE: number
@@ -446,9 +441,11 @@ glift.controllers.BaseController.prototype = {
         }
       }
     }
-    var captures = this.goban.loadStonesFromMovetree(this.movetree)
+    var clears = this.goban.applyClearLocationsFromMovetree(this.movetree);
+    var captures = this.goban.loadStonesFromMovetree(this.movetree);
     this.koHistory.push(this.goban.getKo());
-    this.recordCaptures(captures);
+    this.captureHistory.push(captures);
+    this.clearHistory.push(clears);
     return this.flattenedState();
   },
 
@@ -462,10 +459,21 @@ glift.controllers.BaseController.prototype = {
       return null;
     }
     var captures = this.getCaptures();
+    var clears = this.clearHistory[this.clearHistory.length - 1] || [];
     var allCurrentStones = this.movetree.properties().getAllStones();
     this.captureHistory = this.captureHistory.slice(
-        0, this.currentMoveNumber() - 1);
+        0, this.captureHistory.length - 1);
+    this.clearHistory = this.clearHistory.slice(
+        0, this.clearHistory.length - 1);
     this.unloadStonesFromGoban_(allCurrentStones, captures);
+    for (var i = 0; i < clears.length; i++) {
+      var move = clears[i];
+      if (move.point === undefined) {
+        throw new Error('Unexpected error! Clear history moves must have points.');
+      }
+      this.goban.setColor(move.point, move.color);
+    }
+
     this.movetree.moveUp();
     this.koHistory.pop();
     if (this.koHistory.length) {
@@ -485,6 +493,7 @@ glift.controllers.BaseController.prototype = {
     this.movetree = this.movetree.getTreeFromRoot();
     this.goban = glift.rules.goban.getFromMoveTree(this.movetree, []).goban;
     this.captureHistory = [];
+    this.clearHistory = [];
     this.koHistory = [];
     return this.flattenedState();
   },

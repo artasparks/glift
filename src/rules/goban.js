@@ -39,24 +39,31 @@ glift.rules.goban = {
    *
    * @return {{
    *   goban: !glift.rules.Goban,
-   *   captures: !Array<!glift.rules.CaptureResult>
+   *   captures: !Array<!glift.rules.CaptureResult>,
+   *   clearHistory: !Array<!Array<!glift.rules.Move>>
    * }}
    */
   getFromMoveTree: function(mt, opt_treepath) {
     var treepath = opt_treepath || mt.treepathToHere();
     var goban = new glift.rules.Goban(mt.getIntersections()),
         movetree = mt.getTreeFromRoot(),
+        clearHistory = [],
         captures = []; // array of captures.
     goban.loadStonesFromMovetree(movetree); // Load root placements.
+    // We don't consider clear-locations (AE) properties at the root because why
+    // the heck would you do that?
+
     for (var i = 0;
         i < treepath.length && movetree.node().numChildren() > 0;
         i++) {
       movetree.moveDown(treepath[i]);
+      clearHistory.push(goban.applyClearLocationsFromMovetree(movetree));
       captures.push(goban.loadStonesFromMovetree(movetree));
     }
     return {
       goban: goban,
-      captures: captures
+      captures: captures,
+      clearHistory: clearHistory,
     };
   }
 };
@@ -184,10 +191,13 @@ glift.rules.Goban.prototype = {
   /**
    * Clear a stone from an intersection. Clears the Ko point.
    * @param {!glift.Point} point
+   * @return {glift.enums.states} color of the location cleared
    */
   clearStone: function(point) {
     this.clearKo();
-    this.setColor_(point, glift.enums.states.EMPTY);
+    var color = this.getStone(point);
+    this.setColor(point, glift.enums.states.EMPTY);
+    return color;
   },
 
   /**
@@ -221,7 +231,7 @@ glift.rules.Goban.prototype = {
       this.clearStone(point);
       var oppositeColor = glift.util.colors.oppositeColor(color);
       for (var i = 0; i < addStoneResult.captures.length; i++) {
-        this.setColor_(addStoneResult.captures[i], oppositeColor);
+        this.setColor(addStoneResult.captures[i], oppositeColor);
       }
     }
     return addStoneResult.successful;
@@ -249,7 +259,7 @@ glift.rules.Goban.prototype = {
     }
 
     // Set the stone as active and see what happens!
-    this.setColor_(pt, color);
+    this.setColor(pt, color);
 
     // First find the oppositely-colored connected groups on each of the
     // cardinal directions.
@@ -293,7 +303,7 @@ glift.rules.Goban.prototype = {
       var capPt = capturedPoints[0];
 
       // Try to recapture, and see what happen.
-      this.setColor_(capPt, oppColor);
+      this.setColor(capPt, oppColor);
       var koCapturedGroups = this.findCapturedGroups_(capPt, oppColor);
       // Undo our damage to the board.
       this.clearStone(capPt);
@@ -315,21 +325,15 @@ glift.rules.Goban.prototype = {
    * For the current position in the movetree, load all the stone values into
    * the goban. This includes placements [AW,AB] and moves [B,W].
    *
-   * returns captures -- an object that looks like the following
-   * {
-   *    WHITE: [{point},{point},{point},...],
-   *    BLACK: [{point},{point},{point},...]
-   * }
-   *
    * @param {!glift.rules.MoveTree} movetree
-   * @return {!glift.rules.CaptureResult}
+   * @return {!glift.rules.CaptureResult} The black and white captures.
    */
   loadStonesFromMovetree: function(movetree) {
     /** @type {!Array<glift.enums.states>} */
     var colors = [ glift.enums.states.BLACK, glift.enums.states.WHITE ];
     var captures = { BLACK : [], WHITE : [] };
     for (var i = 0; i < colors.length; i++) {
-      var color = colors[i]
+      var color = colors[i];
       var placements = movetree.properties().getPlacementsAsPoints(color);
       for (var j = 0, len = placements.length; j < len; j++) {
         this.loadStone_({point: placements[j], color: color}, captures);
@@ -339,18 +343,38 @@ glift.rules.Goban.prototype = {
     return captures;
   },
 
+  /**
+   * For the current position in the movetree, apply the clear-locations (AE),
+   * returning any intersections that were actually cleared. Returns an empty
+   * array if AE doesn't exist or no locations were cleared.
+   *
+   * @param {!glift.rules.MoveTree} movetree
+   * @return {!Array<!glift.rules.Move>} the cleared stones.
+   */
+  applyClearLocationsFromMovetree: function(movetree) {
+    var clearLocations = movetree.properties().getClearLocationsAsPoints();
+    var outMoves = [];
+    for (var i = 0; i < clearLocations.length; i++) {
+      var pt = clearLocations[i];
+      var color = this.clearStone(pt);
+      if (color !== glift.enums.states.EMPTY) {
+        outMoves.push({point: pt, color: color});
+      }
+    }
+    return outMoves;
+  },
+
   /////////////////////
   // Private Methods //
   /////////////////////
 
   /**
-   * Set a color without performing any validation.
+   * Set a color without performing any validation. Use with Caution!!
    *
    * @param {glift.enums.states} color
    * @param {!glift.Point} pt
-   * @private
    */
-  setColor_: function(pt, color) {
+  setColor: function(pt, color) {
     this.stones_[pt.y()][pt.x()] = color;
   },
 
