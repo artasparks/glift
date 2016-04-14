@@ -333,7 +333,7 @@ glift.widgets.BaseWidget.prototype = {
           iconPathOrFunc);
     }
     // Lazy initialize the key mappings. Only really runs once.
-    glift.keyMappings.initKeybindingListener();
+    glift.keyMappings.initKeybindingListener(this.wrapperDivId);
   },
 
   /**

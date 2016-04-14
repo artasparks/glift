@@ -23,6 +23,8 @@ glift.dom._escapeMap = {
 
 /**
  * Sanitizes text to prevent XSS. A single pass parser.
+ * @param {string} text
+ * @return {string} the processed text
  */
 glift.dom.sanitize = function(text) {
   var outbuffer = [];

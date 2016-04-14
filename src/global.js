@@ -43,7 +43,7 @@ glift.global = {
   },
 
   /**
-   * Id of the active Glift. instance.
+   * ID of the active Glift instance.
    */
   activeInstanceId: null,
 

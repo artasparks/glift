@@ -72,7 +72,7 @@ glift.global = {
   },
 
   /**
-   * Id of the active Glift. instance.
+   * ID of the active Glift instance.
    */
   activeInstanceId: null,
 
@@ -717,11 +717,17 @@ glift.keyMappings = {
    * Initializes a global listener on keypresses.  Should only be really
    * initialized once, but it's ok to call this function more than once -- it
    * will be idempotent.
+   * @param {string} divId
    */
-  initKeybindingListener: function() {
+  initKeybindingListener: function(divId) {
     if (glift.keyMappings._initializedListener) {
       return;
     }
+    // It's possible to add key events to just an element, but it takes some
+    // hackery. The closest we can get is to set the tabindex=0 and set focus.
+    // It's still a possibility.
+    //
+    // Context: https://github.com/Kashomon/glift/issues/132
     var body = document.body;
 
     // Note: difference between keypress and keydown!
@@ -1557,6 +1563,8 @@ glift.dom._escapeMap = {
 
 /**
  * Sanitizes text to prevent XSS. A single pass parser.
+ * @param {string} text
+ * @return {string} the processed text
  */
 glift.dom.sanitize = function(text) {
   var outbuffer = [];
@@ -15717,7 +15725,7 @@ glift.widgets.BaseWidget.prototype = {
           iconPathOrFunc);
     }
     // Lazy initialize the key mappings. Only really runs once.
-    glift.keyMappings.initKeybindingListener();
+    glift.keyMappings.initKeybindingListener(this.wrapperDivId);
   },
 
   /**

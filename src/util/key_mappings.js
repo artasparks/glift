@@ -106,11 +106,17 @@ glift.keyMappings = {
    * Initializes a global listener on keypresses.  Should only be really
    * initialized once, but it's ok to call this function more than once -- it
    * will be idempotent.
+   * @param {string} divId
    */
-  initKeybindingListener: function() {
+  initKeybindingListener: function(divId) {
     if (glift.keyMappings._initializedListener) {
       return;
     }
+    // It's possible to add key events to just an element, but it takes some
+    // hackery. The closest we can get is to set the tabindex=0 and set focus.
+    // It's still a possibility.
+    //
+    // Context: https://github.com/Kashomon/glift/issues/132
     var body = document.body;
 
     // Note: difference between keypress and keydown!
