@@ -1197,6 +1197,10 @@ glift.util.regions = {
 goog.provide('glift.dom');
 goog.provide('glift.dom.Element');
 
+// TODO(kashomon): glift.dom is not an ideal abstraction. Ideally, this would be
+// a series of helper classes rather than a full on element wrapper. There are
+// several warts here that make this difficult to deal with -- like the
+// implicit assumption that all elements have element IDs.
 glift.dom = {
   /**
    * Constructs a glift dom element. If arg is a string, assume an ID is being
@@ -1420,6 +1424,7 @@ glift.dom.Element.prototype = {
    * Sets the CSS with a CSS object. Note this converts foo-bar to fooBar.
    * @param {!Object} obj Attribute obj
    */
+  // TODO(kashomon): This should probably be called style.
   css: function(obj) {
     for (var key in obj) {
       var outKey = key.replace(/-(.)?/g, function(match, group1) {
@@ -1521,6 +1526,40 @@ glift.dom.Element.prototype = {
   boundingClientRect: function() {
     return this.el.getBoundingClientRect();
   }
+};
+
+goog.provide('glift.dom.ErrorDoc');
+
+/**
+ * Simple registry of Glift error docs.
+ * @enum{string}
+ */
+glift.dom.ErrorDoc = {
+  // TODO(kashomon): Add a real link
+  SGF_PARSE_ERRROR: 'foo',
+};
+
+
+/**
+ * Handles an error by createing a dom element with the right styling.
+ * @param {string} msg User-level error message.
+ * @param {glift.dom.ErrorDoc=} opt_docLink An optional link to docs.
+ * @return {!Element} A new error element.
+ */
+glift.dom.error = function(msg, opt_docLink) {
+  var elem = document.createElement('div');
+  elem.style['color'] = '#E00';
+  msg = '::Glift Error::' + msg
+  elem.appendChild(document.createTextNode(msg));
+  if (opt_docLink) {
+    var link = document.createElement('a');
+    link.href = opt_docLink
+    var textNode = document.createTextNode(
+        ' See here for more details.');
+    link.appendChild(textNode);
+    elem.appendChild(link);
+  }
+  return elem;
 };
 
 goog.require('glift.dom');
@@ -11445,12 +11484,10 @@ glift.parse = {
     TYGEM: 'TYGEM',
 
     /**
-     * DEPRECATED.
+     * DEPRECATED.  This was created when I didn't understand the destinction
+     * between the various FF1-3 versions and FF4
      *
-     * This was created when I didn't understand the destinction between the
-     * various FF versions.
-     *
-     * Prefer SGF.
+     * Prefer SGF, this is now equivalent.
      */
     PANDANET: 'PANDANET'
   },

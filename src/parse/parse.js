@@ -18,12 +18,10 @@ glift.parse = {
     TYGEM: 'TYGEM',
 
     /**
-     * DEPRECATED.
+     * DEPRECATED.  This was created when I didn't understand the destinction
+     * between the various FF1-3 versions and FF4
      *
-     * This was created when I didn't understand the destinction between the
-     * various FF versions.
-     *
-     * Prefer SGF.
+     * Prefer SGF, this is now equivalent.
      */
     PANDANET: 'PANDANET'
   },

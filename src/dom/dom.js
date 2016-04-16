@@ -1,6 +1,10 @@
 goog.provide('glift.dom');
 goog.provide('glift.dom.Element');
 
+// TODO(kashomon): glift.dom is not an ideal abstraction. Ideally, this would be
+// a series of helper classes rather than a full on element wrapper. There are
+// several warts here that make this difficult to deal with -- like the
+// implicit assumption that all elements have element IDs.
 glift.dom = {
   /**
    * Constructs a glift dom element. If arg is a string, assume an ID is being
@@ -224,6 +228,7 @@ glift.dom.Element.prototype = {
    * Sets the CSS with a CSS object. Note this converts foo-bar to fooBar.
    * @param {!Object} obj Attribute obj
    */
+  // TODO(kashomon): This should probably be called style.
   css: function(obj) {
     for (var key in obj) {
       var outKey = key.replace(/-(.)?/g, function(match, group1) {
