@@ -24,7 +24,6 @@
   });
 
   test('Tall box: With resizing, should be square and centered', function() {
-    glift.global.debugMode = true;
     var divBox = glift.orientation.bbox.fromPts(
         util.point(0,0), util.point(300, 400));
     deepEqual(divBox.width(), 300, 'Width must be 300');
@@ -33,12 +32,6 @@
     var cb = displays.cropbox.getFromRegion(boardRegions.ALL, 19);
 
     var resized = getResizedBox(divBox, cb);
-    var d = resized._debugInfo();
-    deepEqual(d.newDims.height, d.newDims.width);
-    deepEqual(d.yDiff, 100);
-    deepEqual(d.xDiff, 0);
-    deepEqual(d.yDelta, 50);
-    deepEqual(d.xDelta, 0);
 
     deepEqual(Math.round(resized.width()), 300, 'Width must be 300');
     deepEqual(Math.round(resized.height()), 300, 'Height must be 300');
@@ -55,11 +48,9 @@
 
     deepEqual(resized.center().x(), 150, 'x center');
     deepEqual(resized.center().y(), 200, 'y center');
-    glift.global.debugMode = false;
   });
 
   test('Wide box: With resizing, should be square and centered', function() {
-    glift.global.debugMode = true;
     var divBox = glift.orientation.bbox.fromPts(
         util.point(0,0), util.point(400, 300));
     deepEqual(divBox.width(), 400, 'Width must be 400');
@@ -68,12 +59,6 @@
     var cb = displays.cropbox.getFromRegion(boardRegions.ALL, 19);
 
     var resized = getResizedBox(divBox, cb);
-    var d = resized._debugInfo();
-    deepEqual(d.newDims.height, d.newDims.width);
-    deepEqual(d.yDiff, 0);
-    deepEqual(d.xDiff, 100)
-    deepEqual(d.yDelta, 0);
-    deepEqual(d.xDelta, 50);
 
     deepEqual(Math.round(resized.width()), 300, 'Width must be 300');
     deepEqual(Math.round(resized.height()), 300, 'Height must be 300');
@@ -90,6 +75,5 @@
 
     deepEqual(resized.center().x(), 200, 'x center');
     deepEqual(resized.center().y(), 150, 'y center');
-    glift.global.debugMode = false;
   });
 })();

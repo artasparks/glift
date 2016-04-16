@@ -40,10 +40,6 @@ glift.global = {
    */
   version: '1.1.0rc1',
 
-  /** Indicates whether or not to store debug data. */
-  // TODO(kashomon): Remove this hack.
-  debugMode: false,
-
   /**
    * Options for performanceDebugLevel: NONE, INFO
    */
@@ -418,17 +414,6 @@ glift.enums.boardRegions = {
   // Minimal cropbox, modulo some heuristics. To do this, you usually need a
   // movetree, and usually, you need next-path information.
   MINIMAL: 'MINIMAL'
-};
-
-/**
- * Controller messages.
- * @enum {string}
- */
-// TODO(kashomon): Delete this
-glift.enums.controllerMessages = {
-  CONTINUE: 'CONTINUE',
-  DONE: 'DONE',
-  FAILURE: 'FAILURE'
 };
 
 /**
@@ -4415,21 +4400,6 @@ glift.displays.getResizedBox = function(divBox, cropbox, opt_alignment) {
       newTop = divBox.topLeft().y() + yDelta,
       newBox = glift.orientation.bbox.fromSides(
           util.point(newLeft, newTop), newWidth, newHeight);
-  if (glift.global.debugMode) {
-    newBox._debugInfo = function() {
-      return {
-        newDims: newDims,
-        newWidth: newWidth,
-        newHeight: newHeight,
-        xDiff: xDiff,
-        yDiff: yDiff,
-        xDelta: xDelta,
-        yDelta: yDelta,
-        newLeft: newLeft,
-        newTop: newTop
-      };
-    };
-  }
   return newBox;
 };
 

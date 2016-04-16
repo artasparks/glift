@@ -11,10 +11,6 @@ glift.global = {
    */
   version: '1.1.0rc1',
 
-  /** Indicates whether or not to store debug data. */
-  // TODO(kashomon): Remove this hack.
-  debugMode: false,
-
   /**
    * Options for performanceDebugLevel: NONE, INFO
    */

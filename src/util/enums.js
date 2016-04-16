@@ -71,17 +71,6 @@ glift.enums.boardRegions = {
 };
 
 /**
- * Controller messages.
- * @enum {string}
- */
-// TODO(kashomon): Delete this
-glift.enums.controllerMessages = {
-  CONTINUE: 'CONTINUE',
-  DONE: 'DONE',
-  FAILURE: 'FAILURE'
-};
-
-/**
  * @enum {string}
  */
 glift.enums.marks = {
