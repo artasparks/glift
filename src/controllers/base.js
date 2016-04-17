@@ -102,6 +102,7 @@ glift.controllers.BaseController = function() {
   /**
    * The Goban representing the current state of the board. Here, we construct a
    * dummy Goban to ensure that the goban is non-nullable.
+   *
    * @package {!glift.rules.Goban} goban
    */
   this.goban = glift.rules.goban.getInstance(1);
@@ -138,7 +139,7 @@ glift.controllers.BaseController.prototype = {
    */
   initOptions: function(sgfOptions) {
     if (sgfOptions === undefined) {
-      throw 'Options is undefined!  Can\'t create controller'
+      throw new Error('Options is undefined!  Can\'t create controller');
     }
     this.sgfString = sgfOptions.sgfString || '';
 
@@ -148,7 +149,6 @@ glift.controllers.BaseController.prototype = {
     }
 
     this.rawInitialPosition = sgfOptions.initialPosition || [];
-
     this.parseType = sgfOptions.parseType || glift.parse.parseType.SGF;
     this.problemConditions = sgfOptions.problemConditions || {};
 
