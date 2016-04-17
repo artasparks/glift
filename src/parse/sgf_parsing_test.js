@@ -182,7 +182,7 @@
     var mt = glift.parse.sgf(sgf);
 
     deepEqual(parseErrors.length, 1);
-    ok(/For property: GC unable to parse/.test(parseErrors[0]), 
+    ok(/Tried to parse property GC/.test(parseErrors[0]),
         'Regex does not match: ' + parseErrors[0]);
 
     deepEqual(mt.properties().getOneValue('GC'), 'foo: bar',

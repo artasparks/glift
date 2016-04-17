@@ -1,3 +1,5 @@
+goog.scope(function() {
+
 /**
  * Metadata Start and End tags allow us to insert metadata directly, as
  * JSON, into SGF comments.  It will not be display by glift (although it
@@ -36,6 +38,37 @@ glift.parse.sgfUnescape = function(text) {
   return text.toString().replace(/\\]/g, ']');
 };
 
+var states = {
+  BEGINNING_BEFORE_PAREN: 0,
+  BEGINNING: 1,
+  PROPERTY: 2, // e.g., 'AB[oe]' or 'A_B[oe]' or 'AB_[oe]'
+  PROP_DATA: 3, // 'AB[o_e]'
+  BETWEEN: 4, // 'AB[oe]_', '_AB[oe]'
+  FINISHED_SGF: 5
+};
+
+var statesToString = {
+  0: 'BEGINNING_BEFORE_PAREN',
+  1: 'BEGINNING',
+  2: 'PROPERTY',
+  3: 'PROP_DATA',
+  4: 'BETWEEN',
+  5: 'FINISHED_SGF'
+};
+
+var syn = {
+  LBRACE:  '[',
+  RBRACE:  ']',
+  LPAREN:  '(',
+  RPAREN:  ')',
+  SCOLON:  ';'
+};
+
+var wsRegex = /\s|\n/;
+var propRegex = /[A-Z]/;
+var oldStyleProp = /[a-z]/;
+var pointRectangleRegex = /^[a-z][a-z]:[a-z][a-z]$/;
+
 /**
  * The new Glift SGF parser!
  * Takes a string, returns a movetree.  Easy =).
@@ -48,34 +81,6 @@ glift.parse.sgfUnescape = function(text) {
  * @package
  */
 glift.parse.sgf = function(sgfString) {
-  var states = {
-    BEGINNING_BEFORE_PAREN: 0,
-    BEGINNING: 1,
-    PROPERTY: 2, // e.g., 'AB[oe]' or 'A_B[oe]' or 'AB_[oe]'
-    PROP_DATA: 3, // 'AB[o_e]'
-    BETWEEN: 4, // 'AB[oe]_', '_AB[oe]'
-    FINISHED_SGF: 5
-  };
-  var statesToString = {
-    0: 'BEGINNING_BEFORE_PAREN',
-    1: 'BEGINNING',
-    2: 'PROPERTY',
-    3: 'PROP_DATA',
-    4: 'BETWEEN',
-    5: 'FINISHED_SGF'
-  };
-  var syn = {
-    LBRACE:  '[',
-    RBRACE:  ']',
-    LPAREN:  '(',
-    RPAREN:  ')',
-    SCOLON:  ';'
-  };
-
-  var wsRegex = /\s|\n/;
-  var propRegex = /[A-Z]/;
-  var oldStyleProp = /[a-z]/;
-
   var curstate = states.BEGINNING_BEFORE_PAREN;
   var movetree = glift.rules.movetree.getInstance();
   var charBuffer = ''; // List of characters.
@@ -94,7 +99,6 @@ glift.parse.sgf = function(sgfString) {
   // relatively costly, so we try to be conservative about point-rectangle
   // processing.
   var possiblePointRectangle = false;
-  var pointRectangleRegex = /^[a-z][a-z]:[a-z][a-z]$/;
 
   var perror = function(msg) {
     glift.parse.sgfParseError(lineNum, colNum, curchar, msg, false /* iswarn */);
@@ -123,8 +127,9 @@ glift.parse.sgf = function(sgfString) {
             movetree.setMetdata(/** @type {!Object} */ (mdata));
           }
         } catch (e) {
-          glift.util.logz('For property: ' + curProp + ' unable to parse ' +
-              'as JSON for Glift SGF metadata: : ' + propData );
+          glift.util.logz('Tried to parse property ' + curProp
+              + ' as Glift SGF JSON-metadata, but unable to parse:' +
+              + pdata );
         }
       }
       movetree.properties().add(curProp, propData);
@@ -308,3 +313,5 @@ glift.parse.sgfParseError = function(lineNum, colNum, curchar, message, isWarnin
     throw new Error(err);
   }
 };
+
+});
