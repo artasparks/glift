@@ -109,4 +109,16 @@
     deepEqual(base.goban.getStone(conv('ac')), glift.enums.states.BLACK);
     deepEqual(base.goban.getStone(conv('cc')), glift.enums.states.WHITE);
   });
+
+  test('Capture count', function() {
+    var base = glift.controllers.base().initOptions({
+        sgfString: '(;AB[ba][ab][bc][ac]AW[bb][cc]'
+            + ';B[cb])'
+    });
+    base.nextMove();
+    deepEqual(base.getCaptureCount(), {
+      BLACK: 0,
+      WHITE: 1
+    });
+  });
 })();

@@ -12245,7 +12245,6 @@ glift.controllers.BaseController.prototype = {
    *  WHITE: number
    * }}
    */
-  // TODO(kashomon): Add tests
   getCaptureCount: function() {
     var countObj = { BLACK: 0, WHITE: 0 };
     for (var i = 0; i < this.captureHistory.length; i++ ) {
