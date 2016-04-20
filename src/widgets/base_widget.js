@@ -367,6 +367,7 @@ glift.widgets.BaseWidget.prototype = {
     var handler = function(e) {
       if (!this.controller) {
         // It's possible that we should make sure that the widget type is only
+        // a game viewer type.
         return;
       }
 
