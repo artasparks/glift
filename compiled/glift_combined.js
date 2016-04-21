@@ -1758,7 +1758,7 @@ glift.themes = {
    */
   get: function(id) {
     var registered = glift.themes.registered;
-    if (!id in registered) {
+    if (!(id in registered)) {
       throw new Error('No theme available for theme with name: ' + id);
     }
     var rawTheme = !(id in registered) ? null : registered[id];
@@ -15756,7 +15756,7 @@ glift.widgets.BaseWidget.prototype = {
       return;
     }
     var testElem = document.createElement('div');
-    if (!'onwheel' in testElem) {
+    if (!('onwheel' in testElem)) {
       // wheel is the standard event. Since it's supported in all major browsers
       // now, it's now worth the caveats here; Mousewheel support is an
       // incremental improvement anyway.
@@ -15772,6 +15772,7 @@ glift.widgets.BaseWidget.prototype = {
     var handler = function(e) {
       if (!this.controller) {
         // It's possible that we should make sure that the widget type is only
+        // a game viewer type.
         return;
       }
 

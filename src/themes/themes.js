@@ -21,7 +21,7 @@ glift.themes = {
    */
   get: function(id) {
     var registered = glift.themes.registered;
-    if (!id in registered) {
+    if (!(id in registered)) {
       throw new Error('No theme available for theme with name: ' + id);
     }
     var rawTheme = !(id in registered) ? null : registered[id];

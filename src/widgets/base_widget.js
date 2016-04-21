@@ -351,7 +351,7 @@ glift.widgets.BaseWidget.prototype = {
       return;
     }
     var testElem = document.createElement('div');
-    if (!'onwheel' in testElem) {
+    if (!('onwheel' in testElem)) {
       // wheel is the standard event. Since it's supported in all major browsers
       // now, it's now worth the caveats here; Mousewheel support is an
       // incremental improvement anyway.
