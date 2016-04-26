@@ -9,8 +9,18 @@
 
   test('Get', function() {
     deepEqual(themes.get('DEFAULT'), themes.baseTemplate, 'get');
-    deepEqual(themes.get('FOO'), null, 'non-get');
   });
+
+  test('Get: throws', function() {
+    var exception = null;
+    try {
+      themes.get('FOO')
+    } catch (err) {
+      exception = err;
+    }
+    ok(exception.toString().indexOf('FOO') > -1, 'Should throw an error');
+  });
+
 
   test('DeepCopy', function() {
     var textbook = themes.get('TEXTBOOK');

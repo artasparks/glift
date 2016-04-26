@@ -34,7 +34,25 @@ glift.flattener.board = {
       board.push(row);
     }
     return new glift.flattener.Board(board, bbox, cropping.size);
-  }
+  },
+
+  /**
+   * A specialized diffing function to be used for display. This differ checkes
+   * whether the stone-layer as different OR the the new intersection has a mark
+   * (even if it's the same).
+   *
+   * @param {!glift.flattener.Intersection} oldPoint
+   * @param {!glift.flattener.Intersection} newPoint
+   * @return {boolean} Whether or not these points are different
+   */
+  displayDiff:  function(oldPoint, newPoint) {
+    if (newPoint.mark()) {
+      // Any time there's a mark, we want to display it, so consider this point
+      // as being different.
+      return true;
+    }
+    return oldPoint.stone() !== newPoint.stone();
+  },
 };
 
 /**
@@ -236,7 +254,9 @@ glift.flattener.Board.prototype = {
 
   /**
    * Create a diff between this board and another board. Obviously for the board
-   * diff to make sense, the boards must have the same type
+   * diff to make sense, the boards must have the same type. This compares each
+   * intersection and, if they are not equal, adds the intersection to the
+   * output.
    *
    * It is required that the boards be the same dimensions, or else an error is
    * thrown.
@@ -245,6 +265,35 @@ glift.flattener.Board.prototype = {
    * @return {!Array<!glift.flattener.BoardDiffPt<T>>}
    */
   diff: function(newBoard) {
+    /**
+     * @param {T} oldPoint
+     * @param {T} newPoint
+     * @return boolean Whether or not these points are different (or rather, not
+     *    equal for this particular diffFn).
+     */
+    var diffFn = function(oldPoint, newPoint) {
+      if (oldPoint.equals && typeof oldPoint.equals === 'function') {
+        // Equals is defined, let's use it.
+        return !oldPoint.equals(newPoint);
+      } else {
+        // Use regular !== since equals isn't defined
+        return oldPoint !== newPoint;
+      }
+    };
+    return this.differ(newBoard, diffFn);
+  },
+
+  /**
+   * General method for performing diff-ing. Takes a newBoard and a function for
+   * determining if the points are different.
+   *
+   * @param {!glift.flattener.Board<T>} newBoard
+   * @param {!function(T, T):boolean} diffFn A diffFn is a function that takes
+   *    two parameters: the old point and the new point. If they are
+   *    different, the diffFn returns true (answering the question: 'are they
+   *    different?') and returns false if they are thsame.
+   */
+  differ: function(newBoard, diffFn) {
     if (!newBoard|| !newBoard.boardArray_ || !newBoard.bbox_ || !newBoard.maxBoardSize_) {
       throw new Error('Diff board not defined or not a flattener board');
     }
@@ -261,17 +310,12 @@ glift.flattener.Board.prototype = {
       for (var j = 0; j < row.length; j++) {
         var intp = row[j];
         var newIntp = thatrow[j];
-        if (!newIntp) { break; }
 
-        var ptsEqual = false;
-        if (intp.equals && typeof intp.equals === 'function') {
-          // Equals is defined, let's use it.
-          ptsEqual = intp.equals(newIntp);
-        } else {
-          // Use regular ===, since equals isn't defined
-          ptsEqual = intp === newIntp;
-        }
-        if (!ptsEqual) {
+        // Out of bounds. This shouldn't happen if the diff function is used in
+        // a sane way.
+        if (!newIntp) { break; }
+        var ptsAreDifferent = diffFn(intp, newIntp);
+        if (ptsAreDifferent) {
           var pt = new glift.Point(j, i);
           out.push(new glift.flattener.BoardDiffPt(
             intp, newIntp, pt, this.ptToBoardPt(pt)));

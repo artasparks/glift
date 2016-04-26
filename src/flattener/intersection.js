@@ -95,7 +95,7 @@ glift.flattener.intersection = {
       }
     }
     return false;
-  }
+  },
 };
 
 /**

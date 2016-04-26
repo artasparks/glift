@@ -158,7 +158,8 @@ glift.displays.board.Display.prototype = {
     this.intersections().clearMarks();
     this.intersections().clearHover();
 
-    var diffArr = this.flattened_.board().diff(flattened.board());
+    var diffArr = this.flattened_.board().differ(
+        flattened.board(), glift.flattener.board.displayDiff);
 
     var symb = glift.flattener.symbols;
     var marks = glift.enums.marks

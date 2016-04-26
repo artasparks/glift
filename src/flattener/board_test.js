@@ -115,7 +115,7 @@
     });
     var diffBoard = defaultCreate({
       stoneMap: {
-        '1,1':  {
+        '1,1':  { // Out of bounds.
           point: pt(1,1),
           color: glift.enums.states.BLACK
         },
@@ -154,8 +154,8 @@
     });
     var diffBoard = defaultCreate({
       markMap: {
-        marks: {},
-        labels: {'14,1': glift.flattener.symbols.TRIANGLE},
+        marks: {'14,1': glift.flattener.symbols.TRIANGLE},
+        labels: {},
       },
       stoneMap: {
         '15,1':  {
@@ -223,5 +223,54 @@
     deepEqual(diff[0].newValue, diffBoard.getIntBoardPt(16, 2),
         'New values: Should be equal');
     deepEqual(diff[0].newValue, WHITE, 'Prev values: Should be equal');
+  });
+
+  test('Display diff', function() {
+    var board = defaultCreate({
+      stoneMap: {
+        '15,1':  {
+          point: pt(15,1),
+          color: glift.enums.states.BLACK
+        },
+        '17,1':  {
+          point: pt(17,1),
+          color: glift.enums.states.BLACK
+        }
+      },
+      markMap: {
+        marks: {'14,1': glift.flattener.symbols.TRIANGLE},
+        labels: {}
+      }
+    });
+    var diffBoard = defaultCreate({
+      stoneMap: {
+        '1,1':  { // out of bounds
+          point: pt(1,1),
+          color: glift.enums.states.BLACK
+        },
+        '15,1':  {
+          point: pt(15,1),
+          color: glift.enums.states.BLACK
+        },
+        '16,2':  {
+          point: pt(16,2),
+          color: glift.enums.states.WHITE
+        },
+        '16,3':  {
+          point: pt(16,3),
+          color: glift.enums.states.WHITE
+        }
+      },
+      markMap: {
+        marks: {'14,1': glift.flattener.symbols.TRIANGLE},
+        labels: {}
+      }
+    });
+    var diff = board.differ(diffBoard, glift.flattener.board.displayDiff);
+    deepEqual(diff.length, 4, 'Should have four diff elements');
+    deepEqual(diff[0].boardPt, pt(14,1), 'Should have diffed 14,1');
+    deepEqual(diff[1].boardPt, pt(17,1), 'Should have diffed 17,1');
+    deepEqual(diff[2].boardPt, pt(16,2), 'Should have diffed 16,2');
+    deepEqual(diff[3].boardPt, pt(16,3), 'Should have diffed 16,3');
   });
 })();
