@@ -8516,8 +8516,9 @@ goog.provide('glift.rules.prop');
  */
 //  TODO(kashomon): Comment these and delete the invalid ones.
 glift.rules.prop = {
-/** Node: Black placements */
+/** Node: Black placements. */
 AB: 'AB',
+/** Node: Clear Intersections.  */
 AE: 'AE',
 AN: 'AN',
 /** Root: Creating program ex:[Glift:1.1.0] */
@@ -8673,14 +8674,14 @@ glift.rules.autonumber = function(movetree) {
       var stone = st[i];
       if (!stone.collision) {
         var sgfPoint = stone.point.toSgfCoord();
-        lblMap[sgfPoint] = '' + mvnum + seen;
+        lblMap[sgfPoint] = (mvnum + seen) + '';
         seen++;
       }
     }
 
     var newlabels = [];
     for (var sgfpt in lblMap) {
-      var l = lblMap[sgfpt] + '';
+      var l = lblMap[sgfpt];
       if (l.length > 2) {
         var subl = l.substring(l.length - 2, l.length);
         if (subl !== '00') {
