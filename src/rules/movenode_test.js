@@ -7,7 +7,7 @@
 
   test('SetNodeId', function() {
     var node = glift.rules.movenode();
-    node._setNodeId(4, 3);
+    node.setNodeId_(4, 3);
     deepEqual(node.getNodeNum(), 4, 'NodeNum');
     deepEqual(node.getVarNum(), 3, 'VarNum');
   });

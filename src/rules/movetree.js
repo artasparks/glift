@@ -216,8 +216,9 @@ glift.rules.MoveTree.prototype = {
    */
   moveDown: function(opt_variationNum) {
     var num = opt_variationNum || 0;
-    if (this.node().getChild(num) !== undefined) {
-      this.currentNode_ = this.node().getChild(num);
+    var child = this.node().getChild(num);
+    if (child != null) {
+      this.currentNode_ = child;
     }
     return this;
   },
@@ -439,20 +440,21 @@ glift.rules.MoveTree.prototype = {
   },
 
   /**
-   * @return {boolean} Returns true if the tree is currently on a mainline
-   *    variation.
+   * Returns true if the tree is currently on a mainline variation and false
+   * otherwise.
+   * @return {boolean}
    */
   onMainline: function() {
     if (!this.markedMainline_) {
       var mt = this.getTreeFromRoot();
-      mt.node()._mainline = true;
+      mt.node().mainline_ = true;
       while (mt.node().numChildren() > 0) {
         mt.moveDown();
-        mt.node()._mainline = true;
+        mt.node().mainline_ = true;
       }
       this.markedMainline_ = true;
     }
-    return this.node()._mainline;
+    return this.node().mainline_;
   },
 
   /**
@@ -604,7 +606,12 @@ glift.rules.MoveTree.prototype = {
     }
 
     for (var i = 0, len = node.numChildren(); i < len; i++) {
-      this.toSgfBuffer_(node.getChild(i), builder);
+      var child = node.getChild(i);
+      if (child) {
+        // Child should never be null here since we're iterating over the
+        // children, but the method can return null.
+        this.toSgfBuffer_(child, builder);
+      }
     }
 
     if (!node.getParent() || node.getParent().numChildren() > 1) {

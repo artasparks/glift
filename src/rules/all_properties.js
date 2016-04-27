@@ -6,8 +6,9 @@ goog.provide('glift.rules.prop');
  */
 //  TODO(kashomon): Comment these and delete the invalid ones.
 glift.rules.prop = {
-/** Node: Black placements */
+/** Node: Black placements. */
 AB: 'AB',
+/** Node: Clear Intersections.  */
 AE: 'AE',
 AN: 'AN',
 /** Root: Creating program ex:[Glift:1.1.0] */

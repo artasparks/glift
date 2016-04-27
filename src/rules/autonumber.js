@@ -21,7 +21,7 @@ glift.rules.autonumber = function(movetree) {
     var labels = mt.properties().getAllValues(glift.rules.prop.LB);
     /**
      * Map from SGF point to string label.
-     * @type {!Object<string>}
+     * @type {!Object<!glift.PtStr, string>}
      */
     var lblMap = {};
     for (var i = 0; labels && i < labels.length; i++) {
@@ -48,7 +48,7 @@ glift.rules.autonumber = function(movetree) {
       var stone = st[i];
       if (!stone.collision) {
         var sgfPoint = stone.point.toSgfCoord();
-        lblMap[sgfPoint] = mvnum + seen;
+        lblMap[sgfPoint] = '' + mvnum + seen;
         seen++;
       }
     }

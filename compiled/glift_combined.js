@@ -8646,7 +8646,7 @@ glift.rules.autonumber = function(movetree) {
     var labels = mt.properties().getAllValues(glift.rules.prop.LB);
     /**
      * Map from SGF point to string label.
-     * @type {!Object<string>}
+     * @type {!Object<!glift.PtStr, string>}
      */
     var lblMap = {};
     for (var i = 0; labels && i < labels.length; i++) {
@@ -8673,7 +8673,7 @@ glift.rules.autonumber = function(movetree) {
       var stone = st[i];
       if (!stone.collision) {
         var sgfPoint = stone.point.toSgfCoord();
-        lblMap[sgfPoint] = mvnum + seen;
+        lblMap[sgfPoint] = '' + mvnum + seen;
         seen++;
       }
     }
@@ -9415,7 +9415,9 @@ glift.rules.Move;
 goog.provide('glift.rules.MoveNode');
 
 /**
- * Id for a particular node. Note: The ID is not guaranteed to be unique
+ * Id for a particular node. Note: The ID is not guaranteed to be unique, due to
+ * pranching up the tree. However, it does uniquely identify a child of a
+ * parent.
  *
  * @typedef {{
  *  nodeNum: number,
@@ -9425,10 +9427,10 @@ goog.provide('glift.rules.MoveNode');
 glift.rules.NodeId
 
 /**
- * Creates a new
+ * Creates a new MoveNode.
  *
  * @param {!glift.rules.Properties=} opt_properties
- * @param {!Array<glift.rules.MoveNode>=} opt_children
+ * @param {!Array<!glift.rules.MoveNode>=} opt_children
  * @param {!glift.rules.NodeId=} opt_nodeId
  * @param {!glift.rules.MoveNode=} opt_parentNode
  *
@@ -9443,7 +9445,7 @@ glift.rules.movenode = function(
  * A Node in the MoveTree.
  *
  * @param {!glift.rules.Properties=} opt_properties
- * @param {!Array<glift.rules.MoveNode>=} opt_children
+ * @param {!Array<!glift.rules.MoveNode>=} opt_children
  * @param {!glift.rules.NodeId=} opt_nodeId
  * @param {!glift.rules.MoveNode=} opt_parentNode
  *
@@ -9452,21 +9454,29 @@ glift.rules.movenode = function(
  */
 glift.rules.MoveNode = function(
     opt_properties, opt_children, opt_nodeId, opt_parentNode) {
-  this._properties = opt_properties || glift.rules.properties();
+  /** @private {!glift.rules.Properties} */
+  this.properties_ = opt_properties || glift.rules.properties();
+  /** @type {!Array<!glift.rules.MoveNode>} */
   this.children = opt_children || [];
-  this._nodeId = opt_nodeId || { nodeNum: 0, varNum: 0 }; // this is a bad default.
-  this._parentNode = opt_parentNode;
+  /** @private {!glift.rules.NodeId} */
+  this.nodeId_ = opt_nodeId || { nodeNum: 0, varNum: 0 };
+  /** @type {?glift.rules.MoveNode} */
+  this.parentNode_ = opt_parentNode || null;
+
   /**
    * Marker for determining mainline.  Should ONLY be used by onMainline from
    * the movetree.
+   * @package {boolean}
    */
-  // TODO(kashomon): Consider putting this in a data class.
-  this._mainline = false;
+  this.mainline_ = false;
 };
 
 glift.rules.MoveNode.prototype = {
-  /** Get the properties */
-  properties: function() { return this._properties; },
+  /**
+   * Returns the properties.
+   * @return {!glift.rules.Properties}
+   */
+  properties: function() { return this.properties_; },
 
   /**
    * Set the NodeId. Each node has an ID based on the depth and variation
@@ -9475,36 +9485,39 @@ glift.rules.MoveNode.prototype = {
    * Great caution should be exercised when using this method.  If you
    * don't adjust the surrounding nodes, the movetree will get into a funky
    * state.
+   * @param {number} nodeNum
+   * @param {number} varNum
+   * @private
    */
-  _setNodeId: function(nodeNum, varNum) {
-    this._nodeId = { nodeNum: nodeNum, varNum: varNum };
+  setNodeId_: function(nodeNum, varNum) {
+    this.nodeId_ = { nodeNum: nodeNum, varNum: varNum };
     return this;
   },
 
   /**
-   * Get the node number (i.e., the depth number).  For our purposes, we
-   * consider passes to be moves, but this is a special enough case that it
-   * shouldn't matter for most situations.
+   * Get the node number (i.e., the depth number). We consider passes and nodes
+   * without non-stone data to be 'moves', although this is relatively rare.
+   * @return {number}
    */
-  getNodeNum: function() { return this._nodeId.nodeNum; },
+  getNodeNum: function() { return this.nodeId_.nodeNum; },
 
-  /** Gets the variation number. */
-  getVarNum: function() { return this._nodeId.varNum; },
+  /**
+   * Gets the variation number.
+   * @return {number}
+   */
+  getVarNum: function() { return this.nodeId_.varNum; },
 
-  /** Gets the number of children. */
+  /**
+   * Gets the number of children.
+   * @return {number}
+   */
   numChildren: function() { return this.children.length; },
 
-  getIntersection: function() {
-    var colors = ['B', 'W'];
-    for (var i = 0; i < colors.length; i++) {
-      var color = colors[i];
-      if(this._properties.propMap[color] != undefined) {
-        return this._properties.propMap[color];
-      }
-    }
-  },
-
-  /** Add a new child node. */
+  /**
+   * Add a new child node.
+   * @return {!glift.rules.MoveNode} this
+   * @package
+   */
   addChild: function() {
     this.children.push(glift.rules.movenode(
       glift.rules.properties(),
@@ -9517,6 +9530,7 @@ glift.rules.MoveNode.prototype = {
   /**
    * Get the next child node.  This the same semantically as moving down the
    * movetree.
+   * @return {?glift.rules.MoveNode} The node or null if it doesn't exist.
    */
   getChild: function(variationNum) {
     variationNum = variationNum || 0;
@@ -9527,25 +9541,35 @@ glift.rules.MoveNode.prototype = {
     }
   },
 
-  /** Return the parent node. Returns null if no parent node exists. */
-  getParent: function() { return this._parentNode ? this._parentNode : null; },
+  /**
+   * Return the parent node. Returns null if no parent node exists.
+   * @return {?glift.rules.MoveNode}
+   */
+  getParent: function() { return this.parentNode_; },
 
   /**
    * Renumber the nodes.  Useful for when nodes are deleted during SGF editing.
    * Note: This performs the renumbering recursively
+   * @return {!glift.rules.MoveNode} this
    */
   renumber: function() {
-    numberMoves(this, this._nodeId.nodeNum, this._nodeId.varNum);
+    glift.rules.numberMoves_(this, this.nodeId_.nodeNum, this.nodeId_.varNum);
     return this;
   }
 };
 
-// Private number moves function
-var numberMoves = function(move, nodeNum, varNum) {
-  move._setNodeId(nodeNum, varNum);
+/**
+ * Recursively renumber the nodes
+ * @param {!glift.rules.MoveNode} move
+ * @param {number} nodeNum
+ * @param {number} varNum
+ * @private
+ */
+glift.rules.numberMoves_ = function(move, nodeNum, varNum) {
+  move.setNodeId_(nodeNum, varNum);
   for (var i = 0; i < move.children.length; i++) {
     var next = move.children[i];
-    numberMoves(next, nodeNum + 1, i);
+    glift.rules.numberMoves_(next, nodeNum + 1, i);
   }
   return move;
 };
@@ -9768,8 +9792,9 @@ glift.rules.MoveTree.prototype = {
    */
   moveDown: function(opt_variationNum) {
     var num = opt_variationNum || 0;
-    if (this.node().getChild(num) !== undefined) {
-      this.currentNode_ = this.node().getChild(num);
+    var child = this.node().getChild(num);
+    if (child != null) {
+      this.currentNode_ = child;
     }
     return this;
   },
@@ -9991,20 +10016,21 @@ glift.rules.MoveTree.prototype = {
   },
 
   /**
-   * @return {boolean} Returns true if the tree is currently on a mainline
-   *    variation.
+   * Returns true if the tree is currently on a mainline variation and false
+   * otherwise.
+   * @return {boolean}
    */
   onMainline: function() {
     if (!this.markedMainline_) {
       var mt = this.getTreeFromRoot();
-      mt.node()._mainline = true;
+      mt.node().mainline_ = true;
       while (mt.node().numChildren() > 0) {
         mt.moveDown();
-        mt.node()._mainline = true;
+        mt.node().mainline_ = true;
       }
       this.markedMainline_ = true;
     }
-    return this.node()._mainline;
+    return this.node().mainline_;
   },
 
   /**
@@ -10156,7 +10182,12 @@ glift.rules.MoveTree.prototype = {
     }
 
     for (var i = 0, len = node.numChildren(); i < len; i++) {
-      this.toSgfBuffer_(node.getChild(i), builder);
+      var child = node.getChild(i);
+      if (child) {
+        // Child should never be null here since we're iterating over the
+        // children, but the method can return null.
+        this.toSgfBuffer_(child, builder);
+      }
     }
 
     if (!node.getParent() || node.getParent().numChildren() > 1) {
@@ -11476,9 +11507,7 @@ glift.parse = {
    * @enum {string}
    */
   parseType: {
-    /**
-     * FF1-FF4 Parse Type.
-     */
+    /** FF1-FF4 Parse Type. */
     SGF: 'SGF',
 
     /** Tygem .gib files. */

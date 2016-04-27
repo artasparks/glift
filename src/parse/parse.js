@@ -9,9 +9,7 @@ glift.parse = {
    * @enum {string}
    */
   parseType: {
-    /**
-     * FF1-FF4 Parse Type.
-     */
+    /** FF1-FF4 Parse Type. */
     SGF: 'SGF',
 
     /** Tygem .gib files. */
