@@ -1,7 +1,10 @@
 goog.require('glift.dom');
 
-/** Tags currently allowed. */
-glift.dom._sanitizeWhitelist = {
+/**
+ * Tags currently allowed.
+ * @private {!Object<string, boolean>}
+ */
+glift.dom.sanitizeWhitelist_ = {
   'br': true,
   'b': true,
   'strong': true,
@@ -13,8 +16,11 @@ glift.dom._sanitizeWhitelist = {
   'h3': true
 };
 
-/** Characters to escape */
-glift.dom._escapeMap = {
+/**
+ * Characters to escape
+ * @private {!Object<string, string>}
+ */
+glift.dom.escapeMap_ = {
  '&': '&amp;',
  '"': '&quot;',
  '\'': '&#x27;',
@@ -30,18 +36,18 @@ glift.dom.sanitize = function(text) {
   var outbuffer = [];
   var strbuff = [];
   var states = { DEFAULT: 1, TAG: 2 };
-  var whitelist = glift.dom._sanitizeWhitelist;
+  var whitelist = glift.dom.sanitizeWhitelist_;
   var curstate = states.DEFAULT;
   var numBrackets = 0;
-  var lt = '&lt;';
-  var gt = '&gt;';
+  var lt = '&lt;'; // '<'
+  var gt = '&gt;'; // '>'
   for (var i = 0, len = text.length; i < len; i++) {
     var chr = text.charAt(i);
     if (chr === '<') {
       curstate = states.TAG;
       numBrackets++;
       if (numBrackets > 1) {
-        strbuff.push(lt); 
+        strbuff.push(lt);
       }
     } else if (chr === '>') {
       numBrackets--;
@@ -68,8 +74,8 @@ glift.dom.sanitize = function(text) {
       if (curstate === states.TAG) {
         strbuff.push(chr);
       } else {
-        if (chr in glift.dom._escapeMap) {
-          chr = glift.dom._escapeMap[chr];
+        if (chr in glift.dom.escapeMap_) {
+          chr = glift.dom.escapeMap_[chr];
         }
         outbuffer.push(chr);
       }
