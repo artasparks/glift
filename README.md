@@ -25,6 +25,12 @@ Here's a simple example, to create a game viewer for a game in div.
 See [GliftGo.com](http://www.gliftgo.com) if you want to see Glift in action and
 lots of code samples!
 
+### How it works:
+
+Glift is an SVG based UI. When you invoke `glift.create`, Glift, looks at the
+div, determines the height and width of the div, and then draws an instance of
+the board.
+
 ### Supported Browsers
 
 The complied Glift JavaScript is completely self-contained and supports the
