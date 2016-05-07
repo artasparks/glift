@@ -425,7 +425,7 @@ glift.widgets.BaseWidget.prototype = {
    */
   applyBoardData: function(flattened) {
     if (flattened) {
-      this.setCommentBox(flattened.comment());
+      this.setCommentBox(flattened);
       this.statusBar &&
           this.statusBar.setMoveNumber(flattened.baseMoveNum())
       this.display.updateBoard(flattened);
@@ -434,10 +434,12 @@ glift.widgets.BaseWidget.prototype = {
 
   /**
    * Set the CommentBox with some specified text, if the comment box exists.
-   * @param {string} text To set on the comment box.
+   * @param {!glift.flattener.Flattened} flattened object, which may contain a
+   * comment.
    * @return {!glift.widgets.BaseWidget} the current instance.
    */
-  setCommentBox: function(text) {
+  setCommentBox: function(flattened) {
+    var text = flattened.comment();
     if (this.commentBox === undefined) {
       // Do nothing -- there is no comment box to set.
     } else if (text) {

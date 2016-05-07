@@ -60,7 +60,7 @@ glift.flattener.Flattened = function(params) {
   this.board_ = params.board;
 
   /**
-   * @private {!Array<glift.flattener.Collision>}
+   * @private {!Array<!glift.flattener.Collision>}
    * @const
    */
   this.collisions_ = params.collisions;
@@ -168,7 +168,7 @@ glift.flattener.Flattened.prototype = {
 
   /**
    * A structure illustrating the board collisions. Only relevant for positions
-   * with a next moves path.
+   * with a next moves path. Will always be defined, but could be empty.
    *
    * Array of collisions objects.  In other words, we record stones that
    * couldn't be placed on the board.
