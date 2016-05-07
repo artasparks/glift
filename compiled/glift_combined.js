@@ -15406,6 +15406,7 @@ glift.flattener.labels = {
    * - Black (x)
    * @type {!RegExp}
    */
+  // TODO(kashomon): Support symbols? Ex: Black Triangle.
   inlineLabelRegex: new RegExp(
       '(Black|White) ' +
       '([A-Z]|([0-9]{1,3})|(\\(([A-Za-z]|[0-9]{1,3})\\)))' +
@@ -15413,7 +15414,8 @@ glift.flattener.labels = {
       ''),
 
   /**
-   * Global version of the above.
+   * Global version of the above. Must be defined lazily due the dependence on
+   * the previous regex.
    * @private {?RegExp}
    */
   inlineLabelRegexGlobal_: null,
@@ -15443,8 +15445,8 @@ glift.flattener.labels = {
     }
     var reg = glift.flattener.labels.inlineLabelRegexGlobal_;
     return text.replace(reg, function(full, player, label) {
-      if (/^\(.\)$/.test(label)) {
-        label = label.replace(/^\(|\)$/g, '');
+      if (label.charAt(0) === '(' && label.charAt(label.length - 1) === ')') {
+        label = label.substring(1, label.length - 1);
       }
       return fn(full, player, label);
     });

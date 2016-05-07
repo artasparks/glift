@@ -1,6 +1,21 @@
 (function() {
   module('glift.flattener.labelsTest');
 
+  test('ReplaceInline', function() {
+    var label = 'Black then played at Black A and then White 32 and Black (133).';
+    var out = glift.flattener.labels.replaceInline(
+        label, function(full, player, label) {
+          var p = '';
+          if (player === 'Black') {
+            p = 'b'
+          } else if (player === 'White') {
+            p = 'w';
+          }
+          return p + '-' + label;
+        });
+    deepEqual(out, 'Black then played at b-A and then w-32 and b-133.');
+  });
+
   test('label for collisions', function() {
     var coll = [
       {color: 'BLACK', mvnum: '1', label: 'a', collisionStoneColor: 'BLACK'},
