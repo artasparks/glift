@@ -170,7 +170,7 @@ glift.displays.board.Intersections.prototype = {
       var stonesTheme = this.theme.stones;
       var marksTheme = stonesTheme[stoneColor].marks;
       glift.displays.board.addMark(container, this.idGen, this.boardPoints,
-          marksTheme, stonesTheme, pt, mark, label);
+          marksTheme, stonesTheme, pt, mark, label, stoneColor);
       this.flushMark_(pt, mark, container);
     }
     return this;

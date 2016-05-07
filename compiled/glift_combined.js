@@ -4989,7 +4989,7 @@ glift.displays.board.Intersections.prototype = {
       var stonesTheme = this.theme.stones;
       var marksTheme = stonesTheme[stoneColor].marks;
       glift.displays.board.addMark(container, this.idGen, this.boardPoints,
-          marksTheme, stonesTheme, pt, mark, label);
+          marksTheme, stonesTheme, pt, mark, label, stoneColor);
       this.flushMark_(pt, mark, container);
     }
     return this;
@@ -5379,7 +5379,7 @@ glift.displays.board.markContainer = function(svg, idGen) {
  * Add a mark of a particular type to the GoBoard
  */
 glift.displays.board.addMark = function(
-    container, idGen, boardPoints, marksTheme, stonesTheme, pt, mark, label) {
+    container, idGen, boardPoints, marksTheme, stonesTheme, pt, mark, label, stoneColor) {
   // Note: This is a static method instead of a method on intersections because,
   // due to the way glift is compiled together, there'no s guarantee what order
   // the files come in (beyond the base package file).  So, either we need to
@@ -5414,16 +5414,20 @@ glift.displays.board.addMark = function(
       threeDigitMod = .75;
     }
     var stroke = 'none';
-    if (marksTheme.fill !== 'white') {
+    var strokeWidth = 'none';
+    if (stoneColor === glift.enums.states.EMPTY ||
+        stoneColor === glift.enums.states.WHITE) {
       // Hackery to work around the fact that we want a stroke for white but not
       // for black because, well, it looks better that way
       stroke = marksTheme.stroke;
+      strokeWidth = marksTheme['stroke-width'];
     }
     container.append(svglib.text()
         .setText(label)
         .setData(pt)
         .setAttr('fill', marksTheme.fill)
         .setAttr('stroke', stroke)
+        .setAttr('stroke-width', strokeWidth)
         .setAttr('text-anchor', 'middle')
         .setAttr('dy', '.33em') // for vertical centering
         .setAttr('x', coordPt.x()) // x and y are the anchor points.
