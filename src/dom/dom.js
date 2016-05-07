@@ -50,6 +50,7 @@ glift.dom = {
    * @param {string} text The input raw text
    * @param {boolean} useMarkdown Whether or not to render with markdown.
    * @param {!Object=} opt_css Optional CSS object to apply to the lines.
+   * @return {!glift.dom.Element}
    */
   convertText: function(text, useMarkdown, opt_css) {
     text = glift.dom.sanitize(text);

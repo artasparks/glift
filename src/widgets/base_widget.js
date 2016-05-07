@@ -440,10 +440,13 @@ glift.widgets.BaseWidget.prototype = {
    */
   setCommentBox: function(flattened) {
     var text = flattened.comment();
+    var collisions = flattened.collisions();
     if (this.commentBox === undefined) {
       // Do nothing -- there is no comment box to set.
-    } else if (text) {
-      this.commentBox.setText(text);
+    } else if (text || (collisions && collisions.length)) {
+      // Create a full label
+      var collisionsLabel = glift.flattener.labels.createFullLabel(flattened);
+      this.commentBox.setText(text, collisionsLabel);
     } else {
       this.commentBox.clearText();
     }

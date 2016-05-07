@@ -77,9 +77,17 @@ glift.displays.commentbox.CommentBox.prototype = {
    * Set the text of the comment box. Note: this sanitizes the text to prevent
    * XSS and does some basic HTML-izing.
    * @param {string} text
+   * @param {string=} opt_collisionsLabel
    */
-  setText: function(text) {
+  setText: function(text, opt_collisionsLabel) {
     this.el.empty();
+    var collisionsLabel = opt_collisionsLabel || '';
+    if (collisionsLabel) {
+      collisionsLabel = glift.dom.sanitize(collisionsLabel);
+      var em = glift.dom.newElem('em')
+          .append(glift.dom.convertText(collisionsLabel, false));
+      this.el.append(em);
+    }
     this.el.append(glift.dom.convertText(text, this.useMarkdown));
   },
 

@@ -64,6 +64,8 @@ glift.flattener.labels = {
     }
     var reg = glift.flattener.labels.inlineLabelRegexGlobal_;
     return text.replace(reg, function(full, player, label) {
+      // Handle the case like 'Black (123)' so that we just pass the label and
+      // not the (123)
       if (label.charAt(0) === '(' && label.charAt(label.length - 1) === ')') {
         label = label.substring(1, label.length - 1);
       }
@@ -72,49 +74,101 @@ glift.flattener.labels = {
   },
 
   /**
-   * Construct the label based on the flattened object. From the flattened
-   * object, we must extract the collisions and the move numbers.
+   * Construct a label based on the collisions in the flattened object.
+   * In the end, this will look something like
+   *
+   *  Black 10, White 13 and a.
    *
    * @param {!glift.flattener.Flattened} flattened
    * @return {string}
    */
   createCollisionLabel: function(flattened) {
-    return glift.flattener.labels.constructLabel_(
+    return glift.flattener.labels.constructCollisionLabel_(
+        flattened.collisions());
+  },
+
+  /**
+   * Construct the label based on the flattened object *and* the move numbers.
+   * In the end, this will look something like
+   *
+   *    (Moves 1-3)
+   *    Black 10, White 13 and a.
+   *
+   * Notes:
+   *    - The move label is only generated when on the main path.
+   *    - The collision label is only generated when there are collisions.
+   *
+   * @param {!glift.flattener.Flattened} flattened
+   * @return {string}
+   */
+  createFullLabel: function(flattened) {
+    return glift.flattener.labels.constructFullLabel_(
         flattened.collisions(),
         flattened.isOnMainPath(),
         flattened.startingMoveNum(),
         flattened.endingMoveNum());
   },
 
-
   /**
-   * Construct the label based on the flattened object. From the flattened
-   * object, we must extract the collisions and the move numbers.
-   *
    * @param {!Array<!glift.flattener.Collision>} collisions
-   * @param {boolean} isOnMainline
+   * @param {boolean} isOnMainPath
    * @param {number} startNum
    * @param {number} endNum
-   * @return {string}
+   * @return {string} the processed move label or an empty string if no label
+   *    should be created.
    * @private
    */
-  constructLabel_: function(collisions, isOnMainline, startNum, endNum) {
-    var baseLabel = '';
-
-    if (isOnMainline) {
-      // If we're on the mainline branch, construct a label that's like:
-      // (Moves: 1-12)
-      // or
-      // (Move: 32)
-      var nums = [startNum];
-      if (startNum !== endNum) {
-        // Note: Currently the API is such that if there's only one move, then
-        // startNum == endNum.
-        nums.push(endNum);
-      }
-      var moveLabel = nums.length > 1 ? 'Moves: ' : 'Move: ';
-      baseLabel += '(' + moveLabel + nums.join('-') + ')';
+  constructFullLabel_: function(collisions, isOnMainPath, startNum, endNum) {
+    var label = ''
+    if (isOnMainPath) {
+      label += glift.flattener.labels.constructMoveLabel(startNum, endNum);
     }
+    var col = glift.flattener.labels.constructCollisionLabel_(collisions);
+    if (label && col) {
+      // If both move label and the collision label is defined, join with a
+      // newline.
+      return label + '\n' + col;
+    }
+    return label + col;
+  },
+
+  /**
+   * Create a move label. This is generally intended only for mainline
+   * sequences, but can be used anywhere.
+   *
+   * @param {number} startNum
+   * @param {number} endNum
+   * @return {string} the processed move label or an empty string if it 
+   * @private
+   */
+  constructMoveLabel: function(startNum, endNum) {
+    var baseLabel = '';
+    // If we're on the mainline branch, construct a label that's like:
+    // (Moves: 1-12)
+    // or
+    // (Move: 32)
+    var nums = [startNum];
+    if (startNum !== endNum) {
+      // Note: Currently the API is such that if there's only one move, then
+      // startNum == endNum.
+      nums.push(endNum);
+    }
+    var moveLabel = nums.length > 1 ? 'Moves: ' : 'Move: ';
+    baseLabel += '(' + moveLabel + nums.join('-') + ')';
+    return baseLabel;
+  },
+
+  /**
+   * Construct the collision label based on the flattened object. From the
+   * flattened object, we must extract the collisions and the move numbers.
+   *
+   * @param {!Array<!glift.flattener.Collision>} collisions
+   *
+   * @return {string} the processed collisions label.
+   * @private
+   */
+  constructCollisionLabel_: function(collisions) {
+    var baseLabel = '';
 
     // No Collisions! Woohoo
     if (collisions == null || collisions.length === 0) {
