@@ -51,7 +51,7 @@ glift.displays.board.addMark = function(
       threeDigitMod = .75;
     }
     var stroke = 'none';
-    if (marksTheme.fill === 'black') {
+    if (marksTheme.fill !== 'white') {
       // Hackery to work around the fact that we want a stroke for white but not
       // for black because, well, it looks better that way
       stroke = marksTheme.stroke;
