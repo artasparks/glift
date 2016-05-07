@@ -50,20 +50,15 @@ glift.displays.board.addMark = function(
       // stones.
       threeDigitMod = .75;
     }
-    var stroke = 'none';
-    var strokeWidth = 'none';
-    if (stoneColor === glift.enums.states.EMPTY ||
-        stoneColor === glift.enums.states.WHITE) {
-      // Hackery to work around the fact that we want a stroke for white but not
-      // for black because, well, it looks better that way
-      stroke = marksTheme.stroke;
-      strokeWidth = marksTheme['stroke-width'];
+    var strokeWidth = parseInt(marksTheme['stroke-width'] || 1, 10)
+    if (stoneColor === glift.enums.states.BLACK) {
+      strokeWidth = strokeWidth * 0.4;
     }
     container.append(svglib.text()
         .setText(label)
         .setData(pt)
         .setAttr('fill', marksTheme.fill)
-        .setAttr('stroke', stroke)
+        .setAttr('stroke', marksTheme.stroke)
         .setAttr('stroke-width', strokeWidth)
         .setAttr('text-anchor', 'middle')
         .setAttr('dy', '.33em') // for vertical centering
