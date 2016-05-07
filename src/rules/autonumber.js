@@ -6,8 +6,6 @@ goog.require('glift.rules');
  * NOTE! This removes all numeric labels and replaces them with the labels
  * constructed here, but that's sort of the point.
  *
- * Modifies the current movetree, so nothing is returned.
- *
  * @param {!glift.rules.MoveTree} movetree The movetree to autonumber.
  */
 glift.rules.autonumber = function(movetree) {

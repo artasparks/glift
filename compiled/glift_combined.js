@@ -5407,18 +5407,31 @@ glift.displays.board.addMark = function(
     } else if (mark === marks.CORRECT_VARIATION) {
       marksTheme = marksTheme.CORRECT_VARIATION;
     }
+    var threeDigitMod = 1;
+    if (label.length === 3) {
+      // If the labels are 3 digits, we make them a bit smaller to fit on the
+      // stones.
+      threeDigitMod = .75;
+    }
+    var stroke = 'none';
+    if (marksTheme.fill === 'black') {
+      // Hackery to work around the fact that we want a stroke for white but not
+      // for black because, well, it looks better that way
+      stroke = marksTheme.stroke;
+    }
     container.append(svglib.text()
         .setText(label)
         .setData(pt)
         .setAttr('fill', marksTheme.fill)
-        .setAttr('stroke', marksTheme.stroke)
+        .setAttr('stroke', stroke)
         .setAttr('text-anchor', 'middle')
         .setAttr('dy', '.33em') // for vertical centering
         .setAttr('x', coordPt.x()) // x and y are the anchor points.
         .setAttr('y', coordPt.y())
         .setAttr('font-family', stonesTheme.marks['font-family'])
+        .setAttr('font-style', 'normal')
         .setAttr('font-size',
-            boardPoints.spacing * stonesTheme.marks['font-size'])
+            threeDigitMod * boardPoints.spacing * stonesTheme.marks['font-size'])
         .setId(markId));
 
   } else if (mark === marks.SQUARE) {
@@ -8661,8 +8674,6 @@ goog.require('glift.rules');
  *
  * NOTE! This removes all numeric labels and replaces them with the labels
  * constructed here, but that's sort of the point.
- *
- * Modifies the current movetree, so nothing is returned.
  *
  * @param {!glift.rules.MoveTree} movetree The movetree to autonumber.
  */
@@ -16246,8 +16257,12 @@ glift.widgets.BaseWidget.prototype = {
     if (this.commentBox === undefined) {
       // Do nothing -- there is no comment box to set.
     } else if (text || (collisions && collisions.length)) {
-      // Create a full label
-      var collisionsLabel = glift.flattener.labels.createFullLabel(flattened);
+      var collisionsLabel = '';
+
+      // Create a full label, but only if there are any collisions.
+      if (collisions && collisions.length) {
+        collisionsLabel = glift.flattener.labels.createFullLabel(flattened);
+      }
       this.commentBox.setText(text, collisionsLabel);
     } else {
       this.commentBox.clearText();
