@@ -3,7 +3,7 @@
  *
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
- * @version 1.1.0
+ * @version 1.1.1
  * --------------------------------------
  */
 
@@ -38,7 +38,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently on stable.
    */
-  version: '1.1.0',
+  version: '1.1.1',
 
   /**
    * Options for performanceDebugLevel: NONE, INFO

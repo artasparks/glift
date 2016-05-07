@@ -9,7 +9,7 @@ glift.global = {
    * See: http://semver.org/
    * Currently on stable.
    */
-  version: '1.1.0',
+  version: '1.1.1',
 
   /**
    * Options for performanceDebugLevel: NONE, INFO
