@@ -83,26 +83,30 @@ And the following options (see [src/widgets/options/base_options.js](/src/widget
 
 ### Development
 
-Before you begin, make sure you've installed 
+Glift uses Glup and Nodejs. Before you begin, make sure you've installed:
 
 * [nodejs](https://nodejs.org/en/)
 * [gulp](https://github.com/gulpjs/gulp/blob/master/docs/getting-started.md)
 
 #### Gulp Instructions
 
-First, you'll need to initialize the repository
+**Initialization**. First, you'll need to initialize the repository with the relevant node modules:
 
 ```shell
 npm install
 ```
 
-To run the QUnit Tests.
+This will create the necessary `node_modules` directory, which should be ignored via the `.gitigonre`
+
+**Running Tests**
+
+There are several ways to run the qunit tests. To run the QUnit Tests via gulp:
 
 ```shell
 gulp test
 ```
 
-This will create the necessary `node_modules` directory, which should be ignored via the `.gitigonre`
+Or, you can just open `src/htmltests/QunitTest.html` in a browser and run the tests there (it's bit faster).
 
 #### Legacy Depgen.py Instructions
 
