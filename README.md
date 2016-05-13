@@ -87,8 +87,11 @@ And the following options (see [src/widgets/options/base_options.js](/src/widget
 
 Glift uses Glup and Nodejs. Before you begin, make sure you've installed:
 
-* [nodejs](https://nodejs.org/en/)
-* [gulp](https://github.com/gulpjs/gulp/blob/master/docs/getting-started.md)
+* [Nodejs (LTS)](https://nodejs.org/en/)
+* [Gulp](https://github.com/gulpjs/gulp/blob/master/docs/getting-started.md)
+* [Java](https://java.com/en/download/) - For using the JSCompiler
+* [Python 2.7](https://www.python.org/) - For the legacy depgen.py script. This
+  should be going away in the relatively near future.
 
 #### Gulp Instructions
 
