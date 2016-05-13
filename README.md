@@ -1,6 +1,8 @@
 Glift
 =====
 
+[![Travis Build Status](https://travis-ci.org/Kashomon/glift.svg?branch=master)](https://travis-ci.org/Kashomon/glift)
+
 ## The Go Lightweight Frontend
 
 Glift is a modern javascript client for the game
