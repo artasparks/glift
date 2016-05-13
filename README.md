@@ -85,6 +85,9 @@ And the following options (see [src/widgets/options/base_options.js](/src/widget
 
 ### Development
 
+Although Glift was built for all major browsers, Glift was built on OSX, so
+these development docs assume a POSIX toolchain.
+
 Glift uses Glup and Nodejs. Before you begin, make sure you've installed:
 
 * [Nodejs (LTS)](https://nodejs.org/en/)
@@ -118,9 +121,6 @@ Or, you can just open `src/htmltests/QunitTest.html` in a browser and run the te
 If you're planning on making deep changes to Glift, it may help to look [this
 infrastructure
 diagram](https://docs.google.com/drawings/d/1MQK8xWe7djaSJtXPffinfRcwdsA859S_uVI8YqOYKhk/edit).
-
-Although Glift was built for all major browsers, Glift was built on OSX, so
-these development docs assume a POSIX toolchain.
 
 For depgen.py to work, you'll need to have java and python installed.
 
