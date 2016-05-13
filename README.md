@@ -51,10 +51,12 @@ Unsupported browsers
 
 ### APIs
 
-Glift is still in beta, but it's rapidly approaching a stable 1.0 release.  All
-methods and options supported for the lifetime of the 1.0 release have been
-marked with @api(1.0). Options/methods that are on track to become supported
-have been marked @api(beta).
+Glift is now released on a public, stable release!! All methods and options that
+are part of the stable 1.0 API have been marked with 'api: 1.0'. Similarly, if
+an option is available from 1.1 onward, then it will be marked 'api: 1.1'.
+
+lifetime of the 1.0 release have been marked with api: 1.0. Options/methods
+that are on track to become supported have been marked @api(beta).
 
 The currently supported methods support @api(1.0):
 
@@ -81,6 +83,29 @@ And the following options (see [src/widgets/options/base_options.js](/src/widget
 
 ### Development
 
+Before you begin, make sure you've installed 
+
+* [nodejs](https://nodejs.org/en/)
+* [gulp](https://github.com/gulpjs/gulp/blob/master/docs/getting-started.md)
+
+#### Gulp Instructions
+
+First, you'll need to initialize the repository
+
+```shell
+npm install
+```
+
+To run the QUnit Tests.
+
+```shell
+gulp test
+```
+
+This will create the necessary `node_modules` directory, which should be ignored via the `.gitigonre`
+
+#### Legacy Depgen.py Instructions
+
 If you're planning on making deep changes to Glift, it may help to look [this
 infrastructure
 diagram](https://docs.google.com/drawings/d/1MQK8xWe7djaSJtXPffinfRcwdsA859S_uVI8YqOYKhk/edit).
@@ -101,3 +126,4 @@ To generate the compiled JS and update the HTML tests, run;
 To generate the concatenated JS and update the HTML tests, run;
 
    * `src/depgen.py concat`
+
