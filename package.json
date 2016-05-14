@@ -25,8 +25,11 @@
     "weiqi"
   ],
   "devDependencies": {
+    "glob": "^7.0.3",
     "gulp": "^3.9.1",
-    "gulp-jshint": "^2.0.1",
-    "gulp-qunit": "^1.4.0"
+    "gulp-qunit": "^1.4.0",
+    "gulp-size": "^2.1.0",
+    "gulp-util": "^3.0.7",
+    "through2": "^2.0.1"
   }
 }
