@@ -177,7 +177,7 @@ glift.displays.board.Display.prototype = {
       if (diffPt.newValue.mark() !== 0) { // We've already cleared empty marks.
         var newMark = diffPt.newValue.mark();
         var enumMark = symbolMarkToMark[newMark];
-        var lbl = undefined;
+        var lbl = null;
         if (enumMark === marks.LABEL ||
             enumMark === marks.VARIATION_MARKER ||
             enumMark === marks.CORRECT_VARIATION) {

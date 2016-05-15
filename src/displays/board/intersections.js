@@ -101,7 +101,7 @@ glift.displays.board.Intersections.prototype = {
    * Add a mark to the display.
    * @param {!glift.Point} pt
    * @param {!glift.enums.marks} mark
-   * @param {string} label
+   * @param {?string} label
    * @return {!glift.displays.board.Intersections} this
    */
   addMarkPt: function(pt, mark, label) {
@@ -131,7 +131,7 @@ glift.displays.board.Intersections.prototype = {
    * or goban.
    * @param {!glift.Point} pt
    * @param {!glift.enums.marks} mark
-   * @param {string} label
+   * @param {?string} label
    * @return {!glift.displays.board.Intersections} this
    */
   addTempMark: function(pt, mark, label) {
@@ -155,7 +155,7 @@ glift.displays.board.Intersections.prototype = {
    * @param {!glift.displays.svg.SvgObj} container
    * @param {!glift.Point} pt
    * @param {!glift.enums.marks} mark
-   * @param {!string} label
+   * @param {?string} label
    * @return {!glift.displays.board.Intersections} this
    * @private
    */

@@ -27,6 +27,8 @@
   "devDependencies": {
     "glob": "^7.0.3",
     "gulp": "^3.9.1",
+    "gulp-closure-compiler": "^0.4.0",
+    "gulp-concat": "^2.6.0",
     "gulp-qunit": "^1.4.0",
     "gulp-size": "^2.1.0",
     "gulp-util": "^3.0.7",
