@@ -13,16 +13,22 @@ var gulp = require('gulp'),
     fs = require('fs'),
     path = require('path');
 
-// Force an ordering on the package structure.
+// Force an ordering on the package structure. It would be nice to use
+// gulp-ordering and get ride of the packageReorder function, but that would
+// require changing the way namespaces are created.
 var ordering = [
   // Top level source package must go first since it defines the namespace
   '.*/src$',
   // I'm not entirely sure why, but util must go first. Probably due to some
   // faulty name-space aliasing.
   '.*/util$',
+  // The widgetopt dir depends *directly* on the controllers. Yuck. These need
+  // to be refactored, probably by putting the widget options directly in the
+  // controller dirs.
+  '.*/controllers$',
   // For most packages it doesn't matter. However, to prevent commit thrashing
   // in the HTML tests, we sort the output files.
-  // Implicitly, the laste entry is '.*',
+  // Implicitly, the last entry is '.',
 ]
 
 var srcGlob = [
@@ -108,7 +114,7 @@ gulp.task('update-html-srcs-dev', () => {
 // Update the HTML tests with the test JS files
 gulp.task('update-html-tests', () => {
   return gulp.src(testGlob)
-    .pipe(packageReorder(ordering))
+    .pipe(packageReorder())
     .pipe(updateHtmlFiles({
       filesGlob: './src/htmltests/QunitTest.html',
       header: '<!-- AUTO-GEN-TESTS -->',
@@ -141,7 +147,7 @@ gulp.task('basicbuild', ['update-html-srcs-dev', 'update-html-tests', 'concat'])
 function packageReorder(orderx) {
   var all = []
   var orderx = (orderx || []).slice()
-  orderx = orderx.map((s) => new RegExp(s, 'g'))
+  orderx = orderx.map((s) => new RegExp(s))
   return through.obj(function(file, enc, cb) {
     all.push(file);
     cb();
@@ -166,7 +172,8 @@ function packageReorder(orderx) {
       }
     });
 
-    // Do some nasty sorting to ensure the order is stable
+    // Based on the ordering array passed in, group the directories togther and
+    // do sorting based on the groupings.
     var dirlistSorted = []
     var processed = {}
     for (var i = 0; i <= orderx.length; i++) {
