@@ -2,8 +2,9 @@
 <html>
 <head>
 
-<title> AjaxTester </title>
-<script type="text/javascript" src="../testdata/sgfs.js"></script>
+<title> KgsTester </title>
+
+<script type="text/javascript" src="../libs/jquery-2.2.3.min.js"></script>
 
 <!-- AUTO-GEN-DEPS -->
 <!-- .. sources -->
@@ -155,7 +156,7 @@
         padding: 0;
       }
       #glift_display1 {
-        height:95%;
+        height:500px;
         position:relative;
       }
     </style>
@@ -167,27 +168,18 @@
       <div id="glift_display1"></div>
       <div id="extra_info"></div>
       <script type="text/javascript">
-        //glift.global.performanceDebugLevel = 'info'
-        var basicProblem = glift.create({
-          divId: 'glift_display1',
-          sgfCollection: [
-            {
-              url: '../testdata/problem9.sgf',
-              initialPosition: '1'
+        (function() {
+          gameViewer = glift.create({
+            divId: "glift_display1",
+            sgfDefaults: {
+              boardRegion: 'ALL'
             },
-            '../testdata/problem10.sgf',
-            '../testdata/ajax3_13.sgf',
-            '../testdata/ajax_problem.sgf',
-            '../testdata/ajax_problem2.sgf',
-            '../testdata/9x9prob.sgf'
-          ],
-          sgfDefaults: {
-            widgetType: 'STANDARD_PROBLEM'
-          }
-        });
-        $(window).resize(function() {
-          basicProblem.destroy().draw();
-        });
+            display: {
+              theme: 'DEPTH',
+              goBoardBackground: '../themes/assets/bambootile_warm.jpg'
+            }
+          });
+        })();
       </script>
     </div>
   </body>
