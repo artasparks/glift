@@ -13,11 +13,19 @@ var gulp = require('gulp'),
     fs = require('fs'),
     path = require('path');
 
-var srcGlob = [
-  'src/glift.js',
+// Force an ordering on the package structure.
+var ordering = [
+  // Top level source package must go first since it defines the namespace
+  '.*/src$',
   // I'm not entirely sure why, but util must go first. Probably due to some
   // faulty name-space aliasing.
-  'src/util/*.js', 
+  '.*/util$',
+  // For most packages it doesn't matter. However, to prevent commit thrashing
+  // in the HTML tests, we sort the output files.
+  // Implicitly, the laste entry is '.*',
+]
+
+var srcGlob = [
   'src/**/*.js',
   // Ignore these groups of files:
   '!src/**/*_test.js',
@@ -50,7 +58,7 @@ gulp.task('test-watch', () => {
 // Compile the sources with the JS Compiler
 gulp.task('compile', () => {
   return gulp.src(srcGlob)
-    .pipe(packageReorder())
+    .pipe(packageReorder(ordering))
     .pipe(closureCompiler({
       compilerPath: './compiler-latest/compiler.jar',
       fileName: 'glift.js',
@@ -79,7 +87,7 @@ gulp.task('compile', () => {
 
 gulp.task('concat', () => {
   return gulp.src(srcGlob)
-    .pipe(packageReorder())
+    .pipe(packageReorder(ordering))
     .pipe(concat('glift_combined.js'))
     .pipe(size())
     .pipe(gulp.dest('./compiled/'))
@@ -88,7 +96,7 @@ gulp.task('concat', () => {
 // Update the HTML tests with the dev JS source files
 gulp.task('update-html-srcs-dev', () => {
   return gulp.src(srcGlob)
-    .pipe(packageReorder())
+    .pipe(packageReorder(ordering))
     .pipe(updateHtmlFiles({
       filesGlob: './src/htmltests/*.html',
       header: '<!-- AUTO-GEN-DEPS -->',
@@ -100,7 +108,7 @@ gulp.task('update-html-srcs-dev', () => {
 // Update the HTML tests with the test JS files
 gulp.task('update-html-tests', () => {
   return gulp.src(testGlob)
-    .pipe(packageReorder())
+    .pipe(packageReorder(ordering))
     .pipe(updateHtmlFiles({
       filesGlob: './src/htmltests/QunitTest.html',
       header: '<!-- AUTO-GEN-TESTS -->',
@@ -130,15 +138,17 @@ gulp.task('basicbuild', ['update-html-srcs-dev', 'update-html-tests', 'concat'])
 /**
  * Reorder so that the file with the same name as the package comes first.
  */
-function packageReorder(params) {
+function packageReorder(orderx) {
   var all = []
+  var orderx = (orderx || []).slice()
+  orderx = orderx.map((s) => new RegExp(s, 'g'))
   return through.obj(function(file, enc, cb) {
     all.push(file);
     cb();
   }, function(cb) {
     var tr = [];
     var dirMap = {};
-    var dirlist = []; // So we keep entries lexicographically sorted
+    var dirlist = []; // So we can order the directories.
     all.forEach((f) => {
       var fullpath = f.path;
       var ppath = path.parse(f.path);
@@ -155,7 +165,30 @@ function packageReorder(params) {
         dirMap[dir].push(f)
       }
     });
-    dirlist.forEach((dir) => {
+
+    // Do some nasty sorting to ensure the order is stable
+    var dirlistSorted = []
+    var processed = {}
+    for (var i = 0; i <= orderx.length; i++) {
+      var reg;
+      if (i === orderx.length) {
+        reg = /.*/;
+      } else {
+        reg = orderx[i];
+      }
+      var suborder = []
+      dirlist.forEach((d) => {
+        if (!processed[d] && reg.test(d)) {
+          suborder.push(d)
+          processed[d] = true;
+        } else {
+        }
+      })
+      suborder.sort()
+      dirlistSorted = dirlistSorted.concat(suborder);
+    }
+
+    dirlistSorted.forEach((dir) => {
       dirMap[dir].forEach((f) => {
         tr.push(f);
       });
@@ -199,7 +232,6 @@ function updateHtmlFiles(params) {
     })
 
     var text = tags.join('\n');
-    console.log(text);
 
     files.forEach((fname) => {
       gutil.log('Updating: ' + fname);

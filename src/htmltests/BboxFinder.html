@@ -35,6 +35,14 @@
 <script type="text/javascript" src="../api/options.js"></script>
 <script type="text/javascript" src="../api/sgf_options.js"></script>
 <script type="text/javascript" src="../api/stone_actions.js"></script>
+<!-- ../api/widgetopt sources -->
+<script type="text/javascript" src="../api/widgetopt/widgetopt.js"></script>
+<script type="text/javascript" src="../api/widgetopt/board_editor.js"></script>
+<script type="text/javascript" src="../api/widgetopt/correct_variations_problem.js"></script>
+<script type="text/javascript" src="../api/widgetopt/example_options.js"></script>
+<script type="text/javascript" src="../api/widgetopt/game_viewer.js"></script>
+<script type="text/javascript" src="../api/widgetopt/reduced_game_viewer.js"></script>
+<script type="text/javascript" src="../api/widgetopt/standard_problem.js"></script>
 <!-- ../controllers sources -->
 <script type="text/javascript" src="../controllers/controllers.js"></script>
 <script type="text/javascript" src="../controllers/base.js"></script>
@@ -50,6 +58,42 @@
 <script type="text/javascript" src="../displays/ids.js"></script>
 <script type="text/javascript" src="../displays/line_box.js"></script>
 <script type="text/javascript" src="../displays/resized_box.js"></script>
+<!-- ../displays/board sources -->
+<script type="text/javascript" src="../displays/board/board.js"></script>
+<script type="text/javascript" src="../displays/board/board_base.js"></script>
+<script type="text/javascript" src="../displays/board/board_labels.js"></script>
+<script type="text/javascript" src="../displays/board/buttons.js"></script>
+<script type="text/javascript" src="../displays/board/intersections.js"></script>
+<script type="text/javascript" src="../displays/board/lines.js"></script>
+<script type="text/javascript" src="../displays/board/marks.js"></script>
+<script type="text/javascript" src="../displays/board/starpoints.js"></script>
+<script type="text/javascript" src="../displays/board/stones.js"></script>
+<!-- ../displays/commentbox sources -->
+<script type="text/javascript" src="../displays/commentbox/commentbox.js"></script>
+<script type="text/javascript" src="../displays/commentbox/create.js"></script>
+<!-- ../displays/gui sources -->
+<script type="text/javascript" src="../displays/gui/gui.js"></script>
+<script type="text/javascript" src="../displays/gui/center.js"></script>
+<!-- ../displays/icons sources -->
+<script type="text/javascript" src="../displays/icons/icons.js"></script>
+<script type="text/javascript" src="../displays/icons/bar.js"></script>
+<script type="text/javascript" src="../displays/icons/icon_centering.js"></script>
+<script type="text/javascript" src="../displays/icons/icon_selector.js"></script>
+<script type="text/javascript" src="../displays/icons/svg.js"></script>
+<script type="text/javascript" src="../displays/icons/wrapped_icon.js"></script>
+<!-- ../displays/position sources -->
+<script type="text/javascript" src="../displays/position/position.js"></script>
+<script type="text/javascript" src="../displays/position/widget_boxes.js"></script>
+<script type="text/javascript" src="../displays/position/widget_positioner.js"></script>
+<!-- ../displays/statusbar sources -->
+<script type="text/javascript" src="../displays/statusbar/statusbar.js"></script>
+<script type="text/javascript" src="../displays/statusbar/fullscreen.js"></script>
+<script type="text/javascript" src="../displays/statusbar/gameinfo.js"></script>
+<script type="text/javascript" src="../displays/statusbar/info_window.js"></script>
+<!-- ../displays/svg sources -->
+<script type="text/javascript" src="../displays/svg/svg.js"></script>
+<script type="text/javascript" src="../displays/svg/pathutils.js"></script>
+<script type="text/javascript" src="../displays/svg/svgobj.js"></script>
 <!-- ../dom sources -->
 <script type="text/javascript" src="../dom/dom.js"></script>
 <script type="text/javascript" src="../dom/error.js"></script>
@@ -104,50 +148,6 @@
 <script type="text/javascript" src="../widgets/widgets.js"></script>
 <script type="text/javascript" src="../widgets/base_widget.js"></script>
 <script type="text/javascript" src="../widgets/manager.js"></script>
-<!-- ../api/widgetopt sources -->
-<script type="text/javascript" src="../api/widgetopt/widgetopt.js"></script>
-<script type="text/javascript" src="../api/widgetopt/board_editor.js"></script>
-<script type="text/javascript" src="../api/widgetopt/correct_variations_problem.js"></script>
-<script type="text/javascript" src="../api/widgetopt/example_options.js"></script>
-<script type="text/javascript" src="../api/widgetopt/game_viewer.js"></script>
-<script type="text/javascript" src="../api/widgetopt/reduced_game_viewer.js"></script>
-<script type="text/javascript" src="../api/widgetopt/standard_problem.js"></script>
-<!-- ../displays/board sources -->
-<script type="text/javascript" src="../displays/board/board.js"></script>
-<script type="text/javascript" src="../displays/board/board_base.js"></script>
-<script type="text/javascript" src="../displays/board/board_labels.js"></script>
-<script type="text/javascript" src="../displays/board/buttons.js"></script>
-<script type="text/javascript" src="../displays/board/intersections.js"></script>
-<script type="text/javascript" src="../displays/board/lines.js"></script>
-<script type="text/javascript" src="../displays/board/marks.js"></script>
-<script type="text/javascript" src="../displays/board/starpoints.js"></script>
-<script type="text/javascript" src="../displays/board/stones.js"></script>
-<!-- ../displays/commentbox sources -->
-<script type="text/javascript" src="../displays/commentbox/commentbox.js"></script>
-<script type="text/javascript" src="../displays/commentbox/create.js"></script>
-<!-- ../displays/gui sources -->
-<script type="text/javascript" src="../displays/gui/gui.js"></script>
-<script type="text/javascript" src="../displays/gui/center.js"></script>
-<!-- ../displays/icons sources -->
-<script type="text/javascript" src="../displays/icons/icons.js"></script>
-<script type="text/javascript" src="../displays/icons/bar.js"></script>
-<script type="text/javascript" src="../displays/icons/icon_centering.js"></script>
-<script type="text/javascript" src="../displays/icons/icon_selector.js"></script>
-<script type="text/javascript" src="../displays/icons/svg.js"></script>
-<script type="text/javascript" src="../displays/icons/wrapped_icon.js"></script>
-<!-- ../displays/position sources -->
-<script type="text/javascript" src="../displays/position/position.js"></script>
-<script type="text/javascript" src="../displays/position/widget_boxes.js"></script>
-<script type="text/javascript" src="../displays/position/widget_positioner.js"></script>
-<!-- ../displays/statusbar sources -->
-<script type="text/javascript" src="../displays/statusbar/statusbar.js"></script>
-<script type="text/javascript" src="../displays/statusbar/fullscreen.js"></script>
-<script type="text/javascript" src="../displays/statusbar/gameinfo.js"></script>
-<script type="text/javascript" src="../displays/statusbar/info_window.js"></script>
-<!-- ../displays/svg sources -->
-<script type="text/javascript" src="../displays/svg/svg.js"></script>
-<script type="text/javascript" src="../displays/svg/pathutils.js"></script>
-<script type="text/javascript" src="../displays/svg/svgobj.js"></script>
 <!-- END-AUTO-GEN-DEPS -->
 
 <body>
