@@ -945,7 +945,7 @@ glift.util.point = function(x, y) {
 
 /**
  * @param {number} x
- * @param {number} y
+ * @param {Object} y
  * return {!glift.PtStr}
  */
 glift.util.coordToString = function(x, y) {

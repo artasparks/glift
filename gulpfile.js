@@ -48,19 +48,21 @@ var testGlob = ['src/**/*_test.js']
 // - Recreates the concat-target
 // - Runs all the tests
 // - Compiles with JSCompiler + TypeChecking
-gulp.task('build-test', ['basicbuild', 'compile', 'test'])
+gulp.task('build-test', ['concat', 'compile', 'test'])
 
-// A watcher for the the full build-test cycle.
-gulp.task('build-test-watch', () => {
-  gulp.watch(source , ['build-test'] );
-})
-
-gulp.task('test', () => {
+gulp.task('test', ['update-html-tests', 'update-html-srcs'], () => {
   return gulp.src('./src/htmltests/QunitTest.html').pipe(qunit())
 });
 
+gulp.task('test-simple', () => {
+  return gulp.src('./src/htmltests/QunitTest.html').pipe(qunit())
+});
+
+// A watcher for the the full build-test cycle.
 gulp.task('test-watch', () => {
-  gulp.watch(source , ['test'] );
+  return gulp.watch([
+    'src/**/*.js',
+    'src/**/*_test.js'], ['test'] );
 });
 
 // Compile the sources with the JS Compiler
@@ -125,7 +127,7 @@ gulp.task('concat', () => {
 })
 
 // Update the HTML tests with the dev JS source files
-gulp.task('update-html-srcs-dev', () => {
+gulp.task('update-html-srcs', () => {
   return gulp.src(srcGlob)
     .pipe(packageReorder(ordering))
     .pipe(updateHtmlFiles({
@@ -158,9 +160,6 @@ gulp.task('update-html-compiled', () => {
       dirHeader: '<!-- %s sources -->',
     }))
 });
-
-// Gulp task for the purpose of chaining.
-gulp.task('basicbuild', ['update-html-srcs-dev', 'update-html-tests', 'concat'])
 
 /////////////////////////////////////////////////
 /////////////// Library Functions ///////////////
@@ -270,7 +269,6 @@ function updateHtmlFiles(params) {
     var text = tags.join('\n');
 
     files.forEach((fname) => {
-      gutil.log('Updating: ' + fname);
       var contents = fs.readFileSync(fname, {encoding: 'UTF-8'})
       var replaced = contents.replace(regexp, '$1\n' + text + '\n$3')
       fs.writeFileSync(fname, replaced)
