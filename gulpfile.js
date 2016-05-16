@@ -27,38 +27,27 @@ var srcGlob = [
 
 var testGlob = ['src/**/*_test.js']
 
-// Note: The 
-gulp.task('build', ['update-html-srcs-dev', 'update-html-tests', 'concat'])
+// The full build-test cycle. This
+// - Updates all the HTML files
+// - Recreates the concat-target
+// - Runs all the tests
+// - Compiles with the
+gulp.task('build-test', ['basicbuild', 'compile', 'test'])
 
-gulp.task('build-test', ['build', 'compile', 'test'])
-
-gulp.task('test', () => {
-  return gulp.src('./src/htmltests/QunitTest.html')
-      .pipe(qunit())
-});
-
-gulp.task('update-html-srcs-dev', () => {
-  return gulp.src(srcGlob)
-    .pipe(packageReorder())
-    .pipe(updateHtmlFiles({
-      filesGlob: './src/htmltests/*.html',
-      header: '<!-- AUTO-GEN-DEPS -->',
-      footer: '<!-- END-AUTO-GEN-DEPS -->',
-      dirHeader: '<!-- %s sources -->',
-    }))
-});
-
-gulp.task('update-html-tests', () => {
-  return gulp.src(testGlob)
-    .pipe(packageReorder())
-    .pipe(updateHtmlFiles({
-      filesGlob: './src/htmltests/QunitTest.html',
-      header: '<!-- AUTO-GEN-TESTS -->',
-      footer: '<!-- END-AUTO-GEN-TESTS -->',
-      dirHeader: '<!-- %s tests -->',
-    }))
+// A watcher for the the full build-test cycle.
+gulp.task('build-test-watch', () => {
+  gulp.watch(source , ['build-test'] );
 })
 
+gulp.task('test', () => {
+  return gulp.src('./src/htmltests/QunitTest.html').pipe(qunit())
+});
+
+gulp.task('test-watch', () => {
+  gulp.watch(source , ['test'] );
+});
+
+// Compile the sources with the JS Compiler
 gulp.task('compile', () => {
   return gulp.src(srcGlob)
     .pipe(packageReorder())
@@ -96,9 +85,43 @@ gulp.task('concat', () => {
     .pipe(gulp.dest('./compiled/'))
 })
 
-gulp.task('test-watch', () => {
-  gulp.watch(source , ['test'] );
+// Update the HTML tests with the dev JS source files
+gulp.task('update-html-srcs-dev', () => {
+  return gulp.src(srcGlob)
+    .pipe(packageReorder())
+    .pipe(updateHtmlFiles({
+      filesGlob: './src/htmltests/*.html',
+      header: '<!-- AUTO-GEN-DEPS -->',
+      footer: '<!-- END-AUTO-GEN-DEPS -->',
+      dirHeader: '<!-- %s sources -->',
+    }))
 });
+
+// Update the HTML tests with the test JS files
+gulp.task('update-html-tests', () => {
+  return gulp.src(testGlob)
+    .pipe(packageReorder())
+    .pipe(updateHtmlFiles({
+      filesGlob: './src/htmltests/QunitTest.html',
+      header: '<!-- AUTO-GEN-TESTS -->',
+      footer: '<!-- END-AUTO-GEN-TESTS -->',
+      dirHeader: '<!-- %s tests -->',
+    }))
+})
+
+// Update the HTML tests with the compiled glift.
+gulp.task('update-html-compiled', () => {
+  return gulp.src('./compiled/glift.js')
+    .pipe(updateHtmlFiles({
+      filesGlob: './src/htmltests/*.html',
+      header: '<!-- AUTO-GEN-DEPS -->',
+      footer: '<!-- END-AUTO-GEN-DEPS -->',
+      dirHeader: '<!-- %s sources -->',
+    }))
+});
+
+// Gulp task for the purpose of chaining.
+gulp.task('basicbuild', ['update-html-srcs-dev', 'update-html-tests', 'concat'])
 
 /////////////// Library Functions ///////////////
 
@@ -115,12 +138,14 @@ function packageReorder(params) {
   }, function(cb) {
     var tr = [];
     var dirMap = {};
+    var dirlist = []; // So we keep entries lexicographically sorted
     all.forEach((f) => {
       var fullpath = f.path;
       var ppath = path.parse(f.path);
       var dir = ppath.dir;
       if (!dirMap[dir]) {
         dirMap[dir] = [];
+        dirlist.push(dir);
       }
       var splat = ppath.dir.split(path.sep)
       var last = splat[splat.length - 1]
@@ -130,11 +155,11 @@ function packageReorder(params) {
         dirMap[dir].push(f)
       }
     });
-    for (var dir in dirMap) {
+    dirlist.forEach((dir) => {
       dirMap[dir].forEach((f) => {
         tr.push(f);
       });
-    }
+    })
     tr.forEach((f) => {
       this.push(f);
     });
@@ -151,6 +176,7 @@ function updateHtmlFiles(params) {
   var dirHeader = params.dirHeader;
   var all = [];
   var template = params.template || '<script type="text/javascript" src="%s"></script>';
+
   return through.obj(function(file, enc, cb) {
     all.push(file);
     cb();
@@ -164,9 +190,7 @@ function updateHtmlFiles(params) {
 
       var dir = path.dirname(f.path)
       if (dir !== lastdir) {
-        var splat = dir.split(path.sep)
-        var last = splat[splat.length - 1]
-        tags.push(dirHeader.replace('%s', last))
+        tags.push(dirHeader.replace('%s', path.relative(htmldir, dir)))
         lastdir = dir
       }
 
@@ -175,6 +199,7 @@ function updateHtmlFiles(params) {
     })
 
     var text = tags.join('\n');
+    console.log(text);
 
     files.forEach((fname) => {
       gutil.log('Updating: ' + fname);
