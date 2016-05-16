@@ -93,8 +93,6 @@ Glift uses Glup and Nodejs. Before you begin, make sure you've installed:
 * [Nodejs (LTS)](https://nodejs.org/en/)
 * [Gulp](https://github.com/gulpjs/gulp/blob/master/docs/getting-started.md)
 * [Java](https://java.com/en/download/) - For using the JSCompiler
-* [Python 2.7](https://www.python.org/) - For the legacy depgen.py script. This
-  should be going away in the relatively near future.
 
 #### Gulp Instructions
 
@@ -108,7 +106,7 @@ This will create the necessary `node_modules` directory, which should be ignored
 
 **Running Tests**
 
-There are several ways to run the qunit tests. To run the QUnit Tests via gulp:
+There are several ways to run the qunit tests. To simply run the QUnit Tests via gulp:
 
 ```shell
 gulp test
@@ -116,23 +114,19 @@ gulp test
 
 Or, you can just open `src/htmltests/QunitTest.html` in a browser and run the tests there (it's bit faster).
 
-#### Legacy Depgen.py Instructions
+**Compilation**
 
-If you're planning on making deep changes to Glift, it may help to look [this
-infrastructure
-diagram](https://docs.google.com/drawings/d/1MQK8xWe7djaSJtXPffinfRcwdsA859S_uVI8YqOYKhk/edit).
+To compile the JavaScript, run:
 
-For depgen.py to work, you'll need to have java and python installed.
+```shell
+gulp compile
+```
 
-To update the HTML tests for development, run:
+**Automated Build+Testing**
 
-   * `src/depgen.py devel`
+To both build *and* run the tests, run:
+```shell
+gulp build-test
+```
 
-To generate the compiled JS and update the HTML tests, run;
-
-   * `src/depgen.py compile`
-
-To generate the concatenated JS and update the HTML tests, run;
-
-   * `src/depgen.py concat`
-
+This is the command run by the Travis continuous integration suite.

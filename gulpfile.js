@@ -31,6 +31,7 @@ var ordering = [
   // Implicitly, the last entry is '.',
 ]
 
+// The glob used for determining sources.
 var srcGlob = [
   'src/**/*.js',
   // Ignore these groups of files:
@@ -39,13 +40,14 @@ var srcGlob = [
   '!src/libs/*',
   '!src/testdata/*']
 
+// The glob used for determining tests
 var testGlob = ['src/**/*_test.js']
 
-// The full build-test cycle. This
+// The full build-test cycle. This:
 // - Updates all the HTML files
 // - Recreates the concat-target
 // - Runs all the tests
-// - Compiles with the
+// - Compiles with JSCompiler + TypeChecking
 gulp.task('build-test', ['basicbuild', 'compile', 'test'])
 
 // A watcher for the the full build-test cycle.
@@ -69,7 +71,24 @@ gulp.task('compile', () => {
       compilerPath: './compiler-latest/compiler.jar',
       fileName: 'glift.js',
       compilerFlags: {
+        // TODO(kashomon): Turn on ADVANCED_OPTIMIZATIONS when all the right
+        // functions have been marked @export, where appropriate
+        // compilation_level: 'ADVANCED_OPTIMIZATIONS',
+        //
         language_in: 'ECMASCRIPT5',
+        // Note that warning_level=VERBOSE corresponds to:
+        //
+        // --jscomp_warning=checkTypes
+        // --jscomp_error=checkVars
+        // --jscomp_warning=deprecated
+        // --jscomp_error=duplicate
+        // --jscomp_warning=globalThis
+        // --jscomp_warning=missingProperties
+        // --jscomp_warning=undefinedNames
+        // --jscomp_error=undefinedVars
+        //
+        // Do some advanced Javascript checks.
+        // https://github.com/google/closure-compiler/wiki/Warnings
         jscomp_error: [
           'accessControls',
           'checkRegExp',
@@ -84,6 +103,12 @@ gulp.task('compile', () => {
           'checkTypes',
           'missingProperties',
           'accessControls'
+          // We don't turn requires into Errors, because the closure compiler
+          // reorders the sources based on the requires.
+          // 'missingRequire',
+
+          // TODO(kashomon): Turn on global this checking
+          // 'globalThis',
         ]
       }
     }))
@@ -137,9 +162,13 @@ gulp.task('update-html-compiled', () => {
 // Gulp task for the purpose of chaining.
 gulp.task('basicbuild', ['update-html-srcs-dev', 'update-html-tests', 'concat'])
 
+/////////////////////////////////////////////////
 /////////////// Library Functions ///////////////
-
-// TODO(kashomon): Make a node library out of these?
+/////////////////////////////////////////////////
+//
+// Beware! Below lie demons unvanquished.
+//
+// TODO(kashomon): Move these to a node library for sharing with GPub?
 
 /**
  * Reorder so that the file with the same name as the package comes first.
