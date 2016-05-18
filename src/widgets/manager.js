@@ -73,7 +73,7 @@ glift.widgets.WidgetManager = function(options) {
    * Cache of SGFs.  Useful for reducing the number AJAX calls.
    * Map from SGF name to String contents.
    *
-   * @type {!Object<string>}
+   * @type {!Object<string, string>}
    */
   this.sgfCache = options.sgfMapping;
 
@@ -153,6 +153,7 @@ glift.widgets.WidgetManager.prototype = {
   /**
    * Creates a BaseWidget instance, and calls draw on the base widget.
    * @return {!glift.widgets.WidgetManager} The manager object.
+   * @export
    */
   draw: function() {
     var that = this;
@@ -160,10 +161,10 @@ glift.widgets.WidgetManager.prototype = {
       if (!this.initBackgroundLoading && this.loadColInBack) {
         // Only start background loading once.
         this.initBackgroundLoading = true;
-        this.backgroundLoad();
+        this.backgroundLoad_();
       }
       var curObj = this.getCurrentSgfObj();
-      this.loadSgfString(curObj, function(sgfObj) {
+      this.loadSgfString_(curObj, function(sgfObj) {
         // Prevent flickering by destroying the widget after loading the SGF.
         this.destroy();
         this.currentWidget = this.createWidget(sgfObj).draw();
@@ -182,17 +183,28 @@ glift.widgets.WidgetManager.prototype = {
     return this;
   },
 
-  /** Redraws the current widget. */
+  /**
+   * Redraws the current widget.
+   * @export
+   */
   redraw: function() {
-    if (this.getCurrentWidget()) {
-      this.getCurrentWidget().redraw();
+    var widget = this.getCurrentWidget()
+    if (widget) {
+      widget.redraw();
     }
   },
 
-  /** Set as the active widget in the global registry. */
+  /**
+   * Set as the active widget in the global registry. Used from icons-land
+   * @export
+   */
   setActive: function() { glift.global.activeInstanceId = this.id; },
 
-  /** Gets the current widget object. */
+  /**
+   * Gets the current (active) widget object or undefined if the widget hasn't
+   * been created.
+   * @return {!glift.widgets.BaseWidget|undefined}
+   */
   getCurrentWidget: function() {
     if (this.temporaryWidget) {
       return this.temporaryWidget;
@@ -299,12 +311,14 @@ glift.widgets.WidgetManager.prototype = {
   },
 
   /**
-   * Get the SGF string.  Since these can be loaded with ajax, the data needs to
-   * be returned with a callback.
+   * Gets the SGF Object loaded with the SGF string. Since these can be loaded
+   * with an XHR request, the data needs to be returned with a callback.
    *
-   * sgfObj: A standard SGF Object.
+   * @param {!glift.api.SgfOptions} sgfObj
+   * @param {!function(glift.api.SgfOptions)} callback
+   * @private
    */
-  loadSgfString: function(sgfObj, callback) {
+  loadSgfString_: function(sgfObj, callback) {
     var alias = sgfObj.alias;
     var url = sgfObj.url;
     if (alias && this.sgfCache[alias]) {
@@ -336,9 +350,14 @@ glift.widgets.WidgetManager.prototype = {
    * Like the above function, but doesn't do XHR -- returns the input SGF object
    * if no SGF exists in the sgf cache. Convenient for contexts where you are
    * certain that the SGF has already been loaded.
+   *
+   * As a historical note, this was created for GPub, which has an interesting
+   * usecase where all SGFs are guaranteed to be in the cache.
+   *
    * @param {!glift.api.SgfOptions} sgfObj
    * @return {!glift.api.SgfOptions} Now we ensure that the SGF object has the
    *    sgf finished.
+   * @export
    */
   loadSgfStringSync: function(sgfObj) {
     var alias = sgfObj.alias;
@@ -357,7 +376,8 @@ glift.widgets.WidgetManager.prototype = {
   },
 
   /**
-   * Get the currentDivId. This is only interesting because the 
+   * Get the currentDivId. This is only interesting because it's possible for
+   * the current div ID to be the fullscreened div id.
    * @return {string}
    */
   getDivId: function() {
@@ -374,6 +394,7 @@ glift.widgets.WidgetManager.prototype = {
    * @param {!glift.api.SgfOptions} sgfObj
    * @return {!glift.widgets.BaseWidget} The construct widget. Note: at this
    *    point, the widget has not yet been 'drawn'.
+   * @export
    */
   createWidget: function(sgfObj) {
     return new glift.widgets.BaseWidget(
@@ -382,8 +403,9 @@ glift.widgets.WidgetManager.prototype = {
   },
 
   /**
-   * Temporarily replace the current widget with another widget.  Used in the
-   * case of the PROBLEM_SOLUTION_VIEWER.
+   * Temporarily replace the current widget with another widget. Used in the
+   * case of the problem viewer. The use case is that it's often useful to, once
+   * you want to see an answer, you jump to a separate game viewer widget.
    * @param {!glift.api.SgfOptions} sgfObj
    */
   createTemporaryWidget: function(sgfObj) {
@@ -392,7 +414,9 @@ glift.widgets.WidgetManager.prototype = {
     this.temporaryWidget = this.createWidget(obj).draw();
   },
 
-  /** Returns from the temporary widget to the original widget. */
+  /**
+   * Returns from the temporary widget to the original widget.
+   */
   returnToOriginalWidget: function() {
     this.temporaryWidget && this.temporaryWidget.destroy();
     this.temporaryWidget = undefined;
@@ -422,10 +446,18 @@ glift.widgets.WidgetManager.prototype = {
     this.draw();
   },
 
-  /** Get the next SGF.  Requires that the list be non-empty. */
+  /**
+   * Load the next SGF. Requires that the collection list be non-empty. Note
+   * that this returns nothing since it simply changes which SGF is 'active' and
+   * then redraws the widget.
+   * @export
+   */
   nextSgf: function() { this.nextSgfInternal_(1); },
 
-  /** Get the next SGF.  Requires that the list be non-empty. */
+  /**
+   * Very similar to nextSgf. Load the previous SGF.
+   * @export
+   */
   prevSgf: function() { this.nextSgfInternal_(-1); },
 
   /**
@@ -447,12 +479,13 @@ glift.widgets.WidgetManager.prototype = {
   /**
    * Load the SGFs in the background.  Try once every 250ms until we get to the
    * end of the SGF collection.
+   * @private
    */
-  backgroundLoad: function() {
+  backgroundLoad_: function() {
     var loader = function(idx) {
       if (idx < this.sgfCollection.length) {
         var curObj = this.getSgfObj(idx);
-        this.loadSgfString(curObj, function() {
+        this.loadSgfString_(curObj, function() {
           setTimeout(function() {
             loader(idx + 1);
           }.bind(this), 250); // 250ms
@@ -465,24 +498,42 @@ glift.widgets.WidgetManager.prototype = {
   /**
    * Whether or not the widget is currently fullscreened.
    * @return {boolean}
+   * @export
    */
   isFullscreen: function() {
     return !!this.fullscreenDivId;
   },
 
-  /** Enable auto-resizing of the glift instance. */
+  /**
+   * Enable auto-resizing of the glift instance, but only in the case that the
+   * widget is already fullscreened. This is not meant generally as an API, but
+   * is public since it's called from statusbar/fullscreen.js
+   *
+   * Note: this isn't generally meant as an API since because currently,
+   * this only works for one Glift instance, since it binds event function to
+   * window.onresize.
+   * @export
+   */
   enableFullscreenAutoResize: function() {
+    // It might be tempting to write check if we're fullscreened, but currently
+    // the enableFullscreenAutoResize is called after widget destruction.
     if (window.onresize) { this.oldWindowResize = window.onresize; }
     window.onresize = function() { this.redraw(); }.bind(this);
   },
 
-  /** Disable auto-resizing of the glift instance. */
+  /**
+   * Disable auto-resizing of the glift instance. Called from the status bar.
+   * @export
+   */
   disableFullscreenAutoResize: function() {
     window.onresize = this.oldWindowResize;
     this.oldWindowResize = null;
   },
 
-  /** Undraw the most recent widget and remove references to it. */
+  /**
+   * Undraw the most recent widget and remove references to it.
+   * @export
+   */
   destroy: function() {
     this.currentWidget && this.currentWidget.destroy();
     this.currentWidget = undefined;

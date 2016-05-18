@@ -65,6 +65,13 @@ gulp.task('test-watch', () => {
     'src/**/*_test.js'], ['test'] );
 });
 
+// A simpler watcher that just updates the 
+gulp.task('update-html-watch', () => {
+  return gulp.watch([
+    'src/**/*.js',
+    'src/**/*_test.js'], ['update-html-tests', 'update-html-srcs'] );
+})
+
 // Compile the sources with the JS Compiler
 gulp.task('compile', () => {
   return gulp.src(srcGlob)

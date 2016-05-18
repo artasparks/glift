@@ -109,7 +109,7 @@
       }
     });
     deepEqual(mgr.sgfCache['zed'], testSgf);
-    mgr.loadSgfString(mgr.getSgfObj(0), function(obj) {
+    mgr.loadSgfString_(mgr.getSgfObj(0), function(obj) {
       deepEqual(obj.sgfString, testSgf);
     });
   })
