@@ -112,7 +112,11 @@ There are several ways to run the qunit tests. To simply run the QUnit Tests via
 gulp test
 ```
 
-Or, you can just open `src/htmltests/QunitTest.html` in a browser and run the tests there (it's bit faster).
+Or, once you've run `gulp test` or `gulp update-html-srcs` you can just open
+`src/htmltests_gen/QunitTest.html` in a browser and run the tests there (it's
+bit faster). Running the aformentioned commands dynamically inserts the sources
+into the HTML test templates in the `src/htmltests` directory and outputs the
+templated files to `htmltests_gen`.
 
 **Compilation**
 

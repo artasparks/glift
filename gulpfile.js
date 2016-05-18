@@ -51,11 +51,11 @@ var testGlob = ['src/**/*_test.js']
 gulp.task('build-test', ['concat', 'compile', 'test'])
 
 gulp.task('test', ['update-html-tests', 'update-html-srcs'], () => {
-  return gulp.src('./src/htmltests/QunitTest.html').pipe(qunit())
+  return gulp.src('./src/htmltests_gen/QunitTest.html').pipe(qunit())
 });
 
 gulp.task('test-simple', () => {
-  return gulp.src('./src/htmltests/QunitTest.html').pipe(qunit())
+  return gulp.src('./src/htmltests_gen/QunitTest.html').pipe(qunit())
 });
 
 // A watcher for the the full build-test cycle.
@@ -132,6 +132,7 @@ gulp.task('update-html-srcs', () => {
     .pipe(packageReorder(ordering))
     .pipe(updateHtmlFiles({
       filesGlob: './src/htmltests/*.html',
+      outDir: './src/htmltests_gen/',
       header: '<!-- AUTO-GEN-DEPS -->',
       footer: '<!-- END-AUTO-GEN-DEPS -->',
       dirHeader: '<!-- %s sources -->',
@@ -144,6 +145,7 @@ gulp.task('update-html-tests', () => {
     .pipe(packageReorder())
     .pipe(updateHtmlFiles({
       filesGlob: './src/htmltests/QunitTest.html',
+      outDir: './src/htmltests_gen/',
       header: '<!-- AUTO-GEN-TESTS -->',
       footer: '<!-- END-AUTO-GEN-TESTS -->',
       dirHeader: '<!-- %s tests -->',
@@ -155,6 +157,7 @@ gulp.task('update-html-compiled', () => {
   return gulp.src('./compiled/glift.js')
     .pipe(updateHtmlFiles({
       filesGlob: './src/htmltests/*.html',
+      outDir: './src/htmltests_gen/',
       header: '<!-- AUTO-GEN-DEPS -->',
       footer: '<!-- END-AUTO-GEN-DEPS -->',
       dirHeader: '<!-- %s sources -->',
@@ -240,6 +243,7 @@ function updateHtmlFiles(params) {
   var header = params.header;
   var footer = params.footer;
   var regexp = new RegExp(`(${header})(.|\n)*(${footer})`, 'g')
+  var outDir = params.outDir;
 
   var dirHeader = params.dirHeader;
   var all = [];
@@ -268,10 +272,23 @@ function updateHtmlFiles(params) {
 
     var text = tags.join('\n');
 
+    if (!fs.existsSync(outDir)){
+      fs.mkdirSync(outDir);
+    }
+
     files.forEach((fname) => {
-      var contents = fs.readFileSync(fname, {encoding: 'UTF-8'})
+      var parsedPath = path.parse(fname)
+      var outPath = path.join(outDir, parsedPath.base)
+      if (!fs.existsSync(outPath)) {
+        // First we write the template files.
+        var contents = fs.readFileSync(fname, {encoding: 'UTF-8'})
+        fs.writeFileSync(outPath, contents)
+      }
+      // Then, read from the newly-written file and overwrite the template
+      // sections.
+      var contents = fs.readFileSync(outPath, {encoding: 'UTF-8'})
       var replaced = contents.replace(regexp, '$1\n' + text + '\n$3')
-      fs.writeFileSync(fname, replaced)
+      fs.writeFileSync(outPath, replaced)
     });
 
     cb();
