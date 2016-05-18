@@ -101,23 +101,20 @@ gulp.task('compile', () => {
         jscomp_error: [
           'accessControls',
           'checkRegExp',
-          'constantProperty',
-          'const',
-          'missingProvide',
-          'checkVars',
-          'duplicate',
-          'undefinedVars',
-          'undefinedNames',
-          'deprecated',
           'checkTypes',
+          'checkVars',
+          'const',
+          'constantProperty',
+          'deprecated',
+          'duplicate',
           'missingProperties',
-          'accessControls'
+          'missingProvide',
+          'undefinedNames',
+          'undefinedVars',
+          'globalThis',
           // We don't turn requires into Errors, because the closure compiler
           // reorders the sources based on the requires.
           // 'missingRequire',
-
-          // TODO(kashomon): Turn on global this checking
-          // 'globalThis',
         ]
       }
     }))

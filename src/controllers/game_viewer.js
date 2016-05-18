@@ -1,3 +1,7 @@
+goog.provide('glift.controllers.GameViewer');
+
+goog.require('glift.controllers.BaseController');
+
 /**
  * A GameViewer encapsulates the idea of traversing a read-only SGF.
  *
@@ -7,12 +11,21 @@ glift.controllers.gameViewer = function(sgfOptions) {
   var ctrl = glift.controllers;
   var baseController = glift.util.beget(ctrl.base());
   var newController = glift.util.setMethods(baseController,
-      ctrl.GameViewerMethods);
+      ctrl.GameViewer.prototype);
   newController.initOptions(sgfOptions);
   return newController;
 };
 
-glift.controllers.GameViewerMethods = {
+/**
+ * Stub class to be used for inheritance.
+ *
+ * @extends {glift.controllers.BaseController}
+ * @constructor
+ */
+glift.controllers.GameViewer = function() {
+};
+
+glift.controllers.GameViewer.prototype = {
   /**
    * Called during initOptions, in the BaseController.
    *
@@ -47,12 +60,12 @@ glift.controllers.GameViewerMethods = {
    * Returns null in the case that we're at the root already.
    */
   previousCommentOrBranch: function(maxMovesPrevious) {
-    var displayDataList = []; // TODO(kashomon): Merge this together?
+    var displayDataList = [];
     var displayData = null;
     var movesSeen = 0;
     do {
       displayData = this.prevMove();
-      var comment = this.movetree.properties().getOneValue('C');
+      var comment = this.movetree.properties().getComment();
       var numChildern = this.movetree.node().numChildren();
       movesSeen++;
       if (maxMovesPrevious && movesSeen === maxMovesPrevious) {
@@ -78,7 +91,7 @@ glift.controllers.GameViewerMethods = {
     var movesSeen = 0;
     do {
       displayData = this.nextMove();
-      var comment = this.movetree.properties().getOneValue('C');
+      var comment = this.movetree.properties().getComment();
       var numChildern = this.movetree.node().numChildren();
       movesSeen++;
       if (maxMovesNext && movesSeen === maxMovesNext) {

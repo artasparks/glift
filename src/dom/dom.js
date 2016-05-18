@@ -85,7 +85,7 @@ glift.dom = {
    * @return {!glift.dom.Element} A new absolutely positioned div.
    */
   absBboxDiv: function(bbox, id) {
-    var newDiv  = this.newDiv(id);
+    var newDiv  = glift.dom.newDiv(id);
     var cssObj = {
       position: 'absolute',
       margin: '0px',

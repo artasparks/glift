@@ -46,7 +46,7 @@ glift.flattener.intersection = {
       baseSymb = sym.RIGHT_EDGE;
     } else if (pt.y() === intz) {
       baseSymb = sym.BOT_EDGE;
-    } else if (this.isStarpoint_(pt, maxInts)) {
+    } else if (glift.flattener.intersection.isStarpoint_(pt, maxInts)) {
       baseSymb = sym.CENTER_STARPOINT;
     } else {
       baseSymb = sym.CENTER;
