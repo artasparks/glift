@@ -107,11 +107,13 @@ gulp.task('compile', () => {
           'constantProperty',
           'deprecated',
           'duplicate',
+          'globalThis',
           'missingProperties',
           'missingProvide',
+          'missingReturn',
           'undefinedNames',
           'undefinedVars',
-          'globalThis',
+          'visibility',
           // We don't turn requires into Errors, because the closure compiler
           // reorders the sources based on the requires.
           // 'missingRequire',
