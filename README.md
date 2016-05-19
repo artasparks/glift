@@ -102,7 +102,7 @@ Glift uses Glup and Nodejs. Before you begin, make sure you've installed:
 npm install
 ```
 
-This will create the necessary `node_modules` directory, which should be ignored via the `.gitigonre`
+This will create the necessary `node_modules` directory, which should be ignored via the `.gitignore`
 
 **Running Tests**
 
