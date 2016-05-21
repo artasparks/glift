@@ -13,31 +13,23 @@ var gulp = require('gulp'),
     fs = require('fs'),
     path = require('path');
 
-// Force an ordering on the package structure. It would be nice to use
-// gulp-ordering and get ride of the packageReorder function, but that would
-// require changing the way namespaces are created.
-var ordering = [
+// The glob used for determining sources.
+var srcGlob = [
   // Top level source package must go first since it defines the namespace
-  '.*/src$',
-  // I'm not entirely sure why, but util must go first. Probably due to some
-  // faulty name-space aliasing.
-  '.*/util$',
+  'src/*.js',
+  // Enums are depended on directly by lots of other packages.
+  'src/util/*.js',
   // The widgetopt dir depends *directly* on the controllers. Yuck. These need
   // to be refactored, probably by putting the widget options directly in the
   // controller dirs.
-  '.*/controllers$',
-  // For most packages it doesn't matter. However, to prevent commit thrashing
-  // in the HTML tests, we sort the output files.
-  // Implicitly, the last entry is '.',
-]
-
-// The glob used for determining sources.
-var srcGlob = [
+  'src/controllers/*.js',
+  // Everything else is in a semi-lexicographical order (but it's not
+  // guaranteed).
   'src/**/*.js',
   // Ignore these groups of files:
   '!src/**/*_test.js',
   '!src/htmltests/*',
-  '!src/libs/*',
+  '!src/libs/*', // Qunit, Raphael
   '!src/testdata/*']
 
 // The glob used for determining tests
@@ -75,7 +67,7 @@ gulp.task('update-html-watch', () => {
 // Compile the sources with the JS Compiler
 gulp.task('compile', () => {
   return gulp.src(srcGlob)
-    .pipe(packageReorder(ordering))
+    .pipe(packageReorder())
     .pipe(closureCompiler({
       compilerPath: './compiler-latest/compiler.jar',
       fileName: 'glift.js',
@@ -126,7 +118,7 @@ gulp.task('compile', () => {
 
 gulp.task('concat', () => {
   return gulp.src(srcGlob)
-    .pipe(packageReorder(ordering))
+    .pipe(packageReorder())
     .pipe(concat('glift_combined.js'))
     .pipe(size())
     .pipe(gulp.dest('./compiled/'))
@@ -135,7 +127,7 @@ gulp.task('concat', () => {
 // Update the HTML tests with the dev JS source files
 gulp.task('update-html-srcs', () => {
   return gulp.src(srcGlob)
-    .pipe(packageReorder(ordering))
+    .pipe(packageReorder())
     .pipe(updateHtmlFiles({
       filesGlob: './src/htmltests/*.html',
       outDir: './src/htmltests_gen/',
@@ -179,12 +171,31 @@ gulp.task('update-html-compiled', () => {
 // TODO(kashomon): Move these to a node library for sharing with GPub?
 
 /**
- * Reorder so that the file with the same name as the package comes first.
+ * Reorder so that the file with the same name as the package comes first. The
+ * idea is that the file with the same name as the directory defines the
+ * namespace. This, of course, enforces a java-like style of defining
+ * namespaces, but it's at least easy to understand at a large scale because the
+ * directory structure represents the package structure.
+ *
+ * I.e., If there are two directories
+ *
+ * foo/
+ *    fib.js
+ *    fob.js
+ *    foo.js
+ * bar/
+ *    blah.js
+ *    bar.js
+ *    zed.js
+ *
+ * This will get reordered to
+ *
+ * foo/ -> [foo.js, fib.js, fob.js]
+ * bar/ -> [bar.js, blah.js, zed.js]
+ *
  */
-function packageReorder(orderx) {
+function packageReorder() {
   var all = []
-  var orderx = (orderx || []).slice()
-  orderx = orderx.map((s) => new RegExp(s))
   return through.obj(function(file, enc, cb) {
     all.push(file);
     cb();
@@ -203,36 +214,16 @@ function packageReorder(orderx) {
       var splat = ppath.dir.split(path.sep)
       var last = splat[splat.length - 1]
       if (last === ppath.name) {
+        // If the file is the directory name + .js, then it's the namespace file
+        // and we bump it to teh top.
         dirMap[dir].unshift(f)
       } else {
+        // otherwise, just stuff it on the end =)
         dirMap[dir].push(f)
       }
     });
 
-    // Based on the ordering array passed in, group the directories togther and
-    // do sorting based on the groupings.
-    var dirlistSorted = []
-    var processed = {}
-    for (var i = 0; i <= orderx.length; i++) {
-      var reg;
-      if (i === orderx.length) {
-        reg = /.*/;
-      } else {
-        reg = orderx[i];
-      }
-      var suborder = []
-      dirlist.forEach((d) => {
-        if (!processed[d] && reg.test(d)) {
-          suborder.push(d)
-          processed[d] = true;
-        } else {
-        }
-      })
-      suborder.sort()
-      dirlistSorted = dirlistSorted.concat(suborder);
-    }
-
-    dirlistSorted.forEach((dir) => {
+    dirlist.forEach((dir) => {
       dirMap[dir].forEach((f) => {
         tr.push(f);
       });
