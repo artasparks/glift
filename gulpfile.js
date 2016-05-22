@@ -235,6 +235,23 @@ function packageReorder() {
   });
 };
 
+
+/**
+ * A function to update the HTML files. The idea is that updateHtmlFiles takes a
+ * glob of files and treats them as templates. It goes through and add
+ * sources to these files then outputs them to  the specified outDir
+ *
+ * @param {string} filesGlob The glob of html files.
+ * @param {string} header The header marker to indicate where to dump the JS
+ *    sources.
+ * @param {string} footer The footer marker to indicate where to dump the JS
+ *    sources.
+ * @param {string} outDir the output dir for the templated files.
+ * @param {string} template the template to use.
+ *
+ * @return an object stream
+ * Note: this gets the 'srcs' as part of the Vinyl file stream.
+ */
 function updateHtmlFiles(params) {
   var files = nglob.sync(params.filesGlob);
   var header = params.header;
