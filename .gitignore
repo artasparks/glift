@@ -6,7 +6,9 @@ src/htmltests_gen/*
 .DS_STORE
 *.swp
 *.swo
-README.md.html
 *.sublime-project
 *.sublime-workspace
 node_modules
+
+# For testing Markdown
+README.md.html 

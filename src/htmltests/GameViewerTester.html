@@ -13,9 +13,6 @@
         padding: 0;
       }
       #glift_display1 {
-        height:500px;
-        width:100%;
-        position:relative;
       }
       p {
         margin: 10px;
@@ -48,7 +45,9 @@
               goBoardBackground: '../themes/assets/bambootile_warm.jpg',
               drawBoardCoords: true,
               useMarkdown: true,
-              disableZoomForMobile: true
+              disableZoomForMobile: true,
+              minHeight: '500px',
+              minWidth: '200px',
             }
           });
           window.onresize = function() {

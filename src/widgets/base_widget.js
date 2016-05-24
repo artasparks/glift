@@ -29,7 +29,7 @@ glift.widgets.BaseWidget = function(
   /** @type {!glift.api.SgfOptions} */
   this.sgfOptions = sgfOptions;
 
-  /** @type {!glift.api.IconActions} */
+  /** @type {!glift.api.DisplayOptions} */
   this.displayOptions = displayOptions;
 
   /** @type {!glift.api.IconActions} */
@@ -224,7 +224,9 @@ glift.widgets.BaseWidget.prototype = {
 
   /**
    * Create an internal wrapper div to contain the whole go board. This sets
-   * position relative on the internal div.
+   * position relative on the internal div. Also, sets the minHeight and
+   * minWidth if it exists.
+   *
    * @private
    */
   createInternalWrapperDiv_: function() {
@@ -234,6 +236,13 @@ glift.widgets.BaseWidget.prototype = {
       width: '100%',
       position: 'relative'
     };
+    if (this.displayOptions.minHeight) {
+      cssObj['min-height'] = this.displayOptions.minHeight;
+    }
+    if (this.displayOptions.minWidth) {
+      cssObj['min-width'] = this.displayOptions.minWidth;
+    }
+
     wrapDiv.css(cssObj);
     glift.dom.elem(this.wrapperDivId).append(wrapDiv);
   },

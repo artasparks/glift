@@ -134,3 +134,19 @@ gulp build-test
 ```
 
 This is the command run by the Travis continuous integration suite.
+
+####  Editing documentation
+
+If you find yourself editing the Markdown docs, I use the node script [Markdown
+Preview](https://www.npmjs.com/package/markdown-preview). It's then used via the
+following:
+
+```shell
+markdown-preview [options] <filename>
+```
+
+or in Vim:
+
+```vimscript
+au Filetype markdown command! PrevMarkdown !markdown-preiew %
+```

@@ -54,6 +54,29 @@ glift.api.DisplayOptions = function(opt_o) {
   this.drawBoardCoords = !!o.drawBoardCoords || false;
 
   /**
+   * The minimum height that Glift will use for the display. In otherwords,
+   * force the enclosing div to have at least this height. Note that users must
+   * supply the units. Ex: 500px
+   *
+   * api:1.0
+   *
+   * @type {string}
+   * @const
+   */
+  this.minHeight = o.minHeight || '';
+
+  /**
+   * Similar to the above, the minimum widththat Glift will use for the display.
+   * As with height, users must specify the units. (Ex: 500px).
+   * api:1.0
+   *
+   * @type {string}
+   * @const
+   */
+  this.minWidth = o.minWidth || '';
+
+
+  /**
    * Split percentages to use for a one-column widget format.
    *
    * @type {!Object}
