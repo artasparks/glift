@@ -54,19 +54,4 @@
         ['ai:2', 'aj:3'], 'variation comments');
     ok(true);
   });
-
-  test('Testing clear numbers', function() {
-    var sgf = "(;GM[1];B[aa]LB[aa:1]C[Foo];LB[ab:A]" +
-        "W[ab];B[ac];W[ad];B[ae];W[af]C[BAR]" +
-        "(;B[ag]C[Biff];W[ah];B[ai];W[aj])" +
-        "(;B[ah]C[Blarg];W[ai];B[aj]C[Flag];W[ak]))";
-    var mt = glift.rules.movetree.getFromSgf(sgf, []);
-    ok(mt != undefined);
-    glift.rules.clearnumbers(mt);
-    mt.moveDown();
-    ok(!mt.properties().contains('LB'));
-    mt.moveDown();
-    deepEqual(mt.properties().getOneValue('W'), 'ab');
-    deepEqual(mt.properties().getOneValue('LB'), 'ab:A');
-  });
 })();

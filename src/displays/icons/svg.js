@@ -309,7 +309,6 @@ glift.displays.icons.svg = {
   // Misc Helpers //
   //////////////////
 
-  // TODO(kashomon): Use for overflow indicator.
   simpletriangleup: {
     string: "M256,77.599 L462,434.4 L50,434.4Z",
     bbox:{"x":50,"y":77.599,"x2":462,"y2":434.4,"width":412,"height":356.801} 

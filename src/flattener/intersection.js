@@ -70,7 +70,6 @@ glift.flattener.intersection = {
     return intsect;
   },
 
-  // TODO(kashomon): Should arbitrary sized go boards be supported?
   _starPointSets: {
     9 : [{4:true}],
     13 : [{3:true, 9:true}, {6:true}],

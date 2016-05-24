@@ -106,34 +106,3 @@ glift.rules.removeCollidingLabels = function(mt, lblMap) {
     }
   }
 };
-
-/**
- * Clear any number-labels at all nodes in the movetree.
- *
- * @param {!glift.rules.MoveTree} movetree
- */
-// TODO(kashomon): Remove? This looks unused.
-glift.rules.clearnumbers = function(movetree) {
-  var digitregex = /\d+/;
-  movetree.recurseFromRoot(function(mt) {
-    // Clear all numeric labels
-    if (!mt.properties().contains(glift.rules.prop.LB)) {
-      return; // no labels to clear;
-    }
-    var labels = mt.properties().getAllValues(glift.rules.prop.LB);
-    var newLbls = [];
-    for (var i = 0; labels && i < labels.length; i++) {
-      var lblData = labels[i].split(':')
-      if (digitregex.test(lblData[1])) {
-        // Clear out digits
-      } else {
-        newLbls.push(labels[i]);
-      }
-    }
-    if (newLbls.length === 0) {
-      mt.properties().remove(glift.rules.prop.LB);
-    } else {
-      mt.properties().set(glift.rules.prop.LB, newLbls);
-    }
-  });
-};
