@@ -174,7 +174,8 @@ glift.api.Options = function(opt_o) {
   this.display = new glift.api.DisplayOptions(o.display);
 
   /**
-   * Default actions for stones.
+   * Default actions for stones. These are then used for defaults when the
+   * SgfOptions are instantiated.
    * api:1.0
    *
    * @type {!glift.api.StoneActions}
@@ -188,6 +189,7 @@ glift.api.Options = function(opt_o) {
    * @type {!glift.api.IconActions}
    */
   this.iconActions = o.iconActions || {};
+
   for (var iconName in glift.api.iconActionDefaults) {
     if (!this.iconActions[iconName]) {
       this.iconActions[iconName] = glift.api.iconActionDefaults[iconName];

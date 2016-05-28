@@ -3,13 +3,11 @@
   var divId = 'zed';
   var defaultSgfOptions = new glift.api.SgfOptions();
   var manager = glift.api.createNoDraw(defaultSgfOptions);
-  var baseWidget = manager.createWidget(defaultSgfOptions);
 
   test('Create widget', function() {
+    var baseWidget = manager.createWidget(defaultSgfOptions);
     ok(baseWidget, 'must be defined');
-  });
 
-  test('Get UI components', function() {
     var uic = glift.enums.boardComponents;
     var comp = baseWidget.getUiComponents_(defaultSgfOptions)
     deepEqual(defaultSgfOptions.uiComponents, [

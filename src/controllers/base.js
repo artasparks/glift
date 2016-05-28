@@ -108,6 +108,13 @@ glift.controllers.BaseController = function() {
   this.goban = glift.rules.goban.getInstance(1);
 
   /**
+   * Initialize a dummy hooks instance and override during initOptions.
+   *
+   * @package {!glift.api.HookOptions}
+   */
+  this.hooks = new glift.api.HookOptions();
+
+  /**
    * The history of the captures so we can go backwards in time.
    * @package {!Array<!glift.rules.CaptureResult>}
    */
@@ -151,6 +158,7 @@ glift.controllers.BaseController.prototype = {
     this.rawInitialPosition = sgfOptions.initialPosition || [];
     this.parseType = sgfOptions.parseType || glift.parse.parseType.SGF;
     this.problemConditions = sgfOptions.problemConditions || {};
+    this.hooks = sgfOptions.hooks || this.hooks;
 
     // A controller may not be the best place for these next few, since they're
     // display only; However, this is currenly the best place to put these since
@@ -183,16 +191,17 @@ glift.controllers.BaseController.prototype = {
     var initTreepath = opt_treepath || this.rawInitialPosition;
     this.treepath = rules.treepath.parseInitialPath(initTreepath);
 
-    this.movetree = rules.movetree.getFromSgf(
-        this.sgfString, this.treepath, this.parseType);
+    this.hooks.beforeParse(this.sgfString, function(str) {
+        this.movetree = rules.movetree.getFromSgf(str, this.treepath, this.parseType);
+        var gobanData = rules.goban.getFromMoveTree(
+            /** @type {!glift.rules.MoveTree} */ (this.movetree), this.treepath);
 
-    var gobanData = rules.goban.getFromMoveTree(
-        /** @type {!glift.rules.MoveTree} */ (this.movetree), this.treepath);
+        this.goban = gobanData.goban;
+        this.captureHistory = gobanData.captures;
+        this.clearHistory = gobanData.clearHistory;
+        this.extraOptions(); // Overridden by implementers
 
-    this.goban = gobanData.goban;
-    this.captureHistory = gobanData.captures;
-    this.clearHistory = gobanData.clearHistory;
-    this.extraOptions(); // Overridden by implementers
+    }.bind(this));
     return this;
   },
 

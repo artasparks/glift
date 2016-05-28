@@ -42,7 +42,7 @@ glift.api.SgfOptions = function(opt_o) {
 
   /**
    * A literal SGF String. This is often overwritten when the SGF String is
-   * retrived via an AJAX call and so thus cannot be const.
+   * retrived via an AJAX call and so thus **cannot be const**.
    *
    * @type {string|undefined}
    */
@@ -53,8 +53,7 @@ glift.api.SgfOptions = function(opt_o) {
    * cached to speed recall time.
    * api:1.0
    *
-   * @type {string|undefined}
-   * @const
+   * @const {string|undefined}
    */
   this.url = o.url !== undefined ? o.url : undefined;
 
@@ -65,8 +64,7 @@ glift.api.SgfOptions = function(opt_o) {
    * Note: If this feature is used, the SGF should be supplied in a SGF Mapping.
    * api:experimental
    *
-   * @type {string|undefined}
-   * @const
+   * @const {string|undefined}
    */
   this.alias = o.alias !== undefined ? o.alias : undefined;
 
@@ -77,9 +75,7 @@ glift.api.SgfOptions = function(opt_o) {
    *  PANDANET
    *
    * api:beta
-   *
-   * @type {glift.parse.parseType}
-   * @const
+   * @const {glift.parse.parseType}
    */
   this.parseType = o.parseType || glift.parse.parseType.SGF;
 
@@ -88,8 +84,7 @@ glift.api.SgfOptions = function(opt_o) {
    *
    * api:1.0
    *
-   * @type {glift.enums.widgetTypes}
-   * @const
+   * @const {glift.enums.widgetTypes}
    */
   this.widgetType = o.widgetType || glift.enums.widgetTypes.GAME_VIEWER;
 
@@ -106,15 +101,11 @@ glift.api.SgfOptions = function(opt_o) {
    * 3         - Start at the 3rd move, going through all the top variations
    * 2.0       - Start at the 3rd move, going through all the top variations
    * 0.0.0.0   - Start at the 3rd move, going through all the top variations
-   * 2.3-4.1   - Start at the 1st variation of the 4th move, arrived at by
-   *             traveling through the 3rd varition on the 2nd move
    * 0+        - Go to the end of the game
    * 2.3+      - Start at the 3rd variation on move 2, and go to the end
    *
    * api:1.0
-   *
-   * @type {string|!Array<number>}
-   * @const
+   * @const {string|!Array<number>}
    */
   this.initialPosition = o.initialPosition || '';
 
@@ -140,9 +131,7 @@ glift.api.SgfOptions = function(opt_o) {
    *  2-3
    *
    * api:1.1
-   *
-   * @type {string|!Array<number>}
-   * @const
+   * @const {string|!Array<number>}
    */
   this.nextMovesPath = o.nextMovesPath || '';
 
@@ -151,9 +140,7 @@ glift.api.SgfOptions = function(opt_o) {
    * to 'AUTO'.
    *
    * api:1.0
-   *
-   * @type {glift.enums.boardRegions}
-   * @const
+   * @const {glift.enums.boardRegions}
    */
   this.boardRegion = o.boardRegion || glift.enums.boardRegions.AUTO;
 
@@ -162,9 +149,7 @@ glift.api.SgfOptions = function(opt_o) {
    * NO_ROTATION, CLOCKWISE_90, CLOCKWISE_180, CLOCKWISE_270, or undefined;
    *
    * api:beta
-   *
-   * @type {glift.enums.rotations}
-   * @const
+   * @const {glift.enums.rotations}
    */
   this.rotation = o.rotation || glift.enums.rotations.NO_ROTATION;
 
@@ -172,9 +157,7 @@ glift.api.SgfOptions = function(opt_o) {
    * The UI Components to use for this display.
    *
    * api:1.0
-   *
-   * @type {!Array<glift.enums.boardComponents>}
-   * @const
+   * @const {!Array<glift.enums.boardComponents>}
    */
   this.uiComponents = o.uiComponents || [
     glift.enums.boardComponents.BOARD,
@@ -186,24 +169,23 @@ glift.api.SgfOptions = function(opt_o) {
   /**
    * Convenience variables for disabling ui components.
    *
-   * api:experimental
-   * @type {boolean}
-   * @const
+   * api:1.0
+   * @const {boolean}
    */
   this.disableStatusBar = !!o.disableStatusBar || false;
   /**
-   * @type {boolean}
-   * @const
+   * api:1.0
+   * @const {boolean}
    */
   this.disableBoard = !!o.disableBoard || false;
   /**
-   * @type {boolean}
-   * @const
+   * api:1.0
+   * @const {boolean}
    */
   this.disableCommentBox = !!o.disableCommentBox || false;
   /**
-   * @type {boolean}
-   * @const
+   * api:1.0
+   * @const {boolean}
    */
   this.disableIconBar = !!o.disableIconBar || false;
 
@@ -214,8 +196,7 @@ glift.api.SgfOptions = function(opt_o) {
    *
    * api:experimental
    *
-   * @type {!Object|undefined}
-   * @const
+   * @const {!Object|undefined}
    */
   this.metadata = o.metadata || undefined;
 
@@ -226,8 +207,8 @@ glift.api.SgfOptions = function(opt_o) {
    *
    * Should be overridden by the widget options.
    *
-   * @type {number|undefined}
-   * @const
+   * api:experimental
+   * @const {number|undefined}
    */
   this.correctVariationsResetTime =
       o.correctVariationsResetTime !== undefined ?
@@ -238,8 +219,8 @@ glift.api.SgfOptions = function(opt_o) {
    * that a user must get correct. Currently only applies to
    * CORRECT_VARIATIONS_PROBLEM.
    *
-   * @type {number|undefined}
-   * @const
+   * api:experimental
+   * @const {number|undefined}
    */
   this.totalCorrectVariationsOverride =
       o.totalCorrectVariationsOverride || undefined;
@@ -248,10 +229,18 @@ glift.api.SgfOptions = function(opt_o) {
    * Whether or not to mark ko locations.  Either true or false, but
    * defaults to true.
    *
-   * @type {boolean}
-   * @const
+   * api:1.0
+   * @const {boolean}
    */
   this.markKo = o.markKo !== undefined ? !!o.markKo: true;
+
+  /**
+   * Hook options for SGFs.
+   *
+   * api:experimental
+   * @const {!glift.api.HookOptions}
+   */
+  this.hooks = new glift.api.HookOptions(o.hooks);
 
   //-------------------------------------------------------------------------
   // These options must always be overriden by the widget type overrides.
@@ -277,9 +266,7 @@ glift.api.SgfOptions = function(opt_o) {
    * ],
    *
    * api:1.0
-   *
-   * @type {!Array<string>|undefined}
-   * @const
+   * @const {!Array<string>|undefined}
    */
   this.statusBarIcons = o.statusBarIcons || undefined;
 
@@ -289,9 +276,7 @@ glift.api.SgfOptions = function(opt_o) {
    * See glift.keyMappings
    *
    * api:beta
-   *
-   * @type {!Object<string>}
-   * @const
+   * @const {!Object<string>}
    */
   this.keyMappings = o.keyMappings || {
     ARROW_LEFT: 'iconActions.chevron-left.click',
@@ -308,9 +293,7 @@ glift.api.SgfOptions = function(opt_o) {
    * property containing 'Correct' or 'is correct'.
    *
    * api:1.0
-   *
-   * @type {!glift.rules.ProblemConditions}
-   * @const
+   * @const {!glift.rules.ProblemConditions}
    */
   this.problemConditions = o.problemConditions || {
     GB: [],
@@ -321,8 +304,8 @@ glift.api.SgfOptions = function(opt_o) {
    * Whether or not to show variations.  See glift.enums.showVariations
    * Values: NEVER, ALWAYS, MORE_THAN_ONE
    *
-   * @type {glift.enums.showVariations}
-   * @const
+   * api:1.0
+   * @const {glift.enums.showVariations}
    */
   this.showVariations = o.showVariations ||
       glift.enums.showVariations.MORE_THAN_ONE;
@@ -331,8 +314,7 @@ glift.api.SgfOptions = function(opt_o) {
    * Whether or not to mark the last move played.  Either true or false, but
    * defaults to true.
    *
-   * @type {boolean}
-   * @const
+   * @const {boolean}
    */
   this.markLastMove = o.markLastMove !== undefined ? !!o.markLastMove : true;
 
@@ -340,8 +322,8 @@ glift.api.SgfOptions = function(opt_o) {
   /**
    * Whether or not to enable the mousewheel for game viewing. Scrolling up
    * advances the game and scrolling down goes backwards.
-   * @type {boolean}
-   * @const
+   *
+   * @const {boolean}
    */
   this.enableMousewheel = o.enableMousewheel || false;
 
@@ -350,9 +332,7 @@ glift.api.SgfOptions = function(opt_o) {
    * See glift.controllers for more detail
    *
    * api:1.0
-   *
-   * @type {!glift.controllers.ControllerFunc|undefined}
-   * @const
+   * @const {!glift.controllers.ControllerFunc|undefined}
    */
   this.controllerFunc = o.controllerFunc || undefined;
 
@@ -361,9 +341,7 @@ glift.api.SgfOptions = function(opt_o) {
    * icon-names, which must be spceified in glift.displays.icons.svg.
    *
    * api:1.0
-   *
-   * @type {!Array<string>|undefined}
-   * @const
+   * @const {!Array<string>|undefined}
    */
   this.icons = o.icons || undefined;
 
@@ -371,21 +349,18 @@ glift.api.SgfOptions = function(opt_o) {
    * The action that is performed when a sure clicks on an intersection.
    *
    * api:1.0
-   *
-   * @type {!glift.api.StoneFn|undefined}
-   * @const
+   * @const {!glift.api.StoneFn|undefined}
    */
   this.stoneClick = o.stoneClick || undefined;
 
   /**
    * Mouseover/mouseout override for stones.
-   * @type {!glift.api.StoneFn}
-   * @const
+   * @const {!glift.api.StoneFn}
    */
   this.stoneMouseover = o.stoneMouseover || undefined;
+
   /**
-   * @type {!glift.api.StoneFn}
-   * @const
+   * @const {!glift.api.StoneFn}
    */
   this.stoneMouseout = o.stoneMouseout || undefined;
 };

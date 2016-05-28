@@ -42,7 +42,7 @@ glift.widgets.BaseWidget = function(
   this.manager = manager;
 
   /** @type {!glift.api.HookOptions} */
-  this.externalHooks = hooks;
+  this.externalHooks_ = hooks;
 
   // These variables are initialized by draw
   this.controller = undefined;
@@ -422,7 +422,7 @@ glift.widgets.BaseWidget.prototype = {
    * @return {!glift.api.HookOptions} the hooks.
    */
   hooks: function() {
-    return this.externalHooks;
+    return this.externalHooks_;
   },
 
   /**
