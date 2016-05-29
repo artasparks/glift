@@ -41,7 +41,7 @@ glift.controllers.GameViewer.prototype = {
    * Returns null if the addStone operation isn't possible.
    */
   addStone: function(point, color) {
-    var possibleMap = this._possibleNextMoves();
+    var possibleMap = this.possibleNextMoves_();
     var key = point.toString() + '-' + color;
     if (possibleMap[key] === undefined) {
       return null;
@@ -127,8 +127,10 @@ glift.controllers.GameViewer.prototype = {
    * Implemented as a map from point-string+color to variationNumber:
    *  e.g., pt-BLACK : 1.  For pass, we use 'PASS' as the point string.  This is
    *  sort of a hack and should maybe be rethought.
+   *
+   * @private
    */
-  _possibleNextMoves: function() {
+  possibleNextMoves_: function() {
     var possibleMap = {};
     var nextMoves = this.movetree.nextMoves();
     for (var i = 0; i < nextMoves.length; i++) {

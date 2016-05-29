@@ -200,7 +200,6 @@ glift.controllers.BaseController.prototype = {
         this.captureHistory = gobanData.captures;
         this.clearHistory = gobanData.clearHistory;
         this.extraOptions(); // Overridden by implementers
-
     }.bind(this));
     return this;
   },
@@ -524,15 +523,11 @@ glift.controllers.BaseController.prototype = {
   /**
    * Back out a movetree addition (used for going back a move).
    *
-   * Recall that stones and captures both have the form:
-   *  { BLACK: [..move..], WHITE: [..move..] };
-   *
    * @param {!glift.rules.MoveCollection} stones
    * @param {!glift.rules.CaptureResult} captures
    *
    * @private
    */
-  // TODO(kashomon): Add testing for this.
   unloadStonesFromGoban_: function(stones, captures) {
     for (var color in stones) {
       var c = /** @type {glift.enums.states} */ (color);

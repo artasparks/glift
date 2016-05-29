@@ -26,6 +26,7 @@
         glift.enums.rotations.NO_ROTATION, 'rotation');
     deepEqual(display.drawBoardCoords(), false, 'draw board coords');
     testUtil.assertFullDiv('glift_display')
+
     display.destroy();
     testUtil.assertEmptyDiv('glift_display')
   });

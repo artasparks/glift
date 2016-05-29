@@ -1,17 +1,17 @@
-goog.provide('glift.rules.CaptureResult');
 goog.provide('glift.rules.Goban');
 goog.provide('glift.rules.StoneResult');
 goog.provide('glift.rules.goban');
 goog.provide('glift.rules.ConnectedGroup');
+goog.provide('glift.rules.CaptureResult');
 
 /**
  * Result of a Capture
  *
  * @typedef {{
- *   WHITE: !Array<!glift.rules.Move>,
- *   BLACK: !Array<!glift.rules.Move>
+ *   WHITE: !Array<!glift.Point>,
+ *   BLACK: !Array<!glift.Point>
  * }}
- */
+*/
 glift.rules.CaptureResult;
 
 glift.rules.goban = {

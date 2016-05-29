@@ -121,4 +121,28 @@
       WHITE: 1
     });
   });
+
+  test('Unload stones from goban', function() {
+    var base = glift.controllers.base().initOptions({
+        sgfString: '(;AB[ba][ab][bc][ac]AW[bb][cc]'
+            + ';B[cb])'
+    });
+    var pt = glift.util.point;
+    var states = glift.enums.states;
+    var stones = {
+      WHITE: [{point: pt(1,1), color: states.WHITE}],
+      BLACK: [{point: pt(1,0), color: states.BLACK}],
+    };
+    var captureResult = {
+      WHITE: [pt(6,6)],
+      BLACK: [pt(6,7)],
+    }
+    base.unloadStonesFromGoban_(stones, captureResult);
+
+    var goban = base.goban;
+    deepEqual(goban.getStone(pt(1,1)), states.EMPTY);
+    deepEqual(goban.getStone(pt(1,0)), states.EMPTY);
+    deepEqual(goban.getStone(pt(6,6)), states.WHITE);
+    deepEqual(goban.getStone(pt(6,7)), states.BLACK);
+  });
 })();
