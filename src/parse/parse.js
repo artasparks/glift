@@ -46,8 +46,9 @@ glift.parse = {
    * Transforms a stringified game-file into a movetree.
    *
    * @param {string} str Raw contents that need to be parsed.
-   * @param {glift.parse.parseType=} opt_ttype The parse type.
-   * @return {!glift.rules.MoveTree}
+   * @param {glift.parse.parseType=} opt_ttype The parse type. Defaults to SGF
+   *    if unspecified.
+   * @return {!glift.rules.MoveTree} The generated movetree
    */
   fromString: function(str, opt_ttype) {
     var ttype = opt_ttype || glift.parse.parseType.SGF;

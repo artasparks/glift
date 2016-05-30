@@ -191,16 +191,14 @@ glift.controllers.BaseController.prototype = {
     var initTreepath = opt_treepath || this.rawInitialPosition;
     this.treepath = rules.treepath.parseInitialPath(initTreepath);
 
-    this.hooks.beforeParse(this.sgfString, function(str) {
-        this.movetree = rules.movetree.getFromSgf(str, this.treepath, this.parseType);
-        var gobanData = rules.goban.getFromMoveTree(
-            /** @type {!glift.rules.MoveTree} */ (this.movetree), this.treepath);
+    this.movetree = rules.movetree.getFromSgf(this.sgfString, this.treepath, this.parseType);
+    var gobanData = rules.goban.getFromMoveTree(
+        /** @type {!glift.rules.MoveTree} */ (this.movetree), this.treepath);
 
-        this.goban = gobanData.goban;
-        this.captureHistory = gobanData.captures;
-        this.clearHistory = gobanData.clearHistory;
-        this.extraOptions(); // Overridden by implementers
-    }.bind(this));
+    this.goban = gobanData.goban;
+    this.captureHistory = gobanData.captures;
+    this.clearHistory = gobanData.clearHistory;
+    this.extraOptions(); // Overridden by implementers
     return this;
   },
 
