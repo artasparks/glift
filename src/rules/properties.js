@@ -533,34 +533,6 @@ glift.rules.Properties.prototype = {
   },
 
   /**
-   * Get all display intersections. Equivalent to calling getAllStones and
-   * getAllMarks and merging the result. Note that the points are segregated by
-   * category:
-   *
-   * {
-   *  BLACK: [...],
-   *  WHITE: [...],
-   *  LABEL: [...],
-   *  SQUARE: [...],
-   * }
-   *
-   * Note that the marks could (and usually will) overlap with the stones, so
-   * duplicate points need to be accounted for.
-   */
-  getAllDisplayPts: function() {
-    var marks = this.getAllMarks();
-    var stones = this.getAllStones();
-    var out = {};
-    for (var key in marks) {
-      out[key] = marks[key];
-    }
-    for (var key in stones) {
-      out[key] = stones[key];
-    }
-    return out;
-  },
-
-  /**
    * Get the game info key-value pairs. Ex:
    * [{
    *  prop: GN

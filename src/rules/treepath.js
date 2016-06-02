@@ -100,7 +100,7 @@ glift.rules.AppliedTreepath;
  * the first variation." This is implemented with a by appending 500 0s to the
  * path array.  This is a hack, but in practice games don't go over 500 moves.
  *
- * Obsolete syntax (no longer works)
+ * Obsolete syntax:
  *    2.3-4.1 becomes [0,0,3,0,1]
  */
 glift.rules.treepath = {
