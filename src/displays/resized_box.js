@@ -3,9 +3,10 @@
  * the minimum of height and width, makes a box out of this value, and centers
  * the box.
  *
- * @param {glift.orientation.BoundingBox} divBox
- * @param {glift.displays.DisplayCropBox} cropbox
+ * @param {!glift.orientation.BoundingBox} divBox
+ * @param {!glift.displays.DisplayCropBox} cropbox
  * @param {glift.enums.boardAlignments=} opt_alignment
+ * @return {!glift.orientation.BoundingBox} The new bounding box.
  */
 glift.displays.getResizedBox = function(divBox, cropbox, opt_alignment) {
   var aligns = glift.enums.boardAlignments;
@@ -36,7 +37,8 @@ glift.displays.getResizedBox = function(divBox, cropbox, opt_alignment) {
  *
  * @param {number} width
  * @param {number} height
- * @param {glift.displays.DisplayCropBox} cropbox.
+ * @param {!glift.displays.DisplayCropBox} cropbox.
+ * @return {{height: number, width: number}}
  */
 glift.displays.getCropDimensions = function(width, height, cropbox) {
   var origRatio = height / width,

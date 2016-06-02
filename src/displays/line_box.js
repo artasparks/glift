@@ -1,6 +1,8 @@
 goog.provide('glift.displays.LineBox');
 
 /**
+ * @param {!glift.orientation.BoundingBox} boardBox
+ * @param {!glift.displays.DisplayCropBox} cropbox
  * @return {!glift.displays.LineBox} The constructed LineBox.
  */
 glift.displays.getLineBox = function(boardBox, cropbox) {
@@ -29,19 +31,30 @@ glift.displays.getLineBox = function(boardBox, cropbox) {
 /**
  * Container for information relating to line-boxes.
  *
- * @constructor
- * @final
- * @struct
+ * @param {!glift.orientation.BoundingBox} boundingBox
+ * @param {number} spacing
+ * @param {!glift.displays.DisplayCropBox} cropbox
+ *
+ * @constructor @final @struct
  */
 glift.displays.LineBox = function(boundingBox, spacing, cropbox) {
+  /** @const {!glift.orientation.BoundingBox} */
   this.bbox = boundingBox;
+  /** @const {number} */
   this.spacing = spacing;
+  /** @const {number} */
   this.topExt = cropbox.topExt();
+  /** @const {number} */
   this.botExt = cropbox.botExt();
+  /** @const {number} */
   this.leftExt = cropbox.leftExt();
+  /** @const {number} */
   this.rightExt = cropbox.rightExt();
 
+  /** @const {!glift.Point} */
   this.pointTopLeft = cropbox.cbox().bbox.topLeft();
+  /** @const {number} */
   this.xPoints = cropbox.xPoints();
+  /** @const {number} */
   this.yPoints = cropbox.yPoints();
 };

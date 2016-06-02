@@ -1,17 +1,40 @@
 goog.provide('glift.displays.boardPoints');
 goog.provide('glift.displays.BoardPoints');
+goog.provide('glift.displays.BoardPt');
 
 /**
+ * A collection of values indicating in intersection  on the board. The intPt is
+ * the standard (0-18,0-18) point indexed from the upper left. The coordPt is
+ * the float point in pixel space. Lastly, each intersection on the board 'owns'
+ * an area of space, indicated by the bounding box.
+ *
  * @typedef {{
- *  intPt: glift.Point,
- *  coordPt: glift.Point,
- *  bbox: glift.orientation.BoundingBox
+ *  intPt: !glift.Point,
+ *  coordPt: !glift.Point,
+ *  bbox: !glift.orientation.BoundingBox
  * }}
  */
 glift.displays.BoardPt;
 
 /**
+ * A label on the edge of the board, for when the draw board coordinates option
+ * is set.
+ *
+ * @typedef {{
+ *  label: string,
+ *  coordPt: !glift.Point
+ * }}
+ */
+glift.displays.EdgeLabel;
+
+/**
  * Construct the board points from a linebox.
+ *
+ * @param {!glift.displays.LineBox} linebox
+ * @param {number} maxIntersects
+ * @param {boolean} drawBoardCoords
+ *
+ * @return {!glift.displays.BoardPoints}
  */
 glift.displays.boardPoints = function(
     linebox, maxIntersects, drawBoardCoords) {
@@ -27,9 +50,11 @@ glift.displays.boardPoints = function(
       top = linebbox.top() + topExtAmt,
       leftPt = linebox.pointTopLeft.x(),
       topPt = linebox.pointTopLeft.y(),
-      // Mapping from int point string, e.g., '0,18', to coordinate data.
+      /** @const {!Object<!glift.PtStr, !glift.displays.BoardPt>} */
       points = {},
+      // Note: Convention is to leave off the I coordinate.
       xCoordLabels = 'ABCDEFGHJKLMNOPQRSTUVWXYZ',
+      /** @const {!Array<!glift.displays.EdgeLabel>} */
       edgeCoords = [];
 
   for (var i = 0; i <= linebox.yPoints; i++) {
@@ -40,6 +65,8 @@ glift.displays.boardPoints = function(
       var coordPt = glift.util.point(xCoord, yCoord);
 
       if (drawBoardCoords) {
+        // If drawBoardCoords is activated, then there is a phantom 'coordinate'
+        // surrounding all the normal points.
         if ((i === 0 || i === linebox.yPoints) &&
             (j === 0 || j === linebox.xPoints)) {
           // Discard corner points
@@ -63,7 +90,7 @@ glift.displays.boardPoints = function(
           }
           edgeCoords.push({
             // Flip the actual label around the x-axis.
-            label: Math.abs(intPt.y() - maxIntersects) + 1,
+            label: (Math.abs(intPt.y() - maxIntersects) + 1) + '',
             coordPt: coordPt
           });
         } else {
@@ -106,18 +133,28 @@ glift.displays.boardPoints = function(
  *  - stone shadows
  *  - button bounding box.
  *
- *  Note: The integer points are 0 Indexed.
+ * @param {!Object<!glift.PtStr, !glift.displays.BoardPt>} points
+ * @param {number} spacing
+ * @param {number} numIntersections
+ * @param {!Array<glift.displays.EdgeLabel>} edgeLabels
  *
  * @constructor @final @struct
  */
 glift.displays.BoardPoints = function(
     points, spacing, numIntersections, edgeLabels) {
-  this.points = points; // string map 
+  /** @const {!Object<!glift.PtStr, !glift.displays.BoardPt>} */
+  this.points = points;
+  /** @const {number} */
   this.spacing = spacing;
+  /** @const {number} */
   this.radius = spacing / 2;
-  this.numIntersections = numIntersections; // 1 indexed (1->19)
+  /** @const {number} */
+  this.numIntersections = numIntersections;
+  /** @const {!Array<!glift.displays.EdgeLabel>} */
   this.edgeCoordLabels = edgeLabels;
-  this.dataCache = undefined;
+
+  /** @private {!Array<glift.displays.BoardPt>|undefined} */
+  this.dataCache_ = undefined;
 };
 
 glift.displays.BoardPoints.prototype = {
@@ -126,46 +163,32 @@ glift.displays.BoardPoints.prototype = {
    * points are 0 indexed, i.e., 0->18 for a 19x19.  Recall that board points
    * from the the top left (0,0) to the bottom right (18, 18).
    *
-   * Ex. :  (0,2) =>
-   *  {
-   *    intPt: (0,2),
-   *    coordPt: (12.2, 34.2),
-   *    ...
-   *  }
+   * @return {!glift.displays.BoardPt}
    */
   getCoord: function(pt) {
     return this.points[pt.toString()];
   },
 
   /**
-   * Traverse over all the points. The order in which the points are traversed
-   * is not guaranteed.
-   */
-  forEach: function(func) {
-    for (var key in this.points) {
-      func(this.points[key]);
-    }
-  },
-
-  /**
-   * Return the points as an array.
+   * Return all the points as an array.
+   * @return {!Array<!glift.displays.BoardPt>}
    */
   data: function() {
-    if (this.dataCache !== undefined) {
-      return this.dataCache;
+    if (this.dataCache_ !== undefined) {
+      return this.dataCache_;
     }
     var data = [];
-    this.forEach(function(point) {
-      data.push(point);
-    });
-    this.dataCache = data;
+    for (var key in this.points) {
+      data.push(this.points[key] );
+    }
+    this.dataCache_ = data;
     return data;
   },
 
   /**
    * Test whether an integer point exists in the points map.
-   * TODO(kashomon): Rename.  This is not apt since it confuses the idea of
-   * integer points and float coordinates.
+   * @param {!glift.Point} pt
+   * @return {boolean}
    */
   hasCoord: function(pt) {
     return this.points[pt.toString()] !== undefined;
@@ -175,6 +198,8 @@ glift.displays.BoardPoints.prototype = {
    * Return an array on integer points (0-indexed), used to indicate where star
    * points should go. Ex. [(3,3), (3,9), (3,15), ...].  This only returns the
    * points that are actually present in the points mapping.
+   *
+   * @return {!Array<!glift.Point>}
    */
   starPoints: function() {
     var point = glift.util.point,
