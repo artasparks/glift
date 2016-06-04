@@ -7,19 +7,20 @@
  * --------------------------------------
  */
 
+
+(function(w) {
 // Define some closure primitives for compatibility with dev mode. Closure
 // compiler works off of regular expressions, so this shouldn't be an issue.
 // This allows us to use goog.require and goog.provides in dev mode.
-if (!window['goog']) {
-  window['goog'] = {}
-  window['goog']['provide'] = function(){};
-  window['goog']['require'] = function(){};
-  window['goog']['scope'] = function(fn) { fn() };
+if (!w['goog']) {
+  w['goog'] = {}
+  w['goog']['require'] = function(ns){};
+  w['goog']['scope'] = function(fn) { fn() };
+  w['goog']['provide'] = function(ns) { };
 }
 
 goog.provide('glift');
 
-(function(w) {
 var glift = w.glift || {};
 if (w) {
   // expose Glift as a global.
