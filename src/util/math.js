@@ -1,3 +1,7 @@
+goog.provide('glift.math');
+
+goog.require('glift');
+
 glift.math = {
   isEven: function(num1) {
     if ((num1 % 2) == 0) return true;

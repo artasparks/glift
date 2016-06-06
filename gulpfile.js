@@ -108,7 +108,7 @@ gulp.task('compile', () => {
           'visibility',
           // We don't turn requires into Errors, because the closure compiler
           // reorders the sources based on the requires.
-          // 'missingRequire',
+          'missingRequire',
         ]
       }
     }))
@@ -151,7 +151,7 @@ gulp.task('update-html-tests', () => {
 })
 
 // Update the HTML tests with the compiled glift.
-gulp.task('update-html-compiled', () => {
+gulp.task('update-html-compiled', ['compile'], () => {
   return gulp.src('./compiled/glift.js')
     .pipe(updateHtmlFiles({
       filesGlob: './src/htmltests/*.html',
@@ -160,6 +160,12 @@ gulp.task('update-html-compiled', () => {
       footer: '<!-- END-AUTO-GEN-DEPS -->',
       dirHeader: '<!-- %s sources -->',
     }))
+});
+
+gulp.task('compile-watch', () => {
+  return gulp.watch([
+    'src/**/*.js',
+    'src/**/*_test.js'], ['update-html-compiled'] );
 });
 
 /////////////////////////////////////////////////

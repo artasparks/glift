@@ -1,3 +1,5 @@
+goog.require('glift');
+
 glift.obj = {
   /**
    * A helper for merging obj information (typically CSS or SVG rules).  This

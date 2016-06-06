@@ -1,3 +1,7 @@
+goog.provide('glift.keyMappings');
+
+goog.require('glift');
+
 glift.keyMappings = {
   /**
    * Some keys must be bound with 'keydown' rather than key code

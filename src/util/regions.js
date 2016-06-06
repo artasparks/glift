@@ -1,3 +1,7 @@
+goog.provide('glift.util.regions');
+
+goog.require('glift.util');
+
 glift.util.regions = {
   getComponents: function(boardRegion) {
     var br = glift.enums.boardRegions,

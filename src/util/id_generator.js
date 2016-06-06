@@ -1,6 +1,8 @@
 goog.provide('glift.util.IdGenerator_');
 goog.provide('glift.util.idGenerator');
 
+goog.require('glift.util');
+
 /**
  * @private
  * @constructor @final @struct

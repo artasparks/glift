@@ -112,7 +112,6 @@ glift.rules.treepath = {
    * @return {!glift.rules.Treepath}
    */
   parseInitialPath: function(initPos) {
-    var errors = glift.errors
     if (initPos === undefined) {
       return [];
     } else if (glift.util.typeOf(initPos) === 'number') {

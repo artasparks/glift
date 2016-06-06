@@ -1,3 +1,5 @@
+goog.require('glift.util');
+
 glift.util.perfLog = function(msg) {
   if (glift.global.performanceDebugLevel === undefined ||
       glift.global.performanceDebugLevel === 'NONE') {

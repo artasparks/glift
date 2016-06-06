@@ -8,6 +8,8 @@ src/htmltests_gen/*
 *.swo
 *.sublime-project
 *.sublime-workspace
+
+# Nodejs
 node_modules
 
 # For testing Markdown
