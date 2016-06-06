@@ -108,7 +108,7 @@ gulp.task('compile', () => {
           'visibility',
           // We don't turn requires into Errors, because the closure compiler
           // reorders the sources based on the requires.
-          'missingRequire',
+          // 'missingRequire',
         ]
       }
     }))
