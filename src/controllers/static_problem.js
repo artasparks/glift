@@ -17,6 +17,9 @@ glift.controllers.staticProblem = function(sgfOptions) {
   var controllers = glift.controllers;
   var baseController = glift.util.beget(controllers.base());
   glift.util.setMethods(baseController, glift.controllers.StaticProblem.prototype);
+  if (!sgfOptions) {
+    throw new Error('SGF Options was not defined, but must be defined');
+  }
   baseController.initOptions(sgfOptions);
   return baseController;
 };

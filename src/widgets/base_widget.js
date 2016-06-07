@@ -147,7 +147,8 @@ glift.widgets.BaseWidget.prototype = {
     if (divIds[glift.enums.boardComponents.STATUS_BAR]) {
       // TODO(kashomon): Move this logic into a helper.
       /** @type {!Array<string>} */
-      var statusBarIcons = glift.util.simpleClone(this.sgfOptions.statusBarIcons);
+      var statusBarIcons = glift.util.simpleClone(
+          this.sgfOptions.statusBarIcons || []);
       if (this.manager.fullscreenDivId) {
         glift.array.replace(statusBarIcons, 'fullscreen', 'unfullscreen');
       }
@@ -319,7 +320,8 @@ glift.widgets.BaseWidget.prototype = {
       return;
     }
 
-    var keyMappings = glift.util.simpleClone(this.sgfOptions.keyMappings);
+    var keyMappings = glift.util.simpleClone(
+        this.sgfOptions.keyMappings || {});
     if (this.manager.fullscreenDivId) {
       // We're fullscreened.  Add ESC to escape =)
       keyMappings['ESCAPE'] = 'iconActions.unfullscreen.click';

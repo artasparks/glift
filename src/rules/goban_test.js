@@ -2,7 +2,6 @@
   module('glift.rules.gobanTest');
   var rules = glift.rules,
       util = glift.util,
-      logz = glift.util.logz,
       BLACK = glift.enums.states.BLACK,
       WHITE = glift.enums.states.WHITE,
       EMPTY = glift.enums.states.EMPTY;

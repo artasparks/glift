@@ -11,6 +11,9 @@ glift.controllers.boardEditor = function(sgfOptions) {
   var ctrl = glift.controllers;
   var baseController = glift.util.beget(ctrl.base());
   glift.util.setMethods(baseController, ctrl.BoardEditor.prototype);
+  if (!sgfOptions) {
+    throw new Error('Sgf Options was not defined, but must be defined');
+  }
   baseController.initOptions(sgfOptions);
   return baseController;
 };

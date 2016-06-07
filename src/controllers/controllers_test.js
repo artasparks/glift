@@ -4,7 +4,7 @@
   test("Must be able te create a controller", function() {
     throws(function() {
       var controller = glift.controllers.staticProblem();
-    }, /Options is undefined/);
+    }, /not defined/);
   });
 
   test("Must create a controller with non-empty string", function() {

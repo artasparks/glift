@@ -145,9 +145,6 @@ glift.controllers.BaseController.prototype = {
    * @param {!glift.api.SgfOptions} sgfOptions Object containing SGF options.
    */
   initOptions: function(sgfOptions) {
-    if (sgfOptions === undefined) {
-      throw new Error('Options is undefined!  Can\'t create controller');
-    }
     this.sgfString = sgfOptions.sgfString || '';
 
     if (sgfOptions.nextMovesPath) {
