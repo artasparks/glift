@@ -72,11 +72,9 @@ glift.rules.movetree = {
       return glift.rules.movetree.getInstance(19);
     }
 
-    glift.util.majorPerfLog('Before SGF parsing in movetree');
     var mt = glift.parse.fromString(sgfString, parseType);
 
     mt = mt.getTreeFromRoot(initTreepath);
-    glift.util.majorPerfLog('After SGF parsing in movetree');
 
     return mt;
   },

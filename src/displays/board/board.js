@@ -140,10 +140,8 @@ glift.displays.board.Display.prototype = {
 
     this.intersections_ = new glift.displays.board.Intersections(
         divId, intGrp, boardPoints, theme, this.rotation());
-    glift.util.majorPerfLog("After display object creation");
 
     this.flush();
-    glift.util.majorPerfLog("After flushing to display");
     return this; // required
   },
 

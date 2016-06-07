@@ -70,14 +70,12 @@ glift.widgets.BaseWidget.prototype = {
     this.controller = this.sgfOptions.controllerFunc(this.sgfOptions);
     this.initialMoveNumber = this.controller.currentMoveNumber();
     this.initialPlayerColor = this.controller.getCurrentPlayer();
-    glift.util.majorPerfLog('Created controller');
 
     var intersections = this.controller.getIntersections();
     var boardRegion =
         this.sgfOptions.boardRegion === glift.enums.boardRegions.AUTO
         ? this.controller.getQuadCropFromBeginning()
         : this.sgfOptions.boardRegion;
-    glift.util.majorPerfLog('Calculated board regions');
 
     this.createInternalWrapperDiv_();
     // This should be the only time we get the base width and height, until the
@@ -100,7 +98,6 @@ glift.widgets.BaseWidget.prototype = {
 
     var divIds = this.createDivsForPositioning_(
         positioning, this.internalWrapperDivId);
-    glift.util.majorPerfLog('Created divs');
 
     var displayTheme = glift.themes.get(this.displayOptions.theme);
 
@@ -117,7 +114,6 @@ glift.widgets.BaseWidget.prototype = {
         intersections,
         this.sgfOptions.rotation,
         this.displayOptions.drawBoardCoords);
-    glift.util.majorPerfLog('Finish creating display');
 
     if (divIds[glift.enums.boardComponents.COMMENT_BOX]) {
       this.commentBox = glift.displays.commentbox.create(
@@ -126,7 +122,6 @@ glift.widgets.BaseWidget.prototype = {
           displayTheme,
           this.displayOptions.useMarkdown);
     }
-    glift.util.majorPerfLog('CommentBox');
 
     if (divIds[glift.enums.boardComponents.ICONBAR]) {
       /** @type {!Array<string>} */
@@ -147,7 +142,6 @@ glift.widgets.BaseWidget.prototype = {
           allPositioning: positioning,
       }).draw();
     }
-    glift.util.majorPerfLog('IconBar');
     divIds.ICONBAR && this.iconBar.initIconActions(this, this.iconActions);
 
     if (divIds[glift.enums.boardComponents.STATUS_BAR]) {
@@ -177,15 +171,12 @@ glift.widgets.BaseWidget.prototype = {
           widget: this
       }).draw();
     }
-    glift.util.majorPerfLog('StatusBar');
     divIds.STATUS_BAR && this.statusBar.iconBar.initIconActions(
         this, this.iconActions);
 
-    glift.util.majorPerfLog('Before stone event creation');
     this.initStoneActions_(this.stoneActions);
     this.initKeyHandlers_();
     this.initMousewheel_(divIds[glift.enums.boardComponents.BOARD]);
-    glift.util.majorPerfLog('After stone event creation');
 
     this.initProblemData_();
     this.applyBoardData(this.controller.flattenedState());
@@ -257,7 +248,7 @@ glift.widgets.BaseWidget.prototype = {
     // Map from component to ID.
     var out = {};
     var createDiv = function(bbox) {
-      var newId = intWrapperDivId + '_internal_div_' + glift.util.idGenerator.next();
+      var newId = intWrapperDivId + '_internal_div_' + glift.widgets.idGenerator.next();
       var newDiv = glift.dom.newDiv(newId);
       var cssObj = {
         top: bbox.top() + 'px',

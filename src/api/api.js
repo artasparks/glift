@@ -17,17 +17,13 @@ glift.api = {
    * @return {glift.widgets.WidgetManager}
    */
   create: function(inOptions) {
-    glift.util.perfInit();
     var manager = glift.api.createNoDraw(inOptions);
 
     glift.init(
         manager.displayOptions.disableZoomForMobile,
         manager.divId);
 
-    glift.util.majorPerfLog('Finish creating manager');
     manager.draw();
-    glift.util.majorPerfLog('Finish drawing manager');
-    glift.util.perfDone();
     return manager;
   },
 

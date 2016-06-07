@@ -27,12 +27,10 @@ glift.displays = {
       intersections,
       rotation,
       drawBoardCoords) {
-    glift.util.majorPerfLog("Before environment creation");
 
     var env = glift.displays.environment.get(
         divId, boardBox, boardRegion, intersections, drawBoardCoords);
 
-    glift.util.majorPerfLog("After environment creation");
     return glift.displays.board.create(env, theme, rotation);
   },
 

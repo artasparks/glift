@@ -12,24 +12,6 @@ glift.global = {
   version: '1.1.1',
 
   /**
-   * Options for performanceDebugLevel: NONE, INFO
-   */
-  performanceDebugLevel: 'NONE',
-
-  /**
-   * Map of performance timestamps. Not normally used unless
-   * performanceDebugLevel is set.
-   */
-  perf: {
-    /** @type {?Date} */
-    first: null,
-    /** @type {?Date} */
-    last: null,
-    /** @type {?Date} */
-    lastMajor: null,
-  },
-
-  /**
    * The registry.  Used to determine who has 'ownership' of key-presses.
    * The problem is that key presses have to be captured in a global scope (or
    * at least at the <body> level.

@@ -16,7 +16,7 @@ glift.widgets.WidgetManager = function(options) {
    * absolutely sure.
    * @type {string}
    */
-  this.id = options.divId + '-glift-' + glift.util.idGenerator.next();
+  this.id = options.divId + '-glift-' + glift.widgets.idGenerator.next();
 
   // Register the instance. Maybe should be its own method.
   glift.global.instanceRegistry[this.id] = this;
