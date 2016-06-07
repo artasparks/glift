@@ -43,11 +43,11 @@ var testGlob = ['src/**/*_test.js']
 gulp.task('build-test', ['concat', 'compile', 'test'])
 
 gulp.task('test', ['update-html-tests', 'update-html-srcs'], () => {
-  return gulp.src('./src/htmltests_gen/QunitTest.html').pipe(qunit())
+  return gulp.src('./test/htmltests_gen/QunitTest.html').pipe(qunit())
 });
 
 gulp.task('test-simple', () => {
-  return gulp.src('./src/htmltests_gen/QunitTest.html').pipe(qunit())
+  return gulp.src('./test/htmltests_gen/QunitTest.html').pipe(qunit())
 });
 
 // A watcher for the the full build-test cycle.
@@ -129,8 +129,8 @@ gulp.task('update-html-srcs', () => {
   return gulp.src(srcGlob)
     .pipe(packageReorder())
     .pipe(updateHtmlFiles({
-      filesGlob: './src/htmltests/*.html',
-      outDir: './src/htmltests_gen/',
+      filesGlob: './test/htmltests/*.html',
+      outDir: './test/htmltests_gen/',
       header: '<!-- AUTO-GEN-DEPS -->',
       footer: '<!-- END-AUTO-GEN-DEPS -->',
       dirHeader: '<!-- %s sources -->',
@@ -142,8 +142,8 @@ gulp.task('update-html-tests', () => {
   return gulp.src(testGlob)
     .pipe(packageReorder())
     .pipe(updateHtmlFiles({
-      filesGlob: './src/htmltests/QunitTest.html',
-      outDir: './src/htmltests_gen/',
+      filesGlob: './test/htmltests/QunitTest.html',
+      outDir: './test/htmltests_gen/',
       header: '<!-- AUTO-GEN-TESTS -->',
       footer: '<!-- END-AUTO-GEN-TESTS -->',
       dirHeader: '<!-- %s tests -->',
@@ -154,8 +154,8 @@ gulp.task('update-html-tests', () => {
 gulp.task('update-html-compiled', ['compile'], () => {
   return gulp.src('./compiled/glift.js')
     .pipe(updateHtmlFiles({
-      filesGlob: './src/htmltests/*.html',
-      outDir: './src/htmltests_gen/',
+      filesGlob: './test/htmltests/*.html',
+      outDir: './test/htmltests_gen/',
       header: '<!-- AUTO-GEN-DEPS -->',
       footer: '<!-- END-AUTO-GEN-DEPS -->',
       dirHeader: '<!-- %s sources -->',

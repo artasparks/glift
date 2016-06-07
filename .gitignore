@@ -1,6 +1,6 @@
 # Generated files
 /compiled/*
-src/htmltests_gen/*
+test/htmltests_gen/*
 
 # Misc settings
 .DS_STORE

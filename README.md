@@ -113,10 +113,10 @@ gulp test
 ```
 
 Or, once you've run `gulp test` or `gulp update-html-srcs` you can just open
-`src/htmltests_gen/QunitTest.html` in a browser and run the tests there (it's
+`test/htmltests_gen/QunitTest.html` in a browser and run the tests there (it's
 bit faster). Running the aformentioned commands dynamically inserts the sources
-into the HTML test templates in the `src/htmltests` directory and outputs the
-templated files to `htmltests_gen`.
+into the HTML test templates in the `test/htmltests` directory and outputs the
+templated files to `test/htmltests_gen`.
 
 **Compilation**
 
