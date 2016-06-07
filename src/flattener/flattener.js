@@ -424,7 +424,7 @@ glift.flattener.findStartingMoveNum_ = function(mt, nextMovesTreepath) {
  */
 glift.flattener.getCorrectNextMoves_ = function(mt, conditions) {
   var correctNextMap = {};
-  if (conditions && !glift.obj.isEmpty(conditions)) {
+  if (conditions && !glift.util.obj.isEmpty(conditions)) {
     var correctNextArr = glift.rules.problems.correctNextMoves(mt, conditions);
     for (var i = 0; i < correctNextArr.length; i++) {
       var move = correctNextArr[i];

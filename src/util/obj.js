@@ -1,11 +1,16 @@
-goog.require('glift');
+goog.provide('glift.util.obj');
 
-glift.obj = {
+goog.require('glift.util');
+
+glift.util.obj = {
   /**
    * A helper for merging obj information (typically CSS or SVG rules).  This
    * method is non-recursive and performs only shallow copy.
+   *
+   * @param {!Object} base object
+   * @param {...!Object} var_args
    */
-  flatMerge: function(base, varargs) {
+  flatMerge: function(base, var_args) {
     var newObj = {};
     if (glift.util.typeOf(base) !== 'object') {
       return newObj;
@@ -24,7 +29,10 @@ glift.obj = {
     return newObj;
   },
 
-  /** Returns true if an object is empty. False otherwise. */
+  /**
+   * Returns true if an object is empty. False otherwise.
+   * @param {!Object} obj
+   */
   isEmpty: function(obj) {
     for (var key in obj) {
       return false;

@@ -22,7 +22,7 @@ glift.displays.statusbar.StatusBar.prototype.fullscreen = function() {
   }
   body = glift.dom.elem(/* @type {!HTMLBodyElement} */ (body));
 
-  var cssObj = glift.obj.flatMerge({
+  var cssObj = glift.util.obj.flatMerge({
       position: 'absolute',
       top: '0px', bottom: '0px', left: '0px', right: '0px',
       margin: '0px', padding: '0px',

@@ -44,7 +44,7 @@ glift.displays.commentbox.CommentBox.prototype = {
     if (this.el === null) {
       throw new Error('Could not find element with ID ' + this.divId);
     }
-    this.el.css(glift.obj.flatMerge({
+    this.el.css(glift.util.obj.flatMerge({
       'overflow-y': 'auto',
       'MozBoxSizing': 'border-box',
       'boxSizing': 'border-box'

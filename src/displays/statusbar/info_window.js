@@ -15,7 +15,7 @@ glift.displays.statusbar.infoWindow = function(
   newDiv.css({'z-index': 100}); // ensure on top.
 
   var textDiv = glift.dom.newDiv(wrapperDivId + suffix + '_textdiv');
-  var textDivCss = glift.obj.flatMerge({
+  var textDivCss = glift.util.obj.flatMerge({
       position: 'relative',
       margin: '0px',
       padding: '0px',
