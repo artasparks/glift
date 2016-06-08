@@ -251,7 +251,11 @@ glift.rules.Goban.prototype = {
    *    the placement was successful.
    */
   addStone: function(pt, color) {
-    if (!glift.util.colors.isLegalColor(color)) throw "Unknown color: " + color;
+    if (!(color === glift.enums.states.BLACK ||
+        color === glift.enums.states.WHITE ||
+        color === glift.enums.states.EMPTY)) {
+      throw "Unknown color: " + color;
+    }
 
     // Add stone fail.  Return a failed StoneResult.
     if (!this.placeable(pt)) {

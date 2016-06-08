@@ -4,12 +4,10 @@ goog.require('glift.util');
 goog.require('glift.enums');
 
 glift.util.colors = {
-  isLegalColor: function(color) {
-    return color === glift.enums.states.BLACK ||
-        color === glift.enums.states.WHITE ||
-        color === glift.enums.states.EMPTY;
-  },
-
+  /**
+   * @param {glift.enums.states} color
+   * @return {glift.enums.states} The opposite color
+   */
   oppositeColor: function(color) {
     if (color === glift.enums.states.BLACK) return glift.enums.states.WHITE;
     if (color === glift.enums.states.WHITE) return glift.enums.states.BLACK;
