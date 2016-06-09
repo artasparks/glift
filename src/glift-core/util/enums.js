@@ -116,16 +116,6 @@ glift.enums.problemResults = {
 };
 
 /**
- * How data from glift.intersections should be displayed.
- * @enum {string}
- */
-// TODO(kashomon): Delete when we migrate to flattener.
-glift.enums.displayDataTypes = {
-  PARTIAL: 'PARTIAL',
-  FULL: 'FULL'
-};
-
-/**
  * Used to create svg element Ids.  The enum values are slightly modified to
  * be compatible with being class / id names.
  * @enum{string}
