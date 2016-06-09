@@ -91,7 +91,7 @@ glift.displays.icons.IconSelector.prototype = {
           .setId(columnId + '_svg')
           .setAttr('height', '100%')
           .setAttr('width', '100%');
-      var idGen = glift.displays.ids.generator(columnId);
+      var idGen = glift.displays.svg.ids.gen(columnId);
       var container = svglib.group().setId(idGen.iconGroup());
       svg.append(container);
       for (var i = 0, len = transforms.length; i < len; i++) {
@@ -121,7 +121,7 @@ glift.displays.icons.IconSelector.prototype = {
     var svglib = glift.displays.svg;
     for (var i = 0; i < this.iconList.length; i++) {
       var svg = this.svgColumnList[i];
-      var idGen = glift.displays.ids.generator(this.columnIdList[i]);
+      var idGen = glift.displays.svg.ids.gen(this.columnIdList[i]);
       var iconColumn = this.iconList[i];
       var container = svglib.group().setId(idGen.buttonGroup());
       svg.append(container);
@@ -150,7 +150,7 @@ glift.displays.icons.IconSelector.prototype = {
 
   setIconEvents: function(eventName, func) {
     for (var i = 0; i < this.iconList.length; i++) {
-      var idGen = glift.displays.ids.generator(this.columnIdList[i]);
+      var idGen = glift.displays.svg.ids.gen(this.columnIdList[i]);
       for (var j = 0; j < this.iconList[i].length; j++) {
         var icon = this.iconList[i][j];
         var buttonId = idGen.button(icon.iconName);

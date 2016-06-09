@@ -109,7 +109,7 @@ glift.displays.board.Display.prototype = {
     var svg = this.svg_;
     var divId = this.divId();
     var svglib = glift.displays.svg;
-    var idGen = glift.displays.ids.generator(divId);
+    var idGen = glift.displays.svg.ids.gen(divId);
     var goBox = env.goBoardBox;
     if (svg === null) {
       throw new Error('Base SVG object not initialized.');

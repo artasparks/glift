@@ -1,6 +1,6 @@
 (function() {
-  module('glift.displays.idsTest');
-  var idGen = glift.displays.ids.generator('foo');
+  module('glift.displays.svg.idsTest');
+  var idGen = glift.displays.svg.ids.gen('foo');
   var pt = glift.util.point(0, 1);
   var name = 'start';
 

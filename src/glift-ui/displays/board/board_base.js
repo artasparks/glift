@@ -6,7 +6,7 @@ goog.require('glift.displays.svg');
  * fill color and a border.
  *
  * @param {!glift.displays.svg.SvgObj} svg Base svg obj
- * @param {!glift.displays.ids.Generator} idGen The ID generator for SVG.
+ * @param {!glift.displays.svg.IdGenerator} idGen The ID generator for SVG.
  * @param {!glift.orientation.BoundingBox} goBox The bounding box of the go board.
  * @param {!glift.themes.base} theme The theme object
  */

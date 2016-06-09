@@ -68,7 +68,7 @@ glift.displays.icons.IconBar = function(options) {
   this.vertMargin = this.theme.icons.vertMargin;
   this.horzMargin = this.theme.icons.horzMargin;
   this.svg = undefined; // initialized by draw
-  this.idGen = glift.displays.ids.generator(this.divId);
+  this.idGen = glift.displays.svg.ids.gen(this.divId);
 
   // Data related to tool tips.
   this.tooltipTimer = undefined;

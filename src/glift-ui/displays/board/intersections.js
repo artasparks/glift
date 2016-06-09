@@ -21,7 +21,7 @@ glift.displays.board.Intersections = function(
   this.theme = theme;
   this.rotation = rotation;
   this.boardPoints = boardPoints;
-  this.idGen = glift.displays.ids.generator(this.divId);
+  this.idGen = glift.displays.svg.ids.gen(this.divId);
 
   /**
    * Defined during events.
@@ -261,11 +261,13 @@ glift.displays.board.Intersections.prototype = {
       var child = children[i]
       var pt = child.data();
       var starpoint =
-          this.svg.child(idGen.starpointGroup()).child(idGen.starpoint(pt))
+          this.svg.child(idGen.starpointGroup()).child(idGen.starpoint(
+              /** @type {!glift.Point} */ (pt)))
       if (starpoint) {
         starpoint.setAttr('opacity', 1).updateAttrInDom('opacity');
       }
-      var line = this.svg.child(idGen.lineGroup()).child(idGen.line(pt))
+      var line = this.svg.child(idGen.lineGroup()).child(idGen.line(
+          /** @type {!glift.Point} */ (pt)))
       if (line) {
         line.setAttr('opacity', 1).updateAttrInDom('opacity');
       }

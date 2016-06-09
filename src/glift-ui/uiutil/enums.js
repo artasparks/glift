@@ -1,1 +1,0 @@
-goog.require('glift.enums');

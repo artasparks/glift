@@ -3,7 +3,7 @@
  * all exist at the time of GoBoard creation.
  *
  * @param {!glift.displays.svg.SvgObj} svg Base svg obj
- * @param {!glift.displays.ids.Generator} idGen The ID generator for SVG.
+ * @param {!glift.displays.svg.IdGenerator} idGen The ID generator for SVG.
  * @param {!glift.displays.BoardPoints} boardPoints Board points object.
  * @param {!glift.themes.base} theme The theme object
  */
@@ -32,7 +32,7 @@ glift.displays.board.stones = function(svg, idGen, boardPoints, theme) {
  * only created if the theme has a shadow.
  *
  * @param {!glift.displays.svg.SvgObj} svg Base svg obj
- * @param {!glift.displays.ids.Generator} idGen The ID generator for SVG.
+ * @param {!glift.displays.svg.IdGenerator} idGen The ID generator for SVG.
  * @param {!glift.displays.BoardPoints} boardPoints Board points object.
  * @param {!glift.themes.base} theme The theme object
  */

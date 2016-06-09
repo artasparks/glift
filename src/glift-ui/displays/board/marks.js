@@ -5,7 +5,7 @@
  * container.
  *
  * @param {!glift.displays.svg.SvgObj} svg Base svg obj
- * @param {!glift.displays.ids.Generator} idGen The ID generator for SVG.
+ * @param {!glift.displays.svg.IdGenerator} idGen The ID generator for SVG.
  */
 glift.displays.board.markContainer = function(svg, idGen) {
   svg.append(glift.displays.svg.group().setId(idGen.markGroup()));
