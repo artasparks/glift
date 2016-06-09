@@ -166,7 +166,7 @@ glift.displays.icons.WrappedIcon.prototype = {
     if (this.subboxIcon === undefined) {
       throw "No subbox defined, so cannot centerWithin.";
     }
-    var centerObj = glift.displays.gui.centerWithin(
+    var centerObj = glift.displays.centerWithin(
         this.subboxIcon.bbox, wrapped.bbox, vMargin, hMargin);
     wrapped.performTransform(centerObj.transform);
     return wrapped;
@@ -177,7 +177,7 @@ glift.displays.icons.WrappedIcon.prototype = {
    * Returns the wrapped icon with the proper scaling.
    */
   centerWithinIcon: function(wrapped, vMargin, hMargin) {
-    var centerObj = glift.displays.gui.centerWithin(
+    var centerObj = glift.displays.centerWithin(
         this.bbox, wrapped.bbox, vMargin, hMargin);
     wrapped.performTransform(centerObj.transform);
     return wrapped;

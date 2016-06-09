@@ -1,6 +1,6 @@
-goog.provide('glift.displays.gui.MultiCenter')
-goog.provide('glift.displays.gui.SingleCenter')
-goog.provide('glift.displays.gui.Transform')
+goog.provide('glift.displays.MultiCenter')
+goog.provide('glift.displays.SingleCenter')
+goog.provide('glift.displays.Transform')
 
 /**
  * Transform object. Note that that the scale is set immediately, while the
@@ -12,7 +12,7 @@ goog.provide('glift.displays.gui.Transform')
  * @param {number=} opt_yMove Defaults to zero if not set
  * @constructor @final @struct
  */
-glift.displays.gui.Transform = function(scale, opt_xMove, opt_yMove) {
+glift.displays.Transform = function(scale, opt_xMove, opt_yMove) {
   /**
    * How much to scale the object by.
    * @type {number}
@@ -33,7 +33,7 @@ glift.displays.gui.Transform = function(scale, opt_xMove, opt_yMove) {
 /**
  * Result of either row-centering or column centering operation
  *
- * @param {!Array<!glift.displays.gui.Transform>} transforms The transformations
+ * @param {!Array<!glift.displays.Transform>} transforms The transformations
  *    to perform.
  * @param {!Array<!glift.orientation.BoundingBox>} bboxes The transformed bounding
  *    boxes.
@@ -41,7 +41,7 @@ glift.displays.gui.Transform = function(scale, opt_xMove, opt_yMove) {
  *    didn't fit given the parameters.
  * @constructor @final @struct
  */
-glift.displays.gui.MultiCenter = function(transforms, bboxes, unfit) {
+glift.displays.MultiCenter = function(transforms, bboxes, unfit) {
   this.transforms = transforms;
   this.bboxes = bboxes;
   this.unfit = unfit;
@@ -50,14 +50,14 @@ glift.displays.gui.MultiCenter = function(transforms, bboxes, unfit) {
 /**
  * Result of either single-element centering.
  *
- * @param {!glift.displays.gui.Transform} transform The transformation
+ * @param {!glift.displays.Transform} transform The transformation
  *    to perform.
  * @param {!glift.orientation.BoundingBox} bbox The transformed bounding
  *    boxes.
  *
  * @constructor @final @struct
  */
-glift.displays.gui.SingleCenter = function(transform, bbox) {
+glift.displays.SingleCenter = function(transform, bbox) {
   this.transform = transform;
   this.bbox = bbox;
 };
@@ -73,11 +73,11 @@ glift.displays.gui.SingleCenter = function(transform, bbox) {
  * @param {number} horzMargin
  * @param {number} minSpacing
  *
- * @return {!glift.displays.gui.MultiCenter}
+ * @return {!glift.displays.MultiCenter}
  */
-glift.displays.gui.rowCenterSimple = function(
+glift.displays.rowCenterSimple = function(
     outerBox, inBboxes, vertMargin, horzMargin, minSpacing) {
-  return glift.displays.gui.linearCentering_(
+  return glift.displays.linearCentering_(
       outerBox, inBboxes, vertMargin, horzMargin, minSpacing, 0, 'h');
 };
 
@@ -88,11 +88,11 @@ glift.displays.gui.rowCenterSimple = function(
  * @param {number} horzMargin
  * @param {number} minSpacing
  *
- * @return {!glift.displays.gui.MultiCenter}
+ * @return {!glift.displays.MultiCenter}
  */
-glift.displays.gui.columnCenterSimple = function(
+glift.displays.columnCenterSimple = function(
     outerBox, inBboxes, vertMargin, horzMargin, minSpacing) {
-  return glift.displays.gui.linearCentering_(
+  return glift.displays.linearCentering_(
       outerBox, inBboxes, vertMargin, horzMargin, minSpacing, 0, 'v');
 };
 
@@ -109,9 +109,9 @@ glift.displays.gui.columnCenterSimple = function(
  * @param {number} maxSpacing Zero indicates no max spacing
  * @param {string} dir Dir must be either 'v' or 'h'.
  *
- * @return {!glift.displays.gui.MultiCenter}
+ * @return {!glift.displays.MultiCenter}
  */
-glift.displays.gui.linearCentering_ = function(
+glift.displays.linearCentering_ = function(
     outerBox, inBboxes, vertMargin, horzMargin, minSpacing, maxSpacing, dir) {
   var outerWidth = outerBox.width(),
       innerWidth = outerWidth - 2 * horzMargin,
@@ -141,7 +141,7 @@ glift.displays.gui.linearCentering_ = function(
     } else {
       var scale = innerHeight / inBboxes[i].height();
     }
-    var partialTransform = new glift.displays.gui.Transform(scale);
+    var partialTransform = new glift.displays.Transform(scale);
     var newBbox = inBboxes[i].scale(scale);
     transforms.push(partialTransform);
     newBboxes.push(newBbox);
@@ -201,7 +201,7 @@ glift.displays.gui.linearCentering_ = function(
     }
   }
 
-  return new glift.displays.gui.MultiCenter(
+  return new glift.displays.MultiCenter(
       transforms, finishedBoxes, unfitBoxes);
 };
 
@@ -214,9 +214,9 @@ glift.displays.gui.linearCentering_ = function(
  * @param {number} vertMargin
  * @param {number} horzMargin
  *
- * @return {!glift.displays.gui.SingleCenter}
+ * @return {!glift.displays.SingleCenter}
  */
-glift.displays.gui.centerWithin = function(
+glift.displays.centerWithin = function(
     outerBbox, bbox, vertMargin, horzMargin) {
   var outerWidth = outerBbox.width(),
       innerWidth = outerWidth - 2 * horzMargin,
@@ -244,10 +244,10 @@ glift.displays.gui.centerWithin = function(
   if (newBbox.height() < innerHeight) {
     top = top + (innerHeight -  newBbox.height()) / 2;
   }
-  var transform = new glift.displays.gui.Transform(
+  var transform = new glift.displays.Transform(
     scale,
     left - newBbox.left(),
     top - newBbox.top());
   newBbox = newBbox.translate(transform.xMove, transform.yMove);
-  return new glift.displays.gui.SingleCenter(transform, newBbox);
+  return new glift.displays.SingleCenter(transform, newBbox);
 };

@@ -196,14 +196,6 @@ glift.enums.boardComponents = {
 };
 
 /**
- * @enum {string}
- */
-glift.enums.dubug = {
-  NONE: 'NONE',
-  INFO: 'INFO'
-};
-
-/**
  * Rotations we can apply to Go Boards. Doesn't rotate the fundamental data (the
  * SGF points), but rotates at the time the board is drawn.
  * @enum {string}

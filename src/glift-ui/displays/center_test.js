@@ -1,8 +1,8 @@
 (function() {
-  module('glift.displays.gui.centerTest');
+  module('glift.displays.centerTest');
   var point = glift.util.point,
-      rowCenter = glift.displays.gui.rowCenterSimple,
-      columnCenter = glift.displays.gui.columnCenterSimple,
+      rowCenter = glift.displays.rowCenterSimple,
+      columnCenter = glift.displays.columnCenterSimple,
       bboxFromPts = glift.orientation.bbox.fromPts,
       baseBox = bboxFromPts(point(0,0), point(250, 50)),
       baseVBox = bboxFromPts(point(0,0), point(50, 250));

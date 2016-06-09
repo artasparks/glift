@@ -70,10 +70,10 @@ glift.displays.icons._centerWrapped = function(
 
   // Row center returns: { transforms: [...], bboxes: [...] }
   if (direction === glift.displays.icons.CenterDir.H) {
-    var centeringData = glift.displays.gui.rowCenterSimple(
+    var centeringData = glift.displays.rowCenterSimple(
         divBbox, bboxes, vMargin, hMargin, minSpacing);
   } else {
-    var centeringData = glift.displays.gui.columnCenterSimple(
+    var centeringData = glift.displays.columnCenterSimple(
         divBbox, bboxes, vMargin, hMargin, minSpacing)
   }
   var transforms = centeringData.transforms;
