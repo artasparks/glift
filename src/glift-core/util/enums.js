@@ -34,9 +34,9 @@ glift.enums.states = {
  * @enum{string}
  */
 glift.enums.boardAlignments = {
-  TOP: "TOP",
-  RIGHT: "RIGHT",
-  CENTER: "CENTER"
+  TOP: 'TOP',
+  RIGHT: 'RIGHT',
+  CENTER: 'CENTER'
 };
 
 
