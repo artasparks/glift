@@ -13,24 +13,30 @@ var gulp = require('gulp'),
     fs = require('fs'),
     path = require('path');
 
-// The glob used for determining sources.
-var srcGlob = [
+// The source paths, used for generating the glob, for determining sources.
+var srcPaths = [
+  // :Glift Core: //
   // Top level source package must go first since it defines the namespace
-  'src/*.js',
+  'src/glift-core/glift.js',
+
   // Enums are depended on directly by lots of other packages.
-  'src/util/*.js',
+  'src/glift-core/util',
+
+  // The rest of glift-core
+  'src/glift-core',
+
+  // :Glift UI: //
+
   // The widgetopt dir depends *directly* on the controllers. Yuck. These need
   // to be refactored, probably by putting the widget options directly in the
   // controller dirs.
-  'src/controllers/*.js',
-  // Everything else is in a semi-lexicographical order (but it's not
-  // guaranteed).
-  'src/**/*.js',
-  // Ignore these groups of files:
-  '!src/**/*_test.js',
-  '!src/htmltests/*',
-  '!src/libs/*', // Qunit, Raphael
-  '!src/testdata/*']
+  'src/glift-ui/controllers',
+
+  // Everything else is in lexicographical order
+  'src/glift-ui']
+
+// Ignore the test files
+var srcIgnore = ['!src/**/*_test.js']
 
 // The glob used for determining tests
 var testGlob = ['src/**/*_test.js']
@@ -66,8 +72,7 @@ gulp.task('update-html-watch', () => {
 
 // Compile the sources with the JS Compiler
 gulp.task('compile', () => {
-  return gulp.src(srcGlob)
-    .pipe(packageReorder())
+  return gulp.src(jsSrcGlobGen(srcPaths, srcIgnore))
     .pipe(closureCompiler({
       compilerPath: './compiler-latest/compiler.jar',
       fileName: 'glift.js',
@@ -117,8 +122,7 @@ gulp.task('compile', () => {
 })
 
 gulp.task('concat', () => {
-  return gulp.src(srcGlob)
-    .pipe(packageReorder())
+  return gulp.src(jsSrcGlobGen(srcPaths, srcIgnore))
     .pipe(concat('glift_combined.js'))
     .pipe(size())
     .pipe(gulp.dest('./compiled/'))
@@ -126,8 +130,7 @@ gulp.task('concat', () => {
 
 // Update the HTML tests with the dev JS source files
 gulp.task('update-html-srcs', () => {
-  return gulp.src(srcGlob)
-    .pipe(packageReorder())
+  return gulp.src(jsSrcGlobGen(srcPaths, srcIgnore))
     .pipe(updateHtmlFiles({
       filesGlob: './test/htmltests/*.html',
       outDir: './test/htmltests_gen/',
@@ -140,7 +143,6 @@ gulp.task('update-html-srcs', () => {
 // Update the HTML tests with the test JS files
 gulp.task('update-html-tests', () => {
   return gulp.src(testGlob)
-    .pipe(packageReorder())
     .pipe(updateHtmlFiles({
       filesGlob: './test/htmltests/QunitTest.html',
       outDir: './test/htmltests_gen/',
@@ -168,78 +170,114 @@ gulp.task('compile-watch', () => {
     'src/**/*_test.js'], ['update-html-compiled'] );
 });
 
+gulp.task('src-gen', () => {
+  gulp.src(jsSrcGlobGen(srcPaths, srcIgnore))
+    .pipe(through.obj(function(file, enc, cb) {
+      console.log(file.path);
+      cb()
+    }, function(cb) {
+      cb()
+    }));
+});
+
 /////////////////////////////////////////////////
 /////////////// Library Functions ///////////////
 /////////////////////////////////////////////////
 //
 // Beware! Below lie demons unvanquished.
 //
-// TODO(kashomon): Move these to a node library for sharing with GPub?
+// TODO(kashomon): Move these to a node library for sharing with GPub
+
 
 /**
- * Reorder so that the file with the same name as the package comes first. The
- * idea is that the file with the same name as the directory defines the
- * namespace. This, of course, enforces a java-like style of defining
- * namespaces, but it's at least easy to understand at a large scale because the
- * directory structure represents the package structure.
+ * Takes an ordering array and an ignore glob-array and generates a glob array
+ * appropriate for gulp. What this does is take an array of paths (both files
+ * and directorys), and recursively generates directory-based globs.
  *
- * I.e., If there are two directories
+ * Glift (and co) have an idiosyncratic way of genserating namespaces.
+ * Namepsaces are created files with the same name as a directory. For example,
+ * src/foo should have a file that defines glift.foo = {}; Thus, these files
+ * must go first before all other files that depend on that namespace.
  *
- * foo/
- *    fib.js
- *    fob.js
+ * As an expanded example, consider the following directories:
+ *
+ * src/
+ *  foo/
+ *    abc.js
  *    foo.js
- * bar/
- *    blah.js
- *    bar.js
  *    zed.js
+ *  bar/
+ *    bbc.js
+ *    bar.js
+ *    zod.js
+ *    biff/
+ *      biff.js
+ *      boff.js
  *
- * This will get reordered to
+ * So, when called as such:
+ *    jsSrcGlobGen(['src'])
  *
- * foo/ -> [foo.js, fib.js, fob.js]
- * bar/ -> [bar.js, blah.js, zed.js]
+ * The following array would be produced:
+ *    [
+ *      'src/*.js', 'src/foo/foo.js', 'src/foo/*.js', 'src/bar/bar.js',
+ *      'src/bar/biff/biff.js', 'src/bar/biff/*.js'
+ *    ]
  *
+ * Note: for convenience, users may pass in a set of normal node-glob style
+ * globs that will be appended to the generated globs.
+ *
+ * I.e., if jsSrcGlobGen is called with
+ *    jsSrcGlobGen(['src'], ['!src/**' + '/*_test.js'])
+ *
+ * Then, assuming the directory structure above, the output array will be
+ *   [ 'src/*.js', ..., !src/**' + ' /*_test.js']
+ *
+ * (note: Concatenation is used to avoid comment-breaks).
  */
-function packageReorder() {
-  var all = []
-  return through.obj(function(file, enc, cb) {
-    all.push(file);
-    cb();
-  }, function(cb) {
-    var tr = [];
-    var dirMap = {};
-    var dirlist = []; // So we can order the directories.
-    all.forEach((f) => {
-      var fullpath = f.path;
-      var ppath = path.parse(f.path);
-      var dir = ppath.dir;
-      if (!dirMap[dir]) {
-        dirMap[dir] = [];
-        dirlist.push(dir);
-      }
-      var splat = ppath.dir.split(path.sep)
-      var last = splat[splat.length - 1]
-      if (last === ppath.name) {
-        // If the file is the directory name + .js, then it's the namespace file
-        // and we bump it to teh top.
-        dirMap[dir].unshift(f)
-      } else {
-        // otherwise, just stuff it on the end =)
-        dirMap[dir].push(f)
-      }
-    });
+function jsSrcGlobGen(ordering, addGlobs) {
+  if (typeof ordering !== 'object' || !ordering.length) {
+    throw new Error(
+        'Ordering must be a non-empty array of paths. ' +
+        'Was: ' + (typeof ordering) + ':' + String(ordering));
+  }
 
-    dirlist.forEach((dir) => {
-      dirMap[dir].forEach((f) => {
-        tr.push(f);
-      });
-    })
-    tr.forEach((f) => {
-      this.push(f);
+  var out = [];
+  var addGlobs = addGlobs || [];
+
+  var rread = function(dirPath) {
+    var components = dirPath.split(path.sep);
+    var last = components[components.length - 1];
+
+    var nsfile = path.join(dirPath, last + '.js');
+    if (fs.existsSync(nsfile)) {
+      out.push(nsfile);
+    }
+    out.push(path.join(dirPath, '*.js'));
+
+    fs.readdirSync(dirPath).forEach((f) => {
+      var fpath = path.join(dirPath, f)
+      var fd = fs.lstatSync(fpath);
+      if (fd.isDirectory()) {
+        rread(fpath)
+      }
     });
-    cb();
-  });
-};
+  }
+
+  ordering.forEach((fpath) => {
+    if (!fs.existsSync(fpath)) {
+      console.warn('Path does not exist: ' + path);
+      return;
+    }
+    var fd = fs.lstatSync(fpath);
+    if (!fd.isDirectory()) {
+      out.push(fpath);
+    } else {
+      rread(fpath);
+    }
+  })
+
+  return out.concat(addGlobs);
+}
 
 
 /**

@@ -13,6 +13,9 @@
 if (window && !window['goog']) {
   window['goog'] = {}
   window['goog']['require'] = function(ns) {
+  };
+  window['goog']['scope'] = function(fn) { fn() };
+  window['goog']['provide'] = function(ns) {
     var nsParts = ns.split('.');
     var curNs = window;
     for (var i = 0; i < nsParts.length; i++) {
@@ -23,8 +26,6 @@ if (window && !window['goog']) {
       curNs = curNs[part];
     }
   };
-  window['goog']['scope'] = function(fn) { fn() };
-  window['goog']['provide'] = function(ns) { };
 }
 
 goog.provide('glift');
