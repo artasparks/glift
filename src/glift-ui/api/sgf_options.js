@@ -84,9 +84,9 @@ glift.api.SgfOptions = function(opt_o) {
    *
    * api:1.0
    *
-   * @const {glift.enums.widgetTypes}
+   * @const {glift.WidgetType}
    */
-  this.widgetType = o.widgetType || glift.enums.widgetTypes.GAME_VIEWER;
+  this.widgetType = o.widgetType || glift.WidgetType.GAME_VIEWER;
 
   /**
    * Defines where to start on the go board. An empty string implies the very
@@ -157,13 +157,13 @@ glift.api.SgfOptions = function(opt_o) {
    * The UI Components to use for this display.
    *
    * api:1.0
-   * @const {!Array<glift.enums.boardComponents>}
+   * @const {!Array<glift.BoardComponent>}
    */
   this.uiComponents = o.uiComponents || [
-    glift.enums.boardComponents.BOARD,
-    glift.enums.boardComponents.COMMENT_BOX,
-    glift.enums.boardComponents.STATUS_BAR,
-    glift.enums.boardComponents.ICONBAR
+    glift.BoardComponent.BOARD,
+    glift.BoardComponent.COMMENT_BOX,
+    glift.BoardComponent.STATUS_BAR,
+    glift.BoardComponent.ICONBAR
   ];
 
   /**

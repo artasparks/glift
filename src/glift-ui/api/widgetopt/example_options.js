@@ -1,7 +1,7 @@
 /**
  * Additional Options for EXAMPLEs
  */
-glift.api.widgetopt[glift.enums.widgetTypes.EXAMPLE] = {
+glift.api.widgetopt[glift.WidgetType.EXAMPLE] = {
   markLastMove: undefined, // rely on defaults
   keyMappings: undefined, // rely on defaults
   enableMousewheel: undefined, // rely on defaults (false)

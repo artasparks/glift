@@ -36,7 +36,7 @@ glift.displays.position.WidgetBoxes.prototype = {
 
   /**
    * Get a component by ID.
-   * @param {glift.enums.boardComponents} key Component key
+   * @param {glift.BoardComponent} key Component key
    * @return {?glift.orientation.BoundingBox} A bounding box or null.
    */
   getBbox: function(key) {
@@ -52,7 +52,7 @@ glift.displays.position.WidgetBoxes.prototype = {
   /**
    * Get the bbox of a component or throw an exception
    *
-   * @param {glift.enums.boardComponents} key Component key
+   * @param {glift.BoardComponent} key Component key
    * @return {!glift.orientation.BoundingBox}.
    */
   mustGetBbox: function(key) {
@@ -135,7 +135,7 @@ glift.displays.position.WidgetColumn = function() {
 glift.displays.position.WidgetColumn.prototype = {
   /** Set a mapping from from component to bounding box. */
   setComponent: function(component, bbox) {
-    if (!glift.enums.boardComponents[component]) {
+    if (!glift.BoardComponent[component]) {
       throw new Error('Unknown component: ' + component);
     }
     this.mapping[component] = bbox;
@@ -145,7 +145,7 @@ glift.displays.position.WidgetColumn.prototype = {
   /**
    * Get the bbox of a component or return null.
    *
-   * @param {glift.enums.boardComponents} component Component key
+   * @param {glift.BoardComponent} component Component key
    * @return {?glift.orientation.BoundingBox} A bounding box or null.
    */
   getBbox: function(component) {
@@ -155,7 +155,7 @@ glift.displays.position.WidgetColumn.prototype = {
   /**
    * Get the bbox of a component or throw an exception.
    *
-   * @param {glift.enums.boardComponents} component Component key
+   * @param {glift.BoardComponent} component Component key
    * @return {!glift.orientation.BoundingBox}
    */
   mustGetBbox: function(component) {

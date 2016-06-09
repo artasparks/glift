@@ -87,7 +87,7 @@ glift.displays.position.WidgetPositioner.prototype = {
     var divBox = this.divBox,
         boardRegion = this.boardRegion,
         componentSet = this.componentSet,
-        comps = glift.enums.boardComponents,
+        comps = glift.BoardComponent,
         hwRatio = divBox.height() / divBox.width(),
         longBoxRegions = { TOP: true, BOTTOM: true };
     if (!componentSet[comps.COMMENT_BOX] ||
@@ -161,7 +161,7 @@ glift.displays.position.WidgetPositioner.prototype = {
   calculateColumn: function(recalCol, wrapperDiv, alignment, startTop) {
     var top = startTop || 0;
     var column = new glift.displays.position.WidgetColumn();
-    var components = glift.enums.boardComponents;
+    var components = glift.BoardComponent;
     var divBoxSplits = [wrapperDiv];
     var ratios = this._extractRatios(recalCol);
     column.setOrderingFromRatioArray(recalCol);

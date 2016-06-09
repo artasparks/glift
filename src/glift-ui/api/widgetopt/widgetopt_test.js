@@ -3,12 +3,12 @@
 
   // List of supported widget types in the Options rewrite.
   var supportedList = [
-    glift.enums.widgetTypes.BOARD_EDITOR,
-    glift.enums.widgetTypes.CORRECT_VARIATIONS_PROBLEM,
-    glift.enums.widgetTypes.EXAMPLE,
-    glift.enums.widgetTypes.GAME_VIEWER,
-    glift.enums.widgetTypes.REDUCED_GAME_VIEWER,
-    glift.enums.widgetTypes.STANDARD_PROBLEM,
+    glift.WidgetType.BOARD_EDITOR,
+    glift.WidgetType.CORRECT_VARIATIONS_PROBLEM,
+    glift.WidgetType.EXAMPLE,
+    glift.WidgetType.GAME_VIEWER,
+    glift.WidgetType.REDUCED_GAME_VIEWER,
+    glift.WidgetType.STANDARD_PROBLEM,
   ];
 
   var keys = [

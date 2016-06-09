@@ -8,7 +8,7 @@
       url: undefined,
       alias: undefined,
       parseType: glift.parse.parseType.SGF,
-      widgetType: glift.enums.widgetTypes.GAME_VIEWER,
+      widgetType: glift.WidgetType.GAME_VIEWER,
       initialPosition: '',
       boardRegion: glift.enums.boardRegions.AUTO,
       nextMovesPath: '',
@@ -22,10 +22,10 @@
         ARROW_RIGHT: 'iconActions.chevron-right.click'
       },
       uiComponents: [
-        glift.enums.boardComponents.BOARD,
-        glift.enums.boardComponents.COMMENT_BOX,
-        glift.enums.boardComponents.STATUS_BAR,
-        glift.enums.boardComponents.ICONBAR
+        glift.BoardComponent.BOARD,
+        glift.BoardComponent.COMMENT_BOX,
+        glift.BoardComponent.STATUS_BAR,
+        glift.BoardComponent.ICONBAR
       ],
       disableStatusBar: false,
       disableBoard: false,

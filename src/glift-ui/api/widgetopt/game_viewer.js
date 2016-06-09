@@ -1,7 +1,7 @@
 /**
  * Additional Options for the GameViewers
  */
-glift.api.widgetopt[glift.enums.widgetTypes.GAME_VIEWER] = {
+glift.api.widgetopt[glift.WidgetType.GAME_VIEWER] = {
   markLastMove: true,
   enableMousewheel: true,
 

@@ -1,7 +1,7 @@
 (function() {
   module('glift.displays.position.widgetPositionerTest');
   var point = glift.util.point;
-  var components = glift.enums.boardComponents;
+  var components = glift.BoardComponent;
   var horzBbox = glift.orientation.bbox.fromSides(point(100, 300), 300, 100);
   var vertBbox = glift.orientation.bbox.fromSides(point(100, 300), 100, 300);
   var squareBbox = glift.orientation.bbox.fromSides(point(100, 300), 200, 200);
@@ -206,7 +206,7 @@
     var boxes = construct().calcVertPositioning();
     var boxList = [];
     boxes.map(function(key, bbox) {
-      ok(glift.enums.boardComponents[key] !== undefined, key);
+      ok(glift.BoardComponent[key] !== undefined, key);
       ok(bbox.width() > 0, bbox);
       boxList.push(key);
     });
@@ -235,7 +235,7 @@
     ok(boxes._second, 'second');
     var boxList = [];
     boxes.map(function(key, bbox) {
-      ok(glift.enums.boardComponents[key] !== undefined, key);
+      ok(glift.BoardComponent[key] !== undefined, key);
       ok(bbox.width() > 0, bbox);
       boxList.push(key);
     });

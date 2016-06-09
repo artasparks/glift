@@ -3,7 +3,7 @@
 /**
  * Board Editor options.
  */
-glift.api.widgetopt[glift.enums.widgetTypes.BOARD_EDITOR] = {
+glift.api.widgetopt[glift.WidgetType.BOARD_EDITOR] = {
   _markMap: {
     bstone_a: glift.enums.marks.LABEL_ALPHA,
     bstone_1: glift.enums.marks.LABEL_NUMERIC,

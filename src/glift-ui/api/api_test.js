@@ -21,12 +21,12 @@
     ok(sgfObj !== undefined);
     deepEqual(sgfObj.sgfString, testdata.sgfs.complexproblem);
     deepEqual(sgfObj.initialPosition, '');
-    deepEqual(sgfObj.widgetType, glift.enums.widgetTypes.GAME_VIEWER);
+    deepEqual(sgfObj.widgetType, glift.WidgetType.GAME_VIEWER);
     manager.destroy();
   });
 
   test('Succesfully create a complex problem series', function() {
-    var wtypes = glift.enums.widgetTypes;
+    var wtypes = glift.WidgetType;
     var sgfs = testdata.sgfs;
     // TODO(kashomon): Do more extensive integration testing here.
     var manager = glift.api.create({

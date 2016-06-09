@@ -126,31 +126,6 @@ glift.enums.showVariations = {
 };
 
 /**
- * The types of widgets users can create. Used to link Controllers and Options.
- * @enum {string}
- */
-glift.enums.widgetTypes = {
-  CORRECT_VARIATIONS_PROBLEM: 'CORRECT_VARIATIONS_PROBLEM',
-  EXAMPLE: 'EXAMPLE',
-  GAME_VIEWER: 'GAME_VIEWER',
-  REDUCED_GAME_VIEWER: 'REDUCED_GAME_VIEWER',
-  STANDARD_PROBLEM: 'STANDARD_PROBLEM',
-  BOARD_EDITOR: 'BOARD_EDITOR'
-};
-
-/**
- * The types of components that exist in the Glift UI.
- * @enum {string}
- */
-glift.enums.boardComponents = {
-  BOARD: 'BOARD',
-  COMMENT_BOX: 'COMMENT_BOX',
-  EXTRA_ICONBAR: 'EXTRA_ICONBAR',
-  ICONBAR: 'ICONBAR',
-  STATUS_BAR: 'STATUS_BAR'
-};
-
-/**
  * Rotations we can apply to Go Boards. Doesn't rotate the fundamental data (the
  * SGF points), but rotates at the time the board is drawn.
  * @enum {string}

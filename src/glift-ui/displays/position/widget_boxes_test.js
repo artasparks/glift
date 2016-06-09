@@ -9,7 +9,7 @@
   var defaultBbox3 = glift.orientation.bbox.fromPts(
       glift.util.point(10, 10),
       glift.util.point(150, 300));
-  var comps = glift.enums.boardComponents;
+  var comps = glift.BoardComponent;
 
   var make = function(opts) {
     return new glift.displays.position.WidgetBoxes();

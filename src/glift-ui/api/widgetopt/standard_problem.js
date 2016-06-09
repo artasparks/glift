@@ -2,7 +2,7 @@
  * Additional options for the standard problems, where the entire problem is
  * stored client-side.
  */
-glift.api.widgetopt[glift.enums.widgetTypes.STANDARD_PROBLEM] = {
+glift.api.widgetopt[glift.WidgetType.STANDARD_PROBLEM] = {
   markLastMove: undefined, // rely on defaults
   keyMappings: undefined, // rely on defaults
   enableMousewheel: undefined, // rely on defaults (false)

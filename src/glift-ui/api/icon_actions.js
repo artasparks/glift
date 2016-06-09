@@ -154,7 +154,7 @@ glift.api.iconActionDefaults = {
     click: function(event, widget, icon, iconBar) {
       var manager = widget.manager;
       var sgfObj = {
-        widgetType: glift.enums.widgetTypes.GAME_VIEWER,
+        widgetType: glift.WidgetType.GAME_VIEWER,
         initialPosition: widget.controller.initialPosition,
         sgfString: widget.controller.originalSgf(),
         showVariations: glift.enums.showVariations.ALWAYS,

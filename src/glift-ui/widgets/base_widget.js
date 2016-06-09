@@ -107,23 +107,23 @@ glift.widgets.BaseWidget.prototype = {
     }
 
     this.display = glift.displays.create(
-        divIds[glift.enums.boardComponents.BOARD],
-        positioning.mustGetBbox(glift.enums.boardComponents.BOARD),
+        divIds[glift.BoardComponent.BOARD],
+        positioning.mustGetBbox(glift.BoardComponent.BOARD),
         displayTheme,
         boardRegion,
         intersections,
         this.sgfOptions.rotation,
         this.displayOptions.drawBoardCoords);
 
-    if (divIds[glift.enums.boardComponents.COMMENT_BOX]) {
+    if (divIds[glift.BoardComponent.COMMENT_BOX]) {
       this.commentBox = glift.displays.commentbox.create(
-          divIds[glift.enums.boardComponents.COMMENT_BOX],
-          positioning.mustGetBbox(glift.enums.boardComponents.COMMENT_BOX),
+          divIds[glift.BoardComponent.COMMENT_BOX],
+          positioning.mustGetBbox(glift.BoardComponent.COMMENT_BOX),
           displayTheme,
           this.displayOptions.useMarkdown);
     }
 
-    if (divIds[glift.enums.boardComponents.ICONBAR]) {
+    if (divIds[glift.BoardComponent.ICONBAR]) {
       /** @type {!Array<string>} */
       var icons = glift.util.simpleClone(this.sgfOptions.icons || []);
       if (this.manager.hasNextSgf()) {
@@ -133,8 +133,8 @@ glift.widgets.BaseWidget.prototype = {
         icons.unshift(this.displayOptions.previousSgfIcon);
       }
       this.iconBar = glift.displays.icons.bar({
-          divId: divIds[glift.enums.boardComponents.ICONBAR],
-          positioning: positioning.mustGetBbox(glift.enums.boardComponents.ICONBAR),
+          divId: divIds[glift.BoardComponent.ICONBAR],
+          positioning: positioning.mustGetBbox(glift.BoardComponent.ICONBAR),
           icons: icons,
           parentBbox: parentDivBbox,
           theme: displayTheme,
@@ -144,7 +144,7 @@ glift.widgets.BaseWidget.prototype = {
     }
     divIds.ICONBAR && this.iconBar.initIconActions(this, this.iconActions);
 
-    if (divIds[glift.enums.boardComponents.STATUS_BAR]) {
+    if (divIds[glift.BoardComponent.STATUS_BAR]) {
       // TODO(kashomon): Move this logic into a helper.
       /** @type {!Array<string>} */
       var statusBarIcons = glift.util.simpleClone(
@@ -156,9 +156,9 @@ glift.widgets.BaseWidget.prototype = {
         statusBarIcons.splice(0, 0, 'widget-page');
       }
       var statusBarIconBar = glift.displays.icons.bar({
-          divId: divIds[glift.enums.boardComponents.STATUS_BAR],
+          divId: divIds[glift.BoardComponent.STATUS_BAR],
           positioning: positioning.mustGetBbox(
-              glift.enums.boardComponents.STATUS_BAR),
+              glift.BoardComponent.STATUS_BAR),
           icons: statusBarIcons,
           parentBbox: parentDivBbox,
           theme: displayTheme,
@@ -177,7 +177,7 @@ glift.widgets.BaseWidget.prototype = {
 
     this.initStoneActions_(this.stoneActions);
     this.initKeyHandlers_();
-    this.initMousewheel_(divIds[glift.enums.boardComponents.BOARD]);
+    this.initMousewheel_(divIds[glift.BoardComponent.BOARD]);
 
     this.initProblemData_();
     this.applyBoardData(this.controller.flattenedState());
@@ -187,17 +187,17 @@ glift.widgets.BaseWidget.prototype = {
   /**
    * Gets the UI icons to use
    * @param {!glift.api.SgfOptions} sgfOptions
-   * @return {!Array<glift.enums.boardComponents>}
+   * @return {!Array<glift.BoardComponent>}
    * @private
    */
   getUiComponents_: function(sgfOptions) {
-    /** @type {!Array<glift.enums.boardComponents>} */
+    /** @type {!Array<glift.BoardComponent>} */
     var base = sgfOptions.uiComponents;
     base = base.slice(0, base.length); // make a shallow copy.
     /**
      * Helper to remove items from the array.
-     * @param {!Array<glift.enums.boardComponents>} arr
-     * @param {glift.enums.boardComponents} key
+     * @param {!Array<glift.BoardComponent>} arr
+     * @param {glift.BoardComponent} key
      */
     var rmItem = function(arr, key) {
       var idx = arr.indexOf(key);
@@ -205,7 +205,7 @@ glift.widgets.BaseWidget.prototype = {
         arr.splice(idx, 1);
       }
     }
-    var bc = glift.enums.boardComponents
+    var bc = glift.BoardComponent;
     sgfOptions.disableStatusBar && rmItem(base, bc.STATUS_BAR);
     sgfOptions.disableBoard && rmItem(base, bc.BOARD);
     sgfOptions.disableCommentBox && rmItem(base, bc.COMMENT_BOX);
@@ -241,7 +241,7 @@ glift.widgets.BaseWidget.prototype = {
 
   /**
    * Create divs from positioning (WidgetBoxes) and the wrapper div id.
-   * @return {!Object<glift.enums.boardComponents, string>} a map from component
+   * @return {!Object<glift.BoardComponent, string>} a map from component
    *    name to the div Id.
    * @private
    */
@@ -393,7 +393,7 @@ glift.widgets.BaseWidget.prototype = {
    */
   initProblemData_: function() {
     if (this.sgfOptions.widgetType ===
-        glift.enums.widgetTypes.CORRECT_VARIATIONS_PROBLEM) {
+        glift.WidgetType.CORRECT_VARIATIONS_PROBLEM) {
       var correctNext = this.controller.getCorrectNextMoves();
       // A Set: i.e., a map of points to true
       this.correctNextSet = this.correctNextSet || {};
@@ -489,7 +489,7 @@ glift.widgets.BaseWidget.prototype = {
    * Set the widget state from a state object and redraws.
    */
   applyState: function(stateObj) {
-    var types = glift.enums.widgetTypes;
+    var types = glift.WidgetType;
     if (this.sgfOptions.widgetType === types.REDUCED_GAME_VIEWER ||
         this.sgfOptions.widgetType === types.GAME_VIEWER) {
       var treepath = stateObj.currentTreepath;

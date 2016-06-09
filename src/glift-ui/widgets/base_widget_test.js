@@ -8,7 +8,7 @@
     var baseWidget = manager.createWidget(defaultSgfOptions);
     ok(baseWidget, 'must be defined');
 
-    var uic = glift.enums.boardComponents;
+    var uic = glift.BoardComponent;
     var comp = baseWidget.getUiComponents_(defaultSgfOptions)
     deepEqual(defaultSgfOptions.uiComponents, [
       uic.BOARD,
