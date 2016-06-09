@@ -1,3 +1,5 @@
+goog.require('glift.displays.svg.Element');
+
 /**
  * Create the Go stones.  They are initially invisible to the user, but they
  * all exist at the time of GoBoard creation.
@@ -21,7 +23,7 @@ glift.displays.board.stones = function(svg, idGen, boardPoints, theme) {
       .setAttr('opacity', 0)
       .setAttr('stone_color', 'EMPTY')
       .setAttr('fill', 'blue') // dummy color
-      .setAttr('class', glift.enums.svgElements.STONE)
+      .setAttr('class', glift.displays.svg.Element.STONE)
       .setId(idGen.stone(pt.intPt)));
   }
 };
@@ -52,7 +54,7 @@ glift.displays.board.shadows = function(svg, idGen, boardPoints, theme) {
       .setAttr('fill', theme.stones.shadows.fill)
       // .setAttr('stroke', theme.stones.shadows.stroke)
       // .setAttr('filter', 'url(#' + divId + '_svg_blur)')
-      .setAttr('class', glift.enums.svgElements.STONE_SHADOW)
+      .setAttr('class', glift.displays.svg.Element.STONE_SHADOW)
       .setId(idGen.stoneShadow(pt.intPt)));
   }
 };

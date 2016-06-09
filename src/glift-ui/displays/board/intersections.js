@@ -283,7 +283,6 @@ glift.displays.board.Intersections.prototype = {
    * @return {glift.displays.board.Intersections} this
    */
   addGuideLines: function(pt) {
-    var elems = glift.enums.svgElements;
     var svglib = glift.displays.svg;
     var container = this.svg.child(this.idGen.markGroup());
     container.rmChild(this.idGen.guideLine());
@@ -303,7 +302,6 @@ glift.displays.board.Intersections.prototype = {
    * @return {glift.displays.board.Intersections} this
    */
   clearGuideLines: function() {
-    var elems = glift.enums.svgElements;
     var container = this.svg.child(this.idGen.markGroup())
       .rmChild(this.idGen.guideLine());
     return this;

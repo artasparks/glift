@@ -18,7 +18,7 @@ glift.displays.svg.ids = {
    * Get an ID for a SVG element (return the stringForm id).
    *
    * @param {string} divId
-   * @param {glift.enums.svgElements} type
+   * @param {glift.displays.svg.Element} type
    * @param {(!glift.Point|!Object|string)=} opt_extraData
    * extraData may be undefined.  Usually a point, but also be an icon name.
    * @return {string} The relevant Id.
@@ -48,7 +48,7 @@ glift.displays.svg.IdGenerator = function(divId) {
   this.divId = divId;
 
   var eidFn = glift.displays.svg.ids.element;
-  var svgEnum = glift.enums.svgElements;
+  var svgEnum = glift.displays.svg.Element;
 
   /** @const @private {string} */
   this.svg_ = eidFn(this.divId, svgEnum.SVG);
@@ -100,7 +100,7 @@ glift.displays.svg.IdGenerator.prototype = {
    */
   stone: function(pt) {
     return glift.displays.svg.ids.element(
-        this.divId, glift.enums.svgElements.STONE, pt);
+        this.divId, glift.displays.svg.Element.STONE, pt);
   },
 
   /** @return {string} Group id for the stone shadows. */
@@ -112,7 +112,7 @@ glift.displays.svg.IdGenerator.prototype = {
    */
   stoneShadow: function(pt) {
     return glift.displays.svg.ids.element(
-        this.divId, glift.enums.svgElements.STONE_SHADOW, pt);
+        this.divId, glift.displays.svg.Element.STONE_SHADOW, pt);
   },
 
   /** @return {string} Group id for the star points. */
@@ -124,7 +124,7 @@ glift.displays.svg.IdGenerator.prototype = {
    */
   starpoint: function(pt) {
     return glift.displays.svg.ids.element(
-        this.divId, glift.enums.svgElements.STARPOINT, pt);
+        this.divId, glift.displays.svg.Element.STARPOINT, pt);
   },
 
   /** @return {string} Group id for a button group. */
@@ -136,7 +136,7 @@ glift.displays.svg.IdGenerator.prototype = {
    */
   button: function(name) {
     return glift.displays.svg.ids.element(
-        this.divId, glift.enums.svgElements.BUTTON, name);
+        this.divId, glift.displays.svg.Element.BUTTON, name);
   },
 
   /** @return {string} ID for a full-board button. */
@@ -151,7 +151,7 @@ glift.displays.svg.IdGenerator.prototype = {
    */
   line: function(pt) {
     return glift.displays.svg.ids.element(
-        this.divId, glift.enums.svgElements.BOARD_LINE, pt);
+        this.divId, glift.displays.svg.Element.BOARD_LINE, pt);
   },
 
   /** @return {string} Group id a Mark Container. */
@@ -163,7 +163,7 @@ glift.displays.svg.IdGenerator.prototype = {
    */
   mark: function(pt) {
     return glift.displays.svg.ids.element(
-        this.divId, glift.enums.svgElements.MARK, pt);
+        this.divId, glift.displays.svg.Element.MARK, pt);
   },
 
   /** @return {string} Group id for temporary marks. */
@@ -174,7 +174,7 @@ glift.displays.svg.IdGenerator.prototype = {
   /** @return {string} ID for a guideline. */
   guideLine: function() {
     return glift.displays.svg.ids.element(
-        this.divId, glift.enums.svgElements.GUIDE_LINE);
+        this.divId, glift.displays.svg.Element.GUIDE_LINE);
   },
 
   /** @return {string} Group ID for the icons.  */
@@ -186,13 +186,13 @@ glift.displays.svg.IdGenerator.prototype = {
    */
   icon: function(name) {
     return glift.displays.svg.ids.element(
-        this.divId, glift.enums.svgElements.ICON, name);
+        this.divId, glift.displays.svg.Element.ICON, name);
   },
 
   /** @return {string} ID for the temp icon group. */
   tempIconGroup: function() {
     return glift.displays.svg.ids.element(
-        this.divId, glift.enums.svgElements.TEMP_ICON_CONTAINER);
+        this.divId, glift.displays.svg.Element.TEMP_ICON_CONTAINER);
   },
 
   /**
@@ -201,7 +201,7 @@ glift.displays.svg.IdGenerator.prototype = {
    */
   tempIcon: function(name) {
     return glift.displays.svg.ids.element(
-        this.divId, glift.enums.svgElements.TEMP_ICON, name);
+        this.divId, glift.displays.svg.Element.TEMP_ICON, name);
   },
 
   /**
@@ -210,6 +210,6 @@ glift.displays.svg.IdGenerator.prototype = {
    */
   tempIconText: function(name) {
     return glift.displays.svg.ids.element(
-        this.divId, glift.enums.svgElements.TEMP_TEXT, name);
+        this.divId, glift.displays.svg.Element.TEMP_TEXT, name);
   },
 };
