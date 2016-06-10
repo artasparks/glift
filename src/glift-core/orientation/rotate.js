@@ -1,5 +1,3 @@
-goog.require('glift.orientation');
-
 /**
  * Calculates the desired rotation. Returns one of
  * glift.enums.rotations.

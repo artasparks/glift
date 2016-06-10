@@ -1,7 +1,5 @@
 goog.provide('glift.util.obj');
 
-goog.require('glift.util');
-
 glift.util.obj = {
   /**
    * A helper for merging obj information (typically CSS or SVG rules).  This

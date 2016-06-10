@@ -1,5 +1,3 @@
-goog.require('glift.orientation');
-
 /**
  * Takes a movetree and returns the optimal BoardRegion-Quad for cropping purposes.
  *

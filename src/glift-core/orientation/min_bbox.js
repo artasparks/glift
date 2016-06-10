@@ -1,5 +1,3 @@
-goog.require('glift.orientation');
-
 /**
  * Get the minimal bounding box for set of stones and marks for the movetree.
  *

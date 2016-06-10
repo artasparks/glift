@@ -111,7 +111,14 @@ glift.rules.movetree = {
       props.add(prop.CA, 'UTF-8');
     }
     if (!props.contains(prop.AP)) {
-      props.add(prop.AP, 'Glift:' + glift.global.version);
+      // The glift.global.version is the ui-version. Use this version, if it
+      // exists. Otherwise, rely on the core version rules.
+      var version = glift.global.version;
+      if (version) {
+        props.add(prop.AP, 'Glift:' + glift.global.version);
+      } else {
+        props.add(prop.AP, 'Glift-core:' + glift.global['core-version']);
+      }
     }
     if (!props.contains(prop.KM)) {
       props.add(prop.KM, '0.00');

@@ -3,7 +3,7 @@
  *
  * @copyright Josh Hoak
  * @license MIT License (see LICENSE.txt)
- * @version 1.1.1
+ * @version 0.9.1
  * --------------------------------------
  */
 
@@ -16,15 +16,6 @@ if (window && !window['goog']) {
   };
   window['goog']['scope'] = function(fn) { fn() };
   window['goog']['provide'] = function(ns) {
-    var nsParts = ns.split('.');
-    var curNs = window;
-    for (var i = 0; i < nsParts.length; i++) {
-      var part = nsParts[i];
-      if (!curNs[part]) {
-        curNs[part] = {};
-      }
-      curNs = curNs[part];
-    }
   };
 }
 

@@ -1,7 +1,5 @@
 goog.provide('glift.enums');
 
-goog.require('glift');
-
 /**
  * Various constants used throughout glift.
  */

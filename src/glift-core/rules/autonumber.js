@@ -1,5 +1,3 @@
-goog.require('glift.rules');
-
 /**
  * Autonumber a movetree.
  *

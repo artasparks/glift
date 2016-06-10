@@ -1,8 +1,5 @@
 goog.provide('glift.util.colors');
 
-goog.require('glift.util');
-goog.require('glift.enums');
-
 glift.util.colors = {
   /**
    * @param {glift.enums.states} color

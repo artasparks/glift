@@ -16,12 +16,15 @@
     deepEqual(p.getOneValue('GM'), '1');
     deepEqual(p.getOneValue('FF'), '4');
     deepEqual(p.getOneValue('CA'), 'UTF-8');
-    deepEqual(p.getOneValue('AP'), 'Glift:' + glift.global.version);
     deepEqual(p.getOneValue('KM'), '0.00');
     deepEqual(p.getOneValue('RU'), 'Japanese');
     deepEqual(p.getOneValue('SZ'), '19');
     deepEqual(p.getOneValue('PW'), 'White');
     deepEqual(p.getOneValue('PB'), 'Black');
+
+    // Note: This changes based on whether Glift is being used as Glift-ui or
+    // Glift core, so we need to make the test resiliant to these changes.
+    ok(/Glift/.test(p.getOneValue('AP')));
   });
 
   test('that property retrieval works', function() {
