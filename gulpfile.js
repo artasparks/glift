@@ -17,29 +17,30 @@ var gulp = require('gulp'),
 var srcPaths = [
   // :Glift Core: //
   // Top level source package must go first since it defines the namespace
-  'src/glift-core/glift.js',
+  'deps/glift-core/glift.js',
 
   // Enums are depended on directly by lots of other packages.
-  'src/glift-core/util',
+  'deps/glift-core/util',
 
   // The rest of glift-core
-  'src/glift-core',
+  'deps/glift-core',
 
   // :Glift UI: //
 
   // The widgetopt dir depends *directly* on the controllers. Yuck. These need
   // to be refactored, probably by putting the widget options directly in the
   // controller dirs.
-  'src/glift-ui/controllers',
+  'src/controllers',
 
   // Everything else is in lexicographical order
-  'src/glift-ui']
+  'src']
 
 // Ignore the test files
-var srcIgnore = ['!src/**/*_test.js']
+var srcIgnore = ['!src/**/*_test.js', '!deps/**/*_test.js', ]
 
-// The glob used for determining tests
-var testGlob = ['src/**/*_test.js']
+// The glob used for determining tests. It's probably the case that we shouldn't
+// run dep tests here, but that can be fixed later.
+var testGlob = ['src/**/*_test.js', 'deps/**/*_test.js', ]
 
 // The full build-test cycle. This:
 // - Updates all the HTML files
@@ -269,7 +270,7 @@ function jsSrcGlobGen(ordering, addGlobs) {
 
   ordering.forEach((fpath) => {
     if (!fs.existsSync(fpath)) {
-      console.warn('Path does not exist: ' + path);
+      console.warn('Path does not exist: ' + fpath);
       return;
     }
     var fd = fs.lstatSync(fpath);

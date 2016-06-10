@@ -29,9 +29,11 @@ fi
 
 readonly src_path="${path}src"
 
-readonly lib_path=$(echo $0 | sed "s/\\/[^/]*$/\\//g")src/$name
+readonly lib_path=$(echo $0 | sed "s/\\/[^/]*$/\\//g")deps/$name
 
 echo "Copying $src_path to $lib_path"
 
 # Ensure that the dirs are readonly.
-rsync -r --chmod=a-w $src_path/* $lib_path
+rsync -r $src_path/* $lib_path
+
+find $lib_path -name "*.js" -print | xargs chmod a-w
