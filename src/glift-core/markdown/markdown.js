@@ -20,20 +20,21 @@ glift.markdown = {
   }
 };
 
-
 /**
  * Wrapper object for the abstract syntax tree.
  *
+ * @param {!Array<!glift.marked.Token>} tree Array of tokens.
  * @constructor @final @struct
  */
 glift.markdown.Ast = function(tree) {
-  /** From marked, this is an  */
+  /** The token array */
   this.tree = tree;
 };
 
 glift.markdown.Ast.prototype = {
   /**
-   * Returns the headers. We assume no nested headers.
+   * Returns just the headers. We assume no nested headers.
+   * @return{!Array<!glift.marked.Token>} Array of header tokens.
    */
   headers: function() {
     var out = [];

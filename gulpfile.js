@@ -164,6 +164,10 @@ gulp.task('update-html-compiled', ['compile'], () => {
     }))
 });
 
+gulp.task('compile-test', ['update-html-compiled'], () => {
+  return gulp.src('./test/htmltests_gen/QunitTest.html').pipe(qunit())
+});
+
 gulp.task('compile-watch', () => {
   return gulp.watch([
     'src/**/*.js',

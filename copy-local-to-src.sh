@@ -5,7 +5,7 @@ set -e
 readonly path=$@
 
 if [[ -z path ]]; then
-  echo "You must supply a path for Glift-core!"
+  echo "You must supply a path for the local repo!!"
   exit 1
 fi
 
@@ -20,18 +20,18 @@ if [[ ! -f ${path}package.json ]]; then
 fi
 
 
-readonly name=$(grep "\"name\": \"glift-core\"" ${path}package.json)
+readonly name=$(grep "^  \"name\":.*" ${path}package.json | sed "s/.*\"\(.*\)\"[^:].*/\1/g")
 
 if [[ -z $name ]]; then
-  echo "Could not find the glift-core package.json!"
+  echo "Could not find the package.json!"
   exit 1
 fi
 
 readonly src_path="${path}src"
 
-readonly lib_path=$(echo $0 | sed "s/\\/[^/]*$/\\//g")src/glift-core
+readonly lib_path=$(echo $0 | sed "s/\\/[^/]*$/\\//g")src/$name
 
-echo "Copying Glift-core"
+echo "Copying $src_path to $lib_path"
 
-# Ensure that Glift is readonly.
+# Ensure that the dirs are readonly.
 rsync -r --chmod=a-w $src_path/* $lib_path

@@ -1,12 +1,11 @@
 goog.provide('glift.marked');
 
-
 /**
  * marked - a markdown parser
  * Copyright (c) 2011-2014, Christopher Jeffrey. (MIT Licensed)
  * https://github.com/chjj/marked
  *
- * Modified by Kashomon to include closure type checking.
+ * Modified by Kashomon to include basic closure type checking.
  */
 goog.scope(function() {
 
