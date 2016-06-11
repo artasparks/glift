@@ -28,7 +28,9 @@
   test('widgetopt: Testing availability', function() {
     for (var i = 0; i < supportedList.length; i++) {
       var widgetType = supportedList[i];
-      var w = glift.api.widgetopt[widgetType];
+      var wfn = glift.api.widgetopt[widgetType];
+      ok(wfn, 'fn must be defined:' + widgetType);
+      var w = wfn();
       ok(w, 'type must be defined:' + widgetType);
       for (var j = 0; j < keys.length; j++) {
         ok(keys[j] in w, 'key not present:' + keys[j]);

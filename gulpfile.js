@@ -26,13 +26,7 @@ var srcPaths = [
   'deps/glift-core',
 
   // :Glift UI: //
-
-  // The widgetopt dir depends *directly* on the controllers. Yuck. These need
-  // to be refactored, probably by putting the widget options directly in the
-  // controller dirs.
-  'src/controllers',
-
-  // Everything else is in lexicographical order
+  // Everything else is in DFS+lexicographical+depth order.
   'src']
 
 // Ignore the test files

@@ -386,7 +386,7 @@ glift.api.SgfOptions.prototype = {
     }
 
     var widgetType = sgf.widgetType || this.widgetType;
-    var widgetOverrides = glift.api.widgetopt[widgetType];
+    var widgetOverrides = glift.api.widgetopt[widgetType]();
     for (var key in widgetOverrides) {
       if (!sgf[key] && widgetOverrides[key] !== undefined) {
         sgf[key] = glift.util.simpleClone(widgetOverrides[key]);
