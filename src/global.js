@@ -8,7 +8,7 @@ goog.require('glift.global');
  *
  * Currently on stable.
  */
-glift.global.version = '1.1.1';
+glift.global.version = '1.1.2';
 
 /**
  * The registry.  Used to determine who has 'ownership' of key-presses.
