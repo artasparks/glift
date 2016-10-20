@@ -82,9 +82,26 @@ glift.themes.baseTemplate = {
         },
       }
     },
+    // TODO(kashomon): This is a direct copy of most of the properties of BLACK
+    // stones and is an ugly hack because I'm not doing inheritance right for
+    // these blocks.
     BLACK_HOVER : {
       fill: "black",
-      opacity: 0.5
+      opacity: 0.5,
+      "stroke-width": 1, // The default value
+      stroke: "black",
+      marks: {
+        fill: 'white',
+        stroke: 'white',
+        STONE_MARKER : {
+          fill: '#CCF',
+          opacity: 0.6
+        },
+        VARIATION_MARKER : {
+          stroke: '#A22',
+          fill: '#A22'
+        },
+      }
     },
     WHITE : {
       stroke: "black",
@@ -104,10 +121,26 @@ glift.themes.baseTemplate = {
         },
       }
     },
+    // TODO(kashomon): This is a direct copy of most of the properties of WHITE
+    // stones and is an ugly hack because I'm not doing inheritance right for
+    // these blocks.
     WHITE_HOVER : {
       fill: "white",
       stroke: "black",
-      opacity: 0.5
+      opacity: 0.5,
+      'stroke-width': 1, // The default value
+      marks: {
+        fill: 'black',
+        stroke: 'black',
+        STONE_MARKER : {
+          fill: '#33F',
+          opacity: 0.6
+        },
+        VARIATION_MARKER : {
+          stroke: '#A22',
+          fill: '#A22'
+        },
+      }
     }
   },
 

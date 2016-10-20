@@ -169,6 +169,13 @@ glift.displays.board.Intersections.prototype = {
       var stoneColor = stone.attr('stone_color');
       var stonesTheme = this.theme.stones;
       var marksTheme = stonesTheme[stoneColor].marks;
+      // This is a terrible hack. Once we've chosen the marks theme, set the
+      // stone color to a real stone color.
+      if (stoneColor === 'BLACK_HOVER') {
+        stoneColor = glift.enums.states.BLACK;
+      } else if (stoneColor === 'WHITE_HOVER') {
+        stoneColor = glift.enums.states.WHITE;
+      }
       glift.displays.board.addMark(container, this.idGen, this.boardPoints,
           marksTheme, stonesTheme, pt, mark, label, stoneColor);
       this.flushMark_(pt, mark, container);

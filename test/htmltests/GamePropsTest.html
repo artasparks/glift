@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf8" />
+    <title></title>
+    <style type="text/css">
+    #glift_display {
+        width: 100%;
+        min-width: 600px;
+        height: 600px;
+    }
+    </style>
+    <!-- AUTO-GEN-DEPS -->
+    <!-- END-AUTO-GEN-DEPS -->
+</head>
+<body>
+
+<div id="glift_display"></div>
+
+<script>
+sgfdata = { problem_0010: "(;AB[bd][cd][dd][ed][ec][eb][ba]AW[ac][bc][cc][dc][db][da]CA[UTF-8]GN[test]PL[W]SZ[19];W[bb];B[ca];W[aa];B[ab];GW[]W[cb]) " };
+
+glift.api.widgetopt[glift.WidgetType.STANDARD_PROBLEM].statusBarIcons = [
+  'game-info',
+  'fullscreen'
+];
+
+// only didplay the problem name in the game info window
+glift.rules.Properties.prototype.getGameInfo = function () {
+    var gameInfoArr = [];
+    var propNameMap = {
+      GN: 'Problem Name',
+    };
+    for (var key in propNameMap) {
+      if (this.contains(key)) {
+        var displayName = propNameMap[key];
+        var obj = {
+          prop: key,
+          displayName: displayName,
+          value: this.getOneValue(key)
+        };
+        gameInfoArr.push(obj);
+      }
+    }
+    return gameInfoArr;
+};
+
+gliftWidget = glift.create({
+  sgfCollection: [ sgfdata.problem_0010 ],
+  sgfDefaults: {
+    widgetType: 'STANDARD_PROBLEM',
+    boardRegion: glift.enums.boardRegions.ALL,
+    problemConditions: { GB: [], GW: [] },
+    keyMappings: {
+      ARROW_LEFT: 'iconActions.arrowleft.click',
+      ARROW_UP: 'iconActions.chevron-left.click',
+      ARROW_DOWN: 'iconActions.chevron-right.click',
+      '/': 'iconActions.undo-problem-move.click'
+    }
+  },
+  divId: "glift_display",
+  allowWrapAround: 1
+});
+
+</script>
+
+</body>
+</html>
