@@ -214,7 +214,7 @@ glift.flattener.Flattened.prototype = {
 
   /**
    * Returns the ending move number. Should be tha same as the starting move
-   * number if no nextMovesTreepath is specified.
+   * number if no nextMovesPath is specified.
    *
    * @return {number}
    */

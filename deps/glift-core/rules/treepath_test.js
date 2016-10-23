@@ -39,13 +39,15 @@
 
   test('Convert back to an init path string', function() {
     var convert  = glift.rules.treepath.toInitPathString;
-    deepEqual(convert([]), '')
+    deepEqual(convert([]), '0')
     deepEqual(convert([0]), '1')
     deepEqual(convert([0,0,0]), '3')
+    deepEqual(convert([0,0,0,0,0,0,0,0,0,0]), '10')
     deepEqual(convert([0,0,0,1]), '3.1')
     deepEqual(convert([0,0,0,1,0]), '3.1.0')
-    deepEqual(convert([0,0,0,1,0,0]), '3.1.0.0')
-    deepEqual(convert([0,0,0,1,0,0,12,0,5]), '3.1.0.0.12.0.5')
+    deepEqual(convert([0,0,0,1,0,0]), '3.1.0:2')
+    deepEqual(convert([0,0,0,1,0,0,12,0,5]), '3.1.0:2.12.0.5')
+    deepEqual(convert([0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1]), '3.1.0:12.1')
   });
 
   test('Parse a fragment', function() {
@@ -87,8 +89,16 @@
 
   test('Convert back to an path fragment string', function() {
     var convertToString = glift.rules.treepath.toFragmentString;
-    deepEqual(convertToString([0,1,0,2,0,0,7]), '0.1.0.2.0.0.7');
+    deepEqual(convertToString([0,1,0,2,0,0,7]), '0.1.0.2.0:2.7');
     deepEqual(convertToString('0'), '0');
+  });
+
+  test('Fragment squashing', function() {
+    var convertToString = glift.rules.treepath.toFragmentString;
+    deepEqual(convertToString([0,0,0,0]), '0:4');
+    deepEqual(convertToString([1,1,1,1]), '1:4');
+    deepEqual(convertToString([0,0,0,0,0,0,0,1,1,1,1,2,3,3,3]), '0:7.1:4.2.3:3');
+    deepEqual(convertToString([0,1,2.3,4]), '0.1.2.3.4');
   });
 
   test('Test to end paths', function() {

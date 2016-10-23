@@ -14,7 +14,10 @@ USAGE="=======================================================================
   Example:
       copy-local-to-deps.sh ../glift-core"
 
-readonly REPO_PATH=$@
+# Ensure the REPO_PATH always has a trailing slash.
+readonly REPO_PATH=${@%/}/
+
+echo "Using repo path $REPO_PATH"
 
 if [[ -z $REPO_PATH ]]; then
   echo "You must supply a path for the local repo!!"

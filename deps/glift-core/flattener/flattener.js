@@ -14,8 +14,10 @@ glift.flattener = {};
  *
  * Optional parameters:
  *  - goban: used for extracting all the inital stones.
- *  - nextMovesTreepath.  Defaults to [].  This is typically only used for
+ *  - nextMovesPath.  Defaults to [].  This is typically only used for
  *    printed diagrams.
+ *  - initPosition.  Defaults to undefined. If not defined, we rely on the
+ *    initial position provided by the movetree.
  *  - startingMoveNum.  Optionally override the move number. If not set, it's
  *    automatically determined based on whether the position is on the
  *    mainpath or a variation.
@@ -40,7 +42,8 @@ glift.flattener = {};
  *
  * @typedef {{
  *  goban: (!glift.rules.Goban|undefined),
- *  nextMovesTreepath: (!glift.rules.Treepath|string|!Array<number>|undefined),
+ *  initPosition: (!glift.rules.Treepath|string|!Array<number>|undefined),
+ *  nextMovesPath: (!glift.rules.Treepath|string|!Array<number>|undefined),
  *  startingMoveNum: (number|undefined),
  *  boardRegion: (glift.enums.boardRegions|undefined),
  *  regionRestrictions: (!Array<glift.enums.boardRegions>|undefined),
@@ -87,7 +90,7 @@ glift.flattener.Collision;
  *    -> The marks
  *    -> The next moves
  *    -> The previous move
- *    -> subsequent stones, if a nextMovesTreepath is present.  These are
+ *    -> subsequent stones, if a nextMovesPath is present.  These are
  *    given labels.
  * @param {!glift.flattener.Options=} opt_options
  *
@@ -98,6 +101,11 @@ glift.flattener.flatten = function(movetreeInitial, opt_options) {
   var mt = movetreeInitial.newTreeRef();
   var options = opt_options || {};
 
+  if (options.initPosition !== undefined) {
+    var initPos = glift.rules.treepath.parseInitialPath(options.initPosition || '');
+    mt = mt.getTreeFromRoot(initPos);
+  }
+
   // Use the provided goban, or reclaculate it.  This is somewhat inefficient,
   // so it's recommended that the goban be provided.
   var goban = options.goban || glift.rules.goban.getFromMoveTree(
@@ -107,7 +115,7 @@ glift.flattener.flatten = function(movetreeInitial, opt_options) {
 
   // Note: NMTP is always defined and will, at the very least, be an empty
   // array.
-  var nmtp = glift.rules.treepath.parseFragment(options.nextMovesTreepath || '');
+  var nmtp = glift.rules.treepath.parseFragment(options.nextMovesPath || '');
 
   var optStartingMoveNum = options.startingMoveNum || null;
   // Find the starting move number before applying the next move path.
@@ -192,7 +200,7 @@ glift.flattener.flatten = function(movetreeInitial, opt_options) {
   }
 
   if (options.markKo && !nmtp.length) {
-    // We don't mark Ko for when the nextMovesTreepath (nmtp) is specified. If
+    // We don't mark Ko for when the nextMovesPath (nmtp) is specified. If
     // there's a Ko & nmtp is defined, then stones will be captured but the
     // stones will be left on the board. So there's no point in putting a mark
     // or indicator at that location.
@@ -392,14 +400,14 @@ glift.flattener.markMap_ = function(movetree) {
  * effectively unused.
  *
  * @param {!glift.rules.MoveTree} mt
- * @param {!glift.rules.Treepath} nextMovesTreepath
+ * @param {!glift.rules.Treepath} nextMovesPath
  * @return {number}
  * @private
  */
-glift.flattener.findStartingMoveNum_ = function(mt, nextMovesTreepath) {
+glift.flattener.findStartingMoveNum_ = function(mt, nextMovesPath) {
   mt = mt.newTreeRef();
   if (mt.onMainline()) {
-    if (nextMovesTreepath.length > 0 && nextMovesTreepath[0] > 0) {
+    if (nextMovesPath.length > 0 && nextMovesPath[0] > 0) {
       return 1;
     } else {
       return mt.node().getNodeNum() + 1;

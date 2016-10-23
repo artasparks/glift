@@ -142,7 +142,7 @@
           mt = glift.rules.movetree.getFromSgf(commentary, 100);
           perfTest('Flatten a movetree with a next moves path', 1000, function() {
             var flattened = glift.flattener.flatten(mt, {
-              nextMovesTreepath: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+              nextMovesPath: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
             });
           });
 

@@ -225,7 +225,7 @@ glift.controllers.BaseController.prototype = {
       showNextVariationsType: this.showVariations_,
       markLastMove: this.markLastMove_,
       markKo: this.markKo_,
-      nextMovesTreepath: this.nextMovesPath_,
+      nextMovesPath: this.nextMovesPath_,
       problemConditions: this.problemConditions,
       selectedNextMove: this.selectedNextMove(),
     });
