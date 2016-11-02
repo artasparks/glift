@@ -106,12 +106,11 @@ glift.displays.icons.IconBar.prototype = {
   /** Draws the icon bar. */
   draw: function() {
     this.destroy();
-    var svglib = glift.displays.svg;
     var divBbox = this.divBbox,
         svgData = glift.displays.icons.svg,
         point = glift.util.point;
     this.bbox = divBbox;
-    this.svg = svglib.svg()
+    this.svg = glift.svg.svg()
       .setAttr('width', '100%')
       .setAttr('height', '100%');
     glift.displays.icons.rowCenterWrapped(
@@ -126,13 +125,12 @@ glift.displays.icons.IconBar.prototype = {
    * Actually draw the icon.
    */
   _createIcons: function() {
-    var svglib = glift.displays.svg;
-    var container = svglib.group().setId(this.idGen.iconGroup());
+    var container = glift.svg.group().setId(this.idGen.iconGroup());
     this.svg.append(container);
-    this.svg.append(svglib.group().setId(this.idGen.tempIconGroup()));
+    this.svg.append(glift.svg.group().setId(this.idGen.tempIconGroup()));
     for (var i = 0, ii = this.icons.length; i < ii; i++) {
       var icon = this.icons[i];
-      var path = svglib.path()
+      var path = glift.svg.path()
         .setId(icon.elementId)
         .setAttr('d', icon.iconStr)
         .setAttr('transform', icon.transformString());
@@ -148,12 +146,11 @@ glift.displays.icons.IconBar.prototype = {
    * complicated icons, it turns out to be obnoxious to try to select the icon.
    */
   _createIconButtons: function() {
-    var svglib = glift.displays.svg;
-    var container = svglib.group().setId(this.idGen.buttonGroup());
+    var container = glift.svg.group().setId(this.idGen.buttonGroup());
     this.svg.append(container);
     for (var i = 0, len = this.icons.length; i < len; i++) {
       var icon = this.icons[i];
-      container.append(svglib.rect()
+      container.append(glift.svg.rect()
         .setData(icon.iconName)
         .setAttr('x', icon.bbox.topLeft().x())
         .setAttr('y', icon.bbox.topLeft().y())
@@ -168,9 +165,11 @@ glift.displays.icons.IconBar.prototype = {
   // TODO(kashomon): Delete this flush nonsense.  It's not necessary for the
   // iconbar.
   flush: function() {
-    this.svg.attachToParent(this.divId);
+    if (this.svg) {
+      glift.displays.svg.dom.attachToParent(this.svg, this.divId);
+    }
     var multi = this.getIcon('multiopen');
-    if (multi !== undefined) {
+    if (multi) {
       this.setCenteredTempIcon('multiopen', multi.getActive(), 'black');
     }
   },
@@ -192,7 +191,6 @@ glift.displays.icons.IconBar.prototype = {
   setCenteredTempIcon: function(
       parentIconNameOrIndex, tempIcon, color, opt_vMargin, opt_hMargin) {
     // Move these defaults into the Theme.
-    var svglib = glift.displays.svg;
     var hm = opt_hMargin || 2,
         vm = opt_vMargin || 2;
     var parentIcon = this.getIcon(parentIconNameOrIndex);
@@ -215,7 +213,8 @@ glift.displays.icons.IconBar.prototype = {
       wrappedTemp = parentIcon.centerWithinIcon(wrappedTemp, vm, hm);
     }
 
-    this.svg.child(this.idGen.tempIconGroup()).appendAndAttach(svglib.path()
+    var group = this.svg.child(this.idGen.tempIconGroup());
+    glift.displays.svg.dom.appendAndAttach(group, glift.svg.path()
       .setId(tempIconId)
       .setAttr('d', wrappedTemp.iconStr)
       .setAttr('fill', color) // theme.icons.DEFAULT.fill
@@ -227,7 +226,6 @@ glift.displays.icons.IconBar.prototype = {
    * Add some temporary text on top of an icon.
    */
   addTempText: function(iconName, text, attrsObj, textMod) {
-    var svglib = glift.displays.svg;
     var icon = this.getIcon(iconName);
     var bbox = icon.bbox;
     if (icon.subboxIcon) {
@@ -240,7 +238,7 @@ glift.displays.icons.IconBar.prototype = {
     var id = this.idGen.tempIconText(iconName);
     var boxStrokeWidth = 7
     this.clearTempText(iconName);
-    var textObj = svglib.text()
+    var textObj = glift.svg.text()
       .setId(this.idGen.tempIconText(iconName))
       .setText(text)
       .setAttr('class', 'tempIcon')
@@ -254,7 +252,8 @@ glift.displays.icons.IconBar.prototype = {
     for (var key in attrsObj) {
       textObj.setAttr(key, attrsObj[key]);
     }
-    this.svg.child(this.idGen.tempIconGroup()).appendAndAttach(textObj);
+    var gr = this.svg.child(this.idGen.tempIconGroup())
+    glift.displays.svg.dom.appendAndAttach(gr, textObj);
     return this;
   },
 
@@ -274,7 +273,8 @@ glift.displays.icons.IconBar.prototype = {
   },
 
   destroyTempIcons: function() {
-    this.svg.child(this.idGen.tempIconGroup()).emptyChildrenAndUpdate();
+    glift.displays.svg.dom.emptyChildrenAndUpdate(
+        this.svg.child(this.idGen.tempIconGroup()));
     return this;
   },
 

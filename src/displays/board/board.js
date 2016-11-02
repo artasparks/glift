@@ -41,7 +41,7 @@ glift.displays.board.Display = function(environment, theme, opt_rotation) {
   this.rotation_ = opt_rotation || glift.enums.rotations.NO_ROTATION;
 
   // Variables defined during draw()
-  /** @private {glift.displays.svg.SvgObj} svgBase Root SVG object. */
+  /** @private {glift.svg.SvgObj} svgBase Root SVG object. */
   this.svg_ = null;
 
   /** @private {?glift.displays.board.Intersections} */
@@ -84,7 +84,7 @@ glift.displays.board.Display.prototype = {
   init: function() {
     if (!this.svg_) {
       this.destroy(); // make sure everything is cleared out of the div.
-      this.svg_ = glift.displays.svg.svg({
+      this.svg_ = glift.svg.svg({
         height: '100%',
         width: '100%',
         position: 'float',
@@ -108,7 +108,7 @@ glift.displays.board.Display.prototype = {
     var theme = this.theme_;
     var svg = this.svg_;
     var divId = this.divId();
-    var svglib = glift.displays.svg;
+    var svglib = glift.svg;
     var idGen = glift.displays.svg.ids.gen(divId);
     var goBox = env.goBoardBox;
     if (svg === null) {
@@ -191,7 +191,9 @@ glift.displays.board.Display.prototype = {
 
   /** @return {!glift.displays.board.Display} this */
   flush: function() {
-    this.svg_.attachToParent(this.divId());
+    if (this.svg_) {
+      glift.displays.svg.dom.attachToParent(this.svg_, this.divId());
+    }
     return this;
   },
 

@@ -1,7 +1,5 @@
 goog.provide('glift.displays.icons.IconSelector');
 
-goog.require('glift.displays.icons');
-
 glift.displays.icons.iconSelector = function(parentDivId, iconBarDivId, icon) {
   return new glift.displays.icons.IconSelector(parentDivId, iconBarDivId, icon)
       .draw();
@@ -40,7 +38,6 @@ glift.displays.icons.IconSelector.prototype = {
     // mess.
     this.destroy();
     var that = this;
-    var svglib = glift.displays.svg;
     var parentBbox = glift.displays.bboxFromDiv(this.parentDivId);
 
     var barElem = glift.dom.elem(this.iconBarId);
@@ -87,19 +84,19 @@ glift.displays.icons.IconSelector.prototype = {
           columnBox, rewrapped, paddingPx, paddingPx);
 
       var svgId = columnId + '_svg';
-      var svg = svglib.svg()
+      var svg = glift.svg.svg()
           .setId(columnId + '_svg')
           .setAttr('height', '100%')
           .setAttr('width', '100%');
       var idGen = glift.displays.svg.ids.gen(columnId);
-      var container = svglib.group().setId(idGen.iconGroup());
+      var container = glift.svg.group().setId(idGen.iconGroup());
       svg.append(container);
       for (var i = 0, len = transforms.length; i < len; i++) {
         var icon = rewrapped.shift();
         var id = svgId + '_' + icon.iconName;
         icon.setElementId(id);
         this.iconList[columnIndex].push(icon);
-        container.append(svglib.path()
+        container.append(glift.svg.path()
             .setId(icon.elementId)
             .setAttr('d', icon.iconStr)
             .setAttr('fill', 'black') // replace with theme
@@ -112,22 +109,22 @@ glift.displays.icons.IconSelector.prototype = {
     this._createIconButtons();
     this._setBackgroundEvent();
     for (var i = 0; i < this.svgColumnList.length; i++) {
-      this.svgColumnList[i].attachToParent(this.columnIdList[i]);
+      glift.displays.svg.dom.attachToParent(
+          this.svgColumnList[i], this.columnIdList[i]);
     }
     return this;
   },
 
   _createIconButtons: function() {
-    var svglib = glift.displays.svg;
     for (var i = 0; i < this.iconList.length; i++) {
       var svg = this.svgColumnList[i];
       var idGen = glift.displays.svg.ids.gen(this.columnIdList[i]);
       var iconColumn = this.iconList[i];
-      var container = svglib.group().setId(idGen.buttonGroup());
+      var container = glift.svg.group().setId(idGen.buttonGroup());
       svg.append(container);
       for (var j = 0; j < iconColumn.length; j++) {
         var icon = iconColumn[j]
-        container.append(svglib.rect()
+        container.append(glift.svg.rect()
           .setData(icon.iconName)
           .setAttr('x', icon.bbox.topLeft().x())
           .setAttr('y', icon.bbox.topLeft().y())

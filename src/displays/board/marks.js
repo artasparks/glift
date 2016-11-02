@@ -4,12 +4,12 @@
  * the Marks are created / destroyed on demand, which is why we need a g
  * container.
  *
- * @param {!glift.displays.svg.SvgObj} svg Base svg obj
+ * @param {!glift.svg.SvgObj} svg Base svg obj
  * @param {!glift.displays.svg.IdGenerator} idGen The ID generator for SVG.
  */
 glift.displays.board.markContainer = function(svg, idGen) {
-  svg.append(glift.displays.svg.group().setId(idGen.markGroup()));
-  svg.append(glift.displays.svg.group().setId(idGen.tempMarkGroup()));
+  svg.append(glift.svg.group().setId(idGen.markGroup()));
+  svg.append(glift.svg.group().setId(idGen.tempMarkGroup()));
 };
 
 /**
@@ -22,8 +22,7 @@ glift.displays.board.addMark = function(
   // the files come in (beyond the base package file).  So, either we need to
   // combine intersections.js with board.js or keep this a separate static
   // method.
-  var svgpath = glift.displays.svg.pathutils;
-  var svglib = glift.displays.svg;
+  var svgpath = glift.svg.pathutils;
   var rootTwo = 1.41421356237;
   var rootThree = 1.73205080757;
   var marks = glift.enums.marks;
@@ -54,7 +53,7 @@ glift.displays.board.addMark = function(
     if (stoneColor === glift.enums.states.BLACK) {
       strokeWidth = strokeWidth * 0.4;
     }
-    container.append(svglib.text()
+    container.append(glift.svg.text()
         .setText(label)
         .setData(pt)
         .setAttr('fill', marksTheme.fill)
@@ -75,7 +74,7 @@ glift.displays.board.addMark = function(
     // If the square is right next to the stone edge, it doesn't look as nice
     // as if it's offset by a little bit.
     var halfWidth = baseDelta - fudge;
-    container.append(svglib.rect()
+    container.append(glift.svg.rect()
         .setData(pt)
         .setAttr('x', coordPt.x() - halfWidth)
         .setAttr('y', coordPt.y() - halfWidth)
@@ -93,7 +92,7 @@ glift.displays.board.addMark = function(
     var topRight = coordPt.translate(halfDelta, -1 * halfDelta);
     var botLeft = coordPt.translate(-1 * halfDelta, halfDelta);
     var botRight = coordPt.translate(halfDelta, halfDelta);
-    container.append(svglib.path()
+    container.append(glift.svg.path()
         .setData(pt)
         .setAttr('d',
             svgpath.movePt(coordPt) + ' ' +
@@ -108,7 +107,7 @@ glift.displays.board.addMark = function(
         .setAttr('stroke', marksTheme.stroke)
         .setId(markId));
   } else if (mark === marks.CIRCLE) {
-    container.append(svglib.circle()
+    container.append(glift.svg.circle()
         .setData(pt)
         .setAttr('cx', coordPt.x())
         .setAttr('cy', coordPt.y())
@@ -119,7 +118,7 @@ glift.displays.board.addMark = function(
         .setId(markId));
   } else if (mark === marks.STONE_MARKER) {
     var stoneMarkerTheme = stonesTheme.marks['STONE_MARKER'];
-    container.append(svglib.circle()
+    container.append(glift.svg.circle()
         .setData(pt)
         .setAttr('cx', coordPt.x())
         .setAttr('cy', coordPt.y())
@@ -132,7 +131,7 @@ glift.displays.board.addMark = function(
     var rightNode = coordPt.translate(r * (rootThree / 2), r * (1 / 2));
     var leftNode  = coordPt.translate(r * (-1 * rootThree / 2), r * (1 / 2));
     var topNode = coordPt.translate(0, -1 * r);
-    container.append(svglib.path()
+    container.append(glift.svg.path()
         .setData(pt)
         .setAttr('fill', 'none')
         .setAttr('d',
@@ -144,7 +143,7 @@ glift.displays.board.addMark = function(
         .setAttr('stroke', marksTheme.stroke)
         .setId(markId));
   } else if (mark === marks.KO_LOCATION) {
-    container.append(svglib.circle()
+    container.append(glift.svg.circle()
         .setData(pt)
         .setAttr('cx', coordPt.x())
         .setAttr('cy', coordPt.y())

@@ -6,7 +6,7 @@ goog.require('glift.displays.board');
  * The backing data for the display.
  *
  * @param {string} divId
- * @param {!glift.displays.svg.SvgObj} svg Base svg obj
+ * @param {!glift.svg.SvgObj} svg Base svg obj
  * @param {!glift.displays.BoardPoints} boardPoints Board points object from the
  *    gui environment.
  * @param {!glift.themes.base} theme The theme object
@@ -152,7 +152,7 @@ glift.displays.board.Intersections.prototype = {
   },
 
   /**
-   * @param {!glift.displays.svg.SvgObj} container
+   * @param {!glift.svg.SvgObj} container
    * @param {!glift.Point} pt
    * @param {!glift.enums.marks} mark
    * @param {?string} label
@@ -231,7 +231,7 @@ glift.displays.board.Intersections.prototype = {
   /**
    * @param {!glift.Point} pt
    * @param {!glift.enums.marks} mark
-   * @param {!glift.displays.svg.SvgObj} markGroup
+   * @param {!glift.svg.SvgObj} markGroup
    * @return {!glift.displays.board.Intersections} the current obj.
    * @private
    */
@@ -248,15 +248,16 @@ glift.displays.board.Intersections.prototype = {
       glift.dom.elem(/** @type {string} */ (linept.id()))
           .setAttr('opacity', /** @type {string} */ (linept.attr('opacity')));
     }
-    markGroup.child(idGen.mark(pt))
-        .attachToParent(/** @type {string} */ (markGroup.id()));
+    markGroup.child(idGen.mark(pt));
+    glift.displays.svg.dom.attachToParent(
+        markGroup, /** @type {string} */ (markGroup.id()));
     return this;
   },
 
   /**
    * Clear marks (optionally) from a group.
    *
-   * @param {glift.displays.svg.SvgObj=} opt_markGroup
+   * @param {!glift.svg.SvgObj=} opt_markGroup
    *    Specify a mark group, or generate one.
    * @return {glift.displays.board.Intersections} the current obj.
    */
@@ -271,12 +272,14 @@ glift.displays.board.Intersections.prototype = {
           this.svg.child(idGen.starpointGroup()).child(idGen.starpoint(
               /** @type {!glift.Point} */ (pt)))
       if (starpoint) {
-        starpoint.setAttr('opacity', 1).updateAttrInDom('opacity');
+        glift.displays.svg.dom.updateAttrInDom(
+            starpoint.setAttr('opacity', 1), 'opacity');
       }
       var line = this.svg.child(idGen.lineGroup()).child(idGen.line(
           /** @type {!glift.Point} */ (pt)))
       if (line) {
-        line.setAttr('opacity', 1).updateAttrInDom('opacity');
+        glift.displays.svg.dom.updateAttrInDom(
+            line.setAttr('opacity', 1), 'opacity');
       }
     }
     markGroup.emptyChildren();
@@ -290,13 +293,12 @@ glift.displays.board.Intersections.prototype = {
    * @return {glift.displays.board.Intersections} this
    */
   addGuideLines: function(pt) {
-    var svglib = glift.displays.svg;
     var container = this.svg.child(this.idGen.markGroup());
     container.rmChild(this.idGen.guideLine());
 
     var bpt = this.boardPoints.getCoord(pt);
     var boardPoints = this.boardPoints;
-    container.append(svglib.path()
+    container.append(glift.svg.path()
       .setAttr('d', glift.displays.board.intersectionLine(
           bpt, boardPoints.radius * 8, boardPoints.numIntersections))
       .setAttr('stroke-width', 3)

@@ -5,22 +5,19 @@ goog.require('glift.displays.board');
  * rather than as a whole so that we can clear theme out when we to draw marks
  * on the raw board (rather than on stones).
  *
- * @param {!glift.displays.svg.SvgObj} svg Base svg obj
+ * @param {!glift.svg.SvgObj} svg Base svg obj
  * @param {!glift.displays.svg.IdGenerator} idGen The ID generator for SVG.
  * @param {!glift.displays.BoardPoints} boardPoints Board points object.
  * @param {!glift.themes.base} theme The theme object
  */
 glift.displays.board.lines = function(svg, idGen, boardPoints, theme) {
-  // Mapping from int point (e.g., 3,3) pt string to id;
-  var svglib = glift.displays.svg;
-
-  var container = svglib.group().setId(idGen.lineGroup());
+  var container = glift.svg.group().setId(idGen.lineGroup());
   svg.append(container);
 
   var data = boardPoints.data();
   for (var i = 0, ii = data.length; i < ii; i++) {
     var pt = data[i];
-    container.append(svglib.path()
+    container.append(glift.svg.path()
       .setAttr('d', glift.displays.board.intersectionLine(
           pt, boardPoints.radius, boardPoints.numIntersections))
       .setAttr('stroke', theme.lines.stroke)
@@ -44,7 +41,7 @@ glift.displays.board.intersectionLine = function(
       maxIntersects = numIntersections - 1,
       coordinate = boardPt.coordPt,
       intersection = boardPt.intPt,
-      svgpath = glift.displays.svg.pathutils;
+      svgpath = glift.svg.pathutils;
   var top = intersection.y() === minIntersects ?
       coordinate.y() : coordinate.y() - radius;
   var bottom = intersection.y() === maxIntersects ?

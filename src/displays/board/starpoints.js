@@ -2,14 +2,13 @@
  * Create the star points.  See boardPoints.starPoints() for details about which
  * points are used
  *
- * @param {!glift.displays.svg.SvgObj} svg Base svg obj
+ * @param {!glift.svg.SvgObj} svg Base svg obj
  * @param {!glift.displays.svg.IdGenerator} idGen The ID generator for SVG.
  * @param {!glift.displays.BoardPoints} boardPoints Board points object.
  * @param {!glift.themes.base} theme The theme object
  */
 glift.displays.board.starpoints = function(svg, idGen, boardPoints, theme) {
-  var svglib = glift.displays.svg;
-  var container = svglib.group().setId(idGen.starpointGroup());
+  var container = glift.svg.group().setId(idGen.starpointGroup());
   svg.append(container);
 
   var size = theme.starPoints.sizeFraction * boardPoints.spacing;
@@ -17,7 +16,7 @@ glift.displays.board.starpoints = function(svg, idGen, boardPoints, theme) {
   for (var i = 0, ii = starPointData.length; i < ii; i++) {
     var pt = starPointData[i];
     var coordPt = boardPoints.getCoord(pt).coordPt;
-    container.append(svglib.circle()
+    container.append(glift.svg.circle()
       .setAttr('cx', coordPt.x())
       .setAttr('cy', coordPt.y())
       .setAttr('r', size)

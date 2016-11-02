@@ -3,13 +3,12 @@ goog.require('glift.displays.board');
 /**
  * Create transparent buttons that overlay each intersection.
  *
- * @param {!glift.displays.svg.SvgObj} svg Base svg obj
+ * @param {!glift.svg.SvgObj} svg Base svg obj
  * @param {!glift.displays.svg.IdGenerator} idGen The ID generator for SVG.
  * @param {!glift.displays.BoardPoints} boardPoints Board points object.
  */
 glift.displays.board.buttons = function(svg, idGen, boardPoints) {
-  var svglib = glift.displays.svg;
-  var container = svglib.group().setId(idGen.buttonGroup());
+  var container = glift.svg.group().setId(idGen.buttonGroup());
   svg.append(container);
 
   var data = boardPoints.data();
@@ -18,7 +17,7 @@ glift.displays.board.buttons = function(svg, idGen, boardPoints) {
   var br = data[len - 1];
 
   data = { tl: tl, br: br, spacing: boardPoints.spacing };
-  container.append(svglib.rect()
+  container.append(glift.svg.rect()
     .setData(data)
     .setAttr("x", tl.coordPt.x() - boardPoints.radius)
     .setAttr("y", tl.coordPt.y() - boardPoints.radius)

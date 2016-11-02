@@ -1,6 +1,6 @@
 (function() {
-  module('glift.displays.svg.svgObjTest');
-  var svg = glift.displays.svg;
+  module('glift.svg.svgObjTest');
+  var svg = glift.svg;
 
   test('Test svg creation', function() {
     deepEqual(svg.svg().render(),
