@@ -5,7 +5,7 @@ glift.displays = {
    * Create the display.  Delegates to board.create(...), which creates an SVG
    * based Go Board.
    *
-   * @param {string} divId
+   * @param {string} elemId The DOM element ID used.
    * @param {!glift.orientation.BoundingBox} boardBox
    * @param {!glift.themes.base} theme Glift theme.
    * @param {glift.enums.boardRegions} boardRegion Board region to crop the
@@ -20,7 +20,7 @@ glift.displays = {
    * @return {glift.displays.board.Display} The display.
    */
   create: function(
-      divId,
+      elemId,
       boardBox,
       theme,
       boardRegion,
@@ -29,9 +29,9 @@ glift.displays = {
       drawBoardCoords) {
 
     var env = glift.displays.environment.get(
-        divId, boardBox, boardRegion, intersections, drawBoardCoords);
+         boardBox, boardRegion, intersections, drawBoardCoords);
 
-    return glift.displays.board.create(env, theme, rotation);
+    return glift.displays.board.create(elemId, env, theme, rotation);
   },
 
   /**

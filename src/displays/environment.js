@@ -12,30 +12,29 @@ glift.displays.environment = {
   /**
    * Gets the environment wrapper, passing in the display options. This is the
    * preferred method.  It's expected that the proper display code will
+   * @param {!glift.orientation.BoundingBox} boardBox
+   * @param {!glift.enums.boardRegions} boardRegion
+   * @param {number} intersections Number of intersections (usu. 19).
+   * @param {boolean} drawBoardCoords Whether or not to draw the board
+   *    coordinates.
    */
-  get: function(
-      divId, boardBox, boardRegion, intersections, drawBoardCoords) {
-    if (!divId) {
-      throw new Error('No DivId Specified!')
-    }
-
+  get: function(boardBox, boardRegion, intersections, drawBoardCoords) {
     // For speed and isolation purposes, it's preferred to define the boardBox
-    // rather than to calculate the h/w by inspecting the div here.
-    // TODO(kashomon): Remove this now given the UI positioner stuff?
-    if (divId && !boardBox) {
-      boardBox = glift.displays.bboxFromDiv(divId);
-    }
+    // externally rather than to calculate the h/w by inspecting the div here.
+    // if (divId && !boardBox) {
+      // boardBox = glift.displays.bboxFromDiv(divId);
+    // }
 
     if (!boardBox) {
       throw new Error('No Bounding Box defined for display environment!')
     }
+
     return new glift.displays.GuiEnvironment(
-        divId, boardBox, boardRegion, intersections, drawBoardCoords);
+        boardBox, boardRegion, intersections, drawBoardCoords);
   }
 };
 
 /**
- * @param {string} divId
  * @param {!glift.orientation.BoundingBox} bbox
  * @param {!glift.enums.boardRegions} boardRegion
  * @param {number} intersections Number of intersections (usu. 19).
@@ -45,9 +44,7 @@ glift.displays.environment = {
  * @constructor @final @struct
  */
 glift.displays.GuiEnvironment = function(
-    divId, bbox, boardRegion, intersections, drawBoardCoords) {
-  /** @type {string} */
-  this.divId = divId;
+    bbox, boardRegion, intersections, drawBoardCoords) {
   /** @type {!glift.orientation.BoundingBox} */
   this.bbox = bbox; // required
   /** @type {number} */
@@ -60,8 +57,6 @@ glift.displays.GuiEnvironment = function(
   this.intersections = intersections;
   /** @type {boolean} */
   this.drawBoardCoords = drawBoardCoords;
-
-  var cropNamespace = glift.displays.cropbox;
 
   /** @type {!glift.displays.DisplayCropBox} */
   this.cropbox = glift.displays.cropbox.getFromRegion(

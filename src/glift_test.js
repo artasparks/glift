@@ -8,9 +8,11 @@
 
   test('Test Create: No Options', function() {
     var theme = glift.themes.get('DEFAULT');
+    var boardBox = glift.displays.bboxFromDiv('glift_display');
+
     var display = glift.displays.create(
-        'glift_display', // divId
-        null, // board box -- get from divId
+        'glift_display', // hardcoded in the HTML
+        boardBox,
         theme, // theme
         glift.enums.boardRegions.ALL,
         9, // intersections

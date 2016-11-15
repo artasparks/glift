@@ -36,8 +36,7 @@ glift.displays.EdgeLabel;
  *
  * @return {!glift.displays.BoardPoints}
  */
-glift.displays.boardPoints = function(
-    linebox, maxIntersects, drawBoardCoords) {
+glift.displays.boardPoints = function(linebox, maxIntersects, drawBoardCoords) {
   var spacing = linebox.spacing,
       radius = spacing / 2,
       linebbox = linebox.bbox,
@@ -65,8 +64,9 @@ glift.displays.boardPoints = function(
       var coordPt = glift.util.point(xCoord, yCoord);
 
       if (drawBoardCoords) {
-        // If drawBoardCoords is activated, then there is a phantom 'coordinate'
-        // surrounding all the normal points.
+        // If drawBoardCoords is activated, then there is a phantom
+        // 'coordinate' surrounding all the normal points. This phantom
+        // location is later used for the drawn coordinates.
         if ((i === 0 || i === linebox.yPoints) &&
             (j === 0 || j === linebox.xPoints)) {
           // Discard corner points
@@ -163,6 +163,7 @@ glift.displays.BoardPoints.prototype = {
    * points are 0 indexed, i.e., 0->18 for a 19x19.  Recall that board points
    * from the the top left (0,0) to the bottom right (18, 18).
    *
+   * @param {!glift.Point} pt
    * @return {!glift.displays.BoardPt}
    */
   getCoord: function(pt) {
@@ -195,6 +196,17 @@ glift.displays.BoardPoints.prototype = {
   },
 
   /**
+   * Since starpoints are rotationally semmetric, we define an array of arrays
+   * and then determine all combinations of pairs in the inner array.
+   * @private {!Object<number, Array<Array<number>>>}
+   */
+  starPointTempl_:  {
+    9 : [[ 2, 6 ], [ 4 ]],
+    13 : [[ 3, 9 ], [6]],
+    19 : [[ 3, 9, 15 ]]
+  },
+
+  /**
    * Return an array on integer points (0-indexed), used to indicate where star
    * points should go. Ex. [(3,3), (3,9), (3,15), ...].  This only returns the
    * points that are actually present in the points mapping.
@@ -206,11 +218,7 @@ glift.displays.BoardPoints.prototype = {
         // In pts, each element in the sub array is mapped against every other
         // element.  Thus [2, 6] generates [(2,2), (2,6), (6,2), (6,6)] and
         // [[2, 6], [4]] generates the above concatinated with [4,4].
-        pts = {
-          9 : [[ 2, 6 ], [ 4 ]],
-          13 : [[ 3, 9 ], [6]],
-          19 : [[ 3, 9, 15 ]]
-        },
+        pts = this.starPointTempl_,
         outerSet = pts[this.numIntersections] || [],
         outStarPoints = [];
     for (var k = 0; k < outerSet.length; k++) {

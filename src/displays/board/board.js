@@ -7,17 +7,19 @@ glift.displays.board = {};
 /**
  * Create a new display Board.
  *
+ * @param {string} elemId The DOM element ID for the container
  * @param {!glift.displays.GuiEnvironment} env Glift display environment.
  * @param {!glift.themes.base} theme A Glift theme.
  * @param {!glift.enums.rotations} rotation Rotation enum
  */
-glift.displays.board.create = function(env, theme, rotation) {
-  return new glift.displays.board.Display(env, theme, rotation).draw();
+glift.displays.board.create = function(elemId, env, theme, rotation) {
+  return new glift.displays.board.Display(elemId,env, theme, rotation).draw();
 };
 
 /**
  * The core Display object returned to the user.
  *
+ * @param {string} elemId The DOM element ID for the container
  * @param {!glift.displays.GuiEnvironment} environment Gui environment object.
  * @param {!glift.themes.base} theme A Glift theme.
  * @param {glift.enums.rotations=} opt_rotation Optional rotation to rotate the
@@ -26,7 +28,10 @@ glift.displays.board.create = function(env, theme, rotation) {
  * @constructor @struct @final
  * @package
  */
-glift.displays.board.Display = function(environment, theme, opt_rotation) {
+glift.displays.board.Display = function(elemId, environment, theme, opt_rotation) {
+  /** @private {string} */
+  this.elemId_ = elemId;
+
   /** @private {glift.displays.GuiEnvironment} */
   this.environment_ = environment;
 
@@ -61,7 +66,7 @@ glift.displays.board.Display.prototype = {
   /** @return {string} */
   boardRegion: function() { return this.environment_.boardRegion; },
   /** @return {string} */
-  divId: function() { return this.environment_.divId },
+  divId: function() { return this.elemId_; },
   /** @return {number} */
   numIntersections: function() { return this.environment_.intersections; },
   /** @return {?glift.displays.board.Intersections} */
