@@ -54,8 +54,8 @@
     var e = createEnv({
       boardBox: bbox.fromPts(tl, pt(200, 400))
     }).init();
-    deepEqual(e.divBox.width(), 200, 'divBox width');
-    deepEqual(e.divBox.height(), 400, 'divBox height');
+    deepEqual(e.divBox_.width(), 200, 'divBox width');
+    deepEqual(e.divBox_.height(), 400, 'divBox height');
     deepEqual(e.goBoardBox.height(), 200, 'goBoardBox height');
     deepEqual(e.goBoardBox.width(), 200, 'goBoardBox width');
     deepEqual(e.goBoardBox.topLeft().x(), 0, 'topLeft x');
@@ -68,8 +68,8 @@
     var e = createEnv({
       boardBox: bbox.fromPts(tl, pt(400, 200))
     }).init();
-    deepEqual(e.divBox.width(), 400, 'divBox width');
-    deepEqual(e.divBox.height(), 200, 'divBox height');
+    deepEqual(e.divBox_.width(), 400, 'divBox width');
+    deepEqual(e.divBox_.height(), 200, 'divBox height');
     deepEqual(e.goBoardBox.height(), 200, 'goBoardBox height');
     deepEqual(e.goBoardBox.width(), 200, 'goBoardBox width');
     deepEqual(e.goBoardBox.topLeft().x(), 100, 'topLeft x');

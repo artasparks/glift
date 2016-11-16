@@ -21,9 +21,6 @@ glift.displays.environment = {
   get: function(boardBox, boardRegion, intersections, drawBoardCoords) {
     // For speed and isolation purposes, it's preferred to define the boardBox
     // externally rather than to calculate the h/w by inspecting the div here.
-    // if (divId && !boardBox) {
-      // boardBox = glift.displays.bboxFromDiv(divId);
-    // }
 
     if (!boardBox) {
       throw new Error('No Bounding Box defined for display environment!')
@@ -45,17 +42,17 @@ glift.displays.environment = {
  */
 glift.displays.GuiEnvironment = function(
     bbox, boardRegion, intersections, drawBoardCoords) {
-  /** @type {!glift.orientation.BoundingBox} */
+  /** @const {!glift.orientation.BoundingBox} */
   this.bbox = bbox; // required
-  /** @type {number} */
+  /** @const {number} */
   this.divHeight = bbox.height();
-  /** @type {number} */
+  /** @const {number} */
   this.divWidth = bbox.width();
-  /** @type {!glift.enums.boardRegions} */
+  /** @const {!glift.enums.boardRegions} */
   this.boardRegion = boardRegion;
-  /** @type {number} */
+  /** @const {number} */
   this.intersections = intersections;
-  /** @type {boolean} */
+  /** @const {boolean} */
   this.drawBoardCoords = drawBoardCoords;
 
   /** @type {!glift.displays.DisplayCropBox} */
@@ -63,13 +60,23 @@ glift.displays.GuiEnvironment = function(
       this.boardRegion, this.intersections, this.drawBoardCoords);
 
   // ------- Defined during init ------- //
-  /** @type {glift.orientation.BoundingBox} */
-  this.divBox = null;
-  /** @type {glift.orientation.BoundingBox} */
+  /** @private {glift.orientation.BoundingBox} */
+  this.divBox_ = null;
+  /** @private {glift.displays.LineBox} */
+  this.goBoardLineBox_ = null;
+
+
+  /**
+   * The 'true' outer-draw box for the go board.
+   * @type {?glift.orientation.BoundingBox}
+   */
   this.goBoardBox = null;
-  /** @type {glift.displays.LineBox} */
-  this.goBoardLineBox = null;
-  /** @type {glift.displays.BoardPoints} */
+
+  /**
+   * The BoardPoints object is really the thing that we're shooting for: A list
+   * of all the intersection-coordinates for drawing the go-board.
+   * @type {?glift.displays.BoardPoints}
+   */
   this.boardPoints = null;
 };
 
@@ -87,8 +94,6 @@ glift.displays.GuiEnvironment.prototype = {
         dirs = glift.enums.directions,
 
         // The box for the entire div.
-        // TODO(kashomon): This is created twice, which is a little silly (but
-        // not expensive) in _resetDimensions. Might want to replace.
         divBox = glift.orientation.bbox.fromPts(
             glift.util.point(0, 0), // top left point
             glift.util.point(divWidth, divHeight)), // bottom right point
@@ -104,9 +109,12 @@ glift.displays.GuiEnvironment.prototype = {
         // Calculate the coordinates and bounding boxes for each intersection.
         boardPoints = glift.displays.boardPoints(
             goBoardLineBox, this.intersections, this.drawBoardCoords);
-    this.divBox = divBox;
+    // Private. Largely for debugging.
+    this.divBox_ = divBox;
+    this.goBoardLineBox_ = goBoardLineBox;
+
+    // Exports.
     this.goBoardBox = goBoardBox;
-    this.goBoardLineBox = goBoardLineBox;
     this.boardPoints = boardPoints;
     return this;
   }

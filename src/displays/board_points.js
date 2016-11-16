@@ -198,7 +198,7 @@ glift.displays.BoardPoints.prototype = {
   /**
    * Since starpoints are rotationally semmetric, we define an array of arrays
    * and then determine all combinations of pairs in the inner array.
-   * @private {!Object<number, Array<Array<number>>>}
+   * @private {!Object<number, !Array<!Array<number>>>}
    */
   starPointTempl_:  {
     9 : [[ 2, 6 ], [ 4 ]],
