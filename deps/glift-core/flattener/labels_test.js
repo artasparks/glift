@@ -22,7 +22,7 @@
       {color: 'WHITE', mvnum: '10', label: 'x', collisionStoneColor: 'WHITE'}
     ];
     deepEqual(
-        glift.flattener.labels.constructCollisionLabel_(coll),
+        glift.flattener.labels.labelFromCollisions(coll),
         'Black 1 at Black (a),\nWhite 10 at White (x).');
   });
 
@@ -33,7 +33,7 @@
       {color: 'WHITE', mvnum: '10', label: 'x'}
     ];
     deepEqual(
-        glift.flattener.labels.constructCollisionLabel_(coll),
+        glift.flattener.labels.labelFromCollisions(coll),
         'Black 1, White 2 at Black 1,\nWhite 10 at White (x).');
   });
 
@@ -44,11 +44,11 @@
       {color: 'WHITE', mvnum: '10', label: 'x', collisionStoneColor: 'BLACK'}
     ];
     deepEqual(
-        glift.flattener.labels.constructFullLabel_(coll, true, 1, 10),
+        glift.flattener.labels.fullLabelFromCollisions(coll, true, 1, 10),
         '(Moves: 1-10)\n' +
         'Black 1, White 2 at Black (a),\nWhite 10 at Black (x).');
     deepEqual(
-        glift.flattener.labels.constructCollisionLabel_(coll),
+        glift.flattener.labels.labelFromCollisions(coll),
         'Black 1, White 2 at Black (a),\nWhite 10 at Black (x).');
   });
 

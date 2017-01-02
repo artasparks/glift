@@ -5,8 +5,6 @@ glift.displays.cropbox = {
   /** @const */
   EXT: .5, // Extension
   /** @const */
-  DEFAULT_EXTENSION: 0, // Wut.
-  /** @const */
   OVERFLOW: 1.5, // The line spacing that goes around the edge.
 
   /**

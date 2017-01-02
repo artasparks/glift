@@ -83,7 +83,7 @@ glift.flattener.labels = {
    * @return {string}
    */
   createCollisionLabel: function(flattened) {
-    return glift.flattener.labels.constructCollisionLabel_(
+    return glift.flattener.labels.labelFromCollisions(
         flattened.collisions());
   },
 
@@ -102,7 +102,7 @@ glift.flattener.labels = {
    * @return {string}
    */
   createFullLabel: function(flattened) {
-    return glift.flattener.labels.constructFullLabel_(
+    return glift.flattener.labels.fullLabelFromCollisions(
         flattened.collisions(),
         flattened.isOnMainPath(),
         flattened.startingMoveNum(),
@@ -116,14 +116,13 @@ glift.flattener.labels = {
    * @param {number} endNum
    * @return {string} the processed move label or an empty string if no label
    *    should be created.
-   * @private
    */
-  constructFullLabel_: function(collisions, isOnMainPath, startNum, endNum) {
+  fullLabelFromCollisions: function(collisions, isOnMainPath, startNum, endNum) {
     var label = ''
     if (isOnMainPath) {
       label += glift.flattener.labels.constructMoveLabel(startNum, endNum);
     }
-    var col = glift.flattener.labels.constructCollisionLabel_(collisions);
+    var col = glift.flattener.labels.labelFromCollisions(collisions);
     if (label && col) {
       // If both move label and the collision label is defined, join with a
       // newline.
@@ -139,7 +138,6 @@ glift.flattener.labels = {
    * @param {number} startNum
    * @param {number} endNum
    * @return {string} the processed move label or an empty string if it 
-   * @private
    */
   constructMoveLabel: function(startNum, endNum) {
     var baseLabel = '';
@@ -163,11 +161,9 @@ glift.flattener.labels = {
    * flattened object, we must extract the collisions and the move numbers.
    *
    * @param {!Array<!glift.flattener.Collision>} collisions
-   *
    * @return {string} the processed collisions label.
-   * @private
    */
-  constructCollisionLabel_: function(collisions) {
+  labelFromCollisions: function(collisions) {
     var baseLabel = '';
 
     // No Collisions! Woohoo

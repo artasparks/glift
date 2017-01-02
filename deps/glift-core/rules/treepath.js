@@ -36,7 +36,7 @@ glift.rules.AppliedTreepath;
  * little easier
  *
  *    0.1+    Take the 0th variation, then the 1st variation, then go to the end
- *    0.1x2   Take the 0th variation, then repeat taking the 1st varation twice
+ *    0.1:2   Take the 0th variation, then repeat taking the 1st varation twice
  *
  * There are two types of treepaths discussed below -- A *treepath fragment*
  * (which is what we have been describing) and an *initial treepath*.
@@ -54,10 +54,10 @@ glift.rules.AppliedTreepath;
  *    53            becomes [53] (the 53rd variation)
  *    2.3           becomes [2,3]
  *    0.0.0.0       becomes [0,0,0]
- *    0x4           becomes [0,0,0,0]
+ *    0:4           becomes [0,0,0,0]
  *    1+            becomes [1,0...(500 times)]
- *    1x4           becomes [1,1,1,1]
- *    1.2x1.0.2x3'  becomes [1,2,0,2,2,2]
+ *    1:4           becomes [1,1,1,1]
+ *    1.2:1.0.2:3'  becomes [1,2,0,2,2,2]
  *
  * ## Initial tree paths.
  *
@@ -77,7 +77,7 @@ glift.rules.AppliedTreepath;
  *    3         - Start at the 3rd move
  *    2.0       - Start at the 3rd move
  *    0.0.0.0   - Start at the 3rd move
- *    0.0x3     - Start at the 3rd move
+ *    0.0:3     - Start at the 3rd move
  *
  * As with fragments, the init position returned is an array of variation
  * numbers traversed through.  The move number is precisely the length of the
@@ -94,7 +94,7 @@ glift.rules.AppliedTreepath;
  *    1+        becomes [0,0,...(500 times)]
  *    0.1+      becomes [1,0,...(500 times)]
  *    0.2.6+    becomes [2,6,0,...(500 times)]
- *    0.0x3.1x3 becomes [0,0,0,1,1,1]
+ *    0.0:3.1x3 becomes [0,0,0,1,1,1]
  *
  * As mentioned before, '+' is a special symbol which means "go to the end via
  * the first variation." This is implemented with a by appending 500 0s to the

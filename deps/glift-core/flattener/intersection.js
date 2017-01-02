@@ -46,7 +46,7 @@ glift.flattener.intersection = {
       baseSymb = sym.RIGHT_EDGE;
     } else if (pt.y() === intz) {
       baseSymb = sym.BOT_EDGE;
-    } else if (glift.flattener.intersection.isStarpoint_(pt, maxInts)) {
+    } else if (glift.flattener.starpoints.isPt(pt, maxInts)) {
       baseSymb = sym.CENTER_STARPOINT;
     } else {
       baseSymb = sym.CENTER;
@@ -68,32 +68,6 @@ glift.flattener.intersection = {
     }
 
     return intsect;
-  },
-
-  _starPointSets: {
-    9 : [{4:true}],
-    13 : [{3:true, 9:true}, {6:true}],
-    19 : [{3:true, 9:true, 15:true}]
-  },
-
-  /**
-   * Determine whether a pt is a starpoint.  Intersections is 1-indexed, but the
-   * pt is 0-indexed.
-   *
-   * @param {!glift.Point} pt
-   * @param {!number} maxInts
-   * @return {boolean} whether the point should be a star point.
-   * @private
-   */
-  isStarpoint_: function(pt, maxInts) {
-    var starPointSets = glift.flattener.intersection._starPointSets[maxInts];
-    for (var i = 0; i < starPointSets.length; i++) {
-      var set = starPointSets[i];
-      if (set[pt.x()] && set[pt.y()]) {
-        return true;
-      }
-    }
-    return false;
   },
 };
 

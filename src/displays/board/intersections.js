@@ -82,10 +82,12 @@ glift.displays.board.Intersections.prototype = {
   flushStone_: function(pt) {
     var stone = this.svg.child(this.idGen.stoneGroup())
         .child(this.idGen.stone(pt));
-    var attrObj = stone.attrObj();
-    var id = stone.id();
-    if (stone && attrObj && id) {
+    if (stone && stone.attrObj() && stone.id()) {
       // A stone might not exist if the board is cropped.
+      var id = stone.idOrThrow();
+      var attrObj = stone.attrObj();
+      // this should always be defined here, but this is for the compiler.
+      if (!attrObj) { return; } 
       glift.dom.elem(id).setAttrObj(attrObj);
       var stoneShadowGroup = this.svg.child(this.idGen.stoneShadowGroup());
       if (stoneShadowGroup !== undefined) {

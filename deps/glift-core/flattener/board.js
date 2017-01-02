@@ -96,6 +96,63 @@ glift.flattener.Board = function(boardArray, bbox, maxBoardSize) {
 
 glift.flattener.Board.prototype = {
   /**
+   * Returns the size of the board. Usually 9, 13 or 19.
+   * @return {number}
+   */
+  maxBoardSize: function() {
+    return this.maxBoardSize_;
+  },
+
+  /**
+   * Gets the go-intersection at the top left, respecting cropping.
+   * @return {!glift.Point}
+   */
+  topLeft: function() {
+    return this.ptToBoardPt(new glift.Point(0,0));
+  },
+
+  /**
+   * Gets the go-intersection at the bottom right, respecting cropping.
+   * @return {!glift.Point}
+   */
+  botRight: function() {
+    return this.topLeft().translate(this.width() - 1, this.height() - 1);
+  },
+
+  /**
+   * Returns the bounding box (in intersections) of the board.
+   * @return {!glift.orientation.BoundingBox}
+   */
+  boundingBox: function() {
+    return new glift.orientation.BoundingBox(this.topLeft(), this.botRight());
+  },
+
+  /** @return {boolean} Returns whether the board is cropped. */
+  isCropped: function() {
+    return this.width() !== this.maxBoardSize() ||
+        this.height() !== this.maxBoardSize();
+  },
+
+  /**
+   * Returns the height of the Go board in intersections. Note that this won't
+   * necessarily be the length of the board - 1 due to cropping.
+   * @return {number}
+   */
+  height: function() {
+    return this.boardArray_.length;
+  },
+
+  /**
+   * Returns the width of the Go board in intersections. Note that this won't
+   * necessarily be the length of the board - 1 due to cropping.
+   * @return {number}
+   */
+  width: function() {
+    // Here we assume that the Go board is rectangular.
+    return this.boardArray_[0].length;
+  },
+
+  /**
    * Provide a SGF Point (indexed from upper left) and retrieve the relevant
    * intersection.  This  takes into account cropping that could be indicated by
    * the bounding box.
@@ -192,33 +249,6 @@ glift.flattener.Board.prototype = {
    */
   boardArray: function() {
     return this.boardArray_;
-  },
-
-  /**
-   * Returns the size of the board. Usually 9, 13 or 19.
-   * @return {number}
-   */
-  maxBoardSize: function() {
-    return this.maxBoardSize_;
-  },
-
-  /**
-   * Returns the height of the Go board. Note that this won't necessarily be the
-   * length of the board - 1 due to cropping.
-   * @return {number}
-   */
-  height: function() {
-    return this.boardArray_.length;
-  },
-
-  /**
-   * Returns the width of the Go board. Note that this won't necessarily be the
-   * length of the board - 1 due to cropping.
-   * @return {number}
-   */
-  width: function() {
-    // Here we assume that the Go board is rectangular.
-    return this.boardArray_[0].length;
   },
 
   /**
