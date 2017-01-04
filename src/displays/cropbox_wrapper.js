@@ -3,9 +3,9 @@ goog.provide('glift.displays.DisplayCropBox');
 
 glift.displays.cropbox = {
   /** @const */
-  EXT: .5, // Extension
+  EXT: .5, // Extension for the ragged edge
   /** @const */
-  OVERFLOW: 1.5, // The line spacing that goes around the edge.
+  OVERFLOW: .5, // The line spacing that goes around the edge.
 
   /**
    * Creates a cropbox based on a region, the number of intersections, and a
@@ -20,6 +20,7 @@ glift.displays.cropbox = {
     var cropbox = glift.orientation.cropbox.get(region, intersects);
     var drawBoardCoords = opt_drawBoardCoords || false;
     var maxIntersects = drawBoardCoords ? intersects + 2 : intersects;
+
     var top = cropbox.bbox.top(),
         bottom = cropbox.bbox.bottom(),
         left = cropbox.bbox.left(),
@@ -34,7 +35,7 @@ glift.displays.cropbox = {
             glift.util.point(left, top),
             glift.util.point(right, bottom)),
         maxIntersects);
-    return new glift.displays.DisplayCropBox(cx);
+    return new glift.displays.DisplayCropBox(cx, cropbox);
   }
 };
 
@@ -43,93 +44,66 @@ glift.displays.cropbox = {
  * it's a box based on points.
  *
  * @param {!glift.orientation.Cropbox} cbox The wrapped Cropbox.
+ * @param {!glift.orientation.Cropbox} cboxNoCoords The cropbox without the
+ *    coordinate-labels.
  *
  * @constructor
  */
-glift.displays.DisplayCropBox = function(cbox) {
+glift.displays.DisplayCropBox = function(cbox, cboxNoCoords) {
   /** @private {!glift.orientation.Cropbox} */
   this.cbox_ = cbox;
+
+  /** @private {!glift.orientation.Cropbox} */
+  this.cboxNoCoords = cboxNoCoords;
+
 };
 
 glift.displays.DisplayCropBox.prototype = {
   /**
-   * Returns the cbox. The cbox is a bounding box that describes what points on
-   * the go board should be displayed. Generally, both the width and height of
-   * the cbox must be between 0 (exclusive) and maxIntersects (inclusive).
+   * Returns the cbox, which may include coordinate labels. The cbox is a
+   * bounding box that describes what points on the go board should be
+   * displayed. Generally, both the width and height of the cbox must be
+   * between 0 (exclusive) and maxIntersects (inclusive), but could be +2 on
+   * each side if there are labels.
    *
    * @return {!glift.orientation.Cropbox}
    */
   cbox: function() { return this.cbox_; },
 
   /**
-   * Returns the bbox for the cropbox
-   *
+   * Returns the bounding box without the coordinate labels.
+   * @return {!glift.orientation.BoundingBox}
+   */
+  bboxWithoutCoords: function() { return this.cboxNoCoords.bbox; },
+
+  /**
+   * Returns the bbox for the cropbox.
    * @return {!glift.orientation.BoundingBox}
    */
   bbox: function() { return this.cbox_.bbox; },
 
   /**
-   * Returns the maximum board size.  Often referred to as max intersections
-   * elsewhere.  Typically 9, 13 or 19.
-   *
-   * @return {number}
-   */
-  maxBoardSize: function() { return this.cbox_.size; },
-
-  /**
-   * The extensions are a special modification for cropped boards.  Due to some
-   * quirks of the way the board is drawn, it's convenient to add this here to
-   * indicate an extra amount around the edge necessary for the overflow lines
-   * (the ragged crop-edge).
-   *
-   * Note: the x and y coordinates for these points will either be 0 or 0.5.
-   *
-   * @return {number}
-   */
-  topExt: function() {
-    return this.cbox_.hasRaggedTop() ? glift.displays.cropbox.EXT : 0;
-  },
-  /** @return {number} */
-  botExt: function() { 
-    return this.cbox_.hasRaggedBottom() ? glift.displays.cropbox.EXT : 0;
-  },
-  /** @return {number} */
-  leftExt: function() {
-    return this.cbox_.hasRaggedLeft() ? glift.displays.cropbox.EXT : 0;
-  },
-  /** @return {number} */
-  rightExt: function() {
-    return this.cbox_.hasRaggedRight() ? glift.displays.cropbox.EXT : 0;
-  },
-
-  /**
-   * Number of x points (or columns) for the cropped go board.
-   * @return {number}
-   */
-  xPoints: function() { return this.cbox().bbox.width(); },
-
-  /**
-   * Number of y points (or rows) for the cropped go board.
-   * @return {number}
-   */
-  yPoints: function() { return this.cbox().bbox.height(); },
-
-  /**
    * Returns the number of 'intersections' we need to allocate for the height.
-   * In otherwords:
-   *    - The base intersections (e.g., 19x19).
+   * This includes the intersections for the board, the extra 2 intersections
+   * (possibly) for the board coordinates, and any intersections (perhaps
+   * fractional) needed for padding.
+   *
    * @return {number}
    */
-  widthMod: function() {
+  widthIntersections: function() {
     var OVERFLOW = glift.displays.cropbox.OVERFLOW;
-    return this.cbox().bbox.width() + this.leftExt() +
-        + this.rightExt() + OVERFLOW;
+    // We need to add 1 since the bbox is 0-indexed, ranging from 0 to 18
+    var k = (this.cbox().bbox.width()+1) + OVERFLOW;
+    console.log('wid ' + k);
+    return k;
   },
 
   /** @return {number} */
-  heightMod: function() {
+  heightIntersections: function() {
     var OVERFLOW = glift.displays.cropbox.OVERFLOW;
-    return this.cbox().bbox.height() + this.topExt() +
-        + this.botExt() + OVERFLOW;
-  }
+    // We need to add 1 since the bbox is 0-indexed, ranging from 0 to 18
+    var k = (this.cbox().bbox.height()+1) + OVERFLOW;
+    console.log('height ' + k);
+    return k;
+  },
 };

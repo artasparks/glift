@@ -104,14 +104,17 @@ glift.displays.GuiEnvironment.prototype = {
         // The bounding box (modified) for the lines. This is slightly different
         // than the go board, due to cropping and the margin between go board
         // and the lines.
-        goBoardLineBox = glift.displays.getLineBox(goBoardBox, cropbox),
+        spacing = glift.displays.getSpacing(goBoardBox, cropbox),
 
         // Calculate the coordinates and bounding boxes for each intersection.
-        boardPoints = glift.displays.boardPoints(
-            goBoardLineBox, this.intersections, this.drawBoardCoords);
+        boardPoints = glift.flattener.BoardPoints.fromBbox(
+            this.cropbox.bboxWithoutCoords(), spacing, this.intersections, {
+              drawBoardCoords: this.drawBoardCoords,
+              padding: glift.displays.cropbox.OVERFLOW / 2,
+            });
+
     // Private. Largely for debugging.
     this.divBox_ = divBox;
-    this.goBoardLineBox_ = goBoardLineBox;
 
     // Exports.
     this.goBoardBox = goBoardBox;

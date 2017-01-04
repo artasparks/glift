@@ -5,7 +5,7 @@ goog.require('glift.displays.board');
  *
  * @param {!glift.svg.SvgObj} svg Base svg obj
  * @param {!glift.displays.svg.IdGenerator} idGen The ID generator for SVG.
- * @param {!glift.displays.BoardPoints} boardPoints Board points object.
+ * @param {!glift.flattener.BoardPoints} boardPoints Board points object.
  */
 glift.displays.board.buttons = function(svg, idGen, boardPoints) {
   var container = glift.svg.group().setId(idGen.buttonGroup());

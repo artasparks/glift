@@ -7,13 +7,13 @@ goog.require('glift.displays.board');
  *
  * @param {!glift.svg.SvgObj} svg Base svg obj
  * @param {!glift.displays.svg.IdGenerator} idGen The ID generator for SVG.
- * @param {!glift.displays.BoardPoints} boardPoints Board points object.
+ * @param {!glift.flattener.BoardPoints} boardPoints Board points object.
  * @param {!glift.themes.base} theme The theme object
  */
 glift.displays.board.boardLabels = function(svg, idGen, boardPoints, theme) {
   var container = glift.svg.group().setId(idGen.boardCoordLabelGroup());
   svg.append(container);
-  var labels = boardPoints.edgeCoordLabels;
+  var labels = boardPoints.edgeLabels;
   for (var i = 0, ii = labels.length; i < ii; i++) {
     var lbl = labels[i];
     container.append(glift.svg.text()

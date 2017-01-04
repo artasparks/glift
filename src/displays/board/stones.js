@@ -4,7 +4,7 @@
  *
  * @param {!glift.svg.SvgObj} svg Base svg obj
  * @param {!glift.displays.svg.IdGenerator} idGen The ID generator for SVG.
- * @param {!glift.displays.BoardPoints} boardPoints Board points object.
+ * @param {!glift.flattener.BoardPoints} boardPoints Board points object.
  * @param {!glift.themes.base} theme The theme object
  */
 glift.displays.board.stones = function(svg, idGen, boardPoints, theme) {
@@ -32,7 +32,7 @@ glift.displays.board.stones = function(svg, idGen, boardPoints, theme) {
  *
  * @param {!glift.svg.SvgObj} svg Base svg obj
  * @param {!glift.displays.svg.IdGenerator} idGen The ID generator for SVG.
- * @param {!glift.displays.BoardPoints} boardPoints Board points object.
+ * @param {!glift.flattener.BoardPoints} boardPoints Board points object.
  * @param {!glift.themes.base} theme The theme object
  */
 glift.displays.board.shadows = function(svg, idGen, boardPoints, theme) {

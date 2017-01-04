@@ -26,7 +26,6 @@ glift.displays.board.boardBase = function(svg, idGen, goBox, theme) {
     .setAttr('y', goBox.topLeft().y() + 'px')
     .setAttr('width', goBox.width() + 'px')
     .setAttr('height', goBox.height() + 'px')
-    .setAttr('height', goBox.height() + 'px')
     .setAttr('fill', theme.board.imagefill ? 'none' : theme.board.fill)
     .setAttr('stroke', theme.board.stroke)
     .setAttr('stroke-width', theme.board['stroke-width'])

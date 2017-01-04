@@ -33,7 +33,6 @@ glift.flattener.EdgeLabel;
  * @typedef {{
  *  drawBoardCoords: (boolean|undefined),
  *  padding: (number|undefined),
- *  raggedEdgePadding: (number|undefined),
  * }}
  *
  * drawBoardCoords: whether to draw the board coordinates:
@@ -41,10 +40,6 @@ glift.flattener.EdgeLabel;
  *    of an intersection. Defaults to zero.
  *    Examule: If padding = 0.75 and spacing = 20, then the actual
  *    padding around each edge will be 15.
- * raggedEdgePadding: Like padding, extra amount of spacing around the edge of
- *    the board as a fraction of an intersection, which defaults to zero. This
- *    only applies to ragged (cropped) sides and lives between the
- *    board-intersections and the
  */
 glift.flattener.BoardPointsOptions;
 
@@ -152,7 +147,15 @@ glift.flattener.BoardPoints.prototype = {
    * @return {!Array<!glift.Point>}
    */
   starPoints: function() {
-    return glift.flattener.starpoints.allPts(this.numIntersections);
+    var sp = glift.flattener.starpoints.allPts(this.numIntersections);
+    var out = [];
+    for (var i = 0; i < sp.length; i++) {
+      var p = sp[i];
+      if (this.hasCoord(p)) {
+        out.push(p);
+      }
+    }
+    return out;
   }
 };
 
@@ -198,13 +201,6 @@ glift.flattener.BoardPoints.fromBbox =
   var drawBoardCoords = !!opts.drawBoardCoords;
   var paddingFrac = opts.padding || 0;
   var paddingAmt = paddingFrac * spacing;
-  var raggedEdgePaddingFrac = opts.raggedEdgePadding || 0;
-  var raggedAmt = raggedEdgePaddingFrac * spacing;
-
-  var raggedLeft = tl.x() === 0 ? 0 : raggedAmt;
-  var raggedRight = br.x() === size-1 ? 0 : raggedAmt;
-  var raggedTop = tl.y() === 0 ? 0 : raggedAmt;
-  var raggedBottom = br.y() === size-1 ? 0 : raggedAmt;
 
   // Note: Convention is to leave off the 'I' coordinate. Note that capital
   // letters are enough for normal boards.
@@ -219,8 +215,8 @@ glift.flattener.BoardPoints.fromBbox =
   var coordBbox = new glift.orientation.BoundingBox(
     new glift.Point(0,0),
     new glift.Point(
-        (endX-startX)*spacing + spacing + 2*paddingAmt + raggedLeft + raggedRight,
-        (endY-startY)*spacing + spacing + 2*paddingAmt + raggedTop + raggedBottom));
+        (endX-startX+1)*spacing + 2*paddingAmt,
+        (endY-startY+1)*spacing + 2*paddingAmt));
 
   var isEdgeX = function(val) { return val === startX || val === endX; }
   var isEdgeY = function(val) { return val === startY || val === endY; }
@@ -230,19 +226,15 @@ glift.flattener.BoardPoints.fromBbox =
       var i = x - startX;
       var j = y - startY;
       var coordPt = new glift.Point(
-          half + i*spacing + paddingAmt + raggedLeft,
-          half + j*spacing + paddingAmt + raggedTop);
+          half + i*spacing + paddingAmt,
+          half + j*spacing + paddingAmt)
+      console.log(coordPt);
 
       if (drawBoardCoords && (isEdgeX(x) || isEdgeY(y))) {
         if (isEdgeX(x) && isEdgeY(y)) {
           // This is a corner; no coords here.
           continue;
         }
-
-        if (raggedLeft && i === 0) { coordPt = coordPt.translate(-raggedLeft, 0); }
-        if (raggedRight && x === endX) { coordPt = coordPt.translate(raggedRight, 0); }
-        if (raggedTop && j === 0) { coordPt = coordPt.translate(0, -raggedTop); }
-        if (raggedBottom && y === endY) { coordPt = coordPt.translate(0, raggedBottom); }
 
         var label = '';
         if (isEdgeY(y)) {

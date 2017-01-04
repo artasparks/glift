@@ -11,8 +11,7 @@
 glift.displays.getResizedBox = function(divBox, cropbox, opt_alignment) {
   var aligns = glift.enums.boardAlignments;
   var alignment = opt_alignment || aligns.CENTER;
-  var util = glift.util,
-      newDims = glift.displays.getCropDimensions(
+  var newDims = glift.displays.getCropDimensions(
           divBox.width(),
           divBox.height(),
           cropbox),
@@ -27,7 +26,7 @@ glift.displays.getResizedBox = function(divBox, cropbox, opt_alignment) {
       newLeft = divBox.topLeft().x() + xDelta,
       newTop = divBox.topLeft().y() + yDelta,
       newBox = glift.orientation.bbox.fromSides(
-          util.point(newLeft, newTop), newWidth, newHeight);
+          new glift.Point(newLeft, newTop), newWidth, newHeight);
   return newBox;
 };
 
@@ -42,7 +41,7 @@ glift.displays.getResizedBox = function(divBox, cropbox, opt_alignment) {
  */
 glift.displays.getCropDimensions = function(width, height, cropbox) {
   var origRatio = height / width,
-      cropRatio = cropbox.heightMod() / cropbox.widthMod(),
+      cropRatio = cropbox.heightIntersections() / cropbox.widthIntersections(),
       newHeight = height,
       newWidth = width;
   if (origRatio > cropRatio) {

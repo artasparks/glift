@@ -7,7 +7,7 @@ goog.require('glift.displays.board');
  *
  * @param {!glift.svg.SvgObj} svg Base svg obj
  * @param {!glift.displays.svg.IdGenerator} idGen The ID generator for SVG.
- * @param {!glift.displays.BoardPoints} boardPoints Board points object.
+ * @param {!glift.flattener.BoardPoints} boardPoints Board points object.
  * @param {!glift.themes.base} theme The theme object
  */
 glift.displays.board.lines = function(svg, idGen, boardPoints, theme) {

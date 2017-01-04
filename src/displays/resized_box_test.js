@@ -19,7 +19,7 @@
     var cropbox = displays.cropbox.getFromRegion(boardRegions.LEFT, 19);
     var outDims = displays.getCropDimensions(120, 60, cropbox);
     deepEqual(Math.round(outDims.height / outDims.width),
-        Math.round(cropbox.heightMod() /  cropbox.widthMod()),
+        Math.round(cropbox.heightIntersections() /  cropbox.widthIntersections()),
         'CropBox Ratio and dim ration must be the same');
   });
 
