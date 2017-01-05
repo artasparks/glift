@@ -33,6 +33,7 @@ glift.flattener.EdgeLabel;
  * @typedef {{
  *  drawBoardCoords: (boolean|undefined),
  *  padding: (number|undefined),
+ *  offsetPt: (!glift.Point|undefined),
  * }}
  *
  * drawBoardCoords: whether to draw the board coordinates:
@@ -40,6 +41,8 @@ glift.flattener.EdgeLabel;
  *    of an intersection. Defaults to zero.
  *    Examule: If padding = 0.75 and spacing = 20, then the actual
  *    padding around each edge will be 15.
+ * offsetPt: It's possible that we may want to offset the board points (as in
+ *    glift, for centering within a boardbox).
  */
 glift.flattener.BoardPointsOptions;
 
@@ -206,6 +209,8 @@ glift.flattener.BoardPoints.fromBbox =
   // letters are enough for normal boards.
   var xCoordLabels = 'ABCDEFGHJKLMNOPQRSTUVWXYZabcdefghjklmnopqrstuvwxyz';
 
+  var offsetPt = opts.offsetPt || new glift.Point(0,0);
+
   var offset = drawBoardCoords ? 1 : 0;
   var startX = tl.x();
   var endX = br.x() + 2*offset;
@@ -226,9 +231,8 @@ glift.flattener.BoardPoints.fromBbox =
       var i = x - startX;
       var j = y - startY;
       var coordPt = new glift.Point(
-          half + i*spacing + paddingAmt,
-          half + j*spacing + paddingAmt)
-      console.log(coordPt);
+          half + i*spacing + paddingAmt + offsetPt.x(),
+          half + j*spacing + paddingAmt + offsetPt.y())
 
       if (drawBoardCoords && (isEdgeX(x) || isEdgeY(y))) {
         if (isEdgeX(x) && isEdgeY(y)) {

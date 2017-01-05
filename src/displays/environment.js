@@ -111,6 +111,7 @@ glift.displays.GuiEnvironment.prototype = {
             this.cropbox.bboxWithoutCoords(), spacing, this.intersections, {
               drawBoardCoords: this.drawBoardCoords,
               padding: glift.displays.cropbox.OVERFLOW / 2,
+              offsetPt: goBoardBox.topLeft(),
             });
 
     // Private. Largely for debugging.

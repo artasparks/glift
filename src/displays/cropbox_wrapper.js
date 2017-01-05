@@ -3,8 +3,6 @@ goog.provide('glift.displays.DisplayCropBox');
 
 glift.displays.cropbox = {
   /** @const */
-  EXT: .5, // Extension for the ragged edge
-  /** @const */
   OVERFLOW: .5, // The line spacing that goes around the edge.
 
   /**
@@ -93,17 +91,13 @@ glift.displays.DisplayCropBox.prototype = {
   widthIntersections: function() {
     var OVERFLOW = glift.displays.cropbox.OVERFLOW;
     // We need to add 1 since the bbox is 0-indexed, ranging from 0 to 18
-    var k = (this.cbox().bbox.width()+1) + OVERFLOW;
-    console.log('wid ' + k);
-    return k;
+    return (this.cbox().bbox.width()+1) + OVERFLOW;
   },
 
   /** @return {number} */
   heightIntersections: function() {
     var OVERFLOW = glift.displays.cropbox.OVERFLOW;
     // We need to add 1 since the bbox is 0-indexed, ranging from 0 to 18
-    var k = (this.cbox().bbox.height()+1) + OVERFLOW;
-    console.log('height ' + k);
-    return k;
+    return (this.cbox().bbox.height()+1) + OVERFLOW;
   },
 };

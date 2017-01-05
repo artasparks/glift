@@ -160,38 +160,15 @@
         '(0,0),(' + (spacing * 14 + pads*2) + ',' +  (spacing * 13 + pads*2) + ')');
   });
 
-  /*
-  test('BoardPoints: drawBoardCoords, cropped, padding, raggedEdge', function() {
-    var pad = 0.75;
-    var raggedEdge = 0.5;
-    var pads = pad*spacing;
-    var rags = raggedEdge*spacing
-
-    var newflat = glift.flattener.flatten(movetree, {
-      boardRegion: 'BOTTOM_RIGHT'
+  test('BoardPoints: offsetPt', function() {
+    var pt = new glift.Point(12, 32);
+    var bp = glift.flattener.BoardPoints.fromFlattened(flat, spacing, {
+      offsetPt: pt,
     });
-    var bp = glift.flattener.BoardPoints.fromFlattened(newflat, spacing, {
-      drawBoardCoords: true,
-      padding: pad,
-      raggedEdgePadding: raggedEdge,
-    });
-
-    deepEqual(bp.edgeLabels[0],
-      { label: '11', coordPt:
-          new glift.Point(pads + half, pads + spacing + half + rags) });
-
-    deepEqual(bp.edgeLabels[11],
-      { label: 'H', coordPt:
-          new glift.Point(pads + spacing + half + rags, pads + half) });
-
-    deepEqual(bp.edgeLabels[12],
-      { label: 'H', coordPt:
-          new glift.Point(pads + spacing + half + rags, 12*spacing + pads + half + rags) });
-
-    deepEqual(bp.coordBbox.toString(),
-        '(0,0),(' +
-        (spacing * 14 + pads*2 + rags) + ',' +
-        (spacing * 13 + pads*2 + rags) + ')');
+    ok(bp.hasCoord(new glift.Point(18, 18)));
+    deepEqual(
+        bp.getCoord(new glift.Point(18, 18)).coordPt,
+        new glift.Point(18*spacing + half + pt.x(), 18*spacing + half + pt.y()),
+        '18,18 coordPt');
   });
-  */
 })();
