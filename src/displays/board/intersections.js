@@ -7,7 +7,7 @@ goog.require('glift.displays.board');
  *
  * @param {string} divId
  * @param {!glift.svg.SvgObj} svg Base svg obj
- * @param {!glift.flattener..BoardPoints} boardPoints Board points object from the
+ * @param {!glift.flattener.BoardPoints} boardPoints Board points object from the
  *    gui environment.
  * @param {!glift.themes.base} theme The theme object
  * @param {!glift.enums.rotations} rotation An optional rotation.

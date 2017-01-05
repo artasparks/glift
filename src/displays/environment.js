@@ -62,9 +62,6 @@ glift.displays.GuiEnvironment = function(
   // ------- Defined during init ------- //
   /** @private {glift.orientation.BoundingBox} */
   this.divBox_ = null;
-  /** @private {glift.displays.LineBox} */
-  this.goBoardLineBox_ = null;
-
 
   /**
    * The 'true' outer-draw box for the go board.
@@ -75,7 +72,7 @@ glift.displays.GuiEnvironment = function(
   /**
    * The BoardPoints object is really the thing that we're shooting for: A list
    * of all the intersection-coordinates for drawing the go-board.
-   * @type {?glift.displays.BoardPoints}
+   * @type {?glift.flattener.BoardPoints}
    */
   this.boardPoints = null;
 };

@@ -28,7 +28,7 @@ glift.displays.board.lines = function(svg, idGen, boardPoints, theme) {
 };
 
 /**
- * @param {!glift.displays.BoardPt} boardPt A
+ * @param {!glift.flattener.BoardPt} boardPt A
  * @param {!number} radius Size of the space between the lines
  * @param {!number} numIntersections Number of intersecitons on the board.
  */
