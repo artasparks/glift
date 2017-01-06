@@ -33,14 +33,17 @@ glift.flattener.EdgeLabel;
  * @typedef {{
  *  drawBoardCoords: (boolean|undefined),
  *  padding: (number|undefined),
+ *  croppedEdgePadding: (number|undefined),
  *  offsetPt: (!glift.Point|undefined),
  * }}
  *
  * drawBoardCoords: whether to draw the board coordinates:
  * padding: Amount of extra spacing around the edge of the board. As a fraction
  *    of an intersection. Defaults to zero.
- *    Examule: If padding = 0.75 and spacing = 20, then the actual
+ *    Example: If padding = 0.75 and spacing = 20, then the actual
  *    padding around each edge will be 15.
+ * croppedEdgePadding: Same as padding, but only for cropped-edges and in
+ *    addition to normal padding.
  * offsetPt: It's possible that we may want to offset the board points (as in
  *    glift, for centering within a boardbox).
  */
@@ -211,6 +214,13 @@ glift.flattener.BoardPoints.fromBbox =
 
   var offsetPt = opts.offsetPt || new glift.Point(0,0);
 
+  var raggedEdgePaddingFrac = opts.croppedEdgePadding || 0;
+  var raggedAmt = raggedEdgePaddingFrac * spacing;
+  var raggedLeft = tl.x() === 0 ? 0 : raggedAmt;
+  var raggedRight = br.x() === size-1 ? 0 : raggedAmt;
+  var raggedTop = tl.y() === 0 ? 0 : raggedAmt;
+  var raggedBottom = br.y() === size-1 ? 0 : raggedAmt;
+
   var offset = drawBoardCoords ? 1 : 0;
   var startX = tl.x();
   var endX = br.x() + 2*offset;
@@ -220,8 +230,8 @@ glift.flattener.BoardPoints.fromBbox =
   var coordBbox = new glift.orientation.BoundingBox(
     new glift.Point(0,0),
     new glift.Point(
-        (endX-startX+1)*spacing + 2*paddingAmt,
-        (endY-startY+1)*spacing + 2*paddingAmt));
+        (endX-startX+1)*spacing + 2*paddingAmt + raggedLeft + raggedRight,
+        (endY-startY+1)*spacing + 2*paddingAmt + raggedTop + raggedBottom));
 
   var isEdgeX = function(val) { return val === startX || val === endX; }
   var isEdgeY = function(val) { return val === startY || val === endY; }
@@ -231,13 +241,26 @@ glift.flattener.BoardPoints.fromBbox =
       var i = x - startX;
       var j = y - startY;
       var coordPt = new glift.Point(
-          half + i*spacing + paddingAmt + offsetPt.x(),
-          half + j*spacing + paddingAmt + offsetPt.y())
+          half + i*spacing + paddingAmt + offsetPt.x() + raggedLeft,
+          half + j*spacing + paddingAmt + offsetPt.y() + raggedTop)
 
       if (drawBoardCoords && (isEdgeX(x) || isEdgeY(y))) {
         if (isEdgeX(x) && isEdgeY(y)) {
           // This is a corner; no coords here.
           continue;
+        }
+
+        if (raggedLeft && i === 0) {
+          coordPt = coordPt.translate(-raggedLeft, 0);
+        }
+        if (raggedRight && x === endX) {
+          coordPt = coordPt.translate(raggedRight, 0);
+        }
+        if (raggedTop && j === 0) {
+          coordPt = coordPt.translate(0, -raggedTop);
+        }
+        if (raggedBottom && y === endY) {
+          coordPt = coordPt.translate(0, raggedBottom);
         }
 
         var label = '';

@@ -5,6 +5,9 @@ glift.displays.cropbox = {
   /** @const */
   OVERFLOW: .5, // The line spacing that goes around the edge.
 
+  /** @const */
+  CROP_PAD: .5, // The extra padding for the cropped-edges.
+
   /**
    * Creates a cropbox based on a region, the number of intersections, and a
    * true/false flag for drawing the board coordinates.
@@ -33,7 +36,7 @@ glift.displays.cropbox = {
             glift.util.point(left, top),
             glift.util.point(right, bottom)),
         maxIntersects);
-    return new glift.displays.DisplayCropBox(cx, cropbox);
+    return new glift.displays.DisplayCropBox(cx, cropbox, drawBoardCoords);
   }
 };
 
@@ -44,16 +47,19 @@ glift.displays.cropbox = {
  * @param {!glift.orientation.Cropbox} cbox The wrapped Cropbox.
  * @param {!glift.orientation.Cropbox} cboxNoCoords The cropbox without the
  *    coordinate-labels.
+ * @param {boolean} drawBoardCoords
  *
  * @constructor
  */
-glift.displays.DisplayCropBox = function(cbox, cboxNoCoords) {
+glift.displays.DisplayCropBox = function(cbox, cboxNoCoords, drawBoardCoords) {
   /** @private {!glift.orientation.Cropbox} */
   this.cbox_ = cbox;
 
   /** @private {!glift.orientation.Cropbox} */
-  this.cboxNoCoords = cboxNoCoords;
+  this.cboxNoCoords_ = cboxNoCoords;
 
+  /** @private {boolean} */
+  this.drawCoords_ = drawBoardCoords;
 };
 
 glift.displays.DisplayCropBox.prototype = {
@@ -72,13 +78,47 @@ glift.displays.DisplayCropBox.prototype = {
    * Returns the bounding box without the coordinate labels.
    * @return {!glift.orientation.BoundingBox}
    */
-  bboxWithoutCoords: function() { return this.cboxNoCoords.bbox; },
+  bboxWithoutCoords: function() { return this.cboxNoCoords_.bbox; },
 
   /**
    * Returns the bbox for the cropbox.
    * @return {!glift.orientation.BoundingBox}
    */
   bbox: function() { return this.cbox_.bbox; },
+
+  /**
+   * The extra padding is a special modification for cropped boards. It makes
+   * cropped boards look a little nicer to have consistent whitespace around
+   * the edge of the board. This adds a lot of complexity, but the result is
+   * much nicer-looking.
+   *
+   * @return {number}
+   * @private
+   */
+  topPad_: function() {
+    return this.cbox_.hasRaggedTop() ? this.croppedEdgePadding() : 0;
+  },
+  /**
+   * @return {number}
+   * @private
+   */
+  botPad_: function() {
+    return this.cbox_.hasRaggedBottom() ? this.croppedEdgePadding() : 0;
+  },
+  /**
+   * @return {number}
+   * @private
+   */
+  leftPad_: function() {
+    return this.cbox_.hasRaggedLeft() ? this.croppedEdgePadding() : 0;
+  },
+  /**
+   * @return {number}
+   * @private
+   */
+  rightPad_: function() {
+    return this.cbox_.hasRaggedRight() ? this.croppedEdgePadding() : 0;
+  },
 
   /**
    * Returns the number of 'intersections' we need to allocate for the height.
@@ -89,15 +129,25 @@ glift.displays.DisplayCropBox.prototype = {
    * @return {number}
    */
   widthIntersections: function() {
-    var OVERFLOW = glift.displays.cropbox.OVERFLOW;
     // We need to add 1 since the bbox is 0-indexed, ranging from 0 to 18
-    return (this.cbox().bbox.width()+1) + OVERFLOW;
+    return (this.cbox().bbox.width()+1) + this.basePadding()*2
+        + this.leftPad_() + this.rightPad_();
   },
 
   /** @return {number} */
   heightIntersections: function() {
-    var OVERFLOW = glift.displays.cropbox.OVERFLOW;
     // We need to add 1 since the bbox is 0-indexed, ranging from 0 to 18
-    return (this.cbox().bbox.height()+1) + OVERFLOW;
+    return (this.cbox().bbox.height()+1) + this.basePadding()*2
+        + this.topPad_() + this.botPad_();
+  },
+
+  /** @return {number} */
+  basePadding: function() {
+    return glift.displays.cropbox.OVERFLOW / 2;
+  },
+
+  /** @return {number} */
+  croppedEdgePadding: function() {
+    return glift.displays.cropbox.CROP_PAD;
   },
 };

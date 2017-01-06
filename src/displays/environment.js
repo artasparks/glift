@@ -107,7 +107,8 @@ glift.displays.GuiEnvironment.prototype = {
         boardPoints = glift.flattener.BoardPoints.fromBbox(
             this.cropbox.bboxWithoutCoords(), spacing, this.intersections, {
               drawBoardCoords: this.drawBoardCoords,
-              padding: glift.displays.cropbox.OVERFLOW / 2,
+              padding: cropbox.basePadding(),
+              croppedEdgePadding: cropbox.croppedEdgePadding(),
               offsetPt: goBoardBox.topLeft(),
             });
 
