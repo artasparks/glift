@@ -1,5 +1,7 @@
 goog.provide('glift.array');
 
+goog.require('glift');
+
 /**
  * Collection of utility methods for arrays
  */

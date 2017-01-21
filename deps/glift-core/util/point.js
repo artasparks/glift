@@ -2,6 +2,10 @@ goog.provide('glift.util.point');
 goog.provide('glift.Point');
 goog.provide('glift.PtStr');
 
+goog.require('glift');
+goog.require('glift.util');
+
+
 /**
  * A point string is just a string with the format '<Number>,<Number>'. We use
  * this special type as a reminder to the reader of the code.

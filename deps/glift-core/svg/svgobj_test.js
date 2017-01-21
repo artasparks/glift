@@ -36,4 +36,15 @@
     var group = svg.group().appendNew('circle', {'r': 30});
     deepEqual(group.render(), '<g>\n<circle r="30"></circle>\n</g>');
   });
+
+  test('Test svg creation+style', function() {
+    var out = svg.svg().setStyle(
+        'circle {\n' +
+        '  fill: orange;\n' +
+        '}').render()
+
+    ok(/CDATA/.test(out));
+    ok(/circle \{/.test(out));
+    ok(/svg/.test(out));
+  });
 })();

@@ -84,6 +84,15 @@ glift.svg.group = function() {
 glift.svg.SvgObj = function(type, opt_attrObj) {
   /** @private {string} */
   this.type_ = type;
+
+  /**
+   * Optional style tag. Should really only be on the top-level SVG element.
+   * For more details, see:
+   * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/style
+   * @private {string}
+   */
+  this.style_ = '';
+
   /** @private {!Object<string>} */
   this.attrMap_ = opt_attrObj || {};
   /** @private {!Array<!glift.svg.SvgObj>} */
@@ -107,6 +116,14 @@ glift.svg.SvgObj.prototype = {
       base += ' ' + key + '="' + this.attrMap_[key] + '"';
     }
     base += '>' + this.text_;
+    if (this.style_) {
+      base += '\n' +
+        '<style>\n' +
+        '/* <![CDATA[ */\n' +
+        this.style_ + '\n' +
+        '/* ]]> */\n' +
+        '</style>\n';
+    }
     if (this.children_.length > 0) {
       base += '\n';
       for (var i = 0; i < this.children_.length; i++) {
@@ -132,6 +149,16 @@ glift.svg.SvgObj.prototype = {
    */
   setAttr: function(key, value) {
     this.attrMap_[key] = value + '';
+    return this;
+  },
+
+  /**
+   * Sets the top-level CSS-styling.
+   * @param {string} s
+   * @return {!glift.svg.SvgObj} This object.
+   */
+  setStyle: function(s) {
+    this.style_ = s;
     return this;
   },
 
