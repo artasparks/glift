@@ -4,7 +4,7 @@ goog.provide('glift.controllers.ControllerFunc');
 /**
  * A controller function which indicates how to consturct a BaseController.
  *
- * @typedef {function(glift.api.SgfOptions):glift.controllers.BaseController}
+ * @typedef {function(!glift.api.SgfOptions):!glift.controllers.BaseController}
  */
 glift.controllers.ControllerFunc;
 

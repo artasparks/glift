@@ -10,8 +10,8 @@ goog.require('glift.controllers.BaseController');
 glift.controllers.gameViewer = function(sgfOptions) {
   var ctrl = glift.controllers;
   var baseController = glift.util.beget(ctrl.base());
-  var newController = glift.util.setMethods(baseController,
-      ctrl.GameViewer.prototype);
+  var newController = /** @type {!glift.controllers.BaseController} */
+      (glift.util.setMethods(baseController, ctrl.GameViewer.prototype));
   if (!sgfOptions) {
     throw new Error('SGF Options was not defined, but must be defined');
   }

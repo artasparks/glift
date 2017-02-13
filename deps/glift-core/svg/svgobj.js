@@ -1,4 +1,16 @@
 goog.provide('glift.svg.SvgObj');
+goog.provide('glift.svg.ViewBox');
+
+/**
+ * @typedef {{
+ *  tlX: number,
+ *  tlY: number,
+ *  brX: number,
+ *  brY: number
+ * }}
+ */
+glift.svg.ViewBox;
+
 
 /**
  * Creats a SVG Wrapper object.
@@ -101,6 +113,8 @@ glift.svg.SvgObj = function(type, opt_attrObj) {
   this.idMap_ = {};
   /** @private {string} */
   this.text_ = '';
+  /** @private {!glift.svg.ViewBox|undefined} */
+  this.viewBox_ = undefined;
   /** @private {?Object} */
   this.data_ = null;
 };
@@ -115,10 +129,21 @@ glift.svg.SvgObj.prototype = {
     for (var key in this.attrMap_) {
       base += ' ' + key + '="' + this.attrMap_[key] + '"';
     }
+    if (this.viewBox_) {
+      var vb = this.viewBox_;
+      base += ' viewBox="' +
+          vb.tlX + ' ' +
+          vb.tlY + ' ' +
+          vb.brX + ' ' +
+          vb.brY + '"';
+      if (!this.attrMap_['preserveAspectRatio']) {
+        base += ' preserveAspectRatio="xMidYMid"'
+      }
+    }
     base += '>' + this.text_;
     if (this.style_) {
       base += '\n' +
-        '<style>\n' +
+        '<style type="text/css">\n' +
         '/* <![CDATA[ */\n' +
         this.style_ + '\n' +
         '/* ]]> */\n' +
@@ -159,6 +184,26 @@ glift.svg.SvgObj.prototype = {
    */
   setStyle: function(s) {
     this.style_ = s;
+    return this;
+  },
+
+  /**
+   * Sets the view-box for the SVG element. 
+   * https://css-tricks.com/scale-svg/
+   *
+   * @param {number} tlX tl.y
+   * @param {number} tlY tl.x
+   * @param {number} brX br.y
+   * @param {number} brY br.x
+   * @return {!glift.svg.SvgObj} this
+   */
+  setViewBox: function(tlX, tlY, brX, brY) {
+    this.viewBox_ = {
+      tlX: tlX,
+      tlY: tlY,
+      brX: brX,
+      brY: brY,
+    };
     return this;
   },
 

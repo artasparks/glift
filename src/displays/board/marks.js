@@ -138,7 +138,7 @@ glift.displays.board.addMark = function(
             svgpath.movePt(topNode) + ' ' +
             svgpath.lineAbsPt(leftNode) + ' ' +
             svgpath.lineAbsPt(rightNode) + ' ' +
-            svgpath.lineAbsPt(topNode))
+            svgpath.lineAbsPt(topNode) + ' ' + 'Z')
         .setAttr('stroke-width', 2)
         .setAttr('stroke', marksTheme.stroke)
         .setId(markId));

@@ -119,7 +119,6 @@ gulp.task('compile', () => {
 gulp.task('concat', () => {
   return gulp.src(jsSrcGlobGen(srcPaths, srcIgnore))
     .pipe(concat('glift_combined.js'))
-    .pipe(size())
     .pipe(gulp.dest('./compiled/'))
 })
 

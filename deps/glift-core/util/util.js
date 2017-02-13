@@ -6,10 +6,10 @@ goog.require('glift');
 glift.util = {
   /**
    * Log a message. Allows the for the possibility of overwriting for tests.
+   * @param {*} msg
    */
   logz: function(msg) {
     console.log(msg);
-    return null; // default value to return.
   },
 
   /**
@@ -75,6 +75,9 @@ glift.util = {
 
   /**
    * Set methods in the base object.  Usually used in conjunction with beget.
+   * @param {!Object} base
+   * @param {!Object} methods
+   * @return {!Object}
    */
   setMethods: function(base, methods) {
     for (var key in methods) {
@@ -86,9 +89,10 @@ glift.util = {
   /**
    * A utility method -- for prototypal inheritence.
    *
-   * @template T
    * @param {T} o
    * @return {T}
+   *
+   * @template T
    */
   beget: function (o) {
     /** @constructor */
@@ -102,9 +106,10 @@ glift.util = {
    * types.  It does not copy functions (which it leaves alone), nor does it
    * address problems with recursive objects.
    *
-   * @template T
    * @param {T} obj
    * @return {T}
+   *
+   * @template T
    */
   simpleClone: function(obj) {
     // Handle immutable types (null, Boolean, Number, String) and functions.

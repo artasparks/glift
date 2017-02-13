@@ -1,6 +1,6 @@
-goog.provide('glift.util.point');
 goog.provide('glift.Point');
 goog.provide('glift.PtStr');
+goog.provide('glift.util.point');
 
 goog.require('glift');
 goog.require('glift.util');
@@ -20,7 +20,7 @@ glift.PtStr;
  * Create a point.  We no longer cache points
  * @param {number} x
  * @param {number} y
- * return {!glift.Point}
+ * @return {!glift.Point}
  */
 glift.util.point = function(x, y) {
   return new glift.Point(x, y);
@@ -29,7 +29,7 @@ glift.util.point = function(x, y) {
 /**
  * @param {number} x
  * @param {number} y
- * return {!glift.PtStr}
+ * @return {!glift.PtStr}
  */
 glift.util.coordToString = function(x, y) {
   return x + ',' + y;
@@ -111,7 +111,7 @@ glift.util.pointFromSgfCoord = function(str) {
     throw 'Unknown SGF Coord length: ' + str.length +
         'for property ' + str;
   }
-  var a = 'a'.charCodeAt(0)
+  var a = 'a'.charCodeAt(0);
   return glift.util.point(str.charCodeAt(0) - a, str.charCodeAt(1) - a);
 };
 
@@ -123,9 +123,9 @@ glift.util.pointFromSgfCoord = function(str) {
  * It was originally cached, with private variables and immutability.  However,
  * I found that all this protection was too tedious.
  *
- * @constructor
- * @struct
- * @final
+ * @param {number} xIn
+ * @param {number} yIn
+ * @constructor @struct @final
  */
 glift.Point = function(xIn, yIn) {
   /**
@@ -142,15 +142,15 @@ glift.Point = function(xIn, yIn) {
 
 glift.Point.prototype = {
   /** @return {number} x value */
-  x: function() { return this.x_ },
+  x: function() { return this.x_; },
   /** @return {number} y value */
-  y: function() { return this.y_ },
+  y: function() { return this.y_; },
   /**
    * @param {?Object} inpt
    * @return {boolean} Whether this point equals another obj.
    */
   equals: function(inpt) {
-    if (!inpt) { return false; };
+    if (!inpt) { return false; }
     if (!inpt.x && !inpt.y) { return false; }
     var pt = /** @type {!glift.Point} */ (inpt);
     return this.x_ === pt.x() && this.y_ === pt.y();
@@ -235,13 +235,13 @@ glift.Point.prototype = {
    * @return {!glift.Point} A rotated point.
    */
   antirotate: function(maxIntersections, rotation) {
-    var rotations = glift.enums.rotations
+    var rotations = glift.enums.rotations;
     if (rotation === rotations.CLOCKWISE_90) {
-      return this.rotate(maxIntersections, rotations.CLOCKWISE_270)
+      return this.rotate(maxIntersections, rotations.CLOCKWISE_270);
     } else if (rotation === rotations.CLOCKWISE_180) {
-      return this.rotate(maxIntersections, rotations.CLOCKWISE_180)
+      return this.rotate(maxIntersections, rotations.CLOCKWISE_180);
     } else if (rotation === rotations.CLOCKWISE_270) {
-      return this.rotate(maxIntersections, rotations.CLOCKWISE_90)
+      return this.rotate(maxIntersections, rotations.CLOCKWISE_90);
     } else {
       return this.rotate(maxIntersections, rotation);
     }

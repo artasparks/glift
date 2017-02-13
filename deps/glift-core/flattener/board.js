@@ -183,7 +183,7 @@ glift.flattener.Board.prototype = {
       var pt = glift.util.point(
           /** @type {number} */ (ptOrX), /** @type {number} */ (opt_y));
     } else {
-      var pt = ptOrX;
+      var pt = /** @type {!glift.Point} */ (ptOrX);
     }
     return this.getInt(this.boardPtToPt(pt));
   },

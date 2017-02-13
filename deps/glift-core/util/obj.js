@@ -9,6 +9,7 @@ glift.util.obj = {
    *
    * @param {!Object} base object
    * @param {...!Object} var_args
+   * @return {!Object}
    */
   flatMerge: function(base, var_args) {
     var newObj = {};
@@ -32,6 +33,7 @@ glift.util.obj = {
   /**
    * Returns true if an object is empty. False otherwise.
    * @param {!Object} obj
+   * @return {boolean}
    */
   isEmpty: function(obj) {
     for (var key in obj) {
