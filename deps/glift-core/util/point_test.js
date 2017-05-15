@@ -71,4 +71,27 @@
     ]
     deepEqual(o, expected, 'vertical pt rectangle');
   });
+
+  test('normalize', function() {
+    ok(point(9, 9).normalize(19).equals(point(0,0)));
+    ok(point(9, 9).normalize(19).denormalize(19).equals(point(9,9)));
+    ok(point(10, 9).normalize(19).equals(point(1,0)));
+    ok(point(7, 9).normalize(19).equals(point(-2, 0)));
+    ok(point(9, 11).normalize(19).equals(point(0,-2)));
+    ok(point(9, 6).normalize(19).equals(point(0,3)));
+  });
+
+  test('flip', function() {
+    deepEqual(point(10, 9).flipHorz(19).toString(), '8,9');
+    deepEqual(point(9, 9).flipHorz(19).toString(), '9,9');
+    deepEqual(point(9, 10).flipHorz(19).toString(), '9,10');
+    deepEqual(point(8, 10).flipHorz(19).toString(), '10,10');
+    deepEqual(point(8, 10).flipHorz(19).flipHorz(19).toString(), '8,10');
+
+    deepEqual(point(10, 9).flipVert(19).toString(), '10,9');
+    deepEqual(point(9, 9).flipVert(19).toString(), '9,9');
+    deepEqual(point(9, 10).flipVert(19).toString(), '9,8');
+    deepEqual(point(8, 10).flipVert(19).toString(), '8,8');
+    deepEqual(point(8, 10).flipVert(19).flipVert(19).toString(), '8,10');
+  });
 })();

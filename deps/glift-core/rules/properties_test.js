@@ -159,6 +159,23 @@
 
   });
 
+  test('Test flip', function() {
+    var pt = glift.util.point;
+
+    var props = properties().add('LB', 'cb:Z');
+
+    props.flipHorz('LB', 19);
+    deepEqual(props.getOneValue('LB'), pt(16, 1).toSgfCoord() + ':Z');
+    props.flipHorz('LB', 19);
+    deepEqual(props.getOneValue('LB'), pt(2, 1).toSgfCoord() + ':Z');
+
+    var props = props.add('B', 'dc');
+    props.flipVert('B', 19);
+    deepEqual(props.getOneValue('B'), pt(3, 16).toSgfCoord());
+    props.flipVert('B', 19);
+    deepEqual(props.getOneValue('B'), pt(3, 2).toSgfCoord());
+  });
+
   test('getAllMarks', function() {
     var pt = glift.util.pointFromSgfCoord;
     var defaultProps = properties();

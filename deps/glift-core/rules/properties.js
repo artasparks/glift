@@ -215,6 +215,60 @@ glift.rules.Properties.prototype = {
         rotation === glift.enums.rotations.NO_ROTATION) {
       return
     }
+    // Replace all the values for this property.
+    this.pointsReplace_(prop, size, function(sgfPoint) {
+      return glift.util.pointFromSgfCoord(sgfPoint)
+          .rotate(size, rotation)
+          .toSgfCoord();
+    });
+  },
+
+  /**
+   * Flips the SGF point-values over thy Y axis (Flipping the X-points);
+   * @param {glift.rules.prop} prop
+   * @param {number} size
+   */
+  flipHorz: function(prop, size) {
+    if (!glift.rules.propertiesWithPts[prop]) {
+      return;
+    }
+    this.pointsReplace_(prop, size, function(sgfPoint) {
+      return glift.util.pointFromSgfCoord(sgfPoint)
+          .flipHorz(size)
+          .toSgfCoord();
+    });
+  },
+
+  /**
+   * Flips the SGF point-values over thy X axis (Flipping the Y-points);
+   * @param {glift.rules.prop} prop
+   * @param {number} size
+   */
+  flipVert: function(prop, size) {
+    if (!glift.rules.propertiesWithPts[prop]) {
+      return;
+    }
+    this.pointsReplace_(prop, size, function(sgfPoint) {
+      return glift.util.pointFromSgfCoord(sgfPoint)
+          .flipVert(size)
+          .toSgfCoord();
+    });
+  },
+
+  /**
+   * Helper for replacing SGF points.
+   * @param {glift.rules.prop} prop
+   * @param {number} size
+   * @param {function(string): string} replFn
+   * @private
+   */
+  pointsReplace_: function(prop, size, replFn) {
+    if (!glift.rules.propertiesWithPts[prop]) {
+      return;
+    }
+    if (!replFn) {
+      throw new Error('Replace function must be supplied');
+    }
     var regex = /([a-z][a-z])/g;
     if (prop === glift.rules.prop.LB) {
       // We handle labels specially since labels have a unqiue format
@@ -222,11 +276,7 @@ glift.rules.Properties.prototype = {
     }
     var vals = this.getAllValues(prop);
     for (var i = 0; i < vals.length; i++) {
-      vals[i] = vals[i].replace(regex, function(sgfPoint) {
-        return glift.util.pointFromSgfCoord(sgfPoint)
-            .rotate(size, rotation)
-            .toSgfCoord();
-      });
+      vals[i] = vals[i].replace(regex, replFn);
     }
     this.propMap[prop] = vals;
   },
@@ -240,6 +290,16 @@ glift.rules.Properties.prototype = {
    */
   contains: function(prop) {
     return prop in this.propMap;
+  },
+
+  /**
+   * Loop over each property / value list.
+   * @param {!function(glift.rules.prop, !Array<string>)} func
+   */
+  forEach: function(func) {
+    for (var p in this.propMap) {
+      func(p, this.propMap[p]);
+    }
   },
 
   /**

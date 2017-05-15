@@ -136,3 +136,16 @@ glift.enums.rotations = {
   CLOCKWISE_180: 'CLOCKWISE_180',
   CLOCKWISE_270: 'CLOCKWISE_270'
 };
+
+/**
+ * Flips that can be applied to a go board.
+ * @enum {string}
+ */
+glift.enums.Flip = {
+  /** Don't perform a flip. A no-action default. */
+  NO_FLIP: 'NO_FLIP',
+  /** Flip vertically. In otherwords, flip points over the X axis (the Y points). */
+  VERTICAL: 'VERTICAL',
+  /** Flip horizontally. In otherwords, flip points over the Y axis (the X points). */
+  HORIZONTAL: 'HORIZONTAL',
+};

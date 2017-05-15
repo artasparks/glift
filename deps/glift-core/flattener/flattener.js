@@ -34,6 +34,9 @@ glift.flattener = {};
  *  - showNextVariationsType: Whether or not to show variations.
  *  - markLastMove: Whether or not to put a special mark on the last move
  *  - markKo: Whether or not to show the Ko location with a mark.
+ *  - clearMarks: Whether to clear all the marks from the diagram. Note: this
+ *    only affects marks and labels that are in the SGF and doesn't affect
+ *    next-move-path labels (since that's the whole point of a next-moves-path.)
  *
  *  Options for problems
  *  - problemConditions: determine how to evaluate whether or not a position is
@@ -46,13 +49,14 @@ glift.flattener = {};
  *  nextMovesPath: (!glift.rules.Treepath|string|!Array<number>|undefined),
  *  startingMoveNum: (number|undefined),
  *  boardRegion: (glift.enums.boardRegions|undefined),
+ *  autoRotateCropPrefs: (!glift.orientation.AutoRotateCropPrefs|undefined),
  *  regionRestrictions: (!Array<glift.enums.boardRegions>|undefined),
  *  showNextVariationsType: (glift.enums.showVariations|undefined),
- *  autoBoxCropOnNextMoves: (boolean|undefined),
  *  markLastMove: (boolean|undefined),
  *  selectedNextMove: (?glift.rules.Move|undefined),
  *  showKoLocation: (boolean|undefined),
- *  problemConditions: (!glift.rules.ProblemConditions|undefined)
+ *  problemConditions: (!glift.rules.ProblemConditions|undefined),
+ *  clearMarks: (boolean|undefined),
  * }}
  */
 glift.flattener.Options;
@@ -179,7 +183,7 @@ glift.flattener.flatten = function(movetreeInitial, opt_options) {
       mt, options.problemConditions);
 
   // Get the marks at the current position
-  var markMap = glift.flattener.markMap_(mt);
+  var markMap = glift.flattener.markMap_(mt, options.clearMarks);
 
   // Optionally update the labels with labels used to indicate variations.
   var sv = glift.enums.showVariations
@@ -344,12 +348,17 @@ glift.flattener.MarkMap;
  * an incorrectly specified SGF/movetree.
  *
  * @param {glift.rules.MoveTree} movetree
+ * @param {(boolean|undefined)} clearMarks Whether or not to clear the marks
+ *    from the board.
  * @return {!glift.flattener.MarkMap}
  * @private
  */
-glift.flattener.markMap_ = function(movetree) {
+glift.flattener.markMap_ = function(movetree, clearMarks) {
   /** @type {!glift.flattener.MarkMap} */
   var out = { marks: {}, labels: {} };
+  if (clearMarks) {
+    return out;
+  }
   var symbols = glift.flattener.symbols;
   /** @type {!Object<glift.rules.prop, !glift.flattener.symbols>} */
   var propertiesToSymbols = {

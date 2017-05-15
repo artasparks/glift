@@ -17,7 +17,7 @@ USAGE="=======================================================================
 # Ensure the REPO_PATH always has a trailing slash.
 readonly REPO_PATH=${@%/}/
 
-echo "Using repo path $REPO_PATH"
+echo "Using repopath $REPO_PATH"
 
 if [[ -z $REPO_PATH ]]; then
   echo "You must supply a path for the local repo!!"
@@ -49,7 +49,7 @@ readonly SRC_PATH="${REPO_PATH}src"
 
 readonly LIB_PATH=$(echo $0 | sed "s/\\/[^/]*$/\\//g")deps/$name
 
-echo "Copying $SRC_PATH to $LIB_PATH"
+# echo "Copying $SRC_PATH to $LIB_PATH"
 
 # Ensure that the dirs are readonly.
 rsync -r $SRC_PATH/* $LIB_PATH
