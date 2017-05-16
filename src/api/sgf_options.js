@@ -301,6 +301,15 @@ glift.api.SgfOptions = function(opt_o) {
   };
 
   /**
+   * This option indicates when, in the tree, the problem be marked 'incorrect'
+   * or 'correct'.
+   *
+   * api:experimental
+   * @const {string}
+   */
+  this.problemTermination = 'INCORRECT_PATH'
+
+  /**
    * Whether or not to show variations.  See glift.enums.showVariations
    * Values: NEVER, ALWAYS, MORE_THAN_ONE
    *
@@ -376,7 +385,7 @@ glift.api.SgfOptions.prototype = {
    *
    * @param {!Object} sgf The raw SGF object.
    *
-   * @retun {!glift.api.SgfOptions} The completed SGF options, which can be then
+   * @return {!glift.api.SgfOptions} The completed SGF options, which can be then
    * used by the widget manager and the controller.
    */
   createSgfObj: function(sgf) {
