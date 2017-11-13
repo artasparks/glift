@@ -25,6 +25,22 @@ glift.parse = {
   },
 
   /**
+   * Get the parse-type from a filename
+   *
+   * @param {string} filename Filename
+   * @return {glift.parse.parseType} The parse type
+   */
+  parseTypeFromFilename: function(filename) {
+    var ttype = glift.parse.parseType.SGF; // default type = SGF.
+    if (filename.indexOf('.sgf') > -1) {
+      ttype = glift.parse.parseType.SGF;
+    } else if (filename.indexOf('.gib') > -1) {
+      ttype = glift.parse.parseType.TYGEM;
+    }
+    return ttype;
+  },
+
+  /**
    * Parse a Go-format format from a string.
    *
    * @param {string} str Raw contents that need to be parsed.
@@ -32,14 +48,8 @@ glift.parse = {
    * @return {!glift.rules.MoveTree}
    */
   fromFileName: function(str, filename) {
-    var parseType = glift.parse.parseType;
-    var ttype = parseType.SGF;
-    if (filename.indexOf('.sgf') > -1) {
-      ttype = parseType.SGF;
-    } else if (filename.indexOf('.gib') > -1) {
-      ttype = parseType.TYGEM;
-    }
-    return glift.parse.fromString(str, ttype);
+    return glift.parse.fromString(
+        str, glift.parse.parseTypeFromFilename(filename));
   },
 
   /**
