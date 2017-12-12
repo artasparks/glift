@@ -5,7 +5,10 @@ var gulp = require('gulp'),
     gutil = require('gulp-util'),
     size = require('gulp-size'),
     concat = require('gulp-concat'),
-    closureCompiler = require('gulp-closure-compiler'),
+    chmod = require('gulp-chmod'),
+    closureCompiler = require('google-closure-compiler').gulp({
+      // extraArguments: ['-Xms2048m']
+    }),
     through = require('through2'),
     nglob = require('glob'),
     jsSource = './src/**/*.js',
@@ -66,59 +69,62 @@ gulp.task('update-html-watch', () => {
 })
 
 // Compile the sources with the JS Compiler
+// See https://www.npmjs.com/package/google-closure-compiler
+// for more details
 gulp.task('compile', () => {
-  return gulp.src(jsSrcGlobGen(srcPaths, srcIgnore))
+  return gulp.src(jsSrcGlobGen(srcPaths, srcIgnore), {base: '.'})
     .pipe(closureCompiler({
-      compilerPath: './compiler-latest/compiler.jar',
-      fileName: 'glift.js',
-      compilerFlags: {
-        // TODO(kashomon): Turn on ADVANCED_OPTIMIZATIONS when all the right
-        // functions have been marked @export, where appropriate
-        // compilation_level: 'ADVANCED_OPTIMIZATIONS',
-        //
-        language_in: 'ECMASCRIPT5',
-        // Note that warning_level=VERBOSE corresponds to:
-        //
-        // --jscomp_warning=checkTypes
-        // --jscomp_error=checkVars
-        // --jscomp_warning=deprecated
-        // --jscomp_error=duplicate
-        // --jscomp_warning=globalThis
-        // --jscomp_warning=missingProperties
-        // --jscomp_warning=undefinedNames
-        // --jscomp_error=undefinedVars
-        //
-        // Do some advanced Javascript checks.
-        // https://github.com/google/closure-compiler/wiki/Warnings
-        jscomp_error: [
-          'accessControls',
-          'checkRegExp',
-          'checkTypes',
-          'checkVars',
-          'const',
-          'constantProperty',
-          'deprecated',
-          'duplicate',
-          'globalThis',
-          'missingProperties',
-          'missingProvide',
-          'missingReturn',
-          'undefinedNames',
-          'undefinedVars',
-          'visibility',
-          // We don't turn requires into Errors, because the closure compiler
-          // reorders the sources based on the requires.
-          // 'missingRequire',
-        ]
-      }
+      // compilerPath: './tools/compiler-latest/compiler.jar',
+      js_output_file: 'glift.js',
+      language_in: 'ECMASCRIPT5_STRICT',
+      //language_in: 'ECMASCRIPT5_STRICT',
+      // TODO(kashomon): Turn on ADVANCED_OPTIMIZATIONS when all the right
+      // functions have been marked @export, where appropriate
+      // compilation_level: 'ADVANCED_OPTIMIZATIONS',
+      //
+      // Note that warning_level=VERBOSE corresponds to:
+      //
+      // --jscomp_warning=checkTypes
+      // --jscomp_error=checkVars
+      // --jscomp_warning=deprecated
+      // --jscomp_error=duplicate
+      // --jscomp_warning=globalThis
+      // --jscomp_warning=missingProperties
+      // --jscomp_warning=undefinedNames
+      // --jscomp_error=undefinedVars
+      //
+      // Do some advanced Javascript checks.
+      // https://github.com/google/closure-compiler/wiki/Warnings
+      jscomp_error: [
+        'accessControls',
+        'checkRegExp',
+        'checkTypes',
+        'checkVars',
+        'const',
+        'constantProperty',
+        'deprecated',
+        'duplicate',
+        'globalThis',
+        'missingProperties',
+        'missingProvide',
+        'missingReturn',
+        'undefinedNames',
+        'undefinedVars',
+        'visibility',
+        // We don't turn requires into Errors, because the closure compiler
+        // reorders the sources based on the requires.
+        // 'missingRequire',
+      ],
     }))
     .pipe(size())
     .pipe(gulp.dest('./compiled/'))
 })
 
+
 gulp.task('concat', () => {
   return gulp.src(jsSrcGlobGen(srcPaths, srcIgnore))
     .pipe(concat('glift_combined.js'))
+    .pipe(chmod(0o666))
     .pipe(gulp.dest('./compiled/'))
 })
 
