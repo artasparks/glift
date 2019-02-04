@@ -4,6 +4,7 @@ var gulp = require('gulp'),
     qunit = require('gulp-qunit'),
     size = require('gulp-size'),
     concat = require('gulp-concat'),
+    chmod = require('gulp-chmod'),
     through = require('through2'),
     jsSource = './src/**/*.js',
 
@@ -64,6 +65,8 @@ gulp.task('update-html-watch', () => {
 })
 
 // Compile the sources with the JS Compiler
+// See https://www.npmjs.com/package/google-closure-compiler
+// for more details
 gulp.task('compile', () => {
   return gulp.src(jsSrcGlobGen(srcPaths, srcIgnore))
     .pipe(closureCompiler('glift.js'))
@@ -71,9 +74,11 @@ gulp.task('compile', () => {
     .pipe(gulp.dest('./compiled/'))
 })
 
+
 gulp.task('concat', () => {
   return gulp.src(jsSrcGlobGen(srcPaths, srcIgnore))
     .pipe(concat('glift_combined.js'))
+    .pipe(chmod(0o666))
     .pipe(gulp.dest('./compiled/'))
 })
 

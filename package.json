@@ -12,7 +12,7 @@
     "email": "jrhoak@gmail.com"
   },
   "engines": {
-    "node": ">=4.0.0"
+    "node": ">=10.0.0"
   },
   "scripts": {
     "test": "gulp"
@@ -26,12 +26,12 @@
   ],
   "devDependencies": {
     "glob": "^7.1.1",
-    "google-closure-compiler": "^20170910.0.0",
     "gulp": "^4.0.0",
     "gulp-chmod": "^2.0.0",
     "gulp-concat": "^2.6.0",
     "gulp-qunit": "^1.5.0",
     "gulp-size": "^2.1.0",
-    "through2": "^2.0.1"
+    "through2": "^2.0.1",
+    "google-closure-compiler": "^20170910.0.0"
   }
 }
