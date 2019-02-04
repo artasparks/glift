@@ -65,6 +65,25 @@
     deepEqual(i.textLabel(), '2');
   });
 
+  test('Simple next moves + ignoring labeling', function() {
+    var basicSgf = '(;GB[1];B[aa]C[zo];W[ab]C[zed])';
+    var mt = glift.rules.movetree.getFromSgf(basicSgf);
+    var f = flattener.flatten(mt, {
+      nextMovesPath: [0,0],
+      ignoreLabels: true,
+    });
+
+    var i = f.board().getIntBoardPt(toPt('aa'));
+    deepEqual(i.stone(), symb.BSTONE);
+    deepEqual(i.mark(), symb.EMPTY);
+    deepEqual(i.textLabel(), null);
+
+    i = f.board().getIntBoardPt(toPt('ab'));
+    deepEqual(i.stone(), symb.WSTONE);
+    deepEqual(i.mark(), symb.EMPTY);
+    deepEqual(i.textLabel(), null);
+  });
+
   test('Init position', function() {
     var basicSgf = '(;GB[1];B[aa]C[zo];W[ab]C[zed])';
     var mt = glift.rules.movetree.getFromSgf(basicSgf);

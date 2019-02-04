@@ -25,6 +25,49 @@ glift.parse = {
   },
 
   /**
+   * List of known suffixes and the filetypes they match to.
+   * @type {!Object<string, glift.parse.parseType>}
+   */
+  suffixToType: {
+    '.sgf': 'SGF',
+    '.gib': 'TYGEM',
+  },
+
+  /**
+   * Determines whether a file is a known Go file.
+   *
+   * @param {string} filename The filename
+   * @return {boolean} whether or not the filename has a known type
+   */
+  knownGoFile: function(filename) {
+    if (!filename || typeof(filename) !== 'string') {
+      return false
+    }
+    for (var key in glift.parse.suffixToType) {
+      if (filename.indexOf(key) > -1) {
+        return true;
+      }
+    }
+    return false;
+  },
+
+  /**
+   * Get the parse-type from a filename
+   *
+   * @param {string} filename Filename
+   * @return {glift.parse.parseType} The parse type
+   */
+  parseTypeFromFilename: function(filename) {
+    var ttype = glift.parse.parseType.SGF; // default type = SGF.
+    for (var key in glift.parse.suffixToType) {
+      if (filename.indexOf(key) > -1) {
+        ttype = glift.parse.suffixToType[key];
+      }
+    }
+    return ttype;
+  },
+
+  /**
    * Parse a Go-format format from a string.
    *
    * @param {string} str Raw contents that need to be parsed.
@@ -32,14 +75,8 @@ glift.parse = {
    * @return {!glift.rules.MoveTree}
    */
   fromFileName: function(str, filename) {
-    var parseType = glift.parse.parseType;
-    var ttype = parseType.SGF;
-    if (filename.indexOf('.sgf') > -1) {
-      ttype = parseType.SGF;
-    } else if (filename.indexOf('.gib') > -1) {
-      ttype = parseType.TYGEM;
-    }
-    return glift.parse.fromString(str, ttype);
+    return glift.parse.fromString(
+        str, glift.parse.parseTypeFromFilename(filename));
   },
 
   /**

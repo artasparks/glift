@@ -16,4 +16,18 @@
     ok(mt);
     ok(/Awesome!/.test(mt.properties().getComment()), 'should be awesome');
   });
+
+  test('Known parse type', function() {
+    ok(glift.parse.knownGoFile('foo-aoeu.sgf'))
+    ok(glift.parse.knownGoFile('zog.gib'))
+    ok(!glift.parse.knownGoFile());
+    ok(!glift.parse.knownGoFile(1234));
+    ok(!glift.parse.knownGoFile('foo-aoeu.aoeu'));
+  });
+
+  test('Parse type from filename', function() {
+    deepEqual(glift.parse.parseTypeFromFilename('foo.gib'), 'TYGEM');
+    deepEqual(glift.parse.parseTypeFromFilename('foo.sgf'), 'SGF');
+    deepEqual(glift.parse.parseTypeFromFilename('foo.zorg'), 'SGF');
+  });
 })();

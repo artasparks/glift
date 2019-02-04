@@ -15,7 +15,7 @@
 
   test('Test init setup', function() {
     var mt = glift.rules.movetree.getFromSgf(simpleGame);
-    var out = findNextMovesPath(mt, []);
+    var out = findNextMovesPath(mt, {initTreepath: []});
     deepEqual(out.treepath, []);
     deepEqual(out.nextMoves, []);
   });
@@ -24,41 +24,41 @@
     var mt = glift.rules.movetree.getFromSgf(
         '(;GM[1]AW[aa];B[ab];W[bbr])', [0]);
     var out = findNextMovesPath(mt);
-    deepEqual(out.treepath, []);
-    deepEqual(out.nextMoves, [0]);
+    deepEqual(out.treepath, [], 'treepath');
+    deepEqual(out.nextMoves, [0], 'nextmoves');
   });
 
   test('Test basic nextmoves', function() {
     var mt = glift.rules.movetree.getFromSgf(simpleGame);
-    var out = findNextMovesPath(mt, [0,0,0]); // 3 moves in.
+    var out = findNextMovesPath(mt, {initTreepath: [0,0,0]}); // 3 moves in.
     deepEqual(out.treepath, []);
     deepEqual(out.nextMoves, [0,0,0]);
   });
 
   test('Test nextmoves with override', function() {
     var mt = glift.rules.movetree.getFromSgf(simpleGame);
-    var out = findNextMovesPath(mt, [0,0,0], 1);
+    var out = findNextMovesPath(mt, {initTreepath: [0,0,0], minusMovesOverride: 1});
     deepEqual(out.treepath, [0, 0]);
     deepEqual(out.nextMoves, [0]);
   });
 
   test('Test nextmoves. Variation -- mainline', function() {
     var mt = glift.rules.movetree.getFromSgf(gameVariation);
-    var out = findNextMovesPath(mt, [0,0,0,0,0,0,0]);
+    var out = findNextMovesPath(mt, {initTreepath: [0,0,0,0,0,0,0]});
     deepEqual(out.treepath, []);
     deepEqual(out.nextMoves, [0,0,0,0,0,0,0]);
   });
 
   test('Test nextmoves. Variation -- sideline', function() {
     var mt = glift.rules.movetree.getFromSgf(gameVariation);
-    var out = findNextMovesPath(mt, [0,0,0,0,0,0,1,0]);
+    var out = findNextMovesPath(mt, {initTreepath: [0,0,0,0,0,0,1,0]});
     deepEqual(out.treepath, [0,0,0,0,0,0]);
     deepEqual(out.nextMoves, [1,0]);
   });
 
   test('Test nextmoves. Variation -- another example on variation', function() {
     var mt = glift.rules.movetree.getFromSgf(gameVariation);
-    var out = findNextMovesPath(mt, [0,0,0,0,0,0,1,0,0,0]);
+    var out = findNextMovesPath(mt, {initTreepath: [0,0,0,0,0,0,1,0,0,0]});
     deepEqual(out.treepath, [0,0,0,0,0,0]);
     deepEqual(out.nextMoves, [1,0,0,0]);
   });

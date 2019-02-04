@@ -18,6 +18,26 @@ glift.rules.Treepath;
 glift.rules.AppliedTreepath;
 
 /**
+ * Options for finding findNextMovesPath.
+ *
+ * initTreepath: The initial treepath. If not specified or undefined, use the
+ *    current location in the movetree
+ * minusMovesOverride: Force findNextMoves to to return a
+ *    nextMovesPath of this length, starting from the init treepath.  The
+ *    actual nextMovesPath can be shorter if there's a break, but this sets an
+ *    upper limit.
+ * breakOnComment: Whether or not to break on comments on the main variation.
+ *    Defaults to true if unspecified.
+ *
+ * @typedef {{
+ *  initTreepath: (!glift.rules.Treepath|undefined),
+ *  minusMovesOverride: (number|undefined),
+ *  breakOnComment: (boolean|undefined),
+ * }}
+ */
+glift.rules.NextMovesPathOptions;
+
+/**
  * # Treepath
  *
  * A treepath is a list of variations that says how to travel through a tree of
@@ -363,14 +383,7 @@ glift.rules.treepath = {
    * the first move.
    *
    * @param {glift.rules.MoveTree} movetree A movetree, of course.
-   * @param {glift.rules.Treepath=} opt_initTreepath The initial treepath. If not
-   *    specified or undefined, use the current location in the movetree.
-   * @param {number=} opt_minusMovesOverride: Force findNextMoves to to return a
-   *    nextMovesPath of this length, starting from the init treepath.  The
-   *    actual nextMovesPath can be shorter. (Note: This option should be
-   *    deleted).
-   * @param {boolean=} opt_breakOnComment Whether or not to break on comments on the
-   *    main variation.  Defaults to true
+   * @param {glift.rules.NextMovesPathOptions=} opt_options options
    *
    * @return {{
    *  movetree: !glift.rules.MoveTree,
@@ -383,12 +396,12 @@ glift.rules.treepath = {
    * - nextMoves: A nextMovesPath, used to apply for the purpose of
    *    crafting moveNumbers.
    */
-  findNextMovesPath: function(
-      movetree, opt_initTreepath, opt_minusMovesOverride, opt_breakOnComment) {
-    var initTreepath = opt_initTreepath || movetree.treepathToHere();
-    var breakOnComment = opt_breakOnComment === false ? false : true;
+  findNextMovesPath: function(movetree, opt_options) {
+    var opt = opt_options || {};
+    var initTreepath = opt.initTreepath || movetree.treepathToHere();
+    var breakOnComment = opt.breakOnComment === undefined ? true : !!opt.breakOnComment;
     var mt = movetree.getTreeFromRoot(initTreepath);
-    var minusMoves = opt_minusMovesOverride || 1000;
+    var minusMoves = opt.minusMovesOverride || 1000;
     var nextMovesPath = [];
     var startMainline = mt.onMainline();
     for (var i = 0; mt.node().getParent() && i < minusMoves; i++) {

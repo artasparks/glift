@@ -7,5 +7,5 @@ glift.global = {
    *
    * Not yet stable.
    */
-  'core-version': '0.9.1'
+  'core-version': '0.9.2'
 };

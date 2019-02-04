@@ -37,6 +37,8 @@ glift.flattener = {};
  *  - clearMarks: Whether to clear all the marks from the diagram. Note: this
  *    only affects marks and labels that are in the SGF and doesn't affect
  *    next-move-path labels (since that's the whole point of a next-moves-path.)
+ *  - ignoreLabels: Whether to ignore any label-mark suggestions. This has the
+ *    effect of clearing all labels
  *
  *  Options for problems
  *  - problemConditions: determine how to evaluate whether or not a position is
@@ -57,6 +59,7 @@ glift.flattener = {};
  *  showKoLocation: (boolean|undefined),
  *  problemConditions: (!glift.rules.ProblemConditions|undefined),
  *  clearMarks: (boolean|undefined),
+ *  ignoreLabels: (boolean|undefined)
  * }}
  */
 glift.flattener.Options;
@@ -211,6 +214,10 @@ glift.flattener.flatten = function(movetreeInitial, opt_options) {
     glift.flattener.markKo_(markMap, goban.getKo());
   }
 
+  // Optionally clear all the labels in the map.
+  if (options.ignoreLabels) {
+    glift.flattener.clearLabels_(markMap);
+  }
 
   // Finally! Generate the intersections double-array.
   var board = glift.flattener.board.create(cropping, stoneMap, markMap);
@@ -319,6 +326,8 @@ glift.flattener.stoneMap_ = function(goban, nextStones) {
 
 
 /**
+ * Tracker for labels and symbols overlayed on stones
+ *
  * Example value:
  * {
  *  marks: {
@@ -623,3 +632,21 @@ glift.flattener.markKo_ = function(markMap, koLocation) {
     }
   }
 };
+
+
+/**
+ * Clear all the labels from a mark map.
+ *
+ * @param {!glift.flattener.MarkMap} markMap
+ * @private
+ */
+glift.flattener.clearLabels_ = function(markMap) {
+  var marks = markMap.marks;
+  for (var key in marks) {
+    var symbol = marks[key];
+    if (symbol === glift.flattener.symbols.TEXTLABEL) {
+      delete marks[key];
+    }
+  }
+  markMap.labels = {};
+}
