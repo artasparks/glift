@@ -17,8 +17,12 @@ const closureCompiler = require('google-closure-compiler').gulp({
  * @return {object} whatever closureCompiler returns.
  */
 var defaultCompile = function(outName) {
+  if (outName == '') {
+    throw new Error('Name is required but was not provided')
+  }
+
   return closureCompiler({
-    js_output_file: 'glift-core.js',
+    js_output_file: outName,
     language_in: 'ECMASCRIPT5_STRICT',
     // TODO(kashomon): Turn on ADVANCED_OPTIMIZATIONS when all the right
     // functions have been marked @export, where appropriate

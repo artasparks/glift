@@ -57,12 +57,14 @@ const path = require('path');
  *
  * (note: Concatenation is used to avoid comment-breaks).
  */
-var jsSrcGlobGen = function(ordering, addGlobs) {
+var jsSrcGlobGen = function(ordering, addGlobs, compileTs) {
   if (typeof ordering !== 'object' || !ordering.length) {
     throw new Error(
         'Ordering must be a non-empty array of paths. ' +
         'Was: ' + (typeof ordering) + ':' + String(ordering));
   }
+
+  compileTs = !!compileTs;
 
   var out = [];
   var addGlobs = addGlobs || [];
@@ -75,7 +77,18 @@ var jsSrcGlobGen = function(ordering, addGlobs) {
     if (fs.existsSync(nsfile)) {
       out.push(nsfile);
     }
+    if (compileTs) {
+      var tsfile = path.join(dirPath, last + '.ts');
+      if (fs.existsSync(tsfile)) {
+        out.push(tsfile);
+      }
+    }
+
     out.push(path.join(dirPath, '*.js'));
+
+    if (compileTs) {
+      out.push(path.join(dirPath, '*.ts'));
+    }
 
     fs.readdirSync(dirPath).forEach((f) => {
       var fpath = path.join(dirPath, f)

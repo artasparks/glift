@@ -35,56 +35,26 @@ var srcIgnore = ['!src/**/*_test.js', '!deps/**/*_test.js', '!**/dev/*'];
 // run dep tests here, but that can be fixed later.
 var testGlob = ['src/**/*_test.js', 'deps/**/*_test.js', ];
 
-// The full build-test cycle. This:
-// - Updates all the HTML files
-// - Recreates the concat-target
-// - Runs all the tests
-// - Compiles with JSCompiler + TypeChecking
-gulp.task('build-test', ['concat', 'compile', 'test'])
-
-gulp.task('test', ['update-html-tests', 'update-html-srcs'], () => {
-  return gulp.src('./test/htmltests_gen/QunitTest.html').pipe(qunit())
-});
-
-gulp.task('test-simple', () => {
-  return gulp.src('./test/htmltests_gen/QunitTest.html').pipe(qunit())
-});
-
-// A watcher for the the full build-test cycle.
-gulp.task('test-watch', () => {
-  return gulp.watch([
-    'src/**/*.js',
-    'src/**/*_test.js'], ['test'] );
-});
-
-// A simpler watcher that just updates the
-gulp.task('update-html-watch', () => {
-  return gulp.watch([
-    'src/**/*.js',
-    'src/**/*_test.js'], ['update-html-tests', 'update-html-srcs'] );
-})
-
 // Compile the sources with the JS Compiler
 // See https://www.npmjs.com/package/google-closure-compiler
 // for more details
 gulp.task('compile', () => {
-  return gulp.src(jsSrcGlobGen(srcPaths, srcIgnore))
+  return gulp.src(jsSrcGlobGen(srcPaths, srcIgnore), {base: '.'})
     .pipe(closureCompiler('glift.js'))
     .pipe(size())
     .pipe(gulp.dest('./compiled/'))
-})
-
+});
 
 gulp.task('concat', () => {
-  return gulp.src(jsSrcGlobGen(srcPaths, srcIgnore))
+  return gulp.src(jsSrcGlobGen(srcPaths, srcIgnore), {base: '.'})
     .pipe(concat('glift_combined.js'))
     .pipe(chmod(0o666))
     .pipe(gulp.dest('./compiled/'))
-})
+});
 
 // Update the HTML tests with the dev JS source files
 gulp.task('update-html-srcs', () => {
-  return gulp.src(jsSrcGlobGen(srcPaths, srcIgnore))
+  return gulp.src(jsSrcGlobGen(srcPaths, srcIgnore), {base: '.'})
     .pipe(updateHtmlFiles({
       filesGlob: './test/htmltests/*.html',
       outDir: './test/htmltests_gen/',
@@ -104,10 +74,10 @@ gulp.task('update-html-tests', () => {
       footer: '<!-- END-AUTO-GEN-TESTS -->',
       dirHeader: '<!-- %s tests -->',
     }))
-})
+});
 
 // Update the HTML tests with the compiled glift.
-gulp.task('update-html-compiled', ['compile'], () => {
+gulp.task('update-html-compiled', gulp.series('compile', () => {
   return gulp.src('./compiled/glift.js')
     .pipe(updateHtmlFiles({
       filesGlob: './test/htmltests/*.html',
@@ -116,20 +86,50 @@ gulp.task('update-html-compiled', ['compile'], () => {
       footer: '<!-- END-AUTO-GEN-DEPS -->',
       dirHeader: '<!-- %s sources -->',
     }))
-});
+}));
 
-gulp.task('compile-test', ['update-html-compiled'], () => {
+gulp.task('test', gulp.series('update-html-tests', 'update-html-srcs', () => {
+  return gulp.src('./test/htmltests_gen/QunitTest.html').pipe(qunit())
+}));
+
+// The full build-test cycle. This:
+// - Updates all the HTML files
+// - Recreates the concat-target
+// - Runs all the tests
+// - Compiles with JSCompiler + TypeChecking
+gulp.task('build-test', gulp.series('concat', 'compile', 'test'))
+
+gulp.task('test-simple', () => {
   return gulp.src('./test/htmltests_gen/QunitTest.html').pipe(qunit())
 });
+
+// A watcher for the the full build-test cycle.
+gulp.task('test-watch', () => {
+  return gulp.watch([
+    'src/**/*.js',
+    'src/**/*_test.js'], gulp.series('test'));
+});
+
+// A simpler watcher that just updates the
+gulp.task('update-html-watch', () => {
+  return gulp.watch([
+    'src/**/*.js',
+    'src/**/*_test.js'], gulp.series('update-html-tests', 'update-html-srcs'));
+})
+
+
+gulp.task('compile-test', gulp.series('update-html-compiled', () => {
+  return gulp.src('./test/htmltests_gen/QunitTest.html').pipe(qunit())
+}));
 
 gulp.task('compile-watch', () => {
   return gulp.watch([
     'src/**/*.js',
-    'src/**/*_test.js'], ['update-html-compiled'] );
+    'src/**/*_test.js'], gulp.series('update-html-compiled'));
 });
 
 gulp.task('src-gen', () => {
-  gulp.src(jsSrcGlobGen(srcPaths, srcIgnore))
+  gulp.src(jsSrcGlobGen(srcPaths, srcIgnore), {base: '.'})
     .pipe(through.obj(function(file, enc, cb) {
       console.log(file.path);
       cb()
